@@ -1,0 +1,80 @@
+{
+  "taskId": "M3.1",
+  "reviewer": "opencode-reviewer-subagent",
+  "revisionDigest": "7fe68431dfd8815027e8accdd951b7b76e813cbb1cf98c66e73ae1ce56435824",
+  "decision": "approved",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M3.1 review-rerun-analysis-2 scripts/pnpm.mjs test:analysis",
+      "exitCode": 0,
+      "observed": "28 tests / 6 files passed (tests/analysis including the M3.2 partition subdir): boundary detection (protected worker/cluster/child_process couplings, env reach, unsafe globals, omitted state), surface classification (import shapes, computed/unknown never safe), private analysis journey (canary/host-path non-emission, drift fail-closed, edit-surface closures), empty-surface bounds, plus the partition extraction/detection suites. No login-heavy or browser work involved.",
+      "evidencePath": ".execution/evidence/M3.1/review-rerun-analysis-2.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.1 review-rerun-security-dep-boundary-2 scripts/pnpm.mjs test:security -- --suite dependency-boundary",
+      "exitCode": 0,
+      "observed": "4/4 tests passed in tests/security/dependency-boundary/coupling.test.ts: protected-coupling rejection with transitive dependents, public->private import rejection with published_private_reach, computed dynamic loading never classified/reported safe with limits+disclaimer asserted, advisory-only facade with hash-drift fail-closed.",
+      "evidencePath": ".execution/evidence/M3.1/review-rerun-security-dep-boundary-2.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.1 review-rerun-tsc-2 node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "observed": "Repository-wide TypeScript check produced no output (no type errors).",
+      "evidencePath": ".execution/evidence/M3.1/review-rerun-tsc-2.json"
+    }
+  ],
+  "criterionFindings": [
+    {
+      "criterion": "TypeScript AST/import closure, edit-surface report and conservative unsupported-feature classification are delivered",
+      "verdict": "met",
+      "basis": "Source review: packages/analyzer/scanner/source-surface.ts (one cached AST per captured file plus syntactic helpers), packages/analyzer/core/boundary-surface.ts (buildBoundarySurface producing importClosures.reachable/privateReachable, editSurface.dependentsOf reverse closure including type-only and JSON edges, and ModuleVerdicts limited to rejected/unsupported/unknown/clean), packages/analyzer/core/dependency-boundary.ts (advisory facade with rejected/unsupported/unknown partitions). Verified by re-running the suites myself: journey test asserts import closures, edit-surface dependentsOf and verdicts; all exits 0."
+    },
+    {
+      "criterion": "Detects protected imports, dynamic loading, unsafe globals and omitted state dependencies",
+      "verdict": "met",
+      "basis": "Source: PROTECTED_SPECIFIERS (worker_threads/cluster/child_process) classified 'protected' + protected_import findings; nested Worker/SharedWorker constructors recorded; non-literal import()/require()/import-equals classified 'computed' (never safe); eval/new Function/globalThis/global/window reads -> unsafe_global; exported top-level functions/arrow bindings reading top-level mutable let/var -> omitted_state_dependency. Re-run observed: boundary-detection tests (4/4) cover worker+cluster+child_process incl. nested worker, env reach without reading values, unsafe global reach without execution, and the two-finding omitted-state case."
+    },
+    {
+      "criterion": "Known forbidden coupling is rejected (including transitive dependents)",
+      "verdict": "met",
+      "basis": "Re-run observed: public/artifact/scheduler.ts importing worker_threads gets verdict 'rejected' and its re-exporting dependents get 'rejected' with rejected_dependency (coupling.test.ts). Source: classifyEvidence propagates rejection through the edit-surface dependentsOf map (boundary-surface.ts:516-532); classifyOne raises rejected for rejected/protected classifications and published_reachable findings (boundary-surface.ts:489-511)."
+    },
+    {
+      "criterion": "Unknown dynamic behaviour is NOT marked safe",
+      "verdict": "met",
+      "basis": "Source: ModuleVerdictLabel has no 'safe' value; classifyImport returns 'computed' for any non-literal specifier before any safe branch, and unresolved/bare specifiers return 'unknown'; computed/unresolved raise 'unknown'/'unsupported' verdicts. The only 'safe' import classifications are statically resolved in-manifest, non-private runtime imports with literal specifiers. Re-run observed: computed fixture never classified or reported safe (serialized report contains no \"verdict\":\"safe\" or \"classification\":\"safe\"), and the mixed-import fixture yields verdict 'unknown' with computed_import/unresolved_import reasons."
+    },
+    {
+      "criterion": "Reports disclose assumptions and limits",
+      "verdict": "met",
+      "basis": "ANALYSIS_LIMITS (alias/decorator/generic/dataflow non-interpretation, top-level-export-only reachability walk, no execution, advisory-only findings, unknown-never-safe) plus the disclaimer are embedded in every report's limits array; the facade repeats them. Re-run observed: tests assert the limits and disclaimer presence in both the surface and the facade report."
+    },
+    {
+      "criterion": "AST linting is never labeled semantic confidentiality proof",
+      "verdict": "met",
+      "basis": "ANALYSIS_DISCLAIMER states the analysis is never a semantic confidentiality proof and cannot authorize any action; assurance is 'bounded' everywhere; no report type carries a proof/confidentiality claim. Re-run observed: both suites assert the disclaimer text and bounded assurance."
+    },
+    {
+      "criterion": "Captured bytes are hash-verified and never executed; captured text is not emitted",
+      "verdict": "met",
+      "basis": "Source: buildBoundarySurface reads each manifest file, recomputes SHA-256 and refuses with private_analysis_evidence_drift on any mismatch (boundary-surface.ts:544-549); the module contains no execution machinery (no vm/eval/child_process; the only eval/Function/worker references are detection patterns). Stored projections contain only paths, resolved paths, specifier texts, syntactic kinds, short identifier chains and positions; statement bodies, string payload values and file bytes are never emitted. Re-run observed: journey and hostile-input tests assert the canary string, JSON secret values, host temp paths and drift text never appear in the serialized surface."
+    },
+    {
+      "criterion": "Revision integrity: the review binds the exact declared revision digest",
+      "verdict": "met",
+      "basis": "I recomputed the M3.1 revision manifest per scripts/execution.mjs (write paths + shared paths + integration paths, per-file SHA-256, localeCompare en, compact canonical JSON) and reproduced digest 7fe68431dfd8815027e8accdd951b7b76e813cbb1cf98c66e73ae1ce56435824 with 0 missing / 0 added / 0 changed files against the stored manifest; taskDefinitionSha256 matches tasks/task-graph.json."
+    }
+  ],
+  "securityReadCompleted": true,
+  "limitations": [
+    "Static-analysis limits disclosed in ANALYSIS_LIMITS are inherent: aliases, decorators, generics, conditional runtime paths and variable-mediated dataflow are not interpreted, so a missed dynamic site would be undetected rather than misclassified; detection is conservative in the safe direction (unknown/computed) but not exhaustive.",
+    "Import classifications include a literal 'safe' label for statically resolved in-manifest, non-private runtime imports, and private-to-private internal imports are structurally 'safe'; privacy enforcement between processes is a runtime ACL concern, not an AST one. The 'private' marker is a path-segment heuristic ('private' segment), disclosed in the draft.",
+    "boundary.nestedWorker stores the worker script argument text (a specifier-class value, e.g. a synthetic worker file name) consistent with the disclosed specifier-text projection surface; it is the one captured string literal family emitted into the report.",
+    "Omitted-state detection walks only top-level exported function declarations and exported arrow bindings; class members and nested closures are not walked (disclosed in ANALYSIS_LIMITS and the draft).",
+    "One malformed evidence record from my first attempt (review-rerun-analysis.json, exit 1, command with a leading 'node' argument that evidence.mjs cannot use) is retained unmodified per the never-overwrite rule; the corrected run is review-rerun-analysis-2.json. It is retention-only and marked unverified, never counted as passing.",
+    "The mandated test:analysis command now also runs the M3.2 partition suites nested under tests/analysis (28 total); this only widens coverage and does not alter M3.1's own checks.",
+    "M3.1's own mandated gates and source checks are covered here; the build/check/doctor commands recorded by the worker and coordinator sweeps were not independently re-run in this review except as covered by the mandated set.",
+    "No judgment is made about semantic confidentiality of any real private system; all fixtures are synthetic, and no real private fixture contents, prompts or secrets appear in this report."
+  ],
+  "reviewedAt": "2026-10-03T02:02:53.425Z"
+}

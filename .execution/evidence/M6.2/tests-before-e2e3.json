@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:e2e",
+    "--",
+    "--suite",
+    "contributor"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T22:56:45.941Z",
+  "finishedAt": "2026-10-03T22:56:48.296Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/e2e/contributor/journey.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Suites 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/e2e/contributor/journey.test.ts\u001b[2m [ tests/e2e/contributor/journey.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../../services/external-api/reservations/routes.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/e2e/contributor/support.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/e2e/contributor/support.ts:\u001b[2m14:1\u001b[22m\u001b[39m\n    \u001b[90m 12|\u001b[39m import { privateSessionCookie } from '../../../services/private-api/bo…\n    \u001b[90m 13|\u001b[39m import { installContributorAuth } from '../../../services/external-api…\n    \u001b[90m 14|\u001b[39m import { installContributorReservationRoutes } from '../../../services…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m 15|\u001b[39m import { MemoryAssignmentStore } from '../../../services/external-api/…\n    \u001b[90m 16|\u001b[39m import { MemoryReservationStore } from '../../../services/external-api…\n\u001b[90m \u001b[2m❯\u001b[22m tests/e2e/contributor/journey.test.ts:\u001b[2m2:1\u001b[22m\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[2mno tests\u001b[22m\n\u001b[2m   Start at \u001b[22m 06:56:46\n\u001b[2m   Duration \u001b[22m 1.10s\u001b[2m (worker 97%, environment 3%)\u001b[22m\n\n"
+}

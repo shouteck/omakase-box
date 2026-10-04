@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "tested",
+  "scope": "Static local unit and coordinator content/reference reconciliation only.",
+  "revision": {
+    "algorithm": "sha256",
+    "digest": "4b431fd6995dc7911fe211738e3ffda96477a2337d53e18bb888d05b59118361",
+    "manifest": ".execution/evidence/M5.2/revision-4b431fd6995dc7911fe211738e3ffda96477a2337d53e18bb888d05b59118361.json"
+  },
+  "handoff": {
+    "path": ".execution/drafts/M5.2.md",
+    "sha256": "358c1ad0bf3f247c0da0874890059e836ac414c266bd10cfb93b27fd10979b50"
+  },
+  "dependencies": [
+    {
+      "path": "packages/runner-protocol/index.ts",
+      "sha256": "9042fa80e9b5369050d0820445b5e8811c19d1b81c5b3eb201395dabe397966d"
+    },
+    {
+      "path": "templates/workspaces/public-image-profile.ts",
+      "sha256": "6f41fdde28b8511e775e933588b08588c55c08458b207bc76de4a4b50011ff3b"
+    },
+    {
+      "path": "templates/workspaces/image/Dockerfile",
+      "sha256": "e1cba32b4443219092c8ede7132e9e14b7c44346c818f827127fb0e0454d8e9d"
+    },
+    {
+      "path": "infra/runner/broker.py",
+      "sha256": "10cf2b385db20f564aadcb13381809a08205cc2ff79a7612d7eb81c1adae389a"
+    },
+    {
+      "path": "scripts/suite.mjs",
+      "sha256": "5a0b28272a06629b24dde782c9b8eaa47098f550357890623b6a2baace663d36"
+    }
+  ],
+  "checks": [
+    {
+      "path": ".execution/evidence/M5.2/plan-20261004-static-complete.json",
+      "sha256": "769217668bf22b0927c9dd29a245d963dfa3e7512d96994f5bff3fb5b97e6054",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:security",
+        "--",
+        "--suite",
+        "runtime"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/plan-20261004-protocol.json",
+      "sha256": "a53d64f0a1961eac1e33f855b8cc6aabe7dafa1bec41e3648286f7fe7c1dc37f",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:runner",
+        "--",
+        "--suite",
+        "protocol"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/plan-20261004-build-complete.json",
+      "sha256": "d8bae465e3dedcfce99732bee312243da6d8034ed62d06c5fe30cf5b555d00fc",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "build"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/plan-20261004-doctor.json",
+      "sha256": "d1c300627d56bc3ca02c4ffbbb9a54a48d23c785408fd83163b5fac74d4b90a9",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "doctor",
+        "--json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/plan-20261004-real.json",
+      "sha256": "fd44b4de94047bf6d1bfd55955849952cf4c33154ab71e93e5ad336122f918a8",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:runner",
+        "--",
+        "--real"
+      ],
+      "exitCode": 2
+    },
+    {
+      "path": ".execution/evidence/M5.2/plan-20261004-security-real.json",
+      "sha256": "f664ad9a44fc66f83841baa3e92f5e4129fc62ea18009977f3cc49b4f1e9fe68",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:security",
+        "--",
+        "--suite",
+        "runtime",
+        "--real"
+      ],
+      "exitCode": 2
+    }
+  ],
+  "rebound": [
+    {
+      "taskId": "M0.1",
+      "revision": "ac2d1a8b3ce83af35e105c4191d99805fbcf7183f05f68c28dc776c0345b7296",
+      "handoff": ".execution/drafts/M0.1-plan-20261004-rebind.md",
+      "handoffSha256": "c849f867d416beb42a98b4f152599f8b61596ed16e7dadd25e01b05bb356a965"
+    },
+    {
+      "taskId": "M0.2",
+      "revision": "1bf6e7df1e190c33bb4a5baa22b2967fe143f7a189c4e1049f387eb729c4ae79",
+      "handoff": ".execution/drafts/M0.2-plan-20261004-rebind.md",
+      "handoffSha256": "b053a171e328f3256c212d4c1e99b04a6c7aa81037d7a971ccc65112ba68ade1"
+    },
+    {
+      "taskId": "M0.3",
+      "revision": "431188ac288aa7dd72b89a513e27d8fadef65ed92ef69cf70df5464c7b99c7d9",
+      "handoff": ".execution/drafts/M0.3-plan-20261004-rebind.md",
+      "handoffSha256": "4010119287b90262a22405ddee7dd7fda5a14c5c5ddf105e231b33a552b14ba6"
+    },
+    {
+      "taskId": "M1.1",
+      "revision": "c79ac570714000a1572994b546ef81a48c038485b583b6249019d060470fd119",
+      "handoff": ".execution/drafts/M1.1-plan-20261004-rebind.md",
+      "handoffSha256": "ee63bdb3dab3ea227c7eda895239459df7a8cdd8d3cf20168b05f3bf1bd2b9ad"
+    },
+    {
+      "taskId": "M1.2",
+      "revision": "3cc93991e9151c2892ea4c7bd48e6789440f7add5228d02d52b510475da93d11",
+      "handoff": ".execution/drafts/M1.2-plan-20261004-rebind.md",
+      "handoffSha256": "2103ee44554ac8e1fb521a3dac5599ed96fb1f9f646b63d9b6662119bf490e34"
+    },
+    {
+      "taskId": "M1.3",
+      "revision": "49a3f35dfb2dee5ddd5f1ad25ec0b2b7b38270ec42feb63d9efd21b6f87a5ef3",
+      "handoff": ".execution/drafts/M1.3-plan-20261004-rebind.md",
+      "handoffSha256": "3e57cbdb4762745238bd251f3589fb6d32c13ae519b54eabc8a590c70bac137f"
+    },
+    {
+      "taskId": "M2.1",
+      "revision": "7a4fe8e3fc28f89bb94ac33f45d2c938f1a5d32923ac930edf92dc9115e4f2d8",
+      "handoff": ".execution/drafts/M2.1-plan-20261004-rebind.md",
+      "handoffSha256": "caf93954ee97ce208ca9395e707e22ccf35009e30c7ce1f9851194da19638581"
+    },
+    {
+      "taskId": "M2.2",
+      "revision": "cae08f4f3323400969b365b74e0be357074dc9875a7b93a893b5e9913e342bc9",
+      "handoff": ".execution/drafts/M2.2-plan-20261004-rebind.md",
+      "handoffSha256": "d4815b9e9c2b0488dcef8799470c2dde7a559564a23e820b7c3fa3a0bad17a8c"
+    },
+    {
+      "taskId": "M2.3",
+      "revision": "c470cc5fcef10792e3043ef468cc661d3f18b4c2dabc7f160ceb2fddfb267322",
+      "handoff": ".execution/drafts/M2.3-plan-20261004-rebind.md",
+      "handoffSha256": "675f65d08ca92ea08db8a0ec8a35491a879e30b2da3ba8adbccfa9396149a33a"
+    },
+    {
+      "taskId": "M3.1",
+      "revision": "81ab26a1ec59464830738dbd58a5dfc3f94a08257f07a2cbe910f9dca5c6c272",
+      "handoff": ".execution/drafts/M3.1-plan-20261004-rebind.md",
+      "handoffSha256": "c0370f134e31547bcd6ce98f9b639692c44d0cf0f5c1cffc0b6d74536e5dcdde"
+    },
+    {
+      "taskId": "M3.2",
+      "revision": "e7ea13301b0c12d61d2c1f65310304147a7f45692ad58421a4926e87bfa83c44",
+      "handoff": ".execution/drafts/M3.2-plan-20261004-rebind.md",
+      "handoffSha256": "fee103699dd743269bc0a69c55541b009b578281758a49f568b217a5ce8cbbc2"
+    },
+    {
+      "taskId": "M3.3",
+      "revision": "60fb3eba06f4881fa7c53e00fbc057d43e9f56c9a916e000a72ac370cc14fa63",
+      "handoff": ".execution/drafts/M3.3-plan-20261004-rebind.md",
+      "handoffSha256": "f0fa3575afd652749dedefc2567e603f88e97ec156133e616608a7f2c3f38b50"
+    },
+    {
+      "taskId": "M3.4",
+      "revision": "fe6822be5a1155f78ae6f4c5209b2f9547a688f0f8a26b78b7144890271785e5",
+      "handoff": ".execution/drafts/M3.4-plan-20261004-rebind.md",
+      "handoffSha256": "0874ef927f76741ca56f29a295f580f3320aa65ed913a7d3233818283ae1dc24"
+    },
+    {
+      "taskId": "M4.1",
+      "revision": "ada65b9da92dc386f67d2452f26cbbe2f50f323e92e4eb80d6191def5c528685",
+      "handoff": ".execution/drafts/M4.1-plan-20261004-rebind.md",
+      "handoffSha256": "11fe526e34d580af1c973880f39fe504464bf2ca42b13be77573183d35995a46"
+    },
+    {
+      "taskId": "M4.2",
+      "revision": "6029d3d382aa796ffdb312d408e862e175e9f9caaed26e965f97aab58d41e5a2",
+      "handoff": ".execution/drafts/M4.2-plan-20261004-rebind.md",
+      "handoffSha256": "353e37fdb38c8eb0cfb134eafd00c2c1d06ec58c91481e06aff87ff093147ed4"
+    },
+    {
+      "taskId": "M5.1",
+      "revision": "734d30c2968f724c416e5165527e98aa3a76160ab79310b74ed4c921eb61e799",
+      "handoff": ".execution/drafts/M5.1-plan-20261004-rebind.md",
+      "handoffSha256": "ee84db4059532bee74a73eb6a0f0002ee419a937770958427abda26aa6f7baf3"
+    },
+    {
+      "taskId": "M5.3",
+      "revision": "5c299a46b0d44de4061a432eb58cc3b46534e58985f37c0b841d52c352ed5801",
+      "handoff": ".execution/drafts/M5.3-plan-20261004-rebind.md",
+      "handoffSha256": "cb5483d23661a18800fff8b4ce355718702553674261cae9e215a061624bfd3c"
+    }
+  ],
+  "previousStateSha256": "12002da375758c5ee78b005253f49bd8c2eeb52fe1b2e40cf8d085b815d68b85",
+  "scriptSha256": "b47de250d590f6e15d966f9b1c0472a6a94b5bcb5d753b18f52d895380819d64",
+  "candidateExecution": false,
+  "realValidation": "unverified",
+  "independentReview": "unverified"
+}

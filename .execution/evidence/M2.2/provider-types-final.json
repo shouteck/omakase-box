@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T19:32:38.640Z",
+  "finishedAt": "2026-10-02T19:32:44.221Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "packages/planner/providers/contracts.ts(44,3): error TS2375: Type '{ planningEvidence: { assurance: \"bounded\"; request: { constraints: string[]; exclusions: string[]; requestId: string; snapshotId: string; goal: string; currentBehaviour: string; desiredBehaviour: string; }; ... 4 more ...; textByteLimit: number; }; approvedIntent: { ...; }; approvedIntentHash: string; approval?: { ...' is not assignable to type 'PrivatePartitionInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.\r\n  Types of property 'approval' are incompatible.\r\n    Type '{ intentId: string; version: number; contentHash: string; state: \"approved\"; } | undefined' is not assignable to type '{ intentId: string; version: number; contentHash: string; state: \"approved\"; }'.\r\n      Type 'undefined' is not assignable to type '{ intentId: string; version: number; contentHash: string; state: \"approved\"; }'.\r\n"
+}

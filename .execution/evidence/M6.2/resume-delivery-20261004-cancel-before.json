@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservations/assignment-delivery.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:48:07.990Z",
+  "finishedAt": "2026-10-04T00:48:09.470Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/portal/reservations/assignment-delivery.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 15\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m cancellation while acquiring a delivery lease never invokes the transport\u001b[39m\u001b[32m 14\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/portal/reservations/assignment-delivery.test.ts\u001b[2m > \u001b[22mcancellation while acquiring a delivery lease never invokes the transport\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected \"vi.fn()\" to not be called at all, but actually been called 1 times\u001b[90m\n\nReceived:\n\n\u001b[1m  1st vi.fn() call:\n\n\u001b[22m    Array [\n      Object {\n        \"payload\": Object {\n          \"assignmentId\": \"f15b478d-114c-48c6-9554-eec124667b04\",\n          \"audience\": \"external-assignment/v1\",\n          \"eventId\": \"bb5cf5e0-8c74-44fc-b248-a618de8f75c6\",\n          \"executor\": Object {\n            \"kind\": \"team\",\n            \"label\": \"Synthetic selected team\",\n          },\n          \"expiresAt\": \"2026-10-04T00:53:09.374Z\",\n          \"issuedAt\": \"2026-10-04T00:48:09.374Z\",\n          \"nonce\": \"3acfc8b2-3eec-4b8d-94bc-635159b685c1\",\n          \"packageDigest\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\n          \"schemaVersion\": 1,\n          \"taskId\": \"f4a151b9-de59-4663-ad21-07f2a792c3fe\",\n          \"taskVersion\": 1,\n        },\n        \"signature\": \"a+ufPFhbcKjFN0MZOyMioz1J3zvvdamYKV2K292+Xq8QbdW8a0fe/K/kNtFd7CWsUWFulj9xDpFyd3SyWIA8CA==\",\n      },\n      AbortSignal {\n        Symbol(kEvents): Map {},\n        Symbol(events.maxEventTargetListeners): 0,\n        Symbol(events.maxEventTargetListenersWarned): false,\n        Symbol(kHandlers): Map {},\n        Symbol(kAborted): true,\n        Symbol(kReason): [AbortError: This operation was aborted],\n        Symbol(kComposite): true,\n        Symbol(kSourceSignals): Set {},\n      },\n    ]\n\u001b[31m\u001b[90m\n\nNumber of calls: \u001b[1m1\u001b[22m\n\u001b[31m\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/portal/reservations/assignment-delivery.test.ts:\u001b[2m14:20\u001b[22m\u001b[39m\n    \u001b[90m 12|\u001b[39m   const release = vi.spyOn(store, 'release').mockResolvedValue(true), …\n    \u001b[90m 13|\u001b[39m   expect(await store.dispatchOne({ send }, controller.signal)).toMatch…\n    \u001b[90m 14|\u001b[39m   expect(send).not.toHaveBeenCalled();\n    \u001b[90m   |\u001b[39m                    \u001b[31m^\u001b[39m\n    \u001b[90m 15|\u001b[39m   expect(release).toHaveBeenCalledExactlyOnceWith(claim);\n    \u001b[90m 16|\u001b[39m });\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 08:48:08\n\u001b[2m   Duration \u001b[22m 416ms\u001b[2m (import 54%, transform 36%, tests 7%, worker 3%)\u001b[22m\n\n"
+}

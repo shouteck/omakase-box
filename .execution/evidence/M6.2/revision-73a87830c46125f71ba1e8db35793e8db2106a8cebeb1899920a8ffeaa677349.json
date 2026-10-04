@@ -1,0 +1,167 @@
+{
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": "apps/contributor-portal/index.html",
+      "bytes": 273,
+      "sha256": "970f604a4569496bfd91b427b7679466b3e79b2af98b46d09315ba2302f9355a"
+    },
+    {
+      "path": "apps/contributor-portal/package.json",
+      "bytes": 148,
+      "sha256": "e3621f60d062d56bba1b191886b16ea6fe91fff984d8caf59a94064d4307421b"
+    },
+    {
+      "path": "apps/contributor-portal/portal/portal-screen.tsx",
+      "bytes": 11491,
+      "sha256": "563f4e70c0bd859f998728a38d66079a7d74795532ea1a0f0b3e995fe42aa26d"
+    },
+    {
+      "path": "apps/contributor-portal/src/bootstrap/main.tsx",
+      "bytes": 1259,
+      "sha256": "3ebc90f9eb1b69379282298e8610c163c98f4d594463edb98690dcc99070043e"
+    },
+    {
+      "path": "apps/contributor-portal/vite.config.ts",
+      "bytes": 190,
+      "sha256": "da0c583d6b8749ecf75c2bb1d8ff18fe31ea84bf4f07d70be6d2e9ae468848b7"
+    },
+    {
+      "path": "apps/private-console/assignments/assignments-screen.tsx",
+      "bytes": 3298,
+      "sha256": "377ef86ea07c3993894a470311f97e9ec849641a12067b540c3a3eb71c4b91b6"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 38047,
+      "sha256": "8e49a9bfc3a2e70afdd89188b071f5b157c8983b291b3781f2be6bbf477df41f"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-live-fixture.ts",
+      "bytes": 9582,
+      "sha256": "608120bec65e320e77b112a235360aac1eeb46a9ce0f7bc303d852926639037c"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-protocol.ts",
+      "bytes": 3390,
+      "sha256": "965b9cbb7af2149d02235cbb8b2acc08b25edd7dc268ff24d97d59352568af9b"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-receiver.ts",
+      "bytes": 4788,
+      "sha256": "8751e3771cde396350ccb2d085cbb6feb4311098b4d095f4364c3d72575a1584"
+    },
+    {
+      "path": "services/external-api/reservations/assignments.ts",
+      "bytes": 13768,
+      "sha256": "3008dd37661690de5e5bf2a35be3955b5fa91456b8e0cc8d532d3fc25dd8961d"
+    },
+    {
+      "path": "services/external-api/reservations/defect-reports.ts",
+      "bytes": 5852,
+      "sha256": "25d8aa17b0ba5e8b3a0403426978c9b888bdb022fe43088b80a9571b399e8b58"
+    },
+    {
+      "path": "services/external-api/reservations/download.ts",
+      "bytes": 5730,
+      "sha256": "300bb96a73643843ea91e2a9d414dfad83e7422c1e1793b0135eb14d1df7154c"
+    },
+    {
+      "path": "services/external-api/reservations/live-fixture.ts",
+      "bytes": 11198,
+      "sha256": "7a739c72ff1350e71009b5dd30f3f2fa42b458d857c473e7da03fb3fd370c643"
+    },
+    {
+      "path": "services/external-api/reservations/reservation-sql.ts",
+      "bytes": 30804,
+      "sha256": "648b2a7b5adfea3d4d69b246d53b30510439af178e4541ba03818af0dac4dc20"
+    },
+    {
+      "path": "services/external-api/reservations/reservation-store.ts",
+      "bytes": 16037,
+      "sha256": "92cc896865afeefa6a6fe68c3d7263528eb4a770daaa5c67c1a112777cd3f136"
+    },
+    {
+      "path": "services/external-api/reservations/routes.ts",
+      "bytes": 9426,
+      "sha256": "90f22e515f8b1d33a7a5c661cab0c9996352324793bbccd622be838a6eafd558"
+    },
+    {
+      "path": "services/private-api/assignments/live-fixture.ts",
+      "bytes": 8020,
+      "sha256": "5f98a404401d0748109a82c5d3732eb73c8c96a6cf27ef51e0969d724b168cca"
+    },
+    {
+      "path": "services/private-api/assignments/routes.ts",
+      "bytes": 1295,
+      "sha256": "6338e789e2955770d88a3195b4bcca1420c52303f5ef52e2504ea7cba6c78f35"
+    },
+    {
+      "path": "services/private-api/assignments/store.ts",
+      "bytes": 7129,
+      "sha256": "00b4284b33120fa36535859592db75dad3df69bb050980db973664a9b7af6e7b"
+    },
+    {
+      "path": "tests/e2e/contributor/harness/index.html",
+      "bytes": 265,
+      "sha256": "b84aba5deaf648476e73945a1613bfcfa965bd26b44ce9610220660483fc0558"
+    },
+    {
+      "path": "tests/e2e/contributor/harness/main.tsx",
+      "bytes": 1524,
+      "sha256": "4ebd80451aa21b550f83264c038fa6579272e6e07f84179ca31913cc68365151"
+    },
+    {
+      "path": "tests/e2e/contributor/journey.test.ts",
+      "bytes": 8411,
+      "sha256": "fb9e50e59591908cb3b24f3f926e3eb0d73057f33f551a7a267518e47190b1df"
+    },
+    {
+      "path": "tests/e2e/contributor/reservation-boundary.test.ts",
+      "bytes": 3713,
+      "sha256": "67411f0320224203de2665748fd599ec69780aedffb142084449b62a151a4871"
+    },
+    {
+      "path": "tests/e2e/contributor/support.ts",
+      "bytes": 16676,
+      "sha256": "155a2aa34b5b540aac1cc610bbb394c699dfb090d99e6e611459ecdb0eb6ec18"
+    },
+    {
+      "path": "tests/portal/reservation/reservation.test.ts",
+      "bytes": 1650,
+      "sha256": "da4d38774a2ba20465d43f69a649f46b2b62f22a4e879e24b83d519d5aa9516b"
+    },
+    {
+      "path": "tests/portal/reservations/assignment-protocol.test.ts",
+      "bytes": 3320,
+      "sha256": "3213a94f4bacdc32b2297e5c255c2b223f471be9b432b196aa8281dc880cef45"
+    },
+    {
+      "path": "tests/portal/reservations/durable-live.test.ts",
+      "bytes": 2583,
+      "sha256": "cc40979a79dbdf9f8006f55d8e90e6100af6d1c2bd5876a159fe28402306eb31"
+    },
+    {
+      "path": "tests/portal/reservations/fixture.ts",
+      "bytes": 2502,
+      "sha256": "545b750b1446c4fb376279bbbd6f696cd39fa804756877f5c354c19254b72654"
+    },
+    {
+      "path": "tests/portal/reservations/owner-assignments.test.ts",
+      "bytes": 6814,
+      "sha256": "5725d701ac1dc2f7ef89c97bdcc23567853df8cc633beef43627c8374ed43839"
+    },
+    {
+      "path": "tests/portal/reservations/reservations.test.ts",
+      "bytes": 34795,
+      "sha256": "15eddd99b9cca07acefc37bb3496790f2b415a5b27d4907168308c2bddfb86c7"
+    },
+    {
+      "path": "tests/portal/reservations/signed-assignment-live.test.ts",
+      "bytes": 4027,
+      "sha256": "9df1cffc25d699757ab6c31c043cc026fef536716162a72789d3227c90b78fe8"
+    }
+  ]
+}

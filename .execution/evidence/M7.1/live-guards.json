@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M7.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/verify-evaluation-pipeline.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T04:03:43.475Z",
+  "finishedAt": "2026-10-04T04:03:44.159Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"private\":{\"lifecycle\":\"tested\",\"jobGuards\":\"tested\",\"infraOnlyQueuedCompletion\":\"tested\",\"appendOnlyResults\":\"tested\",\"bindingImmutability\":\"tested\",\"staleVersion\":\"tested\",\"authority\":\"synthetic_schema_test_not_runner_verdict\"}}\n"
+}

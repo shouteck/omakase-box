@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-04",
+  "kind": "repository_bootstrap_preflight",
+  "authority": "CEO requested starting commits/push and explicitly requested repository creation under github.com/shouteck with a CTO-chosen name.",
+  "waveAuthority": "Separate repository bootstrap; W001 and all B-series tasks remain pending. No product implementation approved.",
+  "repository": {
+    "nameWithOwner": "shouteck/omakase-box",
+    "url": "https://github.com/shouteck/omakase-box",
+    "visibility": "private",
+    "createdAndVerified": true
+  },
+  "preservation": {
+    "productFilesVerifiedUnchanged": 426,
+    "legacyGraphAndStateUnchanged": true,
+    "presentedW001BriefDigestMatches": true
+  },
+  "contentChecks": {
+    "ignoredLocalDataAndCredentials": true,
+    "candidateFilesBeforeThisReceipt": 2134,
+    "candidateBytesApprox": 12830000,
+    "largeFilesOver20MiB": 0,
+    "obviousCredentialPatternFinding": "One provider-key regex false positive in a synthetic cgroup fixture name; no key bytes involved.",
+    "limitations": "Bounded pattern and file-name screening, not a guarantee of no secrets; no product tests run for this baseline."
+  },
+  "stagingPolicy": "Command-local core.autocrlf=false preserves existing bytes in the initial Git blobs; no global Git settings changed.",
+  "runtime": "Devin pstack-based adapter documented; native Cursor plugin not installed or verified by this operation."
+}

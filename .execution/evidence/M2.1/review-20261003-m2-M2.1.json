@@ -1,0 +1,63 @@
+{
+  "taskId": "M2.1",
+  "reviewer": "opencode-reviewer-subagent-m2-20261003",
+  "revisionDigest": "6d4796b20f8100296569c6d3a2832a862493b5959a576f280c0ce399fb9110ea",
+  "decision": "approved",
+  "manifestClassification": {
+    "manifest": ".execution/evidence/M2.1/revision-6d4796b20f8100296569c6d3a2832a862493b5959a576f280c0ce399fb9110ea.json",
+    "files": 66,
+    "recomputed": "every file SHA-256 and byte size recomputed against the current tree",
+    "matching": 63,
+    "missing": 0,
+    "drifted": [
+      { "path": "docs/DECISIONS.md", "expected": "6a1587a2aa9408c664e21cf7188b9fe4f076f5a06fad6f914f4c201362d5a615/26488", "actual": "35c49af98eb2.../28711", "classification": "declared shared path (scripts/execution.mjs sharedPaths); today's coordinator batch" },
+      { "path": "scripts/execution.mjs", "expected": "03bff9fd5ce6.../7503", "actual": "607ee65151cb.../7633", "classification": "declared shared path; today's coordinator batch" },
+      { "path": "services/private-api/db/migrations/meta/_journal.json", "expected": "4242f5748cb3.../964", "actual": "47eebff897d0.../1074", "classification": "M2.1 integration path; drift is solely the additive 0007_evaluation_jobs journal entry" }
+    ],
+    "productPaths": "all writePaths (services/private-api/requests/**, services/private-api/snapshots/**, packages/planner/retrieval/**, tests/planner/evidence/**) byte-identical to the recorded revision",
+    "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101 recomputed over tasks/task-graph.json and matches",
+    "migration0007Check": "read services/private-api/db/migrations/0007_evaluation_jobs.sql in full: CREATE-only (types, functions, tables, triggers) with strict CHECK/trigger guards; no ALTER/DROP of existing tables, no permission or data change; journal delta is exactly the appended idx 7 entry",
+    "boundaryWeakening": "none found"
+  },
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M2.1 review-20261003-2-planner-evidence scripts/pnpm.mjs test:planner -- --suite evidence",
+      "exitCode": 0,
+      "observed": "8/8 tests passed (4 files) including the actual DB/API/browser intake-live journey; snapshot pinning determinism, no lifecycle-hook execution, media structure validation and bounded retrieval all re-observed.",
+      "evidencePath": ".execution/evidence/M2.1/review-20261003-2-planner-evidence.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.1 review-20261003-3-security-evidence scripts/pnpm.mjs test:security -- --suite evidence",
+      "exitCode": 0,
+      "observed": "23/23 tests passed (3 files): traversal/absolute/UNC/ADS/device/trailing-dot-space/excluded-path rejections asserted as throws, real Windows junction/hardlink/root-alias rejection with canary intact, aggregate byte-budget rejection, fixed snapshot_invalid error without path leakage, revoked-session rejection inside the storage transaction (SQL-level FOR SHARE/expiry/disabled assertions, ROLLBACK observed), exact download headers (application/octet-stream, nosniff, attachment, sandbox CSP) with a script canary delivered inert, contributor API evidence route 404.",
+      "evidencePath": ".execution/evidence/M2.1/review-20261003-3-security-evidence.json"
+    }
+  ],
+  "retainedFailures": [
+    {
+      "path": ".execution/evidence/M2.1/review-20261003-1-planner-evidence.json",
+      "exitCode": 1,
+      "explanation": "Reviewer tooling error, not a product failure: evidence.mjs spawns node itself, so the first invocation incorrectly included a leading 'node' argument (MODULE_NOT_FOUND). Retained unmodified per protocol; superseded by review-20261003-2-planner-evidence.json."
+    }
+  ],
+  "acceptanceJudgements": [
+    {
+      "criterion": "Repository import never executes lifecycle hooks or follows forbidden links",
+      "verdict": "met",
+      "basis": "Read importer.ts: lstat directory/file checks with symlink and nlink!==1 rejection, O_NOFOLLOW open, realpath equivalence (case-insensitive on win32), pre/post-read stat re-verification against TOCTOU, strict UTF-8 decode with NUL rejection, extension allowlist, excluded directories, 256 files/1 MiB/16 MiB bounds; nothing is executed. tests/planner/evidence/snapshots.test.ts asserts a preinstall canary script is never run (executed.txt ENOENT) and the security suite asserts junction/hardlink/root-alias rejection with the outside canary file untouched. Rerun green."
+    },
+    {
+      "criterion": "An evidence upload/path cannot expose host files or become executable HTML; contributors cannot fetch it",
+      "verdict": "met",
+      "basis": "media.ts performs bounded structure validation (PNG chunk/CRC/dimension caps, JPEG marker walk, UTF-8/NUL text rules, size caps before parsing). routes.test.ts asserts exact inert-download headers against a <script> canary and that the external API returns 404 for evidence routes; store.test.ts asserts transaction-internal session/role enforcement. Handoff honestly limits image validation to structure checking, not a full decoder. Rerun green."
+    }
+  ],
+  "evidenceChallenged": "Sweep/revalidate evidence (revalidate-20261003-planner-evidence.json, revalidate-20261003-security-evidence.json, sweep-20261003-*.json) opened and verified as genuine recorded runs (real command arrays, timestamps, exit 0, untruncated vitest output with pass counts); not canned files.",
+  "limitations": [
+    "Shared drift (docs/DECISIONS.md, scripts/execution.mjs) is today's coordinator batch and is accounted for under declared shared paths; the _journal.json delta is solely the additive 0007 entry, which I read and verified CREATE-only.",
+    "Snapshot capture against a concurrently mutating hostile namespace remains an operator assumption (quiescent source), as disclosed in the handoff; not re-proven here.",
+    "Image understanding remains absent by design; image validation is structural, not semantic.",
+    "This review does not close M5 real-runner, live-model, human-study or delivery gates."
+  ],
+  "reviewedAt": "2026-10-03T16:56:25.218Z"
+}

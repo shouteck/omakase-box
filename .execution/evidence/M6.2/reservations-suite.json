@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:portal",
+    "--",
+    "--suite",
+    "reservations"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:20:56.529Z",
+  "finishedAt": "2026-10-03T23:21:03.873Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/portal/reservations/reservations.test.ts \u001b[2m(\u001b[22m\u001b[2m22 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 872\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m M6.2 boundary: no chat, no private AI endpoint \u001b[2m(1)\u001b[22m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m registers exactly the released-data route families and never a chat/AI route\u001b[33m 366\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m22 passed\u001b[39m\u001b[22m\u001b[90m (22)\u001b[39m\n\u001b[2m   Start at \u001b[22m 07:21:00\n\u001b[2m   Duration \u001b[22m 2.78s\u001b[2m (tests 38%, import 36%, transform 26%)\u001b[22m\n\n"
+}

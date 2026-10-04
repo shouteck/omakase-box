@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "reviewer": "opencode-reviewer-subagent-rebind-20261004b",
+  "revisionDigest": "67752a2f9d0142d86760918e3229a0ff3f6427bf4798fa321479a951f0b51406",
+  "decision": "no_decision_blocked",
+  "checkedAt": "2026-10-03T20:24:19.485Z",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M0.1 review-20261004b-check-rerun scripts/pnpm.mjs check",
+      "evidence": ".execution/evidence/M0.1/review-20261004b-check-rerun.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M0.1 review-20261004b-build-rerun scripts/pnpm.mjs build",
+      "evidence": ".execution/evidence/M0.1/review-20261004b-build-rerun.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M0.1 review-20261004b-doctor-rerun scripts/pnpm.mjs doctor --json",
+      "evidence": ".execution/evidence/M0.1/review-20261004b-doctor-rerun.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-20261004b-e2e-intent scripts/pnpm.mjs test:e2e -- --suite intent",
+      "evidence": ".execution/evidence/M2.3/review-20261004b-e2e-intent.json",
+      "exitCode": 0
+    }
+  ],
+  "criterionFindings": {
+    "manifestByteVerification": "Recomputed SHA-256 over file bytes and byte counts for all 45 paths in the current recorded manifest .execution/evidence/M5.2/revision-67752a2f9d0142d86760918e3229a0ff3f6427bf4798fa321479a951f0b51406.json against the working tree: all match. taskDefinitionSha256 matches the live task graph digest. No approval is recorded and none is implied.",
+    "productPathByteIdentity": "Compared by path against the prior blocked-task revision-4b431fd6995dc7911fe211738e3ffda96477a2337d53e18bb888d05b59118361 manifest: differences are only docs/DECISIONS.md, scripts/execution.mjs (disclosed shared batch). Product paths including services/runner-controller/isolation/plan.ts are byte-identical (304beabe6e5bc3205f053016eb540ab2b15498063f7ab9612f7d8ebe0446df9f).",
+    "gateStatus": "The mandatory --real runner checks (pnpm test:runner -- --real; pnpm test:security -- --suite runtime --real) remain unexecuted: the dedicated operator-owned Linux KVM host is not configured and no development-host substitute is authorized. This note records the blocked state only; the local isolation-plan implementation remains static/tests-only with integratedIntoRuntime=false, executionAvailable=false and realValidation unverified."
+  },
+  "productPathByteIdentity": {
+    "verified": true,
+    "changedPaths": [
+      "docs/DECISIONS.md",
+      "scripts/execution.mjs"
+    ]
+  },
+  "notes": [
+    "Note-only report: no review decision is made for M5.2; decision field is no_decision_blocked because the task is blocked and no approval exists to verify.",
+    "This report does not run, and does not claim to run, any --real suite; the shared check/build/doctor/e2e runs are workspace-wide foundation checks only and do not validate M5.2 runtime isolation.",
+    "taskDefinitionSha256 consistency: matches live graph"
+  ]
+}

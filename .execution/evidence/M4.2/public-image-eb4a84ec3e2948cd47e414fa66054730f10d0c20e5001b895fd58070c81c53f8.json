@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "assurance": "tested",
+  "imageDigest": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+  "sourceContextHash": "1db95bb47287ffce16eba7fcad21a2e9b1219c82331a0db6941a735d6aad396d",
+  "files": [
+    {
+      "path": ".dockerignore",
+      "bytes": 204,
+      "sha256": "bd742fe05cbc9f69af356794acdbb59b8a20b6169399bbe871bdf7bacccbc387"
+    },
+    {
+      "path": "bootstrap/package-lock.json",
+      "bytes": 566,
+      "sha256": "9aafa3380148d0009d16b1e91a225953bb0e164da5840be69127c283e1477200"
+    },
+    {
+      "path": "bootstrap/package.json",
+      "bytes": 82,
+      "sha256": "3d68f9d324fc496bdec7448e5ea2642139aa47f9583f7f76a8b3a34f402d40e8"
+    },
+    {
+      "path": "Dockerfile",
+      "bytes": 764,
+      "sha256": "e1cba32b4443219092c8ede7132e9e14b7c44346c818f827127fb0e0454d8e9d"
+    },
+    {
+      "path": "self-check.mjs",
+      "bytes": 1277,
+      "sha256": "ecc00dead0b6e54326cf053825f0c54ec50461f75369a72c8bcb0ee90f1dc81a"
+    },
+    {
+      "path": "toolchain/package.json",
+      "bytes": 411,
+      "sha256": "02c46b4a9b01c0102b8e7b857c91e977e5ebfe898b657eb9b5c4f89b1f331848"
+    },
+    {
+      "path": "toolchain/pnpm-lock.yaml",
+      "bytes": 17395,
+      "sha256": "6b2f8974598fd36eb29a326a147abb2ff0788950d6a9f1e7044a088c6fd3b39b"
+    },
+    {
+      "path": "toolchain/pnpm-workspace.yaml",
+      "bytes": 94,
+      "sha256": "995241f6981106e8567d113accd2da09be2c74a994800b62cbc6b814b42015b5"
+    }
+  ],
+  "tooling": {
+    "assurance": "tested",
+    "scope": "Pinned public toolchain and trusted blank-browser smoke only; no task code, no VM/isolation/readiness claim.",
+    "node": "24.11.0",
+    "playwright": "1.63.0",
+    "typescript": "6.0.3",
+    "react": "19.3.0",
+    "uid": 1001,
+    "candidateExecuted": false
+  },
+  "layers": {
+    "assurance": "bounded",
+    "imageDigest": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+    "configurationDigest": "sha256:6452ae90c1f2607d3249c56cb0ddce2aace0a71a34505abba64dd18d06fedfda",
+    "layerDigests": [
+      "sha256:b9a65b3c65ab22d490085bd0bf5490e2409da8748b406870f2463bdc41cd6795",
+      "sha256:05b61f708389aecf2a9b2e058f554db6d84eb17811415f3b34768feebe0bea14",
+      "sha256:73a48c91864c16f507959610c8534667ab25537630e84399f31d968661ed94f9",
+      "sha256:cd7e6e338465408114835eb137df15785b6ac45c2b8046f78773557fe7c0a51c",
+      "sha256:67c5b2ab4bb8dd6c3ece663ece744316ccae0552a54bc2b27e811611cf366472",
+      "sha256:cd321a6dc023a72bba4dc6b34cef9892a2112c17860f4225691daa6a333aa005",
+      "sha256:656afaafaa812f188da425142df4d594b7639d8918fd42490523da6f151b11a8",
+      "sha256:ef922ffa315bcee15133496649b075a5950f6f08806746884e51023d660d4801",
+      "sha256:e2e845fa834e85a458755c87a847f94457787df014b47239565c4d5326177ceb",
+      "sha256:2142f118bc0a046f533328a4bf7271333fcef55fbf44acff037a9b81e8c91bba",
+      "sha256:510cee54c7a6953273eb7ec899746e46b4b464021c96b58e13d93da09a4d855e",
+      "sha256:499ee9ae8cbfdd7d3133e4a57e800ba7e066672f56a28cb8d10988d7e08726fc",
+      "sha256:0c341d2af9ae814de52b8e8062e000aebf886e5b0af970bf5a21f893434e4049",
+      "sha256:d93abb5fa95e2cc78bea16d03db4233c679745b0da0009664873350c3b9ef885",
+      "sha256:a3808979982d18159dcdd04083da0d8cd5aa4c26641e0220b962f9fb6fc2b0c0",
+      "sha256:144253bc8938b5aea48161858a8801138a2fe0f18060be125143f6c7b2322e6f"
+    ],
+    "filesScanned": 31066,
+    "bytesScanned": 2779100026,
+    "violations": [],
+    "scope": "Every saved layer path and regular-file payload; known synthetic private canaries. Public upstream image provenance remains a vendor trust assumption, not semantic confidentiality or VM proof."
+  },
+  "historySha256": "7fc0c7d39665134a621397c90dcbd8af6e3d68ab6bb116729af8783f0d404642",
+  "history": [
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:34+08:00",
+      "CreatedBy": "CMD [\"node\" \"/opt/toolchain/self-check.mjs\"]",
+      "CreatedSince": "8 minutes ago",
+      "ID": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:34+08:00",
+      "CreatedBy": "WORKDIR /work",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "8.19kB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:34+08:00",
+      "CreatedBy": "USER pwuser",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:34+08:00",
+      "CreatedBy": "ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:34+08:00",
+      "CreatedBy": "COPY self-check.mjs ./self-check.mjs # buildkit",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "16.4kB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:33+08:00",
+      "CreatedBy": "RUN /bin/sh -c node /opt/bootstrap/node_modules/pnpm/bin/pnpm.cjs install --frozen-lockfile --ignore-scripts # buildkit",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "105MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:25+08:00",
+      "CreatedBy": "COPY toolchain/package.json toolchain/pnpm-lock.yaml toolchain/pnpm-workspace.yaml ./ # buildkit",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "41kB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:25+08:00",
+      "CreatedBy": "WORKDIR /opt/toolchain",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "12.3kB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:25+08:00",
+      "CreatedBy": "RUN /bin/sh -c npm ci --ignore-scripts --no-audit --no-fund # buildkit",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "31.8MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:19+08:00",
+      "CreatedBy": "COPY bootstrap/package.json bootstrap/package-lock.json ./ # buildkit",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "20.5kB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:19+08:00",
+      "CreatedBy": "WORKDIR /opt/bootstrap",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "12.3kB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-10-03T11:32:19+08:00",
+      "CreatedBy": "COPY /usr/local/ /usr/local/ # buildkit",
+      "CreatedSince": "8 minutes ago",
+      "ID": "<missing>",
+      "Size": "158MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:42:21+08:00",
+      "CreatedBy": "RUN |9 DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles DOCKER_IMAGE_NAME_TEMPLATE=mcr.microsoft.com/playwright:v%version%-noble NODE_VERSION=24 #= autogenerated= via= ./update-playwright-node.mjs= UBUNTU_MIRROR_PREFIX=azure. /bin/sh -c cd /ms-playwright-agent &&     npm exec --no -- playwright-core install webkit &&     rm /tmp/playwright-core.tar.gz &&     rm -rf /ms-playwright-agent &&     rm -rf ~/.npm/ &&     chmod -R 777 /ms-playwright/webkit-* # buildkit",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "307MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:42:16+08:00",
+      "CreatedBy": "RUN |9 DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles DOCKER_IMAGE_NAME_TEMPLATE=mcr.microsoft.com/playwright:v%version%-noble NODE_VERSION=24 #= autogenerated= via= ./update-playwright-node.mjs= UBUNTU_MIRROR_PREFIX=azure. /bin/sh -c cd /ms-playwright-agent &&     npm exec --no -- playwright-core install firefox &&     chmod -R 777 /ms-playwright/firefox-* # buildkit",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "321MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:42:11+08:00",
+      "CreatedBy": "RUN |9 DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles DOCKER_IMAGE_NAME_TEMPLATE=mcr.microsoft.com/playwright:v%version%-noble NODE_VERSION=24 #= autogenerated= via= ./update-playwright-node.mjs= UBUNTU_MIRROR_PREFIX=azure. /bin/sh -c cd /ms-playwright-agent &&     npm exec --no -- playwright-core install chromium &&     chmod -R 777 /ms-playwright/chromium-* /ms-playwright/chromium_headless_shell-* /ms-playwright/ffmpeg-* # buildkit",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "690MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:42:00+08:00",
+      "CreatedBy": "RUN |9 DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles DOCKER_IMAGE_NAME_TEMPLATE=mcr.microsoft.com/playwright:v%version%-noble NODE_VERSION=24 #= autogenerated= via= ./update-playwright-node.mjs= UBUNTU_MIRROR_PREFIX=azure. /bin/sh -c install -d -m 777 /ms-playwright /ms-playwright/.links &&     mkdir /ms-playwright-agent &&     cd /ms-playwright-agent && npm init -y &&     npm i /tmp/playwright-core.tar.gz &&     npm exec --no -- playwright-core mark-docker-image \"${DOCKER_IMAGE_NAME_TEMPLATE}\" &&     npm exec --no -- playwright-core install-deps &&     rm -rf /var/lib/apt/lists/* # buildkit",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "804MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "COPY ./playwright-core.tar.gz /tmp/playwright-core.tar.gz # buildkit",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "3.13MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "RUN |9 DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles DOCKER_IMAGE_NAME_TEMPLATE=mcr.microsoft.com/playwright:v%version%-noble NODE_VERSION=24 #= autogenerated= via= ./update-playwright-node.mjs= UBUNTU_MIRROR_PREFIX=azure. /bin/sh -c find /etc/apt -type f \\( -name '*.list' -o -name '*.sources' \\)       -exec sed -i \"s|http://archive.ubuntu.com|http://${UBUNTU_MIRROR_PREFIX}archive.ubuntu.com|g; s|http://ports.ubuntu.com|http://${UBUNTU_MIRROR_PREFIX}ports.ubuntu.com|g\" {} + &&     apt-get update &&     apt-get install -y curl wget gpg ca-certificates &&     mkdir -p /etc/apt/keyrings &&     curl -sL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg &&     echo \"deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main\" >> /etc/apt/sources.list.d/nodesource.list &&     apt-get update &&     apt-get install -y nodejs &&     apt-get install -y --no-install-recommends git openssh-client &&     npm install -g yarn &&     rm -rf /var/lib/apt/lists/* &&     adduser pwuser # buildkit",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "376MB"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ENV LC_ALL=C.UTF-8",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ENV LANG=C.UTF-8",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ARG UBUNTU_MIRROR_PREFIX=azure.",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ARG NODE_VERSION=24 # autogenerated via ./update-playwright-node.mjs",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ARG DOCKER_IMAGE_NAME_TEMPLATE=mcr.microsoft.com/playwright:v%version%-noble",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ARG TZ=America/Los_Angeles",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "buildkit.dockerfile.v0",
+      "CreatedAt": "2026-09-05T07:39:02+08:00",
+      "CreatedBy": "ARG DEBIAN_FRONTEND=noninteractive",
+      "CreatedSince": "4 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "",
+      "CreatedAt": "2026-08-17T21:09:51+08:00",
+      "CreatedBy": "/bin/sh -c #(nop)  CMD [\"/bin/bash\"]",
+      "CreatedSince": "6 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "",
+      "CreatedAt": "2026-08-17T21:09:50+08:00",
+      "CreatedBy": "/bin/sh -c #(nop) ADD file:cb9335ce6f27399c2b17787739d6675502767c53e0335ded2a5f0d003d996650 in / ",
+      "CreatedSince": "6 weeks ago",
+      "ID": "<missing>",
+      "Size": "87.6MB"
+    },
+    {
+      "Comment": "",
+      "CreatedAt": "2026-08-17T21:09:48+08:00",
+      "CreatedBy": "/bin/sh -c #(nop)  LABEL org.opencontainers.image.version=24.04",
+      "CreatedSince": "6 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "",
+      "CreatedAt": "2026-08-17T21:09:48+08:00",
+      "CreatedBy": "/bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH",
+      "CreatedSince": "6 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    },
+    {
+      "Comment": "",
+      "CreatedAt": "2026-08-17T21:09:48+08:00",
+      "CreatedBy": "/bin/sh -c #(nop)  ARG RELEASE",
+      "CreatedSince": "6 weeks ago",
+      "ID": "<missing>",
+      "Size": "0B"
+    }
+  ],
+  "archive": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.runtime\\public-image-audit-rZbcgt\\image.tar",
+  "actualVmValidation": "unverified",
+  "candidateExecuted": false
+}

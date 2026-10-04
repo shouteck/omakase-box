@@ -1,0 +1,3 @@
+# Coordinator dispatch template
+
+Implement task <ID> from milestones/<MILESTONE>.md. Read AGENTS.md, the task card and these required spec sections: <sections>. Prerequisites and accepted handoffs: <paths>. Write scope: <paths>. Shared-file requests go to the coordinator. Implement observable behaviour and run <checks>. Place bounded check evidence in .execution/evidence/<ID>/ and a draft handoff at .execution/drafts/<ID>-<attempt>.md. Do not modify canonical state or declare yourself reviewed/done. Stop only when the card is ready for review or its explicit prerequisite blocks it; report the blocker and any safe independent progress. This is a bounded subtask of an authorized MVP build, not authority for external publication, payment or production actions.

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M7.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/verify-acceptance.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T04:51:46.835Z",
+  "finishedAt": "2026-10-04T04:51:47.817Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"private\":{\"ownerGuard\":\"tested\",\"payableBinding\":\"tested\",\"atomicCommit\":\"tested\",\"replayDenied\":\"tested\",\"immutability\":\"tested\",\"settlementFlow\":\"tested\",\"outboxGuards\":\"tested\",\"compensationPath\":\"tested\",\"authority\":\"synthetic_schema_test_not_runner_verdict\"}}\n"
+}

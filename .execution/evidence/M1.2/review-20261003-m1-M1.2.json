@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "reviewer": "opencode-reviewer-subagent-m1-20261003",
+  "reviewedAt": "2026-10-04",
+  "role": "distinct independent reviewer; did not implement; reviewed docs/SECURITY.md, docs/SPEC.md, docs/ARCHITECTURE.md, milestones/M1.md, task cards, drafts and evidence before judging",
+  "revisionBinding": {
+    "manifest": ".execution/evidence/M1.2/revision-5295c3128ba45b51580dbc2a4322742e50e52f7f11c18d141c24369c2009cd61.json",
+    "entries": 70,
+    "digestRecomputedMatchesState": true,
+    "taskDefinitionSha256MatchesCurrentTaskGraph": true,
+    "recomputationMethod": "independent Node script (outside repo) recomputed SHA-256 and byte size of every manifest entry against the working tree",
+    "mismatches": [
+      { "path": "docs/DECISIONS.md", "classification": "shared", "expected": true, "detail": "coordinator edited today; 26488 -> 28711 bytes" },
+      { "path": "scripts/execution.mjs", "classification": "shared", "expected": true, "detail": "coordinator edited today; 7503 -> 7633 bytes" },
+      { "path": "services/private-api/db/migrations/meta/_journal.json", "classification": "product (inside M1.2 writePaths)", "expected": true, "detail": "disclosed additive journal entry idx 7 -> 0007_evaluation_jobs; tags idx 0..6 unchanged; 964 -> 1074 bytes exactly consistent with the appended entry" },
+      { "path": "services/private-api/db/migrations/0007_evaluation_jobs.sql", "classification": "product addition (inside M1.2 writePaths), absent from pre-today manifest", "expected": true, "detail": "coordinator-applied additive migration for M5.3 integration; reviewer read the file: only CREATE TYPE/FUNCTION/TABLE/TRIGGER for private_evaluation_jobs/_results/_logs; no ALTER or DROP touches any existing object, so 'nothing existing changed' holds" }
+    ],
+    "productPathMismatchBeyondDisclosed": false,
+    "missingFiles": 0,
+    "previousAcceptedDiff": {
+      "baseline": ".execution/evidence/M1.2/revision-922f14a4b83d0e83f0c52aa117535938db9c910ced23d244745b392bd8c5af5a.json",
+      "productAdditions": [
+        "services/private-api/db/migrations/0005_private_intake.sql",
+        "services/private-api/db/migrations/0006_immutable_release_content.sql",
+        "tests/auth/persistence/auth-live.test.ts"
+      ],
+      "productChanges": ["services/private-api/db/intent-store.ts", "services/private-api/db/migrations/meta/_journal.json", "services/private-api/db/schema.ts"],
+      "productRemovals": [],
+      "explanation": "Product differences are the M2.1 intake migration/declarations, M2.3 session-object intent-store transaction path and today's disclosed idx-7 journal entry, all recorded in later coordinator-owned manifests; the current manifest binds current bytes exactly. Shared drift matches the disclosed set. No unexplained product difference; original M1.2 guard migrations 0000-0004 and external 0000-0003 are byte-identical since acceptance."
+    },
+    "classification": "expected_drift_only_plus_disclosed_additive_migration"
+  },
+  "acceptanceJudgements": [
+    {
+      "bullet": "Invalid, stale and concurrent transitions cannot bypass the workflow.",
+      "verdict": "pass",
+      "evidence": "tests/contracts/workflow/transitions.test.ts (10 tests, rerun by reviewer): stale version before mutation, requester/operator/contributor outcome-approval denial, owner approval blocked without resolved decisions + exact hash, publication gated on whole-release approval and readiness, no upload while in_review/expired, reactivation without new expiry, acceptance requiring latest-attempt evidence and current private base, infrastructure_failure never -> accepted, settlement only by owner with reference and never 'paid'. Reviewer also read scripts/verify-lifecycles.mjs: live PostgreSQL deny() assertions assert exact trigger errors (invalid/stale transitions, evaluation_binding_immutable, supersession_irreversible, obligation_terms_immutable, settlement_required/immutable, outbox_event/delivery_immutable, forged permit_binding_mismatch, cross-contributor submission denial, and the deferred attempt_reservation_commit constraint forcing atomic submission+outbox+reservation commit)."
+    },
+    {
+      "bullet": "Migration from empty DB works; accepted records bind exact contract/package/submission revisions.",
+      "verdict": "pass",
+      "evidence": "tests/auth/persistence/migrations-live.test.ts (rerun by reviewer) creates fresh uniquely-named synthetic databases inside both compose services, migrates and replays, asserts the ten named foundation tables per service, distinguishes additional intake tables, and asserts no private_ tables in external with cleanup preserved_no_drop; reviewer read scripts/verify-empty-migrations.mjs and confirmed the assertion is real (assert.equal(foundationTables.length,10) against a fixed expected list). Binding: private 0002/0003 triggers (approved_revision_immutable, owner_required on approval/release/acceptance, release_binding_mismatch, completed_latest_evaluation_required, acceptance<->payable exact (event_id,id) FK pair, evaluation binding immutability over permit/task/submission/package/base hashes) and external 0001/0002/0003 (reservation terms immutable, submission binding immutability, permit_binding_mismatch across permit fields, superseded_attempt, committed outbox FK)."
+    }
+  ],
+  "reruns": [
+    {
+      "command": "node scripts/evidence.mjs M1.2 review-20261003-2-persistence scripts/pnpm.mjs test:auth -- --suite persistence",
+      "evidence": ".execution/evidence/M1.2/review-20261003-2-persistence.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "4/4 live persistence tests passed: real-DB workflow/concurrency invariants, lifecycle/immutability guards, fresh-database migration+replay (foundation tableCount 10), and the full verify-auth synthetic API journey; no rate-limit restart needed"
+    },
+    {
+      "command": "node scripts/evidence.mjs M1.2 review-20261003-3-workflow scripts/pnpm.mjs test:contracts -- --suite workflow",
+      "evidence": ".execution/evidence/M1.2/review-20261003-3-workflow.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "1 file / 10 tests passed (expectation 10 met)"
+    }
+  ],
+  "retainedFailures": [
+    { "file": ".execution/evidence/M1.2/review-20261003-1-persistence.json", "detail": "reviewer's own first evidence attempt exited 1 due to an argument-convention error (literal 'node' passed to evidence.mjs); disclosed, no product significance, superseded by the corrected run" },
+    { "file": ".execution/evidence/M1.2/lifecycle-before-fix.json", "detail": "historical: initial guard regression allowed received -> accepted before 0003_lifecycle_guards; fixed by adding guards, not by editing expectations (draft and manifest evidence consistent)" }
+  ],
+  "structuralNote": "tests/workflow/** from the card writePaths does not exist on disk; the workflow model tests live under tests/contracts/workflow/** (M1.1-adjacent shared tests) and the live persistence tests under tests/auth/persistence/** (explicit M1.2 writePaths). The card's Verify commands both pass, so this is recorded as an observation, not a finding.",
+  "limitations": "SQL triggers and store logic are structural persistence guarantees: they do not verify Ed25519 signatures, quota reservation, authenticated VM results or owner acceptance authority; those are M5/M6/M7 gates. All records are synthetic and unsigned; permits use fixture signatures.",
+  "verdict": "approved"
+}

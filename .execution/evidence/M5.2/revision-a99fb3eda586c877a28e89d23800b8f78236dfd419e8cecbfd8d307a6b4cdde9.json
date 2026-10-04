@@ -1,0 +1,192 @@
+{
+  "taskId": "M5.2",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 57796,
+      "sha256": "d821cf846158c4bfb3379627fc2c0324da37646cd9eb180a73a79922aef29c51"
+    },
+    {
+      "path": "infra/runner/broker.py",
+      "bytes": 16669,
+      "sha256": "0b7346618012b8f714ebc2c53d36fa5aa59865863578b03a5e4c6722bbf44171"
+    },
+    {
+      "path": "infra/runner/composition/composed-supervisor.mjs",
+      "bytes": 4962,
+      "sha256": "a2055654e13e998dd7167af9a58a980fe678b957138c334a4d09cc633e26e7b0"
+    },
+    {
+      "path": "infra/runner/composition/driver-composed.mjs",
+      "bytes": 8964,
+      "sha256": "e2704021dc0026b54cb804748ff5b79b638ba38ce504c56d2fb3ea71f28ff495"
+    },
+    {
+      "path": "infra/runner/composition/policy-apply.mjs",
+      "bytes": 4994,
+      "sha256": "9951572a357d304243f1d8a418f8ee87e4b77952271c48538df54ba2e250a4a3"
+    },
+    {
+      "path": "infra/runner/composition/proxy-profile.mjs",
+      "bytes": 7118,
+      "sha256": "b7774fd5f57b2e22f77ff34fcd3f7dc2d36c4c9333f6a522d71e94a95d1db63b"
+    },
+    {
+      "path": "infra/runner/jobs/guest-provision.yaml",
+      "bytes": 3856,
+      "sha256": "69f272a89fc839bf4edb974e2349a307027b9df98c469b295f6b9a640d7ca5f7"
+    },
+    {
+      "path": "infra/runner/jobs/harness/container-init",
+      "bytes": 2861,
+      "sha256": "429b856ef655b6d264a96ee448494be81cb2f878b8385d636b7812d3ba914cc9"
+    },
+    {
+      "path": "infra/runner/jobs/harness/driver-pure-module.mjs",
+      "bytes": 5456,
+      "sha256": "3f190258bde926bcf1d2da0cf77d8d19a714ceab7d19a708ebce1e3193c8f5ba"
+    },
+    {
+      "path": "infra/runner/jobs/harness/observations.mjs",
+      "bytes": 1446,
+      "sha256": "aa49db0ba3e5e55b6503ebdc1693137d55394c542f4c0716e72a31851ccf8c75"
+    },
+    {
+      "path": "infra/runner/jobs/harness/records.mjs",
+      "bytes": 8996,
+      "sha256": "6aad21ef091adbb91a1b8548672a0cf3b730f986460309f9adb26eec57b81ded"
+    },
+    {
+      "path": "infra/runner/jobs/harness/sandbox-spec.mjs",
+      "bytes": 6290,
+      "sha256": "48860d72c546b169dd4c8fdb89b1a11123531f628a71c47d6657e7c33a467131"
+    },
+    {
+      "path": "infra/runner/jobs/harness/supervisor.mjs",
+      "bytes": 16337,
+      "sha256": "25b3a99fffd4e85f613f44456d3c4eba0bec7b2c0287b688cf7e54d5dc9c3d8b"
+    },
+    {
+      "path": "infra/runner/jobs/tooling/build.mjs",
+      "bytes": 4256,
+      "sha256": "d745ee9a4d53fb8deef2ac4ae2cff2c0cb3c214e2c8faba992f636130a4e464a"
+    },
+    {
+      "path": "infra/runner/jobs/tooling/worker.mjs",
+      "bytes": 2879,
+      "sha256": "1c6468efda5f9b47c445cdc24ee5c8baa59c29d6ff165cf0fa8cb10e6765aa1e"
+    },
+    {
+      "path": "packages/runner-protocol/index.ts",
+      "bytes": 5499,
+      "sha256": "9042fa80e9b5369050d0820445b5e8811c19d1b81c5b3eb201395dabe397966d"
+    },
+    {
+      "path": "services/runner-controller/controller.ts",
+      "bytes": 1004,
+      "sha256": "93355def6d6b606cd3034e02b330c7111d4965f4310698dc6d7f3c706b07b2d5"
+    },
+    {
+      "path": "services/runner-controller/isolation/adversarial.ts",
+      "bytes": 7131,
+      "sha256": "06158f79d1439bc6d7f12457da790cc1b85353b756e9eecc401e5941216d3180"
+    },
+    {
+      "path": "services/runner-controller/isolation/observations.ts",
+      "bytes": 3289,
+      "sha256": "d139965161b3b77b8f243953e884bcfde236751e28254cd7fea824ee4fa203e0"
+    },
+    {
+      "path": "services/runner-controller/isolation/plan.ts",
+      "bytes": 5802,
+      "sha256": "304beabe6e5bc3205f053016eb540ab2b15498063f7ab9612f7d8ebe0446df9f"
+    },
+    {
+      "path": "services/runner-controller/isolation/plan.ts",
+      "bytes": 5802,
+      "sha256": "304beabe6e5bc3205f053016eb540ab2b15498063f7ab9612f7d8ebe0446df9f"
+    },
+    {
+      "path": "services/runner-controller/isolation/run-request.ts",
+      "bytes": 4884,
+      "sha256": "b5aa4e3acc036312e61ddf99ee2c2b3ea5e39322c53ec8ba4e48a786825e4827"
+    },
+    {
+      "path": "services/runner-controller/provider.ts",
+      "bytes": 3474,
+      "sha256": "5b158edddf6bf38bed9d70b2e91cab5582f7f7863dac37046dbd75c694ff16d7"
+    },
+    {
+      "path": "services/runner-controller/transport.ts",
+      "bytes": 3524,
+      "sha256": "57246345c060829150123643288657416862121d5a8ba59a2ec53bfe232581a6"
+    },
+    {
+      "path": "tests/runner/composition/attempt.test.ts",
+      "bytes": 7514,
+      "sha256": "c57cdbdd9b520a75b0b2d53ca9218fdc627d84848aefeff4bf7ad904bcfa0712"
+    },
+    {
+      "path": "tests/runner/composition/proxy-profile.test.ts",
+      "bytes": 4186,
+      "sha256": "e306bc81bb46192cdff0d9ecd6a65c8d89ecf28db27d9a69b1f8b1d194ab2a65"
+    },
+    {
+      "path": "tests/runner/lifecycle/protocol.test.ts",
+      "bytes": 17163,
+      "sha256": "5e5f923173db17c059b58abe3a53933b2ba74fa91ebf30f89295882d67e966a6"
+    },
+    {
+      "path": "tests/runner/lifecycle/store-live.test.ts",
+      "bytes": 5691,
+      "sha256": "dcda62ba618aaf32c10e54580ccb70868616ad5d1aaaad0f2ade4b6e336dc342"
+    },
+    {
+      "path": "tests/runner/protocol/broker_cases.py",
+      "bytes": 14282,
+      "sha256": "893e85159da5320745385e2b5fec11bea78f7eaa7ef74be56dfa53ec6c6a865e"
+    },
+    {
+      "path": "tests/runner/protocol/broker-check.mjs",
+      "bytes": 396,
+      "sha256": "57ad8fb88afb85fd0f7c70901ab75597addebbb3d024fd4e83a0a6b55bb90dfe"
+    },
+    {
+      "path": "tests/runner/protocol/protocol.test.ts",
+      "bytes": 12688,
+      "sha256": "af5bf923f84844d10e77f2767b708778878550c2b5488cb94610e97f2be56ff9"
+    },
+    {
+      "path": "tests/security/runtime/driver.test.ts",
+      "bytes": 6363,
+      "sha256": "af526ad1c94f41a34b78589bc5670a94d18402696a4a6568f7a58fc10a12b807"
+    },
+    {
+      "path": "tests/security/runtime/guest-records.test.ts",
+      "bytes": 9520,
+      "sha256": "66a1c957e97c9dc8103b4c0f3da319eded841a9dd0d93552d60ac39ad5d8c47e"
+    },
+    {
+      "path": "tests/security/runtime/plan.test.ts",
+      "bytes": 14506,
+      "sha256": "f3c42a1d7e03b06e7526d4aafaf1ee8d646248ed822c05957351186c993936c6"
+    },
+    {
+      "path": "tests/security/runtime/run-request.test.ts",
+      "bytes": 7580,
+      "sha256": "bd123313ef0abe724e4b2386c1f6dc5e3a8014ed6d115f4f1f48f234b654ec53"
+    },
+    {
+      "path": "tests/security/runtime/sandbox.test.ts",
+      "bytes": 5760,
+      "sha256": "a89aaf78e9be10d0c213bd794367379fd3ac5c0e2274c7d1927f35b86f4357d1"
+    },
+    {
+      "path": "tests/security/runtime/staging.test.ts",
+      "bytes": 4408,
+      "sha256": "f6d4f0e217eca84d0b14863fbcb54567ddfd6a2afff7f1d536a6f024d8028d2a"
+    }
+  ]
+}

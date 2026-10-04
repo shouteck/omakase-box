@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:35:19.117Z",
+  "finishedAt": "2026-10-03T23:35:28.301Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "services/external-api/reservations/live-fixture.ts(95,17): error TS2339: Property 'rowId' does not exist on type 'ReservationView'.\r\nservices/external-api/reservations/live-fixture.ts(95,37): error TS2339: Property 'rowId' does not exist on type 'ReservationView'.\r\n"
+}

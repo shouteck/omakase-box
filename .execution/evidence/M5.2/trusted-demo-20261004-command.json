@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M5.2/trusted-demo-20261004.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T18:16:22.300Z",
+  "finishedAt": "2026-10-03T18:16:24.197Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nbrowserType.launch: Executable doesn't exist at C:\\Users\\shout\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1243\\chrome-headless-shell-win64\\chrome-headless-shell.exe\r\n╔════════════════════════════════════════════════════════════╗\r\n║ Looks like Playwright was just installed or updated.       ║\r\n║ Please run the following command to download new browsers: ║\r\n║                                                            ║\r\n║     npx playwright install                                 ║\r\n║                                                            ║\r\n║ <3 Playwright Team                                         ║\r\n╚════════════════════════════════════════════════════════════╝\r\n    at C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.execution\\evidence\\M5.2\\trusted-demo-20261004.mjs:89:34 {\r\n  log: [],\r\n  name: 'Error'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

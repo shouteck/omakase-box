@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/verify-runtime.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:06:01.345Z",
+  "finishedAt": "2026-10-02T18:06:07.755Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\n  \"assurance\": \"tested\",\n  \"profile\": \"trusted_synthetic_compose_not_submission_runner\",\n  \"private\": {\n    \"ownDatabase\": \"tested\",\n    \"ownStorageWritable\": true,\n    \"rollback\": \"tested\",\n    \"ownerCount\": 1,\n    \"oneTimeReplay\": \"denied\",\n    \"concurrentBootstrap\": \"both_denied_existing_owner\",\n    \"tokenRotationCannotReset\": true\n  },\n  \"external\": {\n    \"ownDatabase\": \"tested\",\n    \"ownStorageWritable\": true,\n    \"privateDatabaseConnections\": \"denied\",\n    \"privateSourceSecretsStorageSocket\": \"absent\"\n  },\n  \"loopbackAndSafeHealth\": \"tested\",\n  \"limitations\": [\n    \"Not real customer data, full sessions/CSRF or hostile-code VM validation.\"\n  ]\n}\n"
+}

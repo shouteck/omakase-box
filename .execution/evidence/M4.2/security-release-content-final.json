@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:security",
+    "--",
+    "--suite",
+    "release-content"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T14:16:54.469Z",
+  "finishedAt": "2026-10-03T14:17:32.893Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/security/release-content/image.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 37139\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m real public image verification rechecks every layer and history plus pinned trusted tooling, never candidate execution\u001b[33m 36879\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m   Start at \u001b[22m 22:16:55\n\u001b[2m   Duration \u001b[22m 37.38s\u001b[2m (tests 100%)\u001b[22m\n\n"
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/check-startup.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:19:17.921Z",
+  "finishedAt": "2026-10-02T03:19:19.898Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"service\":\"private-api\",\"missingConfiguration\":\"failed_closed\",\"rawPrivateError\":\"not_exposed\"}\n{\"assurance\":\"tested\",\"service\":\"external-api\",\"missingConfiguration\":\"failed_closed\",\"rawPrivateError\":\"not_exposed\"}\n"
+}

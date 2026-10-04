@@ -1,0 +1,167 @@
+{
+  "taskId": "M7.2",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": "apps/private-console/review/review-panel.tsx",
+      "bytes": 3654,
+      "sha256": "5aa1bd24e658149b73f55d9d4801f3f079a5de293d5a548768303a1f7a4f88f9"
+    },
+    {
+      "path": "apps/private-console/src/bootstrap/main.tsx",
+      "bytes": 4800,
+      "sha256": "43f08e463aa0c7239b5bbe1b5be99dc2953b6e342081efb68d3399cff901edbe"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 63073,
+      "sha256": "f306bda007b773c575aa1edade8d256a17167b8061387c2e7eb5b86c0f7926cb"
+    },
+    {
+      "path": "infra/trusted.Dockerfile",
+      "bytes": 6240,
+      "sha256": "c6d77d1e9f8b637c82242d420b999ef2a8ef4f0181ff6a1fc9a5d659cc4170e2"
+    },
+    {
+      "path": "packages/contracts/public/feedback-bridge.ts",
+      "bytes": 1379,
+      "sha256": "c94168fb17d78997726f2f5dbc59a72173fd957cb4dc7133c727f90e13c35963"
+    },
+    {
+      "path": "scripts/execution.mjs",
+      "bytes": 8295,
+      "sha256": "ec028276052a97b082caf38d2994280b174d81273836c3cce212932cae50778f"
+    },
+    {
+      "path": "scripts/verify-acceptance.mjs",
+      "bytes": 7963,
+      "sha256": "5b705dfacd7187edd0188a02eb383d61edde45af04e05c5eb5616a23ce43ce14"
+    },
+    {
+      "path": "scripts/verify-auth.mjs",
+      "bytes": 12473,
+      "sha256": "f249e8987f7a8c17edce1c6341a08b9de8a2cbd758a61c2b91bbfc4b287a6472"
+    },
+    {
+      "path": "scripts/verify-lifecycles.mjs",
+      "bytes": 10151,
+      "sha256": "19a17dcbfc1d8447e1caa1534bf0b01c55b5fa7f75b084f28e4f6cb306740980"
+    },
+    {
+      "path": "services/external-api/auth/routes.ts",
+      "bytes": 2454,
+      "sha256": "a14a4b4b989d6dc9adb43ae81dde919cae603ef2b6c60a8dc297298ee06c148e"
+    },
+    {
+      "path": "services/external-api/db/migrations/0007_feedback.sql",
+      "bytes": 306,
+      "sha256": "d20d3de9b6b3461f8264cb1b5212f18b39535036d630a80e7815ccc893c1e914"
+    },
+    {
+      "path": "services/external-api/db/migrations/meta/_journal.json",
+      "bytes": 1232,
+      "sha256": "ef1ea4976dc19b54d96ab1c425ba5ee18aeb0fbf04c5ee212745729876f48cc8"
+    },
+    {
+      "path": "services/external-api/src/bootstrap/main.ts",
+      "bytes": 3192,
+      "sha256": "5dec09c86e89ebd3c202aed496c4938570c9d7e754c5183ab5b38dd4515a8faa"
+    },
+    {
+      "path": "services/external-api/src/bootstrap/server.ts",
+      "bytes": 4043,
+      "sha256": "c0435d0695002d014995a92fbb4f570a53146474b882073be540d351a426d932"
+    },
+    {
+      "path": "services/external-api/status/receiver.ts",
+      "bytes": 2732,
+      "sha256": "8d057db6aad266d4048eda33b27d5ba2e5e90e5cad970557cdbf92801479a7dd"
+    },
+    {
+      "path": "services/external-api/status/routes.ts",
+      "bytes": 3089,
+      "sha256": "ce6bdca731645b852b5e10454a7eafad65a81ac71ae0a8405f2675ed4d5a82b4"
+    },
+    {
+      "path": "services/external-api/status/store.ts",
+      "bytes": 3292,
+      "sha256": "713b12569daea93ef25d63a69e4669e86b006051c4d9ff3f2fa736f070be151e"
+    },
+    {
+      "path": "services/private-api/acceptance/routes.ts",
+      "bytes": 2933,
+      "sha256": "dedd0fe194cda6b4e915eecc19d0736e6c01d8e8331d85a1b8541c6b97b702e5"
+    },
+    {
+      "path": "services/private-api/acceptance/store.ts",
+      "bytes": 15105,
+      "sha256": "728c929119513cfc3d97eac789d360b75a8ff0d77aa49a9c99eb0f0b72065606"
+    },
+    {
+      "path": "services/private-api/db/migrations/0011_feedback_submission.sql",
+      "bytes": 1029,
+      "sha256": "ba2dd26ccfa00cc982c8be783e3393404977e5431b215a40945c125f6b2d92b0"
+    },
+    {
+      "path": "services/private-api/db/migrations/meta/_journal.json",
+      "bytes": 1825,
+      "sha256": "bb723e93bf3edf4890949bec65dc74c2acfc6fda55dc0a3f7f700b766042681d"
+    },
+    {
+      "path": "services/private-api/db/schema.ts",
+      "bytes": 10032,
+      "sha256": "23e68cc67e701147df6e32a642b350efbbd54ce120af4c142bd513ecdd45e14c"
+    },
+    {
+      "path": "services/private-api/feedback/delivery.ts",
+      "bytes": 3635,
+      "sha256": "dd539ae2746b9eccac329a88df9780b1093108154e8a71e748176d94ef475fe7"
+    },
+    {
+      "path": "services/private-api/feedback/policy.ts",
+      "bytes": 3763,
+      "sha256": "30ebabcb38c9a688bb806e616bea0b37280b27c84200fb89ef8e365d5fcaeef6"
+    },
+    {
+      "path": "services/private-api/feedback/store.ts",
+      "bytes": 2407,
+      "sha256": "68b671afbc2d6ae2c2fa88e24c283b0350d7b8bc8f0fa96fa34f64b18f0b7a42"
+    },
+    {
+      "path": "services/private-api/ledger/acceptance-transaction/record.ts",
+      "bytes": 4380,
+      "sha256": "25f252a0ce33cb0dbedee0c5b7eae82d21464855bdd1b0e6e9e12410b40ed8a7"
+    },
+    {
+      "path": "services/private-api/src/bootstrap/main.ts",
+      "bytes": 6301,
+      "sha256": "cf7c3bbd162776f546216cc0e287ef78b54fb29116f333f1c2d9d9051655f063"
+    },
+    {
+      "path": "services/private-api/src/bootstrap/server.ts",
+      "bytes": 5107,
+      "sha256": "986b95c1333c53250842c6c1808f9a81a759437b8180055f6f2854f328eb5753"
+    },
+    {
+      "path": "tests/acceptance/atomic-acceptance/atomic-live.test.ts",
+      "bytes": 533,
+      "sha256": "d456ea446a51e1f3265ce3afe2d6032575933fbbb82ec819cd6d3b1f836e13c9"
+    },
+    {
+      "path": "tests/acceptance/feedback/renderer.test.ts",
+      "bytes": 4894,
+      "sha256": "6e37c1d34b20473d2bd5112edda5e218256a806192437cdc18de4c415bab3e24"
+    },
+    {
+      "path": "tests/acceptance/feedback/routes.test.ts",
+      "bytes": 7880,
+      "sha256": "ff7f4e66b1e7aaf3235d920a826bcc0bdfff68e1f428a459a25431069a87c415"
+    },
+    {
+      "path": "tests/security/feedback/injection.test.ts",
+      "bytes": 7956,
+      "sha256": "1cd9d3e34e03866af79dee67fcf840ffc2727001668eeefff6a01187c5ab90c1"
+    }
+  ]
+}

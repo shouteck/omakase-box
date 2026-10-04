@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/e2e/intent/journey.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs",
+    "-t",
+    "review starts with a concise"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T18:24:08.678Z",
+  "finishedAt": "2026-10-03T18:24:22.568Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/e2e/intent/journey.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m | \u001b[22m\u001b[33m5 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 12348\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m a goal entered without technical detail produces a reviewable draft in demo mode with plain-language facts and provenance\n\u001b[31m   \u001b[31m×\u001b[31m review starts with a concise goal, before/after and one question while audit details and editing stay expandable\u001b[39m\u001b[33m 12346\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m required unresolved decisions block preparation, then a decision, readiness, exact-hash owner approval and edit-after-approval invalidation flow correctly\n   \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m a full-stack plus codebase-policy outcome is described, generated and reviewed as ONE composed task draft\n   \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m hostile goal content renders as escaped text only and never executes in the private console origin\n   \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m demo intent drafts remain visible to the owner while private details stay out of unauthenticated views\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/e2e/intent/journey.test.ts\u001b[2m > \u001b[22mreview starts with a concise goal, before/after and one question while audit details and editing stay expandable\n\u001b[31m\u001b[1mTimeoutError\u001b[22m: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('heading', { name: 'Your goal', exact: true }) to be visible\u001b[22m\n\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/e2e/intent/journey.test.ts:\u001b[2m76:73\u001b[22m\u001b[39m\n    \u001b[90m 74|\u001b[39m     await page.getByRole('button', { name: 'Generate intent draft' }).…\n    \u001b[90m 75|\u001b[39m     await page.getByRole('heading', { name: 'Intent review', exact: tr…\n    \u001b[90m 76|\u001b[39m     await page.getByRole('heading', { name: 'Your goal', exact: true }…\n    \u001b[90m   |\u001b[39m                                                                         \u001b[31m^\u001b[39m\n    \u001b[90m 77|\u001b[39m     expect(await page.getByRole('heading', { name: 'What will change',…\n    \u001b[90m 78|\u001b[39m     expect(await page.getByRole('heading', { name: 'What needs your de…\n\u001b[90m \u001b[2m❯\u001b[22m withConsole tests/e2e/intent/journey.test.ts:\u001b[2m25:5\u001b[22m\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m tests/e2e/intent/journey.test.ts:\u001b[2m69:18\u001b[22m\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m5 skipped\u001b[39m\u001b[90m (6)\u001b[39m\n\u001b[2m   Start at \u001b[22m 02:24:09\n\u001b[2m   Duration \u001b[22m 13.13s\u001b[2m (tests 95%, import 4%, transform 1%)\u001b[22m\n\n"
+}

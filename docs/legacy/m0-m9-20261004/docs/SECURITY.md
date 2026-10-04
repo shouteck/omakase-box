@@ -1,0 +1,61 @@
+# MVP threat model and mandatory security gates
+
+## Assurance claim and trust boundary
+
+The MVP implements explicitly approved disclosure, isolated execution and auditable private acceptance. It does not establish automatic semantic confidentiality, universal abstraction, safe arbitrary private model output or zero interactive leakage.
+
+Treat repository text, requester uploads, model responses, contributors, patches and generated diagnostics as untrusted at their respective boundaries. Trust the release owner, signed approved assets, canonicalization/compiler implementation, runtime isolation administrator and explicitly scoped private evaluator. Protect private source, secrets, intent, prompts, model state, provenance and internal evaluation. A compromised release owner or VM host remains outside the initial guarantee.
+
+For local development use entirely synthetic company fixtures. Actual submission execution requires a dedicated Linux VM on an operator-owned host separate from the user's ordinary workstation and private-service host. Every public/private evaluation receives a fresh baseline-derived guest with a unique ephemeral disk, or an equivalently verified complete baseline restoration; no mutable guest state survives between attempts. Containers inside it add resource/filesystem constraints but are not advertised as the entire hostile-code boundary. A `fake` or ordinary host/Docker-only development runner cannot satisfy the M5/M9 runner gate. Implement a capability report that checks the selected profile and required controls; operator attestation of the VM is an assumption to record, not a cryptographic proof.
+
+## Approved-only release
+
+An owner approves exact contract, listing, asset bytes, template/image versions, feedback policy and payment vocabulary. Changing one byte invalidates approval. The deterministic compiler has only approved asset-store access. No repository root, model context, arbitrary path or network is available to it. Export generated workspace source and approved fixtures only; exclude Git history, private mappings, actual .env files, caches, node_modules, source maps and private logs. A generated public `.env.example` is permitted only if independently approved and contains no secrets.
+
+Validate every exported path against a strict portable relative-path policy. Reject traversal, absolute paths, symlinks, hardlinks, NUL, case-fold collisions, Windows drive/UNC/device paths, alternate data streams and names ending in spaces/dots. The same policy applies to patch paths. Public packages use a fixed trusted archive writer. Do not extract arbitrary contributor archives.
+
+Canary and deny-pattern checks are release-review aids, not proof that prose or examples conceal proprietary meaning. Company approval itself intentionally releases information. Store the approved policy and semantic-disclosure rationale privately.
+
+## Hostile submissions and isolated evaluator
+
+Accept only bounded UTF-8 unified patches: default 1 MiB and 10,000 changed lines, configurable only by operator policy. No binary, rename, mode, symlink, submodule or dependency-manifest changes. Normalize line endings for parsing without silently changing source semantics. Reject patches to evaluation tests/harnesses, dependency lockfiles/manifests, task setup scripts/build configuration or files outside the exact editable set. Approved customer-application policy/configuration files may be task outputs under the application_policy adapter; they never control evaluation tooling, dependency installation or execution commands. This explicit data-only scope is not permission to edit arbitrary CI/deployment scripts. Validate the base package/version/reservation and apply only inside an isolated job; never execute or apply worker code to a live customer checkout.
+
+Public-check VMs receive only the fixed vetted public image, frozen released package, validated patch and public harness. Separate private-integration VMs additionally receive a minimal credential-free private test bundle for the complete approved task and its work units. Do not provision private data into a public job. Never mount the real repository, private model, host home, daemon socket, signing keys, cloud credentials or unrelated records. Use invented private fixtures in the demonstration. A customer pilot needs a separate minimal-data review. No worker-controlled dependency install, lifecycle script, network fetch or Dockerfile.
+
+Inside the VM use non-root containers, dropped capabilities, no privilege escalation, read-only root, controlled writable work/tmp areas, no host namespaces and no external network. Pure-module backend jobs use network-none. Frontend checks may use per-job internal transport to trusted static assets; composed full-stack checks additionally permit a fixed proxy to the scoped candidate API in a separate sandbox. Application-policy validation is data-only. No general candidate service-discovery, outbound fetch or private-store access is granted; no DNS/external egress or controller endpoint is reachable by the candidate. Default limits: 2 CPUs, 512 MiB memory, 128 processes, 120 seconds, 1 MiB captured logs and 256 MiB writable storage; record actual enforceable values per runner. Exit on limit violations. Destroy the container, guest VM and ephemeral guest disk after each attempt. Keep only bounded trusted evidence outside the guest. Test cross-job persistence and access to the VM management channel; disposal must not rely on worker cleanup code. Prebuild vetted images with pinned dependencies through a trusted build process separate from contribution execution.
+
+The controller uses a fixed operator-configured transport, such as an SSH/SFTP channel to the disposable VM, and a bounded job/result protocol. Server host keys are verified. The worker receives no controller credentials. Job IDs and digest checks prevent stale/replayed results. Detailed results go only to the private evaluation store. Interrupted, unsigned/corrupt or unavailable jobs become infrastructure/unverified results, never acceptance.
+
+## Feedback and evaluation budgets
+
+Publish the allowed contributor vocabulary before reservation: `received`, `processing`, `owner_review`, `accepted`, `changes_required`, `package_defect`, `infrastructure_issue`, `expired`. Public-check failures may include diagnostics derived only from released assets, after their safe renderer passes. Private jobs expose no raw logs, stack traces, secret-derived examples, scores or durations. Owner release of a terminal category is a controlled disclosure under the approved policy. Task status, timing and payment still carry information; do not promise their elimination.
+
+Default budget: three evaluated attempts per reservation, twelve per stable task lineage across versions/contributors, and one hundred per workspace in a rolling seven-day window. Reserve all applicable counters atomically before jobs start. Malformed uploads rejected before evaluation do not consume evaluation budget but have request rate limits. Idempotent duplicate submissions share one attempt. Exhaustion and cancellation terms are frozen with the contract. A new account/version cannot reset lineage/workspace counters. These caps limit exposure and abuse; they are not a proved information-leakage budget.
+
+## Required adversarial tests
+
+The security suite must independently challenge: canaries in source/comments/private paths/prompts/fixtures/logs; identical approved release sets from different private systems; changed asset approval hashes; planner prompt injection; guessed resource IDs and cross-role access; unsafe archive and patch paths including Windows cases; forbidden file reads and host mounts; DNS/network/metadata/daemon access; infinite loops, process/memory/output exhaustion; forged harness/patch/base/result IDs; raw-log and exception exfiltration; concurrent budget bypass and cross-identity resets; expired reservations; publication without required approval; double acceptance/ledger events; and stale private revisions.
+
+Good contributor implementations must still pass. Include a contract-compliant alternative implementation that differs from the reference. Inject a private integration requirement missing from the external contract: it must be classified as a package defect and eligible compensation, rather than hidden contributor failure.
+
+Unit/mocked protocol tests support development; real hostile-code jobs under the required VM profile are separately mandatory. Record exactly which controls were exercised and which remain operator assumptions. Test absence of private data in HTTP bodies, headers, package bytes, errors, UI bundles, screenshots intended for export, audit DTOs and payment projections.
+
+## Operational limits
+
+No production deployment, automatic merge, real payment, external publishing, participant messaging or real private data release is authorized by the build command. These are later customer/user decisions. Security/privacy claims in the README and UI must match the evidence. Keep logs private, cap retention, and supply workspace-scoped export/deletion procedures that preserve payment/audit records according to explicit owner policy.
+
+## Additional reviewed gates
+
+Real-browser tests inspect credential-bearing requests and prove that `contributor.localhost` receives no `private.localhost` session cookie, even on the same loopback IP. Host-only cookie configuration, no shared Domain, exact CORS origins and CSRF rejection are mandatory.
+
+A trusted supervisor outside the contributor process/container owns harness expectations and authenticated final results. Untrusted JS never shares its global environment, signing key or test-library instance. Add process.exit(0), fake passed stdout, monkeypatched assertions, supervisor-key reads and missing-result tests. These yield failure/unverified/security findings, never passed. Public and private output provenance is checked before rendering.
+
+Exercise crashes after external quota/permit commit, before/after private import, during execution and after acceptance commit. One valid attempt permit starts at most one authoritative evaluation; duplicates cannot create extra disclosure or reset quotas. The private acceptance/payment/feedback-outbox transaction is all-or-nothing. Assert rejected superseded attempt acceptance and repeatable owner-request idempotency.
+
+Preview code cannot execute in the private application origin. Trusted template data is escaped. Images used for contribution execution are reviewed for private files in every layer/history; a manifest/digest alone does not prove clean provenance.
+
+## Composition gates
+
+Owner disclosure review covers the joined public interfaces and assets: approving each fragment separately cannot substitute for reviewing the combined proprietary meaning. Enforce exact per-unit paths, a single writer per path and frozen adapter capability/version sets. A candidate application policy cannot alter evaluator ports, quotas, commands, expectations or privileges. Challenge JSON duplicate keys, unknown/executable fields, mixed package versions, unit verdict spoofing, client/API contract mismatch, unknown required results and partial-acceptance attempts. A frontend/backend task may use only the approved job-local proxy; test that neither candidate reaches its management/signing channel or another job. Enforce aggregate resource/deadline limits and dispose of all processes, networks and VM state. Unit success with failing interface/end-to-end evidence never creates aggregate acceptance or a payable event.
+
+The proxy is a fixed method/route/upstream data-plane allowlist. Test CONNECT/tunneling, arbitrary upstream URLs, redirects, forwarding/Host headers and escaped routes. Candidate browser/backend cannot reach Playwright/CDP, SSH or result-signing channels; exercise renderer-origin access attempts. A trusted application wrapper applies evaluated response policy after candidate output and strips conflicting headers; forged X-Forwarded-Proto or Host cannot change its HTTPS/localhost interpretation. Application response-policy tests never relax evaluator proxy/sandbox/CSP controls. Combined frontend/backend/policy positive and negative cases must run under the real public/private VM profiles.

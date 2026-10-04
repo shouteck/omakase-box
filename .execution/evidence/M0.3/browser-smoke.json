@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/smoke-private-shop.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T05:17:24.524Z",
+  "finishedAt": "2026-10-02T05:17:26.909Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"kind\":\"synthetic_pre_change_fixture\",\"actualBrowserToApi\":\"tested\",\"baselineResponsePolicy\":\"tested\",\"taskAcceptance\":\"unverified\"}\n"
+}

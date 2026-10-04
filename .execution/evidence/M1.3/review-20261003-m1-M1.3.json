@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "reviewer": "opencode-reviewer-subagent-m1-20261003",
+  "reviewedAt": "2026-10-04",
+  "role": "distinct independent reviewer; did not implement; read docs/SECURITY.md in full and specifically challenged the auth boundary: policy map, crypto, session store, HTTP guard, cookie policy, resource SQL and route wiring",
+  "revisionBinding": {
+    "manifest": ".execution/evidence/M1.3/revision-0839268cdda1c9c6258e477d2459e0871df54d34a7e1df6cfd016893d7624d18.json",
+    "entries": 71,
+    "digestRecomputedMatchesState": true,
+    "taskDefinitionSha256MatchesCurrentTaskGraph": true,
+    "recomputationMethod": "independent Node script (outside repo) recomputed SHA-256 and byte size of every manifest entry against the working tree",
+    "mismatches": [
+      { "path": "docs/DECISIONS.md", "classification": "shared", "expected": true, "detail": "coordinator edited today; 26488 -> 28711 bytes" },
+      { "path": "scripts/execution.mjs", "classification": "shared", "expected": true, "detail": "coordinator edited today; 7503 -> 7633 bytes" }
+    ],
+    "productPathMismatch": false,
+    "productPathsByteIdentical": true,
+    "missingFiles": 0,
+    "diskFilesUnderWritePathsNotInManifest": [],
+    "previousAcceptedDiff": "no previousAccepted manifest exists for M1.3 in state; no diff baseline required",
+    "classification": "expected_drift_only"
+  },
+  "acceptanceJudgements": [
+    {
+      "bullet": "Requester/contributor cannot impersonate owner or approve release/acceptance.",
+      "verdict": "pass",
+      "evidence": "packages/contracts/auth/policy.ts is a closed permission map: intent/release/publication/assignment/acceptance.approve and invitation.create exist only for private owner; permits() fails closed for unknown scopes, roles and prototype-pollution keys (__proto__, constructor, toString) and denies external owner; gates.test.ts proves the request-bound gate (WeakMap keyed by request object) ignores forged x-actor-role headers and body role/actorId fields (requester/operator 403, contributor 401, dispatch only for the DB-verified owner, dispatched id equals the verified session id); session-store.test.ts rejects a stored contributor role in the private service; routes.test.ts rejects client role injection at login with 400. Scope observation (not a failure): no release/acceptance HTTP routes exist yet, so the gate is exercised at the handler/gate level; authority enforcement wherever future routes dispatch is a stated obligation for later tasks and no route can currently approve anything."
+    },
+    {
+      "bullet": "Cross-contributor and private-resource access fails server-side; invalid sessions and revoked invitations fail.",
+      "verdict": "pass",
+      "evidence": "resources.test.ts + implementation review: PrivateResourceAccess.intent joins the account, current head revision and an unexpired session inside the SQL (actor.role/id/token_hash bound as parameters; owner sees all, requester only revision.requester_id=actor.id; operator denied requester evidence; traversal IDs denied); ExternalResourceAccess binds resource.contributor_id=actor.id with the reservation-contributor join; projections are positive allowlists (intent: id/version/state; submission: id/reservationId/version) excluding patch, permit, hashes and pre-feedback stage names; missing and cross-identity resources share one denial. Sessions: HMAC-signed scope-prefixed cookies (scope inside the HMAC input, so a private cookie cannot verify at the external API - tested), token stored only as SHA-256 hash, expiry>now() and NOT disabled required in every query, duplicate cookies rejected before touching the store, CSRF token must be 64-hex and hash-match for every mutation, scrypt N=32768 password hashing with timing-safe compare and dummy-hash equalization, login rate limit 20/5min/IP, fixed error allowlist with a canary-leak test, host-only cookie (no Domain attribute, asserted), HttpOnly, SameSite=Strict, __Host- prefix + Secure + TLS fail-closed in production mode. Invitations: redemption requires locked NOT revoked AND redeemed_at IS NULL AND expires_at>now() FOR UPDATE with rollback; creation re-locks owner account + exact session token/CSRF hashes + expiry inside the transaction (regression covered by session-store.test.ts asserting the SQL and the rollback on missing authority)."
+    }
+  ],
+  "reruns": [
+    {
+      "command": "node scripts/evidence.mjs M1.3 review-20261003-1-authorization scripts/pnpm.mjs test:security -- --suite authorization",
+      "evidence": ".execution/evidence/M1.3/review-20261003-1-authorization.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "2 files / 19 tests passed (expectation 19 met)"
+    },
+    {
+      "command": "test:auth verified from today's coordinator evidence instead of rerunning the login-heavy suite",
+      "evidence": ".execution/evidence/M4.2/shared-auth-final.json + .execution/evidence/M4.2/shared-auth-final2.json",
+      "exitCode": "1 then 0",
+      "assurance": "first run unverified, second run tested",
+      "observed": "shared-auth-final.json failed at scripts/verify-auth.mjs:45 with '429 !== 403' - the existing 20-login/5-minute rate policy interfering, not an auth defect; after restarting only the identified synthetic private-api service, shared-auth-final2.json passed 12 files / 40 tests with exit 0. Reviewer corroborated independently: the persistence subgroup rerun (M1.2 review-20261003-2-persistence.json) re-executed the same verify-auth journey cleanly (forged identity, CSRF, expired sessions, invitation replay, disabled accounts, logout revocation, browser cookie separation all tested), and check's auth suite passed 40/40 in review-20261003-2-check.json. No rate policy or persistent data was altered."
+    }
+  ],
+  "retainedFailures": [
+    { "file": ".execution/evidence/M4.2/shared-auth-final.json", "detail": "coordinator's first test:auth run hit the login rate policy (429 vs expected 403); resolved by restarting only the identified synthetic private-api and retrying once; policy and data untouched" },
+    { "file": ".execution/evidence/M1.3/resume-20261003-browser-diagnostic.json", "detail": "historical: Chromium loopback address-space protection rejected the intercepted-navigation browser probe; fixed by serving the trusted probe HTML on real loopback UI listeners without relaxing browser security flags" }
+  ],
+  "limitations": "PM/owner intent HTTP/UI flow is not installed; production TLS startup is fail-closed but unexercised with real certificates; native contributor DNS resolution unverified (browser probes resolve both hosts to loopback explicitly); no real VM, live model, payment or customer data involved. These remain open per the task graph and do not belong to M1.3's acceptance.",
+  "verdict": "approved"
+}

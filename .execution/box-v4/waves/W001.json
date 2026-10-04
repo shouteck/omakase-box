@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W001",
+  "planVersion": "box-v4-2026-10-04.1",
+  "status": "awaiting_ceo",
+  "taskIds": [
+    "B0.1",
+    "B0.2"
+  ],
+  "brief": ".execution/box-v4/briefings/W001.md",
+  "briefDigest": "sha256:5fc9385a15a35dc79a98aec359e6e9bbb1e89e1576e08673f4888b5594634e83",
+  "approval": null,
+  "holdEvents": [],
+  "resumeAuthorizations": [],
+  "revocationEvents": [],
+  "scope": {
+    "productWrites": false,
+    "readOnlyInspection": true,
+    "governancePreparation": true,
+    "pluginInstallation": false,
+    "globalModelConfiguration": false,
+    "processStartup": false,
+    "remoteUpload": false,
+    "spending": false,
+    "gitCommitsOrMerges": false
+  },
+  "revisionPolicy": "Freeze and hash presented brief; bind actual human approval before execution. No approval yet.",
+  "runtimePolicy": {
+    "placement": "local_existing_resources",
+    "models": "preserve_current_available_settings",
+    "maxAgents": "actual_runtime_capacity",
+    "heavyChecks": "serialized"
+  }
+}

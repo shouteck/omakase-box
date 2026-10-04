@@ -1,0 +1,78 @@
+{
+  "taskId": "M2.3",
+  "reviewer": "opencode-reviewer-subagent",
+  "revisionDigest": "ef7a44e9d2e7e0e4c00a2366b7b33bef3d64af583388b560e9333b1d9eab1a13",
+  "decision": "approved",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-rebind-runtime-stop scripts/synthetic-runtime.mjs stop",
+      "exitCode": 0,
+      "observed": "Identified synthetic runtime stopped cleanly; persistent data preserved; no unknown processes touched.",
+      "evidencePath": ".execution/evidence/M2.3/review-rebind-runtime-stop.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-rebind-runtime-up scripts/synthetic-runtime.mjs up",
+      "exitCode": 0,
+      "observed": "Identified synthetic runtime restarted from the canonical trusted images (which include the coordinator's preparations/partition context widening recorded in docs/DECISIONS.md); only identified containers started.",
+      "evidencePath": ".execution/evidence/M2.3/review-rebind-runtime-up.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-rebind-runtime-migrate scripts/migrate-runtime.mjs",
+      "exitCode": 0,
+      "observed": "Migrations reported applied for private-api and external-api; idempotent, persistent data not dropped or reset.",
+      "evidencePath": ".execution/evidence/M2.3/review-rebind-runtime-migrate.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-rebind-e2e-intent scripts/pnpm.mjs test:e2e -- --suite intent",
+      "exitCode": 0,
+      "observed": "6/6 tests passed (2 files) against the restarted synthetic runtime with real Chromium: goal-only reviewable draft in demo mode, decisions/readiness/exact-hash approval/edit-after-approval invalidation journey, the full-stack+policy outcome reviewed as ONE composed draft, hostile goal content rendered as escaped text only (no script/img/svg/javascript: execution in the private console origin), owner visibility without unauthenticated private detail, and server-side role/ownership/revocation authorization with no contributor access to private routes.",
+      "evidencePath": ".execution/evidence/M2.3/review-rebind-e2e-intent.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-rebind-contracts-intent scripts/pnpm.mjs test:contracts -- --suite intent",
+      "exitCode": 0,
+      "observed": "22/22 tests passed (4 files), including the real private-DB session-live fixture: server-allocated identity, strict bodies, provenance round-trip, revalidation, decision/review flows, store-level authorization with stored session roles, hash/version gates, safe error mapping and the positive allowlist projection.",
+      "evidencePath": ".execution/evidence/M2.3/review-rebind-contracts-intent.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-rebind-tsc node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "observed": "Repository-wide TypeScript check produced no output (no type errors).",
+      "evidencePath": ".execution/evidence/M2.3/review-rebind-tsc.json"
+    }
+  ],
+  "criterionFindings": [
+    {
+      "criterion": "Re-bind diff verified: only the claimed shared/content deltas occurred since the approved revision dd85c640c1dfb18036613e9964b0be4846703a3284f5a033efef575350e20fc9",
+      "verdict": "met",
+      "basis": "I diffed the two stored M2.3 revision manifests myself: identical file sets (60 files each, none missing or added) and exactly three content changes: docs/DECISIONS.md (16537->20061 bytes, the coordinator's session entry), infra/trusted.Dockerfile (4168->4304) and infra/trusted.Dockerfile.dockerignore (1685->1819). Every M2.3 product path (apps/private-console/intake/**, intents screens, services/private-api/intents/**, services/private-api/db/intent-store.ts, services/private-api/bootstrap/build.mjs, tests/e2e/intent/**, tests/contracts/intent/**, both src/bootstrap/main.ts files) is byte-identical between the approved and re-bound revisions."
+    },
+    {
+      "criterion": "The delta contains no weakening of an M2.3 security boundary",
+      "verdict": "met",
+      "basis": "Read the current infra files myself: trusted.Dockerfile adds only two private-build-stage COPY lines (services/private-api/preparations, packages/planner/partition) and the dockerignore adds exactly the four matching allowlist lines for those two paths; the dockerignore remains fully allowlist-based (deny-all '**' plus enumerated entries), still denying tests, data, secrets, env files and everything not explicitly allowlisted; the external-api build stage and its COPY lines are untouched. The docs/DECISIONS.md coordinator entry records the sweep, runtime rebuild/restart/migrate and revalidation with no policy, data or volume change. M2.3's own boundaries (intent/session/CSRF/auth store, console screens, intent-store, build.mjs) are byte-identical to the approved revision."
+    },
+    {
+      "criterion": "Decisive gates hold at the new revision: e2e intent, contracts intent and TypeScript check pass against the canonical runtime",
+      "verdict": "met",
+      "basis": "After the sanctioned restart of only the identified synthetic processes (stop/up/migrate captured above), my own runs observed 6/6 e2e intent tests, 22/22 contracts intent tests (including the real private-DB session-live fixture) and a clean tsc. The prior accepted review's criteria (server-side authority, exact-hash approval binding, unresolved-decision blocking, escaped previews, one composed draft, positive allowlist projection, publicProductFlow not_implemented) are re-established by these reruns; no M2.3 product bytes changed since that review."
+    },
+    {
+      "criterion": "Revision integrity: the re-bind review binds the exact new revision digest",
+      "verdict": "met",
+      "basis": "I recomputed the M2.3 revision manifest per scripts/execution.mjs over the current workspace and reproduced digest ef7a44e9d2e7e0e4c00a2366b7b33bef3d64af583388b560e9333b1d9eab1a13 exactly (stored manifest present, 0 missing/added/changed); taskDefinitionSha256 matches tasks/task-graph.json."
+    }
+  ],
+  "securityReadCompleted": true,
+  "limitations": [
+    "This is a re-bind review: it verifies the manifest delta, boundary non-weakening and the decisive gates at the new revision; it does not re-litigate every design observation from the approved dd85 review (those stand as recorded there).",
+    "M2.1/M2.2 prerequisite independent reviews remain open (no accepted .execution/handoffs/M2.1-*.md or M2.2-*.md exist); this approval does not close those gates.",
+    "The runtime restart cycle (stop/up/migrate) ran captured this time (no uncaptured first cycle as in the dd85 review); the login-heavy suites were run once each after the restart to respect the in-memory 20-login/5-minute rate policy, which was not modified.",
+    "The canonical runtime now also serves the M3.2 demo-mode preparations route; that wiring was inspected and judged under the M3.2 review and is additive, demo-gated and permission-guarded, with no effect on M2.3's own acceptance.",
+    "Ollama/live-model mode remains operator-unconfigured in this runtime (safe needs_configuration failure only); live-model quality, prompt robustness and live-response validation remain separate open gates.",
+    "approvedAt still reports the revision row's created_at rather than the approval-recorded time (carried over from the dd85 review as a recorded trade-off, non-blocking).",
+    "Real isolated runner (M5.2), live model, human study and delivery gates remain open; synthetic accounts/data only; no real customer decisions, releases or payments occurred.",
+    "No secrets, prompts or real private fixture contents appear in this report."
+  ],
+  "reviewedAt": "2026-10-03T02:02:53.425Z"
+}

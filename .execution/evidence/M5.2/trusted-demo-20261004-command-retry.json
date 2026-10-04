@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M5.2/trusted-demo-20261004.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T18:16:51.724Z",
+  "finishedAt": "2026-10-03T18:16:54.474Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\n  \"schemaVersion\": 1,\n  \"assurance\": \"tested\",\n  \"kind\": \"trusted_synthetic_demo\",\n  \"startedAt\": \"2026-10-03T18:16:52.221Z\",\n  \"finishedAt\": \"2026-10-03T18:16:54.395Z\",\n  \"command\": [\n    \"node\",\n    \".execution/evidence/M5.2/trusted-demo-20261004.mjs\"\n  ],\n  \"realCustomerData\": false,\n  \"candidateExecution\": false,\n  \"liveModelCalls\": false,\n  \"privateConsole\": \"http://private.localhost:3000\",\n  \"contributorPortal\": \"http://contributor.localhost:3001\",\n  \"ownerUsername\": \"synthetic.auth.owner.7c498f4c\",\n  \"snapshotId\": \"2334b3a3-5dc6-414e-b648-ac1184385043\",\n  \"intentId\": \"e7b1d362-9c43-4c62-bda2-6acb6fd17af3\",\n  \"observed\": {\n    \"apiHealth\": \"tested\",\n    \"ownerBrowserSignIn\": \"tested\",\n    \"syntheticSnapshot\": \"tested\",\n    \"goalOnlyDemoDraft\": \"tested\",\n    \"unresolvedDecisionGate\": \"tested\",\n    \"contributorPlaceholder\": \"tested\",\n    \"privateCookieAbsentFromContributorHealth\": \"tested\",\n    \"browserErrors\": 0\n  },\n  \"limitations\": [\n    \"Hostnames explicitly mapped in Chromium; native contributor DNS remains unverified.\",\n    \"No outcome approval, release publication, hostile code evaluation, acceptance or payment exercised.\",\n    \"This synthetic workflow does not satisfy M5.2 or M9 delivery gates.\"\n  ]\n}\n"
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "check"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T05:51:47.487Z",
+  "finishedAt": "2026-10-02T05:51:54.588Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/boundaries.mjs:14\r\n      if (node.arguments.length !== 1 || !ts.isStringLiteral(node.arguments[0])) throw new Error('Dynamic unresolved imports are forbidden in the external boundary.');\r\n                                                                                       ^\r\n\r\nError: Dynamic unresolved imports are forbidden in the external boundary.\r\n    at visit (file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/boundaries.mjs:14:88)\r\n    at visitNode2 (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:32551:18)\r\n    at forEachChildInExpressionStatement (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:32781:12)\r\n    at Object.forEachChild (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:33072:35)\r\n    at visit (file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/boundaries.mjs:17:8)\r\n    at visitNode2 (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:32551:18)\r\n    at forEachChildInIfStatement (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:32784:51)\r\n    at Object.forEachChild (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:33072:35)\r\n    at visit (file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/boundaries.mjs:17:8)\r\n    at visitNodes (C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\lib\\typescript.js:32559:22)\r\n\r\nNode.js v24.11.0\r\n"
+}

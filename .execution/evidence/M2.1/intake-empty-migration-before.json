@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/verify-empty-migrations.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:39:30.369Z",
+  "finishedAt": "2026-10-02T18:39:31.874Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Empty synthetic database migration failed.\r\n\r\n1 !== 0\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/verify-empty-migrations.mjs:12:10\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 1,\r\n  expected: 0,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:contracts"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:00:50.966Z",
+  "finishedAt": "2026-10-02T17:00:55.191Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  9 passed (9)\n      Tests  122 passed (122)\n   Start at  01:00:51\n   Duration  3.12s (tests 67%, import 25%, transform 7%, worker 2%)\n\n    Isolate  9 workers spawned · ~180ms startup each (spawn + environment, per file)\n             at least ~630ms faster with isolate: false — reuses workers across files instead of one per file\n\n"
+}

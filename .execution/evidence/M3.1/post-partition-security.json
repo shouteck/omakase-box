@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts\\pnpm.mjs",
+    "test:security",
+    "--",
+    "--suite",
+    "dependency-boundary"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:40:12.398Z",
+  "finishedAt": "2026-10-03T01:40:14.112Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/security/dependency-boundary/coupling.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 62\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m   Start at \u001b[22m 09:40:13\n\u001b[2m   Duration \u001b[22m 736ms\u001b[2m (import 68%, transform 20%, tests 11%, worker 1%)\u001b[22m\n\n"
+}

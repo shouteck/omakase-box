@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:portal",
+    "--",
+    "--suite",
+    "publication"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T20:48:40.870Z",
+  "finishedAt": "2026-10-03T20:48:42.457Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/portal/publication/release.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Suites 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/portal/publication/release.test.ts\u001b[2m [ tests/portal/publication/release.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../../services/private-api/bridge/release.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/portal/publication/release.test.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/portal/publication/release.test.ts:\u001b[2m5:1\u001b[22m\u001b[39m\n    \u001b[90m  3|\u001b[39m import { describe, expect, it } from 'vitest';\n    \u001b[90m  4|\u001b[39m import { byteHash, canonicalize, contentHash } from '../../../packages…\n    \u001b[90m  5|\u001b[39m import { buildSignedReleaseTransport } from '../../../services/private…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m  6|\u001b[39m import { BridgeRejected, receive } from '../../../services/external-ap…\n    \u001b[90m  7|\u001b[39m import { MemoryPublishedTaskPersistence } from '../../../services/exte…\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[2mno tests\u001b[22m\n\u001b[2m   Start at \u001b[22m 04:48:41\n\u001b[2m   Duration \u001b[22m 266ms\u001b[2m (worker 97%, environment 3%)\u001b[22m\n\n"
+}

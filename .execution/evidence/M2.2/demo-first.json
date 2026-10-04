@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/planner/provider/demo.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T19:24:55.424Z",
+  "finishedAt": "2026-10-02T19:24:56.830Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/planner/provider/demo.test.ts \u001b[2m(\u001b[22m\u001b[2m12 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 103\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m12 passed\u001b[39m\u001b[22m\u001b[90m (12)\u001b[39m\n\u001b[2m   Start at \u001b[22m 03:24:56\n\u001b[2m   Duration \u001b[22m 642ms\u001b[2m (import 39%, transform 35%, tests 24%, worker 2%)\u001b[22m\n\n"
+}

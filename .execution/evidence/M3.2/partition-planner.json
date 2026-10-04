@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/planner/partition",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:27:45.394Z",
+  "finishedAt": "2026-10-03T01:27:48.056Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/planner/partition/preparation-api.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 357\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/planner/partition/composed-selection.test.ts \u001b[2m(\u001b[22m\u001b[2m11 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 148\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m15 passed\u001b[39m\u001b[22m\u001b[90m (15)\u001b[39m\n\u001b[2m   Start at \u001b[22m 09:27:46\n\u001b[2m   Duration \u001b[22m 1.81s\u001b[2m (import 41%, tests 36%, transform 22%, worker 1%)\u001b[22m\n\n"
+}

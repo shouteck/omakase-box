@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "reviewer": "opencode-reviewer-subagent-rebind-20261004",
+  "revisionDigest": "8d32879ecb5877d82f5cef589ff3361ffeabd616ed5d4a9edef3595c2a9d60d7",
+  "decision": "approved",
+  "checkedAt": "2026-10-03T19:57:03.828Z",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M5.3 review-20261004-check-6 scripts/pnpm.mjs check",
+      "evidence": ".execution/evidence/M5.3/review-20261004-check-6.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M5.3 review-20261004-build scripts/pnpm.mjs build",
+      "evidence": ".execution/evidence/M5.3/review-20261004-build.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M5.3 review-20261004-doctor scripts/pnpm.mjs doctor --json",
+      "evidence": ".execution/evidence/M5.3/review-20261004-doctor.json",
+      "exitCode": 0
+    }
+  ],
+  "criterionFindings": {
+    "manifest byte verification": "Recomputed SHA-256 over UTF-8 bytes for every listed path in .execution/evidence/M1.3/revision-8d32879ecb5877d82f5cef589ff3361ffeabd616ed5d4a9edef3595c2a9d60d7.json against the working tree: all 71 digests and byte counts match, nothing missing, none added. taskDefinitionSha256 = eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101 (matches the shared tasks/task-graph.json binding).",
+    "product byte-identity vs previous accepted revision": "VERIFIED: compared by path against previously accepted manifest .execution/evidence/M1.3/revision-0839268cdda1c9c6258e477d2459e0871df54d34a7e1df6cfd016893d7624d18.json (digest 0839268cdda1c9c6258e477d2459e0871df54d34a7e1df6cfd016893d7624d18, reviewer opencode-reviewer-subagent-m1-20261003): only declared shared/declared drift paths differ; every intersection path is byte-identical and nothing product-bound was added or removed.",
+    "shared-drift accuracy": "Manifest diff (by path, SHA-256 compared): docs/DECISIONS.md (26488/28711/20061 -> 34947 bytes sha256 6a1587a2/35c49af9/echos -> 5f9c08f5; dated decision records appended); scripts/execution.mjs (7503 -> 7633 bytes sha256 03bff9fd -> 607ee651 (+130 bytes)).",
+    "decision-log metadata honesty": "Current docs/DECISIONS.md (34,947 bytes) read in full: contains only dated decision records (2026-10-02 through 2026-10-04), no product code or configuration, no secrets, and no weakened boundary statements. It records the user-authorized deferred physical runner as component-level development authorization with gates unchanged, and states a distinct reviewer was unavailable (no self-approval). The closing 2026-10-03/04 re-snapshot claim is consistent for this task union. Half-truth status versus the currently shared scripts/execution.mjs part of that closing entry is not affected by any task-specific product byte. Note: interim drafts saying \"Only docs/DECISIONS.md changed\" are honest against the immediately prior rebind snapshot state at rebind level, but the closing DECISIONS entry convergence for binding full product paths is the discipline that shows the union history for M3.4/M4.1 dropped files.",
+    "draft handoff honesty": "Draft .execution/drafts/M1.3-deferred-20261004-rebind.md read in full: limits itself to the deferred-runner decision rebind, claims no new check, approval or milestone completion, keeps gates unchanged, and labels itself unverified with no self-approval. No overclaim found.",
+    "historical decisive review existence": "Decisive 2026-10-03 reports exist under .execution/evidence/M1.3/ (review-20261003-*.json); decisive report .execution/evidence/M1.3/review-20261003-m1-M1.3.json read: reviewer opencode-reviewer-subagent-m1-20261003, decision approved, distinct from implementing owner devin-coordinator-sequential and from me."
+  },
+  "productPathByteIdentity": {
+    "verified": true,
+    "changedPaths": [
+      "docs/DECISIONS.md",
+      "scripts/execution.mjs"
+    ]
+  },
+  "notes": [
+    "Verify basis: bytes and evidence, not filenames.",
+    "Real-runner gate stays open: review-20261004-real-gap.json honestly reports unavailable (exit 2); no real-runner, live-model, human study or delivery claim is made.",
+    "Login-heavy check suites hit the existing 20-login/5-minute rate policy on two intermediate attempts (429 retained as evidence check-2/check-3/check-4/check-5); policy was not changed, data was not reset, and only the identified synthetic private-api process was restarted between attempts. Final check-6 attempt ran 40 auth + 144 contracts + 51 planner + 14 bootstrap tests all green.",
+    "Shared batch across tasks: docs/DECISIONS.md (26488/28711/20061 -> 34947 bytes) and scripts/execution.mjs (7503 -> 7633 bytes).",
+    "Historical accepted handoff .execution/handoffs/M1.3-0839268cdda1c9c6258e477d2459e0871df54d34a7e1df6cfd016893d7624d18.md preserved; this decision applies only to exact revision 8d32879ecb5877d82f5cef589ff3361ffeabd616ed5d4a9edef3595c2a9d60d7."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:59:47.053Z",
+  "finishedAt": "2026-10-03T01:59:55.945Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": ""
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/planner/provider/transport.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T19:28:17.715Z",
+  "finishedAt": "2026-10-02T19:28:19.623Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/planner/provider/transport.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 126\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m actual Node HTTP transport exercises a synthetic loopback protocol server, not a live model\u001b[32m 56\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m never follows redirects and terminates a real chunked output flood at the wire limit\u001b[39m\u001b[32m 33\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m cancels a real pending HTTP response and does not wait indefinitely for end-of-stream\u001b[32m 36\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/planner/provider/transport.test.ts\u001b[2m > \u001b[22mnever follows redirects and terminates a real chunked output flood at the wire limit\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected { status: 'failed', …(3) } to match object { status: 'failed', …(1) }\n(2 matching properties omitted from actual)\u001b[39m\n\n\u001b[32m- Expected\u001b[39m\n\u001b[31m+ Received\u001b[39m\n\n\u001b[2m  {\u001b[22m\n\u001b[32m-   \"reason\": \"invalid_response\",\u001b[39m\n\u001b[31m+   \"reason\": \"provider_unavailable\",\u001b[39m\n\u001b[2m    \"status\": \"failed\",\u001b[22m\n\u001b[2m  }\u001b[22m\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/planner/provider/transport.test.ts:\u001b[2m33:59\u001b[22m\u001b[39m\n    \u001b[90m 31|\u001b[39m     expect(await provider.proposeIntent(planningInput())).toMatchObjec…\n    \u001b[90m 32|\u001b[39m     flood = true;\n    \u001b[90m 33|\u001b[39m     expect(await provider.proposeIntent(planningInput())).toMatchObjec…\n    \u001b[90m   |\u001b[39m                                                           \u001b[31m^\u001b[39m\n    \u001b[90m 34|\u001b[39m   } finally { await close(server); await close(destination); }\n    \u001b[90m 35|\u001b[39m });\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (3)\u001b[39m\n\u001b[2m   Start at \u001b[22m 03:28:18\n\u001b[2m   Duration \u001b[22m 791ms\u001b[2m (import 41%, transform 33%, tests 24%, worker 2%)\u001b[22m\n\n"
+}

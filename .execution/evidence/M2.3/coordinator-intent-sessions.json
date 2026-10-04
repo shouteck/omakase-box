@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts\\verify-intent-sessions.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T22:35:31.748Z",
+  "finishedAt": "2026-10-02T22:35:32.607Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"scope\":\"synthetic DB session-bound intent operations\",\"sessionRevocation\":\"denied\",\"operatorRequesterApproval\":\"denied\",\"unresolvedDecision\":\"blocked\",\"exactHash\":\"required\",\"approvedPayload\":\"immutable\",\"editAfterApproval\":\"new_revision_stale_old_approval\",\"publicProductFlow\":\"not_implemented\",\"realCustomerData\":false}\n"
+}

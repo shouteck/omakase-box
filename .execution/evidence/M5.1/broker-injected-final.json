@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "tests/runner/protocol/broker-check.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:46:16.950Z",
+  "finishedAt": "2026-10-02T17:46:17.514Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "test_atomic_receipt_interruption_preserves_previous_receipt (__main__.BrokerTests.test_atomic_receipt_interruption_preserves_previous_receipt) ... ok\r\ntest_baseline_modified_or_writable_denied (__main__.BrokerTests.test_baseline_modified_or_writable_denied) ... ok\r\ntest_failed_create_is_quarantined_and_job_never_replayed (__main__.BrokerTests.test_failed_create_is_quarantined_and_job_never_replayed) ... ok\r\ntest_failed_disposal_remains_quarantined (__main__.BrokerTests.test_failed_disposal_remains_quarantined) ... ok\r\ntest_fixed_create_and_exact_disposal (__main__.BrokerTests.test_fixed_create_and_exact_disposal) ... ok\r\ntest_invalid_command_path_and_symlink_refused (__main__.BrokerTests.test_invalid_command_path_and_symlink_refused) ... ok\r\ntest_lease_lock_is_nonblocking_and_releases_descriptor (__main__.BrokerTests.test_lease_lock_is_nonblocking_and_releases_descriptor) ... ok\r\ntest_owner_mismatch_cannot_destroy_other_job (__main__.BrokerTests.test_owner_mismatch_cannot_destroy_other_job) ... ok\r\ntest_streaming_output_limit_kills_operation (__main__.BrokerTests.test_streaming_output_limit_kills_operation) ... ok\r\ntest_subprocess_uses_no_shell_fixed_environment_and_timeout (__main__.BrokerTests.test_subprocess_uses_no_shell_fixed_environment_and_timeout) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.229s\r\n\r\nOK\r\n"
+}

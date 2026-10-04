@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts\\migrate-runtime.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:45:53.060Z",
+  "finishedAt": "2026-10-03T01:45:55.807Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"service\":\"private-api\",\"migration\":\"applied\"}\n{\"assurance\":\"tested\",\"service\":\"external-api\",\"migration\":\"applied\"}\n"
+}

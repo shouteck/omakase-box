@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M5.1/review-broker-probes.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:47:47.642Z",
+  "finishedAt": "2026-10-02T17:47:49.150Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "test_deadline_kills_operation_without_treating_stdout_as_success (__main__.IndependentBrokerChecks.test_deadline_kills_operation_without_treating_stdout_as_success) ... ok\r\ntest_nonzero_exit_never_becomes_success (__main__.IndependentBrokerChecks.test_nonzero_exit_never_becomes_success) ... ok\r\ntest_quiet_fixed_operation_survives_one_second_without_output (__main__.IndependentBrokerChecks.test_quiet_fixed_operation_survives_one_second_without_output) ... ok\r\ntest_stdout_and_stderr_combined_budget_is_enforced (__main__.IndependentBrokerChecks.test_stdout_and_stderr_combined_budget_is_enforced) ... ok\r\n\r\n----------------------------------------------------------------------\r\n{\"assurance\": \"tested\", \"scope\": \"independent injected broker streaming quiet/deadline/output/exit probes\", \"reviewer\": \"/root/contracts_review\", \"testsRun\": 4, \"actualKvm\": false, \"actualCandidateExecution\": false}\r\nRan 4 tests in 1.206s\r\n\r\nOK\r\n"
+}

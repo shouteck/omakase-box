@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.2",
+  "reviewer": "opencode-reviewer-subagent-rebind-20261004b",
+  "revisionDigest": "0cb710a1d9c6a7dc8d4c221e27086dfcda084c51d14e32df6ecea737039d39f3",
+  "decision": "approved",
+  "checkedAt": "2026-10-03T20:24:19.485Z",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M0.1 review-20261004b-check-rerun scripts/pnpm.mjs check",
+      "evidence": ".execution/evidence/M0.1/review-20261004b-check-rerun.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M0.1 review-20261004b-build-rerun scripts/pnpm.mjs build",
+      "evidence": ".execution/evidence/M0.1/review-20261004b-build-rerun.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M0.1 review-20261004b-doctor-rerun scripts/pnpm.mjs doctor --json",
+      "evidence": ".execution/evidence/M0.1/review-20261004b-doctor-rerun.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-20261004b-e2e-intent scripts/pnpm.mjs test:e2e -- --suite intent",
+      "evidence": ".execution/evidence/M2.3/review-20261004b-e2e-intent.json",
+      "exitCode": 0
+    }
+  ],
+  "criterionFindings": {
+    "manifestByteVerification": "Recomputed SHA-256 over file bytes and byte counts for all 58 paths in the current recorded manifest .execution/evidence/M3.2/revision-0cb710a1d9c6a7dc8d4c221e27086dfcda084c51d14e32df6ecea737039d39f3.json against the working tree: all match, nothing missing, none added. taskDefinitionSha256 matches the live tasks/task-graph.json digest eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101.",
+    "productPathByteIdentity": "Compared by path against the previously accepted manifest revision-66c485d46bfce600a440e706bbc39d90f0299ae9eea386ba911e145760e36826 (reviewer opencode-reviewer-subagent-m3-20261003, distinct from implementing owner devin-coordinator-sequential and from me): previously reviewed product paths are byte-identical; the only differences are docs/DECISIONS.md, scripts/execution.mjs.",
+    "identityVsPriorReviewerVerifiedRevision": "Compared by path against the deferred-20261004 revision the prior reviewer verified (revision-3530c7de14377765fef2beed43d7614b5d2e04e1f48869bbed5e75f226a09529, decision approved): differences are drifted [docs/DECISIONS.md, scripts/execution.mjs]—product bytes unchanged by the re-snapshot.",
+    "sharedDriftAccuracy": "Drift is limited to the disclosed shared batch: docs/DECISIONS.md grew by the new 2026-10-04 repair entry (34947 -> 36666 bytes) and scripts/execution.mjs carries the restored M3.4/M4.1 integrationPaths entries; the collector logic and the deliberate .execution/ exclusion are unchanged. No product byte, dependency, policy or evaluator changed.",
+    "decisionLogEntryHonesty": "The new 2026-10-04 DECISIONS.md entry is metadata only: it documents the manifest-scope defect, the restored integrationPaths, the re-snapshot and one disclosed unbound evidence-helper path; it contains no code, configuration, secrets or weakened boundary, and it keeps real-runner, live-model, publication, acceptance and human-evidence gates open.",
+    "draftHandoffHonesty": "Draft .execution/drafts/M3.2.md claims no new check, approval or milestone completion, labels itself unverified, and keeps gates unchanged. It still cites the pre-repair deferred digest, which is point-in-time bookkeeping, not a false claim.",
+    "historicalDecisiveReview": "Decisive 2026-10-03 reports exist on disk under .execution/evidence/M3.2/ (review-20261003-*.json) with reviewer opencode-reviewer-subagent-m3-20261003, distinct from the implementing owner and from me; they remain immutable evidence for their exact revisions.",
+    "gates": "Doctor output honestly reports runner realValidation=unverified (hostExecutionAllowed=false), live model needs_configuration, independentReview unverified and humanPilot not_conducted. No real-runner, live-model, publication-readiness or human-evidence claim is made by this review."
+  },
+  "productPathByteIdentity": {
+    "verified": true,
+    "changedPaths": [
+      "docs/DECISIONS.md",
+      "scripts/execution.mjs"
+    ]
+  },
+  "notes": [
+    "Verify basis: bytes and evidence, not filenames.",
+    "Shared verification runs were executed once on the current tree and are referenced here rather than duplicated per task; all four exited 0 (check 249 tests: bootstrap 14 + auth 40 + contracts 144 + planner 51; build green; doctor green with honest open gates; e2e intent 8/8). No login-rate-policy 429 was hit during these runs.",
+    "decision approved applies to the exact current revision digest only; historical accepted handoffs are preserved and are not re-labeled."
+  ]
+}

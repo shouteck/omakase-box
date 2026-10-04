@@ -1,0 +1,547 @@
+{
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": "apps/contributor-portal/index.html",
+      "bytes": 273,
+      "sha256": "970f604a4569496bfd91b427b7679466b3e79b2af98b46d09315ba2302f9355a"
+    },
+    {
+      "path": "apps/contributor-portal/package.json",
+      "bytes": 148,
+      "sha256": "e3621f60d062d56bba1b191886b16ea6fe91fff984d8caf59a94064d4307421b"
+    },
+    {
+      "path": "apps/contributor-portal/portal/portal-screen.tsx",
+      "bytes": 11491,
+      "sha256": "563f4e70c0bd859f998728a38d66079a7d74795532ea1a0f0b3e995fe42aa26d"
+    },
+    {
+      "path": "apps/contributor-portal/src/bootstrap/main.tsx",
+      "bytes": 251,
+      "sha256": "6f886723743009570850101be9da23ca1d49c70a0f2248174dd19eb9b6c7c10a"
+    },
+    {
+      "path": "apps/contributor-portal/vite.config.ts",
+      "bytes": 190,
+      "sha256": "da0c583d6b8749ecf75c2bb1d8ff18fe31ea84bf4f07d70be6d2e9ae468848b7"
+    },
+    {
+      "path": "apps/private-console/assignments/assignments-screen.tsx",
+      "bytes": 3298,
+      "sha256": "377ef86ea07c3993894a470311f97e9ec849641a12067b540c3a3eb71c4b91b6"
+    },
+    {
+      "path": "apps/private-console/src/bootstrap/main.tsx",
+      "bytes": 4335,
+      "sha256": "2b32a8128b646b3b4e45a438c92a071b41616fd32a2dcadb1c992233e168f36b"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 51271,
+      "sha256": "4c06ce2b3c39818b49c9881e6e85c5fec23d7959f1f400d800589dc8615d3d5f"
+    },
+    {
+      "path": "infra/compose.yaml",
+      "bytes": 6549,
+      "sha256": "b0a6c4c5c192894672e6b56782ef8ef34f857c595d43b3420ade3d2ee5cbb44c"
+    },
+    {
+      "path": "infra/runner/broker.py",
+      "bytes": 16669,
+      "sha256": "0b7346618012b8f714ebc2c53d36fa5aa59865863578b03a5e4c6722bbf44171"
+    },
+    {
+      "path": "infra/runner/composition/composed-supervisor.mjs",
+      "bytes": 4962,
+      "sha256": "a2055654e13e998dd7167af9a58a980fe678b957138c334a4d09cc633e26e7b0"
+    },
+    {
+      "path": "infra/runner/composition/driver-composed.mjs",
+      "bytes": 8964,
+      "sha256": "e2704021dc0026b54cb804748ff5b79b638ba38ce504c56d2fb3ea71f28ff495"
+    },
+    {
+      "path": "infra/runner/composition/policy-apply.mjs",
+      "bytes": 4994,
+      "sha256": "9951572a357d304243f1d8a418f8ee87e4b77952271c48538df54ba2e250a4a3"
+    },
+    {
+      "path": "infra/runner/composition/proxy-profile.mjs",
+      "bytes": 7118,
+      "sha256": "b7774fd5f57b2e22f77ff34fcd3f7dc2d36c4c9333f6a522d71e94a95d1db63b"
+    },
+    {
+      "path": "infra/runner/jobs/guest-provision.yaml",
+      "bytes": 3856,
+      "sha256": "69f272a89fc839bf4edb974e2349a307027b9df98c469b295f6b9a640d7ca5f7"
+    },
+    {
+      "path": "infra/runner/jobs/harness/container-init",
+      "bytes": 2861,
+      "sha256": "429b856ef655b6d264a96ee448494be81cb2f878b8385d636b7812d3ba914cc9"
+    },
+    {
+      "path": "infra/runner/jobs/harness/driver-pure-module.mjs",
+      "bytes": 5456,
+      "sha256": "3f190258bde926bcf1d2da0cf77d8d19a714ceab7d19a708ebce1e3193c8f5ba"
+    },
+    {
+      "path": "infra/runner/jobs/harness/observations.mjs",
+      "bytes": 1446,
+      "sha256": "aa49db0ba3e5e55b6503ebdc1693137d55394c542f4c0716e72a31851ccf8c75"
+    },
+    {
+      "path": "infra/runner/jobs/harness/records.mjs",
+      "bytes": 8996,
+      "sha256": "6aad21ef091adbb91a1b8548672a0cf3b730f986460309f9adb26eec57b81ded"
+    },
+    {
+      "path": "infra/runner/jobs/harness/sandbox-spec.mjs",
+      "bytes": 6290,
+      "sha256": "48860d72c546b169dd4c8fdb89b1a11123531f628a71c47d6657e7c33a467131"
+    },
+    {
+      "path": "infra/runner/jobs/harness/supervisor.mjs",
+      "bytes": 16337,
+      "sha256": "25b3a99fffd4e85f613f44456d3c4eba0bec7b2c0287b688cf7e54d5dc9c3d8b"
+    },
+    {
+      "path": "infra/runner/jobs/tooling/build.mjs",
+      "bytes": 4256,
+      "sha256": "d745ee9a4d53fb8deef2ac4ae2cff2c0cb3c214e2c8faba992f636130a4e464a"
+    },
+    {
+      "path": "infra/runner/jobs/tooling/worker.mjs",
+      "bytes": 2879,
+      "sha256": "1c6468efda5f9b47c445cdc24ee5c8baa59c29d6ff165cf0fa8cb10e6765aa1e"
+    },
+    {
+      "path": "infra/trusted.Dockerfile",
+      "bytes": 5402,
+      "sha256": "a6c6afca8649a3e6443f3b7d3d80396770e9c5cc9947caa7987b4369fbb34d88"
+    },
+    {
+      "path": "infra/trusted.Dockerfile.dockerignore",
+      "bytes": 2577,
+      "sha256": "369a946f59e399dc841e5d1905c41c86f2657d264f2a38bb4f7968b45e029baf"
+    },
+    {
+      "path": "scripts/migrate-runtime.mjs",
+      "bytes": 584,
+      "sha256": "8c0977b3e7ddf5910773e621920a21032b527398c96466e6bb57cbe35a9cfbd4"
+    },
+    {
+      "path": "scripts/synthetic-runtime.mjs",
+      "bytes": 5131,
+      "sha256": "de2ae8e84e7114fc94cc0618979e748c938351c78935227d6d3364f081a4db34"
+    },
+    {
+      "path": "services/external-api/auth/fixture.ts",
+      "bytes": 7431,
+      "sha256": "df9bc870936ce7d402702e150fb1b9f638e354cd212e0d8b7a67fea87507b380"
+    },
+    {
+      "path": "services/external-api/auth/resources.ts",
+      "bytes": 3225,
+      "sha256": "74e8f3ba68631853c787c22f6498b02eea63615510baaf68c1a6ad3327d4a7e2"
+    },
+    {
+      "path": "services/external-api/auth/routes.ts",
+      "bytes": 2413,
+      "sha256": "dbaa5d9275aa9bbfabf7cf8e090c5aa837cdedb992d0806ed79d6cb4c0c4acc0"
+    },
+    {
+      "path": "services/external-api/bootstrap/build.mjs",
+      "bytes": 337,
+      "sha256": "2d22875bb4e0751689007e1ed09a789c03f5992ecc25e2abed4bc0ec706109f5"
+    },
+    {
+      "path": "services/external-api/bootstrap/cookie-policy.ts",
+      "bytes": 618,
+      "sha256": "6f698b1f9064f35172ee2969240dd6f664f512409839953e28c58929ff628293"
+    },
+    {
+      "path": "services/external-api/bootstrap/environment.ts",
+      "bytes": 1738,
+      "sha256": "fa0657372cbfe20bb643c7ce019ce2c11be8b9bdf79f28b78b001c5617eb26be"
+    },
+    {
+      "path": "services/external-api/db/migrate.ts",
+      "bytes": 1016,
+      "sha256": "7c7d281c12affa20032e7b623bb210861e04d7f0b1cca38fce3eaef5444dbde3"
+    },
+    {
+      "path": "services/external-api/db/migrations/0000_same_jimmy_woo.sql",
+      "bytes": 7054,
+      "sha256": "05ef60e8e7aa38b3522c0295ccad5c08d78f4b4cb13f3468ebbddbf53da4ebc7"
+    },
+    {
+      "path": "services/external-api/db/migrations/0001_integrity_guards.sql",
+      "bytes": 2835,
+      "sha256": "29aebf816bb94418b2c1e9c56b3e69ca26af4a0c75b5772da83b581afb1fb590"
+    },
+    {
+      "path": "services/external-api/db/migrations/0002_lifecycle_guards.sql",
+      "bytes": 4731,
+      "sha256": "9c67466588fb750fc159f7c5e846e486bd0621515d91277ca6299e44644b158a"
+    },
+    {
+      "path": "services/external-api/db/migrations/0003_atomic_attempt_guard.sql",
+      "bytes": 507,
+      "sha256": "56b6b5d68bdacb6946b3e756a8cd8ddb15bf7288067bb7788233f5228a2e12c0"
+    },
+    {
+      "path": "services/external-api/db/migrations/0004_m61_published_tasks.sql",
+      "bytes": 1982,
+      "sha256": "3b162e67926790d7be37687bdaf2aa70b32dfdf8d72fa564af84ffe422e61a8d"
+    },
+    {
+      "path": "services/external-api/db/migrations/0005_reservations_assignments.sql",
+      "bytes": 5958,
+      "sha256": "ae2031a48c0ee188cd89d5c43f8da7edc4927ef17e21e26cb15de6de59af38b9"
+    },
+    {
+      "path": "services/external-api/db/migrations/0006_submission_export.sql",
+      "bytes": 103,
+      "sha256": "8adb09e63fbedda8a979751b9179655c901a5d0dcbb9d23791a49113768d33f7"
+    },
+    {
+      "path": "services/external-api/db/migrations/meta/_journal.json",
+      "bytes": 1095,
+      "sha256": "116c5f4c5352581a18ed061e7a67a070ec6485b436f57206737773794700425c"
+    },
+    {
+      "path": "services/external-api/db/migrations/meta/0000_snapshot.json",
+      "bytes": 20710,
+      "sha256": "27f959e23bf045709029d903252450ae9ede29335864d0d4a96733223146ac35"
+    },
+    {
+      "path": "services/external-api/db/reservation-store.ts",
+      "bytes": 3263,
+      "sha256": "58eb401037fb0b544ac8c78e27a1e1d3f33267cb4bf50cd958fe074a26f03daa"
+    },
+    {
+      "path": "services/external-api/db/schema.ts",
+      "bytes": 5684,
+      "sha256": "5f783115376691391046485398cd02b31627aa05232fb9a8fdd717b6bc9c2f71"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-live-fixture.ts",
+      "bytes": 12283,
+      "sha256": "f21c6cf1459ac83854502eb9fe41ee80f785183b8a0286753dc8ba8f8f8e31ea"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-protocol.ts",
+      "bytes": 6809,
+      "sha256": "7127ff0edeeef036591e8835838537172ddab839f82347c1f92d654960a6b2de"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-receipt.ts",
+      "bytes": 4945,
+      "sha256": "fcd9fb53f64053f57c39e655eb80eeaa3392048e295068672b96b4b82b8a375c"
+    },
+    {
+      "path": "services/external-api/reservations/assignment-receiver.ts",
+      "bytes": 9739,
+      "sha256": "0603abe128e2787e51f7015befc0943fe23f5046b4315e42abaa26fd90aa1595"
+    },
+    {
+      "path": "services/external-api/reservations/assignments.ts",
+      "bytes": 13768,
+      "sha256": "3008dd37661690de5e5bf2a35be3955b5fa91456b8e0cc8d532d3fc25dd8961d"
+    },
+    {
+      "path": "services/external-api/reservations/defect-reports.ts",
+      "bytes": 5852,
+      "sha256": "25d8aa17b0ba5e8b3a0403426978c9b888bdb022fe43088b80a9571b399e8b58"
+    },
+    {
+      "path": "services/external-api/reservations/download.ts",
+      "bytes": 5730,
+      "sha256": "300bb96a73643843ea91e2a9d414dfad83e7422c1e1793b0135eb14d1df7154c"
+    },
+    {
+      "path": "services/external-api/reservations/live-fixture.ts",
+      "bytes": 11807,
+      "sha256": "5be6b3e78883cde8b692d4c5d92462e9f3e8c2d1bffbae38d68db4e423aab223"
+    },
+    {
+      "path": "services/external-api/reservations/reservation-sql.ts",
+      "bytes": 31107,
+      "sha256": "d3accbf5224d3d12adb92b1e2e765fda5929f0958c25f1065becc8ca3dcff84a"
+    },
+    {
+      "path": "services/external-api/reservations/reservation-store.ts",
+      "bytes": 16037,
+      "sha256": "92cc896865afeefa6a6fe68c3d7263528eb4a770daaa5c67c1a112777cd3f136"
+    },
+    {
+      "path": "services/external-api/reservations/routes.ts",
+      "bytes": 11109,
+      "sha256": "14d6bc123e3cb38b06a7ebf49b3e4657fd0b2b4e334beb2470c3f3178e8928fc"
+    },
+    {
+      "path": "services/external-api/src/bootstrap/main.ts",
+      "bytes": 2971,
+      "sha256": "5898cb406127cecaea78644fba9f48dab0b013b2033846fc1cddca73bf8d0165"
+    },
+    {
+      "path": "services/external-api/src/bootstrap/server.ts",
+      "bytes": 3341,
+      "sha256": "66666caf8bd62c2767d51fee9051d73640d8ad45a597a8bf17104ddc6784f2df"
+    },
+    {
+      "path": "services/private-api/assignments/delivery-live-fixture.ts",
+      "bytes": 9691,
+      "sha256": "d9806d9a6a94b46c96031b0d64b16b8bcde2892dc13cfa51a67013629e91dcfd"
+    },
+    {
+      "path": "services/private-api/assignments/delivery.ts",
+      "bytes": 16048,
+      "sha256": "691cd7473e2df1532352ae71ab30cbc6aa5feb233922ebc235a3ab4175fee4f6"
+    },
+    {
+      "path": "services/private-api/assignments/live-fixture.ts",
+      "bytes": 10024,
+      "sha256": "abbc615b635ad92a5851509200e4a33cb7b31296e8517f3141244404e23bed3e"
+    },
+    {
+      "path": "services/private-api/assignments/readiness.ts",
+      "bytes": 3789,
+      "sha256": "85604709a63b25cc4b81a51de512d15457bfe7d6134d14aa7878846b4b932872"
+    },
+    {
+      "path": "services/private-api/assignments/routes.ts",
+      "bytes": 1983,
+      "sha256": "a5ae8c7c41d6561c439d584d20289b4ec7913e7df181cb078388def37f3231d8"
+    },
+    {
+      "path": "services/private-api/assignments/store.ts",
+      "bytes": 12580,
+      "sha256": "71dfe72512e4a3cdc18e0e12cb5c14b9cc66291ec8828b844231f1bc19a23b19"
+    },
+    {
+      "path": "services/private-api/bootstrap/build.mjs",
+      "bytes": 446,
+      "sha256": "0f2ef7523aa3bc876c092eac1cf88f4c68b6d81f291a77aad03a512fb77f9d5d"
+    },
+    {
+      "path": "services/private-api/bootstrap/cookie-policy.ts",
+      "bytes": 606,
+      "sha256": "bf680d393797a0f4177315ddbed3162f0d15ae23791befe9d2a6a88ccc6e76f1"
+    },
+    {
+      "path": "services/private-api/bootstrap/environment.ts",
+      "bytes": 1386,
+      "sha256": "6f5c7fc715486dd10914869195ce6d9e356b9b20c0b5a3a6e2548637b98c7fcc"
+    },
+    {
+      "path": "services/private-api/bootstrap/owner-cli.ts",
+      "bytes": 1473,
+      "sha256": "fc2dbac8f22d94a4b13d77af36c86e0e15d7995fa3cf278fe6df2be2bedb51c4"
+    },
+    {
+      "path": "services/private-api/bootstrap/owner-store.ts",
+      "bytes": 2588,
+      "sha256": "ef8f2642406425488a0801684f3285ca0952902d1d309bb488edf7ec4d9cddab"
+    },
+    {
+      "path": "services/private-api/bootstrap/owner.ts",
+      "bytes": 1941,
+      "sha256": "a69e2f8841f92b6a28e6e5c06716bf97ee9713cfa7f326139a430cdad056fed5"
+    },
+    {
+      "path": "services/private-api/db/intent-store.ts",
+      "bytes": 10404,
+      "sha256": "c1e2b96d4d24a5dfd387cdedffd15812f06a53c98d945c0dbbb869a888fa3985"
+    },
+    {
+      "path": "services/private-api/db/migrate.ts",
+      "bytes": 1317,
+      "sha256": "62dacadf8645abd0cc392bc4bc08cf439b2451dd4a21b7684cd533ccd63ea89e"
+    },
+    {
+      "path": "services/private-api/db/migrations/0000_burly_green_goblin.sql",
+      "bytes": 7634,
+      "sha256": "a75c5eea56fe026547beed8c4b1ffe1b38447fdd7a3e2cb69268ee491b77ce46"
+    },
+    {
+      "path": "services/private-api/db/migrations/0001_milky_living_lightning.sql",
+      "bytes": 1229,
+      "sha256": "f062d20151beeb54e6d6ec7b3a4061aed83de961a57f77ae8896b3952c56edac"
+    },
+    {
+      "path": "services/private-api/db/migrations/0002_integrity_guards.sql",
+      "bytes": 2551,
+      "sha256": "9e748131989f7e42a4523c4d06a69e91ef0375d0df1320db12934f1f3df15868"
+    },
+    {
+      "path": "services/private-api/db/migrations/0003_lifecycle_guards.sql",
+      "bytes": 4171,
+      "sha256": "2fedd3e36d7f3669f1a1fea81ce35f6ff083866885c17f923d3aaaffe464fbf1"
+    },
+    {
+      "path": "services/private-api/db/migrations/0004_monotonic_intent_heads.sql",
+      "bytes": 551,
+      "sha256": "95893bbcf79a4e7dc8f3812c737dc6e9d889f8f92b47370049c91ee7c27b8527"
+    },
+    {
+      "path": "services/private-api/db/migrations/0005_private_intake.sql",
+      "bytes": 3478,
+      "sha256": "5278915777b6e142e7de19c9bd7e216275c23de765faaf41aaea2adf0e29403f"
+    },
+    {
+      "path": "services/private-api/db/migrations/0006_immutable_release_content.sql",
+      "bytes": 3720,
+      "sha256": "71946d8a2429c5a5ee0f7f8d615856151a1e24b0e2cb79860e1f808b174c6e1d"
+    },
+    {
+      "path": "services/private-api/db/migrations/0007_evaluation_jobs.sql",
+      "bytes": 10145,
+      "sha256": "a6131acd589e35eaa655f1ce7a84bf6d8b5159fa24b7665de8d0ff2a3d80f509"
+    },
+    {
+      "path": "services/private-api/db/migrations/0008_assignment_delivery.sql",
+      "bytes": 5829,
+      "sha256": "815c2b6d1565ed64406b2c6fb47d143825b30ecf905d1e34315d429a7ccbb941"
+    },
+    {
+      "path": "services/private-api/db/migrations/0009_submission_import.sql",
+      "bytes": 744,
+      "sha256": "b71fd5d5c20c9d3bfec5816bb99a711248255df0088432fabc067da58aa94c90"
+    },
+    {
+      "path": "services/private-api/db/migrations/meta/_journal.json",
+      "bytes": 1539,
+      "sha256": "c9a396c7d88ddc6e2b1b9e98fd0d9f51457a72b40e3f08cf58f354411e265e94"
+    },
+    {
+      "path": "services/private-api/db/migrations/meta/0000_snapshot.json",
+      "bytes": 23117,
+      "sha256": "be11dbdeb5a3b298fea9b06321a0d5b5f5bbfeca16c1a708aa5bb0dab3ebae66"
+    },
+    {
+      "path": "services/private-api/db/migrations/meta/0001_snapshot.json",
+      "bytes": 24563,
+      "sha256": "25fcb8d6aff4f51a7cb59bee1777094f5b429a1161882479452d12fe8818de97"
+    },
+    {
+      "path": "services/private-api/db/schema.ts",
+      "bytes": 9995,
+      "sha256": "c30c8fc6a7894f8d44c48921d691e38358423b88bc217e9db3b781c96facf0c4"
+    },
+    {
+      "path": "services/private-api/src/bootstrap/main.ts",
+      "bytes": 5064,
+      "sha256": "59a3a929f7b4924dd88e5f7e0274a96c2bab64adfd9a591860cef31019d7741b"
+    },
+    {
+      "path": "services/private-api/src/bootstrap/server.ts",
+      "bytes": 4502,
+      "sha256": "b92c4797fa5ca96ba8a65bd3b2713940456f143b820240c25df291b005803c2f"
+    },
+    {
+      "path": "tests/auth/bootstrap/browser-cookie.test.ts",
+      "bytes": 3627,
+      "sha256": "f448b785574c76a0481378c46342aa4529153c775b8c17146347f2d1c1fef254"
+    },
+    {
+      "path": "tests/auth/bootstrap/cookie-policy.test.ts",
+      "bytes": 1718,
+      "sha256": "12e8fa59c9f5c6d70562ad2a64954c56939ea7abbb2948a65e50b1566dd05135"
+    },
+    {
+      "path": "tests/auth/bootstrap/environment.test.ts",
+      "bytes": 3963,
+      "sha256": "2adf732100fe819117e2c71495addecb6963bef39f956dcb2a712f9e9cfc7c31"
+    },
+    {
+      "path": "tests/auth/bootstrap/owner-store.test.ts",
+      "bytes": 2985,
+      "sha256": "e189697459845050e3bf5ecf13931c0c412a042b4d5ac66dccaab19e1309c051"
+    },
+    {
+      "path": "tests/auth/bootstrap/owner.test.ts",
+      "bytes": 2017,
+      "sha256": "9bce4d7b0bc4318e47b522c777ab7a72fdfeec5ce3f5b9a792195792393f52c3"
+    },
+    {
+      "path": "tests/e2e/contributor/harness/index.html",
+      "bytes": 265,
+      "sha256": "b84aba5deaf648476e73945a1613bfcfa965bd26b44ce9610220660483fc0558"
+    },
+    {
+      "path": "tests/e2e/contributor/harness/main.tsx",
+      "bytes": 1524,
+      "sha256": "4ebd80451aa21b550f83264c038fa6579272e6e07f84179ca31913cc68365151"
+    },
+    {
+      "path": "tests/e2e/contributor/journey.test.ts",
+      "bytes": 8411,
+      "sha256": "fb9e50e59591908cb3b24f3f926e3eb0d73057f33f551a7a267518e47190b1df"
+    },
+    {
+      "path": "tests/e2e/contributor/reservation-boundary.test.ts",
+      "bytes": 3713,
+      "sha256": "67411f0320224203de2665748fd599ec69780aedffb142084449b62a151a4871"
+    },
+    {
+      "path": "tests/e2e/contributor/support.ts",
+      "bytes": 16676,
+      "sha256": "155a2aa34b5b540aac1cc610bbb394c699dfb090d99e6e611459ecdb0eb6ec18"
+    },
+    {
+      "path": "tests/portal/reservation/reservation.test.ts",
+      "bytes": 1650,
+      "sha256": "da4d38774a2ba20465d43f69a649f46b2b62f22a4e879e24b83d519d5aa9516b"
+    },
+    {
+      "path": "tests/portal/reservations/assignment-delivery-live.test.ts",
+      "bytes": 2165,
+      "sha256": "c837b0400dbfc284f138c66d2353779bcea2d7b658151203c8768f49dfee2b71"
+    },
+    {
+      "path": "tests/portal/reservations/assignment-delivery.test.ts",
+      "bytes": 1579,
+      "sha256": "dfea6063e3099e972e7befaa173e6fa49c93767f48b0fe863c6d5161fa8cd982"
+    },
+    {
+      "path": "tests/portal/reservations/assignment-protocol.test.ts",
+      "bytes": 5994,
+      "sha256": "76133743cbbe54708258d92230d16285e0c01c306dfa0c6826d73c19c5901be1"
+    },
+    {
+      "path": "tests/portal/reservations/assignment-receipt.test.ts",
+      "bytes": 3632,
+      "sha256": "de00c46e3acebb3abc7b75bd427d3746d648d96454bd7904f16299ce8f43fdc7"
+    },
+    {
+      "path": "tests/portal/reservations/durable-live.test.ts",
+      "bytes": 2583,
+      "sha256": "cc40979a79dbdf9f8006f55d8e90e6100af6d1c2bd5876a159fe28402306eb31"
+    },
+    {
+      "path": "tests/portal/reservations/fixture.ts",
+      "bytes": 2502,
+      "sha256": "545b750b1446c4fb376279bbbd6f696cd39fa804756877f5c354c19254b72654"
+    },
+    {
+      "path": "tests/portal/reservations/owner-assignments.test.ts",
+      "bytes": 9159,
+      "sha256": "60cab9d3d76dfa58f10639cdaf4101838ad2b452c7a347adcb72bbbc4f30c971"
+    },
+    {
+      "path": "tests/portal/reservations/reservations.test.ts",
+      "bytes": 34832,
+      "sha256": "de48cdd12aba0eac2c2adee68ccb94942f51c3b69574927ea96272a8e6c116c0"
+    },
+    {
+      "path": "tests/portal/reservations/signed-assignment-live.test.ts",
+      "bytes": 5415,
+      "sha256": "345c394728e7e1d6c4cbd77169f9e45dfd88c71870b929f245e834d1ff09c632"
+    }
+  ]
+}

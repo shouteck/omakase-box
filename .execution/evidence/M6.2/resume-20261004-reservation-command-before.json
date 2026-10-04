@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:portal",
+    "--",
+    "--suite",
+    "reservation"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:40:11.882Z",
+  "finishedAt": "2026-10-03T23:40:12.870Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "{\"assurance\":\"unverified\",\"suite\":\"portal\",\"subgroup\":\"reservation\",\"status\":\"unavailable\",\"reason\":\"This required suite has not been implemented.\"}\n"
+}

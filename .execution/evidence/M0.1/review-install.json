@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "install",
+    "--frozen-lockfile"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T16:48:10.243Z",
+  "finishedAt": "2026-10-02T16:48:11.319Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "Scope: all 8 workspace projects\n ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY  Aborted removal of modules directory due to no TTY\n\nIf you are running pnpm in CI, set the CI environment variable to \"true\", or set \"confirmModulesPurge\" to \"false\".\n"
+}

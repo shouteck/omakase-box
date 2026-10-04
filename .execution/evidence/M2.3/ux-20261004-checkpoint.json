@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "assurance": "tested",
+  "scope": "Coordinator content reconciliation; not independent review or delivery.",
+  "previousStateSha256": "86726752532945a01e39707f2ca15a812f1fc27a7364bfbeb3057836bbbd7faf",
+  "scriptSha256": "224c26d8ff6e167c57e310a3acd81874d381f7238b1b96ba35d59deb54fc22cd",
+  "checks": [
+    {
+      "path": ".execution/evidence/M2.3/ux-20261004-e2e.json",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:e2e",
+        "--",
+        "--suite",
+        "intent"
+      ],
+      "exitCode": 0,
+      "sha256": "078cfdb286eb4bb568392f1b7068ed2f70cc8b719ffa029be814f66067a8d32a"
+    },
+    {
+      "path": ".execution/evidence/M2.3/ux-20261004-contracts.json",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:contracts",
+        "--",
+        "--suite",
+        "intent"
+      ],
+      "exitCode": 0,
+      "sha256": "a22d649e7291176f72cc4c03b898c427cd9c094caf84d0a8ac4bf09d0d46cd28"
+    },
+    {
+      "path": ".execution/evidence/M2.3/ux-20261004-build-retry.json",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "build"
+      ],
+      "exitCode": 0,
+      "sha256": "7ab8fa54d7b16ccaa8a0aca775988c1249a75c02bc520150b22139cfd990982f"
+    },
+    {
+      "path": ".execution/evidence/M2.3/ux-20261004-preview.json",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        ".execution/evidence/M2.3/ux-20261004-preview.mjs"
+      ],
+      "exitCode": 0,
+      "sha256": "434253a97580c66f701eb2cdf36f7698a8852d56818b40407cca265cd363059e"
+    }
+  ],
+  "rebound": [
+    {
+      "taskId": "M0.1",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "4e23aaf37a2863ca659d445d01e260e97017e5f6ad2fd411af109865754b2618",
+      "handoff": ".execution/drafts/M0.1-ux-20261004-rebind.md",
+      "handoffSha256": "30412db3d408d5aa8feab44c1ee572dae137daa5e2ca3cab8574fe0328a19599"
+    },
+    {
+      "taskId": "M0.2",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "8dc0186c59efeffa5b3b4078fab01f2b52da5141b185958873522897015e7f92",
+      "handoff": ".execution/drafts/M0.2-ux-20261004-rebind.md",
+      "handoffSha256": "b5440a97c46848ec680f2e98509847e1f7a60f01c253b4b5a97d26fa0278a445"
+    },
+    {
+      "taskId": "M0.3",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "9932d1213836792a07e0cabd8492df9c109b198196d8954c082c67df28274578",
+      "handoff": ".execution/drafts/M0.3-ux-20261004-rebind.md",
+      "handoffSha256": "82fd0bcd60cfb3e026704a2fdaa6e4404d5677daa54d937ae1a5c938edde180b"
+    },
+    {
+      "taskId": "M1.1",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "71aacf00c1eb0ae02da03731a9d33957daea1a35364ef2cc1e36ffb18a694394",
+      "handoff": ".execution/drafts/M1.1-ux-20261004-rebind.md",
+      "handoffSha256": "73633f67841e5a1d3049b542a0cd974a4d6552553c09a3e1488b8a297bd3ac28"
+    },
+    {
+      "taskId": "M1.2",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "d665f6c604ac2a2da365d2aa5d4fe894e6e813af2b69539322c2702ba5ffd596",
+      "handoff": ".execution/drafts/M1.2-ux-20261004-rebind.md",
+      "handoffSha256": "2ae7a2855392872a8b88d8a39f0cc8e8e09622d5fa446fb92b82e52ae438db55"
+    },
+    {
+      "taskId": "M1.3",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "f30f9539e8631fdd3c1dfb3aafaddf95e8461fe7ab689cba2af4029c027b65bc",
+      "handoff": ".execution/drafts/M1.3-ux-20261004-rebind.md",
+      "handoffSha256": "f1c135a6127e2447b6c767b8ff91f5155750366750628664045a6d5c0975327a"
+    },
+    {
+      "taskId": "M2.1",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "deef573fc3e0555629241307ff093a9d7f3a0d04468c9aa71489d118c8df1b11",
+      "handoff": ".execution/drafts/M2.1-ux-20261004-rebind.md",
+      "handoffSha256": "84e9de586f2cf38810f6702ce179787dd4feac2a8b79d0ab843036b48ca5b0eb"
+    },
+    {
+      "taskId": "M2.2",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "483bab1d401bfdc3d5718a840ae84bd2211429a9fcda91ff94524dda93c112b5",
+      "handoff": ".execution/drafts/M2.2-ux-20261004-rebind.md",
+      "handoffSha256": "711bc24fdfa608c969dafdcecd44647ff7feac75d1b82919f57c91e8d938b837"
+    },
+    {
+      "taskId": "M2.3",
+      "changed": [
+        "apps/private-console/intents/intents-screen.tsx",
+        "docs/DECISIONS.md",
+        "tests/e2e/intent/journey.test.ts",
+        "apps/private-console/intents/intents-screen.css",
+        "apps/private-console/intents/styles.d.ts"
+      ],
+      "revision": "94b6462adfdfd44663efce6770beb6735d21d0adb6c5390d0273bcddc163e6e1",
+      "handoff": ".execution/drafts/M2.3-ux-20261004.md",
+      "handoffSha256": "b500166e43d11b25137ff69398db28e81fd449bbf5122891d33b6d06ec1c00e6"
+    },
+    {
+      "taskId": "M3.1",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "06e05ae110f367bbebe55f5ed010f2f85ba4b10789524998501bdc98a025bf0f",
+      "handoff": ".execution/drafts/M3.1-ux-20261004-rebind.md",
+      "handoffSha256": "a8ad0307124a34167f52a652f193755aa042d5f85263359f6367dfa8e52fc93b"
+    },
+    {
+      "taskId": "M3.2",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "399e8ab4d7dcc2f92cd3cf9a5c4eb962d31a8f737881b81fedf8d36673b18b7a",
+      "handoff": ".execution/drafts/M3.2-ux-20261004-rebind.md",
+      "handoffSha256": "b0b3cea8d0294022646f0f968ddfd0a1a82e1650b78204bb30c80b7a2ae40991"
+    },
+    {
+      "taskId": "M3.3",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "84adc61333dc4fd2f2fd15d87617f1d2e5bec5741df9a6558a6ce5159e256083",
+      "handoff": ".execution/drafts/M3.3-ux-20261004-rebind.md",
+      "handoffSha256": "42932450975f2a50103aa1ff1d7ac0af7780aec26a91a3d3173af2c225e6227d"
+    },
+    {
+      "taskId": "M3.4",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "37067e168cee2be187153eba0bc69fa0d4781f17c1f2e7ea9d186361f8f6185d",
+      "handoff": ".execution/drafts/M3.4-ux-20261004-rebind.md",
+      "handoffSha256": "befbad95eee44647448463111b6dc428bd412ba83f272abc7e1cd80b60aacf41"
+    },
+    {
+      "taskId": "M4.1",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "54d545a7223678bfd3fa9a0ae854653c073b4892a769533edc42f7277c669b43",
+      "handoff": ".execution/drafts/M4.1-ux-20261004-rebind.md",
+      "handoffSha256": "906f65435d573ce8ac4e32eee8439284c0d837b3d6df3b385c35c154d0b4674d"
+    },
+    {
+      "taskId": "M4.2",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "d9af2cdb7a3066ccf4058454e59d9098782606e67b3576901aab2ef10e0d535b",
+      "handoff": ".execution/drafts/M4.2-ux-20261004-rebind.md",
+      "handoffSha256": "9bfc73c51884aa3f3614c39a2719bcb25ab5ee9a40698314585eb19615287ef9"
+    },
+    {
+      "taskId": "M5.1",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "e2bb26b5de69dc9637b2354e59ce74c010928fbbee23dc29e5855182e358f6d6",
+      "handoff": ".execution/drafts/M5.1-ux-20261004-rebind.md",
+      "handoffSha256": "a62b82236fda28cb4256059cfafcdc11e2c69eb866384df549f8611e5d0de6e1"
+    },
+    {
+      "taskId": "M5.2",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "beee5723a1d4213b4754c681729329b3a13d51b46827212f251914e130cf9c65",
+      "handoff": ".execution/drafts/M5.2-ux-20261004-rebind.md",
+      "handoffSha256": "bed5503be9307d79f6c198b1d201eeeafa7d6047c9811206d20841a7790fa953"
+    },
+    {
+      "taskId": "M5.3",
+      "changed": [
+        "docs/DECISIONS.md"
+      ],
+      "revision": "dc10b81c817961eede87dd24cb072022f681ae1bcece61a1eb0fd54a4dbd5f76",
+      "handoff": ".execution/drafts/M5.3-ux-20261004-rebind.md",
+      "handoffSha256": "4add707034473aa912437abc657363a98e2dce04b2625ef4225ec9cfb7183be7"
+    }
+  ]
+}

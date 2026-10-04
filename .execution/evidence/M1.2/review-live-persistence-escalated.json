@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/auth/persistence/workflow-live.test.ts",
+    "tests/auth/persistence/lifecycle-live.test.ts",
+    "tests/auth/persistence/migrations-live.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:28:47.703Z",
+  "finishedAt": "2026-10-02T17:28:52.540Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  3 passed (3)\n      Tests  3 passed (3)\n   Start at  01:28:48\n   Duration  4.31s (tests 98%, transform 1%, import 1%)\n\n"
+}

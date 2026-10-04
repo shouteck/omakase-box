@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/boundaries.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:40:22.516Z",
+  "finishedAt": "2026-10-02T17:40:23.081Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"status\":\"passed\",\"checkedSourceFiles\":26,\"limitation\":\"Application workspace source-import policy; not a third-party supply-chain audit or runtime ACL proof.\"}\n"
+}

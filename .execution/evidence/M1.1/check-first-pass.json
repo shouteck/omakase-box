@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "check"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:06:44.766Z",
+  "finishedAt": "2026-10-02T03:06:52.591Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n> private-task-mvp@0.0.0 check C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\n> node scripts/workspace.mjs check\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/bootstrap/services.test.ts \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 189\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/bootstrap/commands.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 4290\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m honest capability and gate commands \u001b[2m(5)\u001b[22m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m fails the final delivery verifier until required gates exist\u001b[33m 2091\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m does not print environment credentials in doctor output\u001b[33m 2085\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m13 passed\u001b[39m\u001b[22m\u001b[90m (13)\u001b[39m\n\u001b[2m   Start at \u001b[22m 11:06:48\n\u001b[2m   Duration \u001b[22m 4.50s\u001b[2m (tests 94%, import 4%, transform 2%)\u001b[22m\n\n"
+}

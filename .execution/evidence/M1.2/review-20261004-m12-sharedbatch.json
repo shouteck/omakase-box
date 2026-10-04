@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "reviewer": "opencode-reviewer-subagent-m61-20261004",
+  "revisionDigest": "019a453f08392a2d51942f95b4d1f11d1a6e4d4e22a17f7cddd1949a2f2e76cb",
+  "decision": "approved",
+  "checkedAt": "2026-10-03T21:43:19.013Z",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M1.2 review-m12-manifest-bytes <reviewer byte-verification script> .execution/evidence/M1.2/revision-019a453f08392a2d51942f95b4d1f11d1a6e4d4e22a17f7cddd1949a2f2e76cb.json",
+      "evidence": ".execution/evidence/M1.2/review-m12-manifest-bytes.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M6.1 coordinator-check scripts/pnpm.mjs check (coordinator rerun on the current tree; 14+40+144+51 = 249 tests green, exit 0)",
+      "evidence": ".execution/evidence/M6.1/coordinator-check.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/evidence.mjs M6.1 coordinator-migrate2 node scripts/migrate-runtime.mjs (coordinator application of 0004 to private+external synthetic runtimes)",
+      "evidence": ".execution/evidence/M6.1/coordinator-migrate2.json",
+      "exitCode": 0
+    }
+  ],
+  "criterionFindings": {
+    "manifestByteVerification": "PASS. All 72 files in .execution/evidence/M1.2/revision-019a453f08392a2d51942f95b4d1f11d1a6e4d4e22a17f7cddd1949a2f2e76cb.json recomputed from disk: 72/72 SHA-256 + byte-count match (evidence review-m12-manifest-bytes.json, 0 problems). The manifest content hash re-equals the recorded revision digest (sha256 over JSON.stringify(manifest)) and taskDefinitionSha256 equals the current tasks/task-graph.json digest eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101. The previously approved binding was .execution/evidence/M1.2/revision-228bc79081d92672f8fc763a98db1f9eae4de236b5ae37380e6af5e2d427c82b.json (per state tasks.M1.2.previousAccepted and the review-20261004b-rebind report).",
+    "writeScopeConformity": "PASS. Byte-scope diff of the rebind-only changes against the previously approved 228bc79081d92672f8fc763a98db1f9eae4de236b5ae37380e6af5e2d427c82b manifest (71 entries) shows EXACTLY the declared drift and nothing else: (a) ADDED services/external-api/db/migrations/0004_m61_published_tasks.sql (1982 bytes, sha256 3b162e67926790d7be37687bdaf2aa70b32dfdf8d72fa564af84ffe422e61a8d) and (b) CHANGED services/external-api/db/migrations/meta/_journal.json (579 -> 796 bytes, journal idx 4 tag 0004_m61_published_tasks, breakpoints false, coordinator-chosen 'when' 1791062688556). Both paths sit inside M1.2's writePath services/external-api/db/** (tasks/task-graph.json line ~178-179). Every other product path is byte-identical to the previously approved manifest (all remaining 70 entries carry identical hashes in both manifests). No M6.1 worker-authored file was absorbed into this rebind.",
+    "migrationIntegrity": "PASS. services/external-api/db/migrations/0004_m61_published_tasks.sql is CREATE-only: exactly CREATE TABLE external_bridge_claims, CREATE TABLE external_published_tasks, CREATE INDEX external_published_tasks_board, CREATE FUNCTION external_released_immutable, and two CREATE TRIGGER (append-only BEFORE UPDATE/DELETE) statements; no ALTER/DROP/TRUNCATE/INSERT/DELETE/GRANT/UPDATE data statements (the only 'UPDATE OR DELETE' occurrences are the append-only trigger clauses themselves). It is byte-identical to the worker-shipped PUBLISHED_TASK_DDL template string in services/external-api/tasks/ddl.ts (only the leading newline that belongs to the TS template literal differs), sha256 3b162e67926790d7be37687bdaf2aa70b32dfdf8d72fa564af84ffe422e61a8d. Bounded-column CHECKs, unique (task_id,version), event FK integrity and the released_data_immutable trigger behaviour were additionally exercised at runtime by the M6.1 durable-live test (immutableGuards:true on the current tree).",
+    "runtimeApplicationEvidence": "Verified-by-evidence, coordinator-owned: first attempt coordinator-migrate.json exited 1 with a malformed invocation (MODULE_NOT_FOUND, recorded honestly), the corrected coordinator-migrate2.json exit 0 reports {\"assurance\":\"tested\",\"service\":\"private-api\",\"migration\":\"applied\"} and external-api applied. The rerun evidence coordinator-check.json shows exit 0 with 14+40+144+51 = 249 tests green on the current tree including live migrations tests (applies all forward migrations and replays on fresh identified synthetic databases).",
+    "realGatesStayOpen": "PASS. This rebind binds the coordinator-owned additive migration into M1.2's packet only; it makes no real-runner, publication, delivery or independent-review claims. M6.2/M6.3 and M6 delivery remain blocked pending M5.2. Note recorded honestly: scripts/audit-execution.mjs currently exits 1 on a broader bookkeeping invariant (M1.3 status done depends on M1.2 which returned to review status with this rebind), not on any M1.2 byte mismatch; every packet reference in this rebind is internally consistent."
+  },
+  "notes": [
+    "Decision: approve the M1.2 rebind (shared migration batch), covering the additive coordinator-applied external migration 0004_m61_published_tasks.sql plus journal idx 4 and the byte-identity of all other product paths against the previously accepted review-20261004b rebind.",
+    "The coordinator's first migrate attempt (coordinator-migrate.json, exit 1, MODULE_NOT_FOUND) is retained as history; the applied state is certified by the corrected rerun (coordinator-migrate2.json, exit 0).",
+    "scripts/audit-execution.mjs currently exits 1 on the done-task dependency invariant after M1.2's review-status rebind (M1.3 done depends on M1.2 in review); also an earlier audit failure versus the 579-byte journal is superseded by this refreshed 796-byte binding. Coordinator follow-up, not an M1.2 byte failure.",
+    "No real-runner, live-model, publication-readiness or human-evidence claims are associated with this approval; it binds execution-packet integrity for the local component slice only."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "planVersion": "2026-10-02.4",
+  "milestones": 10,
+  "tasks": 32,
+  "dependencyLayers": 22,
+  "cycles": false,
+  "initialReadyTasks": [
+    "M0.1"
+  ],
+  "finalReadyTasks": [
+    "M9.3"
+  ],
+  "taskCardsSynchronized": true,
+  "jsonValid": true,
+  "markdownLinksValid": true,
+  "researchCopyHashVerified": true,
+  "nonexclusiveTaskCompositionSpecified": true,
+  "coherentFullStackAndCodebasePolicyRequired": true,
+  "productImplementationStarted": false,
+  "checksPerformed": "Plan structure and consistency only; required product checks are future implementation gates."
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "build"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T18:30:25.113Z",
+  "finishedAt": "2026-10-03T18:30:33.771Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "apps/private-console/intents/intents-screen.tsx(3,8): error TS2882: Cannot find module or type declarations for side-effect import of './intents-screen.css'.\r\n"
+}

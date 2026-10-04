@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:analysis"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T00:21:04.751Z",
+  "finishedAt": "2026-10-03T00:21:08.181Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/analysis/surface-classification.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 45\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/analysis/boundary-detection.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 58\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/analysis/private-analysis-journey.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 50\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/analysis/empty-surface.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 16\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m12 passed\u001b[39m\u001b[22m\u001b[90m (12)\u001b[39m\n\u001b[2m   Start at \u001b[22m 08:21:05\n\u001b[2m   Duration \u001b[22m 2.49s\u001b[2m (import 83%, tests 9%, transform 7%, worker 1%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m4 workers spawned\u001b[39m\u001b[2m · ~135ms startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~406ms faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n"
+}

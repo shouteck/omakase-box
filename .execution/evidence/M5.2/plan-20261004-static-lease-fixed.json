@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:security",
+    "--",
+    "--suite",
+    "runtime"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T19:01:47.408Z",
+  "finishedAt": "2026-10-03T19:01:49.178Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/security/runtime/plan.test.ts \u001b[2m(\u001b[22m\u001b[2m60 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 130\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m60 passed\u001b[39m\u001b[22m\u001b[90m (60)\u001b[39m\n\u001b[2m   Start at \u001b[22m 03:01:48\n\u001b[2m   Duration \u001b[22m 640ms\u001b[2m (import 40%, tests 36%, transform 23%, worker 2%)\u001b[22m\n\n"
+}

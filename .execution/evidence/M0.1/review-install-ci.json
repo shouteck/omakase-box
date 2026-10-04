@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "install",
+    "--frozen-lockfile"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T16:48:21.250Z",
+  "finishedAt": "2026-10-02T16:57:26.643Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "Scope: all 8 workspace projects\nRecreating C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node_modules\n"
+}

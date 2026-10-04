@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--input-type=module",
+    "-e",
+    "import assert from 'node:assert/strict'; import {canonicalize} from './packages/contracts/hash.ts'; let reads=0;const a=[1];Object.defineProperty(a,'0',{enumerable:true,get(){return ++reads}});assert.throws(()=>canonicalize(a),/Accessors|accessor/, 'Array getters must be rejected without invocation');"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T16:49:54.963Z",
+  "finishedAt": "2026-10-02T16:49:55.738Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Missing expected exception: Array getters must be rejected without invocation\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/[eval1]:1:201\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:278:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:275:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: undefined,\r\n  expected: /Accessors|accessor/,\r\n  operator: 'throws',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

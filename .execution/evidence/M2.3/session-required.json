@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:contracts",
+    "--",
+    "--suite",
+    "intent"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T19:55:38.961Z",
+  "finishedAt": "2026-10-02T19:55:41.924Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/contracts/intent/session-store.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 13\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/contracts/intent/session-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 950\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m actual private DB session records protect intent revisions, decisions and immutable owner approval\u001b[33m 948\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m   Start at \u001b[22m 03:55:40\n\u001b[2m   Duration \u001b[22m 1.67s\u001b[2m (tests 75%, import 15%, transform 8%, worker 1%)\u001b[22m\n\n"
+}

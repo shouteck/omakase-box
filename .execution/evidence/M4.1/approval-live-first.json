@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M4.1/verify-release-live.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:10:58.533Z",
+  "finishedAt": "2026-10-03T03:11:01.003Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[43m\u001b[30m WARN \u001b[39m\u001b[49m \u001b[36minlineDynamicImports\u001b[39m option is deprecated, please use \u001b[36mcodeSplitting: false\u001b[39m instead.\n\n{\"assurance\":\"tested\",\"realCustomerData\":false,\"scope\":\"Actual synthetic PostgreSQL and authenticated injected HTTP; not real runner or independent review.\",\"database\":\"synthetic_release_de3e73a69d61434b9ddf3fcb3c812890\",\"immutableAssets\":\"tested\",\"ownerSession\":\"tested\",\"csrf\":\"tested\",\"roleDenial\":\"tested\",\"approvalConcurrency\":\"tested\",\"staleIntent\":\"tested\",\"signature\":\"tested\",\"integratedRuntime\":\"not_yet_wired\"}\n"
+}

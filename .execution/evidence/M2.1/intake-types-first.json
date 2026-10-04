@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:27:44.382Z",
+  "finishedAt": "2026-10-02T18:27:49.183Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "services/private-api/src/bootstrap/server.ts(26,20): error TS18046: 'error' is of type 'unknown'.\r\nservices/private-api/src/bootstrap/server.ts(26,53): error TS18046: 'error' is of type 'unknown'.\r\n"
+}

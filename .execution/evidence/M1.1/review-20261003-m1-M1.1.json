@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "reviewer": "opencode-reviewer-subagent-m1-20261003",
+  "reviewedAt": "2026-10-04",
+  "role": "distinct independent reviewer; did not implement; reviewed docs/SECURITY.md, docs/SPEC.md, docs/ARCHITECTURE.md, milestones/M1.md, task cards, drafts and evidence before judging",
+  "revisionBinding": {
+    "manifest": ".execution/evidence/M1.1/revision-3bf2ca681a5683a2ff61ed11118b3c597f910a6078580b6a22bbf8645a599a7a.json",
+    "entries": 75,
+    "digestRecomputedMatchesState": true,
+    "taskDefinitionSha256MatchesCurrentTaskGraph": true,
+    "recomputationMethod": "independent Node script (outside repo) recomputed SHA-256 and byte size of every manifest entry against the working tree",
+    "mismatches": [
+      { "path": "docs/DECISIONS.md", "classification": "shared", "expected": true, "detail": "coordinator edited today; 26488 -> 28711 bytes" },
+      { "path": "scripts/execution.mjs", "classification": "shared", "expected": true, "detail": "coordinator edited today; 7503 -> 7633 bytes" }
+    ],
+    "productPathMismatch": false,
+    "productPathsByteIdentical": true,
+    "missingFiles": 0,
+    "diskFilesUnderWritePathsNotInManifest": [],
+    "previousAcceptedDiff": {
+      "baseline": ".execution/evidence/M1.1/revision-cbf74267e6516e7488e347e97cf382c881c2a91243ddc303463ce375fa412fd0.json",
+      "productAdditions": [
+        "packages/contracts/auth/policy.ts",
+        "packages/contracts/private/analysis.ts",
+        "packages/contracts/private/planning.ts",
+        "packages/contracts/public/response-policy.ts",
+        "tests/contracts/intent/orchestrator.test.ts",
+        "tests/contracts/intent/routes.test.ts",
+        "tests/contracts/intent/session-live.test.ts",
+        "tests/contracts/intent/session-store.test.ts"
+      ],
+      "productChanges": ["packages/contracts/auth/http.ts", "packages/contracts/auth/store.ts"],
+      "productRemovals": [],
+      "explanation": "All product differences are later coordinator-integration work inside M1.1 writePaths (M1.3 auth contract integration, M2.1 intake/policy, M2.2 planning schemas) recorded in those tasks' manifests; the current manifest binds every one of them byte-identically to disk. Shared drift (AGENTS.md, docs/DECISIONS.md, infra/trusted.Dockerfile*, pnpm-lock.yaml, scripts/doctor|execution|verify-mvp|vitest.config|workspace.mjs, services/*/src/bootstrap/main.ts, plus new scripts/verify-*.mjs) is consistent with the disclosed sweep and coordinator edits. No unexplained product difference."
+    },
+    "classification": "expected_drift_only"
+  },
+  "acceptanceJudgements": [
+    {
+      "bullet": "Unknown privileged fields are rejected; external DTOs contain no internal provenance.",
+      "verdict": "pass",
+      "evidence": "tests/contracts/schemas.test.ts injects injectedAuthority into all 9 architecture schemas (manifest, envelope, submission, permit, feedback, intent, plan, attempt, result) and every parse fails; composition.test.ts rejects privateRevision/approvalActor/family/internalIntent/modelPrompt/role and a nested workUnit command; projectPublicListing is a positive allowlist asserting the exact key set, absence of workUnits, and throws on a privateLogs canary; PublicFeedbackSchema rejects privateLogs, private jobKind and rawMessage; SubmissionEnvelopeSchema rejects client actorId."
+    },
+    {
+      "bullet": "Identical canonical content hashes identically; one-byte changes invalidate its digest; path collisions are rejected.",
+      "verdict": "pass",
+      "evidence": "packages/contracts/hash.ts canonicalizes json-sorted-utf8/v1 with recursive key sort, preserved array order, and rejects non-JSON values, cycles, sparse/extended arrays and accessors (canonical-array.test.ts proves getters are never invoked); paths.test.ts asserts an independently known SHA-256 vector which the reviewer recomputed outside the suite (sha256 of the 5 canonical bytes '\"abc\"' = 6cc43f858fbb763301637b5af970e2a46b46f461f27e5a0f41e009c59b827b25, matching the assertion); hash sensitivity test shows one changed byte/hash/terms/policy binding changes the manifest digest; paths.test.ts and the manifest asset test reject exact, case-folded and file/directory collisions; PortablePathSchema rejects traversal, drive/UNC/device/ADS/NUL/backslash/trailing-dot/space cases."
+    },
+    {
+      "bullet": "Single-unit, frontend+backend and frontend+backend+policy contracts validate; conflicting path/schema ownership, dangling links and unknown capabilities are rejected.",
+      "verdict": "pass",
+      "evidence": "composition.test.ts parses single-unit, full-stack and full-stack+policy fixtures and rejects 15 named invalid scenarios (duplicate_ids, shared_paths, case_paths, dangling_interface, unknown_capability shell, unsupported_version, missing_capability, schema_owner, missing_e2e, partial_e2e, cyclic_start, uncovered_requirement, missing_interface_check, tooling_edit, executable_policy); graph-hardening.test.ts additionally rejects a disconnected policy unit, non-participating interface declaration, mixed versions of one schema, and candidate-editable published interface schemas; the 'family' exclusive discriminator field is rejected."
+    }
+  ],
+  "reruns": [
+    {
+      "command": "node scripts/evidence.mjs M1.1 review-20261003-1-contracts scripts/pnpm.mjs test:contracts",
+      "evidence": ".execution/evidence/M1.1/review-20261003-1-contracts.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "13 files / 144 tests passed (expectation 144 met)"
+    },
+    {
+      "command": "node scripts/evidence.mjs M1.1 review-20261003-2-check scripts/pnpm.mjs check",
+      "evidence": ".execution/evidence/M1.1/review-20261003-2-check.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "external source-import boundary 27 files passed; 14 bootstrap + 40 auth + 144 contracts + 51 planner tests passed; auth suite ran clean after a deliberate 300s wait to respect the 20-login/5-minute rate policy (no restart needed)"
+    }
+  ],
+  "retainedFailures": [
+    { "file": ".execution/evidence/M1.2/review-20261003-1-persistence.json", "detail": "reviewer's own first M1.2 evidence attempt used an incorrect argument convention (literal 'node' passed to evidence.mjs) and exited 1; task-agnostic invocation error, disclosed and superseded by the corrected run" },
+    { "file": ".execution/evidence/M1.1/sweep-20261003-check.json", "detail": "historical coordinator sweep had 1 auth failure (429 rate-limit interference, not an auth defect); superseded by revalidate-20261003-check.json exit 0" }
+  ],
+  "limitations": "Zod schemas, canonicalization and hash bindings are structural guarantees; they are not signature verification, release-approval authority, transactional enforcement, runner authenticity or semantic confidentiality, which remain M1.2/M1.3/M4/M5/M6 gates. All fixtures are synthetic. verify:mvp still correctly exits 2 (unavailable gates).",
+  "verdict": "approved"
+}

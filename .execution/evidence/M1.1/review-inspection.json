@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "root/contracts_review",
+  "assurance": "bounded",
+  "requiredReads": [
+    "AGENTS.md",
+    "START.md",
+    "PLAN.md",
+    "docs/SPEC.md",
+    "docs/COMPOSITION.md",
+    "docs/ARCHITECTURE.md",
+    "docs/SECURITY.md",
+    "milestones/M1.md",
+    "tasks/task-graph.json",
+    ".execution/state.json"
+  ],
+  "taskId": "M1.1",
+  "inspection": [
+    "Strict public/private Zod DTOs and positive public listing",
+    "Versioned adapters and capabilities, single path writer, schema ownership",
+    "Connected runtime interface graph and acyclic start graph",
+    "Requirement links and aggregate end-to-end coverage",
+    "Portable paths, canonical JSON and SHA-256"
+  ],
+  "findings": [
+    {
+      "status": "fixed_pending_full_suite",
+      "file": "packages/contracts/hash.ts",
+      "issue": "Array accessors previously executed and changed output across repeated canonicalization.",
+      "evidence": "review-array-accessor.json",
+      "recheck": "review-array-accessor-recheck.json"
+    }
+  ],
+  "limitations": [
+    "Schema validation is not cryptographic signature verification or full release verification; later bridge/compiler work is mandatory.",
+    "External import closure check is not runtime ACL or dependency supply-chain proof."
+  ]
+}

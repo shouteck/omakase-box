@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/analysis/partition",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:27:34.105Z",
+  "finishedAt": "2026-10-03T01:27:45.327Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/analysis/partition/boundary-extraction.test.ts \u001b[2m(\u001b[22m\u001b[2m14 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 8911\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m a coupled selection flow acquires a newly typed generic boundary without layer splitting\u001b[33m 1697\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m the proposed parameterization removes protected coupling from both layers while the retained adapter keeps the protected computation\u001b[33m 1192\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m the public projection carries the generic boundary only and never captured payloads, private paths or the adapter body\u001b[33m 1221\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m lists uncaptured private couplings as advisory instead of silently ignoring them\u001b[33m 1160\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m never executes or writes captured code into the workspace\u001b[33m 1109\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m refuses a protected disclosure that is not an array-shaped consumer surface\u001b[33m 672\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m refuses option fields outside the bounded primitive disclosure\u001b[33m 700\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m refuses a caller that invokes an option-parameterized component directly as a function\u001b[33m 753\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m refuses a broken pinned baseline instead of proposing over it\u001b[33m 395\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/analysis/partition/boundary-detection.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 103\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m16 passed\u001b[39m\u001b[22m\u001b[90m (16)\u001b[39m\n\u001b[2m   Start at \u001b[22m 09:27:34\n\u001b[2m   Duration \u001b[22m 10.62s\u001b[2m (tests 88%, import 9%, transform 2%)\u001b[22m\n\n"
+}

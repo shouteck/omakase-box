@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.3",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "check"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T05:11:03.887Z",
+  "finishedAt": "2026-10-02T05:11:08.819Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "examples/private-shop/vite.config.ts(5,1): error TS4082: Default export of the module has or is using private name 'ForwardConsoleOptions'.\r\nexamples/private-shop/vite.config.ts(5,1): error TS4082: Default export of the module has or is using private name 'FutureOptions'.\r\n"
+}

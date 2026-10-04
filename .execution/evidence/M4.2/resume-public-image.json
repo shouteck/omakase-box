@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M4.2/public-image.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:35:53.077Z",
+  "finishedAt": "2026-10-03T03:37:17.792Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Public layer scan failed:  Traceback (most recent call last):\r\r\n  File \"C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.execution\\evidence\\M4.2\\scan-public-image.py\", line 71, in <module>\r\r\n    report = scan_archive(sys.argv[1], sys.argv[2])\r\r\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\r\n  File \"C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.execution\\evidence\\M4.2\\scan-public-image.py\", line 32, in scan_archive\r\r\n    raise ValueError('image_configuration_digest')\r\r\nValueError: image_configuration_digest\r\r\n\r\n\r\n1 !== 0\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/.execution/evidence/M4.2/public-image.mjs:42:8\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 1,\r\n  expected: 0,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

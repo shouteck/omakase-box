@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "services/private-api/bootstrap/build.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:40:09.175Z",
+  "finishedAt": "2026-10-02T17:40:09.748Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "vite v8.3.1 building ssr environment for production...\ntransforming...\n✓ 11 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/main.js  21.05 kB │ gzip: 5.89 kB\n\n✓ built in 42ms\nvite v8.3.1 building ssr environment for production...\ntransforming...\n✓ 5 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/owner-cli.js  6.31 kB │ gzip: 2.32 kB\n\n✓ built in 19ms\nvite v8.3.1 building ssr environment for production...\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/owner-store.js  2.37 kB │ gzip: 0.92 kB\n\n✓ built in 15ms\nvite v8.3.1 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/migrate.js  2.41 kB │ gzip: 1.08 kB\n\n✓ built in 31ms\nvite v8.3.1 building ssr environment for production...\ntransforming...\n✓ 7 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/intent-store.js  16.57 kB │ gzip: 4.70 kB\n\n✓ built in 30ms\nvite v8.3.1 building ssr environment for production...\ntransforming...\n✓ 3 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/fixture.js  4.22 kB │ gzip: 1.69 kB\n\n✓ built in 33ms\n"
+}

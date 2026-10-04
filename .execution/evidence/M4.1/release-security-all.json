@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:security"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:16:09.114Z",
+  "finishedAt": "2026-10-03T03:16:16.048Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/security/evidence/routes.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 386\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m a requester cannot import arbitrary host paths or impersonate an operator\u001b[33m 343\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/evidence/snapshots.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 215\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/authorization/gates.test.ts \u001b[2m(\u001b[22m\u001b[2m9 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 218\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/dependency-boundary/coupling.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 82\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/prompt-injection/providers.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 49\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/policy-scope/policy.test.ts \u001b[2m(\u001b[22m\u001b[2m21 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 25\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/prompt-injection/contracts.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 13\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/authorization/resources.test.ts \u001b[2m(\u001b[22m\u001b[2m10 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 14\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/security/evidence/store.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 11\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m9 passed\u001b[39m\u001b[22m\u001b[90m (9)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m73 passed\u001b[39m\u001b[22m\u001b[90m (73)\u001b[39m\n\u001b[2m   Start at \u001b[22m 11:16:10\n\u001b[2m   Duration \u001b[22m 5.46s\u001b[2m (import 53%, tests 27%, transform 18%, worker 2%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m9 workers spawned\u001b[39m\u001b[2m · ~171ms startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~1.37s faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n"
+}

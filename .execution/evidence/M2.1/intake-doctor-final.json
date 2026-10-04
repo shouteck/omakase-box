@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "doctor",
+    "--json"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:53:49.179Z",
+  "finishedAt": "2026-10-02T18:53:52.690Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\n  \"schemaVersion\": 1,\n  \"assurance\": \"tested\",\n  \"node\": {\n    \"version\": \"24.11.0\",\n    \"supported\": true,\n    \"pinned\": \"24.11.0\"\n  },\n  \"pnpm\": {\n    \"pinned\": \"10.34.5\",\n    \"localInstalled\": true\n  },\n  \"docker\": {\n    \"status\": \"tested\",\n    \"daemonAvailable\": true,\n    \"reason\": null\n  },\n  \"databases\": {\n    \"private\": \"tested\",\n    \"external\": \"tested\",\n    \"reason\": \"Live own-database identity probes only; separation, cookie policy and owner transactions have distinct verification evidence.\"\n  },\n  \"browserHosts\": [\n    {\n      \"hostname\": \"private.localhost\",\n      \"status\": \"tested\"\n    },\n    {\n      \"hostname\": \"contributor.localhost\",\n      \"status\": \"tested\"\n    }\n  ],\n  \"model\": {\n    \"mode\": \"not_configured\",\n    \"status\": \"needs_configuration\",\n    \"liveVerification\": \"unverified\"\n  },\n  \"runner\": {\n    \"assurance\": \"unverified\",\n    \"requiredProfile\": \"dedicated-linux-kvm-fresh-vm\",\n    \"status\": \"needs_configuration\",\n    \"realValidation\": \"unverified\",\n    \"hostExecutionAllowed\": false\n  },\n  \"independentReview\": \"unverified\",\n  \"humanPilot\": \"not_conducted\"\n}\n"
+}

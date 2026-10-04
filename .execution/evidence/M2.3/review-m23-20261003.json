@@ -1,0 +1,111 @@
+{
+  "taskId": "M2.3",
+  "reviewer": "opencode-reviewer-subagent",
+  "revisionDigest": "dd85c640c1dfb18036613e9964b0be4846703a3284f5a033efef575350e20fc9",
+  "decision": "approved",
+  "checksRerun": [
+    {
+      "command": "node scripts/synthetic-runtime.mjs stop",
+      "exitCode": 0,
+      "observed": "Identified synthetic runtime stopped cleanly (first uncaptured cycle before the e2e suite; captured second cycle recorded here). Persistent data preserved.",
+      "evidencePath": ".execution/evidence/M2.3/review-runtime-stop.json"
+    },
+    {
+      "command": "node scripts/synthetic-runtime.mjs up",
+      "exitCode": 0,
+      "observed": "Synthetic runtime restarted from the canonical trusted images (coordinator rebuilt them at 2026-10-02T22:32Z after applying the planner prompts/providers COPY lines); only identified containers started.",
+      "evidencePath": ".execution/evidence/M2.3/review-runtime-up.json"
+    },
+    {
+      "command": "node scripts/migrate-runtime.mjs",
+      "exitCode": 0,
+      "observed": "Migrations reported applied for private-api and external-api; idempotent, persistent data not dropped.",
+      "evidencePath": ".execution/evidence/M2.3/review-runtime-migrate.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-e2e-intent scripts/pnpm.mjs test:e2e -- --suite intent",
+      "exitCode": 0,
+      "observed": "6/6 tests passed (2 files) against the restarted synthetic runtime with real Chromium: goal-only reviewable draft, decisions/readiness/exact-hash approval/edit-after-approval journey, ONE composed full-stack+policy draft, hostile-goal escaped-text canary (no script/img/svg/javascript: execution, only the console bundle script), owner visibility without unauthenticated private detail. Runtime restart (stop/up/migrate) performed first per the rate policy.",
+      "evidencePath": ".execution/evidence/M2.3/review-e2e-intent.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-contracts-intent scripts/pnpm.mjs test:contracts -- --suite intent",
+      "exitCode": 0,
+      "observed": "22/22 tests passed (4 files) including the real private-DB session-live fixture: server-allocated identity, strict bodies, provenance round-trip, revalidation, decision/review flows, store-level authorization with stored session roles, hash/version gates, safe error mapping, positive 17-key allowlist projection.",
+      "evidencePath": ".execution/evidence/M2.3/review-contracts-intent.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-security-authorization scripts/pnpm.mjs test:security -- --suite authorization",
+      "exitCode": 0,
+      "observed": "19/19 security tests passed (gates 9, resources 10).",
+      "evidencePath": ".execution/evidence/M2.3/review-security-authorization.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-tsc node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "observed": "TypeScript check produced no output (no type errors).",
+      "evidencePath": ".execution/evidence/M2.3/review-tsc.json"
+    }
+  ],
+  "criterionFindings": [
+    {
+      "criterion": "A goal entered WITHOUT technical detail produces a reviewable draft in demo mode",
+      "verdict": "met",
+      "basis": "Re-ran tests/e2e/intent/journey.test.ts myself in a real browser after a sanctioned runtime restart: goal-only form -> demo mode -> draft review screen with facts/assumptions/unknowns, blockage count and provenance, exit 0. Source confirms: intake requires only snapshot+goal (intake-screen.tsx:88), orchestrator assembles a server-owned draft via DemoPlannerProvider with revalidation (orchestrator.ts:89-99), demo provider is credential/network-free and visibly fixture-based (demo.ts)."
+    },
+    {
+      "criterion": "Required unresolved decisions block preparation",
+      "verdict": "met",
+      "basis": "assertTransition requires requiredDecisionsResolved for ready_for_approval/approved (packages/contracts/workflow/index.ts:30) and InternalIntentSchema blocks ready/approved payload state with unresolved required decisions (packages/contracts/private/index.ts:20); store transition enforces it inside the transaction (intent-store.ts:122). Observed in my e2e re-run: readiness 422 missing_evidence before decision resolution, UI button disabled; contract orchestrator tests cover the same gates."
+    },
+    {
+      "criterion": "Edit-after-approval invalidates affected downstream evidence/approvals; a new revision after approval invalidates the old approval",
+      "verdict": "met",
+      "basis": "Observed in my e2e re-run: POST /v1/intents/:id/revisions after approval -> 201 version 3 draft with approvalInvalidated:true; repeat approval with old version/hash -> 409 stale_version; head read shows supersededApproval:true and the UI shows the invalidation alert. Real-DB session-live fixture (contracts intent suite) confirms approved payload immutability and stale-old-approval rejection. Old approved revision rows stay immutable (approved_hash binds content_hash, intent-store.ts:49,124); future downstream stores bind by intent hash and are invalidated by construction (no downstream artifacts exist yet, M3.2+)."
+    },
+    {
+      "criterion": "Previews use trusted templates/escaped data or an opaque-origin sandbox; proposed code never executes in the private console origin",
+      "verdict": "met",
+      "basis": "Verified BOTH from source and a real browser: source inspection of apps/private-console (intents-screen.tsx, intake-screen.tsx, main.tsx, private-client.ts) shows only React text interpolation with no dangerouslySetInnerHTML/innerHTML/document.write/eval/new Function (grep clean over the app). My re-run of the hostile-goal e2e test in Chromium rendered the script/img-onerror/svg-onload/javascript: goal as escaped text: window canaries undefined, zero img/svg/javascript:-link elements, page URL unchanged, exactly one script element (the console bundle), and the review fetch returns application/json. Escaping path used; opaque-origin sandbox not needed since no code-preview content exists at the intent stage (honest limitation)."
+    },
+    {
+      "criterion": "PM can describe a full-stack or codebase-policy outcome; owner can review ONE composed task without being forced to create separate layer bounties",
+      "verdict": "met",
+      "basis": "My e2e re-run of the composed journey: one goal describing selection journey plus response policy produced exactly one reviewable draft whose acceptance examples span selection_ui, selection_api, response_policy and the end-to-end selection_journey; exactly one review article rendered; UI states nothing is split into separate per-layer bounties. Demo fixture selection_with_policy (demo-fixtures.ts:47) backs this without an exclusive discipline discriminator."
+    },
+    {
+      "criterion": "Owner approval binds the exact reviewed intent revision/hash with private traceability; server-side authority (no client-supplied authority assertion; no bearer capability from a request body)",
+      "verdict": "met",
+      "basis": "Approval route uses intent.approve (owner-only per packages/contracts/auth/policy.ts:7); body schemas are strictObject {expectedVersion, expectedHash} (intents/types.ts:15); orchestrator.approve passes exact version+hash to the store; store.transition re-locks the head row, re-derives the role from private_accounts/private_sessions inside the transaction (intent-store.ts:33-37) and sets approved_by/approved_hash=content_hash only on exact match (intent-store.ts:124). My re-run of the e2e authorization test: requester approval 403, operator every intent route 403, stranger create 404/read 403, wrong hash 422, contributor cookie 401 on private API, external API route 404; contract tests reject request bodies containing endpoint/model/executor/approval/actorRole fields with 400. Minor note: approvedAt reports the revision row's created_at, not the approval-recorded time (see limitations)."
+    },
+    {
+      "criterion": "Internal task objects are never serialized to a contributor route; publicProductFlow remains not_implemented",
+      "verdict": "met",
+      "basis": "Grep of services/external-api shows no intent routes/wiring; my e2e re-run confirms external API returns 404 for intent/request-intent routes and the private API rejects a contributor session with 401 authentication_denied. The review DTO is a schema-enforced positive allowlist (ReviewProjectionSchema strictObject, intents/types.ts:32-49); tests assert exactly 17 keys and absence of workspace paths/private canaries. publicProductFlow not_implemented is asserted in the session-live DB fixture and both e2e structured logs."
+    },
+    {
+      "criterion": "Coordinator-granted integration wiring inspected (server.ts, main.tsx, intent-store.ts, trusted.Dockerfile + dockerignore, services/private-api/intents/**)",
+      "verdict": "met",
+      "basis": "Read all of them myself. server.ts:11-26 wires intents only when auth exists, with a derived-from-intake fallback and no model configuration (so ollama is safely unconfigured); host/origin allowlist hook preserved. main.tsx is a thin shell mounting IntakeScreen/IntentsScreen with CSRF handling. intent-store.ts adds request-bound create with transaction-bound ownership+snapshot-hash binding, ownership-filtered readForRequest by provenance containment, approval traceability and supersededApproval; the legacy string-actor branch is unchanged. trusted.Dockerfile lines 22-23 COPY packages/planner/prompts and providers; dockerignore lines 46-49 allowlist exactly !packages/planner/prompts/** and !packages/planner/providers/** as the handoff requested; the canonical image build (coordinator-runtime-build.json exit 0) and my successful runtime restart plus passing e2e prove the wiring works."
+    },
+    {
+      "criterion": "Revision integrity: the reviewed digest binds the exact current workspace content",
+      "verdict": "met",
+      "basis": "I recomputed the M2.3 revision manifest per scripts/execution.mjs (write paths + shared paths + integration paths, sha256 per file, sorted, canonical JSON) and reproduced the digest dd85c640c1dfb18036613e9964b0be4846703a3284f5a033efef575350e20fc9 with 0 missing/0 added/0 changed files vs the manifest. taskDefinitionSha256 also matches. The granted server.ts/main.tsx edits are not in this manifest's file set by design; I verified their exact current bytes are bound by the coordinator-refreshed shared manifests (server.ts by M2.1 current manifest a6cea794..., main.tsx by M0.1 current manifest deb2bb80...)."
+    }
+  ],
+  "securityReadCompleted": true,
+  "limitations": [
+    "M2.1/M2.2 prerequisite independent reviews remain open: no accepted .execution/handoffs/M2.1-*.md or M2.2-*.md exist and both tasks carry independentReviewStatus not_available in state.json. This M2.3 approval is an independent review of the M2.3 revision under sequential fallback and does not close the M2.1/M2.2 independent-review gates.",
+    "The first restart cycle before the e2e suite (stop/up/migrate) ran uncaptured; the captured second cycle (review-runtime-*.json) re-executed and confirmed the identical commands. The e2e suite itself ran against the runtime restarted by the first cycle.",
+    "approvedAt in the private approval traceability is the revision row's created_at (revision creation time) rather than the moment approval was recorded; the approval binding itself (approver, exact hash, immutable reviewed bytes) was verified against the real DB. Recommend a follow-up column or approval-time record in a later pass.",
+    "Downstream invalidation beyond the intent approval is by construction only: no partition/preparation/package/evaluation artifacts exist yet (M3.2+), so only approval invalidation could be and was demonstrated.",
+    "Preview safety uses the trusted-template escaping path (React text interpolation); the opaque-origin sandbox alternative is not exercised because no code-preview content exists at the intent stage.",
+    "Ollama/live-model mode is operator-unconfigured in this runtime: only the safe needs_configuration failure is exercised end to end; live model quality, prompt robustness and live-response validation remain separate open gates.",
+    "docs/DECISIONS.md contains the M2.3 session-boundary checkpoint entry but no separate final M2.3 completion entry mirroring the provenance-line linkage design, the 403/404 read/create split and the infra allowlist widening (coordinator-owned doc; non-blocking).",
+    "Design observations accepted after challenge: provenance linkage embeds the planning request ID inside the immutable private intent bytes (scope line) with transaction-bound request/snapshot binding (no schema change); reads of a foreign intent return 403 (existence disclosed only to holders of a valid UUID) while cross-identity creates return 404 via the intake ownership check. Both are recorded here as reviewed trade-offs, not defects.",
+    "Real isolated runner (M5.2 blocked), live model, human study and delivery gates remain open; this review covers only the M2.3 scope on the synthetic runtime.",
+    "No secrets, prompts or real private fixture contents are reproduced in this report; all observations use synthetic accounts/data."
+  ],
+  "reviewedAt": "2026-10-02T22:58:57.172Z"
+}

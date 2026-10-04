@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "build"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:16:54.171Z",
+  "finishedAt": "2026-10-02T03:16:58.928Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"status\":\"passed\",\"checkedSourceFiles\":11,\"limitation\":\"Application workspace source-import policy; not a third-party supply-chain audit or runtime ACL proof.\"}\n\u001b[36mvite v8.3.1 \u001b[32mbuilding ssr environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 4 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/private-api/dist/main.js  2.87 kB │ gzip: 1.31 kB\n\n\u001b[32m✓ built in 50ms\u001b[39m\n\u001b[36mvite v8.3.1 \u001b[32mbuilding ssr environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 4 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/external-api/dist/main.js  3.24 kB │ gzip: 1.44 kB\n\n\u001b[32m✓ built in 17ms\u001b[39m\n\u001b[36mvite v8.3.1 \u001b[32mbuilding ssr environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 2 modules transformed.\nrendering chunks...\ncomputing gzip size...\nservices/runner-controller/dist/index.js  0.43 kB │ gzip: 0.29 kB\n\n\u001b[32m✓ built in 15ms\u001b[39m\n\u001b[36mvite v8.3.1 \u001b[32mbuilding client environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 14 modules transformed.\nrendering chunks...\ncomputing gzip size...\napps/private-console/dist/index.html                  0.29 kB │ gzip:  0.22 kB\napps/private-console/dist/assets/index-mukipltU.js  220.70 kB │ gzip: 69.06 kB\n\n\u001b[32m✓ built in 160ms\u001b[39m\n\u001b[36mvite v8.3.1 \u001b[32mbuilding client environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 14 modules transformed.\nrendering chunks...\ncomputing gzip size...\napps/contributor-portal/dist/index.html                  0.29 kB │ gzip:  0.22 kB\napps/contributor-portal/dist/assets/index-DUxyb9K3.js  220.51 kB │ gzip: 69.01 kB\n\n\u001b[32m✓ built in 141ms\u001b[39m\n"
+}

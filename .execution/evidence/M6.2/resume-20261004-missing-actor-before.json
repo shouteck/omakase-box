@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservation/reservation.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:47:08.891Z",
+  "finishedAt": "2026-10-03T23:47:11.970Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/portal/reservation/reservation.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 478\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m reservation writes and package reads fail closed if no authenticated actor source is installed\u001b[39m\u001b[33m 476\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/portal/reservation/reservation.test.ts\u001b[2m > \u001b[22mreservation writes and package reads fail closed if no authenticated actor source is installed\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected 200 to be 401 // Object.is equality\u001b[39m\n\n\u001b[32m- Expected\u001b[39m\n\u001b[31m+ Received\u001b[39m\n\n\u001b[32m- 401\u001b[39m\n\u001b[31m+ 200\u001b[39m\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/portal/reservation/reservation.test.ts:\u001b[2m17:30\u001b[22m\u001b[39m\n    \u001b[90m 15|\u001b[39m   try {\n    \u001b[90m 16|\u001b[39m     const write = await app.inject({ method: 'POST', url: `/v1/tasks/$…\n    \u001b[90m 17|\u001b[39m     expect(write.statusCode).toBe(401);\n    \u001b[90m   |\u001b[39m                              \u001b[31m^\u001b[39m\n    \u001b[90m 18|\u001b[39m     expect(write.json()).toEqual({ error: 'authentication_denied' });\n    \u001b[90m 19|\u001b[39m     const read = await app.inject({ method: 'GET', url: '/v1/reservati…\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 07:47:10\n\u001b[2m   Duration \u001b[22m 1.61s\u001b[2m (import 35%, tests 35%, transform 29%, worker 1%)\u001b[22m\n\n"
+}

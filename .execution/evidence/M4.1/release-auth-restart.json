@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--input-type=module",
+    "-e",
+    "import { docker } from './scripts/docker.mjs'; import { composeArguments } from './scripts/synthetic-runtime.mjs'; const result = await docker([...composeArguments, 'restart', 'private-api', 'external-api']); console.log(JSON.stringify({assurance: result.code === 0 ? 'tested' : 'unverified', identifiedSyntheticRestart: result.code})); process.exitCode = result.code;"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:19:37.027Z",
+  "finishedAt": "2026-10-03T03:19:38.247Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"identifiedSyntheticRestart\":0}\n"
+}

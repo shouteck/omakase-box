@@ -1,0 +1,12 @@
+{
+  "name": "@private-task/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./public": "./public/index.ts",
+    "./private": "./private/index.ts",
+    "./hash": "./hash.ts"
+  },
+  "dependencies": { "zod": "4.6.5" }
+}

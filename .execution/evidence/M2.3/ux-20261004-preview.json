@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M2.3/ux-20261004-preview.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T18:32:47.128Z",
+  "finishedAt": "2026-10-03T18:32:48.988Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"scope\":\"Real Chromium against the running trusted Vite UI and synthetic private API.\",\"screenshot\":\".execution/evidence/M2.3/ux-20261004-private.png\",\"defaultTechnicalDetails\":\"collapsed\",\"questionCount\":1,\"mobileOverflow\":false,\"browserErrors\":0,\"candidateExecution\":false,\"independentReview\":\"unverified\"}\n"
+}

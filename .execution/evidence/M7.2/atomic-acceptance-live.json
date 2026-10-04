@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M7.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:acceptance",
+    "--",
+    "--suite",
+    "atomic-acceptance"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T04:51:38.842Z",
+  "finishedAt": "2026-10-04T04:51:41.295Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/acceptance/atomic-acceptance/atomic-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 989\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m real PostgreSQL enforces the atomic acceptance transaction and payable guards\u001b[33m 987\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 12:51:40\n\u001b[2m   Duration \u001b[22m 1.23s\u001b[2m (tests 95%, transform 2%, import 2%, worker 1%)\u001b[22m\n\n"
+}

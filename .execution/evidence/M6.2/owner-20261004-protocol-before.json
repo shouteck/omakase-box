@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservations/assignment-protocol.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:01:59.866Z",
+  "finishedAt": "2026-10-04T00:02:02.144Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/portal/reservations/assignment-protocol.test.ts \u001b[2m(\u001b[22m\u001b[2m11 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 37\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m accepts exact Ed25519 commands using only the intended public key\u001b[32m 13\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m rejects a private key object or private PEM instead of deriving and silently accepting its public half\u001b[39m\u001b[32m 11\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the wrong key and any unsigned choice mutation\u001b[32m 3\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the unexpected signed field ownerId\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the unexpected signed field chosenBy\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the unexpected signed field role\u001b[32m 0\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the unexpected signed field prompt\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the unexpected signed field privateRevision\u001b[32m 0\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects the unexpected signed field publicationReady\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m enforces the command audience, nonce separation and bounded freshness without swallowing expiry\u001b[32m 4\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m errors expose only the approved code, never the rejected payload or crypto details\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/portal/reservations/assignment-protocol.test.ts\u001b[2m > \u001b[22mrejects a private key object or private PEM instead of deriving and silently accepting its public half\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected [Function] to throw an error\u001b[39m\n\n\u001b[32m- Expected:\u001b[39m\nnull\n\n\u001b[31m+ Received:\u001b[39m\nundefined\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/portal/reservations/assignment-protocol.test.ts:\u001b[2m21:123\u001b[22m\u001b[39m\n    \u001b[90m 19|\u001b[39m   const packet = signed(payload());\n    \u001b[90m 20|\u001b[39m   expect(() => verifyAssignmentCommand(packet, keys.privateKey, now)).…\n    \u001b[90m 21|\u001b[39m   expect(() => verifyAssignmentCommand(packet, keys.privateKey.export(…\n    \u001b[90m   |\u001b[39m                                                                                                                           \u001b[31m^\u001b[39m\n    \u001b[90m 22|\u001b[39m });\n    \u001b[90m 23|\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m10 passed\u001b[39m\u001b[22m\u001b[90m (11)\u001b[39m\n\u001b[2m   Start at \u001b[22m 08:02:01\n\u001b[2m   Duration \u001b[22m 560ms\u001b[2m (import 53%, transform 31%, tests 14%, worker 3%)\u001b[22m\n\n"
+}

@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "planVersion": "box-v4-2026-10-04.1",
+  "projectStatus": "awaiting_ceo_wave_approval",
+  "activeWave": "W001",
+  "lastCompletedWave": null,
+  "ceoWaveApprovalRequired": true,
+  "currentApproval": null,
+  "primaryRuntime": {
+    "name": "cursor_native_pstack",
+    "installation": "unverified",
+    "activation": "unverified",
+    "dispatch": "unverified"
+  },
+  "fallbackRuntime": {
+    "name": "codex_portable_pstack_adaptation",
+    "status": "documented_not_rehearsed"
+  },
+  "roles": {
+    "cto": "root_coordinator",
+    "stationLeads": [
+      "product_experience",
+      "platform_execution",
+      "assurance_research"
+    ],
+    "actualAssignments": []
+  },
+  "milestones": {
+    "B0": "pending",
+    "B1": "pending",
+    "B2": "pending",
+    "B3": "pending",
+    "B4": "pending",
+    "B5": "pending",
+    "B6": "pending",
+    "B7": "pending",
+    "B8": "pending"
+  },
+  "tasks": {
+    "B0.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B0.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B1.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B1.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B2.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B2.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B3.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B3.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B4.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B4.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B5.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B5.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B6.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B6.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B7.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B7.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B8.1": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    },
+    "B8.2": {
+      "status": "pending",
+      "implementationStatus": "pending",
+      "independentReviewStatus": "pending",
+      "waveId": null,
+      "owner": null,
+      "lease": null,
+      "candidate": null,
+      "reviewer": null,
+      "receipts": [],
+      "blockers": []
+    }
+  },
+  "delivery": {
+    "software": "not_delivered",
+    "openTrustedExecution": "unverified",
+    "nativePstack": "unverified",
+    "independentReview": "pending",
+    "liveIntentModelQuality": "unverified",
+    "humanAgentPilot": "not_conducted",
+    "restrictedHostileRunner": "legacy_blocked_unchanged"
+  },
+  "legacy": {
+    "graph": "tasks/task-graph.json",
+    "state": ".execution/state.json",
+    "snapshot": "docs/legacy/m0-m9-20261004/manifest.json",
+    "preservation": ".execution/box-v4/preservation-baseline.json",
+    "reuseDoesNotImplyAccepted": true
+  }
+}

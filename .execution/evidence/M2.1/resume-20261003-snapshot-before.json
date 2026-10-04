@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:planner",
+    "--",
+    "--suite",
+    "evidence"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:10:02.294Z",
+  "finishedAt": "2026-10-02T18:10:03.958Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/planner/evidence/snapshots.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Suites 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/planner/evidence/snapshots.test.ts\u001b[2m [ tests/planner/evidence/snapshots.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../../services/private-api/snapshots/importer.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/planner/evidence/snapshots.test.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/planner/evidence/snapshots.test.ts:\u001b[2m6:1\u001b[22m\u001b[39m\n    \u001b[90m  4|\u001b[39m import { join } from 'node:path';\n    \u001b[90m  5|\u001b[39m import { expect, it } from 'vitest';\n    \u001b[90m  6|\u001b[39m import { importPinnedSnapshot } from '../../../services/private-api/sn…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m  7|\u001b[39m\n    \u001b[90m  8|\u001b[39m it('pins actual source bytes in deterministic path order without runni…\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[2mno tests\u001b[22m\n\u001b[2m   Start at \u001b[22m 02:10:03\n\u001b[2m   Duration \u001b[22m 265ms\u001b[2m (worker 96%, environment 4%)\u001b[22m\n\n"
+}

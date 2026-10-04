@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/smoke-bootstrap.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:20:21.862Z",
+  "finishedAt": "2026-10-02T03:20:23.194Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"host\":\"private.localhost\",\"port\":4000,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"contributor.localhost\",\"port\":4001,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"private.localhost\",\"port\":3000,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"contributor.localhost\",\"port\":3001,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n<anonymous_script>:2\r\n    <body>\r\n    ^\r\n\r\nSyntaxError: Unexpected token '<', \"\r\n    <body>\r\n   \"... is not valid JSON\r\n    at JSON.parse (<anonymous>)\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/smoke-bootstrap.mjs:56:25\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\r\n\r\nNode.js v24.11.0\r\n"
+}

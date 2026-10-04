@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/smoke-bootstrap.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:18:47.282Z",
+  "finishedAt": "2026-10-02T03:18:48.164Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"host\":\"private.localhost\",\"port\":4000,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"contributor.localhost\",\"port\":4001,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"private.localhost\",\"port\":3000,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"contributor.localhost\",\"port\":3001,\"result\":\"reachable\",\"hostHeaderOverride\":true}\nnode:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Contributor dev server must not serve private workspace source.\r\n\r\n200 !== 403\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/smoke-bootstrap.mjs:54:10\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 200,\r\n  expected: 403,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

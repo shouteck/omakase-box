@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:runner",
+    "--",
+    "--real"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T03:08:46.546Z",
+  "finishedAt": "2026-10-04T03:08:47.466Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "{\"assurance\":\"unverified\",\"suite\":\"runner\",\"status\":\"unavailable\",\"reason\":\"Real VM execution is not configured or implemented.\"}\n"
+}

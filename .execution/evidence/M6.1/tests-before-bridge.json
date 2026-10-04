@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:security",
+    "--",
+    "--suite",
+    "bridge"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T20:41:14.714Z",
+  "finishedAt": "2026-10-03T20:41:15.440Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "{\"assurance\":\"unverified\",\"suite\":\"security\",\"subgroup\":\"bridge\",\"status\":\"unavailable\",\"reason\":\"This required suite has not been implemented.\"}\n"
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "assurance": "tested",
+  "decision": "APPROVED",
+  "reviewer": "/root/contracts_review",
+  "revision": {
+    "algorithm": "sha256",
+    "digest": "922f14a4b83d0e83f0c52aa117535938db9c910ced23d244745b392bd8c5af5a",
+    "manifest": ".execution/evidence/M1.2/revision-922f14a4b83d0e83f0c52aa117535938db9c910ced23d244745b392bd8c5af5a.json"
+  },
+  "verifiedFileCount": 64,
+  "mismatches": [],
+  "evidence": [
+    {
+      "path": ".execution/evidence/M1.2/review-workflow.json",
+      "sha256": "1465d0742eb47284eabd3d4cc3f1288873d8ebee43848c6839ba3807f0412ccb"
+    },
+    {
+      "path": ".execution/evidence/M1.2/review-live-persistence-escalated.json",
+      "sha256": "cf2bbd9faf3f3eae41a100c60de80b9f976ec13d803abd771b4b6944f2e8e2db"
+    },
+    {
+      "path": ".execution/evidence/M1.2/review-current-digests.json",
+      "sha256": "2e8c23bf534df47005561c9bfa4e6d36a40b2d69ba893c0f76ae3d54fb5e92b7"
+    },
+    {
+      "path": ".execution/evidence/M0.1/review-check.json",
+      "sha256": "f442baa738c7e68a01f1f7bb4832e9bde5e35d6feaa0b20a876f3d8f63100c5a"
+    },
+    {
+      "path": ".execution/evidence/M0.2/review-runtime-build.json",
+      "sha256": "edfea941302fe0faa3d81b4c586108244fe6fb71250e3479969850dd86470f2d"
+    },
+    {
+      "path": ".execution/evidence/M0.2/review-migrate.json",
+      "sha256": "1d998e45d7dfe205595812505a1d147cb01b66f8825918535382cfd187522cd6"
+    }
+  ],
+  "finishedAt": "2026-10-02T17:30:12.038Z"
+}

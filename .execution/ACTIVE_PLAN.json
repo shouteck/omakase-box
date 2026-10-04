@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "activePlan": "box-v4-2026-10-04",
+  "entrypoint": "START.md",
+  "graph": "tasks/box-v4-task-graph.json",
+  "state": ".execution/box-v4/state.json",
+  "target": "B8",
+  "executionPolicy": "brief_and_wait_for_ceo_each_new_wave",
+  "legacyGraph": "tasks/task-graph.json",
+  "legacyState": ".execution/state.json",
+  "legacyExecutionPolicy": "preserve_history_do_not_resume_automatically",
+  "productImplementationAuthorizedByThisRevision": false
+}

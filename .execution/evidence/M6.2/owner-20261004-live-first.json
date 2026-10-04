@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservations/signed-assignment-live.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:01:02.612Z",
+  "finishedAt": "2026-10-04T00:01:08.805Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n \u001b[32m✓\u001b[39m tests/portal/reservations/signed-assignment-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 4419\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m real separate private/external databases bind owner authority, signed choice, replay and authenticated durable reservation routes\u001b[33m 4417\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 08:01:03\n\u001b[2m   Duration \u001b[22m 5.08s\u001b[2m (tests 90%, import 7%, transform 3%)\u001b[22m\n\n"
+}

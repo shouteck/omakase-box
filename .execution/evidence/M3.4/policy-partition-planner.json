@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.4",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:planner",
+    "--",
+    "--suite",
+    "partition"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T02:58:01.262Z",
+  "finishedAt": "2026-10-03T02:58:05.279Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/planner/partition/preparation-api.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 450\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m an owner request for the exact approved intent revision composes connected work-unit proposals without snapshot text\u001b[33m 401\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/planner/partition/composed-selection.test.ts \u001b[2m(\u001b[22m\u001b[2m11 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 165\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m15 passed\u001b[39m\u001b[22m\u001b[90m (15)\u001b[39m\n\u001b[2m   Start at \u001b[22m 10:58:02\n\u001b[2m   Duration \u001b[22m 2.35s\u001b[2m (import 40%, tests 34%, transform 25%, worker 1%)\u001b[22m\n\n"
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:01:09.043Z",
+  "finishedAt": "2026-10-04T00:01:18.416Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "services/external-api/reservations/assignment-live-fixture.ts(73,32): error TS7006: Parameter '_error' implicitly has an 'any' type.\r\nservices/external-api/reservations/assignment-live-fixture.ts(73,39): error TS7006: Parameter '_request' implicitly has an 'any' type.\r\nservices/external-api/reservations/assignment-live-fixture.ts(73,48): error TS7006: Parameter 'reply' implicitly has an 'any' type.\r\n"
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/synthetic-runtime.mjs",
+    "build"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T13:16:29.964Z",
+  "finishedAt": "2026-10-03T13:16:30.889Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "{\"assurance\":\"unverified\",\"kind\":\"synthetic_runtime\",\"action\":\"build\",\"exitCode\":1}\n Image private-task-mvp-synthetic-private-api Building \n Image private-task-mvp-synthetic-external-api Building \nfailed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.\n\n\n"
+}

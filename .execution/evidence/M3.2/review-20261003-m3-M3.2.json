@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.2",
+  "reviewer": "opencode-reviewer-subagent-m3-20261003",
+  "reviewType": "independent_rebind_review",
+  "reviewedAt": "2026-10-03T01:15:00.000Z",
+  "scope": "Independent reviewer for the M3.2 rebind (previous approval 42af213aa36bd8c214e535813acb92190c363aed244ce8dd892fada298a4e032 by opencode-reviewer-subagent; current revision 66c485d46bfce600a440e706bbc39d90f0299ae9eea386ba911e145760e36826). Reviewer did not implement these tasks; decisive checks rerun on current bytes.",
+  "revisionBinding": {
+    "currentManifest": ".execution/evidence/M3.2/revision-66c485d46bfce600a440e706bbc39d90f0299ae9eea386ba911e145760e36826.json",
+    "recomputedEveryFileSha256": true,
+    "fileCount": 58,
+    "missingFiles": 0,
+    "internalDigestRecomputation": {
+      "stateDigest": "66c485d46bfce600a440e706bbc39d90f0299ae9eea386ba911e145760e36826",
+      "recomputedFromManifest": "66c485d46bfce600a440e706bbc39d90f0299ae9eea386ba911e145760e36826",
+      "fileNameDigestMatches": true,
+      "taskDefinitionSha256Matches": true
+    },
+    "classification": {
+      "product": 15,
+      "sharedOnly": 43,
+      "integrationOnly": 0,
+      "outOfScope": 0,
+      "note": "Product paths: packages/planner/partition/**, packages/analyzer/adapters/**, services/private-api/preparations/** (incl. M3.4's preparations/policy addition under the same glob), tests/analysis/partition/**, tests/planner/partition/**."
+    },
+    "productPathMismatches": [],
+    "sharedPathMismatches": [
+      { "path": "docs/DECISIONS.md", "cause": "today's coordinator decision-log edit after the snapshot" },
+      { "path": "scripts/execution.mjs", "cause": "today's coordinator execution-script edit after the snapshot" }
+    ],
+    "staleSharedEntriesNote": "Recorded manifest shared-file entries are stale for docs/DECISIONS.md and scripts/execution.mjs relative to the current tree; both are coordinator-owned shared paths outside the M3.2 write scope. Coordinator should re-snapshot when recording the review decision.",
+    "rebindVerification": {
+      "previouslyApprovedManifest": ".execution/evidence/M3.2/revision-42af213aa36bd8c214e535813acb92190c363aed244ce8dd892fada298a4e032.json",
+      "previousManifestAssurance": "tested",
+      "productPathsInApprovedManifest": 50,
+      "byteIdenticalToCurrentTree": 47,
+      "changedSinceApproval": 3,
+      "changedPaths": [
+        { "path": "infra/trusted.Dockerfile", "owner": "M0.2 shared coordinator file, not M3.2 product" },
+        { "path": "infra/trusted.Dockerfile.dockerignore", "owner": "M0.2 shared coordinator file, not M3.2 product" },
+        { "path": "scripts/execution.mjs", "owner": "M0.1 shared coordinator file, not M3.2 product" }
+      ],
+      "addedSinceApproval": [
+        { "path": "packages/planner/partition/policy/index.ts", "owner": "M3.4 new file inside the overlapping packages/planner/partition/** glob" },
+        { "path": "services/private-api/preparations/policy/index.ts", "owner": "M3.4 new file inside the overlapping services/private-api/preparations/** glob" }
+      ],
+      "removedSinceApproval": [],
+      "rebindCleared": true,
+      "rebindStatement": "Rebind CLEARED: every M3.2 product path present in the previously approved manifest is byte-identical (SHA-256) between that approved manifest and the current tree, including compose.ts, extraction.ts, all four preparations modules and all five partition test files. No M3.2-owned product file was modified since approval; the only changes inside the broad M3.2 write-scope globs are M3.4's new product files (in M3.4 first review) and coordinator-owned shared-file batches."
+    }
+  },
+  "rerunChecks": [
+    {
+      "command": "node scripts/evidence.mjs M3.2 review-20261003-1-analysis-partition scripts/pnpm.mjs test:analysis -- --suite partition",
+      "label": "review-20261003-1-analysis-partition",
+      "exitCode": 0,
+      "observed": "16 tests / 2 files passed: boundary-extraction 14/14 (coupled selection flow acquires NEW typed boundary PublicOptions without layer splitting; parameterization removes protected coupling from both layers while the retained adapter keeps the protected computation; public projection free of captured payloads/private paths/adapter body; uncaptured couplings listed advisory; no workspace writes; explicit not_supported for non-array disclosure, non-primitive fields, non-top-level consumer, residual protected references, direct component-as-function call, broken baseline) and boundary-detection 2/2.",
+      "evidencePath": ".execution/evidence/M3.2/review-20261003-1-analysis-partition.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.2 review-20261003-2-planner-partition scripts/pnpm.mjs test:planner -- --suite partition",
+      "label": "review-20261003-2-planner-partition",
+      "exitCode": 0,
+      "observed": "15 tests / 2 files passed: composed-selection 11/11 (one composed task with connected UI+API units and one integration plan; never split into separate layer bounties; frontend+backend+policy stays one task; retained scoring in private adapter with no auth/billing claims; deterministic composition; untraceable requirements recorded as not_supported; missing declared targets and interface adapters explicit; retained adapters private-managed and outside candidate-editable paths; provider not_supported flows through; mismatched intent bindings refused) and preparation-api 4/4.",
+      "evidencePath": ".execution/evidence/M3.2/review-20261003-2-planner-partition.json"
+    }
+  ],
+  "retainedFailures": [
+    { "note": "Reviewer produced no failing reruns for M3.2. Worker's retained intermediate records (partition-analysis-first.json failed mid-fix; partition-tsc.json malformed invocation; wiring-* runtime records) were inspected and are honest process records, not blessed expectations." }
+  ],
+  "acceptanceJudgements": [
+    {
+      "bullet": "Private eligibility/scoring remain in private adapters while contributor obligations are meaningful.",
+      "verdict": "met",
+      "basis": "compose.ts enforces retainedAdapterPath inside a private path segment and never candidate-editable (lines 237-243, 258-264); extraction.ts generates the retained adapter that still calls the protected computation and its transformation-model check fails if the protected call disappears from the adapter or remains in parameterized modules (verifyTransformationModel). Tests assert both layers lose the protected import/call while src/private/selection-adapter.ts keeps derivePrivateOptions."
+    },
+    {
+      "bullet": "Each external requirement traces privately to approved intent; unsupported requirements are recorded instead of silently dropped.",
+      "verdict": "met",
+      "basis": "compose.ts maps every public/compatibility requirement id to approvedIntent.acceptanceExamples and returns explicit not_supported with kind 'untraceable_requirement' otherwise (lines 267-276); provider not_supported flows through verbatim with reason/missingCapabilities/retained work; missing declared unit/interface targets produce explicit not_supported records. Tests cover all of these."
+    },
+    {
+      "bullet": "A fixture initially coupled to a protected module acquires a newly typed boundary; static type and transformation-model checks pass. Existing-interface packaging alone is insufficient. Generated-code execution stays pending for M4.3 after M5.2/M5.3.",
+      "verdict": "met",
+      "basis": "extraction.ts checks baseline type program (refuses broken base), transformed type program (parameterized modules + callers + boundary + adapter must type-check clean via a real TS program over a disposed OS-temp snapshot that refuses repo-root overlap), and transformation-model assertions (exactly one generic interface with exactly the extracted fields and zero captured string literals; no protected imports/calls remain in parameterized modules; adapter retains the protected call; callers supplied only through the adapter). The fixture (src/private/rules.ts with derivePrivateOptions + coupled api.ts/panel.tsx) acquires NEW src/selection/public-options.ts; approval is pending_owner_approval with proposalHash and no apply/execute path (tests assert Object.keys lack 'apply'/'execute'). Runtime preservation/integration honestly deferred to M4.3; not claimed."
+    },
+    {
+      "bullet": "The coherent selection fixture produces connected UI/API units and frozen request/context/response obligations; private eligibility remains in a retained adapter and no production authentication/billing capability is claimed.",
+      "verdict": "met",
+      "basis": "composed-selection.test.ts asserts one composed task with selection_ui (frontend_component) + selection_api (backend_api), interface selection_http with frozen 'POST only selectedId'/trusted wrapper context/frozen safe error semantics, errorStates ['unavailable','not_found','invalid_input'], one PrivateIntegrationPlan with both unit mappings, traceability to the approved intent, costRecord excluding production auth/billing, and SOURCE_CANARY absent from the composed output."
+    }
+  ],
+  "weakenedExpectationsChecked": "None found. The composed-selection, boundary-extraction and preparation suites assert the delivered contract shapes at least as strictly as the card requires; all refusal cases are explicit not_supported rather than silent drops.",
+  "findings": [
+    {
+      "severity": "note",
+      "finding": "Recorded manifest is stale on two coordinator-owned shared files relative to the current tree; coordinator should re-snapshot at acceptance. Not an M3.2 product issue."
+    },
+    {
+      "severity": "note",
+      "finding": "The 'never executes or writes captured code into the workspace' test (boundary-extraction.test.ts:100-103) is a thin status assertion; the actual no-execution/no-workspace-write property is enforced structurally in extraction.ts (OS-temp snapshot with repo-root-overlap refusal, no exec/spawn in the module, disposal in finally). Acceptable but worth an eventual deeper direct assertion."
+    }
+  ],
+  "verdict": "approved",
+  "rebindCleared": true,
+  "limitations": "Bounded static structural checking only; ambient checker shims declare externals data-only; actual generated-code preservation/integration execution remains the M4.3 gate after M5.2/M5.3 (recorded honestly in the proposal assumptions and the draft). No production capability claimed; all fixtures synthetic."
+}

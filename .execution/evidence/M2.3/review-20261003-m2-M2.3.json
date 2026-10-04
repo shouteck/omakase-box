@@ -1,0 +1,75 @@
+{
+  "taskId": "M2.3",
+  "reviewer": "opencode-reviewer-subagent-m2-20261003",
+  "revisionDigest": "5b4598b7c927d367d4194c55308bdcfd787146fd345fadd17ca4786426b706bf",
+  "decision": "approved",
+  "rebind": {
+    "status": "CLEARED",
+    "previousReviewedRevision": "ef7a44e9d2e7e0e4c00a2366b7b33bef3d64af583388b560e9333b1d9eab1a13",
+    "previousReviewedReport": ".execution/evidence/M2.3/review-m23-20261003-rebind.json",
+    "method": "Diffed the current manifest (5b4598b7) against BOTH the recorded current revision manifest and the previously approved manifest (ef7a44e9); recomputed every file SHA-256 and byte size against the current tree; then independently re-verified byte-identity of every M2.3 product path between the ef7a44e9 manifest and the current tree.",
+    "manifestDiff": {
+      "fileSets": "identical (60 files each, none added or removed)",
+      "contentDeltas": [
+        { "path": "docs/DECISIONS.md", "delta": "20061->26488 bytes", "classification": "declared shared path; coordinator batch" },
+        { "path": "infra/trusted.Dockerfile", "delta": "4304->4522 bytes", "classification": "declared shared path; later-milestone additive COPY lines" },
+        { "path": "infra/trusted.Dockerfile.dockerignore", "delta": "1819->2043 bytes", "classification": "declared shared path; additive allowlist entries only" },
+        { "path": "services/private-api/src/bootstrap/main.ts", "delta": "2390->2774 bytes", "classification": "declared shared path (services/*/src/bootstrap/main.ts); later-milestone releases/compiler wiring" }
+      ]
+    },
+    "productPathVerification": {
+      "productGlobsUsed": ["apps/private-console/intake/**", "apps/private-console/intents/**", "services/private-api/intents/**", "tests/e2e/intent/**", "tests/contracts/intent/**", "services/private-api/db/intent-store.ts", "services/private-api/bootstrap/build.mjs"],
+      "productPathsInPrevManifest": 17,
+      "byteIdenticalInCurrentTree": 17,
+      "drifted": [],
+      "absent": []
+    },
+    "boundaryNonWeakening": "Read the current infra/trusted.Dockerfile.dockerignore in full: still deny-all ('**') plus an allowlist; the delta adds only preparations/, releases/ and packages/planner/partition allowlist entries; no deny rule removed, tests/data/secrets/env remain excluded. Read the current services/private-api/src/bootstrap/main.ts and server.ts: the M2.3 intents wiring (installIntentRoutes + intentOrchestrationForIntake fallback) is intact; the private.localhost:4000 host check, exact-origin allowlist, nosniff/no-store headers and safe error handler are unchanged; the main.ts growth is M4.1 releases/compiler wiring and the server.ts additions are demo-gated preparations/releases routes owned by later tasks' reviews. No M2.3 boundary was weakened.",
+    "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101 recomputed over tasks/task-graph.json and matches"
+  },
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-20261003-1-e2e-intent scripts/pnpm.mjs test:e2e -- --suite intent",
+      "exitCode": 0,
+      "observed": "6/6 tests passed (2 files) against the canonical synthetic runtime with real Chromium (console built fresh by the harness from current sources): goal-only reviewable demo draft, decisions/readiness/exact-hash approval/edit-after-approval invalidation journey (422 blocks, requester approval 403, stale approval 409, supersededApproval surfaced), full-stack+policy outcome reviewed as ONE composed draft, hostile goal rendered as escaped text with script/img/svg/javascript: canaries asserted undefined and zero executable elements, owner visibility without unauthenticated private detail, server-side role/ownership/revocation authorization. No 429 encountered; rate policy untouched.",
+      "evidencePath": ".execution/evidence/M2.3/review-20261003-1-e2e-intent.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.3 review-20261003-2-contracts-intent scripts/pnpm.mjs test:contracts -- --suite intent",
+      "exitCode": 0,
+      "observed": "22/22 tests passed (4 files) including the real private-DB session-live fixture: server-allocated identity, strict bodies, provenance round-trip, revalidation, decision/review flows, store-level authorization with stored session roles, hash/version gates, safe error mapping and the exact 17-key positive allowlist projection.",
+      "evidencePath": ".execution/evidence/M2.3/review-20261003-2-contracts-intent.json"
+    }
+  ],
+  "retainedFailures": [],
+  "acceptanceJudgements": [
+    {
+      "criterion": "A goal entered without technical detail produces a reviewable draft in demo mode",
+      "verdict": "met",
+      "basis": "E2e journey 1 re-ran green: goal-only request, explicit demo radio, reviewable draft with facts/assumptions/unknowns, provenance and blocked-preparation notice; DemoPlannerProvider source read (goal-only proposals with explicit unknowns, no silent shrink)."
+    },
+    {
+      "criterion": "Required unresolved decisions block preparation; edit-after-approval invalidates affected downstream evidence",
+      "verdict": "met",
+      "basis": "E2e journey 2 re-ran green: readiness rejected 422 with unresolved decision and with wrong hash; approval requester-403, wrong-hash-422; owner approval binds the exact ready hash; revision after approval returns approvalInvalidated:true and the stale approval is rejected 409 with supersededApproval:true. Downstream stores bind by intent hash (per M2.2/M3.2 design); only approval invalidation exists at this milestone, honestly disclosed."
+    },
+    {
+      "criterion": "Previews use trusted templates/escaped data or an opaque-origin sandbox; proposed code never executes in the private console origin",
+      "verdict": "met",
+      "basis": "E2e hostile-goal journey re-ran green with canary assertions of NON-execution (window canaries undefined, zero img[src=x]/svg/javascript: elements, exactly one script element — the app bundle), escaped text asserted present, and the API response asserted application/json. intents-screen.tsx uses React text interpolation; no dangerouslySetInnerHTML. Preview safety is trusted-template escaping, not an opaque-origin sandbox — acceptable because no code-preview content exists at the intent stage, as disclosed."
+    },
+    {
+      "criterion": "PM can describe a full-stack or codebase policy outcome; owner can review one composed task without being forced to create separate layer bounties",
+      "verdict": "met",
+      "basis": "E2e composed journey re-ran green: selection_ui, selection_api, response_policy and selection_journey all present in ONE review article; no per-layer split offered. Authorization suite confirms no contributor access to private intent routes and publicProductFlow not_implemented."
+    }
+  ],
+  "evidenceChallenged": "Prior rebind report (review-m23-20261003-rebind.json) and retained resume evidence (resume-20261003-e2e-intent-final.json, resume-20261003-contracts-final.json, resume-20261003-final-check-restart.json) opened and verified as genuine recorded runs. The blocker note's wording ('unchanged since dd85c640') is slightly stale — the approved revision is ef7a44e9 — but the substantive claim was re-verified directly against ef7a44e9 and holds.",
+  "limitations": [
+    "This is a re-bind review: it verifies the manifest delta, product-path byte-identity, boundary non-weakening and the decisive gates at revision 5b4598b7; it does not re-litigate design observations recorded in the approved dd85/ef7a reviews (e.g., approvedAt reporting the revision row's created_at — carried trade-off).",
+    "Ollama mode remains operator-unconfigured (safe needs_configuration only); live-model quality and prompt robustness remain open gates.",
+    "Real isolated runner (M5.2), live model, human study and delivery gates remain open; synthetic accounts/data only.",
+    "No secrets, prompts or real private fixture contents appear in this report."
+  ],
+  "reviewedAt": "2026-10-03T16:56:25.218Z"
+}

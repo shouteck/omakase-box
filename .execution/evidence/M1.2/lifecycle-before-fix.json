@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:auth",
+    "--",
+    "--suite",
+    "persistence"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T06:58:22.467Z",
+  "finishedAt": "2026-10-02T06:58:25.659Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/auth/persistence/lifecycle-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 825\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m real PostgreSQL rejects lifecycle bypass, identity mutation, supersession reset and outbox tampering\u001b[39m\u001b[33m 824\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/auth/persistence/workflow-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1471\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m real synthetic PostgreSQL enforces revision/approval and reservation concurrency invariants\u001b[33m 1470\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/auth/persistence/lifecycle-live.test.ts\u001b[2m:5\u001b[22m\u001b[2m > \u001b[22mreal PostgreSQL rejects lifecycle bypass, identity mutation, supersession reset and outbox tampering\n\u001b[31m\u001b[1mError\u001b[22m: Command failed: C:\\Program Files\\nodejs\\node.exe scripts/verify-lifecycles.mjs\nnode:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: private-api lifecycle guard failed: node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Missing expected rejection.\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\r\n    at async file:///workspace/services/private-api/[eval1]:8:5 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: undefined,\r\n  expected: [Function (anonymous)],\r\n  operator: 'rejects',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n\r\n\r\n1 !== 0\r\n\r\n    at run (file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/verify-lifecycles.mjs:9:10)\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\r\n    at async file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/verify-lifecycles.mjs:12:23 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 1,\r\n  expected: 0,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m run scripts/verify-lifecycles.mjs:\u001b[2m9:10\u001b[22m\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/auth/persistence/lifecycle-live.test.ts:\u001b[2m6:18\u001b[22m\u001b[39m\n\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m   Start at \u001b[22m 14:58:23\n\u001b[2m   Duration \u001b[22m 1.77s\u001b[2m (tests 95%, transform 3%, import 2%, worker 1%)\u001b[22m\n\n"
+}

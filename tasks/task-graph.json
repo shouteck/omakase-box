@@ -1,0 +1,1292 @@
+{
+  "schemaVersion": 1,
+  "entrypoint": "START.md",
+  "target": "M9",
+  "researchMilestone": "M10 (not automatically executed)",
+  "tasks": [
+    {
+      "id": "M0.1",
+      "title": "Bootstrap the workspace",
+      "dependencies": [],
+      "role": "platform",
+      "writePaths": [
+        "package.json",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "tsconfig*",
+        "scripts/**",
+        "apps/**/package.json",
+        "services/**/package.json",
+        "packages/**/package.json",
+        "docs/tooling.md",
+        "apps/**/src/bootstrap/**",
+        "services/**/src/bootstrap/**",
+        "tests/bootstrap/**"
+      ],
+      "deliverables": [
+        "Pin Node/pnpm/dependencies; establish layout and nonempty check/build/doctor scripts.",
+        "Record prerequisites, platform compatibility and supported versions; initialize a dedicated Git repository only if absent.",
+        "Create runnable application/service skeletons and test entry points, not merely empty manifests."
+      ],
+      "checks": [
+        "pnpm install --frozen-lockfile",
+        "pnpm check",
+        "pnpm build",
+        "pnpm doctor --json"
+      ],
+      "acceptance": [
+        "A clean dependency installation and build succeed or an exact host prerequisite is recorded.",
+        "Doctor reports model/DB/VM capabilities without credentials; no unavailable suite is represented as passing."
+      ],
+      "milestone": "M0",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M0.md"
+      ],
+      "handoff": ".execution/handoffs/M0.1.md",
+      "evidenceDirectory": ".execution/evidence/M0.1/"
+    },
+    {
+      "id": "M0.2",
+      "title": "Separate trusted runtime services",
+      "dependencies": [
+        "M0.1"
+      ],
+      "role": "platform",
+      "writePaths": [
+        "infra/**",
+        "services/private-api/bootstrap/**",
+        "services/external-api/bootstrap/**",
+        ".env.example",
+        "docs/runtime.md",
+        "tests/auth/bootstrap/**"
+      ],
+      "deliverables": [
+        "Compose configuration, service-specific volumes/networks and DB credentials.",
+        "Local owner bootstrap and environment-variable validation; no real secrets in source."
+      ],
+      "checks": [
+        "pnpm test:auth -- --suite bootstrap",
+        "pnpm doctor --json"
+      ],
+      "acceptance": [
+        "External service cannot read private DB/storage or obtain model/release credentials.",
+        "Default listeners are loopback; missing config fails explicitly; ordinary startup does not launch untrusted jobs.",
+        "Real browser requests to contributor host contain no private session credential; cookies are host-only and origins explicitly allowed."
+      ],
+      "milestone": "M0",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M0.md"
+      ],
+      "handoff": ".execution/handoffs/M0.2.md",
+      "evidenceDirectory": ".execution/evidence/M0.2/"
+    },
+    {
+      "id": "M0.3",
+      "title": "Synthetic private application and demo seed",
+      "dependencies": [
+        "M0.2"
+      ],
+      "role": "fixtures",
+      "writePaths": [
+        "examples/private-shop/**",
+        "research/fixtures/**",
+        "scripts/demo-seed.*",
+        "docs/demo-fixtures.md",
+        "tests/contracts/fixture/**"
+      ],
+      "deliverables": [
+        "A small React/TypeScript private app with proprietary scoring/eligibility fixtures, an initially coupled coherent selection UI/API flow, ranker adapter and data-only response-security policy/loader.",
+        "Canaries, pre-change revisions and independently authored requirements; reference solutions separate from planner inputs."
+      ],
+      "checks": [
+        "pnpm demo:seed",
+        "pnpm check",
+        "pnpm test:contracts -- --suite fixture"
+      ],
+      "acceptance": [
+        "Fixture includes single-unit, coherent full-stack and executable response-security policy goals, plus unsupported cloud/data/tooling candidates. Full-stack work follows one UI-to-API outcome rather than unrelated bundled exercises.",
+        "Reset/seed touches only identified synthetic data; reference fixes and canaries are not public assets."
+      ],
+      "milestone": "M0",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M0.md"
+      ],
+      "handoff": ".execution/handoffs/M0.3.md",
+      "evidenceDirectory": ".execution/evidence/M0.3/"
+    },
+    {
+      "id": "M1.1",
+      "title": "Typed contracts and immutable hashes",
+      "dependencies": [
+        "M0.1"
+      ],
+      "role": "contracts",
+      "writePaths": [
+        "packages/contracts/**",
+        "tests/contracts/**"
+      ],
+      "deliverables": [
+        "Zod types, canonicalization version and positive public projections.",
+        "Valid/invalid fixture examples for all schema types from ARCHITECTURE.",
+        "Define nonexclusive disciplines, WorkUnit/PublicInterface arrays, adapter versions, exact edit ownership and aggregate end-to-end requirements; no exclusive task-family discriminator."
+      ],
+      "checks": [
+        "pnpm test:contracts",
+        "pnpm check"
+      ],
+      "acceptance": [
+        "Unknown privileged fields are rejected; external DTOs contain no internal provenance.",
+        "Identical canonical content hashes identically; one-byte changes invalidate its digest; path collisions are rejected.",
+        "Single-unit, frontend+backend and frontend+backend+policy contracts validate; conflicting path/schema ownership, dangling links and unknown capabilities are rejected."
+      ],
+      "milestone": "M1",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M1.md"
+      ],
+      "handoff": ".execution/handoffs/M1.1.md",
+      "evidenceDirectory": ".execution/evidence/M1.1/"
+    },
+    {
+      "id": "M1.2",
+      "title": "Transactional workflow and migrations",
+      "dependencies": [
+        "M0.2",
+        "M1.1"
+      ],
+      "role": "backend",
+      "writePaths": [
+        "services/private-api/db/**",
+        "services/external-api/db/**",
+        "packages/contracts/workflow/**",
+        "tests/workflow/**",
+        "tests/auth/persistence/**"
+      ],
+      "deliverables": [
+        "Service-specific migrations, workflow invariants, version checks and idempotency constraints.",
+        "Private intent/approval/evaluation/ledger and external task/reservation/submission persistence."
+      ],
+      "checks": [
+        "pnpm test:contracts -- --suite workflow",
+        "pnpm test:auth"
+      ],
+      "acceptance": [
+        "Invalid, stale and concurrent transitions cannot bypass the workflow.",
+        "Migration from empty DB works; accepted records bind exact contract/package/submission revisions."
+      ],
+      "milestone": "M1",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M1.md"
+      ],
+      "handoff": ".execution/handoffs/M1.2.md",
+      "evidenceDirectory": ".execution/evidence/M1.2/"
+    },
+    {
+      "id": "M1.3",
+      "title": "Role and session enforcement",
+      "dependencies": [
+        "M1.2"
+      ],
+      "role": "security_backend",
+      "writePaths": [
+        "services/private-api/auth/**",
+        "services/external-api/auth/**",
+        "tests/auth/**"
+      ],
+      "deliverables": [
+        "Separate session keys/cookies, invitation redemption, CSRF and role checks.",
+        "Response/error allowlists and ID-based authorization tests."
+      ],
+      "checks": [
+        "pnpm test:auth",
+        "pnpm test:security -- --suite authorization"
+      ],
+      "acceptance": [
+        "Requester/contributor cannot impersonate owner or approve release/acceptance.",
+        "Cross-contributor and private-resource access fails server-side; invalid sessions and revoked invitations fail."
+      ],
+      "milestone": "M1",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M1.md"
+      ],
+      "handoff": ".execution/handoffs/M1.3.md",
+      "evidenceDirectory": ".execution/evidence/M1.3/"
+    },
+    {
+      "id": "M2.1",
+      "title": "Private evidence and pinned snapshots",
+      "dependencies": [
+        "M0.3",
+        "M1.3"
+      ],
+      "role": "backend",
+      "writePaths": [
+        "services/private-api/requests/**",
+        "services/private-api/snapshots/**",
+        "packages/planner/retrieval/**",
+        "tests/planner/evidence/**"
+      ],
+      "deliverables": [
+        "Read-only snapshot importer with path/size rules and no execution of repository scripts.",
+        "Text and PNG/JPEG evidence storage with opaque IDs, private provenance and bounded retrieval."
+      ],
+      "checks": [
+        "pnpm test:planner -- --suite evidence",
+        "pnpm test:security -- --suite evidence"
+      ],
+      "acceptance": [
+        "Repository import never executes lifecycle hooks or follows forbidden links.",
+        "An evidence upload/path cannot expose host files or become executable HTML; contributors cannot fetch it."
+      ],
+      "milestone": "M2",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M2.md"
+      ],
+      "handoff": ".execution/handoffs/M2.1.md",
+      "evidenceDirectory": ".execution/evidence/M2.1/"
+    },
+    {
+      "id": "M2.2",
+      "title": "Demo and private-model providers",
+      "dependencies": [
+        "M1.1",
+        "M2.1"
+      ],
+      "role": "ai",
+      "writePaths": [
+        "packages/planner/providers/**",
+        "packages/planner/prompts/**",
+        "tests/planner/provider/**",
+        "docs/model-configuration.md"
+      ],
+      "deliverables": [
+        "Provider interface, fixture-driven demo provider and local Ollama adapter.",
+        "Validated typed proposals, timeouts, one bounded repair, provenance and no tool authority.",
+        "Demo and model schemas propose connected work-unit/interface graphs and complete outcomes; support is not selected by exclusive discipline tags."
+      ],
+      "checks": [
+        "pnpm test:planner -- --suite provider",
+        "pnpm test:security -- --suite prompt-injection"
+      ],
+      "acceptance": [
+        "Malformed/timeout/tool-call responses never create an approved/publishable intent.",
+        "Demo/mock/live modes remain distinguishable; endpoint is operator-controlled; no private egress to an unapproved provider."
+      ],
+      "milestone": "M2",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M2.md"
+      ],
+      "handoff": ".execution/handoffs/M2.2.md",
+      "evidenceDirectory": ".execution/evidence/M2.2/"
+    },
+    {
+      "id": "M2.3",
+      "title": "PM outcome review and decisions",
+      "dependencies": [
+        "M2.2"
+      ],
+      "role": "frontend",
+      "writePaths": [
+        "apps/private-console/intake/**",
+        "apps/private-console/intents/**",
+        "services/private-api/intents/**",
+        "tests/e2e/intent/**",
+        "tests/contracts/intent/**"
+      ],
+      "deliverables": [
+        "Goal/evidence form, facts/assumptions/unknowns presentation, before/after preview and internal decision UI.",
+        "Owner approval of exact intent revision with private traceability."
+      ],
+      "checks": [
+        "pnpm test:e2e -- --suite intent",
+        "pnpm test:contracts -- --suite intent"
+      ],
+      "acceptance": [
+        "A goal entered without technical detail produces a reviewable draft in demo mode.",
+        "Required unresolved decisions block preparation; edit-after-approval invalidates affected downstream evidence.",
+        "Previews use trusted templates/escaped data or an opaque-origin sandbox; proposed code never executes in the private console origin.",
+        "PM can describe a full-stack or codebase policy outcome; owner can review one composed task without being forced to create separate layer bounties."
+      ],
+      "milestone": "M2",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M2.md"
+      ],
+      "handoff": ".execution/handoffs/M2.3.md",
+      "evidenceDirectory": ".execution/evidence/M2.3/"
+    },
+    {
+      "id": "M3.1",
+      "title": "Dependency/capability analysis",
+      "dependencies": [
+        "M2.1",
+        "M1.1"
+      ],
+      "role": "analysis",
+      "writePaths": [
+        "packages/analyzer/**",
+        "tests/analysis/**"
+      ],
+      "deliverables": [
+        "TypeScript AST/import closure, edit-surface report and conservative unsupported-feature classification.",
+        "Detect protected imports, dynamic loading, unsafe globals and omitted state dependencies."
+      ],
+      "checks": [
+        "pnpm test:analysis",
+        "pnpm test:security -- --suite dependency-boundary"
+      ],
+      "acceptance": [
+        "Known forbidden coupling is rejected; unknown dynamic behaviour is not marked safe.",
+        "Reports disclose assumptions and limits; AST linting is never labeled semantic confidentiality proof."
+      ],
+      "milestone": "M3",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M3.md"
+      ],
+      "handoff": ".execution/handoffs/M3.1.md",
+      "evidenceDirectory": ".execution/evidence/M3.1/"
+    },
+    {
+      "id": "M3.2",
+      "title": "Composable source and API boundary adapters",
+      "dependencies": [
+        "M2.2",
+        "M3.1"
+      ],
+      "role": "compiler",
+      "writePaths": [
+        "packages/planner/partition/**",
+        "packages/analyzer/adapters/**",
+        "services/private-api/preparations/**",
+        "tests/analysis/partition/**",
+        "tests/planner/partition/**"
+      ],
+      "deliverables": [
+        "Frontend component, backend pure-module and scoped backend API work-unit proposals with public interfaces and one private integration map for a coherent task.",
+        "Cost/retained-work record and explicit unsupported capability results; never silently omit a connected responsibility or split a task by layer.",
+        "Implement bounded AST extraction/parameterization that creates a new typed public boundary while retaining protected rule computation in a private adapter; check the proposed private diff before approval."
+      ],
+      "checks": [
+        "pnpm test:analysis -- --suite partition",
+        "pnpm test:planner -- --suite partition"
+      ],
+      "acceptance": [
+        "Private eligibility/scoring remain in private adapters while contributor obligations are meaningful.",
+        "Each external requirement traces privately to approved intent; unsupported requirements are recorded instead of silently dropped.",
+        "A fixture initially coupled to a protected module acquires a newly typed boundary; static type and transformation-model checks pass. Actual generated-code preservation/integration execution remains a pending gate for M4.3 after M5.2/M5.3. Existing-interface packaging alone is insufficient.",
+        "The coherent selection fixture produces connected UI/API units and frozen request/context/response obligations; private eligibility remains in a retained adapter and no production authentication/billing capability is claimed."
+      ],
+      "milestone": "M3",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M3.md"
+      ],
+      "handoff": ".execution/handoffs/M3.2.md",
+      "evidenceDirectory": ".execution/evidence/M3.2/"
+    },
+    {
+      "id": "M3.3",
+      "title": "Contract sufficiency and bounded ranker checks",
+      "dependencies": [
+        "M3.2"
+      ],
+      "role": "verification",
+      "writePaths": [
+        "packages/evaluation/contracts/**",
+        "tests/acceptance/contract-fit/**",
+        "docs/assurance-model.md"
+      ],
+      "deliverables": [
+        "Independent property checker and 0..4-item bounded ranker model.",
+        "Caller-assumption checks, alternative satisfying implementations and package-defect counterexample fixture.",
+        "Check composed interface/end-to-end obligation completeness, including a client/API mismatch counterexample that passes local unit checks."
+      ],
+      "checks": [
+        "pnpm test:acceptance -- --suite contract-fit",
+        "pnpm test:contracts"
+      ],
+      "acceptance": [
+        "Local contract and private caller assumptions are both checked in stated bounds.",
+        "An alternative valid implementation is accepted; a missing private requirement is classified as package defect; all bounds/unknowns are reported.",
+        "Contract checking distinguishes missing published obligations from implementation errors; all required units/interfaces must be supported and unit success alone cannot imply complete fit."
+      ],
+      "milestone": "M3",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M3.md"
+      ],
+      "handoff": ".execution/handoffs/M3.3.md",
+      "evidenceDirectory": ".execution/evidence/M3.3/"
+    },
+    {
+      "id": "M3.4",
+      "title": "Bounded application security-policy adapter",
+      "dependencies": [
+        "M3.1",
+        "M2.2",
+        "M1.1"
+      ],
+      "role": "configuration",
+      "writePaths": [
+        "packages/analyzer/policy/**",
+        "packages/planner/partition/policy/**",
+        "packages/evaluation/policy/**",
+        "services/private-api/preparations/policy/**",
+        "tests/analysis/policy/**",
+        "tests/acceptance/policy/**",
+        "tests/security/policy/**"
+      ],
+      "deliverables": [
+        "Implement application_policy for the versioned response-security JSON schema in COMPOSITION.md; register data-only parse/schema/constraint checks and private loader mapping.",
+        "Generate a PM-reviewed policy task or policy work unit within a composed task, with exact approved values, edit path, HTTPS/localhost semantics and preservation obligations.",
+        "Track broader security/cloud/data/tooling requirements individually; absence of a suitable adapter is explicit and never inferred just from the discipline."
+      ],
+      "checks": [
+        "pnpm test:analysis -- --suite policy",
+        "pnpm test:acceptance -- --suite policy",
+        "pnpm test:security -- --suite policy-scope"
+      ],
+      "acceptance": [
+        "A response-security policy task has a runnable frozen contract and generic synthetic fixtures; policy code never selects evaluator commands, dependencies, routes or privileges.",
+        "Reject duplicate JSON keys, unknown fields, executable/remote references and out-of-scope edits; valid declared alternatives remain eligible.",
+        "Static/schema feasibility passes here; runtime transfer and preservation remain mandatory after the real runner gates."
+      ],
+      "milestone": "M3",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M3.md"
+      ],
+      "handoff": ".execution/handoffs/M3.4.md",
+      "evidenceDirectory": ".execution/evidence/M3.4/"
+    },
+    {
+      "id": "M4.1",
+      "title": "Release review and approval binding",
+      "dependencies": [
+        "M1.3",
+        "M3.2",
+        "M2.3",
+        "M3.4"
+      ],
+      "role": "release",
+      "writePaths": [
+        "services/private-api/releases/**",
+        "apps/private-console/releases/**",
+        "tests/compiler/approval/**"
+      ],
+      "deliverables": [
+        "Review exact listing/contract/assets/feedback/terms; stage approved content-addressed bytes.",
+        "Owner approval signatures bound to hashes, versions and frozen policy.",
+        "Review combined public meaning, interfaces and capability union across all work units; one owner approval covers the exact whole task."
+      ],
+      "checks": [
+        "pnpm test:compiler -- --suite approval",
+        "pnpm test:auth"
+      ],
+      "acceptance": [
+        "Editing any approved byte, policy or template requires reapproval.",
+        "AI/worker cannot approve; a displayed summary cannot replace review of actual released contents."
+      ],
+      "milestone": "M4",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M4.md"
+      ],
+      "handoff": ".execution/handoffs/M4.1.md",
+      "evidenceDirectory": ".execution/evidence/M4.1/"
+    },
+    {
+      "id": "M4.2",
+      "title": "Approved-only compiler and workspace templates",
+      "dependencies": [
+        "M4.1",
+        "M1.1",
+        "M3.4"
+      ],
+      "role": "compiler",
+      "writePaths": [
+        "packages/compiler/**",
+        "templates/workspaces/**",
+        "tests/compiler/package/**"
+      ],
+      "deliverables": [
+        "Deterministic ZIP/manifest build with composable vetted fragments for frontend, pure module, backend API and application policy; assemble one offline-capable workspace with fixed shared toolchain/start/check instructions.",
+        "Pinned trusted public image with required dependencies and runnable public checks."
+      ],
+      "checks": [
+        "pnpm test:compiler",
+        "pnpm test:security -- --suite release-content"
+      ],
+      "acceptance": [
+        "Two different private systems with identical approved inputs produce byte-identical packages.",
+        "Package excludes private mappings/canaries/history/cache/source maps; compiler has no arbitrary private-path or model access.",
+        "Execution image layers/history contain no private files/canaries; images are built exclusively from public/vetted inputs.",
+        "Single-unit, connected full-stack and policy packages compile; schema/toolchain collisions and dangling interfaces fail; changing one unit/interface invalidates whole-package approval."
+      ],
+      "milestone": "M4",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M4.md"
+      ],
+      "handoff": ".execution/handoffs/M4.2.md",
+      "evidenceDirectory": ".execution/evidence/M4.2/"
+    },
+    {
+      "id": "M4.3",
+      "title": "Readiness records and publish gate",
+      "dependencies": [
+        "M4.2",
+        "M3.3",
+        "M5.2",
+        "M5.3",
+        "M5.4"
+      ],
+      "role": "readiness",
+      "writePaths": [
+        "services/private-api/readiness/**",
+        "apps/private-console/readiness/**",
+        "tests/compiler/readiness/**",
+        "tests/contracts/publication/**"
+      ],
+      "deliverables": [
+        "Fresh-build, traceability, ambiguity and external-context solve/human-review evidence model.",
+        "Readiness UI, failure reasons and immutable package version.",
+        "Run fresh readiness checks in the real isolated profile; baseline builds and harness self-validation must work even though unfinished feature tests may fail. Private reference patches validate feasibility without being exported."
+      ],
+      "checks": [
+        "pnpm test:compiler -- --suite readiness",
+        "pnpm test:contracts -- --suite publication"
+      ],
+      "acceptance": [
+        "Any missing mandatory readiness or approval blocks publication.",
+        "A failed external AI solve is classified, not automatically called ambiguity or a proof of human difficulty.",
+        "Execute preservation/integration checks for the proposed private boundary diff in the validated isolated runner; pending M3 transformation evidence cannot be treated as completed runtime evidence.",
+        "Coherent full-stack and policy reference patches pass actual unit/interface/end-to-end/private-fit/preservation checks; initial unfinished feature tests may fail but baseline tooling and harness self-validation must work."
+      ],
+      "milestone": "M4",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M4.md"
+      ],
+      "handoff": ".execution/handoffs/M4.3.md",
+      "evidenceDirectory": ".execution/evidence/M4.3/"
+    },
+    {
+      "id": "M5.1",
+      "title": "Runner protocol and safe controller",
+      "dependencies": [
+        "M1.1",
+        "M0.2"
+      ],
+      "role": "platform",
+      "writePaths": [
+        "packages/runner-protocol/**",
+        "services/runner-controller/**",
+        "infra/runner/**",
+        "docs/runner-setup.md"
+      ],
+      "deliverables": [
+        "Bounded job/result schemas, trusted command mapping, digest/replay verification and SSH/SFTP transport.",
+        "Capability doctor, fake-development adapter and required dedicated-VM adapter.",
+        "Implement the operator-host KVM/libvirt baseline-to-ephemeral-guest provider and explicit per-job VM lease disposal."
+      ],
+      "checks": [
+        "pnpm test:runner -- --suite protocol",
+        "pnpm doctor --json"
+      ],
+      "acceptance": [
+        "Untrusted commands/URLs/harness IDs cannot control host execution.",
+        "Fake runner is explicit; missing/invalid required profile fails closed and leaves real-validation tasks blocked."
+      ],
+      "milestone": "M5",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M5.md"
+      ],
+      "handoff": ".execution/handoffs/M5.1.md",
+      "evidenceDirectory": ".execution/evidence/M5.1/"
+    },
+    {
+      "id": "M5.2",
+      "title": "Sandboxed jobs and adversarial runtime checks",
+      "dependencies": [
+        "M5.1",
+        "M4.2"
+      ],
+      "role": "security_runtime",
+      "writePaths": [
+        "infra/runner/jobs/**",
+        "services/runner-controller/isolation/**",
+        "tests/security/runtime/**"
+      ],
+      "deliverables": [
+        "Non-root constrained container inside dedicated VM; offline dependencies and per-job disposal.",
+        "Good, network/file-read, output-flood, loop/process/memory and forged-result cases.",
+        "Keep authenticated supervisor/harness authority outside candidate process/container; frontend driver is outside candidate renderer. Public/private jobs use distinct fresh VMs and inputs."
+      ],
+      "checks": [
+        "pnpm test:runner -- --real",
+        "pnpm test:security -- --suite runtime --real"
+      ],
+      "acceptance": [
+        "Good jobs run; forbidden access/egress and resource abuse are blocked or terminated under actual recorded controls.",
+        "No host/private-store/model/socket/cloud credentials are present; raw results remain private; tests really execute, not mock, the VM boundary.",
+        "Forged verdict stdout, process.exit(0), assertion monkeypatching and cross-job persistence cannot yield passing authority or survive guest destruction."
+      ],
+      "milestone": "M5",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M5.md"
+      ],
+      "handoff": ".execution/handoffs/M5.2.md",
+      "evidenceDirectory": ".execution/evidence/M5.2/"
+    },
+    {
+      "id": "M5.3",
+      "title": "Jobs, cancellation and evaluator evidence",
+      "dependencies": [
+        "M5.1",
+        "M1.2"
+      ],
+      "role": "backend",
+      "writePaths": [
+        "services/private-api/jobs/**",
+        "packages/evaluation/runner-results/**",
+        "tests/runner/lifecycle/**"
+      ],
+      "deliverables": [
+        "Transactional enqueue/cancel/result states, immutable harness/image binding and bounded private log storage.",
+        "Public-vs-private evaluation job separation with exact artifact linkage."
+      ],
+      "checks": [
+        "pnpm test:runner -- --suite lifecycle",
+        "pnpm test:security -- --suite output-boundary"
+      ],
+      "acceptance": [
+        "Timeouts, corrupted/replayed results and interrupted jobs never become passed/accepted.",
+        "Evidence binds evaluated bytes and revisions; job cleanup cannot affect another workspace or active job."
+      ],
+      "milestone": "M5",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M5.md"
+      ],
+      "handoff": ".execution/handoffs/M5.3.md",
+      "evidenceDirectory": ".execution/evidence/M5.3/"
+    },
+    {
+      "id": "M5.4",
+      "title": "Composed services and aggregate evaluation authority",
+      "dependencies": [
+        "M5.2",
+        "M5.3"
+      ],
+      "role": "runtime_integration",
+      "writePaths": [
+        "services/runner-controller/composition/**",
+        "infra/runner/composition/**",
+        "packages/evaluation/composition/**",
+        "tests/runner/composition/**",
+        "tests/security/composition/**"
+      ],
+      "deliverables": [
+        "Implement fixed per-job browser/static-assets/candidate-API proxy profile, separate candidate process/container boundaries, data-only policy validation and trusted aggregate verdicts per COMPOSITION.md.",
+        "Bind all work-unit/interface/package/harness digests to one authorized attempt; aggregate CPU/memory/process/time/storage limits and clean up every service/network/guest on cancellation.",
+        "Run positive full-stack and policy cases plus mismatched client/API, missing unit result, forged success, privilege-changing policy and forbidden network/management access cases in the real VM profile.",
+        "Exercise fixed proxy method/route/upstream rules, renderer isolation from CDP/SSH/signing channels, forged forwarding/Host headers and trusted application-policy application after candidate API output."
+      ],
+      "checks": [
+        "pnpm test:runner -- --suite composition --real",
+        "pnpm test:security -- --suite composition --real"
+      ],
+      "acceptance": [
+        "Browser checks exercise the actual candidate API through fixed internal routes; trusted supervisor/signing authority remains inaccessible to every candidate.",
+        "Unit success with failed interface/end-to-end or missing required evidence cannot pass; one submission attempt is counted once even when it starts multiple bounded child jobs.",
+        "Public/private composition jobs use separate fresh VMs and input bundles; pure modules stay network-none and policies never execute as scripts. Real resource/egress/disposal evidence is required.",
+        "Run passing and failing frontend+backend+policy patches in real separate public/private VMs. A candidate response header cannot override trusted application policy; policy cannot relax evaluator controls; forged ingress context and proxy tunneling/redirect/route escape fail."
+      ],
+      "milestone": "M5",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M5.md"
+      ],
+      "handoff": ".execution/handoffs/M5.4.md",
+      "evidenceDirectory": ".execution/evidence/M5.4/"
+    },
+    {
+      "id": "M6.1",
+      "title": "Signed release bridge and local task board",
+      "dependencies": [
+        "M4.3",
+        "M1.3"
+      ],
+      "role": "backend",
+      "writePaths": [
+        "services/private-api/bridge/**",
+        "services/external-api/tasks/**",
+        "services/external-api/bridge/**",
+        "tests/portal/publication/**"
+      ],
+      "deliverables": [
+        "Signed approved envelope delivery with nonce/expiry/replay protection and public positive projections.",
+        "Local board and exact package retrieval; no external publishing integration."
+      ],
+      "checks": [
+        "pnpm test:portal -- --suite publication",
+        "pnpm test:security -- --suite bridge"
+      ],
+      "acceptance": [
+        "External DB contains released data only; guessed private IDs/errors do not expose context.",
+        "Unsigned/stale/replayed envelope is rejected; published assets match approved hashes.",
+        "Board displays nonexclusive skills/discipline tags and the whole composed scope; reservation/package remain one task and one fixed reward."
+      ],
+      "milestone": "M6",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M6.md"
+      ],
+      "handoff": ".execution/handoffs/M6.1.md",
+      "evidenceDirectory": ".execution/evidence/M6.1/"
+    },
+    {
+      "id": "M6.2",
+      "title": "Assignments, reservations and package-defect flow",
+      "dependencies": [
+        "M6.1"
+      ],
+      "role": "backend_frontend",
+      "writePaths": [
+        "services/external-api/reservations/**",
+        "apps/private-console/assignments/**",
+        "apps/contributor-portal/**",
+        "tests/portal/reservations/**"
+      ],
+      "deliverables": [
+        "Customer choice of human/AI/team, invitations, one-reservation transaction and expiry.",
+        "Contributor download/instructions and structured package-defect report."
+      ],
+      "checks": [
+        "pnpm test:portal -- --suite reservation",
+        "pnpm test:e2e -- --suite contributor"
+      ],
+      "acceptance": [
+        "Customer executor choice persists without AI-first routing.",
+        "Concurrent reservations cannot both win; expiry/defect/cancellation uses frozen terms; no chat or private AI endpoint exists.",
+        "Revisions preserve original expiry/terms; changes_required reactivates the reservation and old attempts cannot be accepted."
+      ],
+      "milestone": "M6",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M6.md"
+      ],
+      "handoff": ".execution/handoffs/M6.2.md",
+      "evidenceDirectory": ".execution/evidence/M6.2/"
+    },
+    {
+      "id": "M6.3",
+      "title": "Bounded patch intake and atomic budgets",
+      "dependencies": [
+        "M6.2",
+        "M5.1"
+      ],
+      "role": "security_backend",
+      "writePaths": [
+        "services/external-api/submissions/**",
+        "services/private-api/submission-import/**",
+        "packages/evaluation/patch-validation/**",
+        "tests/security/submissions/**"
+      ],
+      "deliverables": [
+        "UTF-8 patch parsing, strict portable paths/edit allowlist, digest and reservation validation.",
+        "Idempotency and reservation/lineage/workspace attempt counters, private bounded submission import.",
+        "External DB owns atomic quota/attempt-permit/outbox commit; signed permits authorize idempotent private import and recovery."
+      ],
+      "checks": [
+        "pnpm test:portal -- --suite submissions",
+        "pnpm test:security -- --suite patch-and-budget"
+      ],
+      "acceptance": [
+        "Traversal, Windows unsafe paths, evaluator/manifest edits, binary/mode/submodule changes and forged bases fail before execution.",
+        "Concurrent identities/versions cannot bypass limits; duplicate idempotency keys create one attempt; no patch executes on the host.",
+        "Crash/replay tests prove no evaluation without a committed permit and no duplicate authoritative attempt across the bridge.",
+        "One bounded patch may edit approved paths across units; authoritative attempt quotas do not reset or multiply by work-unit count."
+      ],
+      "milestone": "M6",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M6.md"
+      ],
+      "handoff": ".execution/handoffs/M6.3.md",
+      "evidenceDirectory": ".execution/evidence/M6.3/"
+    },
+    {
+      "id": "M7.1",
+      "title": "Public checks and private integration pipeline",
+      "dependencies": [
+        "M6.3",
+        "M5.3",
+        "M3.3",
+        "M5.2",
+        "M5.4"
+      ],
+      "role": "evaluation",
+      "writePaths": [
+        "packages/evaluation/pipeline/**",
+        "services/private-api/evaluations/**",
+        "tests/acceptance/integration/**"
+      ],
+      "deliverables": [
+        "Frozen public and private VM jobs, template-specific patch mapping and evidence classification.",
+        "Private candidate diff produced as data against exact base; no merge/deploy.",
+        "Map all units/shared interfaces into one pinned private base and aggregate required public/private/end-to-end/preservation evidence; include response-policy loader verification."
+      ],
+      "checks": [
+        "pnpm test:acceptance -- --suite integration",
+        "pnpm test:runner -- --real"
+      ],
+      "acceptance": [
+        "Compatible changes pass published/private-fit checks; genuine violations fail; infrastructure/unknown results remain distinct.",
+        "Stale versions trigger revalidation; hidden tests introduce no unpublished obligation.",
+        "A mismatch patch whose unit checks pass fails whole-task fit; a correct composed patch creates one aggregate candidate diff. An unpublished private expectation is package_defect, not contributor fault."
+      ],
+      "milestone": "M7",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M7.md"
+      ],
+      "handoff": ".execution/handoffs/M7.1.md",
+      "evidenceDirectory": ".execution/evidence/M7.1/"
+    },
+    {
+      "id": "M7.2",
+      "title": "Owner review and controlled feedback",
+      "dependencies": [
+        "M7.1",
+        "M1.3"
+      ],
+      "role": "backend_frontend",
+      "writePaths": [
+        "services/private-api/acceptance/**",
+        "services/private-api/feedback/**",
+        "services/external-api/status/**",
+        "apps/private-console/review/**",
+        "tests/acceptance/feedback/**",
+        "services/private-api/ledger/acceptance-transaction/**",
+        "tests/acceptance/atomic-acceptance/**"
+      ],
+      "deliverables": [
+        "Private evidence review, owner-only acceptance and approved public feedback renderer.",
+        "Feedback policy version, public-only diagnostics and package-defect compensation path.",
+        "Atomically record exact latest-attempt acceptance, candidate-diff hash, payment obligation and feedback outbox in the private DB; M7.3 adds settlement/ledger UI and exports."
+      ],
+      "checks": [
+        "pnpm test:acceptance -- --suite feedback",
+        "pnpm test:security -- --suite feedback"
+      ],
+      "acceptance": [
+        "Only owner accepts exact checked revision; AI/jobs do not self-approve.",
+        "Canary/raw logs/stack traces/private scores never appear in public responses; terminal status is identified as approved intentional disclosure.",
+        "Crash/retry/supersession cannot expose accepted without a payable record or create duplicate payable/feedback events.",
+        "Partial unit passes cannot be separately accepted or create implicit payments; one exact complete task acceptance binds all evaluated unit/interface hashes."
+      ],
+      "milestone": "M7",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M7.md"
+      ],
+      "handoff": ".execution/handoffs/M7.2.md",
+      "evidenceDirectory": ".execution/evidence/M7.2/"
+    },
+    {
+      "id": "M7.3",
+      "title": "Idempotent ledger and research event capture",
+      "dependencies": [
+        "M7.2"
+      ],
+      "role": "backend",
+      "writePaths": [
+        "services/private-api/ledger/**",
+        "services/private-api/metrics/**",
+        "apps/private-console/payments/**",
+        "tests/acceptance/ledger/**",
+        "tests/contracts/metrics/**"
+      ],
+      "deliverables": [
+        "Payment-obligation and owner-recorded settlement/compensation ledger, safe CSV export.",
+        "Stage/time/effort, rejection, clarification, retained-work and assurance records."
+      ],
+      "checks": [
+        "pnpm test:acceptance -- --suite ledger",
+        "pnpm test:contracts -- --suite metrics"
+      ],
+      "acceptance": [
+        "Concurrent acceptance cannot create duplicate payable events; no real payment claim/API exists.",
+        "Package defects are not silently contributor fault; missing effort data is null, and private financial projections obey release policy."
+      ],
+      "milestone": "M7",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M7.md"
+      ],
+      "handoff": ".execution/handoffs/M7.3.md",
+      "evidenceDirectory": ".execution/evidence/M7.3/"
+    },
+    {
+      "id": "M8.1",
+      "title": "Adversarial boundary verification",
+      "dependencies": [
+        "M4.3",
+        "M5.2",
+        "M6.3",
+        "M7.2",
+        "M5.4"
+      ],
+      "role": "security_review",
+      "writePaths": [
+        "tests/security/**",
+        "docs/security-review.md"
+      ],
+      "deliverables": [
+        "Complete mandatory attack suite and evidence report from SECURITY.md.",
+        "Open findings with severity, trusted assumptions and limits; no unsupported security claims.",
+        "Independently challenge composite disclosure, API proxy privileges, data-only policy handling, verdict aggregation and shared-path ownership gates."
+      ],
+      "checks": [
+        "pnpm test:security --real",
+        "pnpm test:auth",
+        "pnpm test:compiler"
+      ],
+      "acceptance": [
+        "All decisive adversarial tests run with independent expected outcomes and actual VM jobs where required.",
+        "Any unresolved blocker prevents pilot-ready status; positive good-submission cases still work."
+      ],
+      "milestone": "M8",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M8.md"
+      ],
+      "handoff": ".execution/handoffs/M8.1.md",
+      "evidenceDirectory": ".execution/evidence/M8.1/"
+    },
+    {
+      "id": "M8.2",
+      "title": "External-only cold-start and alternatives",
+      "dependencies": [
+        "M7.1",
+        "M6.2"
+      ],
+      "role": "readiness_review",
+      "writePaths": [
+        "tests/e2e/cold-start/**",
+        "research/readiness/**",
+        "docs/package-readiness-review.md"
+      ],
+      "deliverables": [
+        "Fresh external-only workspace build/check/submit rehearsal and alternative satisfying patches.",
+        "Incomplete package, support failure and defect-report classification; explicit human-readiness evidence field.",
+        "Run the actual fresh package-only build/rehearsal in an isolated workspace. A solver, when available, has fresh context and package-only tool/filesystem exposure; full-history/shared-repository solves are labeled limited rehearsal."
+      ],
+      "checks": [
+        "pnpm test:e2e -- --suite cold-start",
+        "pnpm test:acceptance -- --suite alternatives"
+      ],
+      "acceptance": [
+        "Rehearsal has no private references/model/context; valid alternatives transfer privately.",
+        "An agent solve is recorded as an agent solve; no human independence evidence is fabricated.",
+        "Record mechanical rehearsal separately from blind solver and human evidence. Missing a constrained solver/human does not fabricate evidence; implementation can pass its mechanical gate while those research fields remain unverified.",
+        "Cold-start mechanical readiness covers the connected full-stack package and response-policy package; valid alternatives pass aggregate private transfer, not merely isolated unit checks."
+      ],
+      "milestone": "M8",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M8.md"
+      ],
+      "handoff": ".execution/handoffs/M8.2.md",
+      "evidenceDirectory": ".execution/evidence/M8.2/"
+    },
+    {
+      "id": "M8.3",
+      "title": "Research instruments and breadth records",
+      "dependencies": [
+        "M7.3",
+        "M3.2",
+        "M3.4"
+      ],
+      "role": "research_engineering",
+      "writePaths": [
+        "research/**",
+        "services/private-api/research/**",
+        "apps/private-console/research/**",
+        "scripts/research-report.*",
+        "tests/research/**",
+        "tests/contracts/research/**"
+      ],
+      "deliverables": [
+        "Versioned study templates and synthetic examples with nonexclusive frontend/backend/security/cloud/data/tooling tags, work-unit/adapter/interface records and distinct composition cohorts.",
+        "Reports implementing EVALUATION metrics, missing-value rules and explicit unevaluated hypotheses."
+      ],
+      "checks": [
+        "pnpm research:report -- --fixture synthetic",
+        "pnpm research:report -- --fixture empty",
+        "pnpm test:contracts -- --suite research"
+      ],
+      "acceptance": [
+        "Rejected and retained-private work remain in denominator; no unsupported discipline is counted implemented.",
+        "Synthetic/empty inputs report insufficient evidence; participant/expert superiority claims require genuine evidence.",
+        "A composed task counts once in the unique task denominator; overlapping discipline counts are labeled and never summed into fictional breadth."
+      ],
+      "milestone": "M8",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M8.md"
+      ],
+      "handoff": ".execution/handoffs/M8.3.md",
+      "evidenceDirectory": ".execution/evidence/M8.3/"
+    },
+    {
+      "id": "M9.1",
+      "title": "End-to-end PM to accepted contribution",
+      "dependencies": [
+        "M8.1",
+        "M8.2",
+        "M8.3",
+        "M7.3"
+      ],
+      "role": "integration",
+      "writePaths": [
+        "tests/e2e/full-journey/**",
+        "apps/**/integration/**",
+        "scripts/demo.*",
+        "docs/demo-walkthrough.md"
+      ],
+      "deliverables": [
+        "Complete single-unit compatibility, coherent full-stack selection and executable response-security policy journeys, including intent/approval/invalidation/reservation/patch/aggregate review/ledger states.",
+        "Usable responsive UI, loading/error states and accessibility smoke checks.",
+        "Complete the combined frontend/backend/policy journey; a local-unit-pass/aggregate-fail patch never reaches accepted or creates a payable record."
+      ],
+      "checks": [
+        "pnpm test:e2e -- --suite full-journey",
+        "pnpm check",
+        "pnpm build"
+      ],
+      "acceptance": [
+        "PM can describe an outcome and owner/contributor complete the prescribed workflow without bypassing gates.",
+        "Invalidation, task defects and failed jobs appear honestly; correct patches integrate as candidate diffs only.",
+        "Full-stack success requires one task/contract/package/reward with working UI-to-candidate-API behaviour; response-security policy completes private loader/preservation checks. Frontend+backend+policy also completes one combined journey with passing and failing real-runner patches, aggregate owner acceptance and one payable event; no exclusive family rule remains."
+      ],
+      "milestone": "M9",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M9.md"
+      ],
+      "handoff": ".execution/handoffs/M9.1.md",
+      "evidenceDirectory": ".execution/evidence/M9.1/"
+    },
+    {
+      "id": "M9.2",
+      "title": "Fresh-environment and capability verification",
+      "dependencies": [
+        "M9.1"
+      ],
+      "role": "release_review",
+      "writePaths": [
+        "scripts/verify-mvp.*",
+        "docs/operations.md",
+        "docs/backup-recovery.md",
+        "tests/operations/**"
+      ],
+      "deliverables": [
+        "Clean-install verification, credential-free demo instructions and real VM setup/run documentation.",
+        "Workspace-scoped backup/restore, interrupted-job recovery and machine-readable delivery status."
+      ],
+      "checks": [
+        "pnpm install --frozen-lockfile",
+        "pnpm verify:mvp",
+        "pnpm doctor --json"
+      ],
+      "acceptance": [
+        "Mandatory real-runner gate must pass; missing VM is a blocker, not a successful mock substitute.",
+        "Live model verification is either genuinely observed or clearly needs_configuration; backups do not export private data into external storage.",
+        "Runtime verification excludes the final coordinator task-state audit so M9.3 can execute its checks before its own completion.",
+        "verify:mvp requires full-stack and executable policy pathways plus real composite runner gates; future unsupported adapters remain explicit capability gaps."
+      ],
+      "milestone": "M9",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M9.md"
+      ],
+      "handoff": ".execution/handoffs/M9.2.md",
+      "evidenceDirectory": ".execution/evidence/M9.2/"
+    },
+    {
+      "id": "M9.3",
+      "title": "Final independent review and delivery report",
+      "dependencies": [
+        "M9.2"
+      ],
+      "role": "final_review",
+      "writePaths": [
+        "docs/DELIVERY.md",
+        "README.md",
+        "docs/limitations.md",
+        ".execution/evidence/M9.3/**"
+      ],
+      "deliverables": [
+        "Evidence-backed milestone audit, exact commands/URLs and current limitations.",
+        "Separate statuses for software, VM runner, live provider, independent review and real human study; next research steps.",
+        "Report exact implemented adapters/compositions and unsupported capability boundaries; avoid claiming all codebase disciplines or arbitrary cloud work are already supported."
+      ],
+      "checks": [
+        "pnpm verify:mvp",
+        "pnpm research:report -- --fixture empty"
+      ],
+      "acceptance": [
+        "No unresolved mandatory implementation/security gates or invented successes.",
+        "User can start/resume from documented instructions; software delivery never implies H1/H2 are proved or real participants were paid."
+      ],
+      "milestone": "M9",
+      "requiredReads": [
+        "AGENTS.md",
+        "docs/SPEC.md",
+        "docs/COMPOSITION.md",
+        "docs/ARCHITECTURE.md",
+        "docs/SECURITY.md",
+        "milestones/M9.md"
+      ],
+      "handoff": ".execution/handoffs/M9.3.md",
+      "evidenceDirectory": ".execution/evidence/M9.3/"
+    }
+  ]
+}

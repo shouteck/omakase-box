@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts\\pnpm.mjs",
+    "test:runner",
+    "--",
+    "--suite",
+    "lifecycle"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T15:44:21.069Z",
+  "finishedAt": "2026-10-03T15:44:33.150Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n \u001b[32m✓\u001b[39m tests/runner/lifecycle/store-live.test.ts \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 10147\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m job activation, cancellation and evidence behaviours run against a real isolated synthetic private database\u001b[33m 2546\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m enqueue is idempotent per attempt permit kind and never re-discloses\u001b[33m 1071\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m verified results chain public-then-private and bind exact artifact bytes in owner-review evidence\u001b[33m 987\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m replayed, corrupt, forged, expired and malformed results never become passed or accepted\u001b[33m 1055\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m interrupted and timed-out jobs land in infrastructure states and stay terminal\u001b[33m 1200\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m job cleanup is scoped to its own workspace and cannot affect another workspace or active job\u001b[33m 1048\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m SQL guards reject binding mutation, stale versions, result tampering and oversized log bytes\u001b[33m 1161\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m public and private kinds keep separate artifact bundles with exact digest linkage\u001b[33m 1076\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/runner/lifecycle/protocol.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 50\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m25 passed\u001b[39m\u001b[22m\u001b[90m (25)\u001b[39m\n\u001b[2m   Start at \u001b[22m 23:44:22\n\u001b[2m   Duration \u001b[22m 11.04s\u001b[2m (tests 95%, import 3%, transform 2%)\u001b[22m\n\n"
+}

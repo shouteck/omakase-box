@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.4",
+  "reviewer": "opencode-reviewer-subagent-m3-20261003",
+  "reviewType": "independent_first_review",
+  "reviewedAt": "2026-10-03T01:30:00.000Z",
+  "scope": "Full first independent review of M3.4 (security-sensitive, no prior independent review). docs/SECURITY.md read and used as the challenge basis: the application-policy adapter must be strictly data-only and must never control evaluator authority.",
+  "revisionBinding": {
+    "currentManifest": ".execution/evidence/M3.4/revision-1d446f9e48bd69bac1a7dd388f319880fe00846327952ef5cb11b273e55c8944.json",
+    "recomputedEveryFileSha256": true,
+    "fileCount": 53,
+    "missingFiles": 0,
+    "internalDigestRecomputation": {
+      "stateDigest": "1d446f9e48bd69bac1a7dd388f319880fe00846327952ef5cb11b273e55c8944",
+      "recomputedFromManifest": "1d446f9e48bd69bac1a7dd388f319880fe00846327952ef5cb11b273e55c8944",
+      "fileNameDigestMatches": true,
+      "taskDefinitionSha256Matches": true
+    },
+    "classification": {
+      "product": 8,
+      "sharedOnly": 41,
+      "integrationOnly": 2,
+      "outOfScope": 2,
+      "outOfScopeFiles": [
+        { "path": "packages/contracts/public/response-policy.ts", "note": "coordinator-owned shared public schema (strict Zod), explicitly declared as coordinator integration in the draft and included in this snapshot; reviewed as part of this revision" },
+        { "path": "tests/security/policy-scope/policy.test.ts", "note": "coordinator-owned one-line prescribed-suite shim re-exporting tests/security/policy/cases.ts; reviewed as part of this revision" }
+      ],
+      "note": "The two out-of-scope files are coordinator-owned integration additions declared in the draft; they are inside the recorded snapshot so they were reviewed. The policy-scope suite's real cases live in tests/security/policy/cases.ts (M3.4 product path)."
+    },
+    "productPathMismatches": [],
+    "sharedPathMismatches": [
+      { "path": "docs/DECISIONS.md", "cause": "today's coordinator decision-log edit after the snapshot" },
+      { "path": "scripts/execution.mjs", "cause": "today's coordinator execution-script edit after the snapshot" }
+    ],
+    "staleSharedEntriesNote": "Recorded manifest shared-file entries are stale for docs/DECISIONS.md and scripts/execution.mjs relative to the current tree; both coordinator-owned, outside the M3.4 write scope. No migration 0007 file appears in the M3.4 manifest and none is needed for its product scope."
+  },
+  "rerunChecks": [
+    {
+      "command": "node scripts/evidence.mjs M3.4 review-20261003-1-analysis-policy scripts/pnpm.mjs test:analysis -- --suite policy",
+      "label": "review-20261003-1-analysis-policy",
+      "exitCode": 0,
+      "observed": "9/9 tests passed: exact-byte/hash/scope binding with rejection of drifted source; six path attacks rejected (../ traversal, other config, drive path, different directory, NTFS alternate-data-stream, case-fold collision); capability records retain cloud/data/ci needs_adapter instead of discipline-based silent support; declared schema alternatives parse.",
+      "evidencePath": ".execution/evidence/M3.4/review-20261003-1-analysis-policy.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.4 review-20261003-2-acceptance-policy scripts/pnpm.mjs test:acceptance -- --suite policy",
+      "label": "review-20261003-2-acceptance-policy",
+      "exitCode": 0,
+      "observed": "11/11 tests passed: freeze keeps one task (single-policy and frontend+backend+policy), exact frozen values embedded with specification SHA-256, six registered check IDs, whole-task hash sensitivity with independent copies, BOTH declared alternatives accepted as static feasibility with acceptanceEligible false, schema-valid-but-unfrozen policy rejected (policy_constraint_failure, specification_hash_mismatch), expected headers derived independently of candidate/forwarding headers (HTTPS-only HSTS, localhost omits HSTS, /health preserves original headers, extra ingress key rejected), disabled controlled headers removed while unrelated headers preserved, immutable loader/revision binding with pending runtime, full published enum/boundary coverage (0 and 31536000 with includeSubDomains), and editable-loader/unknown-preservation-link/no-unit-path rejections.",
+      "evidencePath": ".execution/evidence/M3.4/review-20261003-2-acceptance-policy.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.4 review-20261003-3-security-policy-scope scripts/pnpm.mjs test:security -- --suite policy-scope",
+      "label": "review-20261003-3-security-policy-scope",
+      "exitCode": 0,
+      "observed": "21/21 tests passed (13 hostile-policy parameterized rejections + 7 forged-authority-field rejections + accessor/non-disclosure case): duplicate keys (root, unicode-escape collision \\u0053, nested hsts.enabled), unknown fields (command, $ref, interpolation string), HSTS integer bounds (31536001, 1.5), schemaVersion 2, trailing content, __proto__ pollution attempt, 64 KiB+ size, depth-40 nesting — every case rejected with no echo of the hostile source; forged commands/ports/dependencies/network/privileges/harness/approvedBy fields in the specification throw invalid_policy_specification; getter accessors never invoked (no accessor code executed) and supplied canary never disclosed in rejected results.",
+      "evidencePath": ".execution/evidence/M3.4/review-20261003-3-security-policy-scope.json"
+    }
+  ],
+  "retainedFailures": [
+    { "note": "Reviewer produced no failing rerun for M3.4. Worker's retained failures (policy-tests-before-implementation.json failed on the genuinely absent adapter; import-depth fixes; Zod-dependency solution moved schemas into the contracts package instead of changing the lockfile) were inspected and are honest process records. The Zod solution respects the pinned-dependency rule (no new package/dependency/lockfile entry)." }
+  ],
+  "acceptanceJudgements": [
+    {
+      "bullet": "A response-security policy task has a runnable frozen contract and generic synthetic fixtures; policy code never selects evaluator commands, dependencies, routes or privileges.",
+      "verdict": "met",
+      "basis": "freezePolicyProposal freezes exact finite allowedPolicies (distinct by canonical content hash, 1..16), pinned edit path (literal config/response-security.json), HTTPS/localhost semantics (trusted_https_non_localhost literal), excluded /health route (tuple literal) and header-override stripping into requirement inputs/outputs/states/invalidCases/exclusions/examples, plus six fixed POLICY_CHECK_IDS (schema/constraints as unit checks; transfer/preservation/ingress/override as end-to-end checks with whole-task unit/interface linkage). DATA-ONLY boundary verified structurally, not just by tests: ResponsePolicySchema/PolicySpecificationSchema/BindingSchema are z.strictObject with enum/literal/bounded-integer fields, so commands/ports/routes/privileges cannot be expressed (forged fields throw); preparePolicyCheck pins privateDestinationPath to the literal POLICY_PATH, requires the retained loader path inside a private segment and not candidate-editable (case-insensitive), requires every preservation requirement ID to belong to the policy unit, requires the specification hash to appear in the unit's frozen obligation outputs, and returns acceptanceEligible:false unconditionally; expectedPolicyHeaders derives headers only from the trusted policy/ingress data (HSTS only when ingress.https && !ingress.localhost — never from X-Forwarded-Proto/Host, which have no schema path) and strips candidate-controlled security headers (CSP/XCTO/Referrer-Policy/STS) case-insensitively. No evaluator command/route/port field exists anywhere in the policy schemas; the registered checks use fixed IDs, not policy-selected values."
+    },
+    {
+      "bullet": "Reject duplicate JSON keys, unknown fields, executable/remote references and out-of-scope edits; valid declared alternatives remain eligible.",
+      "verdict": "met",
+      "basis": "parsePolicyJson is a bounded strict JSON parser (64 KiB cap, depth 16, null-prototype objects, Object.hasOwn duplicate-key rejection AFTER decoding escapes — the unicode-escape \\u0053niff duplicate is caught via canonical decoding; nested duplicates caught per object; __proto__ assignment safe on null-proto); ResponsePolicySchema strictObject rejects unknown fields (command/$ref tested); enums/booleans/bounded integers leave no room for executable expressions, remote references, paths, environment interpolation or script hooks; analyzePolicyCandidate binds the exact supplied byte digest (source_hash_mismatch on any byte change, incl. appended whitespace) and preparePolicyCheck rejects out-of-scope edit paths (config/other.json, infra/policy.json, drive path, ADS, case-fold collision, ../ traversal). VALID ALTERNATIVES REMAIN ELIGIBLE: both {frameAncestors:'none'} and {frameAncestors:'self'} declarations are accepted as checked static feasibility, and the full published enum/boundary space (3 referrerPolicy values x maxAgeSeconds 0 and 31536000 with includeSubDomains) is exercised; a specification may declare 1..16 distinct policies and any declared one passes."
+    },
+    {
+      "bullet": "Static/schema feasibility passes here; runtime transfer and preservation remain mandatory after the real runner gates.",
+      "verdict": "met (honestly bounded)",
+      "basis": "Every result in the adapter/evaluation/preparation modules carries assurance:'bounded', runtimeTransfer:'pending_real_runner', acceptanceEligible:false. No loader execution, no VM transfer and no preservation run is claimed anywhere; tests assert the pending status and non-acceptance eligibility explicitly. COMPOSITION.md's remaining requirements (real loader emitting headers on synthetic HTTPS responses under the real runner, forged-ingress and candidate-header-override execution cases) are correctly deferred to M4.3/M5 and not marked passed."
+    },
+    {
+      "bullet": "Deliverable: track broader security/cloud/data/tooling requirements individually; absence of a suitable adapter is explicit and never inferred just from the discipline.",
+      "verdict": "met",
+      "basis": "assessPolicyCapabilities returns per-candidate records: response_security_v1 -> supported, cloud_network/database_migration/ci_workflow -> needs_adapter with a reasoned message and retained requirement — discipline tags ('security', 'data', 'tooling') do not flip support. Duplicated candidate ids rejected. Test asserts exact statuses/order."
+    }
+  ],
+  "weakenedExpectationsChecked": "None found. The one-line shim (tests/security/policy-scope/policy.test.ts -> tests/security/policy/cases.ts) is an id-preserving suite mount, not an expectation reduction: all 21 security cases still execute under the prescribed suite name. The shared strict schemas moved into packages/contracts (coordinator-owned) rather than weakening any check.",
+  "findings": [
+    {
+      "severity": "note",
+      "finding": "M3.4's recorded manifest includes two coordinator-owned integration files (packages/contracts/public/response-policy.ts, tests/security/policy-scope/policy.test.ts) outside the declared writePaths/sharedPaths; they were explicitly declared in the draft and are reviewed here, but the coordinator should ensure snapshot scope declarations stay consistent when recording the review decision."
+    },
+    {
+      "severity": "note",
+      "finding": "parseResponsePolicy throws a single generic 'invalid_policy' for all hostile cases and analyzePolicyCandidate never echoes the source — good for diagnostics hygiene (tests assert no hostile echo). Diagnostic precision (why a policy was rejected) is intentionally minimal; acceptable for the data-only boundary."
+    }
+  ],
+  "verdict": "approved",
+  "limitations": "Static/schema/constraint feasibility only: the synthetic /selection and /health route model, one versioned policy path, finite approved alternatives; actual loader transfer, preservation, forged-ingress and candidate-header-override execution under the real public/private VM profiles remain M4.3/M5 gates and are not claimed. Expected-header tests are bounded trusted-data tests, not contributor VM execution. No live deployment or credentials; all fixtures synthetic."
+}

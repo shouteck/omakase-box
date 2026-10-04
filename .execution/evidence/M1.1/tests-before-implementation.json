@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:contracts"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:04:27.199Z",
+  "finishedAt": "2026-10-02T03:04:28.782Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n> private-task-mvp@0.0.0 test:contracts C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\n> node scripts/suite.mjs contracts\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/contracts/paths.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Suites 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/contracts/paths.test.ts\u001b[2m [ tests/contracts/paths.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../packages/contracts/paths.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/contracts/paths.test.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/contracts/paths.test.ts:\u001b[2m2:1\u001b[22m\u001b[39m\n    \u001b[90m  1|\u001b[39m import { describe, expect, it } from 'vitest';\n    \u001b[90m  2|\u001b[39m import { assertDistinctPaths, PortablePathSchema } from '../../package…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m  3|\u001b[39m import { canonicalize, contentHash } from '../../packages/contracts/ha…\n    \u001b[90m  4|\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[2mno tests\u001b[22m\n\u001b[2m   Start at \u001b[22m 11:04:28\n\u001b[2m   Duration \u001b[22m 202ms\u001b[2m (worker 95%, environment 5%)\u001b[22m\n\n ELIFECYCLE  Command failed with exit code 1.\n"
+}
