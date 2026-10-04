@@ -16,6 +16,20 @@ On START.md, reconcile a missing checkpoint for previously accepted work and com
 
 ## Checkpoint procedure
 
+### Git command scope on this Windows checkout
+
+Verified on 4 October 2026: the checkout is `C:/Users/shout/Desktop/Projects/private-task-mvp`, its `.git` owner is `DESKTOP-6U13DFA/shout` (SID ending `-1002`), and the Codex sandbox runs as `CodexSandboxOffline` (SID ending `-1007`). The actual remote is the authorized origin above. This is an account mismatch, not evidence that the repository needs ownership or ACL changes.
+
+Use this exact command form for each Git operation in this project:
+
+```text
+git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>
+```
+
+Run it from the verified project/worktree and use forward slashes in the exception path. For a different worktree, verify its resolved absolute path, expected ownership and relationship to this repository first, then use its exact path only. Never use `safe.directory=*`, a parent directory wildcard or an unrelated repository path. Do not change global/system Git trust settings or ownership/ACLs automatically. This command-scoped setting is Git configuration for the individual invocation, not an approval to run forbidden actions or bypass tool permission controls. An ownership mismatch alone is handled by this recipe; a genuine command/tool denial remains a blocker.
+
+Bare `git status` reproduced the ownership error; the scoped invocation successfully read status/history/remotes, and scoped `ls-remote` verified the latest checkpoint `0699aea174cccce7acdfaa72377a2bf2275a2e15` on origin/master before this instruction update. The working tree was clean at that observation. This is a dated observation, not a guarantee of future live state. A proposed global exception was rejected by automatic approval review and was not applied; this command-scoped alternative changes no persistent trust setting.
+
 1. Reconcile active writers/leases, worktree, branch, actual remote URL, repository visibility and current local/remote history. Before upload, confirm the destination remains the authorized private repository. If visibility/access cannot be verified, report the checkpoint blocked; do not upload somewhere else or seek repeated approval for the same authorized destination.
 2. Select only accepted wave outputs, their necessary governance/evidence and independently checked instruction changes. Inspect the exact staged diff. Preserve unrelated or unfinished work unstaged; do not blanket-stage the checkout. Exclude actual credentials, .env/.runtime material, ignored files and raw machine-specific session exports. Use metadata/diff and authorized sources; do not read secret paths to perform this check.
 3. Confirm the selected bytes match current review/check evidence. Changed accepted documents or product files require affected revalidation. Preserve earlier manifests/verdicts as history rather than rewriting them to manufacture a pass. Obtain independent review of unreviewed instruction changes before checkpointing them.

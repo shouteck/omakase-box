@@ -40,6 +40,8 @@ Use existing configured/subscribed models and local resources by default. Routin
 
 On this 16 GB Windows host, serialize heavy builds/browser/runtime checks. Preserve free-license conditions and existing resource settings. Current tooling notes are preserved in docs/legacy/m0-m9-20261004/AGENTS.md; verify them before use. Existing local wrapper is node scripts/pnpm.mjs <arguments>. Legacy execution.mjs/checkpoint scripts cannot update B-series state.
 
+Git ownership on this checkout: .git is owned by the CEO's Windows account, while sandboxed agents may use a different account. Use a command-scoped exception for this verified project: `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call, including read-only START reconciliation and checkpoint operations. Read docs/box-v4/GIT-CHECKPOINTS.md for the verified path/owner and boundary. Do not add a global safe.directory entry, use a wildcard, change ownership/ACLs or send this routine mismatch back to the CEO. Report a real tool denial or a different path/owner separately.
+
 One writer per candidate worktree, one owner per shared integration lease. CTO alone writes active acceptance/approval state; leads own track receipts/inboxes. Replace JSON atomically. Check absolute workspace boundaries before recursive moves/deletes. Never kill unknown processes, edit unrelated projects or read .runtime/actual environment credentials for planning.
 
 ## Evidence and persistence
