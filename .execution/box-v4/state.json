@@ -1,11 +1,16 @@
 {
   "schemaVersion": 1,
   "planVersion": "box-v4-2026-10-04.1",
-  "projectStatus": "awaiting_ceo_wave_approval",
-  "activeWave": null,
+  "projectStatus": "blocked_pending_wave_amendment",
+  "activeWave": "W002",
+  "nextProposal": ".execution/box-v4/briefings/W002-r2.md (frozen amendment, not approved)",
   "lastCompletedWave": "W001",
   "ceoWaveApprovalRequired": true,
-  "currentApproval": null,
+  "currentApproval": {
+    "waveId": "W002",
+    "record": ".execution/box-v4/approvals/W002-approval.json",
+    "briefDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
   "primaryRuntime": {
     "name": "cursor_native_pstack",
     "installation": "unverified",
@@ -94,16 +99,33 @@
       "blockers": []
     },
     "B1.1": {
-      "status": "pending",
-      "implementationStatus": "pending",
-      "independentReviewStatus": "pending",
-      "waveId": null,
-      "owner": null,
+      "status": "blocked",
+      "implementationStatus": "checked",
+      "independentReviewStatus": "changes_requested",
+      "waveId": "W002",
+      "owner": "box-platform-lead/f65bedca",
       "lease": null,
-      "candidate": null,
-      "reviewer": null,
-      "receipts": [],
-      "blockers": []
+      "candidate": ".execution/box-v4/evidence/B1.1/candidate-manifest.json (corrected candidate, uncommitted, not accepted)",
+      "reviewer": "box-reviewer/77c88b35",
+      "receipts": [
+        ".execution/box-v4/evidence/B1.1/worker-receipt.md",
+        ".execution/box-v4/evidence/B1.1/worker-receipt-r2.md",
+        ".execution/box-v4/evidence/B1.1/reviewer-verdict.md",
+        ".execution/box-v4/evidence/B1.1/reviewer-verdict-r2.md",
+        ".execution/box-v4/evidence/B1.1/reviewer-manifest-r2.json",
+        ".execution/box-v4/evidence/B1.1/coordinator-rollup.json"
+      ],
+      "blockers": [
+        "Required check/test:auth and separately attempted contracts/planner fail in the approved isolated workspace; no accepted verdict.",
+        "Legacy fixtures need a bounded Docker-exec transport, Linux Chromium, missing staged fixtures and reviewed timeout policy; these require amended authority.",
+        "Remaining authorization/token boundary coverage noted by reviewer must be addressed before acceptance rather than inferred from suite names.",
+        "G5 actual START session resumption remains degraded/not demonstrated; no later parallel fan-out.",
+        "Staging helper policy deviations and prior probe auto-removal recorded; helper stopped by root and preserved."
+      ],
+      "worker": "box-worker/e44008a7",
+      "routineRetriesUsed": 1,
+      "routineRetryLimit": 2,
+      "verificationSummary": "Box contracts 7/7 and Box auth 7/7 with fresh PostgreSQL migrations passed; build passed. Legacy regression failures remain failed/unavailable, not proven non-regressions. Product leases released; no active writer is claimed."
     },
     "B1.2": {
       "status": "pending",

@@ -2,13 +2,20 @@
   "schemaVersion": 1,
   "waveId": "W002",
   "planVersion": "box-v4-2026-10-04.1",
-  "status": "proposed",
+  "status": "changed",
   "taskIds": [
     "B1.1"
   ],
   "brief": ".execution/box-v4/briefings/W002.md",
-  "briefDigest": "sha256:697a702ea45dce1b48a50b8ce32a516909e6ed818dcc3678ccb2c4c6d73c34ac",
-  "approval": null,
+  "briefRevision": "2026-10-04-r1",
+  "briefDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9",
+  "approval": {
+    "record": ".execution/box-v4/approvals/W002-approval.json",
+    "approver": "CEO (human operator)",
+    "message": "Approve",
+    "observedAt": "2026-10-04T08:35:06.1650860Z",
+    "boundBriefDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
   "holdEvents": [],
   "resumeAuthorizations": [],
   "revocationEvents": [],
@@ -16,31 +23,62 @@
     "productWrites": true,
     "readOnlyInspection": true,
     "governancePreparation": true,
+    "subagentDelegation": "proposed root -> box-platform-lead -> one box-worker then distinct box-reviewer, foreground/sequential; no dispatch until actual approval",
     "pluginInstallation": false,
     "globalModelConfiguration": false,
-    "processStartup": false,
+    "processStartup": "proposed isolated disposable local workspace and synthetic PostgreSQL containers only, cached pinned images, no pulls; exact policy in frozen brief; not authorized until approval",
     "remoteUpload": false,
     "spending": false,
-    "gitCommitsOrMerges": "routine reviewed checkpoints per docs/box-v4/GIT-CHECKPOINTS.md standing authority (non-force to existing private origin/master); no PR or other destination"
+    "gitCommitsOrMerges": "routine reviewed checkpoints per docs/box-v4/GIT-CHECKPOINTS.md standing authority, non-force to existing private origin/master; no PR, other destination or shared-branch merge",
+    "destructiveOperations": "require explicit confirmation for each specific action; no resets/drops of existing DBs or deletion of unrelated resources"
   },
-  "revisionPolicy": "Draft proposal produced by W001 per its approved deliverable. Not presented for approval; no execution authority exists. Presentation freezes a revision and binds a fresh digest.",
+  "revisionPolicy": "Frozen r1 prepared for the CEO decision card in this session. No execution authority exists until actual human approval binds these exact brief bytes. Material changes require a new revision and approval. Earlier unapproved drafts remain in Git history.",
   "runtimePolicy": {
     "placement": "local_existing_resources",
     "models": "preserve_current_available_settings",
-    "maxAgents": "actual_runtime_capacity",
+    "maxAgents": "root plus one active lead and one terminal child at a time within actual host capacity",
     "heavyChecks": "serialized",
     "adapter": "devin_portable_pstack_adaptation",
-    "baseRevision": "71ecb436ad12c6c55fa1f9b3f77361d5825a6ef1"
+    "baseRevision": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+    "workspaceImageId": "sha256:99fc47dac8b729a5060068378def035fab6542c9be55885187251291e71e65c9",
+    "postgresImage": "postgres:17-bookworm@sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+    "workspaceReadiness": "cached image metadata observed; execution/toolchain preflight not yet run; non-root override required because dependency image has no configured User"
   },
   "pilotGates": [
-    "G1 approved brief digest bound",
+    "G1 actual approval bound to frozen brief digest",
     "G2 single-worker receipt bound to exact candidate manifest",
-    "G3 distinct box-reviewer verdict on identical bytes",
-    "G4 durable receipt persisted",
-    "G5 resume demonstrated or labeled degraded"
+    "G3 distinct box-reviewer verdict on identical recomputed bytes",
+    "G4 durable worker/reviewer evidence persisted",
+    "G5 real START resumption demonstrated; undemonstrated is degraded, not passed, and blocks later parallel fan-out"
   ],
   "adoptedChoicesOnApproval": [
     "Q2: behavior artifact is a distinct object from InternalIntent",
-    "scripts/boundaries.mjs gains packages/box-*/ forbidden-prefix coverage under tooling-scripts lease"
-  ]
+    "Q3: owner-role behavior and merge approvals remain separate records; executor cannot approve its own behavior, review or merge",
+    "scripts/boundaries.mjs gains packages/box-*/ forbidden-prefix coverage under tooling-scripts lease",
+    "Follow existing hand-authored migration convention with new 0012 SQL and journal idx 12; no new snapshot",
+    "Colocate Box table definitions in the store tree; defer existing schema/auth session/bootstrap edits and public routes"
+  ],
+  "checkpointStatus": "prior work confirmed on private origin/master at base; W002 product candidate remains blocked, unaccepted and uncommitted; only separately exact-reviewed governance may be checkpointed",
+  "executionStatus": "blocked_pending_revised_verification_authority",
+  "actualAssignments": {
+    "lead": "box-platform-lead/f65bedca",
+    "worker": "box-worker/e44008a7",
+    "reviewer": "box-reviewer/77c88b35",
+    "topology": "foreground sequential nested lead -> worker then distinct reviewer; children terminal",
+    "observedModels": "not exposed by this session's run_subagent response; no diversity claim"
+  },
+  "candidate": ".execution/box-v4/evidence/B1.1/candidate-manifest.json",
+  "review": ".execution/box-v4/evidence/B1.1/reviewer-verdict-r2.md",
+  "pilotGatesObserved": {"G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "degraded_not_demonstrated"},
+  "routineRetriesUsed": 1,
+  "materialChangeRequired": "Required legacy verification cannot pass with original workspace permissions; amended scope must be frozen and separately approved. Original r1 authority/history remain intact, but no further dispatch until reconciliation/amendment.",
+  "proposedAmendment": {
+    "revision": "2026-10-04-r2",
+    "brief": ".execution/box-v4/briefings/W002-r2.md",
+    "briefDigest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+    "status": "awaiting_ceo",
+    "approval": null,
+    "materialPermissions": "reviewed fixed-command fixture relay, disposable synthetic service containers, matching pinned Linux Chromium download in public-toolchain-only acquisition container, specific test harness timeout/staging leases; no host candidate execution or daemon socket"
+  }
+
 }

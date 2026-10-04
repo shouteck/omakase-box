@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "kind": "governance-review-r3",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "planVersion": "box-v4-2026-10-04.1",
+  "reviewer": "77c88b35",
+  "reviewedAt": "2026-10-04T09:54:48Z",
+  "reviewedAtSource": "actual host clock via `date -u` at review time; coordinator-rollup agent-supplied reviewedAt caveat noted and not used as authority",
+  "scope": "read-only exact-byte documentary checkpoint-eligibility review only; NOT an implementation re-review, NOT r2 approval, NOT product acceptance, NOT a candidate test run. No dispatch, product writes, staging, commits, pushes, resource stops/removals, check execution or secret reads performed.",
+  "verdict": "pass",
+  "documentaryCheckpointEligibility": "eligible - all 16 documentary files hashed, internally consistent and supported by cited evidence; no unsupported claims or secret material found; final decision remains root's",
+  "productVerdict": "not_accepted",
+  "hashes": {
+    ".execution/box-v4/state.json": "81a09674d7ff29cd956e4fff24ceed3b964b3a6d9ea70310ef7d4e219b635aa7",
+    ".execution/box-v4/waves/W002.json": "2da062831638b012133a5c908831b652569c204fbff75b475b7513777ab9363e",
+    ".execution/box-v4/approvals/W002-approval.json": "5114753a22c249d4c315eaa23b9fc629d66c797574cce94f0f90c92a9fa7c5a9",
+    ".execution/box-v4/briefings/W002.md": "44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9",
+    ".execution/box-v4/briefings/W002-r2.md": "1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+    ".execution/box-v4/evidence/B1.1/candidate-manifest.json": "ca56e74fd79c1da7e057b720a826e87771891d882549e36ebb73a21bb35b8659",
+    ".execution/box-v4/evidence/B1.1/candidate-manifest.txt": "1dab104c064eee44cc1ff2e44676df3cc5de05ac8f735343c1779bfe0b2d0196",
+    ".execution/box-v4/evidence/B1.1/coordinator-rollup.json": "0412519404f1085c60de025af36b225b7c38175492475a525586523ee0c26ab3",
+    ".execution/box-v4/evidence/B1.1/preflight-receipt.md": "53caa44d232edfb0484caa0c5ab56113d1bade090bbb122c6849b071907b77bc",
+    ".execution/box-v4/evidence/B1.1/reviewer-manifest-r2.json": "6e7522367f83eb882bda71b6342e00ffa9acf0ba3901aba5c6ea8c17e9a06c12",
+    ".execution/box-v4/evidence/B1.1/reviewer-manifest.json": "a2e71071fd1afee2b683f0d8644273e2ef6351bff2062bb30a2fe8f35606d328",
+    ".execution/box-v4/evidence/B1.1/reviewer-verdict-r2.md": "8b89cf54fedb52d884cf24ade1f04917aa9b860c700e6ee60103c764ee165c1e",
+    ".execution/box-v4/evidence/B1.1/reviewer-verdict.md": "10758eb7b0f631e26e7c8c836092123ae2fad4e28c50b9f850f03d6b58c77227",
+    ".execution/box-v4/evidence/B1.1/worker-receipt-r2.md": "b849ad463bf62534dd2becf7f797e78568ad544cffbbddcccde7e60a8cec2dc9",
+    ".execution/box-v4/evidence/B1.1/worker-receipt.md": "94159c82a295f3771a2fe21c19f8526e05299b791dec8c7ec45ae87f816a934f",
+    ".execution/box-v4/evidence/B1.1/workspace-recipe.md": "380841d9bd2defcaaad2804153730750771db82730b9486ca96165ee1e590e7b"
+  },
+  "authorityFindings": [
+    "r1 brief digest recomputed = 44e984be...a7ac9, matching approval record and wave binding; r1 approval immutable and untouched (hash unchanged since prior review)",
+    "waves/W002.json status='changed', taskIds=[B1.1] only, holdEvents/revocationEvents empty; approval still binds r1 digest/base cd3feaf0",
+    "state.json projectStatus='blocked_pending_wave_amendment'; B1.1 status='blocked', independentReviewStatus='changes_requested', lease=null, no active writer claimed, routineRetriesUsed=1 of 2, blockers list matches actual evidence",
+    "currentApproval still points at historical r1 record/digest; briefings/W002-r2.md digest recomputed = 1ce91643...2167 matching expected value; file self-labels FROZEN/not approved and grants no authority; no B1.2 or later-task authority present anywhere",
+    "actual identities lead f65bedca / worker e44008a7 / reviewer 77c88b35 consistent across rollup, state and receipts; no model-diversity claim made"
+  ],
+  "r2SecurityFindings": [
+    "PASS: one-time Linux Chromium/headless-shell rev 1243 via pinned Playwright 1.63.0 installer in a separate bounded non-root setup container with temporary artifact-only egress; differing/unpinnable artifact or missing libs = stop, not guess",
+    "PASS: browser manifest/source validation inside approved container before acquisition; no npm/OS package installs, image pulls, model weights or global config changes",
+    "PASS: host Docker bookkeeping relay is fixed argument-array docker exec limited to two named W002-owned service containers; bounded data requests, W002 mailbox, no shell strings/arbitrary commands/mounts/env; independently reviewed before execution; relay change reopens gate; destructive requests require specific human confirmation",
+    "PASS: verify-* execution allowlist is exact literal node entrypoints or --input-type=module -e source digests; unknown/malformed requests fail closed; assertions cannot be altered and transport cannot classify failure as pass (stdout never accepted as pass)",
+    "PASS: synthetic private/external fixture services share isolated workspace netns for localhost 4000/4001; internal network, no published host ports, no egress, no socket, non-root/read-only/cap-drop/no-new-privileges with stated limits; fresh synthetic secrets only, .runtime/actual and host .env never read",
+    "PASS: explicit proposed scripts/vitest.config.mjs lease for testTimeout 30000 scoped to wait budget only; assertions/acceptance unchanged; exceeding tests still recorded as failure",
+    "PASS: staging expansion limited to listed non-sensitive bytes (templates/, research/fixtures/candidates.json, infra/compose.yaml as metadata, built fixture outputs); new staging helper must be hardened, no reuse of stopped noncompliant helper, no auto-removal",
+    "PASS: r1 approval explicitly immutable; missing token/role negative coverage carried as a stated obligation (expired token, cross-attempt binding, evaluation actor mismatch, non-owner approval/assign/merge refusal); retry count 1/2 preserved not reset",
+    "AMBIGUITY/GAP (non-blocking, flag to root): the host relay is a new host-side execution surface; brief binds review-before-execution but the relay bytes do not yet exist, so its security properties are proposed not verified. The 'host-managed startup' of fixture containers and the temporary egress exception are new permissions classes that must be restated on the actual decision card so the approval binds them, not just this file's digest in the abstract"
+  ],
+  "sourceSupportFindings": [
+    "All documentary claims traced to evidence: rollup checks summary matches reviewer-verdict-r2 (box 7/7+7/7, build pass, check/test:auth/contracts/planner failed)",
+    "Failed checks are exposed, not reclassified: rollup states 'failed' plainly and notes baseline equivalence was not independently established (honest non-claim of no-regression)",
+    "Deviations all recorded: unauthorized testTimeout (reverted, verified), candidate-manifest.txt naming defect (JSON corrected, history retained), journal reformat (corrected), stage-helper hardening/egress deviation (stopped by root, preserved), --rm probe auto-removal, staging-manifest omission",
+    "Retry count 1/2 and degraded G5 recorded in state, rollup and r2 brief; reviewer coverage gaps carried forward as obligations",
+    "coordinator-rollup reviewedAt caveat is itself disclosed in the rollup limitations; not used as authority"
+  ],
+  "secrecyFindings": [
+    "No secret values, raw session exports, credentials or password material found: only placeholders (<synthetic-generated-hex>, redacted BOX_TEST_DATABASE_URL) across all 11 evidence files",
+    "Synthetic token values generated inside tests are ephemeral per-run, not persisted credentials"
+  ],
+  "productCandidateFindings": [
+    "candidate-manifest.json hashes identical to r2 review values; product bytes unchanged since reviewer-verdict-r2",
+    "scripts/vitest.config.mjs = 0af03a7f...c208 = exact base blob (git show HEAD: identical digest); restored, not a candidate change",
+    "git status shows no new product writes beyond the corrected B1.1 candidate set and governance/evidence files; candidate remains uncommitted/unstaged per documentary claims"
+  ],
+  "resourcePolicyFindings": [
+    "All six W002 resources recorded preserved: ws, db, net, srcimg, stage-helper (stopped-exited, not removed), stage dir; rollup confirms tmpfs DB never stopped/reset",
+    "This review performed no inspect of env/secrets and no stop/remove; relies on root's stated inspect result and prior r2 metadata audit"
+  ],
+  "pilotGates": { "G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "degraded_not_passed" },
+  "limitations": [
+    "Documentary review only: no test re-execution, no container state re-inspection beyond non-secret metadata already recorded; rollup's claims accepted where independently verifiable via hashes",
+    "W002-r2.md is a proposal; this review assesses completeness/consistency, not feasibility proof or approval",
+    "governance-review-r3.json is intentionally not self-hashed; root will hash after return"
+  ],
+  "requiredFixes": [],
+  "explicitStatement": "This receipt is NOT r2 approval and NOT product acceptance. B1.1 remains not_accepted/blocked; W002-r2.md confers no authority until a real human approval binds its exact bytes."
+}

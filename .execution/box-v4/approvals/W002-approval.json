@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W002",
+  "planVersion": "box-v4-2026-10-04.1",
+  "status": "approved",
+  "brief": {
+    "path": ".execution/box-v4/briefings/W002.md",
+    "revision": "2026-10-04-r1",
+    "digest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
+  "approver": "CEO (human operator)",
+  "message": "Approve",
+  "messageContext": "Verbatim user reply in this Devin Desktop conversation immediately following the W002 decision card linked to frozen revision 2026-10-04-r1. The preceding Ready request authorized briefing, not implementation. This approval adopts only the presented W002 proposal, including its bounded subagent delegation and isolated synthetic workspace permissions.",
+  "observedAt": "2026-10-04T08:35:06.1650860Z",
+  "approvedTasks": ["B1.1"],
+  "scopeSource": ".execution/box-v4/briefings/W002.md",
+  "baseRevision": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "adapter": "devin_portable_pstack_adaptation",
+  "materialBoundaries": "One platform lead delegates one terminal worker then a distinct terminal reviewer. B1.1 and named shared leases only. Cached isolated local workspace/synthetic PostgreSQL test containers after preflight; no pulls, installations, purchases, model/global config changes, host candidate execution, production data, restricted-code execution, public routes/UI, B1.2 or later tasks. Specific destructive actions still require explicit confirmation.",
+  "checkpointAuthority": "Routine exact-reviewed commits/non-force pushes to existing private origin/master use docs/box-v4/GIT-CHECKPOINTS.md standing authority, not this approval. No unreviewed outgoing scope, PR or other destination.",
+  "notes": "Actual brief digest and base were rechecked before recording approval. Frozen brief remains unchanged. Holds, revocation and material changes stop dispatch; completion cannot approve the next wave. Timestamp is the observation time, not an invented user-message transport timestamp."
+}
