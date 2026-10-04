@@ -23,6 +23,13 @@
     "productInput": ".execution/box-v4/evidence/B0.2/product-input.md reviewed PASS (input evidence)",
     "nextProposal": ".execution/box-v4/briefings/W002.md (proposed, task B1.1 + orchestration pilot)"
   },
+  "checkpoint": {
+    "id": "CP001",
+    "commit": "71ecb436ad12c6c55fa1f9b3f77361d5825a6ef1",
+    "remote": "origin/master",
+    "authority": "docs/box-v4/GIT-CHECKPOINTS.md standing direction",
+    "record": ".execution/box-v4/checkpoints/CP001.json"
+  },
   "holdEvents": [],
   "resumeAuthorizations": [],
   "revocationEvents": [],

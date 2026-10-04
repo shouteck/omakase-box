@@ -7,7 +7,7 @@
     "B1.1"
   ],
   "brief": ".execution/box-v4/briefings/W002.md",
-  "briefDigest": "sha256:723ea303eafa5fdeccdca2ab82342c472377f8819906ecc31d99ad05b46158ce",
+  "briefDigest": "sha256:697a702ea45dce1b48a50b8ce32a516909e6ed818dcc3678ccb2c4c6d73c34ac",
   "approval": null,
   "holdEvents": [],
   "resumeAuthorizations": [],
@@ -21,7 +21,7 @@
     "processStartup": false,
     "remoteUpload": false,
     "spending": false,
-    "gitCommitsOrMerges": "one named scoped local commit of governance/evidence bytes at wave start; no push/PR/remote operation"
+    "gitCommitsOrMerges": "routine reviewed checkpoints per docs/box-v4/GIT-CHECKPOINTS.md standing authority (non-force to existing private origin/master); no PR or other destination"
   },
   "revisionPolicy": "Draft proposal produced by W001 per its approved deliverable. Not presented for approval; no execution authority exists. Presentation freezes a revision and binds a fresh digest.",
   "runtimePolicy": {
@@ -30,7 +30,7 @@
     "maxAgents": "actual_runtime_capacity",
     "heavyChecks": "serialized",
     "adapter": "devin_portable_pstack_adaptation",
-    "baseRevision": "2ad7e35c7cebc9141503c3042fb81edbb40cbd0c"
+    "baseRevision": "71ecb436ad12c6c55fa1f9b3f77361d5825a6ef1"
   },
   "pilotGates": [
     "G1 approved brief digest bound",
