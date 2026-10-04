@@ -14,6 +14,12 @@ CEO approves product direction and each wave. Root CTO authors briefs, coordinat
 
 Every wave approval is bounded, revocable and specific. It never automatically approves the next wave. Read-only investigation and truthful governance preparation may continue while approval is pending.
 
+## CEO interface
+
+Follow docs/box-v4/CEO-SERVICE.md for every opening briefing and finished report. Present outcomes, one recommendation and a simple "Approve" decision; keep full technical authority/evidence in linked files. At closure prepare and present the next proposal proactively, with only essential human decisions translated into plain language. The CEO need not compose coordination prompts or inspect hashes and agent IDs. Short reports preserve all scope, permission and review gates.
+
+The CEO made routine commits and pushes a standing kitchen responsibility on 4 October 2026. Follow docs/box-v4/GIT-CHECKPOINTS.md: after current checks/review, save scoped accepted work to the existing private shouteck/omakase-box repository (origin/master), without repeated approval. This includes the outstanding reviewed S001/W001 checkpoint and verified instruction updates. Respect holds, exact candidate review, privacy and non-force history checks; keep new product waves pending.
+
 ## Preserve and separate
 
 Never reset legacy progress, overwrite accepted handoffs, delete evidence, drop data, replace the repository or mass-rename modules to introduce Box terminology. Inventory/revalidate actual interfaces first. Distinguish historical approval, current component review and new integration readiness. Governance changes may stale legacy metadata digests; preserve history rather than re-signing it as passed.
@@ -28,7 +34,9 @@ Follow docs/box-v4/PSTACK.md and STANDING_ORDERS.md. Native Cursor skills/tools 
 
 The CEO used Devin for W001. Support its explicitly labeled pstack-based portable adapter while preserving Cursor as the primary planned native integration and Codex as a distinct fallback. Recheck actual tools and topology in each host; briefing reports alone do not prove dispatch. A runtime change cannot silently amend an approved wave.
 
-Use existing configured/subscribed models and local resources by default. No new purchases, paid APIs, rentals, cloud workers, remote repositories, pushes, PRs, shared-branch merges, external messages, production deploys or real payments are authorized by START.md alone. A wave must expressly name permitted destinations/actions and obey tool controls. Do not install plugins, download model weights or change global Cursor/Codex/Docker/WSL settings automatically.
+The CEO subsequently approved Devin plugin setup S001. Use the locally registered box-pstack skills and project .devin profiles where available, with .execution/box-v4/setup/S001 evidence determining verified capabilities. Bounded nesting is configured for custom leads; built-in default restrictions must not be generalized to all profiles. S001 is setup authority only; W001 still requires a refreshed exact brief and separate approval.
+
+Use existing configured/subscribed models and local resources by default. Routine reviewed commits/non-force pushes to the authorized private origin/master use the standing authority in GIT-CHECKPOINTS.md, not START.md alone. Other remote destinations, purchases, paid APIs, rentals, cloud workers, PRs, unrelated shared-branch merges, external messages, production deploys and real payments need specific authority and tool controls. Do not install plugins, download model weights or change global Cursor/Codex/Docker/WSL settings automatically.
 
 On this 16 GB Windows host, serialize heavy builds/browser/runtime checks. Preserve free-license conditions and existing resource settings. Current tooling notes are preserved in docs/legacy/m0-m9-20261004/AGENTS.md; verify them before use. Existing local wrapper is node scripts/pnpm.mjs <arguments>. Legacy execution.mjs/checkpoint scripts cannot update B-series state.
 

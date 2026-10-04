@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "setupId": "S001",
+  "date": "2026-10-04",
+  "status": "setup_verified",
+  "plugin": {
+    "name": "box-pstack",
+    "version": "0.11.3-box.1",
+    "sourceCommit": "e9e225bb1f3362a51ac4e489d16f2d7b13c248ff",
+    "registration": "machine-local",
+    "skills": 40,
+    "installedCacheFilesCompared": 95
+  },
+  "runtime": {
+    "cliVersion": "3000.10.31",
+    "parentSession": "knotty-ellipse",
+    "observedModel": "SWE-2 High",
+    "modelDiversity": false,
+    "modelsPinnedOrSettingsChanged": false
+  },
+  "dispatches": [
+    {
+      "id": "86e9c015",
+      "profile": "box-rehearsal-lead",
+      "parent": "knotty-ellipse",
+      "depth": 1,
+      "callId": "run_subagent_0_9d52ec66#8ad4a03b3d04435e89d7c6ea73768d4d"
+    },
+    {
+      "id": "41c04fd6",
+      "profile": "box-rehearsal-worker",
+      "parent": "86e9c015",
+      "depth": 2,
+      "callId": "run_subagent_0_ff1212d9#1c5c0e24684247b18e42fe5be88426fc"
+    },
+    {
+      "id": "d7d9c915",
+      "profile": "box-rehearsal-reviewer",
+      "parent": "86e9c015",
+      "depth": 2,
+      "callId": "run_subagent_0_1547d707#ccee89fa5af14e92910bbfafd4f0a7d8"
+    }
+  ],
+  "fixture": {
+    "kind": "synthetic_dependency_fixture",
+    "tasks": [
+      {
+        "id": "N1",
+        "status": "accepted",
+        "dependencies": []
+      },
+      {
+        "id": "N2",
+        "status": "pending",
+        "dependencies": [
+          "N1"
+        ]
+      },
+      {
+        "id": "N3",
+        "status": "pending",
+        "dependencies": [
+          "N2"
+        ]
+      }
+    ],
+    "rules": "A pending task is eligible only when all dependencies are accepted. Return topologicalOrder, eligiblePending, and blockedPending with reason. Resolve ties by ID."
+  },
+  "candidate": {
+    "topologicalOrder": [
+      "N1",
+      "N2",
+      "N3"
+    ],
+    "eligiblePending": [
+      "N2"
+    ],
+    "blockedPending": [
+      {
+        "id": "N3",
+        "reason": "Dependency N2 is not accepted (status: pending)"
+      }
+    ]
+  },
+  "candidateSha256CanonicalJson": "49aa995a024d460000ab81e05c1a2fd378527b0e166af20b061523e7e01be1a8",
+  "candidateSha256ExactWorkerText": "17205071feb3a628965f35f86866ea0c70c353c152d004a1c59d2c5169d44640",
+  "review": {
+    "reviewedCandidate": {
+      "topologicalOrder": [
+        "N1",
+        "N2",
+        "N3"
+      ],
+      "eligiblePending": [
+        "N2"
+      ],
+      "blockedPending": [
+        {
+          "id": "N3",
+          "reason": "Dependency N2 is not accepted (status: pending)"
+        }
+      ]
+    },
+    "expected": {
+      "topologicalOrder": [
+        "N1",
+        "N2",
+        "N3"
+      ],
+      "eligiblePending": [
+        "N2"
+      ],
+      "blockedPending": [
+        {
+          "id": "N3",
+          "reason": "Dependency N2 is not accepted (status: pending)"
+        }
+      ]
+    },
+    "verdict": "pass",
+    "differences": []
+  },
+  "evidence": {
+    "path": "native-evidence.json",
+    "sha256File": "9218bb6ec901ec0b4d424437c4cbc06b60af31d5ff959f3127a93a9e4cc2474f",
+    "rootExport": {
+      "path": "attempt-02.atif.json",
+      "sha256": "aec74bbad52d26523ea0cf4a3bf43ec98fb65c3b74e1cd7b2c36f459c30d07b1",
+      "localIgnored": true
+    }
+  },
+  "checks": {
+    "sourceFilesVerified": 91,
+    "pluginFilesRegisteredBytesMatch": 95,
+    "productFilesPreserved": 426,
+    "presentedW001AndLegacyRecordsPreserved": true,
+    "rootDelegatedOnlyToLead": true,
+    "leadDelegatedToWorkerThenDistinctReviewer": true,
+    "terminalChildrenDidNotDelegate": true,
+    "reviewBoundToExactWorkerCandidate": true,
+    "nativeSkillInvocation": true,
+    "noProductShellWriteNetworkToolsInSuccessfulRun": true,
+    "STARTStaticApprovalGate": true,
+    "STARTLiveRouting": "passed with explicit read-only rehearsal constraints"
+  },
+  "attempts": [
+    {
+      "id": "attempt-01",
+      "result": "skill loaded; attempted shell listing denied; no children dispatched; not a pass",
+      "sha256": "3e1d838cbfd42e50f539350543eb91f1a6704c5274e652e7bf8fa1cafc361566"
+    },
+    {
+      "id": "attempt-02",
+      "result": "nested delegation and independent review verified against actual native chain events"
+    }
+  ],
+  "authority": {
+    "W001Approved": false,
+    "productWorkApproved": false,
+    "B1CodingProof": false,
+    "cursorNativeProof": false
+  },
+  "limits": [
+    "Synthetic read-only fixture only; not product coding or confidentiality proof.",
+    "Distinct agent identities, same observed model family; no guaranteed model diversity.",
+    "Full local CLI exports are ignored; curated native tool events and candidate binding are saved.",
+    "Native START routing passed only under explicit no-edit/no-dispatch rehearsal constraints; normal unrestricted bare START has not yet been exercised.",
+    "Bundled Devin CLI was tested; actual Desktop session capabilities must be reconciled on kickoff.",
+    "Generated routing brief contains a configuration-scope comparison error documented in routing-evidence.json; it is a proposal, not an approved or fully revalidated W001 briefing."
+  ],
+  "launch": {
+    "permissionMode": "auto",
+    "modelArgument": null,
+    "configuredPermissionPolicy": {
+      "subagents_enabled": true,
+      "permissions": {
+        "allow": [
+          "read",
+          "grep",
+          "glob",
+          "run_subagent",
+          "read_subagent"
+        ],
+        "deny": [
+          "edit",
+          "exec",
+          "mcp__*",
+          "Read(.runtime/**)",
+          "Read(.env*)",
+          "Read(secrets/**)",
+          "Read(apps/**)",
+          "Read(services/**)",
+          "Read(packages/**)"
+        ]
+      }
+    },
+    "configurationCleanup": "Incidental organization/onboarding/theme fields removed after run; permission policy unchanged."
+  },
+  "routing": {
+    "sessionId": "alder-brow",
+    "evidencePath": "routing-evidence.json",
+    "sha256": "f143edeb67eda5338e7e92e65431fd3179fdb5297d3a69d2f2d4075d6a4948fe",
+    "rawExportSha256": "54d14c330c6989f8b16397280a9a68d8a187d3dc1e0601f388371f3ee30e5bca",
+    "authorizationPath": "routing-approval.json",
+    "noDispatchOrEdits": true,
+    "normalBareSTARTTested": false
+  },
+  "approvalReviewHistory": {
+    "initialRoutingRejection": true,
+    "privatePlanningInferenceExplicitlyApprovedAfterward": true,
+    "noBypass": true,
+    "authorizedCheckCompleted": true
+  }
+}

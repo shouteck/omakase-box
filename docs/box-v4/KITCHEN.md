@@ -22,7 +22,7 @@ Before product dispatch, brief the wave and obtain approval. Every worker gets t
 
 ## Briefing and service
 
-Each station reports what it wants to serve, what is already prepared, which workers will do it, how a verifier judges it and what could block it. The CTO presents all station summaries with an actual task/dependency matrix. Do not manufacture messages or make the CEO direct every worker.
+Each station reports what it wants to serve, what is already prepared, which workers will do it, how a verifier judges it and what could block it. The CTO consolidates station summaries and the actual task/dependency matrix into the full briefing. The CEO sees the short outcome-first decision card in CEO-SERVICE.md, with a link to the technical details. Do not manufacture messages or make the CEO direct every worker.
 
 The approval binds the exact named wave. Within it, the team can fix/retry routine defects without asking again. No unapproved task or new placement can be added because it seems useful. When the wave finishes or scope materially changes, return to the CEO with evidence and the next proposal.
 
@@ -32,6 +32,8 @@ Completion notifications are queue pointers. Leads collect results and coverage,
 
 Only actual human approval evidence opens a wave. A child cannot edit approval state or declare the programme complete. Only root changes product acceptance state; leads own track inbox/receipt files. Different reviewers check implementation candidates; a different model family is preferred when available within the approved model budget. Distinguish absent diversity from absent independence.
 
-Approved code, current review, merge authority and empirical usefulness are separate. New candidate bytes invalidate affected verdicts. A verifier failure gets a fix task; a missing environment gets a blocker. The CEO receives one compact report with outcomes, exact evidence, open decisions, resources and recommended next wave.
+Approved code, current review, merge authority and empirical usefulness are separate. New candidate bytes invalidate affected verdicts. A verifier failure gets a fix task; a missing environment gets a blocker. The CEO receives one compact finished report following CEO-SERVICE.md: actual outcomes, check status/material gaps, and the prepared next proposal with its recommendation and simple decision. Exact evidence, resources and technical decisions remain in the linked records; only necessary human choices appear in the card.
+
+Saving accepted work is routine service: GIT-CHECKPOINTS.md supplies standing CEO authority for scoped reviewed commits and non-force pushes to the existing private origin/master. The CTO coordinates the checkpoint before the finished report, using an integration worker for product integration where needed. No repeated commit/push approval is required. Report the actual saved status and any blocker; next-wave "Approve" remains the product execution gate.
 
 On hold, stop new dispatch and checkpoint running children before accepting new results. On resume, reconcile worktree/head/approval identities before touching anything. Late results are matched against the current candidate, not blindly integrated.

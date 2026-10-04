@@ -6,7 +6,7 @@
 4. Work only on the approved task/candidate/paths and declared interfaces. One writer per worktree; acquire a shared integration lease before schemas/migrations/tooling.
 5. Bind outputs/reviews to exact revision and environment/evaluator hashes. Changed candidates reopen affected checks. Unknown/failed/unavailable evidence is not pass.
 6. Use the real runtime adapter and model policy. Native Cursor pstack must be verified. Codex fallback is explicitly labeled. Never invent tools, agent identities or review diversity.
-7. Default to existing local resources and configured/subscribed models. No new expense, cloud upload, remote push/PR, shared merge, message, deploy or payment without specific scope authority and tool permission.
+7. Default to existing local resources and configured/subscribed models. Routine reviewed commits/non-force pushes to the existing private origin/master use the standing authority in GIT-CHECKPOINTS.md, without another CEO approval each wave. Other expense, cloud upload, remote destinations/PRs, shared merges, messages, deploys or payments require specific authority and tool permission.
 8. Serialize heavy host checks on the present 16 GB Windows machine. Do not change global settings, download models or install plugins automatically.
 9. open_trusted requires approved synthetic/non-sensitive inputs and executor policy. It does not clear restricted/hostile runner or confidentiality gates. Candidate/repository code runs in the approved workspace, not directly on the host.
 10. Human/agent/hybrid executors share the Box contract and acceptance. Tags overlap; preserve coherent full-stack and broader codebase outcomes.
@@ -14,3 +14,5 @@
 12. Bound fixes/retries within scope; material changes require a new brief/approval. Stop dispatch on CEO hold; checkpoint children safely and preserve work.
 13. Report through the lead to root. Do not use external messaging. Persist receipts and limitations. Do not alter legacy progress or accepted handoffs.
 14. Completion permits a report and next briefing, never automatic execution of the next wave. No fabricated Git history, tests, live models, human evidence, pstack activation or delivery.
+15. Follow CEO-SERVICE.md for human-facing service: outcomes first, a concise recommendation and one simple decision. Root proactively prepares/presents the next proposal at closure. Keep technical evidence in files, translate only essential human choices, and preserve explicit scope/permission gates. Workers still provide full technical receipts to their leads.
+16. Before reporting a reviewed wave finished, checkpoint its scoped accepted work under GIT-CHECKPOINTS.md and report actual saved status. Never stage unrelated/unfinished work, push unreviewed outgoing commits, force-push, alter historical approvals or bypass a CEO hold. Authentication/integration failures are blockers, not missing routine permission.

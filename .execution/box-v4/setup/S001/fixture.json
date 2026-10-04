@@ -1,0 +1,9 @@
+{
+  "kind": "synthetic_dependency_fixture",
+  "tasks": [
+    {"id": "N1", "status": "accepted", "dependencies": []},
+    {"id": "N2", "status": "pending", "dependencies": ["N1"]},
+    {"id": "N3", "status": "pending", "dependencies": ["N2"]}
+  ],
+  "rules": "A pending task is eligible only when all dependencies are accepted. Return topologicalOrder, eligiblePending, and blockedPending with reason. Resolve ties by ID."
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W002",
+  "planVersion": "box-v4-2026-10-04.1",
+  "status": "proposed",
+  "taskIds": [
+    "B1.1"
+  ],
+  "brief": ".execution/box-v4/briefings/W002.md",
+  "briefDigest": "sha256:723ea303eafa5fdeccdca2ab82342c472377f8819906ecc31d99ad05b46158ce",
+  "approval": null,
+  "holdEvents": [],
+  "resumeAuthorizations": [],
+  "revocationEvents": [],
+  "scope": {
+    "productWrites": true,
+    "readOnlyInspection": true,
+    "governancePreparation": true,
+    "pluginInstallation": false,
+    "globalModelConfiguration": false,
+    "processStartup": false,
+    "remoteUpload": false,
+    "spending": false,
+    "gitCommitsOrMerges": "one named scoped local commit of governance/evidence bytes at wave start; no push/PR/remote operation"
+  },
+  "revisionPolicy": "Draft proposal produced by W001 per its approved deliverable. Not presented for approval; no execution authority exists. Presentation freezes a revision and binds a fresh digest.",
+  "runtimePolicy": {
+    "placement": "local_existing_resources",
+    "models": "preserve_current_available_settings",
+    "maxAgents": "actual_runtime_capacity",
+    "heavyChecks": "serialized",
+    "adapter": "devin_portable_pstack_adaptation",
+    "baseRevision": "2ad7e35c7cebc9141503c3042fb81edbb40cbd0c"
+  },
+  "pilotGates": [
+    "G1 approved brief digest bound",
+    "G2 single-worker receipt bound to exact candidate manifest",
+    "G3 distinct box-reviewer verdict on identical bytes",
+    "G4 durable receipt persisted",
+    "G5 resume demonstrated or labeled degraded"
+  ],
+  "adoptedChoicesOnApproval": [
+    "Q2: behavior artifact is a distinct object from InternalIntent",
+    "scripts/boundaries.mjs gains packages/box-*/ forbidden-prefix coverage under tooling-scripts lease"
+  ]
+}

@@ -2,14 +2,27 @@
   "schemaVersion": 1,
   "waveId": "W001",
   "planVersion": "box-v4-2026-10-04.1",
-  "status": "awaiting_ceo",
+  "status": "completed",
   "taskIds": [
     "B0.1",
     "B0.2"
   ],
   "brief": ".execution/box-v4/briefings/W001.md",
-  "briefDigest": "sha256:5fc9385a15a35dc79a98aec359e6e9bbb1e89e1576e08673f4888b5594634e83",
-  "approval": null,
+  "briefDigest": "sha256:573e2e68dddd3b7d50414f815eb168241b1e830f09835f37db6dcd5642ae45d1",
+  "approval": {
+    "record": ".execution/box-v4/approvals/W001-approval.json",
+    "approver": "CEO (human operator)",
+    "message": "Approve",
+    "observedAt": "2026-10-04T07:11:18Z",
+    "boundBriefDigest": "sha256:573e2e68dddd3b7d50414f815eb168241b1e830f09835f37db6dcd5642ae45d1"
+  },
+  "completedAt": "2026-10-04T08:00:14Z",
+  "outcome": {
+    "B0.1": "accepted — census/drift/REUSE refresh, reviewer PASS, .execution/box-v4/handoffs/B0.1.md",
+    "B0.2": "accepted — profile-contract/ARCHITECTURE/PSTACK + integration inventory + pilot recipe, reviewer PASS, .execution/box-v4/handoffs/B0.2.md",
+    "productInput": ".execution/box-v4/evidence/B0.2/product-input.md reviewed PASS (input evidence)",
+    "nextProposal": ".execution/box-v4/briefings/W002.md (proposed, task B1.1 + orchestration pilot)"
+  },
   "holdEvents": [],
   "resumeAuthorizations": [],
   "revocationEvents": [],
@@ -24,11 +37,13 @@
     "spending": false,
     "gitCommitsOrMerges": false
   },
-  "revisionPolicy": "Freeze and hash presented brief; bind actual human approval before execution. No approval yet.",
+  "revisionPolicy": "Freeze and hash presented brief; bind actual human approval before execution. Approval recorded 2026-10-04T07:11:18Z against r4 digest.",
   "runtimePolicy": {
     "placement": "local_existing_resources",
     "models": "preserve_current_available_settings",
     "maxAgents": "actual_runtime_capacity",
-    "heavyChecks": "serialized"
+    "heavyChecks": "serialized",
+    "adapter": "devin_portable_pstack_adaptation",
+    "baseRevision": "2ad7e35c7cebc9141503c3042fb81edbb40cbd0c"
   }
 }

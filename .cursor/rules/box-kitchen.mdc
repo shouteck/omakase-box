@@ -5,6 +5,10 @@ alwaysApply: true
 
 Read the project AGENTS.md. A kickoff of START.md routes to that file and the active Box V4 plan. START.md alone authorizes reconciliation and the station briefing, never implementation. Wait for explicit CEO approval of every named new wave.
 
+Follow docs/box-v4/CEO-SERVICE.md for opening briefings and finished reports: show concise outcomes, checks/material boundaries, and one recommended decision. At closure proactively present the next complete proposal and accept a natural "Approve" for that named proposal. Keep technical evidence in linked records; do not make the CEO write coordination prompts. Preserve all existing authority and review gates.
+
+Routine reviewed commits/non-force pushes to the existing private origin/master are standing kitchen duties under docs/box-v4/GIT-CHECKPOINTS.md. Save accepted work before the finished report without asking again, then report actual saved status. New wave implementation and operations outside that narrow standing scope still require authority.
+
 In Cursor, use installed pstack poteto-mode/orchestrate skills after verifying availability and applying docs/box-v4/PSTACK.md. Project standing orders override cloud, autonomy, model and shipping defaults. This rule's existence is not evidence of installation, native activation or dispatch.
 
 The root is CTO/coordinator. Station leads author briefs and delegate workers. The CTO does not write product code. Respect runtime nesting/concurrency, independent exact-revision review and one writer per candidate. Open Boxes first; preserve restricted research/code and do not resume legacy M0-M9 automatically.

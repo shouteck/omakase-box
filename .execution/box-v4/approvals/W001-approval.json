@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W001",
+  "planVersion": "box-v4-2026-10-04.1",
+  "status": "approved",
+  "brief": {
+    "path": ".execution/box-v4/briefings/W001.md",
+    "revision": "2026-10-04-r4",
+    "digest": "sha256:573e2e68dddd3b7d50414f815eb168241b1e830f09835f37db6dcd5642ae45d1"
+  },
+  "approver": "CEO (human operator)",
+  "message": "Approve",
+  "messageContext": "Verbatim CEO reply in this Devin Desktop session immediately following the presented r4 consolidated briefing for wave W001 (tasks B0.1 + B0.2). Natural-language approval of the presented wave per START.md; no special token required.",
+  "observedAt": "2026-10-04T07:11:18Z",
+  "approvedTasks": ["B0.1", "B0.2"],
+  "scope": {
+    "productWrites": false,
+    "readOnlyInspection": true,
+    "governancePreparation": true,
+    "pluginInstallation": false,
+    "globalModelConfiguration": false,
+    "processStartup": false,
+    "remoteUpload": false,
+    "spending": false,
+    "gitCommitsOrMerges": false,
+    "allowedWrites": [
+      "docs/box-v4/**",
+      ".execution/box-v4/**"
+    ],
+    "notAuthorized": "product code writes; shared tooling edits without CTO lease; installs; global/git config changes; model settings; dev-server/process startup beyond scoped checks; pushes/PRs/remote ops; paid services; legacy .execution/state.json and tasks/task-graph.json edits; killing unrelated processes; reads of .runtime/**, .env*, secrets/**"
+  },
+  "runtimePolicy": {
+    "adapter": "devin_portable_pstack_adaptation",
+    "placement": "local_existing_resources",
+    "models": "preserve_current_available_settings",
+    "maxAgents": "actual_runtime_capacity",
+    "heavyChecks": "serialized",
+    "baseRevision": "2ad7e35c7cebc9141503c3042fb81edbb40cbd0c"
+  },
+  "supersededBriefs": [
+    {
+      "revision": "2026-10-04-r3",
+      "digest": "sha256:7b3acdaad3279d725a0cda99df37ef7c63741f48c36d4736262323f118f2a100",
+      "archive": ".execution/box-v4/briefings/archive/W001-r3.md",
+      "archiveVerifiedByDigest": true,
+      "note": "r3 was never committed; archived copy is byte-exact per recorded digest. Git history at 2ad7e35 contains r2."
+    }
+  ],
+  "notes": "Approval binds this exact brief digest. Material scope/placement/runtime/authority change requires a revised brief and fresh approval. Completion permits a report and next briefing only."
+}

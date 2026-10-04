@@ -1,5 +1,30 @@
 # Wave briefing
 
+## CEO chat card
+
+Follow docs/box-v4/CEO-SERVICE.md. Present only the following short card in chat by default; the sections below remain the complete approval record.
+
+**[Wave ID] - proposed**
+
+**You will get:**
+- [Observable outcome 1]
+- [Observable outcome 2, if needed]
+- [Observable outcome 3, if needed]
+
+**We will check:** [Plain-language demonstration of success.]
+
+**Scope:** [Material boundary and explicitly proposed Git/external/spending/configuration actions.]
+
+[Only if essential: **Decision:** recommended product choice and practical consequence, or the concise question needed before this proposal can be frozen.]
+
+**Recommendation:** approve [Wave ID]. Reply **Approve** or describe a change.
+
+[Details](relative/path/to/full-briefing.md)
+
+Do not ask for implementation approval until the complete proposal is frozen and necessary product choices are resolved or explicitly included as recommended choices. Do not print hashes, agent IDs or station tables in the chat card by default.
+
+## Full approval record
+
 Wave ID and immutable brief revision/hash. Plan version and exact candidate/base. Proposed task IDs and dependencies. Approval status is pending until actual human approval is recorded.
 
 ## What the CEO is deciding
@@ -16,7 +41,7 @@ Desired user outcome, what this wave will serve, what it will not add, and the C
 
 ## Approval scope
 
-Task IDs, allowed and forbidden paths, dependencies, baseline, runtime and local/cloud placement, available models, concurrency and heavy-check limits, existing-resource/spending limit, exact verification and timebox. Explicitly list whether product writes, plugin setup, model configuration, process startup, local commits/merges, remote push/PR or other external actions are allowed. Default absent actions are not authorized.
+Task IDs, allowed and forbidden paths, dependencies, baseline, runtime and local/cloud placement, available models, concurrency and heavy-check limits, existing-resource/spending limit, exact verification and timebox. Reference GIT-CHECKPOINTS.md for standing authority to save reviewed work by scoped local commit and non-force push to the existing private origin/master; no separate routine approval is needed. Explicitly list whether product writes, plugin setup, model configuration, process startup, merges, other remote destinations/PRs or other external actions are allowed. Default absent actions outside standing authority are not authorized.
 
 ## Stop and resume
 

@@ -15,7 +15,7 @@ This read-only assessment was performed on 4 October 2026. It is a source/eviden
 
 ## Gaps that change the next wave
 
-Git inspection found unborn master with no commits and the project files untracked. No actual attempt/worktree/commit/merge helpers were found. CandidateDiff is a hash-bound data record, explicitly not a merge. A reviewable baseline plan and actual Git-backed mechanics are required before a Box can claim Git provenance.
+Git inspection found unborn master with no commits and the project files untracked. Correction 2026-10-04 (B0.1, W001): that finding predates the baseline. Git now records HEAD `2ad7e35c7cebc9141503c3042fb81edbb40cbd0c` on `master` (tracking `origin/master`) with two commits — `53ec783` "Establish existing MVP baseline and Box kitchen governance" and `2ad7e35` "Preserve byte-bound Box evidence across Git checkouts" — plus uncommitted S001/W001 governance artifacts (`.devin/`, `.execution/box-v4/{approvals,briefings/archive,setup}/`, `docs/box-v4/DEVIN-SETUP.md`, and modifications to `AGENTS.md`, `START.md`, `docs/box-v4/PSTACK.md`, `.execution/box-v4/{briefings/W001.md,state.json,waves/W001.json}`). No actual attempt/worktree/commit/merge helpers were found. CandidateDiff is a hash-bound data record, explicitly not a merge. A reviewable baseline plan and actual Git-backed mechanics are required before a Box can claim Git provenance.
 
 The present UI includes intake, decisions, release, assignment/readiness and owner review components. It is not yet a Box list/detail/history/workbench flow. Human/AI/team selection is descriptive, not a headless executor. Build one common Box API and reuse existing editor/workspace infrastructure; do not reconstruct an IDE.
 

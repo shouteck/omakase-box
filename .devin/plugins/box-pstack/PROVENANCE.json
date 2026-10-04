@@ -1,0 +1,756 @@
+{
+  "schemaVersion": 1,
+  "adapter": "box-pstack-devin-project",
+  "version": "0.11.3-box.1",
+  "reviewedDate": "2026-10-04",
+  "source": {
+    "repo": "https://github.com/HustleCoding/pstack",
+    "commit": "e9e225bb1f3362a51ac4e489d16f2d7b13c248ff",
+    "manifestVersion": "0.11.3",
+    "fileCount": 91
+  },
+  "sourceFiles": [
+    {
+      "path": ".devin-plugin/plugin.json",
+      "sourceSha256": "8301fc80cf7b08d7d99a9d953255ff2eb1a184d4cfa8970aefd6e10023bb5abc",
+      "outputSha256": "7dcc9ac27ea1a579a66d08af1c36904786240b15af3415de32d022c3532a85c5",
+      "changed": true,
+      "change": "Devin manifest replacement"
+    },
+    {
+      "path": "LICENSE",
+      "sourceSha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
+      "outputSha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
+      "changed": false,
+      "change": "Preserved bytes"
+    },
+    {
+      "path": "NOTICE.md",
+      "sourceSha256": "701ab94a1c4a687554fef1d853159c2818cc41d67adf26e8e3b76393fbd745ac",
+      "outputSha256": "701ab94a1c4a687554fef1d853159c2818cc41d67adf26e8e3b76393fbd745ac",
+      "changed": false,
+      "change": "Preserved bytes"
+    },
+    {
+      "path": "README.md",
+      "sourceSha256": "82256b1032c50f5cb62f1a7ad8b9558f758b3b5425ee8e30fd018a952ca1bf75",
+      "outputSha256": "9466937436accfeaa79af7a9139d186f4b1cf6787240d43c5eab510ba40bc5ca",
+      "changed": true,
+      "change": "Adaptation README"
+    },
+    {
+      "path": "skills/architect/references/rationale-template.md",
+      "sourceSha256": "f4a1201c8e6161f84a9700c06593a597d31dd38f4e7bc790fd9badac462517e0",
+      "outputSha256": "8be227662779d292365067dbca3db20cc036f23108d65cdb7b8200d039dab9ed",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/architect/references/runner-prompt.md",
+      "sourceSha256": "5b15041601b2a9b0bb77c7cfc3543829e49ae9d6d741d70f77deb448ad44e537",
+      "outputSha256": "09f883e8c5ddfd2731f0291a8fac3ec55ea8ab5f095cf6c61c45d10636f0f572",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/architect/SKILL.md",
+      "sourceSha256": "6493f65677d6ba8f6cae9fbcde19e944aa51636fb4bb15c6a33ee0083e7427c3",
+      "outputSha256": "69db5bd0cdec6d335c24eb076081cc82fc0bbaa779037b7977938ad5fb005a38",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/arena/SKILL.md",
+      "sourceSha256": "267f7fb24078aa955ffd055186a848d8ec903f5349cee6b6e4d190eb62a9408b",
+      "outputSha256": "426cce6b8e30d27d7e82dcd6c5328803627d5a9fd12156352ff6f05b664cfe62",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/automate-me/SKILL.md",
+      "sourceSha256": "8a484fab12469a6f739a7cec7cef7f18299a6757c1780d580554947ad2a1dc6e",
+      "outputSha256": "b784adbe0babc8ae4ff795a35c2b420aecd7d7376284aeb6a4528866f05d09e3",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/blast-radius/SKILL.md",
+      "sourceSha256": "c5feb63ed89c752f602ae4347d546f99003911fbec5c25f5aa77c4423bc53113",
+      "outputSha256": "99d835c68f149b7e4d3b1dd79066672cc12bc7fa4e2fdead499d8c777a709eb2",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/create-verification-skill/SKILL.md",
+      "sourceSha256": "598591c970f6f2a9b194d01ca8d8eae1bc12e44b3f25944299b228184447bccd",
+      "outputSha256": "302aefb8d8862d841e214da1a83777f0731615c9d69e820ae3c6dc56a17b2bb2",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/figure-it-out/SKILL.md",
+      "sourceSha256": "d81043d23faea8462a9a4c0a95739c7f53fa5fbb99430fd51ea406d1eaf4d8c4",
+      "outputSha256": "fea9dbf36ae93d22f0feef7c1dba3d8497ec38f9a72b2ca616332e7179115fad",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/how/references/critic-prompt.md",
+      "sourceSha256": "aa77a15590814c814bd5cb074842029ab7b790c2e8379050525bdbc20739d1bb",
+      "outputSha256": "543bcb01c8c2f10e3e14122c804b03627ccf1201d9c04dc6a0bac5cd4c39731f",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/how/references/critique-rubric.md",
+      "sourceSha256": "5774ff2caf51796e54c4a61b63620a165de5801f23c8f47406e527abfbe9addc",
+      "outputSha256": "88c76240ba6444feb6fcbb16d6ab011d083c577c8fef084e3cd2d1cc8f68d4ac",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/how/references/explainer-prompt.md",
+      "sourceSha256": "04336086e7c415394459ca2f461717d920e15339517dbf5a56ca042f8b4fead3",
+      "outputSha256": "63f1ff96147b2ee6923339c69d161bf036eb96794ca241164f5066cca747381e",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/how/references/explorer-prompt.md",
+      "sourceSha256": "fd1218b8cf1f467c644d4ce6fa5e54e6089ede65a28fbbae61f6ee7a2d462f85",
+      "outputSha256": "367ddcd3eb59641f49b9011230ae501017e30a879bea2c43499e3cedc58f01c5",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "sourceSha256": "192999c8d9d78b9be972d96865192cca4aa7411ecea186e6291a13ea80b7f7db",
+      "outputSha256": "d5ca58a05c5ac6a0d594db52dbd0590d9968a34fb71f259355f910ea63560318",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/interrogate/references/code-quality-review.md",
+      "sourceSha256": "2462f1347b99b412b04fcb0577b96d8744c801f792f2651746f9409fd4465dc9",
+      "outputSha256": "2304461e7b455d2d5216fd752f7633734fe1be2d432c7536cbde5869adf87dc5",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/interrogate/references/lead-judgment.md",
+      "sourceSha256": "310b4a24bb54349ee2aae661298fa2cb46e381d1514a766669d637d7a594028c",
+      "outputSha256": "c40560d57e82aaa5b108624c2e909ada58e2b9947ddafe42188634b947b7fce8",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/interrogate/references/reviewer-prompt.md",
+      "sourceSha256": "a397cc61102add709803d917fb23d726920525bf23e7c06dc4ed0b5cbeb00e54",
+      "outputSha256": "c9370ac80bc343ec8a9a71e44772898d6b23f0f510b09ce0c47dbf96a248db5f",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/interrogate/references/rubric.md",
+      "sourceSha256": "a67bf02426f88714634ff481d667db821d4b2cea7b335bcd165fe3126e427fb5",
+      "outputSha256": "5141c01adbfbf23b5979052eace418133fcd60b84b612dd9966fe8b44d70cba3",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/interrogate/SKILL.md",
+      "sourceSha256": "42ec79e14c1d26c83cbf57c34a4e80e9dbeb80206ef09673a9137f9ac5f8df2a",
+      "outputSha256": "fb9cc4152d2bb6eadefe954b0d64b7fb3cb87475ca11da2bb917c8ea99b0022b",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/maintain-verification-skill/SKILL.md",
+      "sourceSha256": "aff8f60505a889d05b66a774736104f0c98e243bbc7912fa5131bffc7ad208c4",
+      "outputSha256": "574332c876608b287ddcc89124936b68c42edabda214dab1f8c05f15a8b5c2c9",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/authoring-a-skill.md",
+      "sourceSha256": "5479e2b3914acccbafd70f8be56520e1774775d9527f79ac255fd31ec554538a",
+      "outputSha256": "f48a5eb8a5c468ec064a678eea856db8340a8dba3032a0e5dddb17c0bff7675d",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/autonomous-run.md",
+      "sourceSha256": "c4a1fbc73591aee1cd70b64aeeb76f1233900b00a3c3f7d4543feb61471d7fc8",
+      "outputSha256": "776ec35e1466e08443a0f39836aa053ad327d4aaad7c2ec7a356b4187654efd7",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/bug-fix.md",
+      "sourceSha256": "c0b9eaa79d9484cd356a19310d6d66f09160ed860b3902bfd2a599241a78b4ea",
+      "outputSha256": "bd4fe6fcca4d6ba91a6e4bfbc0867533914e70371db9b1308f313d2e35e602ee",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/eval.md",
+      "sourceSha256": "4881699e688353f7f5c64ae6f4db20fe96bf7267b2a77ce5a6198d2abf218ed3",
+      "outputSha256": "6354525baf89ac7cf79870d84c16fab6d1465b058dbf9a84efcae85d313086a7",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/feature.md",
+      "sourceSha256": "4ccd832bd24cf2e45e7e10c48fb55f2ef0f81ac19fcf9c71b91c7f1a43e319c5",
+      "outputSha256": "b6277626841b28cafd700814c9a5eedda0a896a9ab8c42db4b48958ebb0dff21",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/hillclimb.md",
+      "sourceSha256": "623c741178f0d699ecaa4c06490bfc7d30f397f5377ca191f0f0306a54898b99",
+      "outputSha256": "fa53726dd8534fcf7d72c3a0427b45145e0454ac7e0c46b0088dee39318a8b6a",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/investigation.md",
+      "sourceSha256": "bb28bfe2912511dbb777057326a8ccff3ef279d219e52271dcb5b10f68a38b5b",
+      "outputSha256": "7c9341975de8b37720cd0e1e5f120e3232fb01046432b89607019a1001f3827f",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "sourceSha256": "ce0988b092c27c9e1b1cdbb2ec8346739c053c4cba0a4f26634baa2dd2985cdb",
+      "outputSha256": "736b52f948f752bc88550a3c39dcb31ac33915a979fafee53388d641ccfb7770",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "sourceSha256": "9857a12ddb0ca03ab9ba127210e3644496fd580adeb134b5f1113d2dc886ac87",
+      "outputSha256": "22427093add179b0540eadbea5de906a710e3c4c04f8e0b26634b47cce049303",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/pause-safely.md",
+      "sourceSha256": "5a34883f8daa41596c0f69387f60c083fa826f90004e14952b8c831651a69b3c",
+      "outputSha256": "6423622d94f5109b9122c6d1be2e3c740d50cf8e0a2849b145dd71b4455e20fc",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/perf-issue.md",
+      "sourceSha256": "b7c1893c2276ed5269e2e8ecf45fccb79ba040e5bcabb430b6d6a7bd55d31df2",
+      "outputSha256": "d8bf9e5a4653666d65afbf6fb159e185ca045b560e3191c5eb3c1a22bd237128",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/prototype.md",
+      "sourceSha256": "0e539b57aa33deb09472e10ccab2a20cd166a86bea94c50e0b8be39e41164d33",
+      "outputSha256": "d42bcef30727b7e33647cf8e1990970a8d6bafd8e71d26be689198a554a124b5",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/refactoring.md",
+      "sourceSha256": "4a0ff89e74fb082ac1e3607d52327e6e828ce2f298fcd0a524ee628d368547f4",
+      "outputSha256": "cb575233b34e4885360f846db184e17ad417f16850a85d44955b949426f893be",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/runtime-forensics.md",
+      "sourceSha256": "96ac9a3a368e6a31d8a7aa56055e6f7f75e8e773c21b65c0f941c26403c8d105",
+      "outputSha256": "902b44a711d8c98261abb89d7e556b049b1dfa649152c9ea63a39220c1c7b442",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/session-pickup.md",
+      "sourceSha256": "c1a4aa69e32e2950fb66f7351b5cea7bbf8acff9c2aed4a4623585ed688fbf1e",
+      "outputSha256": "13928507fd7f0b866db8e176dea7978ce47555065fbf8df2869988fd6c602407",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/trace-forensics.md",
+      "sourceSha256": "fcae1f68f349072a8b2518f09b73dedeb826192d2ec33befb8906f42292e38be",
+      "outputSha256": "983d1720a132bc42c4d8b96476424f0a00ca537b2be90bbf2d6d877854d5ddd7",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/visual-parity.md",
+      "sourceSha256": "33165e74665bf8ddec181598c2b21b4a1cd310b1adf23742af90ac0d10652b39",
+      "outputSha256": "63ec746163063ee047befe4a79bf514dceaeb5cd2a066671d8b56ea2dbb86640",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/references/plan.md",
+      "sourceSha256": "2b0ed052566f987a50afbbc33cc6846ae03fb859b5cd17e8dac43ed11e5b81a6",
+      "outputSha256": "da9b26409c3bf87de551ac69620df9865647d2ecd5b925535e2247685c565c62",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/poteto-mode/SKILL.md",
+      "sourceSha256": "67d7342e84bbbdbef4d4f2f43aaadfd415778ff0547a5716bf3535d9ac8543ed",
+      "outputSha256": "63505122c38e5317c17fdc56b1ba705c2cee0e033a639496d47f65d10ee603df",
+      "changed": true,
+      "change": "Devin router replacement"
+    },
+    {
+      "path": "skills/principle-boundary-discipline/SKILL.md",
+      "sourceSha256": "ba7f87de9612c907310bdafa49d70c27cbfe69336b2296c3850ab90d663cd163",
+      "outputSha256": "829eafcc551313c55d44b34d8313ad3c10e111753cf067a3fe16c91c9605d71a",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-build-the-lever/SKILL.md",
+      "sourceSha256": "a1b58d7d4ac42e8d08d6afdabb6615e78af7ffad74dc333df21610716ecaa904",
+      "outputSha256": "ac8344b0e2471da7646522739743dd601b5327dfee3207fe8ff9acbf11fe2c27",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-encode-lessons-in-structure/SKILL.md",
+      "sourceSha256": "4b3fd9f328355da6cb7940f2c0842440d401879f6f190fb58bb8c227e02743b7",
+      "outputSha256": "30d2e2b0b52ec7f536504f1f511f1f0543d56ebca5ace19eabc1b05bbc33e718",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-exhaust-the-design-space/SKILL.md",
+      "sourceSha256": "f0f91e2ef3fc95bff828b6ec3614928fbdd3435a667a71fe15e94095eaba2aae",
+      "outputSha256": "2f315800aa76c0cbe872da984ab5d08c7e3fd6af3f01a7a4a3aaf4e821930397",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-experience-first/SKILL.md",
+      "sourceSha256": "360d99ac7acf8288663fbcca5c9e88c63e3f0cca5b94b0e41ffc7e277aea0fd5",
+      "outputSha256": "ead89845e32e723e786ef3f26c1970d5c065776e693deb86ea036c1c46dc789b",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-fix-root-causes/SKILL.md",
+      "sourceSha256": "e47ed8a73de08e436b9b503c9731e04955cd8eced943b9b85184d8f32c4f953d",
+      "outputSha256": "03ce66257b39510d5ec468ead8abfdb3718bd0810dfc58118cef563269ebebb7",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-foundational-thinking/SKILL.md",
+      "sourceSha256": "7d20bac1f998e60d0eaacd0b1f21b78a4d0e241da66fb8891230f28422c0e12b",
+      "outputSha256": "db418ca02caee44ab69bcdf99a1d21603ccf7e161041343a54c969f845e7341c",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-guard-the-context-window/SKILL.md",
+      "sourceSha256": "30f1331160a9d57a12884a36d94093ad9137e8d5c5c9756049adc13123dfcd2b",
+      "outputSha256": "d44bf0e9c18d9c63c70cdb03ad556824e3465e6f6254fcfdee79f5bbc1acb46e",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-laziness-protocol/SKILL.md",
+      "sourceSha256": "6902c8f4a8144f3692d51dd5ba6cf017dab3925387e700c29bb676ed4f55b574",
+      "outputSha256": "5636d0662df55254896b6b216ae0d9009171bffe4b522bdf25e04091c5eeb7c7",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-make-operations-idempotent/SKILL.md",
+      "sourceSha256": "0071d5be76173a90181c0eadd9acc6f115b04cd093c2fc9dbe3564cfa4926773",
+      "outputSha256": "6876c1c439b92e6c1ec517892f72b53bf7c8257411c8a4c7e487bb81a5d49544",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+      "sourceSha256": "49db39e7a321adce8408b7f497efeddeead0bf7374ed363e9c232e794c8e4511",
+      "outputSha256": "431222772f475a0ec388b4220909bdb3346c6cd87c586f81f374ccc734102c57",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-minimize-reader-load/SKILL.md",
+      "sourceSha256": "f8e6bed3355cffdae3d522d418c46b4e87e535317ec90cd3355dcf5e7cbb9dd9",
+      "outputSha256": "c71bac08078963f3a6ce936ea0cd0cd7353927d427b9b22850467a4551c4d286",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-model-the-domain/SKILL.md",
+      "sourceSha256": "11dffd92255dbc8732c90708318e806071e3a19e189931fe5f83fefa87f3e379",
+      "outputSha256": "734f206fc60fdf9c920ff434f906fc55c1699f5bec593b104570885144476fe8",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-never-block-on-the-human/SKILL.md",
+      "sourceSha256": "08c656003a756c703030e319f0f224cd91f7740032a2e705e5bfcf9da4634b8e",
+      "outputSha256": "b3aa1ad843733919871a371c470ed908a90212d649462131e24f3623cb81c239",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-outcome-oriented-execution/SKILL.md",
+      "sourceSha256": "3222c5b3961e2c58b69a84fdb315c045d9f908d9f499f187d7943bd7aab91e6b",
+      "outputSha256": "b06da6b51383dad04427bd1b856f90b797ead29f20783bd22348b31fcd2eb829",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-prove-it-works/SKILL.md",
+      "sourceSha256": "d5835e9b4a1fac5d1cb2cfec8d359db4e736759219320fe8a4846fa49c8696d0",
+      "outputSha256": "41e99fdc41a72e2443ee9971dea2202ec6cb1c30a8da48cd433c0c1013467eb6",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-redesign-from-first-principles/SKILL.md",
+      "sourceSha256": "41ba95f13c960ec3abf03e1db62070e50c0f178683a61fb5b86762b26c7192ba",
+      "outputSha256": "c81297aa82c13bcf2a25a4b29e4cd1dbee0f7c355d0be5559d6e4e57615bb8b2",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-separate-before-serializing-shared-state/SKILL.md",
+      "sourceSha256": "3198b552d19646f7c66c48728902fa4e9996c90bb6b602db6eb9a8857f1b083c",
+      "outputSha256": "171d95a2654b3d5450b6fa554c81e6ce4a74c756b3d31b7d90d8df9f8c562561",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-sequence-verifiable-units/SKILL.md",
+      "sourceSha256": "df398c4327dcf5765a4198539f66a9805338ac0f7330f48c28f14a34e05dfbd7",
+      "outputSha256": "4caeb0b6c4f5e120f2ec9bbc842eab2e72ff804e6515c4eb370728ef935fc7a2",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-subtract-before-you-add/SKILL.md",
+      "sourceSha256": "a0e6637097d01b4b85c369e2e5643bb8eb415b872b2d747804571604ed9a1722",
+      "outputSha256": "c99b79092a3f14360f5dd9e86c853a01499376cfc29b86bee75d6b6ad217feb9",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/principle-type-system-discipline/SKILL.md",
+      "sourceSha256": "8eb5b46e11a8ad9790425b33fa28c31e15c78b4dc14e3bd6edc84258cc6bf7c4",
+      "outputSha256": "4d394f6dced8b6b594001c6b15d844312d980621bf2414b18e1b1ca4b119162d",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/recall/SKILL.md",
+      "sourceSha256": "90377e5232bdd57a9ee2bba3af36750584b5ab60a4498776af442b394a05364c",
+      "outputSha256": "ba094de047095b81b76049497ecd04d6e2564254e0679e742962337d04992f11",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/reflect/references/divergent-reviewer.md",
+      "sourceSha256": "823167d485c8fc424530ac4eff447f132a10e318a2db35380312c7e843f17683",
+      "outputSha256": "6943269eb177987cab9c1dfd45d6814cae18eda24d691546dafe7a2258f92a44",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/reflect/references/judgment-reviewer.md",
+      "sourceSha256": "8db7a315ccf9280486b4df08b1277ba0fe4c4ac533ad3719945aa1aab2ebddea",
+      "outputSha256": "e08e3e72724b124c7e8ea923856403e88d466452d314dc4f7c8ce30242186d02",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/reflect/references/synthesizer.md",
+      "sourceSha256": "52767b4566c37df0adc6350fff1c5c7a919a1178c2be539e0efbf920f2803702",
+      "outputSha256": "bd413929283d2a08ed9cebd440fd218b6447a30fdd279992ec1a9d59c417c77f",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/reflect/references/tooling-reviewer.md",
+      "sourceSha256": "3a4dc9e87d0d74b46d0d0bc2c1af6acba10be7c95d1adafeab6ec5701e247933",
+      "outputSha256": "ec2d41c664bf465d6b4f45e0617aa314b986bbd90ec8758b5d67e62f76fe9794",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/reflect/SKILL.md",
+      "sourceSha256": "e38ca4dc0c87bf7e708ba253d51c52f405c9bdd67cdfb1537e92b5d13f1b3d9c",
+      "outputSha256": "80020347d09d9d7ec2438d9dc7b007fc19f404e1b8f342de12b1875fa9efb6b5",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/setup-pstack/SKILL.md",
+      "sourceSha256": "0e9340c7d40390e8d3c6b9739df496ce5164bc1ab6ba4836a1f732301a7008c8",
+      "outputSha256": "4cb67f17ffcb5caf5bf2024638a5a2f2914bdd4874ec0615b23862c395d33376",
+      "changed": true,
+      "change": "Devin setup replacement"
+    },
+    {
+      "path": "skills/show-me-your-work/references/decision-log-template.tsv",
+      "sourceSha256": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
+      "outputSha256": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
+      "changed": false,
+      "change": "Preserved bytes"
+    },
+    {
+      "path": "skills/show-me-your-work/scripts/log.sh",
+      "sourceSha256": "1601bc18f9aba0af3f5d6375e4f2d5dc6102334d1bca935026c0e3547cdadbbf",
+      "outputSha256": "1601bc18f9aba0af3f5d6375e4f2d5dc6102334d1bca935026c0e3547cdadbbf",
+      "changed": false,
+      "change": "Preserved bytes"
+    },
+    {
+      "path": "skills/show-me-your-work/SKILL.md",
+      "sourceSha256": "a76e4992bd658f837e22badf0a6323dd3f1fb9bfcf2686772ea6a78e865e0cf8",
+      "outputSha256": "29b3d6c31f0ab8ce9f9a949abfdda24c701290cd1a524cdfbb9ecd0132e588e9",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/tdd/SKILL.md",
+      "sourceSha256": "1328068f731410a36be02e858d402d409b561d660621386c9286a264bbeac5d2",
+      "outputSha256": "eebd485f89715032c0131f627ec41b425d41f3107d343a19348d5693e1db380d",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/teach/SKILL.md",
+      "sourceSha256": "31997e4f83b050968308e7e130ff7b527663dc564bc15de89b22db31489662a5",
+      "outputSha256": "0e33f46a63616cd3d0b382246bcf7af406fe8cfbf15200540ef853e9e740e22a",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/typescript-best-practices/references/patterns.md",
+      "sourceSha256": "76b5fb15312f6d6d4113b29594323044fae7e5754e0f407d3eb9e49cf3566ad6",
+      "outputSha256": "84dc4a8a943173134babcad097298be03e4b2e60f5bceeca988b05e392ff5965",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/typescript-best-practices/SKILL.md",
+      "sourceSha256": "46a19ff9c01d0e69b6044e2b6c694a2620e16b1f4c85185854c11885fe7600ef",
+      "outputSha256": "989ce6a9e4567b7a962c19485f329dfc87dc7316d6881bb3fe0dd598923e8b6d",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/unslop/SKILL.md",
+      "sourceSha256": "6756459b5ecc9bb32879b36f4363c98bee65557609723038c8f0b1ba2038be8f",
+      "outputSha256": "4f8ff8c637b867a909eef642142aab73f30087ea3210571d1d35c481187bde9c",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    },
+    {
+      "path": "skills/why/references/epistemics.md",
+      "sourceSha256": "ba99dcdc4fbce91a83b50fc0c9b2c5769febd95540b1722c6b87fe8f900bb60a",
+      "outputSha256": "ea247da8b2467e920c408c90f9f2ebe6d29b47d74e4913c9ac0d64615a5e4301",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/investigator-prompt.md",
+      "sourceSha256": "e35d8eaea13f0a027dd35572d525e9f66e8f8918ca9e555237dc228f26278d5f",
+      "outputSha256": "480f4bf752ec6b42ff5c6589dc4da9948870835efb55fe97079468235721fc7a",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/source-playbook.md",
+      "sourceSha256": "3cfb0245d5b2019eeeaa7a0e023579d390f2cdcdff6942d2fe009b9efac0eb11",
+      "outputSha256": "3cd9b748c22c0eb666380151d16995f457e2502207c3d23b2bf00251a9b63258",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/code-archaeology.md",
+      "sourceSha256": "8c14aa382f0de40829b2668d43e3f54814480bb93a486c9282ada4003f6b9dbd",
+      "outputSha256": "d5d76cee7936c42d89c92bdf6be2929c59fe48a1e128214bd0aa071f73ae98c0",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/databricks.md",
+      "sourceSha256": "269a22032f027ee30a33c1b5e30443d13dd6d127ff20d8d1e8a20715b06a69cc",
+      "outputSha256": "d2e5a7abd107c9c32ab7fde8adfa697dcb7accaff659b20b8da30ae5bf784167",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/datadog.md",
+      "sourceSha256": "db80803f1635a5015e3190f4753c4228083e6cebf222c84e24fc3c3919aa5574",
+      "outputSha256": "c29be7af2b6ddc567d8eca790a9295c6ec4554cc4cfad7dc8fae96d8c50300dd",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/incident-postmortem.md",
+      "sourceSha256": "486132457d3782eea64292ce7a2d3bbe3b24b372b20ca00de4329e820f74cd42",
+      "outputSha256": "3fa21186de79a608b87959e174f6056aeb47e9be04872c7da1d9deee3efb015b",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/linear.md",
+      "sourceSha256": "7e1b72ba459089168efd701502f8c268d2481154aeeda1ddd84f840f7e974760",
+      "outputSha256": "5bc503e3367f07c0e0565b333f75c1a31e822a86389dc91df434266f3020f044",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/notion.md",
+      "sourceSha256": "2ce336dd3052967187a56ec33d308c7a69e7ef3b04ba7b17386a8b3914a0f000",
+      "outputSha256": "4e06e2d84e4d181cf5494332a687e6808dd0ae5b161dda25ec68282fb96fa0e4",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/sentry.md",
+      "sourceSha256": "0eef902cb0f835f7fa9bd85a8e19ba1505d05e59a0173dfe852d8d52d828266d",
+      "outputSha256": "73fd2dcff070ad91fb819249bc349a6d4ca31998e70d2ce76c34c4cd8a8ebffd",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/sources/slack.md",
+      "sourceSha256": "60e4c8dbb941f563c86aec7267cde66443b1dc651422569c8d112bc9da7551f6",
+      "outputSha256": "08265fde9b573338f1960427a9811d83c5b30a4ee6d0c5891d8b0a24972f6272",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/references/synthesizer-prompt.md",
+      "sourceSha256": "fcdc69ede22f94da9e22f510bb0c4a75a63820f0b49b8d5fd54a196b4010bf2a",
+      "outputSha256": "44cd2f2427e1b0fb8d82c6668fa7af193221356810864f10a52e4a4a0a47cff3",
+      "changed": true,
+      "change": "Reference compatibility preface"
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "sourceSha256": "95c2eda112298e35526e5204d20ed597455e37c960e54fdbf9b66baeadb0509e",
+      "outputSha256": "52448bfa5ee9a9666c8addfa3c636ed3564b8d225bbedd9197331ab0be56ce3d",
+      "changed": true,
+      "change": "Box-scope frontmatter and compatibility preface"
+    }
+  ],
+  "newFiles": [
+    {
+      "path": "ADAPTATION-NOTICE.md",
+      "outputSha256": "e4514158748e1ac650555ec9ccc5e0b513d8f06b4b628fec2e87562ed919921b"
+    },
+    {
+      "path": "DEVIN-COMPATIBILITY.md",
+      "outputSha256": "ba64a61fac6706a450de20bfe080a7d7483de5636550180a15482e7acc4c2169"
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/orchestrate.md",
+      "outputSha256": "42caf9dd4045d84420d1acaf08133b0dc8da2afb18cbeda5f12601c81821ef6b"
+    }
+  ],
+  "sourceCompatibilityInventory": {
+    "Task": [
+      "skills/how/SKILL.md",
+      "skills/interrogate/SKILL.md",
+      "skills/poteto-mode/SKILL.md",
+      "skills/reflect/SKILL.md",
+      "skills/setup-pstack/SKILL.md",
+      "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "skills/reflect/references/divergent-reviewer.md",
+      "skills/reflect/references/judgment-reviewer.md",
+      "skills/reflect/references/tooling-reviewer.md"
+    ],
+    "subagent_type": [
+      "skills/how/SKILL.md",
+      "skills/interrogate/SKILL.md",
+      "skills/poteto-mode/SKILL.md",
+      "skills/reflect/SKILL.md",
+      "skills/why/SKILL.md",
+      "skills/poteto-mode/references/plan.md"
+    ],
+    "grok-": [
+      "skills/architect/SKILL.md",
+      "skills/arena/SKILL.md",
+      "skills/how/SKILL.md",
+      "skills/interrogate/SKILL.md",
+      "skills/poteto-mode/SKILL.md",
+      "skills/reflect/SKILL.md",
+      "skills/setup-pstack/SKILL.md",
+      "skills/why/SKILL.md",
+      "skills/poteto-mode/playbooks/feature.md",
+      "skills/poteto-mode/playbooks/refactoring.md",
+      "skills/poteto-mode/references/plan.md"
+    ],
+    "claude-": [
+      "skills/architect/SKILL.md",
+      "skills/arena/SKILL.md",
+      "skills/how/SKILL.md",
+      "skills/interrogate/SKILL.md",
+      "skills/poteto-mode/SKILL.md",
+      "skills/reflect/SKILL.md",
+      "skills/setup-pstack/SKILL.md",
+      "skills/why/SKILL.md",
+      "skills/poteto-mode/references/plan.md"
+    ],
+    "gpt-": [
+      "skills/architect/SKILL.md",
+      "skills/arena/SKILL.md",
+      "skills/how/SKILL.md",
+      "skills/interrogate/SKILL.md",
+      "skills/setup-pstack/SKILL.md",
+      "skills/poteto-mode/playbooks/bug-fix.md",
+      "skills/poteto-mode/playbooks/hillclimb.md",
+      "skills/poteto-mode/playbooks/perf-issue.md",
+      "skills/reflect/references/synthesizer.md"
+    ],
+    "cursor-team-kit": [
+      "skills/poteto-mode/SKILL.md",
+      "skills/poteto-mode/references/plan.md"
+    ],
+    "~/.cursor": [
+      "skills/automate-me/SKILL.md",
+      "skills/recall/SKILL.md",
+      "skills/reflect/SKILL.md",
+      "skills/setup-pstack/SKILL.md",
+      "skills/show-me-your-work/SKILL.md",
+      "skills/poteto-mode/playbooks/eval.md",
+      "skills/poteto-mode/playbooks/session-pickup.md",
+      "skills/reflect/references/divergent-reviewer.md",
+      "skills/reflect/references/judgment-reviewer.md",
+      "skills/reflect/references/tooling-reviewer.md"
+    ],
+    "AskQuestion": [
+      "skills/automate-me/SKILL.md",
+      "skills/poteto-mode/SKILL.md",
+      "skills/setup-pstack/SKILL.md",
+      "skills/poteto-mode/references/plan.md"
+    ]
+  },
+  "packagingValidation": {
+    "skillCount": 40,
+    "frontmatterAndRelativeEntrypointLinks": "passed",
+    "licenseAndNotice": "byte_preserved",
+    "sourceFilesPresent": true,
+    "noHooksMcpGlobalRulesOrDependencies": true,
+    "quickValidate": "not_run_missing_pyyaml_dependency; equivalent basic name/description/link checks performed",
+    "installed": false,
+    "liveInvocationVerified": false,
+    "nestedDispatchVerified": false
+  },
+  "scope": "Only .devin/plugins/box-pstack",
+  "selfHashExcluded": true
+}

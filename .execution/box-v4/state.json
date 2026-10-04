@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "planVersion": "box-v4-2026-10-04.1",
   "projectStatus": "awaiting_ceo_wave_approval",
-  "activeWave": "W001",
-  "lastCompletedWave": null,
+  "activeWave": null,
+  "lastCompletedWave": "W001",
   "ceoWaveApprovalRequired": true,
   "currentApproval": null,
   "primaryRuntime": {
@@ -13,8 +13,10 @@
     "dispatch": "unverified"
   },
   "fallbackRuntime": {
-    "name": "codex_portable_pstack_adaptation",
-    "status": "documented_not_rehearsed"
+    "name": "devin_portable_pstack_adaptation",
+    "status": "verified_docs_scope_product_dispatch_unproven",
+    "tools": "run_subagent/read_subagent; registered box-* profiles (3 station leads max-nesting 2, terminal box-worker/box-reviewer, S001 rehearsal trio); nested lead->worker/reviewer dispatch exercised for real in W001 (docs/evidence scope only)",
+    "note": "Cursor native pstack remains primary planned runtime (absent/uninstalled); Codex remains a distinct labeled fallback. Product-coding dispatch and resume remain unproven pending the B1.1 pilot. All observed agents used SWE-2 High; model diversity unverified."
   },
   "roles": {
     "cto": "root_coordinator",
@@ -23,10 +25,33 @@
       "platform_execution",
       "assurance_research"
     ],
-    "actualAssignments": []
+    "actualAssignments": [
+      {
+        "taskId": "B0.1",
+        "waveId": "W001",
+        "lead": "box-assurance-lead/27f3c095",
+        "worker": "box-worker/e9facb99",
+        "reviewer": "box-reviewer/94a6fe58"
+      },
+      {
+        "taskId": "B0.2",
+        "waveId": "W001",
+        "lead": "box-platform-lead/d395c530",
+        "worker": "box-worker/87085d1c",
+        "reviewer": "box-reviewer/86091ca0"
+      },
+      {
+        "taskId": "B0.2-input",
+        "waveId": "W001",
+        "lead": "box-product-lead/b600d43d",
+        "worker": "box-worker/6cd8b48b",
+        "reviewer": "box-reviewer/dbba2107",
+        "note": "Product station memo, input evidence for B0.2"
+      }
+    ]
   },
   "milestones": {
-    "B0": "pending",
+    "B0": "completed",
     "B1": "pending",
     "B2": "pending",
     "B3": "pending",
@@ -38,27 +63,34 @@
   },
   "tasks": {
     "B0.1": {
-      "status": "pending",
-      "implementationStatus": "pending",
-      "independentReviewStatus": "pending",
-      "waveId": null,
-      "owner": null,
+      "status": "accepted",
+      "implementationStatus": "checked",
+      "independentReviewStatus": "passed",
+      "waveId": "W001",
+      "owner": "box-assurance-lead/27f3c095",
       "lease": null,
-      "candidate": null,
-      "reviewer": null,
-      "receipts": [],
+      "candidate": "content digests bound in .execution/box-v4/handoffs/B0.1.md",
+      "reviewer": "box-reviewer/94a6fe58",
+      "receipts": [
+        ".execution/box-v4/evidence/B0.1/worker-receipt.md",
+        ".execution/box-v4/handoffs/B0.1.md"
+      ],
       "blockers": []
     },
     "B0.2": {
-      "status": "pending",
-      "implementationStatus": "pending",
-      "independentReviewStatus": "pending",
-      "waveId": null,
-      "owner": null,
+      "status": "accepted",
+      "implementationStatus": "checked",
+      "independentReviewStatus": "passed",
+      "waveId": "W001",
+      "owner": "box-platform-lead/d395c530",
       "lease": null,
-      "candidate": null,
-      "reviewer": null,
-      "receipts": [],
+      "candidate": "content digests bound in .execution/box-v4/handoffs/B0.2.md",
+      "reviewer": "box-reviewer/86091ca0",
+      "receipts": [
+        ".execution/box-v4/evidence/B0.2/worker-receipt.md",
+        ".execution/box-v4/evidence/B0.2/product-input.md",
+        ".execution/box-v4/handoffs/B0.2.md"
+      ],
       "blockers": []
     },
     "B1.1": {
@@ -258,7 +290,7 @@
     "software": "not_delivered",
     "openTrustedExecution": "unverified",
     "nativePstack": "unverified",
-    "independentReview": "pending",
+    "independentReview": "exercised_in_W001_docs_scope",
     "liveIntentModelQuality": "unverified",
     "humanAgentPilot": "not_conducted",
     "restrictedHostileRunner": "legacy_blocked_unchanged"

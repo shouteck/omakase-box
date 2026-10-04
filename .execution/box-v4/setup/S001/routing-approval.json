@@ -1,0 +1,18 @@
+{
+  "setupId": "S001",
+  "approvalType": "read-only Devin START routing inference",
+  "humanQuestion": "May I run the final read-only START.md check using your private project planning documents, including W001, with your configured Devin model?",
+  "humanAnswer": "Approve the read-only Devin check",
+  "promptPath": ".execution/box-v4/setup/S001/routing.prompt.md",
+  "promptSha256": "e4da06766903a0e0de3fb0c17c09c31a27bfccab92fd70b3423288169d6723c4",
+  "scope": {
+    "planningDocumentInference": true,
+    "privateW001Inference": true,
+    "productReads": false,
+    "fileEdits": false,
+    "shell": false,
+    "workerDispatch": false,
+    "W001Execution": false
+  },
+  "earlierAutoReviewRejection": "No rejected run occurred; approval was requested and then granted by the human."
+}

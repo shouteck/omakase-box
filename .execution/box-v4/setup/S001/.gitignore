@@ -1,0 +1,3 @@
+# Full local CLI exports can contain machine-specific system context.
+*.atif.json
+*.raw.json
