@@ -20,6 +20,7 @@
     "test:box-contracts": "node scripts/suite.mjs box --suite contracts",
     "test:box-auth": "node scripts/suite.mjs box --suite auth",
     "test:box-delegation": "node scripts/suite.mjs box --suite delegation",
+    "test:box-package": "node scripts/suite.mjs box --suite package",
     "test:planner": "node scripts/suite.mjs planner",
     "test:analysis": "node scripts/suite.mjs analysis",
     "test:compiler": "node scripts/suite.mjs compiler",
