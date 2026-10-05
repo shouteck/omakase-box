@@ -21,7 +21,7 @@ on:
       - '.cursor/**'
       - '.gitignore'
 
-# A newer push to the same ref cancels the stale run still in progress.
+# A newer push to the same ref cancels a stale run, queued or in progress.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
