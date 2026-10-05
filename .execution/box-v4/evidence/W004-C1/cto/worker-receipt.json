@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_capability_worker_receipt",
+  "waveId": "W004",
+  "taskId": "W004-C1",
+  "briefSha256": "8a93ce56a15c84810936301530239bc01373a4445cd544eff25b02bc77094638",
+  "lead": "box-product-lead/362e0c60",
+  "worker": "subagent_general/c0c68c39",
+  "attribution": "Faithful excerpt of full actual worker receipt and same-worker hash-only supplement returned through lead. Root persisted; worker created only probe, never this record. Decorative checkmarks omitted.",
+  "sourceBaseline": "fd57788663e2867b46f2f3ce06e419c8fb828bfe",
+  "precondition": "Worker path glob found no W004-C1 subtree or existing probe before creation; root independently observed absence before dispatch",
+  "creation": {"tool": "write", "schemaObserved": "file_path:string,content:string", "count": 1, "path": ".execution/box-v4/evidence/W004-C1/new-file-tool-proof.json", "parentCreation": "Normal dedicated tool behavior, no mkdir/shell operation", "literalContent": "{\"waveId\":\"W004\",\"taskId\":\"W004-C1\",\"kind\":\"new_file_tool_proof\",\"marker\":\"dedicated_tool_only\"}", "bytes": 96, "newline": false},
+  "readback": "Dedicated read byte-identical to specified content",
+  "gitBlobSha1": "1ce7cde1ca4a1007ab24781658664247d6f19315",
+  "sha256": "3f599412119fe2b1240703d66fa7133a882b65e320d7ac203b763e0f34e564ec",
+  "commands": ["Scoped git rev-parse --show-object-format returned sha1 exit0", "Scoped git hash-object probe returned Git blob SHA1 exit0", "Same worker hash-only supplement used exec PowerShell Get-FileHash -Algorithm SHA256 -LiteralPath absolute-owned-probe path, exit0, correct SHA256"],
+  "reportedDurations": "Worker reported less than1second each; not independently timed by root",
+  "correctedInterpretation": "Initial SHA256-unavailable claim was an incorrect distinction between dedicated hash tool and approved core exec hashing. Same-worker single informative hash-only followup corrected it; SHA1 never called SHA256 and no requirement waived.",
+  "scope": "One owned JSON file write; no auxiliary file, child, profile/config/code/design/runtime/service/database/cleanup/stage/commit/push action",
+  "result": "PASS_CAPABILITY_not_root_acceptance",
+  "toolModelLimits": "Actual write exposed and used in this built-in worker; no inference every profile/runtime exposes it or model-family diversity",
+  "signedTrace": "Not available to reviewer; method evidence is actual returned worker tool receipt, independently consistent artifact and scoped observations"
+}

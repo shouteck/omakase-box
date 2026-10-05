@@ -5,7 +5,9 @@
   "revision": "2026-10-05-c1-r1",
   "brief": ".execution/box-v4/briefings/W004.md",
   "briefSha256": "8a93ce56a15c84810936301530239bc01373a4445cd544eff25b02bc77094638",
-  "status": "awaiting_ceo_approval",
+  "status": "completed_capability_accepted_current_checkpoint_pending",
+  "acceptance": ".execution/box-v4/evidence/W004-C1/cto/acceptance.json",
+  "reconciliation": {"head": "fd57788663e2867b46f2f3ce06e419c8fb828bfe", "remoteMaster": "fd57788663e2867b46f2f3ce06e419c8fb828bfe", "acceptedDesignHashesMatch": true, "productSourceDriftFromBaseline": false, "probePathPreviouslyAbsent": true, "oldW003ActorsReturned": true, "unrelatedRelayRecoveryMaterial": "preserved_and_excluded", "runtimeResourceOperations": false},
   "taskIds": ["W004-C1"],
   "taskKind": "bounded_setup_capability_not_D12_implementation",
   "dependencies": ["D1.1", "B1.1"],
@@ -24,6 +26,7 @@
   "runtimeOperations": false,
   "featureImplementationApproved": false,
   "customerPilotApproved": false,
-  "actualApproval": null,
-  "authorizesDispatch": false
+  "actualApproval": ".execution/box-v4/approvals/W004-approval.json",
+  "authorizesDispatch": false,
+  "completionBoundary": "Single owned creation proof accepted; no further probe or W005/D1.2 authority"
 }

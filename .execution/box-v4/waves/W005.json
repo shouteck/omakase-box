@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W005",
+  "revision": "2026-10-05-d1.2-r1",
+  "status": "awaiting_ceo",
+  "taskIds": ["D1.2"],
+  "brief": ".execution/box-v4/briefings/W005.md",
+  "briefSha256": "4564159d6de8f622f20bbf0baaab69991bbccb0e764d563c931f7fa8347f04f9",
+  "binding": ".execution/box-v4/evidence/W005-proposal-binding.json",
+  "approval": null,
+  "dispatches": [],
+  "lease": null,
+  "productWritesCurrentlyPermitted": false,
+  "runtimeOperationsCurrentlyPermitted": false,
+  "customerPilot": false,
+  "executionStatus": "not_started_no_actual_approval"
+}
