@@ -128,8 +128,7 @@ function readWaves(root) {
     const commits = [...text.matchAll(/- Commit:\s*`?([0-9a-f]{7,40})/g)].map(match => match[1]);
     const merge = (text.match(/- Merged:\s*`?([0-9a-f]{7,40})/) || [])[1] || null;
     const branches = [...text.matchAll(/`((?:wave|proto)\/[^`\s]+)`/g)].map(match => match[1]);
-    const usage = (text.match(/Usage:[ \t]*(\S[^\n]*)/) || [])[1] || null;
-    waves.push({ id: file.slice(0, -3), commits, merge, branches, usage });
+    waves.push({ id: file.slice(0, -3), commits, merge, branches });
   }
   return waves;
 }
@@ -260,12 +259,6 @@ function page(root) {
   [...steps].sort((a, b) => b[1].seconds - a[1].seconds).slice(0, 3).forEach(([name, bucket], index) => out.push('  ' + (index + 1) + '. ' + name + ' — ' + fmtMin(bucket.seconds) + ' min across ' + bucket.runs + ' runs'));
   [...withSummary].sort((a, b) => (b.seconds || 0) - (a.seconds || 0)).slice(0, 3).forEach((run, index) => out.push('  single run ' + (index + 1) + ': ' + run.name + ' — ' + run.seconds + 's (' + (run.verdict || 'no verdict') + ')'));
   if (!steps.size) out.push('  missing — no run data');
-  out.push('');
-
-  out.push('Usage per wave (agent usage as recorded in each wave file Result)');
-  const usage = readWaves(root);
-  if (usage.every(wave => !wave.usage)) out.push('  missing — no wave file records a Usage value; nothing to report, not zero');
-  else for (const wave of usage) out.push('  ' + wave.id + ': ' + (wave.usage || 'missing'));
   out.push('');
 
   const checks = checkLimits(root);
