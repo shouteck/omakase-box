@@ -1,6 +1,6 @@
 # Hosts and the pstack method
 
-The kitchen borrows its method from Lauren Tan's (poteto) pstack: small verifiable units, proof against the real artifact, lessons encoded in tools, a human who supervises instead of gating every step. The rules in [AGENTS.md](../../AGENTS.md) and the procedure in [KITCHEN.md](KITCHEN.md) are the same on every host. Where a host's plugin text disagrees with them (station leads, per-wave CEO approval, nested dispatch), AGENTS.md wins.
+Every kitchen follows Lauren Tan's (poteto) pstack; AGENTS.md makes that a rule on every host. The method: go deep before going fast, small verifiable units, proof against the real artifact, lessons encoded in tools, a human who supervises instead of gating every step. The skills, playbooks and principles are kept in one place, `.devin/plugins/box-pstack/skills/`, and every host reads them from there. The rules in [AGENTS.md](../../AGENTS.md) and the procedure in [KITCHEN.md](KITCHEN.md) are the same on every host. Where a host's plugin text disagrees with them (station leads, per-wave CEO approval, nested dispatch), AGENTS.md wins.
 
 Any host can take any role. Record who did what in the wave file. Never claim a model, tool or diversity that was not actually used. A reviewer from a different model family is preferred where the brief asks for it, as far as usage allows; a wave never waits for one.
 

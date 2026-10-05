@@ -40,6 +40,7 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 - Verify: `<summary line from the reviewer's run>`
 - Verdict: PASS | FAIL · Level: ui-verified | test-verified | typecheck-only
 - Lenses: <one line per ticked lens: what was tried and what was found>
+- Method: <playbook followed; each principle that changed a decision and what it changed>
 - Findings and limits:
 - Merged: `<merge SHA>` · Resources removed: yes | <what remains and why>
 - Reflect: <what went wrong or was repeated> -> <the script, template line, check or profile it became, or "nothing">

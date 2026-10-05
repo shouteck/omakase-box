@@ -6,6 +6,15 @@ This file is the stable rulebook. It does not carry status. For what is happenin
 
 Portable Boxes for delegation: package a bounded change with only the source it needs, let a chosen developer or agent implement it without the owner repository, then verify and integrate the patch in the original repository. The roadmap is [PLAN.md](PLAN.md); the product map is [docs/box-v4/DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md).
 
+## Method
+
+Every kitchen, on every host, works the pstack way (Lauren Tan, "poteto"): go deep before going fast, write less code of higher quality, and prove work on the real thing. This is a rule, not a suggestion.
+
+- **CTO:** at kickoff, load the mode skill, `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`. Hosts that have the plugin installed invoke it as a skill; other hosts read the file.
+- **Worker:** before writing code, open the playbook that fits the wave in `.devin/plugins/box-pstack/skills/poteto-mode/playbooks/` (feature, bug fix, refactoring, investigation, prototype) and follow its steps.
+- **Everyone:** the principles are in `.devin/plugins/box-pstack/skills/principle-*/SKILL.md`. Read the ones the task calls for, and in your report name each principle that changed a decision and what it changed. Do not cite one you did not read.
+- Where pstack text assumes Cursor tools, cloud workers or pull requests, keep the idea and use what the host has. Where it conflicts with who decides what below, this file wins.
+
 ## Roles
 
 - **CEO** sets product direction and approves each milestone.

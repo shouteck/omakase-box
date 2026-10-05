@@ -5,7 +5,7 @@ alwaysApply: true
 
 Read AGENTS.md, then STATUS.md. They are the rules and the current state; this file adds only what is specific to Cursor.
 
-- A bare START.md request means: act as CTO and follow START.md.
+- A bare START.md request means: act as CTO, load the pstack mode as AGENTS.md requires, then follow START.md. If native pstack is installed, invoke `/poteto-mode`; otherwise read `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`.
 - The team is flat: one worker agent, then a separate reviewer agent that did not write the code, each given the wave file.
 - Native pstack is not installed on this machine. Installing it is a CEO decision; do not claim it ran.
 - Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call.
