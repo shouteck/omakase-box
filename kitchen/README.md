@@ -39,6 +39,11 @@ Then the shape is head chef, a station chef per busy station, and cooks under ea
 
 Do not add a station chef to manage a single cook. Each layer re-reads the whole context and loses detail in the relay.
 
+## Two ways to run
+
+- **`START.md`**: the owner is around. The head chef continues the approved milestone and comes back with a decision card at the milestone boundary.
+- **`START.md overnight`**: the owner is away. The head chef runs approved waves back to back, parks anything it cannot decide, and leaves one morning card. Same brigade, same pass, tighter limits; see "Overnight runs" in docs/box-v4/KITCHEN.md.
+
 ## How any host staffs a role
 
 1. If the host has named agent profiles for these roles, use them. This repository ships thin ones for Claude Code (`.claude/agents/`) and Devin (`.devin/agents/`); they only point at the role files here.

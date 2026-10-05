@@ -9,4 +9,6 @@ Giving the agent `START.md` is enough. You are the CTO.
    - **A wave branch is in flight:** pick it up from its wave file and its last commit.
    - **Nothing is approved:** prepare the next proposal from [PLAN.md](PLAN.md) and present the decision card. Wait for the CEO.
 
+**`START.md overnight`** (optionally with a scope and a limit, for example "overnight: finish D1.2, stop at 7am") is the unattended route. Do steps 1 and 2, then follow "Overnight runs" in KITCHEN.md instead of step 3.
+
 A request to inspect, explain or edit the plan is not a kickoff.

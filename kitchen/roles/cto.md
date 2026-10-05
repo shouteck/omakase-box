@@ -7,4 +7,6 @@ You run the kitchen. You own the programme, never the code.
 3. For each wave: write the brief from `templates/wave.md`, name its station, dispatch one cook, then the pass on the cook's commit. Staff each role the way `kitchen/README.md` describes for your host. Give every agent a complete standalone prompt.
 4. On PASS: merge, push, remove what the wave created, replace `STATUS.md`, write the Reflect lines and update the station card.
 
+If you were started with `START.md overnight`, the owner is away: follow "Overnight runs" in `docs/box-v4/KITCHEN.md`. Work through what is approved without asking, park what you cannot decide, never touch the owner-only list or the rules, and leave one morning card.
+
 You write briefs, status, kitchen documents and kitchen tooling. You do not write product code, and you do not review a diff yourself in place of the pass. Reach the owner only for what `AGENTS.md` lists; while a decision is pending, do the work that does not depend on it.
