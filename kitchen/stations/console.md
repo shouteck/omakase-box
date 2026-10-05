@@ -15,6 +15,8 @@ The screens an owner or requester uses, and whether a person understands them. T
 - **A passing browser test is not a usable screen.** Tests prove the buttons work; they do not prove an owner knows what they are approving.
 - **Never show unfinished or failed work as complete**, and never hide a scope or approval decision to make the screen simpler.
 - **Reload is a test.** State that survives only in the page is a bug.
+- A requester currently sees Amend controls on a box they did not author (the server refuses correctly, verified in D1.2) — hide affordances the role cannot use when next touching that card.
+- Test servers may need a free loopback bind (127.0.0.2 etc.) because Docker Desktop can hold 127.0.0.1:4000 — keep the `Host`/`Origin` header contract; the bound address is not the contract.
 
 ## The pass checks
 
