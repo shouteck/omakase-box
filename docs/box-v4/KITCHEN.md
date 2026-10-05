@@ -77,12 +77,13 @@ The owner says `START.md overnight` and goes to sleep. The head chef runs waves 
 
 - the exit condition as something checkable ("D1.2 merged to master", "K2 and K3 merged");
 - the scope: milestones already approved in STATUS.md, plus any the owner named in the overnight message. Naming a milestone there is its approval. Nothing else is in scope;
-- the limits the owner gave (a stop time, a number of waves). If none, stop when the exit condition is met or nothing in scope is left.
+- the limits the owner gave (a stop time, a number of waves). If none, stop when the exit condition is met or nothing in scope is left;
+- the queue: the "Night queue" in STATUS.md, cut down to what is in scope. Keep that queue stocked in the day so a night never runs dry: when a wave closes, the head chef adds the next product waves and any kitchen cleanup that is ready.
 
 **During the night:**
 
 - Every wave runs exactly as in the day: brief, cook, the pass, merge on PASS. Nothing reaches master without the pass. A night run never skips review, weakens a test or lowers a verdict level to keep moving.
-- Never stop to ask. When a question comes up that only the owner can answer, park it in the night file with the options and the default you would choose, then move to the next wave that does not depend on it.
+- Never stop to ask. When a question comes up that only the owner can answer, park it in the night file with the options and the default you would choose, then move to the next wave in the queue that does not depend on it. Kitchen cleanup waves are there for exactly this.
 - A wave that stalls (two attempts with nothing new, or three times its timebox) is parked: leave its branch as it is, write down what was tried and what you would try next, move on. Two parked waves in a row means something shared is wrong: stop the run.
 - After every wave, merged or parked: replace STATUS.md, push master, add a line to the night file. If the session dies, at most the wave in flight is lost.
 - One heavy job at a time, and five minutes between full verify runs.
@@ -90,7 +91,8 @@ The owner says `START.md overnight` and goes to sleep. The head chef runs waves 
 **Not at night, whatever the reason:**
 
 - anything on the owner-only list in AGENTS.md: spending, new remote destinations, external messages, deleting anything not disposable;
-- starting a milestone the owner did not approve or name;
+- starting a milestone the owner did not approve or name, or anything past the end of the night queue;
+- starting D4 or any wave whose result is a recommendation to the owner;
 - changing the rules: AGENTS.md, this file, role files and `scripts/verify.mjs` are read-only overnight. Note the change you want in the night file instead;
 - adding or upgrading a dependency, or downloading anything;
 - force-pushing, rewriting history, or pushing an unreviewed branch.

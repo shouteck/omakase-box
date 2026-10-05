@@ -19,6 +19,20 @@ Replaced at every wave close. Last written 5 October 2026, 21:05 (+08), by Claud
 1. **D1.2 resumes** from `wave/D1.2` (already approved): rebase onto master, move its tests to the disposable database, drop its container harness, review and verify.
 2. **D2 - the Box as a folder and a command line.** Proposal to the CEO when D1.2 closes.
 
+## Night queue
+
+For `START.md overnight`. Work down the list; skip an entry whose dependency is parked and come back if it clears. Entries marked "needs naming" run only if the owner names that milestone in the overnight message.
+
+1. D1.2: finish from `wave/D1.2` (approved). Brief: [waves/D1.2.md](waves/D1.2.md).
+2. K2: move the legacy live tests onto the disposable database (kitchen wave, head chef's authority).
+3. K3: remove the old container harness (kitchen wave; after D1.2).
+4. D2.1 prototype wave: two or three throwaway attempts at source selection, compared. Needs naming: D2.
+5. D2.1: export a Box as a folder and prove it in a clean directory. Needs naming: D2.
+6. D2.2: a blind taster completes a change from the Box and submits a patch. Needs naming: D2.
+7. D3.1: verify the patch in the owner repository and merge it. Needs naming: D3.1.
+
+A typical wave has taken about an hour including review, so eight hours is roughly five to seven waves. D4 is not on the night queue: its measurements and its recommendation should be read by the owner before anything is built on them.
+
 ## Known problems
 
 - 16 tests named `*-live.test.ts` shell into the old `private-task-mvp-synthetic` container stack, including some inside `check`. That stack is left running for them. `auth-live` returns HTTP 429 when `check` runs back to back; wait about five minutes between full verify runs.

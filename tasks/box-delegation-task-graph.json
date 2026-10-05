@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "K1 (kitchen: Docker-free verification) -> D1.2 (resume from wave/D1.2) -> D2 -> D3.1 -> D4 -> D3.2. The web journey D3.2 waits for the D4 decision.",
+    "sequence": "K1 (done) -> D1.2 (resume from wave/D1.2) -> D2 -> D3.1 -> D4 -> D3.2. K2 and K3 are kitchen cleanup waves that can run whenever a product wave is parked or waiting.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -329,6 +329,64 @@
         "Independent metric/artifact reconciliation, all-attempt denominator and reproducible fresh-start instructions; empty customer-study data remains explicitly empty."
       ],
       "handoff": "waves/D4.2.md"
+    },
+    {
+      "id": "K2",
+      "milestone": "K",
+      "title": "Move the legacy live tests onto the disposable database",
+      "dependencies": [
+        "K1"
+      ],
+      "writePaths": [
+        "tests/**/*-live.test.ts",
+        "scripts/verify-*.mjs",
+        "scripts/synthetic-runtime.mjs",
+        "scripts/migrate-runtime.mjs"
+      ],
+      "deliverables": [
+        "The tests named *-live.test.ts that only need a database run against the Postgres that scripts/verify.mjs provides, instead of shelling into the private-task-mvp-synthetic containers.",
+        "Tests that genuinely need the running legacy services are listed with the reason and moved out of check into their own package script, unchanged.",
+        "check passes twice in a row with no wait, because nothing in it hits the legacy login rate limiter any more."
+      ],
+      "acceptance": [
+        "node scripts/verify.mjs exits 0 twice back to back.",
+        "No assertion in any moved test is weakened; each still fails when the behaviour it guards is broken.",
+        "With the four private-task-mvp-synthetic containers stopped, check still passes."
+      ],
+      "verification": [
+        "Reviewer stops the synthetic containers, runs verify twice, restarts them, and compares each ported assertion with master."
+      ],
+      "handoff": "waves/K2.md"
+    },
+    {
+      "id": "K3",
+      "milestone": "K",
+      "title": "Remove the old container verification harness",
+      "dependencies": [
+        "K1",
+        "D1.2"
+      ],
+      "writePaths": [
+        "scripts/box-verification/**",
+        "tests/box/verification/**",
+        "tests/box/auth/fixture-transport.test.ts",
+        "scripts/docker.mjs",
+        "scripts/suite.mjs",
+        "scripts/vitest.config.mjs",
+        "package.json"
+      ],
+      "deliverables": [
+        "scripts/box-verification/, tests/box/verification/ and the mailbox transport in scripts/docker.mjs are deleted, with the BOX_VERIFICATION_* switches in scripts/suite.mjs and scripts/vitest.config.mjs.",
+        "tests/box/auth/fixture-transport.test.ts goes with the transport it tested. This removal of tests is the stated purpose of the wave and is named in its brief."
+      ],
+      "acceptance": [
+        "No file references BOX_VERIFICATION_ or scripts/box-verification.",
+        "node scripts/verify.mjs test:box-contracts test:box-auth test:box-delegation exits 0."
+      ],
+      "verification": [
+        "Reviewer greps for leftovers and confirms no test outside the old harness was removed or changed."
+      ],
+      "handoff": "waves/K3.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"
