@@ -141,14 +141,15 @@ export function delegationServices(pool: PgPool) {
   return { intake, intents, boxes, preparation };
 }
 
-export function delegationApi(pool: PgPool) {
+export function delegationApi(pool: PgPool): { app: ReturnType<typeof createPrivateApi>; sources: ReturnType<typeof delegationSources> } {
   const sources = delegationSources();
   const app = createPrivateApi({ store: new SessionStore(pool as never, 'private', SESSION_KEY), mode: 'localhost_demo', intake: new PrivateIntakeStore(pool as never, sources), boxes: new BoxStore(pool as never), boxSources: sources });
   return { app, sources };
 }
 
-export function http(accountValue: DelegationAccount, method: 'GET' | 'POST', path: string, body?: unknown) {
-  return { method, url: path, headers: { host: 'private.localhost:4000', origin: 'http://private.localhost:3000', cookie: 'private_session=' + accountValue.cookie, 'x-csrf-token': accountValue.csrf, 'content-type': 'application/json' }, ...(body === undefined ? {} : { payload: body }) };
+export function http(accountValue: DelegationAccount, method: 'GET' | 'POST', path: string, body?: Record<string, unknown>) {
+  const headers = { host: 'private.localhost:4000', origin: 'http://private.localhost:3000', cookie: 'private_session=' + accountValue.cookie, 'x-csrf-token': accountValue.csrf, 'content-type': 'application/json' };
+  return body === undefined ? { method, url: path, headers } : { method, url: path, headers, payload: body };
 }
 
 export async function approvedIntentFor(pool: PgPool, actor: DelegationAccount, requestText: typeof REQUEST_A_TEXT, snapshotId: string) {

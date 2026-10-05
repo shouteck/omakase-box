@@ -45,7 +45,7 @@ async function gitHeadCommit(root: string): Promise<string | null> {
     const packed = await readFile(join(root, '.git', 'packed-refs'), 'utf8').catch(() => '');
     for (const line of packed.split('\n')) {
       const match = /^([a-f0-9]{40}) (\S+)$/.exec(line);
-      if (match && match[2] === ref) return match[1];
+      if (match !== null && match[2] === ref && match[1] !== undefined) return match[1];
     }
     return null;
   }
@@ -79,7 +79,7 @@ async function verifyGitBaseline(root: string, baseCommit: string, files: readon
   const bodyEnd = commitObject.indexOf(0x0a, bodyStart);
   const firstLine = bodyEnd < 0 ? commitObject.toString('utf8', bodyStart) : commitObject.toString('utf8', bodyStart, bodyEnd);
   const treeLine = /^tree ([a-f0-9]{40})$/.exec(firstLine);
-  if (treeLine === null) throw new WorkflowError('missing_evidence');
+  if (treeLine === null || treeLine[1] === undefined) throw new WorkflowError('missing_evidence');
   const tracked = new Map<string, string>();
   await gitTreeFiles(root, treeLine[1], '', tracked);
   for (const file of files) {
