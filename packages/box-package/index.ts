@@ -1,7 +1,7 @@
 export { BoxAgreementSchema, DEFAULT_INVENTORY_EXCLUDE, parseAgreement } from './agreement.js';
 export type { BoxAgreement, EditableEntry } from './agreement.js';
 export { AgreementInvalid } from './agreement.js';
-export { describeGap, ExportFailed, PreparationGap } from './errors.js';
+export { describeGap, ExportFailed, GitFailed, PreparationGap, SubmissionFailed } from './errors.js';
 export { exportBox } from './export.js';
 export type { ExportOptions, ExportResult, PnpmInvocation } from './export.js';
 export { BoxFileSchema, BoxManifestSchema } from './manifest.js';
@@ -9,3 +9,6 @@ export type { BoxFile, BoxManifest } from './manifest.js';
 export { generate, packageManifest, tsconfigJson } from './scaffolds.js';
 export { deriveSelection } from './selection.js';
 export type { SelectedFile, Selection, SelectionGap } from './selection.js';
+export { SubmissionArtifactSchema, SubmissionFileSchema, validateSubmission } from './submission.js';
+export type { SubmissionApply, SubmissionArtifact, SubmissionRejection, SubmissionReport, ValidateSubmissionOptions } from './submission.js';
+export { SUBMIT_TOOL, SUBMIT_TOOL_PATH } from './submit-tool.js';

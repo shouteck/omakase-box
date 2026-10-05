@@ -6,9 +6,11 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
 import type { BoxAgreement } from './agreement.js';
 import { ExportFailed, PreparationGap } from './errors.js';
+import { git } from './git.js';
 import type { BoxManifest } from './manifest.js';
 import { generate, packageManifest, tsconfigJson } from './scaffolds.js';
 import { deriveSelection, toPosix } from './selection.js';
+import { SUBMIT_TOOL, SUBMIT_TOOL_PATH } from './submit-tool.js';
 
 // Folder export: agreement -> selection -> bytes -> generated scaffold -> lockfile ->
 // box.json. Export never reaches back into the owner repository beyond the declared
@@ -29,14 +31,6 @@ export interface ExportResult {
 }
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
-
-function git(repo: string, args: readonly string[]): string {
-  // Per-invocation ownership override (never a global config change): lets the exporter read
-  // a checkout owned by a different account, matching how every kitchen git call is made.
-  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll('\\', '/')}`, '-C', repo, ...args], { encoding: 'utf8' });
-  if (result.status !== 0) throw new ExportFailed(`git ${args.join(' ')} failed in ${repo}: ${(result.stderr || result.stdout || '').trim() || `exit ${result.status}`}`);
-  return result.stdout.trim();
-}
 
 function resolveBaseCommit(agreement: BoxAgreement, repo: string, sourceRoot: string): string {
   const head = git(repo, ['rev-parse', 'HEAD']);
@@ -120,6 +114,9 @@ export function exportBox(options: ExportOptions): ExportResult {
   ship('package.json', null, 'generated', manifestText, false);
   ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
   for (const check of agreement.evaluator) ship(check.box, null, 'generated', generate(check.generator), false);
+  // The submission tool travels inside the folder: the recipient seals its work with
+  // `node box/submit.mjs`, no box-cli or repository needed.
+  ship(SUBMIT_TOOL_PATH, null, 'generated', SUBMIT_TOOL, false);
   ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
 
   const inventory = inventoryCount(sourceRoot, agreement.inventoryExcludePrefixes);
@@ -139,7 +136,7 @@ export function exportBox(options: ExportOptions): ExportResult {
     readContext: agreement.readContext,
     checks: agreement.checks,
     evaluator: agreement.evaluator.map(entry => ({ box: entry.box, generator: entry.generator })),
-    submission: { format: 'editable-overlay', editable, instructions: agreement.submission.instructions },
+    submission: { format: 'editable-overlay', tool: SUBMIT_TOOL_PATH, editable, instructions: agreement.submission.instructions },
     disclosure: { shippedOwnerFiles: shippedOwner, inventoryFiles: inventory, share: inventory === 0 ? 0 : shippedOwner / inventory }
   };
   ship('box.json', null, 'generated', JSON.stringify(manifest, null, 2) + '\n', false);

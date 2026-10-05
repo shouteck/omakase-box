@@ -17,6 +17,7 @@ describe('box export', () => {
     const result = runExport(agreement);
     expect(result.files).toEqual([
       'box.json',
+      'box/submit.mjs',
       'evaluator/request-a.test.ts',
       'package.json',
       'pnpm-lock.yaml',
@@ -33,6 +34,7 @@ describe('box export', () => {
     expect(manifest.checks).toEqual(['pnpm exec tsc --noEmit', 'pnpm exec vitest run evaluator/request-a.test.ts']);
     expect(manifest.disclosure).toEqual({ shippedOwnerFiles: 3, inventoryFiles: 15, share: 0.2 });
     expect(manifest.submission.editable).toEqual(manifest.editable);
+    expect(manifest.submission.tool).toBe('box/submit.mjs');
     expect(manifest.files.map(file => `${file.origin}:${file.owner ?? '-'}->${file.box}`).sort()).toEqual([
       'editable:config/response-security.json->src/config/response-security.json',
       'runnable:src/policy/loader.ts->src/policy/loader.ts',
@@ -49,6 +51,7 @@ describe('box export', () => {
     const result = runExport(agreementFile('request-b'));
     expect(result.files).toEqual([
       'box.json',
+      'box/submit.mjs',
       'evaluator/request-b.test.ts',
       'package.json',
       'pnpm-lock.yaml',
