@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, relative, sep } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exportBox } from '../../../packages/box-package/index.js';
 import type { ExportResult } from '../../../packages/box-package/index.js';
@@ -80,6 +80,62 @@ export function materializeFixtureRepo(): FixtureRepo {
 let shared: FixtureRepo | undefined;
 export function fixtureRepo(): FixtureRepo {
   return shared ??= materializeFixtureRepo();
+}
+
+// An installable owner workspace for D3.1 verify tests: the same fixture tree under
+// examples/private-shop, plus the smallest honest pnpm workspace around it (root
+// package.json, workspace file, tsconfig, .gitignore). pnpm install runs once here so
+// the committed tree carries a real lockfile — verify's scratch clone then runs its
+// own `install --frozen-lockfile`, `tsc --noEmit` and `vitest` exactly as it does in
+// the real repository. Toolchain versions mirror the repo's declared toolchain.
+export function materializeOwnerRepo(): FixtureRepo {
+  const repo = join(runRoot('owner'), 'owner-repo');
+  const write = (rel: string, content: string): void => {
+    const target = join(repo, rel);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, content);
+  };
+  write('package.json', JSON.stringify({
+    name: 'owner-repo', version: '0.0.0', private: true, type: 'module',
+    devDependencies: { typescript: '6.0.3', vitest: '5.0.1', vite: '8.3.1', '@types/node': '24.13.6', '@types/react': '19.3.0', '@types/react-dom': '19.3.0' }
+  }, null, 2) + '\n');
+  write('pnpm-workspace.yaml', 'packages:\n  - examples/*\n');
+  write('tsconfig.json', JSON.stringify({
+    compilerOptions: {
+      target: 'ES2023', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true,
+      noUncheckedIndexedAccess: true, exactOptionalPropertyTypes: true, verbatimModuleSyntax: true,
+      jsx: 'react-jsx', esModuleInterop: true, skipLibCheck: true, noEmit: true,
+      types: ['node', 'react', 'react-dom']
+    },
+    include: ['examples/**/*.ts', 'examples/**/*.tsx', 'tests/**/*.ts'],
+    exclude: ['node_modules', '**/dist']
+  }, null, 2) + '\n');
+  write('.gitignore', 'node_modules/\ndist/\n');
+  // The fixture's vite.config.ts imports this repo-level helper; the owner
+  // workspace must carry it for `tsc --noEmit` to mean what it means upstream.
+  mkdirSync(join(repo, 'scripts'), { recursive: true });
+  cpSync(join(ROOT, 'scripts', 'vite-safety.ts'), join(repo, 'scripts', 'vite-safety.ts'));
+  const target = join(repo, 'examples', 'private-shop');
+  mkdirSync(target, { recursive: true });
+  const copy = (from: string, to: string): void => {
+    for (const entry of readdirSync(from, { withFileTypes: true })) {
+      if (['node_modules', 'dist'].includes(entry.name)) continue;
+      const source = join(from, entry.name);
+      const dest = join(to, entry.name);
+      if (entry.isDirectory()) { mkdirSync(dest, { recursive: true }); copy(source, dest); }
+      else cpSync(source, dest);
+    }
+  };
+  copy(FIXTURE, target);
+  const install = spawnSync(process.execPath, [PNPM_CJS, 'install'], { cwd: repo, encoding: 'utf8', timeout: 300000 });
+  if (install.status !== 0) throw new Error(`owner fixture install failed: ${install.stderr ?? install.stdout}`);
+  fixtureGit(repo, ['init', '-b', 'main']);
+  return { repo, baseCommit: fixtureCommit(repo, 'private-shop-before-v1') };
+}
+
+let sharedOwner: FixtureRepo | undefined;
+export function ownerRepo(): FixtureRepo {
+  return sharedOwner ??= materializeOwnerRepo();
 }
 
 export interface AgreementOverrides { baseCommit?: string | null; mutate?: (agreement: Record<string, unknown>) => void }

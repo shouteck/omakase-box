@@ -1,13 +1,15 @@
 // Box CLI:
 //   export <agreement.json> --repo <path> --out <dir> [--pnpm <command|pnpm.cjs path>]
 //   submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]
+//   verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]
 // Thin shell over packages/box-package: argument parsing and exit codes live here; all
-// agreement validation, selection, folder emission and submission checks live in the
-// library. `submit` only validates and reports what it would apply — merging is D3.1.
+// agreement validation, selection, folder emission, submission checks and owner-side
+// verify live in the library. `verify` applies the patch in a scratch clone, runs the
+// owner checks and lands a scratch merge on pass — real history is never touched.
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describeGap, exportBox, PreparationGap, validateSubmission } from '../../box-package/index.js';
+import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
 
 function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
@@ -27,6 +29,7 @@ function usage(message?: string): never {
   if (message !== undefined) console.error(message);
   console.error('usage: box export <agreement.json> --repo <path> --out <dir> [--pnpm <command|pnpm.cjs path>]');
   console.error('       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]');
+  console.error('       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]');
   process.exit(2);
 }
 
@@ -84,6 +87,29 @@ if (command === 'export') {
     process.exitCode = report.accepted ? 0 : 3;
   } catch (error) {
     console.error(`submit failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+} else if (command === 'verify') {
+  const agreementPath = flag('--agreement');
+  const repoPath = flag('--repo');
+  const boxDir = flag('--box');
+  const base = flag('--base');
+  const keepScratch = rest.includes('--keep-scratch');
+  if (target === undefined || agreementPath === undefined || repoPath === undefined) usage();
+  try {
+    const report = verifySubmission({
+      submissionPath: resolve(target),
+      agreementPath: resolve(agreementPath),
+      repoPath: resolve(repoPath),
+      pnpm: pnpmInvocation(rest),
+      ...(boxDir !== undefined ? { boxDir: resolve(boxDir) } : {}),
+      ...(base !== undefined ? { baseCommit: base } : {}),
+      ...(keepScratch ? { keepScratch: true } : {})
+    });
+    console.log(JSON.stringify(report, null, 2));
+    process.exitCode = report.verdict === 'pass' ? 0 : 3;
+  } catch (error) {
+    console.error(`verify failed: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 } else {

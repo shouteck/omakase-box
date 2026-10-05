@@ -12,3 +12,7 @@ export type { SelectedFile, Selection, SelectionGap } from './selection.js';
 export { SubmissionArtifactSchema, SubmissionFileSchema, validateSubmission } from './submission.js';
 export type { SubmissionApply, SubmissionArtifact, SubmissionRejection, SubmissionReport, ValidateSubmissionOptions } from './submission.js';
 export { SUBMIT_TOOL, SUBMIT_TOOL_PATH } from './submit-tool.js';
+export { ownerCheck } from './owner-checks.js';
+export type { OwnerCheck } from './owner-checks.js';
+export { verifySubmission } from './verify.js';
+export type { VerifyCheck, VerifyCheckName, VerifyFailureClass, VerifyMerge, VerifyOptions, VerifyReport } from './verify.js';
