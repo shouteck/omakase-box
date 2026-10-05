@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { Pool } from 'pg';
 import { hashPassword, newToken, tokenHash } from '../../../packages/contracts/auth/crypto.js';
 
-if (process.env.SYNTHETIC_AUTH_FIXTURE !== 'private-task-mvp-synthetic') process.exit(2);
+if (process.env.SYNTHETIC_AUTH_FIXTURE !== 'synthetic-fixture') process.exit(2);
 const pool = new Pool({ host: process.env.PRIVATE_DATABASE_HOST, database: process.env.PRIVATE_DATABASE_NAME, user: process.env.PRIVATE_DATABASE_USER, password: readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE!, 'utf8').trim(), max: 1 });
 try {
   let input = ''; for await (const chunk of process.stdin) { input += chunk.toString(); if (input.length > 4096) throw new Error('Fixture input exceeded.'); }

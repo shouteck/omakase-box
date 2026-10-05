@@ -9,7 +9,7 @@ try {
   const chunks = Array.isArray(bundle) ? bundle : 'output' in bundle ? bundle.output : [];
   const chunk = chunks.find(item => item.type === 'chunk' && typeof item.code === 'string');
   assert.ok(chunk?.code, 'Intent session fixture bundle did not produce a chunk.');
-  const result = await runtime.exec('private-api', ['--input-type=module'], { input: chunk.code, timeout: 60000, env: { SYNTHETIC_INTENT_FIXTURE: 'private-task-mvp-synthetic' } });
+  const result = await runtime.exec('private-api', ['--input-type=module'], { input: chunk.code, timeout: 60000, env: { SYNTHETIC_INTENT_FIXTURE: 'synthetic-fixture' } });
   assert.equal(result.code,0,'Synthetic intent session verification failed.');
   const report=JSON.parse(result.stdout);
   assert.equal(report.assurance,'tested');assert.equal(report.realCustomerData,false);

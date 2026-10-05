@@ -26,12 +26,6 @@ The private host and contributor host must remain distinct. The real-browser syn
 
 ## Identified synthetic runtime and resource use
 
-    node scripts/synthetic-runtime.mjs config
-    node scripts/synthetic-runtime.mjs build
-    node scripts/synthetic-runtime.mjs up
-    node scripts/verify-runtime.mjs
-    node scripts/synthetic-runtime.mjs stop
+The synthetic container runtime profile and the box-verification harness were removed in K3, along with their bring-up/verification scripts and tagged runtime directory. Ordinary verification needs no Docker: `node scripts/verify.mjs` provisions a disposable embedded Postgres and `scripts/host-test-runtime.mjs` runs the real services and fixtures on loopback. The trusted Compose topology above remains the deployment shape; `verify.mjs --db=docker` is still a supported disposable-database option.
 
-This profile uses project name private-task-mvp-synthetic and a tagged .runtime/synthetic-runtime directory. Initialization creates distinct test-only credential/key files and a path-only runtime.env without printing secrets or overwriting unidentified directories. It refuses remote Docker endpoints. Services have bounded per-container memory/CPU; builds run one Compose operation at a time. Stop preserves volumes and one-time authority; do not delete/reset them to make tests pass. The private runtime CLI is exercised only with synthetic accounts. No customer data, model calls, contributor code, paid service or real payment is involved.
-
-Doctor uses the installed local Docker CLI and probes each initialized synthetic service's own database identity while it is running. `doctor --json --passive` avoids active DB probes and reports those capabilities unverified. Successful identity probes do not replace separate runtime-separation tests.
+Doctor reports only whether the local Docker CLI/daemon is available. It no longer probes live service databases, so `databases` stays `unverified`; separation, cookie policy and owner transactions have their own verification evidence.

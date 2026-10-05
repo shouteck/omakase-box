@@ -1,8 +1,10 @@
+// Containers suite: needs a local Docker daemon and the frozen M-series public image present
+// (see tests/containers/README.md). Not run by check or ordinary verification.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { basename, dirname } from 'node:path';
-import { PUBLIC_IMAGE_PROFILE } from '../../../templates/workspaces/public-image-profile.js';
+import { PUBLIC_IMAGE_PROFILE } from '../../templates/workspaces/public-image-profile.js';
 
 it('independently authored OCI fixtures detect private payloads in historical layers, paths and chunk boundaries', () => {
   const output = execFileSync(process.platform === 'win32' ? 'python' : 'python3', ['-B', '.execution/evidence/M4.2/scan-public-image-cases.py'], { encoding: 'utf8', timeout: 30000 });

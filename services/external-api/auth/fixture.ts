@@ -6,7 +6,7 @@ import { hashPassword, newToken, tokenHash } from '../../../packages/contracts/a
 import { contentHash } from '../../../packages/contracts/hash.js';
 import { ExternalTaskContractSchema, projectPublicListing } from '../../../packages/contracts/public/index.js';
 
-if (process.env.SYNTHETIC_AUTH_FIXTURE !== 'private-task-mvp-synthetic') process.exit(2);
+if (process.env.SYNTHETIC_AUTH_FIXTURE !== 'synthetic-fixture') process.exit(2);
 const pool = new Pool({ host: process.env.EXTERNAL_DATABASE_HOST, database: process.env.EXTERNAL_DATABASE_NAME, user: process.env.EXTERNAL_DATABASE_USER, password: readFileSync(process.env.EXTERNAL_DATABASE_PASSWORD_FILE!, 'utf8').trim(), max: 1 });
 try {
   let input='';for await(const chunk of process.stdin){input+=chunk.toString();if(input.length>4096)throw new Error('Fixture input exceeded.');}

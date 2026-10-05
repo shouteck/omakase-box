@@ -58,7 +58,7 @@ try {
     if (process.env.AUTH_MODE !== 'localhost_demo') throw new Error('Production TLS listener must be configured explicitly.');
     pool = new Pool({ host: config.PRIVATE_DATABASE_HOST, database: config.PRIVATE_DATABASE_NAME, user: config.PRIVATE_DATABASE_USER, password: readFileSync(config.PRIVATE_DATABASE_PASSWORD_FILE,'utf8').trim(), max: 3, connectionTimeoutMillis: 5000 });
     const sources = await loadSnapshotSources(process.env.PRIVATE_SNAPSHOT_SOURCES_FILE);
-    if (process.env.SYNTHETIC_SNAPSHOT_SOURCE === 'private-task-mvp-synthetic') {
+    if (process.env.SYNTHETIC_SNAPSHOT_SOURCE === 'synthetic-fixture') {
       // Host test mode takes the fixture root from the environment; the container keeps the
       // baked-in workspace path. Only the directory moves — the fixture contract is unchanged.
       const shopRoot = process.env.SYNTHETIC_HOST_TEST === 'true' ? process.env.SYNTHETIC_SNAPSHOT_ROOT : '/workspace/examples/private-shop';

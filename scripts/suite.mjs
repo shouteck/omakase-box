@@ -19,18 +19,5 @@ if (!suite || !/^[a-z0-9-]+$/.test(suite) || args.includes('--real') || !hasTest
   console.log(JSON.stringify({ assurance: 'unverified', suite, subgroup, status: 'unavailable', reason: args.includes('--real') ? 'Real VM execution is not configured or implemented.' : 'This required suite has not been implemented.' }));
   process.exit(2);
 }
-// Environment-first verification profile may override the browser cache to the
-// reviewed in-image /ms-playwright path. Only the exact named profile plus the
-// exact '/ms-playwright' value activates the override; every other value, and the
-// default (no profile), keep the original .runtime/browsers behavior and the
-// unavailable-suite/--real semantics above.
-const verificationProfile = process.env.BOX_VERIFICATION_PROFILE === 'w002-b11-environment-first-r4';
-const browserOverride = verificationProfile && process.env.BOX_VERIFICATION_BROWSER_PATH === '/ms-playwright'
-  ? '/ms-playwright'
-  : null;
 const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
-// Native ESM loading avoids Vite's bundled-config write into read-only dependencies.
-// Installed Vitest forwards this supported option to Vite; default runs retain
-// their original loader and argv.
-const configLoader = verificationProfile ? ['--configLoader', 'native'] : [];
-process.exit(await runNode(vitest, ['run', directory, '--config', 'scripts/vitest.config.mjs', ...configLoader], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browserOverride ?? join(root, '.runtime', 'browsers') } }));
+process.exit(await runNode(vitest, ['run', directory, '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));

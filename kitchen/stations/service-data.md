@@ -14,11 +14,11 @@ The private API, the Box store, migrations and auth. Home of B1.1 (accepted) and
 
 - **Never hand a connection URL to `pg`.** Its parser lets a `?host=` parameter override the hostname, which bypassed the loopback check in K1. Validate, then build the pool from explicit host, port, user, password and database.
 - **Always call `pool.end()` in `afterAll`.** That is what drops the test database.
-- **Legacy `*-live.test.ts` files** shell into the old `private-task-mvp-synthetic` container stack, and some run inside `check`. `auth-live` returns HTTP 429 when `check` runs twice in a row. Wait about five minutes between full verify runs. Do not "fix" this inside an unrelated wave. (Being retired by K2a/K2b.)
+- **`*-live.test.ts` files** run on the host against the disposable Postgres via `acquireHostRuntime` in `scripts/host-test-runtime.mjs` (K2a/K2b). The old container stack and its 429 flake are gone.
 - **Do not weaken a security control to make a test pass**: rate limits, role checks, session and CSRF handling stay as they are.
 - `tests/box/delegation/support.ts` caches its per-run directory per module, so a second `delegationPool()` in one vitest file reuses a removed path — one pool per file today; fix when a test needs two.
 - Ports 4000/4001 can be held by Docker Desktop on this host. Host-run tests may bind any other loopback address (e.g. 127.0.0.2) as long as the `Host`/`Origin` contract headers stay intact — D1.2's browser test does this.
-- `scripts/box-verification/` and `tests/box/verification/` are the old container harness. Leave them alone until the cleanup wave (K3).
+- The old container harness (`scripts/box-verification/`, `tests/box/verification/`, and its runtime bring-up scripts) was removed in K3. The frozen hostile-runner tests live in `tests/containers/` (`test:containers`, needs Docker, never in `check` or ordinary verification).
 
 ## The pass checks
 

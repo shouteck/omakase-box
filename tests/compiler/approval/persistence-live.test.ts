@@ -16,7 +16,7 @@ it('actual synthetic PostgreSQL stores immutable exact approvals under session/C
   const source = `${chunk!.code}\ntry { console.log(JSON.stringify(await runReleaseFixture(${JSON.stringify(migrations)},${JSON.stringify(schemaSql)}))); } catch (error) { console.error(error instanceof Error ? error.message : 'release_fixture_failed'); process.exitCode=1; }\n`;
   const runtime = await acquireHostRuntime();
   try {
-    const result = await runtime.exec('private-api', ['--input-type=module'], { input: source, timeout: 60000, env: { SYNTHETIC_RELEASE_FIXTURE: 'private-task-mvp-synthetic' } });
+    const result = await runtime.exec('private-api', ['--input-type=module'], { input: source, timeout: 60000, env: { SYNTHETIC_RELEASE_FIXTURE: 'synthetic-fixture' } });
     expect(result.code, result.stderr.slice(-4000)).toBe(0);
     const report = JSON.parse(result.stdout.trim().split('\n').at(-1)!) as Record<string, unknown>;
     expect(report).toMatchObject({ assurance: 'tested', realCustomerData: false, immutableAssets: 'tested', ownerSession: 'tested', csrf: 'tested', roleDenial: 'tested', approvalConcurrency: 'tested', staleIntent: 'tested', signature: 'tested' });

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { SessionStore, AuthDenied } from '../../../packages/contracts/auth/store.js';
 import { PrivateIntakeStore } from './store.js';
 
-if (process.env.SYNTHETIC_INTAKE_FIXTURE !== 'private-task-mvp-synthetic') process.exit(2);
+if (process.env.SYNTHETIC_INTAKE_FIXTURE !== 'synthetic-fixture') process.exit(2);
 const pool = new Pool({ host: process.env.PRIVATE_DATABASE_HOST, database: process.env.PRIVATE_DATABASE_NAME, user: process.env.PRIVATE_DATABASE_USER, password: readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE!, 'utf8').trim(), max: 2 });
 try {
   let raw = ''; for await (const chunk of process.stdin) { raw += chunk.toString(); if (raw.length > 4096) throw new Error('fixture_bounds'); }

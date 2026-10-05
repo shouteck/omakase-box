@@ -19,7 +19,7 @@ import { PUBLIC_IMAGE_PROFILE } from '../../../templates/workspaces/public-image
 import { byteHash } from '../../../packages/contracts/hash.js';
 
 export async function runReleaseFixture(migrations: string[], schemaSql: string) {
-  assert.equal(process.env.SYNTHETIC_RELEASE_FIXTURE, 'private-task-mvp-synthetic');
+  assert.equal(process.env.SYNTHETIC_RELEASE_FIXTURE, 'synthetic-fixture');
   assert.equal(process.env.PRIVATE_DATABASE_NAME, 'private_task');
   const configuration = { host: process.env.PRIVATE_DATABASE_HOST, user: process.env.PRIVATE_DATABASE_USER, password: readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE!, 'utf8').trim(), max: 3 };
   const admin = new Pool({ ...configuration, database: 'private_task' });
