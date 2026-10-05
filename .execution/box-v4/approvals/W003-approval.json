@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual_ceo_wave_approval",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r1",
+  "brief": ".execution/box-v4/briefings/W003.md",
+  "briefSha256": "491074d91dc72f7fc130fd2adabd8dcbf3d6c5a16889a26639b8df8b4455ec8c",
+  "source": "Current Devin Desktop conversation",
+  "message": "START.MD, I approve the latest briefing.",
+  "recordedAtUtc": "2026-10-05T05:52:21.1496111Z",
+  "timestampMeaning": "Recording clock, not an independently available human-message timestamp",
+  "resolution": "Current state nextProposal and nextProposalBinding both select W003; exact frozen brief SHA256 verified before dispatch.",
+  "subagentPermission": {
+    "question": "May I use W003's specified subagent team: one assurance lead, one design worker, then a distinct reviewer, sequentially?",
+    "answer": "Use the W003 team",
+    "source": "Actual ask_user_question response in this conversation"
+  },
+  "taskIds": ["D1.1"],
+  "baselineHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "acceptedSourceBaseline": "a38c1e01cdf139af31a80d816efce8b9e023513a",
+  "runtime": "devin_portable_pstack_adaptation",
+  "topology": "root_to_one_box-assurance-lead_to_one_terminal_box-worker_then_distinct_terminal_box-reviewer_sequential",
+  "scope": "Only the three design records, scoped worker/reviewer/lead receipts, and root W003 approval/binding/wave/state/selector/D1.1 handoff governance enumerated in the frozen briefing.",
+  "graphTransitionApproved": true,
+  "productSourceWrites": false,
+  "featureImplementationApproved": false,
+  "customerPilotApproved": false,
+  "runtimeOperationsApproved": false,
+  "resourcesOrModelsChanged": false,
+  "oldDevinResumed": false,
+  "routineSaving": "Separate standing private origin/master checkpoint authority, after exact independent scope review",
+  "status": "approved_current_capability_gates_required"
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_compliant_review_excerpt",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r3",
+  "reviewer": "box-reviewer/6f9cae38",
+  "lead": "box-assurance-lead/cfd46892",
+  "attribution": "Faithful excerpt of actual same-reviewer supplemental verdict returned within lead rollup, root persisted, not child-written",
+  "baselineHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "candidate": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "1808019ebcbfbef194c1310a5a6feff4ef9af8d181d1edccb62ce8ebea10d8e0",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "45d7277013a55a53b5b0eb12b1a8b7323602df4e5104d94b79f246b4cb3879d6",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "b2cd60cdd87a3eacdd61d838e798458c3ba819b22f232167ef6edd7dfac43ce6"
+  },
+  "reportedVerdict": "PASS_exact_byte_content_review_only",
+  "reportedPermittedChecks": ["sha256sum", "scoped Git status/rev-parse/log/diff", "read", "grep", "find_file_by_name"],
+  "reportedFindings": ["Runnable closure versus protected explanatory context separated", "HSTS localhost/helper truth corrected", "Transactional repo registration and actual auth/store/intent seams grounded", "Concrete API/routes/migration/tests/literal command proposal", "Total-effort comparison and commercial limits preserved", "Both profile diffs exactly plus-write", "Root D1.1 blocker metadata stale and needs bookkeeping"],
+  "noCandidateEdits": true,
+  "runtimeTests": "not_run_design_only",
+  "notRootAcceptance": true,
+  "rootReopenedFindings": "Pending correction of invalid evaluator IdSchema reference, contradictory protected explanatory exclusions and future verification/resource/fixture inventory completeness. Prior reviewer PASS preserved, not rewritten as covering these findings."
+}

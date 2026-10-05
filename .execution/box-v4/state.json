@@ -1,11 +1,14 @@
 {
   "schemaVersion": 1,
   "planVersion": "box-v4-2026-10-04.1",
-  "projectStatus": "b11_accepted_next_product_proposal_pending",
-  "currentRootAcceptance": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/cto-acceptance-h1.json",
-  "activeWave": "W002",
-  "nextProposal": ".execution/box-v4/briefings/W003.md",
-  "nextProposalBinding": ".execution/box-v4/evidence/W003-proposal-binding.json",
+  "projectStatus": "w003_completed_independently_reviewed_checkpoint_pending_w004_capability_proposed",
+  "activeDelegationGraph": "tasks/box-delegation-task-graph.json",
+  "delegationGraphActivation": ".execution/box-v4/approvals/W003-approval.json",
+  "currentRootAcceptance": ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json",
+  "foundationRootAcceptance": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/cto-acceptance-h1.json",
+  "activeWave": "W003",
+  "nextProposal": ".execution/box-v4/briefings/W004.md",
+  "nextProposalBinding": ".execution/box-v4/evidence/W004-proposal-binding.json",
   "historicalR2Proposal": ".execution/box-v4/briefings/W002-CTO-R2.md",
   "historicalR2ProposalBinding": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-binding-r2.json",
   "historicalD1r3Budget": {
@@ -32,13 +35,20 @@
   },
   "approvedRecovery": ".execution/box-v4/briefings/W002-D1-r4.md",
   "historicalApprovedRecovery": ".execution/box-v4/briefings/W002-D1-r2.md",
-  "executionPrerequisite": "B1.1 accepted and saved. W003 frozen proposal requires actual CEO approval and current scope/ownership reconciliation before D1.1 design dispatch or graph activation; no D1.2 coding or W002 mutation follows automatically.",
+  "executionPrerequisite": "D1.1 exact design independently passed and root accepted; all writer/reviewer calls returned. Current root governance/profile/next-proposal review and scoped standing checkpoint remain. W004 capability-only proposal awaits CEO approval; D1.2 and all runtime/W002 mutation remain forbidden.",
   "historicalR4ExecutionPrerequisite": "Actual r4 approval and fresh root transfer checks recorded; establish one actual lead and exclusive harness lease. No source execution/setup/acceptance phase until current independent gates pass.",
-  "lastCompletedWave": "W002",
+  "lastCompletedWave": "W003",
   "currentCheckpointStatus": "accepted_source_committed_and_private_origin_confirmed",
   "acceptedSourceCheckpoint": {"commit": "a38c1e01cdf139af31a80d816efce8b9e023513a", "record": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/checkpoint-h1-saved.json", "pushed": true},
   "ceoWaveApprovalRequired": true,
   "currentApproval": {
+    "waveId": "W003",
+    "revision": "2026-10-05-d1.1-r3",
+    "record": ".execution/box-v4/approvals/W003-r3-approval.json",
+    "status": "completed_design_scope_current_checkpoint_review_pending_no_d12_approval"
+  },
+  "originalW003Approval": {"record": ".execution/box-v4/approvals/W003-approval.json", "revision": "2026-10-05-d1.1-r1", "status": "preserved_stopped_tool_violation_design_reopened"},
+  "completedFoundationApproval": {
     "waveId": "W002",
     "revision": "W002-CTO-R2-Devin-H1",
     "record": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
@@ -93,7 +103,8 @@
     "proposedResumeBrief": ".execution/box-v4/briefings/W002-r3.md",
     "proposedResumeBriefDigest": "sha256:8f95b5bfebee620dd74072a5a495cc60d6fb989660f1069d6aa54b005cf5d733"
   },
-  "dispatchStop": {
+  "dispatchStop": {"waveId": "W003", "designOnlyTeamDispatchPermitted": false, "executionPermitted": false, "productSourceWrites": false, "environmentSetupPermitted": false, "acceptanceChecksPermitted": false, "currentReadOnlyGovernanceReviewPermitted": true, "activeApproval": ".execution/box-v4/approvals/W003-r3-approval.json", "reason": "D1.1 design accepted; all writer calls returned. Final read-only governance/next-proposal/checkpoint review only. W004 awaits approval; no D1.2 or W002 runtime operation."},
+  "completedW002DispatchStop": {
     "reason": "H1 repair completed and B1.1 accepted; no product dispatch until next named D proposal is approved. Old Devin r4 remains suspended.",
     "historicalCeoStopReason": "Direct CEO stopped Devin and requested CTO repair; changed-wave execution awaits approved frozen proposal.",
     "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r8-final.json",
@@ -217,7 +228,12 @@
       }
     ]
   },
+  "w003CheckpointStatus": "independent_design_and_governance_pass_exact_scoped_checkpoint_pending",
   "milestones": {
+    "D1": "pending",
+    "D2": "pending",
+    "D3": "pending",
+    "D4": "pending",
     "B0": "completed",
     "B1": "pending",
     "B2": "pending",
@@ -229,6 +245,14 @@
     "B8": "pending"
   },
   "tasks": {
+    "D1.1": {"status": "accepted", "implementationStatus": "checked_design_only", "independentReviewStatus": "passed", "waveId": "W003", "revision": "2026-10-05-d1.1-r3", "owner": "box-assurance-lead/cfd46892_returned", "lease": null, "candidate": ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json", "worker": "box-worker/7759c6eb", "reviewer": "box-reviewer/6f9cae38", "historicalReviewer": "box-reviewer/c34c32ac", "receipts": [".execution/box-v4/evidence/D1.1/cto-r3/worker-correction2.json", ".execution/box-v4/evidence/D1.1/cto-r3/review-correction2.json", ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json", ".execution/box-v4/handoffs/D1.1.md"], "blockers": [], "limitations": ["Design/source review only; no new feature or runtime proof", "New-file implementation writer still unverified; separate W004 capability-only proposal pending", "Original failures/tool deviations preserved as history"], "phase": "accepted_design_current_governance_checkpoint_review_pending"},
+    "D1.2": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
+    "D2.1": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
+    "D2.2": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
+    "D3.1": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
+    "D3.2": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
+    "D4.1": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
+    "D4.2": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
     "B0.1": {
       "status": "accepted",
       "implementationStatus": "checked",

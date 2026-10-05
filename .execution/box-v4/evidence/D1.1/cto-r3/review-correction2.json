@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_exact_reviewer_verdict",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r3",
+  "briefSha256": "0627ab37fd8fac13e33606fc07d82330a6b3cd7f9a2aa3a611550152dbb5bbe1",
+  "reviewer": "box-reviewer/6f9cae38",
+  "sourceWriter": "box-worker/7759c6eb",
+  "lead": "box-assurance-lead/cfd46892",
+  "attribution": "Faithful attributed excerpt of exact TARGETED REREVIEW VERDICT returned within lead foreground response. Root persisted; reviewer made no filesystem write and did not author candidate. Decorative checkmarks omitted.",
+  "candidate": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "7d039c1035931f6bc76bc860096f35008e47cd60db87c26d2a0b13b94da085bf",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "0c8c80297186b10017a5ab8ff5d82ad167521cfbe87652a9bfaa7ec764dc7cb7",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "4875d4427493be2077d6fa046cc82c7db4285197ac201d15e0f9f9f4d527d4a5"
+  },
+  "baselineHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "hashesIndependentlyRecomputed": true,
+  "reportedTools": ["read", "grep", "find_file_by_name", "sha256sum", "git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp status/rev-parse/log/diff"],
+  "reportedCommandExits": "All 0",
+  "reportedDurations": "Reviewer stated less than five seconds each; not independently timed by root",
+  "obligationVerdicts": {
+    "idAndDigestShapes": "PASS common.ts and box-contracts strict shapes; no slash references/schema relaxation",
+    "protectedExclusions": "PASS raw protected modules never exported even explanatory; imports excluded from runnable/contribution scope",
+    "ownerInventoryAndMigration": "PASS real fixture checks/candidates source, no invented example tests path, journal idx0-12 then proposed13 no assumed snapshot",
+    "futureRuntimeRecipe": "PASS exact cached images/browser/limits treated as historical grounding not readiness; new independent network/runner/DB explicitly deferred to future approval; old data/cap preserved",
+    "newFileCapability": "PASS current edit-only worker limitation and separately approved supported-writer gate truthfully explicit",
+    "originalD11AndComparison": "PASS two requests, unsupported coupling, HSTS truth, total effort/quality/failures/missing/commercial limits, registration/intent/auth/version/obligation/idempotency expectations retained",
+    "scope": "PASS only three design files and approved profile/governance changes; unrelated recovery/relay material excluded"
+  },
+  "verdict": "PASS",
+  "supersedesCandidateVerdict": "review-attempt1-supplement.json, preserved as prior bytes history",
+  "notRootAcceptance": true,
+  "limitations": ["Store tail beyond approximately line252 not reread; new prepared wrappers remain proposed", "mode-demo intent payload shape was not independently schema-verified by this reviewer", "Per-file fixture digests deferred to future implementation", "Current D1.1 bookkeeping needs root refresh"],
+  "runtimeExecution": "not_run_design_only",
+  "modelIdentity": "Not exposed; no diversity claim"
+}

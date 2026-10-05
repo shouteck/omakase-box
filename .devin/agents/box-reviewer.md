@@ -5,6 +5,7 @@ allowed-tools:
   - read
   - grep
   - glob
+  - write
   - exec
 ---
 

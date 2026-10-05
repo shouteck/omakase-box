@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "d11_independent_review_rereceipt_f1",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r1",
+  "brief": ".execution/box-v4/briefings/W003.md",
+  "briefSha256": "491074d91dc72f7fc130fd2adabd8dcbf3d6c5a16889a26639b8df8b4455ec8c",
+  "approval": ".execution/box-v4/approvals/W003-approval.json",
+  "taskId": "D1.1",
+  "reviewer": "terminal D1.1 independent reviewer (same reviewer as receipt.json; did not implement this design)",
+  "supersedes": ".execution/box-v4/evidence/D1.1/review/receipt.json (preserved, append-only)",
+  "candidate": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "066c7759c9462f01487d2b7fe0595369e0de92440465e722997b71b3a2b80d9c (unchanged)",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "8aa7ea0f74218cd99c056733d4cef4b8cbd29b9539c1c6973930002f0b48b042 (corrected)",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "0e106481d62a1f0cc5bfe1d2a169ba30fa632a1129f8367e040ffd1b7dbc5791 (unchanged)",
+    "correctionReceipt": ".execution/box-v4/evidence/D1.1/worker/correction-f1.json = ee51482b5e8dc9b4f9b5f7562cf49d7649cb69961b5598e7942352bfe80d0c04"
+  },
+  "hashesVerified": "All four SHA256 recomputed via sha256sum on file bytes; all match worker-reported corrected values.",
+  "f1Resolution": "CONFIRMED. Line 35 now reads 'supersededApproval', matching services/private-api/boxes/store/store.ts line 106. Full 74-line re-read of the corrected file against my prior complete read shows only the single-token rename changed; zero occurrences of 'supersedesApproval' remain; line count identical (74); no other candidate bytes altered. Worker correction receipt honestly binds the fix and scope.",
+  "rubric": {
+    "1_exactBytesScope": "pass",
+    "2_d11Obligations": "pass",
+    "3_interfaceTruth": "pass — F1 resolved; all source claims verified against actual code in first pass",
+    "4_comparisonValueLimits": "pass",
+    "5_d12Readiness": "pass",
+    "6_governance": "pass — worker marked nothing accepted; receipt stays 'corrected_pending_rereview_not_accepted'"
+  },
+  "verdict": "PASS",
+  "verdictDetail": "All three records verified against actual source at HEAD 021024594c8b08ef7a8b24e08cfb7c8b9e021086. Supported case (private-shop fixture, two grounded requests, excluded/protected modules, unsupported coupling), interface inventory (accepted vs source-only vs absent vs proposed honestly labeled, including absent BoxStore HTTP wiring), ordinary-delegation comparison with total-effort accounting and commercial limits, and D1.2 readiness (create/approve/amend, agreement card, negatives, fixture registration, existing-runtime recipe, exact write paths) all satisfy the D1.1 graph obligations. This PASS is an independent review verdict, not acceptance: root owns state/approval/graph activation and D1.2 remains separately gated.",
+  "limitations": [
+    "store.ts tail beyond ~line 252 not line-read (outside D1.2 slice).",
+    "Byte-identity of unchanged docs confirmed by matching hashes; corrected file confirmed by full re-read (no baseline blob diff available).",
+    "Read-only review only; no candidate execution. No acceptance marked."
+  ],
+  "status": "review_pass_not_accepted"
+}

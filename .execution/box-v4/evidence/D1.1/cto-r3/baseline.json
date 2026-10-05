@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_preserved_last_observed_design_hash_map",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r3",
+  "author": "current_Devin_Desktop_root",
+  "attribution": "Root-owned record of hashes independently observed through Get-FileHash in this conversation; not a child-authored receipt. Sole worker must recompute before edits.",
+  "baselineHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "preservedCandidate": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "066c7759c9462f01487d2b7fe0595369e0de92440465e722997b71b3a2b80d9c",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "8aa7ea0f74218cd99c056733d4cef4b8cbd29b9539c1c6973930002f0b48b042",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "0e106481d62a1f0cc5bfe1d2a169ba30fa632a1129f8367e040ffd1b7dbc5791"
+  },
+  "preservedHistory": [".execution/box-v4/evidence/D1.1/worker/receipt.json", ".execution/box-v4/evidence/D1.1/worker/correction-f1.json", ".execution/box-v4/evidence/D1.1/review/receipt.json", ".execution/box-v4/evidence/D1.1/review/receipt-f1-rereview.json", ".execution/box-v4/waves/W003-r2.json"]
+}

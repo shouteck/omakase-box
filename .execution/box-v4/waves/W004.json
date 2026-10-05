@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W004",
+  "revision": "2026-10-05-c1-r1",
+  "status": "awaiting_ceo",
+  "taskIds": ["W004-C1"],
+  "taskKind": "capability_setup_only",
+  "brief": ".execution/box-v4/briefings/W004.md",
+  "briefSha256": "8a93ce56a15c84810936301530239bc01373a4445cd544eff25b02bc77094638",
+  "binding": ".execution/box-v4/evidence/W004-proposal-binding.json",
+  "approval": null,
+  "dispatches": [],
+  "lease": null,
+  "productSourceWrites": false,
+  "newRuntimeResources": 0,
+  "profileOrModelChanges": false,
+  "featureImplementationApproved": false,
+  "customerPilotApproved": false,
+  "executionStatus": "not_started_awaiting_actual_ceo_approval"
+}

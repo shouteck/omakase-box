@@ -5,7 +5,19 @@
   "revision": "2026-10-05-d1.1-r1",
   "brief": ".execution/box-v4/briefings/W003.md",
   "briefSha256": "491074d91dc72f7fc130fd2adabd8dcbf3d6c5a16889a26639b8df8b4455ec8c",
-  "status": "awaiting_ceo_approval",
+  "status": "approved_r1_stopped_amendment_required",
+  "currentHandoff": ".execution/box-v4/handoffs/D1.1.md",
+  "nextProposal": ".execution/box-v4/briefings/W003-r2.md",
+  "reconciliation": {
+    "head": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+    "remoteMaster": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+    "destination": "private shouteck/omakase-box origin/master verified by gh repo view and git ls-remote",
+    "acceptedSourceDiff": "Only proposal/checkpoint governance differs from a38c1e0; no tracked product source drift or tracked working-tree edits.",
+    "untrackedPreservation": "Existing recovery archives/snapshots/pathspec/output files stay untouched and excluded from W003 checkpoint.",
+    "ownership": "B1.1 recorded sole worker/reviewer returned and no active source lease. W003 design paths absent and non-overlapping with old runtime/mailboxes. No historical process shutdown is inferred, no process/runtime probe or mailbox operation needed or permitted for this design wave.",
+    "profiles": "Actual registered assurance lead max-nesting2 with run_subagent/read_subagent; terminal worker and reviewer inspected. Actual new-host nesting/write tools must still be observed, not inferred.",
+    "skillInvocation": "Actual poteto-mode tool invoked in this conversation; native Cursor and model diversity unverified."
+  },
   "taskIds": ["D1.1"],
   "graph": "tasks/box-delegation-task-graph.json",
   "graphActivation": "only_after_actual_approval_and_safe_reconciliation",
@@ -21,6 +33,7 @@
   "featureImplementationApproved": false,
   "customerPilotApproved": false,
   "resourcesOrModelsChanged": false,
-  "actualApproval": null,
-  "authorizesDispatch": false
+  "actualApproval": ".execution/box-v4/approvals/W003-approval.json",
+  "authorizesDispatch": false,
+  "stopReason": "Supported file-write capability absent; shell-created design/receipts and root design gaps require current amendment approval; all actors returned"
 }
