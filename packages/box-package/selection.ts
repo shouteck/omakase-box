@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { dirname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import type { BoxAgreement } from './agreement.js';
 
@@ -109,8 +109,8 @@ export function deriveSelection(agreement: BoxAgreement, sourceRootAbs: string):
     if (isExcluded(context)) gaps.push({ kind: 'excluded-input', detail: `read-context ${context}`, chain: [context] });
   }
 
-  while (queue.length > 0) {
-    const { owner, chain } = queue.shift() as { owner: string; chain: string[] };
+  for (let item = queue.shift(); item !== undefined; item = queue.shift()) {
+    const { owner, chain } = item;
     const absolute = join(root, owner);
     const text = readFileSync(absolute, 'utf8');
     const source = ts.createSourceFile(absolute, text, ts.ScriptTarget.Latest, true, owner.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);

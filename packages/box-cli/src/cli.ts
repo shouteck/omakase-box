@@ -28,14 +28,16 @@ function usage(message?: string): never {
 
 const [command, ...rest] = process.argv.slice(2);
 if (command !== 'export') usage();
-const positional = rest.filter((arg, index) => !arg.startsWith('--') && rest[index - 1] !== '--pnpm');
 const flag = (name: string): string | undefined => {
   const index = rest.indexOf(name);
   return index >= 0 ? rest[index + 1] : undefined;
 };
-const [agreementPath] = positional;
+const flags = ['--repo', '--out', '--pnpm'];
+const positional = rest.filter((arg, index) => !arg.startsWith('--') && !flags.includes(rest[index - 1] ?? ''));
+const [agreementPath, ...extra] = positional;
 const repoPath = flag('--repo');
 const outDir = flag('--out');
+if (extra.length > 0) usage(`unexpected argument ${extra[0]}`);
 if (agreementPath === undefined || repoPath === undefined || outDir === undefined) usage();
 
 try {

@@ -97,23 +97,26 @@ export function exportBox(options: ExportOptions): ExportResult {
   mkdirSync(outDir, { recursive: true });
 
   const files: BoxManifest['files'][number][] = [];
-  const ship = (box: string, owner: string | null, origin: 'runnable' | 'editable' | 'generated', content: Buffer): void => {
+  const written = new Set<string>();
+  const ship = (box: string, owner: string | null, origin: 'runnable' | 'editable' | 'generated', content: Buffer | string, record: boolean): void => {
+    if (written.has(box.toLowerCase())) throw new ExportFailed(`two inputs map to the same package path ${box}`);
+    written.add(box.toLowerCase());
     write(outDir, box, content);
-    files.push({ box, owner, origin, sha256: sha256(content), bytes: content.length });
+    if (record) files.push({ box, owner, origin, sha256: sha256(content), bytes: typeof content === 'string' ? Buffer.byteLength(content) : content.length });
   };
   for (const file of selection.files) {
     if (file.origin === 'generated') {
-      ship(file.box, file.owner, 'generated', Buffer.from(generate(file.generated ?? ''), 'utf8'));
+      ship(file.box, file.owner, 'generated', generate(file.generated ?? ''), true);
       continue;
     }
-    ship(file.box, file.owner, file.origin, readFileSync(join(sourceRoot, file.owner)));
+    ship(file.box, file.owner, file.origin, readFileSync(join(sourceRoot, file.owner)), true);
   }
 
   const manifestText = packageManifest(agreement);
-  write(outDir, 'package.json', manifestText);
-  write(outDir, 'tsconfig.json', tsconfigJson());
-  for (const check of agreement.evaluator) write(outDir, check.box, generate(check.generator));
-  write(outDir, 'pnpm-lock.yaml', resolveLockfile(manifestText, options.pnpm));
+  ship('package.json', null, 'generated', manifestText, false);
+  ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
+  for (const check of agreement.evaluator) ship(check.box, null, 'generated', generate(check.generator), false);
+  ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
 
   const inventory = inventoryCount(sourceRoot, agreement.inventoryExcludePrefixes);
   const shippedOwner = files.filter(file => file.origin !== 'generated').length;
@@ -135,7 +138,7 @@ export function exportBox(options: ExportOptions): ExportResult {
     submission: { format: 'editable-overlay', editable, instructions: agreement.submission.instructions },
     disclosure: { shippedOwnerFiles: shippedOwner, inventoryFiles: inventory, share: inventory === 0 ? 0 : shippedOwner / inventory }
   };
-  write(outDir, 'box.json', JSON.stringify(manifest, null, 2) + '\n');
+  ship('box.json', null, 'generated', JSON.stringify(manifest, null, 2) + '\n', false);
 
   const produced: string[] = [];
   const walk = (dir: string): void => {
