@@ -28,22 +28,28 @@ const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];
 const RUN_DB_PREFIX = 'box_test_';
 const CONNECTION_DEADLINE_MS = 10000;
 
-async function dropDatabase(adminUrl: string, database: string): Promise<void> {
-  const admin = new Pool({ connectionString: adminUrl, max: 1, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
+interface Server { host: string; port: number; user: string; password: string; database: string }
+
+async function dropDatabase(server: Server, database: string): Promise<void> {
+  const admin = new Pool({ ...server, max: 1, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
   try { await admin.query('DROP DATABASE IF EXISTS ' + database + ' WITH (FORCE)'); }
   finally { await admin.end().catch(() => undefined); }
 }
 
 // The database is disposable: it is created per call on a loopback server and dropped when the returned pool ends.
+// pg never sees the URL: its parser lets query parameters such as host override the validated hostname, so the
+// URL may carry none and every pool is built from the explicit fields validated here.
 export async function migratedPool(): Promise<{ pool: PgPool; database: string }> {
   const adminUrl = process.env.BOX_TEST_DATABASE_URL;
   if (typeof adminUrl !== 'string' || !adminUrl.startsWith('postgres://')) throw new Error('BOX_TEST_DATABASE_URL is not configured.');
   const runId = process.env.BOX_TEST_RUN_ID;
   if (typeof runId !== 'string' || !/^[A-Za-z0-9_.-]{4,64}$/.test(runId)) throw new Error('BOX_TEST_RUN_ID is not configured.');
+  if (/[?#]/.test(adminUrl)) throw new Error('BOX_TEST_DATABASE_URL must not carry a query or fragment.');
   const url = new URL(adminUrl);
   if (!LOOPBACK_HOSTS.includes(url.hostname)) throw new Error('BOX_TEST_DATABASE_URL is not a loopback database.');
+  const server: Server = { host: url.hostname.replace(/^\[|\]$/g, ''), port: url.port === '' ? 5432 : Number(url.port), user: decodeURIComponent(url.username), password: decodeURIComponent(url.password), database: decodeURIComponent(url.pathname.slice(1)) || 'postgres' };
   const database = RUN_DB_PREFIX + runId.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 24) + '_' + hex(8);
-  const admin = new Pool({ connectionString: adminUrl, max: 1, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
+  const admin = new Pool({ ...server, max: 1, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
   let pool: PgPool | undefined;
   let created = false;
   try {
@@ -56,16 +62,15 @@ export async function migratedPool(): Promise<{ pool: PgPool; database: string }
     if (!ready) throw lastReadinessError;
     await admin.query('CREATE DATABASE ' + database);
     created = true;
-    url.pathname = '/' + database;
-    pool = new Pool({ connectionString: url.toString(), max: 4, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
+    pool = new Pool({ ...server, database, max: 4, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
     await migrate(drizzle(pool), { migrationsFolder: fileURLToPath(new URL('../../../services/private-api/db/migrations/', import.meta.url)) });
     const end = pool.end.bind(pool);
     let ended: Promise<void> | undefined;
-    pool.end = () => ended ??= end().finally(() => dropDatabase(adminUrl, database));
+    pool.end = () => ended ??= end().finally(() => dropDatabase(server, database));
     return { pool, database };
   } catch (error) {
     if (pool !== undefined) await pool.end().catch(() => undefined);
-    if (created) await dropDatabase(adminUrl, database).catch(() => undefined);
+    if (created) await dropDatabase(server, database).catch(() => undefined);
     throw error;
   } finally { await admin.end().catch(() => undefined); }
 }
