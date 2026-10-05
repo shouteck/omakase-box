@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { parse } from 'yaml';
 import { describe, expect, it } from 'vitest';
 import { parsePrivateEnvironment } from '../../../services/private-api/bootstrap/environment.js';
@@ -52,5 +54,68 @@ describe('trusted-service configuration (static evidence, not real isolation)', 
     expect(externalRuntime).not.toContain('/services/private-api');
     expect(dockerfile).not.toContain('COPY . .');
     expect(readFileSync('.env.example', 'utf8')).not.toMatch(/PASSWORD=|SECRET=|TOKEN=/);
+  });
+});
+
+describe('host test mode (SYNTHETIC_HOST_TEST, never set by the container compose file)', () => {
+  const secret = join(tmpdir(), 'synthetic-host-test-secret');
+  const privateHost = {
+    SYNTHETIC_HOST_TEST: 'true',
+    PRIVATE_DATABASE_HOST: '127.0.0.1',
+    PRIVATE_DATABASE_NAME: 'private_task',
+    PRIVATE_DATABASE_USER: 'private_service',
+    PRIVATE_DATABASE_PASSWORD_FILE: secret,
+    PRIVATE_STORAGE_ROOT: join(tmpdir(), 'synthetic-private-storage'),
+    PRIVATE_SESSION_KEY_FILE: secret,
+    PRIVATE_OWNER_BOOTSTRAP_FILE: secret,
+    PRIVATE_RELEASE_KEY_FILE: secret,
+    PRIVATE_BRIDGE_KEY_FILE: secret,
+    PRIVATE_ASSIGNMENT_KEY_FILE: secret,
+    PRIVATE_RECEIPT_PUBLIC_KEY_FILE: secret,
+    PRIVATE_IMPORT_KEY_FILE: secret,
+    PRIVATE_PERMIT_PUBLIC_KEY_FILE: secret
+  };
+  const externalHost = {
+    SYNTHETIC_HOST_TEST: 'true',
+    EXTERNAL_DATABASE_HOST: '127.0.0.1',
+    EXTERNAL_DATABASE_NAME: 'external_task',
+    EXTERNAL_DATABASE_USER: 'external_service',
+    EXTERNAL_DATABASE_PASSWORD_FILE: secret,
+    EXTERNAL_STORAGE_ROOT: join(tmpdir(), 'synthetic-external-storage'),
+    EXTERNAL_SESSION_KEY_FILE: secret,
+    EXTERNAL_RELEASE_PUBLIC_KEY_FILE: secret,
+    EXTERNAL_BRIDGE_KEY_FILE: secret,
+    EXTERNAL_ASSIGNMENT_PUBLIC_KEY_FILE: secret,
+    EXTERNAL_RECEIPT_KEY_FILE: secret,
+    EXTERNAL_PERMIT_KEY_FILE: secret,
+    EXTERNAL_IMPORT_PUBLIC_KEY_FILE: secret
+  };
+  it('accepts loopback database hosts and temp-directory file paths', () => {
+    expect(parsePrivateEnvironment(privateHost).PRIVATE_DATABASE_HOST).toBe('127.0.0.1');
+    expect(parseExternalEnvironment(externalHost).EXTERNAL_DATABASE_HOST).toBe('127.0.0.1');
+  });
+  it.each(['db-private', 'postgres.internal', '0.0.0.0', '10.0.0.9', 'localhost.evil.com'])('rejects non-loopback private database host %s', host => {
+    expect(() => parsePrivateEnvironment({ ...privateHost, PRIVATE_DATABASE_HOST: host })).toThrow();
+    expect(() => parseExternalEnvironment({ ...externalHost, EXTERNAL_DATABASE_HOST: host })).toThrow();
+  });
+  it('rejects secret and storage paths outside the OS temp directory', () => {
+    for (const path of ['/run/secrets/private_session_key', '/data/private', 'relative-secret', join(process.cwd(), 'synthetic-secret')]) {
+      expect(() => parsePrivateEnvironment({ ...privateHost, PRIVATE_SESSION_KEY_FILE: path })).toThrow();
+      expect(() => parsePrivateEnvironment({ ...privateHost, PRIVATE_STORAGE_ROOT: path })).toThrow();
+      expect(() => parseExternalEnvironment({ ...externalHost, EXTERNAL_SESSION_KEY_FILE: path })).toThrow();
+    }
+  });
+  it('rejects host-shaped configuration without the gate and keeps names and users pinned', () => {
+    const { SYNTHETIC_HOST_TEST: _gate, ...ungated } = privateHost;
+    expect(() => parsePrivateEnvironment(ungated)).toThrow();
+    expect(() => parsePrivateEnvironment({ ...privateHost, PRIVATE_DATABASE_NAME: 'postgres' })).toThrow();
+    expect(() => parsePrivateEnvironment({ ...privateHost, PRIVATE_DATABASE_USER: 'postgres' })).toThrow();
+  });
+  it('refuses the container wide-listen flag in host test mode', () => {
+    expect(() => parsePrivateEnvironment({ ...privateHost, TRUSTED_CONTAINER_LISTEN: 'true' })).toThrow();
+    expect(() => parseExternalEnvironment({ ...externalHost, TRUSTED_CONTAINER_LISTEN: 'true' })).toThrow();
+  });
+  it('still forbids private-looking secret paths in the external service', () => {
+    expect(() => parseExternalEnvironment({ ...externalHost, EXTERNAL_SESSION_KEY_FILE: join(tmpdir(), 'private_secret') })).toThrow();
   });
 });

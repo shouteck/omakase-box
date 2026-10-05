@@ -46,11 +46,12 @@ Milestone: K2 · Station: service-data · Base: master after K2a · Branch: `wav
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict:
+- Worker: · Reviewer: pass (independent; did not write the code)
+- Commit: 7583c0825ad4f2ce3307986314dad4d52bd1a3d0
+- Verify: `verify 7583c08 PASS check=0 build=0 test:auth=0 test:planner=0 test:e2e=0 db=embedded 253s` — run by the reviewer on the candidate, and a second consecutive identical PASS (251s); auth-live/intake-live each ran 4 times across both runs with no 429.
+- Verdict: PASS (test-verified)
 - Lenses:
-- Method:
-- Findings and limits:
-- Merged: · Resources removed:
+  - **Security:** attacked `SYNTHETIC_HOST_TEST` directly against the real parsers. Non-loopback DB hosts (10.0.0.9, 0.0.0.0, 192.168.1.5, localhost.evil.com, decimal 2130706433) all rejected; only 127.x/localhost/::1/[::1] accepted. File paths confined under the OS temp dir — `..` traversal, temp-sibling prefix dirs and repo paths all rejected. `TRUSTED_CONTAINER_LISTEN` + the gate throws ('cannot publish beyond loopback'); `SYNTHETIC_HOST_TEST_BIND` is validated to 127.x and ignored without the gate; `SYNTHETIC_HOST_TEST='1'` or absent falls to the untouched container schema (strict literals), so container mode is unchanged and the compose file never sets the gate. Host/Origin/CSRF/session/rate-limit code untouched (no diff in server.ts, cookie-policy, packages/); secrets are per-run 0o600 files under a mkdtemp dir. TCP mirrors bind only ::1/127.0.0.1, forward only to the loopback target, and are socket-tracked + closed in cleanup; they die with the harness process and service children carry a stdin-watchdog for killed runs.
+- Method: read the full `git diff master...7583c08`; ran `node scripts/verify.mjs test:auth test:planner test:e2e` twice in the foreground on the exact SHA (both PASS); exercised `parsePrivateEnvironment`/`parseExternalEnvironment` with 19 hostile inputs beyond the added vitest cases; diffed asserted JSON keys and assert lines vs master (identical — only the docker-exit-code asserts moved into `runFixture` throwing on non-zero); post-run residue sweep.
+- Findings and limits: no leftovers — only Docker Desktop's backend (PID 98996, disclosed) holds 127.0.0.1:4000/4001; no mirror/service/postgres listeners, no `k2a-host-runtime-*`/`ptm-host-*`/`kitchen-verify-pg-*` temp dirs, no `host-*.mjs` bundles, databases dropped with the embedded server. Minor: mirror bind failure is silent (a held loopback port just skips that mirror — failure direction is a test error, not exposure); unknown env keys are ignored by the selector, matching master's behaviour. `tests/e2e/intent/scripts.d.ts` deletion is safe — no remaining docker.mjs/synthetic-runtime.mjs imports and `tsc --noEmit` passes in check. Host: Windows/Cursor agent; model: Claude.
+- Merged: · Resources removed: none required — per-run processes, mirrors, temp dirs and databases self-cleaned.

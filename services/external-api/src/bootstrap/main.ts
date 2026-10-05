@@ -33,7 +33,10 @@ try {
   }
   const app = createExternalApi(auth);
   app.addHook('onClose', async () => { await pool?.end(); });
-  const host = !synthetic && process.env.TRUSTED_CONTAINER_LISTEN === 'true' ? '0.0.0.0' : '127.0.0.1';
+  // Host test mode may move the loopback bind (see the private bootstrap); only 127.x is accepted.
+  const hostTestBind = process.env.SYNTHETIC_HOST_TEST === 'true' ? process.env.SYNTHETIC_HOST_TEST_BIND : undefined;
+  if (hostTestBind !== undefined && !/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostTestBind)) throw new Error('Host test bind must be a 127.x loopback address.');
+  const host = !synthetic && process.env.TRUSTED_CONTAINER_LISTEN === 'true' ? '0.0.0.0' : hostTestBind ?? '127.0.0.1';
   await app.listen({ host, port: 4001 });
   console.log('Contributor API listening on port 4001; MVP delivery remains unverified.');
   for (const signal of ['SIGINT','SIGTERM'] as const) process.on(signal, () => { void app.close(); });

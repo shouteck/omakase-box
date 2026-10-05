@@ -3,17 +3,18 @@ import { randomUUID } from 'node:crypto';
 import { createServer, request } from 'node:http';
 import { crc32, deflateSync } from 'node:zlib';
 import { chromium } from '@playwright/test';
-import { docker } from './docker.mjs';
-import { composeArguments } from './synthetic-runtime.mjs';
+import { acquireHostRuntime } from './host-test-runtime.mjs';
 
-async function fixture(service, entry, command, flag='SYNTHETIC_AUTH_FIXTURE') {
-  const result=await docker([...composeArguments,'exec','-T','--env',`${flag}=private-task-mvp-synthetic`,'--workdir',`/workspace/services/${service}`,service,'node',`dist/${entry}.js`],{input:JSON.stringify(command)});
-  assert.equal(result.code,0,'Synthetic intake fixture failed.');return JSON.parse(result.stdout);
-}
+// Both APIs run as host children on 127.0.0.2 (see verify-auth.mjs); contract headers unchanged.
+const BIND='127.0.0.2';
+const runtime=await acquireHostRuntime();
+try {
+await runtime.startServices({ host: BIND });
+const fixture=(service,entry,command,flag)=>runtime.runFixture(service,entry,command,flag);
 function http(scope,method,path,body,headers={}) {
   const port=scope==='private'?4000:4001, host=scope==='private'?'private.localhost':'contributor.localhost', origin=scope==='private'?'http://private.localhost:3000':'http://contributor.localhost:3001';
   return new Promise((resolve,reject)=>{
-    const req=request({host:'127.0.0.1',port,path,method,headers:{Host:`${host}:${port}`,Origin:origin,'Content-Type':'application/json',...headers},timeout:30000},response=>{
+    const req=request({host:BIND,port,path,method,headers:{Host:`${host}:${port}`,Origin:origin,'Content-Type':'application/json',...headers},timeout:30000},response=>{
       const chunks=[];let length=0;
       response.on('data',chunk=>{length+=chunk.length;if(length>2097152){response.destroy(new Error('Bounded intake response exceeded.'));return;}chunks.push(chunk);});
       response.on('error',reject);response.on('end',()=>{const bytes=Buffer.concat(chunks);resolve({status:response.statusCode,bytes,body:response.headers['content-type']?.startsWith('application/json')?JSON.parse(bytes.toString()):null,headers:response.headers});});
@@ -26,7 +27,7 @@ async function login(scope,account) {
 }
 function chunk(name,bytes){const length=Buffer.alloc(4);length.writeUInt32BE(bytes.length);const body=Buffer.concat([Buffer.from(name),bytes]);const sum=Buffer.alloc(4);sum.writeUInt32BE(crc32(body));return Buffer.concat([length,body,sum]);}
 function png(padded=false){const header=Buffer.alloc(13);header.writeUInt32BE(1,0);header.writeUInt32BE(1,4);header[8]=8;header[9]=6;const parts=[Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(Buffer.from([0,255,0,0,255])))];const end=chunk('IEND',Buffer.alloc(0));if(padded){const size=parts.reduce((sum,part)=>sum+part.length,0)+end.length;parts.push(chunk('tEXt',Buffer.concat([Buffer.from('Synthetic\0'),Buffer.alloc(1048576-size-12-10,65)])));}return Buffer.concat([...parts,end]);}
-const seed=await fixture('private-api','fixture',{action:'seed'}), other=await fixture('private-api','fixture',{action:'seed'}), externalSeed=await fixture('external-api','fixture',{action:'seed'});
+const seed=await fixture('private-api','auth/fixture',{action:'seed'}), other=await fixture('private-api','auth/fixture',{action:'seed'}), externalSeed=await fixture('external-api','auth/fixture',{action:'seed'});
 const requesterAccount=seed.accounts.find(account=>account.role==='requester');
 const owner=await login('private',seed.accounts.find(account=>account.role==='owner')), requester=await login('private',requesterAccount), operator=await login('private',seed.accounts.find(account=>account.role==='operator')), stranger=await login('private',other.accounts.find(account=>account.role==='requester')), contributor=await login('external',externalSeed.accounts[0]);
 assert.equal((await http('private','POST','/v1/snapshots',{sourceId:'synthetic-shop'},requester)).status,403);
@@ -63,8 +64,8 @@ const largeRequest=await http('private','POST','/v1/requests',{snapshotId:regist
 const largeImage=png(true);assert.equal(largeImage.length,1048576);const byteRace=await Promise.all(Array.from({length:9},()=>upload(largeImage,'image/png',requester,largeRequest.body.id)));assert.equal(byteRace.filter(result=>result.status===201).length,8);assert.equal(byteRace.filter(result=>result.status===429).length,1);
 const shells=[];let browser;
 try {
-  for(const [host,port] of [['private.localhost',3000],['contributor.localhost',3001]]){const shell=createServer((request,response)=>{if(request.headers.host!==`${host}:${port}`||request.url!=='/synthetic-intake'){response.writeHead(404);response.end();return;}response.writeHead(200,{'Content-Type':'text/html','Cache-Control':'no-store'});response.end('<!doctype html><title>Synthetic intake browser</title><script>window.syntheticEvidenceExecuted=false</script>');});await new Promise((resolve,reject)=>{shell.once('error',reject);shell.listen(port,'127.0.0.1',resolve);});shells.push(shell);}
-  browser=await chromium.launch({headless:true,args:['--host-resolver-rules=MAP private.localhost 127.0.0.1,MAP contributor.localhost 127.0.0.1']});const context=await browser.newContext();const page=await context.newPage();
+  for(const [host,port] of [['private.localhost',3000],['contributor.localhost',3001]]){const shell=createServer((request,response)=>{if(request.headers.host!==`${host}:${port}`||request.url!=='/synthetic-intake'){response.writeHead(404);response.end();return;}response.writeHead(200,{'Content-Type':'text/html','Cache-Control':'no-store'});response.end('<!doctype html><title>Synthetic intake browser</title><script>window.syntheticEvidenceExecuted=false</script>');});await new Promise((resolve,reject)=>{shell.once('error',reject);shell.listen(port,BIND,resolve);});shells.push(shell);}
+  browser=await chromium.launch({headless:true,args:[`--host-resolver-rules=MAP private.localhost ${BIND},MAP contributor.localhost ${BIND}`]});const context=await browser.newContext();const page=await context.newPage();
   await page.goto('http://private.localhost:3000/synthetic-intake');
   const browserLogin=await page.evaluate(async username=>{const response=await fetch('http://private.localhost:4000/v1/auth/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password:'synthetic-auth-password-only'})});return response.status;},requesterAccount.username);assert.equal(browserLogin,200);
   const downloadPromise=page.waitForEvent('download');await page.evaluate(url=>{window.location.href=url;},`http://private.localhost:4000/v1/requests/${requestId}/evidence/${text.body.id}`);const downloaded=await downloadPromise;assert.equal(downloaded.suggestedFilename(),`${text.body.id}.txt`);assert.equal(await page.evaluate(()=>window.syntheticEvidenceExecuted),false);
@@ -74,6 +75,7 @@ try {
   const jpegRequest=await http('private','POST','/v1/requests',{snapshotId:registered.body.id,goal:'Synthetic JPEG journey'},requester);assert.equal(jpegRequest.status,201);assert.equal((await upload(Buffer.from(jpeg,'base64'),'image/jpeg',requester,jpegRequest.body.id)).status,201);
   await context.close();
 } finally {await browser?.close();for(const shell of shells)await new Promise((resolve,reject)=>shell.close(error=>error?reject(error):resolve()));}
-const immutable=await fixture('private-api','intake-fixture',{cookie:requester.Cookie.split('=')[1],requestId,snapshotId:registered.body.id,evidenceId:text.body.id},'SYNTHETIC_INTAKE_FIXTURE');assert.equal(immutable.immutableObjectsSnapshotsRequestsEvidenceProvenance,true);assert.equal(immutable.revokedSessionAfterAuthenticationDenied,true);
+const immutable=await fixture('private-api','requests/intake-fixture',{cookie:requester.Cookie.split('=')[1],requestId,snapshotId:registered.body.id,evidenceId:text.body.id},'SYNTHETIC_INTAKE_FIXTURE');assert.equal(immutable.immutableObjectsSnapshotsRequestsEvidenceProvenance,true);assert.equal(immutable.revokedSessionAfterAuthenticationDenied,true);
 assert.equal((await http('private','GET',`/v1/requests/${requestId}`,undefined,requester)).status,401);
 console.log(JSON.stringify({assurance:'tested',scope:'synthetic actual DB/API/browser private evidence',pinnedSnapshots:'immutable_deduplicated',privateProvenance:'not_in_dtos_or_planner_input',requestOwnership:'enforced',sessionAndCsrf:'enforced',textPngJpeg:'bounded_structure_validated',uploadCountAndByteRace:'bounded',evidenceDownloads:'attachment_not_executed',contributorAccess:'denied',plannerRetrieval:'bounded_no_image_understanding',immutableSqlAndRevokedSession:'tested',realCustomerData:false}));
+} finally { await runtime.cleanup(); }

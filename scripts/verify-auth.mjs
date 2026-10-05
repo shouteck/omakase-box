@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict';
 import { createServer, request } from 'node:http';
-import { docker } from './docker.mjs';
-import { composeArguments } from './synthetic-runtime.mjs';
+import { acquireHostRuntime } from './host-test-runtime.mjs';
 
-async function fixture(service, command) {
-  const result = await docker([...composeArguments,'exec','-T','--env','SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic','--workdir',`/workspace/services/${service}`,service,'node','dist/fixture.js'], { input: JSON.stringify(command) });
-  assert.equal(result.code,0,'Synthetic account setup failed.'); return JSON.parse(result.stdout);
-}
+// Both APIs run as host children on 127.0.0.2 (Docker Desktop can hold 127.0.0.1:4000); the
+// Host/Origin contract headers stay exactly as the container stack presented them.
+const BIND='127.0.0.2';
+const runtime=await acquireHostRuntime();
+try {
+await runtime.startServices({ host: BIND });
+const fixture=(service,command)=>runtime.runFixture(service,'auth/fixture',command);
 function http(scope,method,path,body,headers={}) {
   const port=scope==='private'?4000:4001; const host=scope==='private'?'private.localhost':'contributor.localhost'; const origin=scope==='private'?'http://private.localhost:3000':'http://contributor.localhost:3001';
-  return new Promise((resolve,reject)=>{const req=request({host:'127.0.0.1',port,path,method,headers:{Host:`${host}:${port}`,Origin:origin,'Content-Type':'application/json',...headers},timeout:5000},response=>{let data='';response.on('data',chunk=>{data+=chunk;});response.on('end',()=>resolve({status:response.statusCode,body:JSON.parse(data||'null'),headers:response.headers}));});req.on('error',reject);req.on('timeout',()=>req.destroy(new Error('Auth request timeout.')));req.end(body===undefined?undefined:JSON.stringify(body));});
+  return new Promise((resolve,reject)=>{const req=request({host:BIND,port,path,method,headers:{Host:`${host}:${port}`,Origin:origin,'Content-Type':'application/json',...headers},timeout:5000},response=>{let data='';response.on('data',chunk=>{data+=chunk;});response.on('end',()=>resolve({status:response.statusCode,body:JSON.parse(data||'null'),headers:response.headers}));});req.on('error',reject);req.on('timeout',()=>req.destroy(new Error('Auth request timeout.')));req.end(body===undefined?undefined:JSON.stringify(body));});
 }
 const privateSeed=await fixture('private-api',{action:'seed'}); const externalSeed=await fixture('external-api',{action:'seed'});
 const owner=privateSeed.accounts.find(account=>account.role==='owner'); const requester=privateSeed.accounts.find(account=>account.role==='requester'); const operator=privateSeed.accounts.find(account=>account.role==='operator');
@@ -62,10 +64,10 @@ try {
       response.writeHead(200,{'Content-Type':'text/html','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
       response.end('<!doctype html><title>Synthetic authentication browser</title>');
     });
-    await new Promise((resolve,reject)=>{shell.once('error',reject);shell.listen(port,'127.0.0.1',resolve);});
+    await new Promise((resolve,reject)=>{shell.once('error',reject);shell.listen(port,BIND,resolve);});
     shells.push(shell);
   }
-  browser=await chromium.launch({headless:true,args:['--host-resolver-rules=MAP private.localhost 127.0.0.1,MAP contributor.localhost 127.0.0.1']});
+  browser=await chromium.launch({headless:true,args:[`--host-resolver-rules=MAP private.localhost ${BIND},MAP contributor.localhost ${BIND}`]});
   const context=await browser.newContext();const page=await context.newPage();const contributorCookies=[];
   page.on('request',request=>{if(request.url().startsWith('http://contributor.localhost:4001/'))contributorCookies.push(request.allHeaders().then(headers=>headers.cookie??''));});
   async function browserCall(scope,path,body,csrf) {
@@ -98,3 +100,4 @@ await fixture('private-api',{action:'expire',id:operator.id});assert.equal((awai
 await fixture('external-api',{action:'expire',id:externalSeed.accounts[1].id});assert.equal((await http('external','GET','/v1/auth/session',undefined,otherContributor)).status,401);
 const freshContributor=await login('external',externalSeed.accounts[1]);await fixture('external-api',{action:'disable',id:externalSeed.accounts[1].id});assert.equal((await http('external','GET','/v1/auth/session',undefined,freshContributor)).status,401);
 console.log(JSON.stringify({assurance:'tested',scope:'synthetic actual API/DB auth',signedSessionIsolation:'tested',clientRoleInjection:'denied',csrf:'required',requesterOperatorAuthority:'denied',invitationReplayRevocationExpiry:'tested',disabledAccounts:'denied',expiredSessions:'denied',publicProjection:'allowlisted',resourceOwnership:'tested',actualBrowserSignedSessions:'tested',logoutRevocation:'tested',syntheticStructuralResourcesNotReleaseApproval:true,realCustomerData:false},null,2));
+} finally { await runtime.cleanup(); }
