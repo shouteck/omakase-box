@@ -22,7 +22,9 @@ export function docker(args, { input, timeout = 120000 } = {}) {
   if (transport !== undefined) {
     if (transport !== 'mailbox') return Promise.reject(new Error('Unknown verification transport.'));
     const mailbox = process.env.BOX_VERIFICATION_MAILBOX;
-    if (typeof mailbox !== 'string' || mailbox.length === 0 || mailbox.length > 512 || mailbox.includes('..') || /[\0"'`$;|&<>\\]/.test(mailbox)) return Promise.reject(new Error('Unconfigured verification mailbox.'));
+    // Backslash is the path separator on Windows only; everywhere else it stays rejected.
+    const forbidden = process.platform === 'win32' ? /[\0"'`$;|&<>]/ : /[\0"'`$;|&<>\\]/;
+    if (typeof mailbox !== 'string' || mailbox.length === 0 || mailbox.length > 512 || mailbox.includes('..') || forbidden.test(mailbox)) return Promise.reject(new Error('Unconfigured verification mailbox.'));
     const profileActive = process.env.BOX_VERIFICATION_PROFILE === VERIFICATION_PROFILE;
     const runId = profileActive ? process.env.BOX_VERIFICATION_RUN_ID : undefined;
     const effectiveTimeout = profileActive ? Math.min(timeout, READY_PROFILE_TRANSPORT_DEADLINE_MS) : timeout;

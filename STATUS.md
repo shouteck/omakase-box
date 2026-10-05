@@ -1,12 +1,12 @@
 # Status
 
-Replaced at every wave close. Last written 5 October 2026, 20:40 (+08), by Claude as CTO, at the switch to the lean kitchen.
+Replaced at every wave close. Last written 5 October 2026, 21:05 (+08), by Claude as CTO, at the close of K1.
 
 ## Now
 
-- **Accepted on master:** B0, B1.1 (versioned Box store), D1.1 (delegation design), and the lean kitchen itself.
-- **In flight:** K1, verify on the host without Docker. Brief: [waves/K1.md](waves/K1.md).
-- **Held:** D1.2 (create and approve a Box from a request). The CEO held the old kitchen's wave W005 after 24 review rounds. Its unaccepted code and records are on the local branch `wave/D1.2` (not pushed).
+- **Accepted on master:** B0, B1.1 (versioned Box store), D1.1 (delegation design), the lean kitchen, K1 (verification on the host with an embedded Postgres, no Docker).
+- **In flight:** nothing.
+- **Held:** D1.2 (create and approve a Box from a request). Unaccepted code and the old kitchen's records are on the local branch `wave/D1.2` (not pushed).
 
 ## Approved by the CEO
 
@@ -16,17 +16,16 @@ Replaced at every wave close. Last written 5 October 2026, 20:40 (+08), by Claud
 
 ## Next
 
-1. **K1** closes.
-2. **D1.2 resumes** from `wave/D1.2`: rebase onto master, move its tests to the disposable database, drop its container harness, review and verify.
-3. **D2 - the Box as a folder and a command line.** Proposal to the CEO when D1.2 closes.
+1. **D1.2 resumes** from `wave/D1.2` (already approved): rebase onto master, move its tests to the disposable database, drop its container harness, review and verify.
+2. **D2 - the Box as a folder and a command line.** Proposal to the CEO when D1.2 closes.
 
 ## Known problems
 
-- `packages/box-contracts` is missing from `pnpm-lock.yaml`; on the host `test:box-contracts` fails with "Cannot find package 'zod'". K1 fixes it.
-- `tests/box/auth/support.ts` only accepts a database on a removed container's hostname. K1 fixes it.
-- 16 tests named `*-live.test.ts` shell into the old `private-task-mvp-synthetic` container stack, including some inside `check`. That stack is left running for them until they are ported.
-- `scripts/box-verification/` and `tests/box/verification/` are the old container harness. Unused; remove in a later cleanup wave.
+- 16 tests named `*-live.test.ts` shell into the old `private-task-mvp-synthetic` container stack, including some inside `check`. That stack is left running for them. `auth-live` returns HTTP 429 when `check` runs back to back; wait about five minutes between full verify runs.
+- `scripts/box-verification/` and `tests/box/verification/` are the old container harness. Unused; remove in a cleanup wave together with the `BOX_VERIFICATION_PROFILE` switches.
+- `embedded-postgres` is a beta wrapper release, and its install-policy entry covers Windows only.
 - Three source tarballs under `.execution/box-v4/evidence/B1.1/` are on disk, ignored by Git.
+- Worker and reviewer were both Claude Opus 5.5 on K1. Use a different host for one of the roles when available.
 
 ## Decisions waiting for the CEO
 

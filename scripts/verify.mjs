@@ -1,12 +1,16 @@
-// The kitchen's single acceptance command: node scripts/verify.mjs [--only] [--db=auto|docker|none] [suite...]
-// Runs check, build and the named package scripts on the host against a disposable Postgres,
+// The kitchen's single acceptance command: node scripts/verify.mjs [--only] [--db=auto|embedded|docker|none] [suite...]
+// Runs check, build and the named package scripts on the host against a disposable Postgres (embedded by default;
+// KITCHEN_PG_URL under auto uses a provided server, --db=docker a throwaway container),
 // writes one log per step plus summary.json under .kitchen/runs/, and exits 0 only when every step passed
 // on a committed tree.
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { createWriteStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createWriteStream, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { docker } from './docker.mjs';
 import { root } from './process.mjs';
 
@@ -16,7 +20,7 @@ const dbMode = (args.find(arg => arg.startsWith('--db=')) ?? '--db=auto').slice(
 const suites = args.filter(arg => !arg.startsWith('--'));
 const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const unknown = suites.filter(name => !Object.hasOwn(scripts, name));
-if (unknown.length || !['auto', 'docker', 'none'].includes(dbMode)) {
+if (unknown.length || !['auto', 'embedded', 'docker', 'none'].includes(dbMode)) {
   console.error(unknown.length ? `Unknown package script: ${unknown.join(', ')}` : `Unknown --db mode: ${dbMode}`);
   process.exit(2);
 }
@@ -57,10 +61,50 @@ async function dockerDatabase() {
     return { kind: 'docker', url: `postgres://postgres:${password}@127.0.0.1:${port}/postgres`, stop };
   } catch (error) { await stop(); throw error; }
 }
+const freePort = () => new Promise((resolve, reject) => {
+  const probe = createServer().once('error', reject).listen(0, '127.0.0.1', () => { const { port } = probe.address(); probe.close(() => resolve(port)); });
+});
+// embedded-postgres only carries the PostgreSQL binaries here. pg_ctl starts the server because postgres.exe refuses an
+// elevated Windows account, which pg_ctl handles by dropping privileges itself.
+const tool = (command, commandArgs) => new Promise(resolve => {
+  const child = spawn(command, commandArgs, { stdio: 'ignore', windowsHide: true });
+  child.on('error', () => resolve(127));
+  child.on('exit', code => resolve(code ?? 1));
+});
+async function embeddedDatabase() {
+  const binaries = `@embedded-postgres/${process.platform === 'win32' ? 'windows' : process.platform}-${process.arch}`;
+  const { initdb, pg_ctl: pgCtl } = await import(pathToFileURL(createRequire(import.meta.resolve('embedded-postgres')).resolve(binaries)).href);
+  const directory = mkdtempSync(join(tmpdir(), 'kitchen-verify-pg-'));
+  const data = join(directory, 'data');
+  const serverLog = join(directory, 'server.log');
+  const password = randomBytes(16).toString('hex');
+  let started = false;
+  let stopped;
+  const stop = () => stopped ??= (async () => {
+    if (started && await tool(pgCtl, ['stop', '-D', data, '-m', 'fast', '-w', '-t', '30']) !== 0) await tool(pgCtl, ['stop', '-D', data, '-m', 'immediate', '-w', '-t', '30']);
+    rmSync(directory, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 });
+  })();
+  db = { kind: 'embedded', stop }; // registered before startup so a signal during initdb still cleans up
+  try {
+    const passwordFile = join(directory, 'pwfile');
+    writeFileSync(passwordFile, password + '\n', { mode: 0o600 });
+    const initialised = await tool(initdb, ['-D', data, '-U', 'postgres', '--auth=scram-sha-256', `--pwfile=${passwordFile}`, '--encoding=UTF8', '--locale=C']);
+    rmSync(passwordFile, { force: true });
+    if (initialised !== 0) throw new Error(`initdb exited ${initialised}.`);
+    const port = await freePort();
+    started = true;
+    if (await tool(pgCtl, ['start', '-D', data, '-l', serverLog, '-w', '-t', '60', '-o', `-p ${port} -c listen_addresses=127.0.0.1`]) !== 0) {
+      let tail = '';
+      try { tail = readFileSync(serverLog, 'utf8').trim().split('\n').slice(-3).join(' | '); } catch { /* no server log */ }
+      throw new Error(`pg_ctl start failed${tail ? `: ${tail}` : '.'}`);
+    }
+    return { kind: 'embedded', url: `postgres://postgres:${password}@127.0.0.1:${port}/postgres`, stop };
+  } catch (error) { await stop(); throw new Error(`Embedded Postgres did not start: ${error instanceof Error ? error.message : String(error)}`); }
+}
 async function database() {
   if (dbMode === 'none') return { kind: 'none', stop: async () => undefined };
   if (dbMode === 'auto' && process.env.KITCHEN_PG_URL) return { kind: 'provided', url: process.env.KITCHEN_PG_URL, stop: async () => undefined };
-  return dockerDatabase();
+  return dbMode === 'docker' ? dockerDatabase() : embeddedDatabase();
 }
 
 const startedAt = new Date();
