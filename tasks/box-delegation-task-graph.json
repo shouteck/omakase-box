@@ -534,14 +534,15 @@
       "deliverables": [
         "A GitHub Actions workflow on the private repository runs a frozen install and node scripts/verify.mjs --full on a Linux runner and uploads the run logs. It runs on pushes to master that change code, tests, scripts or dependencies; pushes that touch only documents, kitchen files, briefs or agent profiles do not trigger it.",
         "The install policy gains the Linux entry embedded-postgres needs. No secrets, no deploys, no other triggers, no paid runners.",
-        "A failed run is surfaced at the next kickoff: START reconciliation reads the latest run result and STATUS says so.",
+        "The head chef reads the latest run result with the gh command line at every kickoff and after every merge to master, including overnight. A red run on master comes first: no new wave starts until a fix wave has made it green, and STATUS.md says so while it is red. START.md and KITCHEN.md gain one line each for this, written by the head chef when the wave closes.",
         "Stay inside the free allowance (2,000 Linux minutes and 500 MB a month for a private repository): a newer push cancels a run still in progress, logs are kept for three days, and the job has a ten-minute timeout. If runs approach the allowance, switch to one run per wave merge plus one nightly run, and say so in STATUS.md."
       ],
       "acceptance": [
         "A push with a deliberately broken test on a scratch branch (workflow temporarily pointed at it) fails the run; master passes.",
         "The workflow uses only the free tier and no secret is configured.",
         "A document-only push starts no run; a second push while a run is in progress cancels the first.",
-        "The wave file records the minutes one run actually used."
+        "The wave file records the minutes one run actually used.",
+        "With a deliberately red run on a scratch branch standing in for master, a kickoff reports it and declines to start the next wave."
       ],
       "verification": [
         "Reviewer reads the workflow for triggers, permissions and secrets, and checks one real run's log against a local verify on the same commit."
