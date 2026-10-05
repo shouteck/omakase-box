@@ -1,11 +1,11 @@
 # Status
 
-Replaced at every wave close. Last written 5 October 2026, 21:05 (+08), by Claude as CTO, at the close of K1.
+Replaced at every wave close. Last written 5 October 2026, 21:05 (+08), by Claude as CTO, after K1 closed and the D1.2 brief was written.
 
 ## Now
 
 - **Accepted on master:** B0, B1.1 (versioned Box store), D1.1 (delegation design), the lean kitchen, K1 (verification on the host with an embedded Postgres, no Docker).
-- **In flight:** nothing.
+- **In flight:** D1.2 resumption. Brief ready at [waves/D1.2.md](waves/D1.2.md); not yet dispatched. Planned hosts: Devin as CTO and worker, Claude as independent reviewer.
 - **Held:** D1.2 (create and approve a Box from a request). Unaccepted code and the old kitchen's records are on the local branch `wave/D1.2` (not pushed).
 
 ## Approved by the CEO
