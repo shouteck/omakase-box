@@ -23,6 +23,8 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 
 ## Verification
 
+- **Off-machine verify.** Pushes to master run `verify` on GitHub Actions (free tier, master-only, code pushes). The head chef checks `gh run list -R shouteck/omakase-box` at every kickoff and after every merge; a red master run blocks new waves until a fix wave turns it green and STATUS.md names the block while it stands.
+
 `node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, boundary checks, build and the named suites on the host, gives them a disposable Postgres, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
 - The candidate's identity is its commit SHA. Verify refuses to call a run with uncommitted changes acceptable.

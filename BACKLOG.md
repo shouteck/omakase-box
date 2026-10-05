@@ -19,5 +19,6 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - Ports 4000 and 4001 are held by Docker Desktop when it runs; host tests bind 127.0.0.2 with loopback mirrors (`scripts/host-test-runtime.mjs`).
 - `tests/box/delegation/support.ts` caches its run directory per module, so one `delegationPool()` per test file. Fix when a test needs two.
 - `embedded-postgres` is a beta wrapper release and its install-policy entry covers Windows only. K8 needs the Linux entry.
+- Three suites carry host-bound tests excluded from CI (`test:box-package` case-alias, `test:security` absolute-path probe, `test:containers` local-image): a per-file split or linux lane would restore them. From K8.
 - `doctor.mjs` reports the `databases` check as unverified since the synthetic stack was removed. Honest label, not a failure.
 - Cook and pass have been the same model family on every wave so far. Accepted; see "Review" in KITCHEN.md.
