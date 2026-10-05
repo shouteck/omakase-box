@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BoxManifestSchema } from '../../../packages/box-package/index.js';
-import { agreementFile, fixtureRepo, listFiles, privateByteLeaks, requirePnpmTooling, runExport } from './support.js';
+import { agreementFile, fixtureCommit, fixtureRepo, listFiles, materializeFixtureRepo, privateByteLeaks, requirePnpmTooling, runExport } from './support.js';
 
 requirePnpmTooling();
 
@@ -66,6 +66,19 @@ describe('box export', () => {
     const scaffold = readFileSync(join(result.outDir, 'src/ranking/rankItems.ts'), 'utf8');
     expect(scaffold).not.toMatch(/privateScore|private\/scoring/);
     expect(scaffold).toMatch(/export function rankItems/);
+    expect(privateByteLeaks(result.outDir)).toEqual([]);
+  });
+
+  it('does not count a link inside the source root as an owner file', () => {
+    const repo = materializeFixtureRepo();
+    const src = join(repo.repo, 'examples', 'private-shop', 'src');
+    symlinkSync(join(src, 'private'), join(src, 'policy', 'vault'), 'junction');
+    const baseCommit = fixtureCommit(repo.repo, 'linked-tree');
+    const result = runExport(agreementFile('request-a', { baseCommit }), repo.repo);
+    // Still the 15 real owner files: the junction is not a file, and its target's bytes are
+    // already counted at their real path under src/private/.
+    expect(result.disclosure.inventoryFiles).toBe(15);
+    expect(result.files).not.toContain('src/policy/vault/scoring.ts');
     expect(privateByteLeaks(result.outDir)).toEqual([]);
   });
 });

@@ -48,12 +48,16 @@ function resolveBaseCommit(agreement: BoxAgreement, repo: string, sourceRoot: st
 }
 
 function inventoryCount(root: string, excluded: readonly string[]): number {
+  const prefixes = excluded.map(prefix => prefix.toLowerCase());
   let count = 0;
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      // A link is not an owner file: its target is counted at its real path (or not part
+      // of this tree at all), and recursing it would count the same bytes twice.
+      if (entry.isSymbolicLink()) continue;
       const rel = toPosix(relative(root, join(dir, entry.name)));
-      if (entry.isDirectory()) { if (!excluded.some(prefix => `${rel}/`.startsWith(prefix))) walk(join(dir, entry.name)); continue; }
-      if (!excluded.some(prefix => rel.startsWith(prefix))) count += 1;
+      if (entry.isDirectory()) { if (!prefixes.some(prefix => `${rel}/`.toLowerCase().startsWith(prefix))) walk(join(dir, entry.name)); continue; }
+      if (!prefixes.some(prefix => rel.toLowerCase().startsWith(prefix))) count += 1;
     }
   };
   walk(root);

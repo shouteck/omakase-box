@@ -132,6 +132,39 @@ describe('box export negatives', () => {
     }
   });
 
+  it('rejects an entrypoint that names an excluded file through a link inside the root', () => {
+    const repo = materializeFixtureRepo();
+    const src = join(repo.repo, 'examples', 'private-shop', 'src');
+    symlinkSync(join(src, 'private'), join(src, 'policy', 'vault'), 'junction');
+    const baseCommit = fixtureCommit(repo.repo, 'linked-private');
+    const agreement = agreementFile('request-a', {
+      baseCommit,
+      mutate: value => { value.entrypoints = ['src/policy/vault/scoring.ts']; }
+    });
+    try {
+      runExport(agreement, repo.repo);
+      expect.unreachable('export should have failed');
+    } catch (error) {
+      expect(error).toBeInstanceOf(PreparationGap);
+      expect((error as PreparationGap).gaps.some(gap => gap.kind === 'excluded-input')).toBe(true);
+    }
+  });
+
+  it('rejects a case-aliased editable input that resolves under an excluded prefix', () => {
+    // On a case-insensitive filesystem 'SRC/PRIVATE/SCORING.TS' resolves to
+    // src/private/scoring.ts; on a case-sensitive one it does not exist. Either way the
+    // export must be a named gap, never a shipped file.
+    const agreement = agreementFile('request-a', {
+      mutate: value => { value.editable = [{ kind: 'copy', owner: 'SRC/PRIVATE/SCORING.TS', box: 'src/policy/alias.ts' }]; }
+    });
+    try {
+      runExport(agreement);
+      expect.unreachable('export should have failed');
+    } catch (error) {
+      expect(error).toBeInstanceOf(PreparationGap);
+    }
+  });
+
   it('fails on an unresolved import inside the closure', () => {
     const repo = materializeFixtureRepo();
     writeFileSync(join(repo.repo, 'examples', 'private-shop', 'src', 'policy', 'broken.ts'), "import { nothing } from './nowhere.js';\nexport const value = nothing;\n");
