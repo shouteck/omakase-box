@@ -15,6 +15,7 @@ import { SqlSubmissionImportStore } from '../../submission-import/store.js';
 import { SubmissionImporter, type ImportTransport } from '../../submission-import/importer.js';
 import { PrivateReadinessStore } from '../../readiness/store.js';
 import { PrivateAcceptanceStore } from '../../acceptance/store.js';
+import { BoxStore } from '../../boxes/store/store.js';
 import { PrivateFeedbackStore } from '../../feedback/store.js';
 import { FeedbackDeliverer, type DeliveryTransport } from '../../feedback/delivery.js';
 import { createPublicKey } from 'node:crypto';
@@ -60,6 +61,7 @@ try {
       const fixture = JSON.parse(readFileSync('/workspace/examples/private-shop/fixture.json', 'utf8'));
       if (fixture.kind !== 'synthetic-private-shop' || fixture.schemaVersion !== 1) throw new Error('Invalid synthetic snapshot fixture.');
       sources.push({ id: 'synthetic-shop', root: '/workspace/examples/private-shop', paths: fixture.snapshotPaths });
+      sources.push({ id: 'private-shop', root: '/workspace/examples/private-shop', paths: fixture.snapshotPaths });
     }
     const releaseKey = readFileSync(config.PRIVATE_RELEASE_KEY_FILE);
     const gate = releaseReadinessGate(createPublicKey(releaseKey));
@@ -76,7 +78,7 @@ try {
     const pollFeedback = () => { void deliverer.deliverOnce().catch(() => undefined); };
     feedbackTimer = setInterval(pollFeedback, 8000);
     feedbackTimer.unref();
-    auth = { store: new SessionStore(pool, 'private', readFileSync(config.PRIVATE_SESSION_KEY_FILE)), mode: 'localhost_demo', resources: new PrivateResourceAccess(pool), intake: new PrivateIntakeStore(pool, sources), releases: new PrivateReleaseStore(pool, releaseKey), releaseCompiler: new ApprovedReleaseCompiler(pool, createPublicKey(releaseKey)), assignments: new PrivateAssignmentStore(pool, assignmentKey, gate), readiness: new PrivateReadinessStore(pool), acceptance: new PrivateAcceptanceStore(pool) };
+    auth = { store: new SessionStore(pool, 'private', readFileSync(config.PRIVATE_SESSION_KEY_FILE)), mode: 'localhost_demo', resources: new PrivateResourceAccess(pool), intake: new PrivateIntakeStore(pool, sources), releases: new PrivateReleaseStore(pool, releaseKey), releaseCompiler: new ApprovedReleaseCompiler(pool, createPublicKey(releaseKey)), assignments: new PrivateAssignmentStore(pool, assignmentKey, gate), readiness: new PrivateReadinessStore(pool), acceptance: new PrivateAcceptanceStore(pool), boxes: new BoxStore(pool), boxSources: sources };
   }
   const app = createPrivateApi(auth);
   app.addHook('onClose', async () => { if (dispatchTimer) clearInterval(dispatchTimer); if (importTimer) clearInterval(importTimer); if (feedbackTimer) clearInterval(feedbackTimer); await pool?.end(); });

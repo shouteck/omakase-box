@@ -1,0 +1,876 @@
+{
+  "id": "24ff0c07-eae6-4660-8649-1d6babf2ad70",
+  "prevId": "fb4299de-0dc7-47a7-b457-37e16f5bc539",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.private_acceptances": {
+      "name": "private_acceptances",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evaluation_id": {
+          "name": "evaluation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submission_hash": {
+          "name": "submission_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "package_hash": {
+          "name": "package_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "private_base_revision": {
+          "name": "private_base_revision",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "candidate_diff_hash": {
+          "name": "candidate_diff_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_acceptances_evaluation_id_private_evaluations_id_fk": {
+          "name": "private_acceptances_evaluation_id_private_evaluations_id_fk",
+          "tableFrom": "private_acceptances",
+          "tableTo": "private_evaluations",
+          "columnsFrom": [
+            "evaluation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "private_acceptances_owner_id_private_accounts_id_fk": {
+          "name": "private_acceptances_owner_id_private_accounts_id_fk",
+          "tableFrom": "private_acceptances",
+          "tableTo": "private_accounts",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "private_acceptances_evaluation_id_submission_hash_package_hash_private_base_revision_private_evaluations_id_submission_hash_package_hash_private_base_revision_fk": {
+          "name": "private_acceptances_evaluation_id_submission_hash_package_hash_private_base_revision_private_evaluations_id_submission_hash_package_hash_private_base_revision_fk",
+          "tableFrom": "private_acceptances",
+          "tableTo": "private_evaluations",
+          "columnsFrom": [
+            "evaluation_id",
+            "submission_hash",
+            "package_hash",
+            "private_base_revision"
+          ],
+          "columnsTo": [
+            "id",
+            "submission_hash",
+            "package_hash",
+            "private_base_revision"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "private_acceptances_event_id_unique": {
+          "name": "private_acceptances_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id"
+          ]
+        },
+        "private_acceptances_evaluation_id_unique": {
+          "name": "private_acceptances_evaluation_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "evaluation_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.private_accounts": {
+      "name": "private_accounts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "private_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "disabled": {
+          "name": "disabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "private_accounts_username_unique": {
+          "name": "private_accounts_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.private_evaluations": {
+      "name": "private_evaluations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "permit_id": {
+          "name": "permit_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "task_version": {
+          "name": "task_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submission_id": {
+          "name": "submission_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submission_hash": {
+          "name": "submission_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "package_hash": {
+          "name": "package_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "private_base_revision": {
+          "name": "private_base_revision",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "private_evaluation_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'received'"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "result": {
+          "name": "result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "superseded": {
+          "name": "superseded",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "private_evaluations_permit_id_unique": {
+          "name": "private_evaluations_permit_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "permit_id"
+          ]
+        },
+        "private_evaluation_exact_binding": {
+          "name": "private_evaluation_exact_binding",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "submission_hash",
+            "package_hash",
+            "private_base_revision"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "private_evaluation_version_positive": {
+          "name": "private_evaluation_version_positive",
+          "value": "\"private_evaluations\".\"version\" > 0 AND \"private_evaluations\".\"task_version\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.private_feedback_outbox": {
+      "name": "private_feedback_outbox",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "delivered_at": {
+          "name": "delivered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.private_intent_heads": {
+      "name": "private_intent_heads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "current_version": {
+          "name": "current_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_intent_heads_id_current_version_private_intent_revisions_id_version_fk": {
+          "name": "private_intent_heads_id_current_version_private_intent_revisions_id_version_fk",
+          "tableFrom": "private_intent_heads",
+          "tableTo": "private_intent_revisions",
+          "columnsFrom": [
+            "id",
+            "current_version"
+          ],
+          "columnsTo": [
+            "id",
+            "version"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "private_intent_head_positive": {
+          "name": "private_intent_head_positive",
+          "value": "\"private_intent_heads\".\"current_version\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.private_intent_revisions": {
+      "name": "private_intent_revisions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "intent_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "snapshot_hash": {
+          "name": "snapshot_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requester_id": {
+          "name": "requester_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "approved_hash": {
+          "name": "approved_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_intent_revisions_requester_id_private_accounts_id_fk": {
+          "name": "private_intent_revisions_requester_id_private_accounts_id_fk",
+          "tableFrom": "private_intent_revisions",
+          "tableTo": "private_accounts",
+          "columnsFrom": [
+            "requester_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "private_intent_revisions_approved_by_private_accounts_id_fk": {
+          "name": "private_intent_revisions_approved_by_private_accounts_id_fk",
+          "tableFrom": "private_intent_revisions",
+          "tableTo": "private_accounts",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "private_intent_revisions_id_version_pk": {
+          "name": "private_intent_revisions_id_version_pk",
+          "columns": [
+            "id",
+            "version"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "private_intent_version_positive": {
+          "name": "private_intent_version_positive",
+          "value": "\"private_intent_revisions\".\"version\" > 0"
+        },
+        "private_intent_hash_syntax": {
+          "name": "private_intent_hash_syntax",
+          "value": "\"private_intent_revisions\".\"content_hash\" ~ '^[a-f0-9]{64}$'"
+        },
+        "private_intent_approval_bound": {
+          "name": "private_intent_approval_bound",
+          "value": "\"private_intent_revisions\".\"state\" <> 'approved' OR (\"private_intent_revisions\".\"approved_by\" IS NOT NULL AND \"private_intent_revisions\".\"approved_hash\" IS NOT NULL AND \"private_intent_revisions\".\"approved_hash\" = \"private_intent_revisions\".\"content_hash\")"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.private_invitations": {
+      "name": "private_invitations",
+      "schema": "",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "char(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "private_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issuer_id": {
+          "name": "issuer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revoked": {
+          "name": "revoked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "redeemed_at": {
+          "name": "redeemed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_invitations_issuer_id_private_accounts_id_fk": {
+          "name": "private_invitations_issuer_id_private_accounts_id_fk",
+          "tableFrom": "private_invitations",
+          "tableTo": "private_accounts",
+          "columnsFrom": [
+            "issuer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.private_payment_obligations": {
+      "name": "private_payment_obligations",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "acceptance_id": {
+          "name": "acceptance_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payee_id": {
+          "name": "payee_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "char(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "payment_obligation_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'due'"
+        },
+        "settlement_reference": {
+          "name": "settlement_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_payment_obligations_acceptance_id_private_acceptances_id_fk": {
+          "name": "private_payment_obligations_acceptance_id_private_acceptances_id_fk",
+          "tableFrom": "private_payment_obligations",
+          "tableTo": "private_acceptances",
+          "columnsFrom": [
+            "acceptance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "private_payment_obligations_acceptance_id_unique": {
+          "name": "private_payment_obligations_acceptance_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "acceptance_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "private_money_bounded": {
+          "name": "private_money_bounded",
+          "value": "\"private_payment_obligations\".\"amount_minor\" >= 0 AND \"private_payment_obligations\".\"amount_minor\" <= 9007199254740991"
+        },
+        "private_settlement_reference_required": {
+          "name": "private_settlement_reference_required",
+          "value": "\"private_payment_obligations\".\"state\" <> 'settlement_recorded' OR \"private_payment_obligations\".\"settlement_reference\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.private_release_approvals": {
+      "name": "private_release_approvals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "task_version": {
+          "name": "task_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "manifest_hash": {
+          "name": "manifest_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "manifest": {
+          "name": "manifest",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "private_revision": {
+          "name": "private_revision",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_release_approvals_owner_id_private_accounts_id_fk": {
+          "name": "private_release_approvals_owner_id_private_accounts_id_fk",
+          "tableFrom": "private_release_approvals",
+          "tableTo": "private_accounts",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "private_release_approvals_manifest_hash_unique": {
+          "name": "private_release_approvals_manifest_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "manifest_hash"
+          ]
+        },
+        "private_release_task_version_unique": {
+          "name": "private_release_task_version_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "task_id",
+            "task_version"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "private_release_version_positive": {
+          "name": "private_release_version_positive",
+          "value": "\"private_release_approvals\".\"task_version\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.private_sessions": {
+      "name": "private_sessions",
+      "schema": "",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "char(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "csrf_hash": {
+          "name": "csrf_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "private_sessions_account_id_private_accounts_id_fk": {
+          "name": "private_sessions_account_id_private_accounts_id_fk",
+          "tableFrom": "private_sessions",
+          "tableTo": "private_accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.private_evaluation_state": {
+      "name": "private_evaluation_state",
+      "schema": "public",
+      "values": [
+        "received",
+        "public_evaluating",
+        "private_evaluating",
+        "owner_review",
+        "accepted",
+        "changes_required",
+        "package_defect",
+        "infrastructure_failure"
+      ]
+    },
+    "public.intent_state": {
+      "name": "intent_state",
+      "schema": "public",
+      "values": [
+        "draft",
+        "needs_decision",
+        "ready_for_approval",
+        "approved"
+      ]
+    },
+    "public.payment_obligation_state": {
+      "name": "payment_obligation_state",
+      "schema": "public",
+      "values": [
+        "due",
+        "settlement_recorded"
+      ]
+    },
+    "public.private_role": {
+      "name": "private_role",
+      "schema": "public",
+      "values": [
+        "requester",
+        "owner",
+        "operator"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

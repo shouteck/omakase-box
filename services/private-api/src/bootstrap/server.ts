@@ -23,6 +23,11 @@ import { installReadinessRoutes } from '../../readiness/routes.js';
 import type { PrivateReadinessStore } from '../../readiness/store.js';
 import { installAcceptanceRoutes } from '../../acceptance/routes.js';
 import type { PrivateAcceptanceStore } from '../../acceptance/store.js';
+import { installBoxPreparationRoutes } from '../../boxes/preparation/routes.js';
+import { boxPreparationOrchestration } from '../../boxes/preparation/orchestrator.js';
+import type { BoxPreparationOrchestration } from '../../boxes/preparation/types.js';
+import type { BoxStore } from '../../boxes/store/store.js';
+import type { SnapshotSource } from '../../requests/types.js';
 
 function preparationOrchestrationForIntake(intake: PrivateIntakeStore, modelConfiguration?: unknown): PreparationOrchestration | null {
   const database = (intake as unknown as { database?: unknown }).database;
@@ -30,7 +35,7 @@ function preparationOrchestrationForIntake(intake: PrivateIntakeStore, modelConf
   return new PreparationOrchestrator(intake, new PrivateIntentStore(database as Pool), new SyntheticShopPlanningIntegrationSource(), modelConfiguration);
 }
 
-export function createPrivateApi(auth?: { store: SessionStore; mode: 'localhost_demo' | 'production'; resources?: PrivateResourceAccess; intake?: PrivateIntakeStore; intents?: IntentOrchestration; preparations?: PreparationOrchestration; releases?: PrivateReleaseStore; releaseCompiler?: ApprovedReleaseCompiler; assignments?: Pick<PrivateAssignmentStore, 'choose' | 'revokeInvitation'>; readiness?: Pick<PrivateReadinessStore, 'record' | 'list' | 'decide'>; acceptance?: Pick<PrivateAcceptanceStore, 'accept' | 'reject' | 'compensate' | 'pending'> }) {
+export function createPrivateApi(auth?: { store: SessionStore; mode: 'localhost_demo' | 'production'; resources?: PrivateResourceAccess; intake?: PrivateIntakeStore; intents?: IntentOrchestration; preparations?: PreparationOrchestration; releases?: PrivateReleaseStore; releaseCompiler?: ApprovedReleaseCompiler; assignments?: Pick<PrivateAssignmentStore, 'choose' | 'revokeInvitation'>; readiness?: Pick<PrivateReadinessStore, 'record' | 'list' | 'decide'>; acceptance?: Pick<PrivateAcceptanceStore, 'accept' | 'reject' | 'compensate' | 'pending'>; boxes?: BoxStore; boxSources?: readonly SnapshotSource[]; boxPreparation?: BoxPreparationOrchestration }) {
   const app = Fastify({ logger: false, bodyLimit: 65536, trustProxy: false });
   app.addHook('onRequest', async (request, reply) => {
     const origin = request.headers.origin;
@@ -53,6 +58,8 @@ export function createPrivateApi(auth?: { store: SessionStore; mode: 'localhost_
     if (auth.assignments) installOwnerAssignmentRoutes(app, handlers, auth.assignments);
     if (auth.readiness) installReadinessRoutes(app, handlers, auth.readiness);
     if (auth.acceptance) installAcceptanceRoutes(app, handlers, auth.acceptance);
+    const boxPreparation = auth.boxPreparation ?? (auth.intake && intents && auth.boxes ? boxPreparationOrchestration(auth.intake, intents, auth.boxes, auth.boxSources ?? []) : undefined);
+    if (boxPreparation) installBoxPreparationRoutes(app, handlers, boxPreparation);
   } else app.addHook('onRequest', async (request, reply) => { if (request.url !== '/health' || request.method !== 'GET') return reply.code(404).send({ error: 'not_found' }); });
   app.get('/health', async () => ({ service: 'private-api', status: 'bootstrap', assurance: 'tested', productReady: false }));
   app.setNotFoundHandler(async (_request, reply) => reply.code(404).send({ error: 'not_found' }));

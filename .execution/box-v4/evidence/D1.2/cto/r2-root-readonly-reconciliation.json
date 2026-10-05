@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_observed_nonmutating_r2_preflight_metadata",
+  "waveId": "W005",
+  "revision": "2026-10-05-d1.2-r2",
+  "authority": "Approved r2/r1 read-only in-container core identity/resource probes; no old state mutation",
+  "sourceCandidate": "All22 preserved currentManifest entries rehashed and equal correction-receipt-5; auth helper equals saved HEAD before new lease",
+  "rootCommands": [
+    {"command": "docker ps -a --filter name=w005-d12-delegation --format selected ID/name/image/status", "exit": 0, "output": "empty_no_W005_containers"},
+    {"command": "docker network ls --filter name=w005-d12-delegation-net --format selected ID/name/driver", "exit": 0, "output": "empty_no_W005_network"},
+    {"command": "docker ps -a --filter name=w002-b11 --filter ancestor=sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652 --format selected ID/name/image/status", "exit": 0, "output": "Existing reviewed project Postgres resources only; no alteration"},
+    {"command": "docker inspect --format Id/Image/State.Running da55c050fffb", "exit": 0, "output": "da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86 sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652 true"},
+    {"command": "docker exec exact verified same-image container da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86 getent passwd 999", "exit": 0, "output": "postgres:x:999:999::/var/lib/postgresql:/bin/bash"}
+  ],
+  "accountEvidence": "UID/GID999 postgres exists in actual running container with the exact approved cached DB image. Read-only system account metadata only, no Env/shadow/credential/data read. New container override/hardening/readiness still independently checked after permitted creation.",
+  "mutations": {"networkCreate": 0, "containerCreateStartStop": 0, "databaseOperation": 0, "fixtureOrCandidateCodeExecution": 0, "oldMailboxOperation": 0},
+  "rootSetupRelease": false,
+  "oldW002Preserved": true,
+  "duration": "Tool exact duration not supplied; not fabricated"
+}

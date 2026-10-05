@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released lifecycle under setup-release.json (sha256 7628868f8e8cbd846b1704ff544600c47854382db802318b3d781ae8966c5a46); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_NO_RESOURCES_CREATED",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupReleaseSha256": "7628868f8e8cbd846b1704ff544600c47854382db802318b3d781ae8966c5a46 (verified)",
+    "rootSetupRelease": true,
+    "independentReviewVerdict": "PASS_PREEXECUTION",
+    "hostMjsSha256": "c709fa0930a5f9929960998c111ecc20d274f5c50ed8a47c54c8f508bff01284 (verified, no drift)",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d (verified, no drift)",
+    "existingResources": "docker ps -a --filter name=w005-d12: empty; docker network ls --filter name=w005-d12: empty"
+  },
+  "modes": [
+    {
+      "mode": "plan",
+      "exit": 1,
+      "failure": "Error environment_host_arg 'bad inspect format' thrown at containerInspectArgv (environment-host.mjs:761) called from environmentPlan phase 'verify' (line 782) and 'final_verify' (line 785); also used at lines 1165-1167 by verify mode.",
+      "rootCause": "containerInspectArgv fmt guard /^\\{\\{(?:json )?(?:\\.[A-Za-z.]+)+\\}\\}$/ only accepts a single {{.Field}} group, but every call site passes pipe-separated multi-group formats ('{{.State.Status}}|{{.Config.User}}|...' and the CONTAINER_FMT at line 1160). The guard therefore rejects all released inspect formats; controller('plan') fails before producing any output and before any docker call."
+    }
+  ],
+  "modesNotRun": ["ledger", "deps", "create", "start", "verify", "stage", "supervise"],
+  "dockerCalls": "None beyond the two read-only pre-gate ls/ps filters; no create/exec/cp/inspect of released resources. STAGE_ROOT/DEPS_ROOT not created.",
+  "resourcesCreated": [],
+  "resourcesPreserved": "No W005 resources exist; nothing created, nothing mutated, nothing cleaned up.",
+  "requiredAction": "BLOCKED_NEEDS_AMENDMENT: the reviewed/released containerInspectArgv format guard is inconsistent with all released call sites. Worker cannot edit product source under this runtime lease; root must issue a bounded source amendment (widening the fmt guard to the fixed pipe-separated field list or pinning the exact released format strings) and re-review/re-release before any further mode invocation.",
+  "checksRun": [
+    {"command": "sha256sum setup-release.json + 2 leased files", "exit": 0},
+    {"command": "docker ps -a / network ls w005-d12 filters (read-only reconciliation)", "exit": 0},
+    {"command": "controller('plan') via released node -e invocation", "exit": 1, "error": "environment_host_arg bad inspect format"}
+  ],
+  "unperformed": "No other controller mode invoked; no password generated; no docker mutation; no source edits; no Git writes."
+}

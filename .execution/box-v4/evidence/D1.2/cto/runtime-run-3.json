@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released lifecycle under setup-release-3.json (sha256 250b87acba1f9492739b0d6a3c28c52074d094581042b82bc9aae986d4eab62f); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_DEPS_DEST_CLOSURE_LINK",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupRelease3Sha256": "250b87acba1f9492739b0d6a3c28c52074d094581042b82bc9aae986d4eab62f (verified)",
+    "rootSetupRelease": true,
+    "reviewVerdict": "PASS_PREEXECUTION",
+    "hostMjsSha256": "be81885d761a8b8da4a6190f39b5324b16b607312082fdf33f3f794a6d8d4e01 (verified)",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d (verified)",
+    "priorState": "environment-ledger.json f8d48f47... reused; DEPS_ROOT absent at start; zero W005 resources"
+  },
+  "modes": [
+    {"mode": "plan", "exit": 0, "durationMs": 4},
+    {"mode": "ledger", "exit": 0, "durationMs": 3, "result": "existing ledger path returned (idempotent, sha256 f8d48f47...)"},
+    {
+      "mode": "deps",
+      "exit": 1,
+      "durationMs": "~240000 (copied ~8400 files before failing)",
+      "failure": "Error environment_deps_closure 'copied destination closure does not equal the reviewed closure', detail reason 'dependency_link:C:\\...\\w005-d12-delegation-deps\\node_modules\\.pnpm\\@esbuild-kit+core-utils@3.3.2\\node_modules\\@esbuild-kit\\core-utils\\node_modules\\esbuild' at environment-host.mjs:1091 (post-copy dest verifyDependencyClosure).",
+      "rootCause": "Round-20 depLinks synthesis emits dep links at <pkgRel>/node_modules/<depName> — INSIDE the package root — but real pnpm layout places dep links as SIBLINGS of the package dir inside the containing node_modules (.pnpm/x/node_modules/<dep>). verifyDependencyClosure's per-package walk rejects any symlink inside a package root as 'dependency_link:', so the copied destination can never equal the reviewed closure. The synthesis placement is a source defect, not a data/permission problem: the EACCES source-symlink issue from attempt-2 is resolved (copy completed).",
+      "requiredFix": "In buildExpectedDependencyInventory, emit dep links at the containing node_modules level: strip pkgRel's trailing '/<name>' (and '/@scope' for scoped packages — i.e., everything after the last 'node_modules' segment) so rel = '<parentNodeModules>/<depName>', matching real pnpm layout and keeping links outside package roots. Self-link guard and all other logic stays."
+    }
+  ],
+  "modesNotRun": ["create", "start", "verify", "stage", "supervise"],
+  "dockerCalls": "None; no containers/network exist.",
+  "partialState": {
+    "depsRoot": "C:/Users/shout/AppData/Local/Temp/w005-d12-delegation-deps/node_modules EXISTS and is fully populated with the round-20 (wrong-layout) inventory — copy completed before dest closure failed; tooling-node_modules was never started; dependency-preparation.json was never written.",
+    "reconciliationBlocker": "deps mode never deletes/reconciles an existing dest; on any fixed re-run the stale wrong-layout tree will fail exact-inventory equality. Root must authorize removal of this never-committed deps dir (it is disposable generated state, not reviewed source) or bind a fresh DEPS_ROOT before re-release."
+  },
+  "receiptsPreserved": {
+    "environment-ledger.json": "f8d48f4774411dac539dd8756e4770e2c019914eb0cb0cbad3ad0130c9de18f7 (valid)",
+    "dependency-preparation.json": "absent (never written)"
+  },
+  "checksRun": [
+    {"command": "sha256sum release-3 + 2 leased files", "exit": 0},
+    {"command": "controller('plan')", "exit": 0},
+    {"command": "controller('ledger')", "exit": 0},
+    {"command": "controller('deps')", "exit": 1, "error": "environment_deps_closure dependency_link inside package root"},
+    {"command": "post-failure ls DEPS_ROOT + docker ps", "result": "deps/node_modules populated; zero containers"}
+  ],
+  "unperformed": "No create/start/verify/stage/supervise; no password generated; no source edits; no Git writes; no cleanup or teardown."
+}

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round6_r2_amendment",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "subagent_general/c0c68c39 (logical role handle; actual returned envelope bound externally by lead/root)",
+  "resumeTarget": "c0c68c39",
+  "inResponseTo": "Approved W005-r2 combined-cap guard amendment (approvals/W005-r2-approval.json); resolves prior reviewer blocking B2 and the delegation-suite per-test database overspend",
+  "authorityHashesRead": {
+    "brief": ".execution/box-v4/briefings/W005-r2.md",
+    "briefSha256": "991f9530f5e9b0a861ced98d01268717f0179da609418b2e267d1986fae91aca",
+    "approval": ".execution/box-v4/approvals/W005-r2-approval.json",
+    "binding": ".execution/box-v4/evidence/W005-r2-proposal-binding.json",
+    "wave": ".execution/box-v4/waves/W005-r2.json",
+    "priorWorkerReceipt": ".execution/box-v4/evidence/D1.2/worker/correction-receipt-5.json",
+    "priorBlocker": ".execution/box-v4/evidence/D1.2/cto/preexecution-blocked-cap.json",
+    "rootReadonlyReconciliation": ".execution/box-v4/evidence/D1.2/cto/r2-root-readonly-reconciliation.json"
+  },
+  "status": "SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "leaseCompliance": "Changed exactly the newly leased tests/box/auth/support.ts (migratedPool pre-create inventory guard only) plus three already-leased delegation test files (shared per-file fixture DB + one bounded regression test). No other support/contracts/auth policy/suite/vitest config/package/lock/example/reference/profile/graph file touched. No comments added or removed, no new dependencies, no DROP/TRUNCATE/reset/refund/skip/proxy/monkeypatch, no cap reinterpretation.",
+  "filesChanged": [
+    {
+      "path": "tests/box/auth/support.ts",
+      "change": "Added literal const DELEGATION_RUN_DB_PREFIX = 'w005_d12_run_'. migratedPool's pre-CREATE DATABASE inventory guard now counts BOTH owned literal prefixes with escaped underscores: SELECT count(*)::int AS n FROM pg_database WHERE datname LIKE 'w002\\_b11\\_r4run\\_%' ESCAPE '\\' OR datname LIKE 'w005\\_d12\\_run\\_%' ESCAPE '\\' — byte-identical predicate shape to the reviewed delegationPool guard. MAX_RUN_DATABASES stays 12, unknown inventory stays fail-closed (?? MAX_RUN_DATABASES), error text unchanged. Hostname/user/URL/run-id validation, generated naming, readiness retries/deadlines, pool limits, migrations, accounts/auth semantics and all other original assertions untouched."
+    },
+    {
+      "path": "tests/box/delegation/preparation.test.ts",
+      "change": "Refactored from a fresh fixture database per test (7 CREATE DATABASE) to one shared fresh fixture database per file via beforeAll/afterAll on the same pool; all assertions, literal expectations and independent checks preserved; per-test app/browser/vite cleanup kept in finally; unique run/account names retained."
+    },
+    {
+      "path": "tests/box/delegation/agreement-card.test.ts",
+      "change": "Same refactor: one shared fixture database per file via beforeAll/afterAll instead of one per test (was 3); preparedCase uses the shared pool; all literal agreement expectations unchanged."
+    },
+    {
+      "path": "tests/box/delegation/fixture-registration.test.ts",
+      "change": "Added one bounded regression test 'counts both owned run prefixes toward one shared cap before creation and blocks at the budget gate'. It (a) creates exactly ONE additional real database through the now-leased original migratedPool helper (w002_b11_r4run_ prefix), (b) proves at runtime on real pg_database inventory that the combined dual-prefix count equals the sum of both single-prefix populations and rose by exactly one after helper creation (pre-create counting across both prefixes), (c) proves reject-before-execution at the designed superviseBatch budget seam for both an exhausted count (RUN_DB_LIMIT) and an unknown/non-numeric count, asserting environment_db_budget and that the supervised command's ledger never records index 1 (nothing spawned/created). Uses the established tests/box/verification pattern await import(new URL(...).href) for the .mjs module; no new test path, no weakened or fabricated expectations."
+    }
+  ],
+  "exactSqlGuard": "SELECT count(*)::int AS n FROM pg_database WHERE datname LIKE 'w002\\_b11\\_r4run\\_%' ESCAPE '\\' OR datname LIKE 'w005\\_d12\\_run\\_%' ESCAPE '\\'",
+  "dbBudgetMath": {
+    "delegationSuiteCommand0": {"fixtureRegistrationBeforeAll": 1, "capRegressionMigratedPoolCall": 1, "agreementCardBeforeAll": 1, "preparationBeforeAll": 1, "total": 4, "previous": 11},
+    "testBoxAuthCommand2": {"beforeAllPerFile": ["box-store", "negative-scope", "roles-merge", "scopes-idempotency"], "total": 4, "note": "fixture-transport.test.ts does not call migratedPool; tests/auth (command 5) uses fully mocked SessionStore, no real PG"},
+    "cumulativeRunPrefixedDatabases": 8,
+    "cap": 12,
+    "headroom": 4,
+    "concurrency": "No .concurrent or parallel PG creation anywhere in tests/box; environment-manifest commands.supervision.maxWorkers fixed at 1; beforeAll pools are sequential per file."
+  },
+  "classificationReview": "assertRequestGrounding requiredMarkers ('response-security.json','hsts','frameAncestors' for request A; 'rankItems','ASCII' for request B) are all literal substrings already present in the exact approved REQUEST_A_TEXT/REQUEST_B_TEXT; classification already accepts the two approved plain request texts and still rejects the unsupported private-UI coupling case, unknown case ids and mismatched request/case pairs (existing negative tests unchanged). No routine-classification edit was required; no expansion added.",
+  "metadataFactsUsed": "Root nonmutating reconciliation r2-root-readonly-reconciliation.json reused without new probes: W005 containers/network absent; old project DB container da55c050 runs exact image sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652; scoped read-only docker exec getent passwd 999 exited 0 returning postgres:x:999:999 — resolves image UID-999 existence only; runtime override/hardening still requires post-create verification. No old state/Env/credentials accessed; no DB commands, resource creation, pull, install or old-container mutation performed by this worker.",
+  "commandsRunThisRound": [
+    {"command": "node --check tests/box/delegation/environment-host.mjs", "exit": 0, "kind": "non-executing syntax parse"},
+    {"command": "node --check tests/box/delegation/register-fixture.mjs", "exit": 0, "kind": "non-executing syntax parse"},
+    {"command": "sha256sum on all 23 leased product paths", "exit": 0, "kind": "core hash"},
+    {"command": "git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp rev-parse HEAD -> baa8acbf92f6f15fb81a340ef4511fc639ea7562", "exit": 0, "kind": "scoped git"},
+    {"command": "git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp status --porcelain", "exit": 0, "kind": "scoped git", "note": "confirms only leased paths plus pre-existing governance/history entries changed; no staging performed"}
+  ],
+  "dockerMetadataThisRound": {"probesRun": 0, "note": "None needed; root r2 reconciliation record stands. Resources/DBs created this wave: 0."},
+  "currentManifest": {
+    "newFiles": [
+      {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8"},
+      {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061"},
+      {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359"},
+      {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8"},
+      {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682"},
+      {"path": "tests/box/delegation/support.ts", "sha256": "792a34e901a58df92d822a6110c7f0daaf744bab4233aeb76df7c8c49f073581"},
+      {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "bead39e339fa4a51a366263cfff4c7f906979c26768877fb64116372e4eb2710"},
+      {"path": "tests/box/delegation/preparation.test.ts", "sha256": "409dc7c3b81ac039601d86a0e5c98db0191541dcd855b51aacff2e73eaa1f770"},
+      {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "bf25917a766ecc5e4c7b623dc0d7ff22efdd347b941dd0b8d5367eb52e280f9a"},
+      {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5"},
+      {"path": "tests/box/delegation/environment-manifest.json", "sha256": "06d7fe07c3401ca912c3e2af9b2fa70e72340797938682972beeeeb54fb449df"},
+      {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe"},
+      {"path": "tests/box/delegation/environment-host.mjs", "sha256": "571fdfe5f306bb7092949030e0658829fa8f0959fc8fe212abc8076a666c4fd0"}
+    ],
+    "modifiedSharedPaths": [
+      {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986"},
+      {"path": "services/private-api/boxes/store/store.ts", "sha256": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19"},
+      {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234"},
+      {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da"},
+      {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf"},
+      {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787"},
+      {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7"},
+      {"path": "tests/box/auth/support.ts", "sha256": "635e7b2a3474300028840cb14a57395caaf5872097fecfa8141b1571a1855a39"}
+    ]
+  },
+  "unperformed": [
+    "All docker create/start/exec/cp, staging, fixture materialization, the 8 commands, tests/build/typecheck remain unreleased (root setup release still false).",
+    "Literal runtime helper-level saturation (driving the combined inventory to exactly 12 inside the suite) was deliberately NOT exercised: it would consume the entire approved cumulative-12 ledger and break the later fixed auth command; reject-before-create is proven at the designed supervisor budget seam (count>=12 and unknown inventory both throw environment_db_budget before superviseInner spawns) plus the now-identical dual-prefix predicate and unchanged >=12 guard in both helpers, bound by static review.",
+    "TypeScript compile/typecheck of edited .ts files not run (scoped tool limits: dedicated file tools plus node --check on .mjs only); edits reviewed against existing typed patterns."
+  ],
+  "knownLimitations": [
+    "Helper reject-path runtime proof is at the supervisor budget seam, not a real 12th-database attempt; if independent review requires literal in-suite saturation, that needs an explicit scope/ledger amendment (no safe in-budget path exists since the delegation suite runs first).",
+    "Loose-object git store assumption unchanged. Deps provenance map remains a setup-phase record.",
+    "Any rerun of the batch on the same DB resource accumulates run-prefixed databases cumulatively (no reset/drop permitted); current single-run allocation is 8 of 12."
+  ],
+  "nextPhaseRecipe": "Distinct reviewer f3ab3b2f performs fresh exact-revision preexecution review of all 23 paths (recompute sha256 against this manifest; auth support.ts now 635e7b2a...). On PASS, root releases setup: plan/ledger/create/start/verify/stage/supervise fixed controller modes only; redacted pre-mutation receipts; prove new internal network id, new DB id and legacy alias inside the new network before suites; db getent-uid-999 and runner uid-1000 verify gates; docker cp staged exact whitelist; supervise 8 fixed commands with started-before-spawn ledger, durable digest-addressed stdout/stderr, owned-PGID descendant checks; combined dual-prefix pre-create count before every CREATE DATABASE; cumulative budget 8 <= 12; no setup execution until root release."
+}

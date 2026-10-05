@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round5",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r1",
+  "actor": "subagent_general/c0c68c39 (logical role handle; actual returned envelope bound externally by lead/root)",
+  "resumeTarget": "c0c68c39",
+  "inResponseTo": "reviewer FAIL_PREEXECUTION: blocking B1 (supervise mode unreachable + stream close race) and blocking B2 (unleased tests/box/auth/support.ts migratedPool counts only w002_b11_r4run_% against a total-12 budget across both prefixes)",
+  "status": "BLOCKED_NEEDS_AMENDMENT",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "leaseCompliance": "One leased path changed: tests/box/delegation/environment-host.mjs, plus this append-only receipt. tests/box/auth/support.ts NOT edited (outside lease). No monkeypatch/proxy/skip/reset/relaxation. All prior R1-R8/D1-D5 corrections, bare image IDs, account gates, stage/dep bounds, controller modes, W002 preservation and no-secrets preserved.",
+  "corrections": [
+    {"id": "B1", "finding": "runnerEntryArgv execs 'node environment-host.mjs supervise <i>' but module had no argv dispatch; controller('supervise') throws", "fix": "Added fixed main(argv) dispatcher at end of environment-host.mjs: accepts ONLY exactly ['supervise','<digits>'] with index in [0,8), calls superviseInner(index, RUNNER_RECEIPT_DIR), prints a redacted single-line result descriptor {commandHash,state,exitCode} to stdout and sets process.exitCode=1 for any non-'completed' state; every other argv shape throws environment_host_arg (logs redacted arg-count only). Self-invocation is gated by resolve(process.argv[1])===resolve(SELF_PATH) so plain module import is a no-op. Host transport semantics preserved: superviseBatch treats the docker-exec result as transport only and requires the inner command-<i>-<hash>.json record + ledger 'started' entry; absent record => 'unknown'/failure, interrupted index blocks replay.", "files": ["tests/box/delegation/environment-host.mjs"]},
+    {"id": "B1-race", "finding": "spawnToFiles attached stdio 'close' listeners inside the 'exit' handler; streams closing first could hang the await", "fix": "Rewrote spawnToFiles with a synchronous state latch: 'exit', stdout 'close' and stderr 'close' listeners are all attached before the promise can resolve and resolution requires exited && outClosed && errClosed regardless of ordering; a bounded close-wait (SIGTERM_GRACE_MS+SIGKILL_DRAIN_MS) destroys lingering streams and resolves with signal 'CLOSE_TIMEOUT' fail-closed rather than hanging. Streams still end() on exit; complete stdout/stderr capture to digest-addressed files, started-before-spawn ledger, timeout/drain/descendant evidence all unchanged.", "files": ["tests/box/delegation/environment-host.mjs"]},
+    {"id": "B2", "finding": "global 12-DB cap is not enforced before creation by the unleased harness migratedPool, which counts only w002_b11_r4run_%", "fix": "NOT RESOLVED IN-LEASE. Surveyed all 22 leased paths: the only pre-creation gate in lease is delegationPool's dual-prefix pg_database count inside tests/box/delegation/support.ts, which the fixed commands do not consult before the auth harness creates databases. No in-lease mechanism can prevent an over-cap CREATE DATABASE inside command #2/#5 (detection after the fact via superviseBatch post-count is insufficient per the finding).", "amendmentRequested": "Minimal bounded amendment: one edit to tests/box/auth/support.ts migratedPool to count BOTH prefixes 'w002_b11_r4run_%' OR 'w005_d12_run_%' (literal-escaped LIKE, ESCAPE '\\', matching the delegationPool query) against the same total cap 12 before every new database creation; alternatively root explicitly amends/reinterprets the cap. No monkeypatch/proxy/drop/reset proposed.", "files": []}
+  ],
+  "commandsRunThisRound": [
+    {"command": "node --check tests/box/delegation/environment-host.mjs", "exit": 0, "kind": "non-executing syntax parse"},
+    {"command": "certutil -hashfile tests/box/delegation/environment-host.mjs SHA256", "exit": 0, "kind": "core hash"}
+  ],
+  "dockerMetadataThisRound": {"probesRun": 0, "note": "No new probes needed; round-3 capture stands (both image IDs cached, zero w005 resources, W002 untouched). Resources/DBs created this wave: 0."},
+  "currentManifest": {
+    "newFiles": [
+      {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8"},
+      {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061"},
+      {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359"},
+      {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8"},
+      {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682"},
+      {"path": "tests/box/delegation/support.ts", "sha256": "792a34e901a58df92d822a6110c7f0daaf744bab4233aeb76df7c8c49f073581"},
+      {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "a9289afcfbbfba95318c182e287287738a44593dc6bab5790bdb4eea4ed516bc"},
+      {"path": "tests/box/delegation/preparation.test.ts", "sha256": "4d03ea2ad58fc653ffee89435c3d36b52a4dd1e6e2463a1242e9e7d884524426"},
+      {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "d0ac29da37c52780c79683c4a85e4284c485fff56488f924f14c5a706013866e"},
+      {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5"},
+      {"path": "tests/box/delegation/environment-manifest.json", "sha256": "06d7fe07c3401ca912c3e2af9b2fa70e72340797938682972beeeeb54fb449df"},
+      {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe"},
+      {"path": "tests/box/delegation/environment-host.mjs", "sha256": "571fdfe5f306bb7092949030e0658829fa8f0959fc8fe212abc8076a666c4fd0"}
+    ],
+    "modifiedSharedPaths": [
+      {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986"},
+      {"path": "services/private-api/boxes/store/store.ts", "sha256": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19"},
+      {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234"},
+      {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da"},
+      {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf"},
+      {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787"},
+      {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7"}
+    ]
+  },
+  "unperformed": [
+    "All docker create/start/exec/cp, staging, fixture materialization, the 8 commands, tests/build/typecheck remain unreleased.",
+    "DB uid-999 account existence remains UNVERIFIED (W002 probe authority ambiguous); fail-closed getent gate encoded in controller verify."
+  ],
+  "knownLimitations": [
+    "B2 requires the bounded tests/box/auth/support.ts amendment (or explicit cap reinterpretation by root) before the fixed 8-command batch can guarantee the total-12 budget; after that amendment lands, status can return to SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW without further code changes.",
+    "Loose-object git store assumption unchanged. Deps provenance map is a setup-phase record."
+  ]
+}

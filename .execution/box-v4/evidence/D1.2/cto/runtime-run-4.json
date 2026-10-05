@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released lifecycle under setup-release-4.json (sha256 91650ff372dd3db77c98ff8050e2236124c5b5cb321557424f4fc188dfe0cbc5); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_CREATE_INSPECT_REGEX",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupRelease4Sha256": "91650ff372dd3db77c98ff8050e2236124c5b5cb321557424f4fc188dfe0cbc5 (verified)",
+    "rootSetupRelease": true,
+    "reviewVerdict": "PASS_PREEXECUTION",
+    "hostMjsSha256": "27988ab6ec96d2dfff78a107c0d78276188cf44a3e3857fef843991f5631a8a4 (verified)",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d (verified)"
+  },
+  "authorizedDisposal": {
+    "path": "C:/Users/shout/AppData/Local/Temp/w005-d12-delegation-deps/node_modules",
+    "preDeleteVerification": "realpath === resolve(expected path) under owned DEPS_ROOT; contents verified derived-only (top entry 'node_modules' holding .pnpm store with 132 package-key dirs)",
+    "method": "node fs.rmSync(recursive) — removes junctions as links without touching targets",
+    "result": "deleted; DEPS_ROOT left empty (REMAINING [])"
+  },
+  "modes": [
+    {"mode": "plan", "exit": 0, "durationMs": 13},
+    {"mode": "ledger", "exit": 0, "durationMs": 31, "result": "existing ledger reused (sha256 f8d48f47...)"},
+    {"mode": "deps", "exit": 0, "durationMs": 45743, "result": "dependency-preparation.json written; both mounts prepared; node_modules expectedInventorySha256==inventorySha256==3b7d00da0d0dcd63bc68f48d15718864604156c0f9bec0b78bdac5fec513c45e (131 pkgs, 7274 files + links + metadata, round-21 sibling layout); post-copy dest closure + exact inventory verified ok"},
+    {
+      "mode": "create",
+      "exit": 1,
+      "failure": "Error environment_daemon_error 'docker inspect failed (daemon/permission/transport)' at inspectResource (environment-host.mjs:314) for name w005-d12-delegation-net, exit 1, stderr 'error: no such object: w005-d12-delegation-net'.",
+      "rootCause": "inspectResource's absent-object detection tests case-sensitive /No such object/, but the Docker daemon emits lowercase 'no such object' (containers) and 'network ... not found' (networks). The collision gate therefore misclassifies 'absent' as a daemon error before the first create. Fix: case-insensitive match covering both phrasings (e.g., /no such object|not found/i). Zero resources were created; image-pin inspects ran before the gate and are read-only.",
+      "imagePinChecks": "Both approved local image-id inspects ran and succeeded before the collision gate (read-only docker image inspect)."
+    }
+  ],
+  "modesNotRun": ["start", "verify", "stage", "supervise"],
+  "resourcesCreated": [],
+  "partialState": {
+    "depsRoot": "DEPS_ROOT fully populated with the CORRECT round-21 sibling-layout inventory and bound by dependency-preparation.json — on re-run deps mode will see dest exists, verify closure + exact inventory match, and report already-prepared (fail-closed but success). No cleanup needed.",
+    "ledger": "environment-ledger.json f8d48f47... valid; create mode re-reads and appends resources on re-run."
+  },
+  "requiredAction": "BLOCKED_NEEDS_AMENDMENT (source): widen inspectResource's absent detection to case-insensitive 'no such object'/'not found' (both daemon phrasings). Then fresh independent review + re-release; on resume, plan->ledger->deps->create re-runs cleanly (deps will report already-prepared on exact-match).",
+  "checksRun": [
+    {"command": "sha256sum release-4 + 2 leased files", "exit": 0},
+    {"command": "bounded disposal of stale DEPS_ROOT/node_modules (verified under owned root, derived-only)", "result": "deleted"},
+    {"command": "controller('plan'/'ledger'/'deps')", "exit": "0/0/0"},
+    {"command": "controller('create',{dbPassword: in-memory})", "exit": 1},
+    {"command": "post-failure docker ps/network ls/inspect w005-d12", "result": "zero resources; daemon confirms 'network ... not found' phrasing"}
+  ],
+  "unperformed": "No start/verify/stage/supervise; password generated in-memory only and never persisted; no source edits; no Git writes; no teardown."
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released resume lifecycle under setup-release-7.json (sha256 046d80e9839ba497c07859f9e14ff8040c1bfe0d76826c4ce484b7ee0df9dc73); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_STAGE_ROOT_ALREADY_POPULATED",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupRelease7Sha256": "046d80e9839ba497c07859f9e14ff8040c1bfe0d76826c4ce484b7ee0df9dc73 (verified)",
+    "rootSetupRelease": true,
+    "hostMjsSha256": "c6f33fe16bb1352f563d10fae0e11929a04d6b622075425f8aeea086f636d775 (verified)",
+    "manifestSha256": "d2b15ff295795f0719a823cbf8c11fdc6bcfd098b1ca0e3ef5e972752173d5a9 (verified)",
+    "resumeSemantics": "Confirmed: resources exist running+verified from attempt 6; 'create' complete and NOT re-run (collision gates stay closed). Released sequence: plan -> ledger -> deps -> start -> verify -> stage -> supervise -> final_verify."
+  },
+  "modes": [
+    {"mode": "plan", "exit": 0, "result": "released plan emitted (stage phase argv now stagePipeArgv tar-over-exec route)"},
+    {"mode": "ledger", "exit": 0, "result": "existing ledger reused; sha256 c0676e352286181af3648c1de836236b5f0546c9894f094613d024018c543efa (unchanged — already records all three resources)"},
+    {"mode": "deps", "exit": 0, "result": "both mounts already-prepared; dependency-preparation.json regenerated under new manifest binding; sha256 449eaf247477d1554a40e4dace10d0ccd46541770f71dcc1da758ef9dcb80212"},
+    {"mode": "start", "exit": 0, "result": "idempotent; both containers already running"},
+    {"mode": "verify", "exit": 0, "result": "all checks passed (as attempt 6: db uid 999, runner uid 1000, internal network, image pins, limits, aliases)"},
+    {
+      "mode": "stage",
+      "exit": 1,
+      "failure": "envError 'environment_stage_forbidden': 'stage destination already exists; exclusive write refuses overwrite' at stageFiles (environment-host.mjs:266); first refused target C:\\Users\\shout\\AppData\\Local\\Temp\\w005-d12-delegation-stage\\package.json",
+      "rootCause": "Attempt 6's stage mode populated STAGE_ROOT with the hash-verified fixed inventory BEFORE the docker cp transport was refused by the read-only rootfs. The stageFiles exclusive non-symlink write gate correctly refuses to overwrite an already-populated stage root, so attempt-7 stage fails closed at the enumeration/copy step before the new tar transport is reached. No source defect in the round-24 transport itself — this is preserved partial state from attempt 6 meeting the fail-closed exclusive-write gate. Deleting/resetting STAGE_ROOT is an unauthorized mutation (no cleanup/disposal authority in release 7).",
+      "notReached": "the round-24 stagePipeArgv tar-over-exec transport was never invoked this attempt"
+    }
+  ],
+  "modesNotRun": ["supervise", "final_verify", "inner result retrieval 0..7"],
+  "receipts": {
+    "environment-ledger.json": "c0676e352286181af3648c1de836236b5f0546c9894f094613d024018c543efa",
+    "dependency-preparation.json": "449eaf247477d1554a40e4dace10d0ccd46541770f71dcc1da758ef9dcb80212"
+  },
+  "resourcesState": "Network w005-d12-delegation-net, db w005-d12-delegation-db (89161b0f77dcc41a64a5605016a4210eb0732ef52ea846ba5bbf5f77571d7272), runner w005-d12-delegation-runner (cfabd66645acf030abcedceec88db46e8f92ea60f3eccc4f4baab15af9d0acf6) all preserved running+verified; STAGE_ROOT still holds attempt-6 hash-verified inventory; no cleanup performed.",
+  "requiredAction": "BLOCKED_NEEDS_AUTHORITY: root must decide one of — (a) authorize a bounded reset of the owned STAGE_ROOT (delete contents only, it contains only the manifest-fixed hash-verified inventory) then re-run deps->...->stage under a resume release; (b) amend stageFiles to a verify-then-skip-if-identical idempotent path (source amendment -> fresh review + release); or (c) other approved handling. No worker retry without new release.",
+  "unperformed": "No create invoked; no STAGE_ROOT/DEPS_ROOT mutation; no container changes; no inner records; no final_verify; no source edits; no Git writes."
+}

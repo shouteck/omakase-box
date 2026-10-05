@@ -6,6 +6,7 @@ import { ReleaseScreen } from '../../releases/release-screen.js';
 import { AssignmentsScreen } from '../../assignments/assignments-screen.js';
 import { ReadinessPanel } from '../../readiness/readiness-panel.js';
 import { ReviewPanel } from '../../review/review-panel.js';
+import { PreparationScreen } from '../../boxes/preparation/preparation-screen.js';
 import { currentSession, rememberCsrf, signIn, signOut, storedCsrf, type PrivateSession } from '../../intake/private-client.js';
 
 function Console() {
@@ -13,7 +14,7 @@ function Console() {
   const [session, setSession] = useState<PrivateSession | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [tab, setTab] = useState<'intake' | 'intents' | 'releases' | 'assignments' | 'readiness' | 'review'>('intake');
+  const [tab, setTab] = useState<'intake' | 'intents' | 'preparation' | 'releases' | 'assignments' | 'readiness' | 'review'>('intake');
   const [intentId, setIntentId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ function Console() {
     <nav aria-label="Console areas">
       <button type="button" onClick={() => setTab('intake')}>Outcome intake</button>
       <button type="button" onClick={() => setTab('intents')}>Intent review</button>
+      <button type="button" onClick={() => setTab('preparation')}>Box preparation</button>
       <button type="button" onClick={() => setTab('releases')}>Release review</button>
       <button type="button" onClick={() => setTab('assignments')}>Customer assignments</button>
       <button type="button" onClick={() => setTab('readiness')}>Publication readiness</button>
@@ -67,6 +69,7 @@ function Console() {
     {tab === 'intake'
       ? <IntakeScreen session={session} onOpenIntent={id => { setIntentId(id); setTab('intents'); }} />
       : tab === 'intents' ? <IntentsScreen session={session} intentId={intentId} onIntentId={setIntentId} />
+      : tab === 'preparation' ? <PreparationScreen session={session} />
       : tab === 'releases' ? <ReleaseScreen key={session?.id ?? 'signed-out'} session={session} />
       : tab === 'assignments' ? <AssignmentsScreen session={session} publicationReady={session?.role === 'owner'} />
       : tab === 'readiness' ? <ReadinessPanel session={session} />
