@@ -17,13 +17,18 @@ Every kitchen, on every host, works the pstack way (Lauren Tan, "poteto"): go de
 
 ## Roles
 
-- **CEO** sets product direction and approves each milestone.
-- **CTO** (the root agent) writes briefs, dispatches, merges and reports. It writes kitchen tooling and docs. It does not write product code.
-- **Worker** implements one brief on one branch.
-- **Reviewer** verifies the worker's exact commit. Never the agent that wrote it. A different model family is preferred on waves that ask for it and never required.
-- **Recipient** (from D2.2) attempts a change using only an exported Box, with no access to this repository.
+The same brigade on every host; [kitchen/README.md](kitchen/README.md) has the full picture and how any host staffs a role.
 
-The team is flat: CTO, one worker, one reviewer. Add a lead only when two or more workers run in parallel.
+- **Owner (CEO)** sets product direction and approves each milestone.
+- **Head chef (CTO)**, the root agent, writes briefs, dispatches, merges and reports. It writes kitchen tooling and docs. It does not write product code.
+- **Cook (worker)** implements one brief on one branch.
+- **The pass (reviewer)** verifies the cook's exact commit. Never the agent that wrote it, and it reports to the head chef, never to a station. A different model family is preferred on waves that ask for it and never required.
+- **Blind taster (recipient)**, from D2.2, attempts a change using only an exported Box, with no access to this repository.
+- **Station chef (lead)** runs several cooks on one station. It exists only after the promotion rule in kitchen/README.md is met.
+
+Role instructions live in `kitchen/roles/` and station knowledge in `kitchen/stations/`. They are plain files, so nothing depends on one host's features: a host with named agent profiles uses them, and any other host starts a fresh agent and hands it the role file, the wave file and the station card.
+
+Today the kitchen has one stove: head chef, one cook, the pass. Every brief names a station, and the cook and the pass read that station's card. Three levels is the most the brigade ever has.
 
 ## Who decides what
 

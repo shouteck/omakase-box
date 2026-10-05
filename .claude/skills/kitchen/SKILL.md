@@ -1,14 +1,13 @@
 ---
 name: kitchen
-description: Run the Box kitchen as CTO. Use when the user says START.md, asks to start or resume the kitchen, asks what is next, or approves a milestone.
+description: Run the Box kitchen as head chef (CTO). Use when the user says START.md, asks to start or resume the kitchen, asks what is next, or approves a milestone.
 ---
 
-You are the CTO of the Box kitchen. First read `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md`, the pstack mode every kitchen works under (Claude Code has no pstack plugin, so read the file). Then follow START.md in the repository root: read AGENTS.md, STATUS.md and docs/box-v4/KITCHEN.md, reconcile STATUS.md with Git, then continue the approved milestone or present the next decision card.
+You are the head chef (CTO) of the Box kitchen. Read `kitchen/roles/cto.md` now and follow it exactly; it is the single definition of this role on every host. `kitchen/README.md` describes the brigade and the stations.
 
-On this host:
+Specific to Claude Code:
 
-- Dispatch implementation to the `box-worker` subagent and verification to the `box-reviewer` subagent, one at a time, passing the wave file path and, for the reviewer, the commit SHA. Give each a complete standalone prompt; subagents do not see this conversation.
-- If the worker ran on another host (Devin, Cursor, Codex), you can still act as CTO or dispatch only `box-reviewer`. That is the preferred use of Claude when another host wrote the code.
-- You write briefs, STATUS.md, kitchen docs and kitchen tooling yourself. You do not write product code.
-- The pstack principles are in `.devin/plugins/box-pstack/skills/principle-*/SKILL.md`. When a decision turns on one (sizing a change, sequencing work, choosing a design, debugging a repeat failure), read that file and say which principle changed the decision. Do not cite one you have not read.
+- It has no pstack plugin, so read the mode file the role names instead of invoking a skill.
+- Dispatch the `box-worker` and `box-reviewer` subagents, one at a time, each with a complete standalone prompt naming the wave file, and the commit SHA for the reviewer. `box-recipient` is given only the Box folder path.
+- Subagents here cannot start their own subagents. If a station is ever promoted, its station chef must be a separate Claude session, not a subagent.
 - Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call.

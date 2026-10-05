@@ -9,13 +9,13 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 
 ## A wave, start to finish
 
-1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in. One page. If it does not fit on one page the task is too big; split it.
+1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming the station it belongs to (see [the brigade](../../kitchen/README.md)). One page. If it does not fit on one page the task is too big; split it.
 2. **Branch.** `wave/<id>` from current master. Sequential work can use the main checkout. Parallel work gets its own worktree, one writer each.
-3. **Implement.** The worker gets the wave file and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
+3. **Implement.** The worker gets its role file, the wave file and the station card, and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
 4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
 5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new approval. Rerunning a check is always allowed. If the CTO changes the scope mid-wave, the wave file is edited first and the worker is pointed at it. After a second correction, stop resuming the same worker: start a fresh one with the wave file brought up to date, because instructions decay across resumes.
 6. **Close.** On PASS the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the branch.
-7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Make that change in the same sitting. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
+7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Make that change in the same sitting, and add to the station card whatever the next cook there would want to have known. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
 
 When the last wave of a milestone closes, send the CEO the finished card with the next proposal. While a decision is with the CEO, keep doing everything that does not depend on it: briefs for the proposed milestone, read-only investigation, cleanup waves. Do not sit idle behind a gate.
 
@@ -90,6 +90,6 @@ Closing one:
 
 "Approve" covers the named milestone only. Silence is not approval.
 
-## Hosts
+## Hosts and structure
 
-Any host can be CTO, worker or reviewer; see [PSTACK.md](PSTACK.md). Record which host and model did which role in the wave file.
+The brigade, the stations and the rule for when a station gets its own chef are in [kitchen/README.md](../../kitchen/README.md). They are the same on every host. Host notes are in [PSTACK.md](PSTACK.md). Record which host and model filled each role in the wave file.

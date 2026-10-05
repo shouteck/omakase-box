@@ -1,6 +1,6 @@
 # <id>: <one-line outcome>
 
-Milestone: <D2> · Base: `<master SHA>` · Branch: `wave/<id>` · Timebox: <hours; at expiry, report partial findings and stop>
+Milestone: <D2> · Station: <packaging | service-data | console | evidence> · Base: `<master SHA>` · Branch: `wave/<id>` · Timebox: <hours; at expiry, report partial findings and stop>
 
 ## Outcome
 
