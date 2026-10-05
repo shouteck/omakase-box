@@ -1,60 +1,78 @@
-# The kitchen operating contract
+# How the kitchen runs
 
-## Roles beneath the CEO
+The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The reasons behind it are in [LESSONS-W002.md](LESSONS-W002.md).
 
-For future D proposals apply delegation/VALIDATION-PLAN.md. Product owns the initial buyer/job and repeat-use pilot design; Platform captures actual preparation/setup effort without burdening requesters; Assurance owns fair ordinary-delegation comparisons, independent acceptance and honest commercial claims. Root relays the updated delegation-focus handoff at safe boundaries. Defining a pilot is not permission to contact participants, access private data or charge them; current W002 scope remains intact.
+## Units of work
 
-| Role | Owns | Delegates | Reports |
-|---|---|---|---|
-| CEO / head chef | Product priorities, wave approval, scope/cost/integration authority | CTO and station mandates | Human decision |
-| CTO / kitchen coordinator | Architecture recommendation, complete briefs, cross-track dependencies, acceptance state | Station leads and integration tasks | One consolidated CEO briefing/report |
-| Product and Experience lead | Request intake, approved outcome and minimal owner/recipient journey | UX/API/integration workers | Understandable agreement, preparation gaps and actual user evidence |
-| Platform and Execution lead | Portable source packages, Box/Git state, workspaces and submission/integration interfaces | Packaging/service/Git/workspace workers | Package usability, dependency boundaries and owner integration readiness |
-| Assurance and Research lead | Independent package sufficiency, owner acceptance and total-effort measurements | Independent verifiers and research-instrument workers | Exact verdicts, omitted context, integration rework and honest claims |
+- A **milestone** (D2, D3, ...) is what the CEO approves. It has an outcome the CEO can observe.
+- A **wave** is one task inside a milestone: one brief, one branch, one worker, one reviewer. The CTO opens and closes waves without asking.
 
-These are persistent responsibilities, not claims that five agents always run. The CTO and station leads manage; workers implement. A full-stack change can cross stations under one owning lead and explicit interface agreements. The integration worker is leased by the CTO/Platform lead; the CTO does not resolve code conflicts itself.
+## A wave, start to finish
 
-Future briefs follow DELEGATION-MAP.md and the D-series delivery ladder. The first proof is a prepared selected-source package, a fresh recipient contribution and owner-side verified integration. Conversation is one intake adapter, not a prerequisite. Bounties, private transformation and rich universal previews are later extensions. Relay .execution/box-v4/handoffs/delegation-focus-20261005.md through actual station/worker dispatches; file changes alone do not establish that active agents received it. Current W002 scope remains governed by its frozen approval.
+1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in. One page. If it does not fit on one page the task is too big; split it.
+2. **Branch.** `wave/<id>` from current master. Sequential work can use the main checkout. Parallel work gets its own worktree, one writer each.
+3. **Implement.** The worker gets the wave file and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
+4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
+5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new brief, no new approval. Rerunning a check is always allowed.
+6. **Close.** On PASS the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the branch.
 
-## Capacity and dispatch
+When the last wave of a milestone closes, send the CEO the finished card with the next proposal.
 
-Use three levels when the runtime supports them: root CTO, station lead, worker/verifier. Never invent nested tools. With four slots, CTO + one active lead + one worker + one verifier fills capacity. Collect other stations' briefing reports sequentially and rotate active stations. Do not create all leaders and then discover there are no worker slots. Heavy host checks run one at a time.
+## Verification
 
-If nesting is unsupported, a station lead can author the brief and the CTO can perform the available dispatch on its behalf. Label the flattened topology. If no implementation worker is available, the CTO prepares governance and reports the capability gap; it does not write product code. Implementation waits for a worker or an expressly approved change to the role contract, and independent acceptance stays open. Fresh workers receive consolidated briefs; reuse an agent only when its live checkout/process is costly to transfer.
+`node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, boundary checks, build and the named suites on the host, gives them a disposable Postgres, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
-Before product dispatch, brief the wave and obtain approval. Every worker gets task IDs, wave/brief hash, outcomes, dependencies and exact upstream interfaces/evidence, write/forbidden paths, base candidate, verification, progress supervision and command/resource/spending bounds, stop conditions, report path and full standing orders. Missing fields prevent dispatch. One candidate writer per worktree; coordinator-managed leases protect shared schema/migrations/tooling.
+- The candidate's identity is its commit SHA. Verify refuses to call a run with uncommitted changes acceptable.
+- Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
+- Tests named `*-live.test.ts` shell into the old container stack and are not part of ordinary verification until they are ported to the disposable database.
+- A lost or unclear result is fixed by running it again. Databases are created per run and destroyed after it, so a rerun costs nothing.
+- The reviewer's run is the one that counts. The worker's run is a self-check.
 
-## Reliable execution and recovery
+## Review
 
-The CEO-directed W002-CTO-R1 repair adds these concrete controls to future briefs: classify unconfirmed descendants before successful parent exit; capture complete durable stdout/stderr, literal exit and duration without accidentally backgrounding a compound shell list; serialize new JSON receipts rather than hand-escaping Windows paths. Preserve old invalid/UNKNOWN evidence and supersede it truthfully. An informative corrected-collector rerun does not require an unrelated source edit or a fresh agent. Record spawn/follow-up/wait separately with actual IDs, and prove a runtime route once per actor/environment change rather than repeating initial-probe agents. For the current recovery use the named flat Codex fallback, preserving the future pstack station model and all acceptance checks. This is not a claim to repair Devin's transcript UI.
+The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. It may add tests on the branch; it may not weaken existing ones. Different model family or host from the worker when available; say plainly when it was not.
 
-These lessons from W002 govern future briefs and dispatches. They do not amend a frozen wave, authorize execution while held, or replace its acceptance checks. The CEO's 5 October direction makes progress-based supervision the default for future proposals: no arbitrary overall completion deadline or blanket correction count. Preserve any exact limits still present in a currently approved wave. Historical effort remains information; it does not silently reinstate a superseded deadline.
+## When work stalls
 
-1. **Prove the execution route cheaply.** Before substantive work in a new or failed runtime, demonstrate the approved transport and output collection with a small permitted core-tool probe. A missing Linux path on Windows does not establish Docker failure. Read and hash container inputs inside that container. Reuse valid evidence while the route is unchanged; avoid repeated exploratory calls. Read-only transport probes do not authorize candidate execution, installation or resource creation.
-2. **Keep results durable.** Capture stdout, stderr, exact exit, duration and any background command identifier. Collect background output to completion through the actual tool. Process disappearance is not success. Lost output is an evidence blocker: diagnose collection rather than rerunning work to manufacture a result, especially where prior mutations are unknown. Account for owned descendants before reporting command completion. For Docker exec, terminating or timing out the host CLI does not prove the Linux child stopped. Put the command bound and durable result inside the approved Linux workspace, retain the actual tool session and collect it to completion; reconcile the owned remote process before another attempt.
-3. **Respect actual dependency layouts.** Use one canonical digest representation and the reviewed runtime's dependency resolution. Legitimate pnpm links require resolved-target boundary checks; rejecting all links is not a substitute. Hash original bytes, without reviewer instrumentation changing the input. Prefer existing tooling over a new general-purpose verification framework.
-4. **Recover toward acceptance.** Name the reproduced blocker, smallest correction and complete route to the product's unchanged acceptance criteria. Persist findings and periodic checkpoints. Continue informative in-scope corrections and affected reruns; record what changed and what the next attempt will teach. Repeated attempts without new evidence require lead diagnosis, simplification or safe handoff. Preserve effort history across sessions and resource/spending consumption without invented refunds. No overall deadline or fixed correction allowance is imposed by default. Keep declared command hang protection, narrow phase safeguards and actual resource/spending authority. If no safe informative step exists, report the concrete blocker and smallest next decision rather than building another recovery layer.
-5. **Allocate verification deliberately.** Keep distinct independent review and every required acceptance check. Do not duplicate full suites across all actors by default: focused worker self-checks plus reviewer execution can suffice when the approved brief specifies that allocation. Existing wave requirements cannot be silently reduced. Changed inputs reopen affected evidence, not unrelated checks by habit.
-6. **Transfer ownership practically.** Follow the approved transfer contract. Current process/command, lease, candidate and mutation reconciliation can establish sole ownership when that contract allows it; a previous coordinator acknowledgement is not a universal prerequisite. If the exact current brief requires one, preserve that requirement until an approved amendment. Missing historical handles prove neither shutdown nor conflict. Do not repeatedly look up unavailable agents, invent an acknowledgement, replay an ambiguous operation or kill unknown processes. A real conflict or incomplete mutation accounting blocks affected execution.
-7. **Give resources an owner and an exit plan.** Inventory existing containers and their purpose before proposing more. Reuse suitable resources; include any new resource count, limits, ownership and eventual cleanup proposal in the brief. Account for volatile database storage before stopping anything. Cleanup requires the applicable named authority; no blanket prune or data deletion. Preserve required resources without treating indefinite accumulation as the default design.
-8. **Keep engineering and CEO service proportionate.** Separate tool/environment/evidence failures from demonstrated product defects. Resolve routine engineering choices inside approved scope; do not invent gates around obsolete agent IDs or unchanged working capabilities. Propose a narrow amendment when constraints contradict necessary diagnostics. Keep configured models unless a change is explicitly requested; no quota-confirmation policy is reinstated. Give the CEO the short outcome, concrete blocker if any, recommendation and simple decision; keep technical detail in the records.
+- Two attempts at the same blocker with no new information: stop. The CTO diagnoses and either simplifies the task, changes the approach or escalates with one recommendation.
+- A wave running at three times its size guess gets the same treatment.
+- Separate environment failures from product defects in the report. If the environment is the problem, fix the environment as its own small wave before continuing the product task.
+- Never stack unknowns. A wave that changes product code does not also introduce a new runtime, a new verification route or a new agent host.
 
-W002 runtime readiness also established two launch lessons: probe the actual source-defined health route with its required Host header, and independently confirm the HTTP client sends that header. A stale planning hint is not evidence of an implemented endpoint. Preserve failed probes and record the corrected recipe explicitly; stop an unchanged failed probe loop after its hypothesis is disproved. In a read-only browser image, provide writable task-owned HOME/XDG profile directories only to the permitted browser or acceptance process under existing tmpfs. Prove real launch, roundtrip and clean close without weakening container hardening, downloading a browser or changing global settings. Reuse unchanged successful readiness evidence rather than replaying staging or builds.
+## Resources
 
-## Briefing and service
+Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. After a wave closes, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
 
-Each station reports what it wants to serve, what is already prepared, which workers will do it, how a verifier judges it and what could block it. The CTO consolidates station summaries and the actual task/dependency matrix into the full briefing. The CEO sees the short outcome-first decision card in CEO-SERVICE.md, with a link to the technical details. Do not manufacture messages or make the CEO direct every worker.
+## Records
 
-The approval binds the exact named wave. Within it, the team can fix/retry routine defects without asking again. No unapproved task or new placement can be added because it seems useful. When the wave finishes or scope materially changes, return to the CEO with evidence and the next proposal.
+- `STATUS.md`: one screen, replaced at every wave close. Never appended to.
+- `waves/<id>.md`: the brief, then the result. One file per wave.
+- Git: history. `git log --first-parent master` is the list of accepted waves.
+- `.kitchen/runs/`: verify logs, ignored by Git. Quote the summary line in the wave file.
 
-Completion notifications are queue pointers. Leads collect results and coverage, request independent verification and publish one track rollup. Root drains across tracks, integrates accepted interfaces and records exact revisions. A report is not a pass. Missing workers, abandoned scope, stale candidates and retries stay visible. Use the progress-supervision rules above, not a generic fixed retry count. A failed check closes the affected execution gate until informative safe correction, refreeze and current review; it cannot be bypassed. A new plan outside the wave awaits approval.
+There is no state file, approval file, lease file or evidence directory for new work.
 
-## Decision and review ownership
+## Decision cards
 
-Only actual human approval evidence opens a wave. A child cannot edit approval state or declare the programme complete. Only root changes product acceptance state; leads own track inbox/receipt files. Different reviewers check implementation candidates; a different model family is preferred when available within the approved model budget. Distinguish absent diversity from absent independence.
+Opening a milestone:
 
-Approved code, current review, merge authority and empirical usefulness are separate. New candidate bytes invalidate affected verdicts. A verifier failure gets a fix task; a missing environment gets a blocker. The CEO receives one compact finished report following CEO-SERVICE.md: actual outcomes, check status/material gaps, and the prepared next proposal with its recommendation and simple decision. Exact evidence, resources and technical decisions remain in the linked records; only necessary human choices appear in the card.
+> **D2 - proposed**
+> **You will get:** up to three outcomes you can see.
+> **We will check:** one sentence.
+> **Scope:** what it touches, plus any spending, external action or deletion.
+> **Recommendation:** approve D2. Reply **Approve** or describe a change.
 
-Saving accepted work is routine service: GIT-CHECKPOINTS.md supplies standing CEO authority for scoped reviewed commits and non-force pushes to the existing private origin/master. The CTO coordinates the checkpoint before the finished report, using an integration worker for product integration where needed. No repeated commit/push approval is required. Report the actual saved status and any blocker; next-wave "Approve" remains the product execution gate.
+Closing one:
 
-On hold, stop new dispatch and checkpoint running children before accepting new results. On resume, reconcile worktree/head/approval identities before touching anything. Late results are matched against the current candidate, not blindly integrated.
+> **D2 - completed / partial / blocked**
+> **Delivered:** up to three actual outcomes.
+> **Checks:** passed / incomplete / failed, with any material limit.
+> **Saved:** merged and pushed, or the blocker.
+> **Next: D3 - proposed.** Outcomes, check, scope.
+> **Recommendation:** approve D3. Reply **Approve** or describe a change.
+
+"Approve" covers the named milestone only. Silence is not approval.
+
+## Hosts
+
+Any host can be CTO, worker or reviewer; see [PSTACK.md](PSTACK.md). Record which host and model did which role in the wave file.
