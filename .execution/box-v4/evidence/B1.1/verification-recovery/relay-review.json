@@ -1,0 +1,188 @@
+{
+ "schemaVersion": 1,
+ "kind": "relay-preexecution-review",
+ "waveId": "W002",
+ "taskId": "B1.1",
+ "planVersion": "box-v4-2026-10-04.1",
+ "reviewer": "77c88b35",
+ "reviewedAt": "2026-10-04T16:47:59Z",
+ "reviewedAtSource": "actual host clock via date -u",
+ "verdict": "fail",
+ "productVerdict": "not_accepted",
+ "relayAuthorizedToExecute": false,
+ "authority": {
+  "r1": {
+   "briefDigest": "44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9",
+   "recomputed": true
+  },
+  "r2": {
+   "briefDigest": "1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+   "recomputed": true,
+   "approval": ".execution/box-v4/approvals/W002-r2-approval.json",
+   "message": "Approve",
+   "observedAt": "2026-10-04T15:50:36.0926937Z",
+   "boundDigestMatches": true
+  },
+  "lease": "sole writer box-worker/e44008a7 per state.json lease; reviewer 77c88b35 distinct"
+ },
+ "reviewedArtifactHashes": {
+  "scripts/box-verification/fixture-exec-host.mjs": "5b61aa58227f452919e490a59643fb54a2995c540db041b091401aae28ac7666",
+  "scripts/box-verification/fixture-exec-client.mjs": "4ae93912a19bfa51793cca69d47a2f8b29451b835f1d1366cdaaf04fde793557",
+  "scripts/box-verification/fixture-command-manifest.json": "94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7",
+  "scripts/docker.mjs": "f2f6caad839ef11703ea2a601257e7cf9e6d500279262587cdc2e08eec634f7b",
+  "scripts/vitest.config.mjs": "bcb91022694fc8c4f9cff9fd82aaaeba986e52538559e73ce880c2a3ea23ec60",
+  "tests/box/auth/fixture-transport.test.ts": "eea4d8ecb9ad224e44316266e2aed7f624296cf2b33bc29f9ef256a4e2a7b4eb",
+  "tests/box/auth/negative-scope.test.ts": "0e1b0abe7bd834392e50bc4b40b8e588bbad0ac776837a2a26948bd4bd2de6f9",
+  "tests/box/auth/support.ts": "d85a0ffb3d009c9b251f320110151fc8fe90be4b33e65dc94e17e82cd65cfae1",
+  ".execution/box-v4/evidence/B1.1/verification-recovery/browser-manifest.json": "ddaaea0067f725cbf7a096e523a2da27bc72329823972d967dfea4677a0817c5"
+ },
+ "candidateManifest": {
+  "package.json": "f58a04e0bdc46efb69e332fb6958d37321c17110cb1848ec44fd89c51cce83ca",
+  "packages/box-contracts/index.ts": "91d7061bcfd36630ce7bae6d9a2329c527e36773ca016f57d4969bedf4c04332",
+  "packages/box-contracts/package.json": "d217fac28d8f721f1a6f777b7999dfed38b72fbf52bc8d2776c054e03c32a28c",
+  "packages/contracts/auth/policy.ts": "5b303861d2a5dab8442c5b4c05984ce1983a2a32344ce1fa8fd8b65dc2ed7522",
+  "scripts/boundaries.mjs": "947e14ad51573b05da76f62d44599647ef720fef1ab807172954ce92e643be6c",
+  "scripts/docker.mjs": "f2f6caad839ef11703ea2a601257e7cf9e6d500279262587cdc2e08eec634f7b",
+  "scripts/vitest.config.mjs": "bcb91022694fc8c4f9cff9fd82aaaeba986e52538559e73ce880c2a3ea23ec60",
+  "scripts/box-verification/fixture-command-manifest.json": "94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7",
+  "scripts/box-verification/fixture-exec-client.mjs": "4ae93912a19bfa51793cca69d47a2f8b29451b835f1d1366cdaaf04fde793557",
+  "scripts/box-verification/fixture-exec-host.mjs": "5b61aa58227f452919e490a59643fb54a2995c540db041b091401aae28ac7666",
+  "services/private-api/boxes/store/schema.ts": "9692f18fec4e942e8773c4d335cd26552bbfe1913541d15d8db45054dc8e40ca",
+  "services/private-api/boxes/store/store.ts": "f592cb1850b49939eba4e8c09df2a01ab0827feb957a0259d3bf7e81646da44c",
+  "services/private-api/db/migrations/0012_open_box_foundation.sql": "f271a6a07dde82db2be33ee0f27a084530ca8afdeac8b0140d1f14910e5a8f84",
+  "services/private-api/db/migrations/meta/_journal.json": "d46dc1f035987525dd52e57e60fb12cfed73c38c05d507e496473b8a233bfa9a",
+  "tests/box/auth/box-store.test.ts": "498a9c8bb6c23e9b77b6dfbfe6849982bd5a978d5c56063bd45d220ff63f9a74",
+  "tests/box/auth/fixture-transport.test.ts": "eea4d8ecb9ad224e44316266e2aed7f624296cf2b33bc29f9ef256a4e2a7b4eb",
+  "tests/box/auth/negative-scope.test.ts": "0e1b0abe7bd834392e50bc4b40b8e588bbad0ac776837a2a26948bd4bd2de6f9",
+  "tests/box/auth/roles-merge.test.ts": "beb3c1433cb9b28491e3096838fc2cb12da135bc5780ca3735f4e7f8201156d2",
+  "tests/box/auth/scopes-idempotency.test.ts": "a98198cd70e2c3f5406ef6c29e4ac6b1f5a16003d908505f8824be3ca7912658",
+  "tests/box/auth/support.ts": "d85a0ffb3d009c9b251f320110151fc8fe90be4b33e65dc94e17e82cd65cfae1",
+  "tests/box/contracts/boundary.test.ts": "b1173a2420d47dd8c0750fa693c22650924f4025d8480d9ee2294e5b5bf56ecc",
+  "tests/box/contracts/box-schemas.test.ts": "5f7ed23c542395d4aad6cd1ba74d489306a6eee3df9595bd025950fb53c1406e"
+ },
+ "candidateManifestRecomputed": "all 22 candidate file digests independently recomputed from live working bytes; 0 mismatches; staged /workspace bytes identical for all 22 (sha256 per file inside w002-b11-ws); infra/compose.yaml and research/fixtures/candidates.json present; no extra unapproved writes observed in git status",
+ "commandsRun": [
+  {
+   "command": "sha256 W002-r2.md / W002.md",
+   "result": "match frozen digests"
+  },
+  {
+   "command": "recompute 22 candidate hashes working + staged",
+   "result": "22/22 match candidate-manifest-r3.json; parity confirmed"
+  },
+  {
+   "command": "git diff scripts/vitest.config.mjs",
+   "result": "single authorized change: testTimeout:30000 added; maxWorkers:1, include/exclude unchanged (r2 lease line 41)"
+  },
+  {
+   "command": "git diff scripts/docker.mjs",
+   "result": "adds opt-in BOX_VERIFICATION_TRANSPORT=mailbox branch; default path/behavior unchanged; unknown transport and malformed mailbox paths (.., shell chars, >512, empty) fail closed"
+  },
+  {
+   "command": "node -e argv capture via patched /tmp copies inside w002-b11-ws (no candidate bytes altered)",
+   "result": "captured actual expanded -e sources for verify-persistence/lifecycles/readiness/empty-migrations; fixed argv for verify-auth/intent-sessions/intake; doctor source computed manually"
+  },
+  {
+   "command": "node scripts/pnpm.mjs test:box-contracts (in w002-b11-ws)",
+   "exit": 0,
+   "result": "2 files, 7 tests passed"
+  },
+  {
+   "command": "node scripts/pnpm.mjs test:box-auth (in w002-b11-ws)",
+   "exit": 0,
+   "result": "5 files, 18 tests passed incl. new negative-scope (4) and fixture-transport (7)"
+  },
+  {
+   "command": "node scripts/pnpm.mjs build (in w002-b11-ws)",
+   "exit": 0,
+   "result": "tsc + vite builds completed"
+  },
+  {
+   "command": "node scripts/pnpm.mjs check (in w002-b11-ws)",
+   "exit": 1,
+   "result": "tsc clean; boundary passed (59 files); vitest 6 files failed/6 passed, 6 tests failed/34 passed - 4 live persistence (transport not executed, gated), browser-cookie (no Linux Chromium), environment external-image check (no image build metadata); recorded failed, not reclassified"
+  },
+  {
+   "command": "node scripts/pnpm.mjs test:contracts (in w002-b11-ws)",
+   "exit": 1,
+   "result": "2 live-DB files failed (transport gated), 13 files passed, 153/155 tests"
+  },
+  {
+   "command": "node scripts/pnpm.mjs test:planner (in w002-b11-ws)",
+   "exit": 1,
+   "result": "1 live-DB file failed (transport gated), 9 files passed, 50/51 tests"
+  },
+  {
+   "command": "test:auth",
+   "result": "not separately rerun; check subsumes the same auth vitest suite and produced identical 6-failed/6-passed file set as worker report"
+  }
+ ],
+ "sourceDigestVerification": {
+  "verifiedMatch": [
+   "lifecycles.private-api 6f9df38a",
+   "lifecycles.external-api fcace5e1",
+   "readiness.private-api 01ff0839",
+   "empty-migrations.private-api 22eb9937",
+   "empty-migrations.external-api 0c025099",
+   "doctor.private-api eaac982e",
+   "doctor.external-api 160e418a",
+   "contract fixture sha256 bcb46146 (matches manifest note)"
+  ],
+  "verifiedMismatch": [
+   {
+    "entry": "persistence.private-api",
+    "manifest": "8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae",
+    "actualExpandedSource": "5e7ae1664d5d157050fb754fc5314d39ec3310668a5f35fc4627a225a5c00b0d",
+    "cause": "manifest digest computed on unexpanded template literal; runtime -e source embeds JSON.stringify(contract) expansion"
+   },
+   {
+    "entry": "persistence.external-api",
+    "manifest": "63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954",
+    "actualExpandedSource": "5f6bffd416e6ce9cd3d7beaec300f2b1baf597f11af035e6990731e366a60595",
+    "cause": "same; also differs from raw-template digest 82d47e5e"
+   }
+  ],
+  "consequence": "client matchEntry and host buildExecArgv hash the ACTUAL argv/source; wrong manifest digests cause deterministic denied:unlisted_command/source_digest - fail closed, no bypass, but verify-persistence (workflow-live) cannot be served by this manifest"
+ },
+ "relayDesignFindings": [
+  "mailbox bounded: request <=16384B, input <=65536, output <=262144, seen set <=8192, log bounded to 128KiB, atomic tmp+rename writes",
+  "fixed argv maps only to manifest containers w002-b11-svc-(private|external)-api; container regex enforced; no shell strings - argv array only; no mounts/network/env/workdir from request",
+  "client enforces composeArguments literal prefix + exec -T only; env pairs strict regex; service/workdir/argv must match manifest entry; @SOURCE@ bound by sha256 of actual arg",
+  "malformed/oversized/non-v1/bad-UUID/traversal commandId/type escapes all throw; replay denied via persisted seen set; timeout hard-capped at 120s; errors propagate with code; no stdout content trusted",
+  "host relay re-validates entries at load and per request; requiresSpecificConfirmation entries denied; source digest re-verified host-side; responses only for validated UUID filenames",
+  "docker.mjs mailbox path validated (no .., no shell metachars, <=512); unknown transport value rejected"
+ ],
+ "destructiveSourceFindings": [
+  "No DROP/TRUNCATE/database-reset statements exist in any reached verify-* source",
+  "DELETE/UPDATE appear only inside assert.rejects deny() probes in verify-readiness/-persistence that immutable triggers MUST reject - denial assertions, not destructive ops",
+  "verify-empty-migrations runs CREATE DATABASE synthetic_empty_<hex> on the owned synthetic postgres - creation only, cleanup explicitly preserved_no_drop",
+  "migratedPool (tests/box/auth/support.ts) drops ONLY its own w002_b11_test_% ephemeral test databases with zero active connections - test-internal housekeeping on owned tmpfs fixture, disclosed by worker; not forwarded through the relay and touches no governed resource",
+  "no manifest entry carries destructive semantics; assertSafeEntry denies requiresSpecificConfirmation entries absent confirmation"
+ ],
+ "browserFindings": "browser-manifest.json: pinned playwright-core 1.63.0, browsers.json sha256 545d52f8 verified in-container; chromium-headless-shell rev 1243 / v153.0.8010.12 required; no executable anywhere in image (find scan clean); acquisition NOT performed (phase 2 gated); no download attempted by this review",
+ "secrecyFindings": "no secret values, session exports, raw tokens or docker env inspected or recorded; synthetic DB password file never read; only non-secret metadata collected",
+ "resourceObservations": [
+  "w002-b11-ws Up (checks executed inside only)",
+  "w002-b11-db Up (tmpfs, OOM-restart documented by worker; no governed data)",
+  "w002-b11-net Internal=true",
+  "w002-b11-srcimg Created (never run)",
+  "w002-b11-stage-helper Exited (previously stopped by root, deviations unchanged)",
+  "no w002-b11-svc-* fixture containers exist - none started",
+  "no relay execution, no service startup, no browser acquisition performed"
+ ],
+ "negativeCoverageFindings": [
+  "negative-scope.test.ts (new): expired scoped token refused server-side; immutable-trigger proof on token table; evaluate-capability token refused for execute; recordEvaluation recordedBy!=actor refused (missing_evidence); non-owner approveBehavior/assign/applyMerge all forbidden_role; owner merge path still works",
+  "support.ts reconstructed tail reviewed: helpers consistent with contracts schemas and suite usage; tokenHash-stored credentials only, no plaintext bearer leakage; no replay/role-gate weakening; migratedPool change is bounded test-DB cleanup + 3x retry"
+ ],
+ "requiredFixes": [
+  "Recompute persistence.private-api and persistence.external-api sourceSha256 against the ACTUAL expanded -e argv strings (contract JSON.stringify expansion applied), or make the -e source input-independent; corrected digests with singleUnitContract bcb46146 input: private=5e7ae1664d5d157050fb754fc5314d39ec3310668a5f35fc4627a225a5c00b0d external=5f6bffd416e6ce9cd3d7beaec300f2b1baf597f11af035e6990731e366a60595",
+  "intake-fixture.private-api and intent-session.private-api argv patterns could not be end-to-end argv-captured (playwright import / early assert) - entry shapes consistent with reach sites; verify at execution",
+  "any byte change to relay/client/manifest reopens this pre-execution review"
+ ],
+ "limitations": [
+  "host relay never executed (gate); mailbox round-trip tested only via in-workspace test double, not against the daemon",
+  "doctor/intake/intent-session argv verified by source inspection + partial capture, not full live exec",
+  "test:auth not rerun standalone; check covers the same suite"
+ ],
+ "explicitStatement": "This receipt is a PRE-EXECUTION gate review only - NOT r2 approval (already granted by CEO record), NOT product acceptance. B1.1 remains not_accepted. The host relay is NOT authorized to execute; execution requires the corrected manifest bytes (exact fixes above) to be re-reviewed. Any byte change to fixture-exec-host.mjs 5b61aa58, fixture-exec-client.mjs 4ae93912 or fixture-command-manifest.json reopens this review."
+}

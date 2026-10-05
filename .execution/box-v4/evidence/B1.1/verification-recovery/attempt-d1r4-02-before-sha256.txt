@@ -1,0 +1,2 @@
+c2192eee062b46eb26e06f8eed4dc6e260a7d31423025a75c3f3385ab8f56ee2 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/environment-manifest.json
+134439ce984f385b8249154778b5abd987d706114eb6453986ac3ec8e2ce5c67 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/environment-host.mjs

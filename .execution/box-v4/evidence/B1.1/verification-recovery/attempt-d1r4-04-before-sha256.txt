@@ -1,0 +1,2 @@
+bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5  scripts/box-verification/environment-manifest.json
+6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d  tests/box/verification/environment-readiness.test.ts

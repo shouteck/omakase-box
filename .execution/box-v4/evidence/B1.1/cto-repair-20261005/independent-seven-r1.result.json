@@ -1,0 +1,7 @@
+{
+  "exit": 1,
+  "durationSeconds": 8.687999999994645,
+  "startedAtUtc": "2026-10-05T03:14:43.892510+00:00",
+  "endedAtUtc": "2026-10-05T03:14:52.571396+00:00",
+  "plan": "independent-seven-command-plan-r1.json"
+}

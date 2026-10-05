@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_read_only_required_identity_preflight",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "authority": ".execution/box-v4/approvals/W002-r7-approval.json",
+  "briefDigest": "sha256:bbf8e4c0533d9cbad9b715b7b5dc4079a27b9e2f09b66877a5f4ec9d2170057b",
+  "recordedAtUtc": "2026-10-04T19:46:46.709Z",
+  "timestampMeaning": "Observed host clock, not human-message timestamp; supplied session date 2026-10-05 differs.",
+  "runtime": "devin_portable_pstack_adaptation",
+  "skillInvocation": "Actual functions.skill(skill=poteto-mode) succeeded from the installed 0.11.3-box.1 cache in this session; recall/unslop also invoked. No native Cursor or Codex activation claimed.",
+  "identityLookups": [
+    {"tool": "functions.read_subagent", "agentId": "9d815787", "role": "box-platform-lead", "result": "No subagent found with agent_id=9d815787"},
+    {"tool": "functions.read_subagent", "agentId": "0f83ba36", "role": "box-worker", "result": "No subagent found with agent_id=0f83ba36"},
+    {"tool": "functions.read_subagent", "agentId": "8eabd268", "role": "box-reviewer", "result": "No subagent found with agent_id=8eabd268"}
+  ],
+  "status": "blocked_required_team_unavailable",
+  "stopAuthority": ".execution/box-v4/briefings/W002-r7.md line21 requires stop/rebrief, not replacement or flattening.",
+  "actualDispatches": 0,
+  "candidateLeaseGranted": false,
+  "git": {"commandScope": "git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp", "head": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7", "branch": "master", "status": "Dirty existing product/harness/governance work preserved; cached tracking reports master...origin/master", "remotePrivacyAndHistory": "not freshly checked; no upload attempted"},
+  "briefHashVerification": "Root host node:crypto SHA256 bookkeeping recomputed exact r7/r6/r5/r4 bytes against their frozen digests; all match. No candidate module execution.",
+  "verificationLimitations": ["current14/protected16/staged22 not rehashed in this preflight because the required identity gate stopped before a lease", "No live host/container process ownership check; unavailable agents do not prove old processes stopped", "Current Free routing not reconfirmed; r6 human confirmation remains historical, main model preserved, child model unobserved and quota unknown", "PowerShell hash bookkeeping invocation failed before output; existing Bash/Node bookkeeping invocation succeeded", "No product/harness tests, readiness, G5 resumption or acceptance demonstrated"],
+  "budget": {"priorConservativeActiveMinutes": 134, "totalActiveMinuteLimit": 180, "remainingMaximumMinutes": 46, "r7WorkerAllocationConsumed": false, "r7ReviewerAllocationConsumed": false, "r7CorrectionUsed": 0, "environmentAttemptsUsed": 0, "historicalProductRetriesUsed": 1, "meaning": "No worker/reviewer dispatched or active candidate work performed; no historical refund/reset"},
+  "actionsNotPerformed": ["candidate writes", "worker/reviewer dispatch", "tests", "container mutation", "stage/mailbox population", "host relay/harness startup", "API/DB mutation", "credential reads", "cleanup/deletion", "settings/model changes", "Git staging/commit/push"],
+  "candidateStatus": "r6 exact independent FAIL remains current history; B1.1 unaccepted, setup/readiness/acceptance gates closed",
+  "checkpoint": "Blocked product/harness and unreviewed concurrent instruction work remain local; no eligible new independently reviewed checkpoint identified",
+  "nextProposal": ".execution/box-v4/briefings/W002-r8.md"
+}

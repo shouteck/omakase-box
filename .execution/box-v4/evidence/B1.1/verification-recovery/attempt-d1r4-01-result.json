@@ -1,0 +1,16 @@
+{
+  "attempt": "d1-r4-01",
+  "status": "completed",
+  "literalResults": [
+    {"command": "sha256sum (before)", "shell": "native host git-bash", "exit": 0, "output": "attempt-d1r4-before-sha256.txt"},
+    {"command": "node --check x4 + JSON.parse x2 (host, parse-only bookkeeping)", "exit": 0, "output": "SYNTAX_OK / JSON_OK", "note": "Windows parse-only check performed once; authoritative execution is the Linux check below"},
+    {"command": "docker --context desktop-linux exec w002-b11-ws sha256sum review-dir files", "exit": 0, "output": "all 18 copied files match current host digests; companions match r8 contract digests"},
+    {"command": "docker exec w002-b11-ws timeout 120 node verifyDependencyClosure(manifest.linuxDependencies, root=/workspace/node_modules)", "exit": 0, "duration": "<120s", "stdout": "dependency-closure-d1r4.json", "result": "{\"status\":\"ok\",\"packageCount\":44,\"fileCount\":1153,\"closureSha256\":\"6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6\"}"},
+    {"command": "docker exec w002-b11-ws 'cd /workspace/.d1-r4-worker-review-d1r4w1 && timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs'", "exit": 0, "wallDurationS": 27, "vitestDurationS": 21.19, "stdout": "vitest-selection-d1r4.stdout.txt", "stderr": "empty", "statusFile": "vitest-selection-d1r4.stderr-status.txt", "testCounts": "3 files passed (3); 60 tests passed (60): environment-readiness 21, relay-lifecycle 32, fixture-transport 7", "shellId": "docker exec one-shot; no owned descendants left running (verified: no node processes remain)"}
+  ],
+  "ownedDescendants": "vitest run completed with exit 0 inside the bounded timeout; polling confirmed no residual node processes",
+  "mutationDisposition": "8 leased files edited; fresh additive review dir /workspace/.d1-r4-worker-review-d1r4w1 (host C:/Users/shout/AppData/Local/Temp/w002-b11-stage/.d1-r4-worker-review-d1r4w1) created; node_modules is a symlink to /workspace/node_modules (read-only reference, no copy); evidence records added under this directory; no other mutations",
+  "concreteFinding": "Corrected verifyDependencyClosure reproduces the canonical 44/1153/6dafd9a0 closure end-to-end; all gates order before Docker mutation; descendant probe now covers normal exits; writeResult persists record before response; fresh-mailbox exclusivity enforced; r8-added comments removed; manifests re-digested",
+  "nextDecision": "candidate frozen for the SAME distinct reviewer's exact pre-execution review",
+  "failedOrBackgroundCommands": "two earlier exec tool invocations backgrounded without retrievable output (IDs 72a663, 2c4433, f510fe, 299a95); their work was repeated once with durable file output — no unchanged failure re-run for cleaner output; no lost-result inference"
+}

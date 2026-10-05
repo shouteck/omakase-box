@@ -1,0 +1,115 @@
+{"assurance":"tested","status":"passed","checkedSourceFiles":59,"limitation":"Application workspace source-import policy; not a third-party supply-chain audit or runtime ACL proof."}
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/stage[39m
+
+ [32m✓[39m tests/bootstrap/services.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 5967[2mms[22m[39m
+   [32m✓[39m private-api [2m(3)[22m
+     [33m[2m✓[22m[39m returns a fixed positive health projection without credentials[33m 5936[2mms[22m[39m
+ [32m✓[39m tests/bootstrap/commands.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 4320[2mms[22m[39m
+   [32m✓[39m honest capability and gate commands [2m(5)[22m
+     [33m[2m✓[22m[39m fails the final delivery verifier until required gates exist[33m 2093[2mms[22m[39m
+     [33m[2m✓[22m[39m does not print environment credentials in doctor output[33m 2111[2mms[22m[39m
+ [32m✓[39m tests/bootstrap/environment.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 48[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m14 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 05:09:22
+[2m   Duration [22m 25.30s[2m (tests 52%, import 34%, transform 12%, worker 1%)[22m
+
+[2m    Isolate [22m [33m3 workers spawned[39m[2m · ~1.85s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~3.70s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/stage[39m
+
+ [32m✓[39m tests/auth/persistence/auth-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 41287[2mms[22m[39m
+   [33m[2m✓[22m[39m actual synthetic APIs reject forged identity, CSRF, expired sessions and invitation replay[33m 41285[2mms[22m[39m
+ [32m✓[39m tests/auth/persistence/migrations-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 10987[2mms[22m[39m
+   [33m[2m✓[22m[39m applies all forward migrations and replays on fresh identified synthetic databases without dropping data[33m 10985[2mms[22m[39m
+ [32m✓[39m tests/auth/routes.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 5980[2mms[22m[39m
+   [33m[2m✓[22m[39m logout requires verified mutation authority and expires only the host-local session cookie[33m 5941[2mms[22m[39m
+ [32m✓[39m tests/auth/persistence/workflow-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 5882[2mms[22m[39m
+   [33m[2m✓[22m[39m real synthetic PostgreSQL enforces revision/approval and reservation concurrency invariants[33m 5880[2mms[22m[39m
+ [32m✓[39m tests/auth/persistence/lifecycle-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3060[2mms[22m[39m
+   [33m[2m✓[22m[39m real PostgreSQL rejects lifecycle bypass, identity mutation, supersession reset and outbox tampering[33m 3059[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/browser-cookie.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 400[2mms[22m[39m
+   [33m[2m✓[22m[39m real browser sends synthetic private cookies only to the private hostname (bootstrap policy, not DB authentication)[33m 398[2mms[22m[39m
+ [32m✓[39m tests/auth/credentials.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 404[2mms[22m[39m
+   [33m[2m✓[22m[39m uses salted bounded scrypt hashes and constant-format verification[33m 400[2mms[22m[39m
+ [32m✓[39m tests/auth/session-store.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 269[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/owner.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 181[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/environment.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/cookie-policy.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/owner-store.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[32m40 passed[39m[22m[90m (40)[39m
+[2m   Start at [22m 05:09:52
+[2m   Duration [22m 117.92s[2m (tests 73%, import 22%, transform 4%, worker 1%)[22m
+
+[2m    Isolate [22m [33m12 workers spawned[39m[2m · ~2.00s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~22.04s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/stage[39m
+
+ [32m✓[39m tests/contracts/publication/gate.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 7268[2mms[22m[39m
+   [32m✓[39m readiness record routes — role-gated evidence writes [2m(4)[22m
+     [33m[2m✓[22m[39m owner records a human review; operator records machine evidence[33m 7153[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/routes.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 6488[2mms[22m[39m
+   [33m[2m✓[22m[39m intent routes exist only through authorized wiring and enforce role policy on every route[33m 6405[2mms[22m[39m
+ [32m✓[39m tests/contracts/fixture/private-shop.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 6020[2mms[22m[39m
+   [32m✓[39m synthetic pre-change fixture and independently authored goals [2m(6)[22m
+     [33m[2m✓[22m[39m has an actual synthetic selection HTTP route and safe origin enforcement[33m 5980[2mms[22m[39m
+ [32m✓[39m tests/contracts/boundaries.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 4745[2mms[22m[39m
+   [32m✓[39m public/private import export boundaries [2m(4)[22m
+     [33m[2m✓[22m[39m rejects private package imports and handles static imports, reexports and dynamic imports[33m 1423[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed for an unresolved dynamic import[33m 774[2mms[22m[39m
+     [33m[2m✓[22m[39m walks real external source import closures without private source access[33m 2537[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/session-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3386[2mms[22m[39m
+   [33m[2m✓[22m[39m actual private DB session records protect intent revisions, decisions and immutable owner approval[33m 3384[2mms[22m[39m
+ [32m✓[39m tests/contracts/publication/readiness-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1450[2mms[22m[39m
+   [33m[2m✓[22m[39m real PostgreSQL enforces readiness immutability, owner review authority and solve classification[33m 1449[2mms[22m[39m
+ [32m✓[39m tests/contracts/fixture/seed.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 767[2mms[22m[39m
+   [33m[2m✓[22m[39m seeds only a tagged synthetic workspace, preserves content-addressed snapshots and excludes answers[33m 765[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/orchestrator.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+ [32m✓[39m tests/contracts/composition.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m tests/contracts/schemas.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/contracts/graph-hardening.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/contracts/paths.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/session-store.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/contracts/workflow/transitions.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/contracts/canonical-array.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m155 passed[39m[22m[90m (155)[39m
+[2m   Start at [22m 05:11:54
+[2m   Duration [22m 88.52s[2m (tests 49%, import 43%, transform 5%, worker 2%)[22m
+
+[2m    Isolate [22m [33m15 workers spawned[39m[2m · ~1.76s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~24.66s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/stage[39m
+
+ [32m✓[39m tests/planner/evidence/intake-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 15003[2mms[22m[39m
+   [33m[2m✓[22m[39m persists pinned private evidence with actual session/ownership, atomic quotas and inert browser downloads[33m 15002[2mms[22m[39m
+ [32m✓[39m tests/planner/partition/preparation-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 6213[2mms[22m[39m
+   [33m[2m✓[22m[39m an owner request for the exact approved intent revision composes connected work-unit proposals without snapshot text[33m 6148[2mms[22m[39m
+ [32m✓[39m tests/planner/provider/demo.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m tests/planner/partition/composed-selection.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 182[2mms[22m[39m
+ [32m✓[39m tests/planner/provider/ollama.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 115[2mms[22m[39m
+ [32m✓[39m tests/planner/provider/transport.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m tests/planner/evidence/snapshots.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/planner/provider/contracts.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m tests/planner/evidence/media.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/planner/evidence/retrieval.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[32m51 passed[39m[22m[90m (51)[39m
+[2m   Start at [22m 05:13:28
+[2m   Duration [22m 66.54s[2m (tests 48%, import 46%, transform 3%, worker 2%)[22m
+
+[2m    Isolate [22m [33m10 workers spawned[39m[2m · ~2.11s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~19.01s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

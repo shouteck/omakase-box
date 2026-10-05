@@ -1,0 +1,14 @@
+{
+  "status": "collector_timeout_completion_unknown",
+  "durationLimitMs": 90000,
+  "matchedOwnedProcesses": [
+    {
+      "pid": 24574,
+      "cwd": "/workspace/.r4-harness-review-cto-r1-dependency",
+      "argv": [
+        "node",
+        "--input-type=module"
+      ]
+    }
+  ]
+}

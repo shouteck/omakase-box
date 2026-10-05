@@ -1,0 +1,25 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/workspace/.d1-r4-worker-review-d1r4w1[39m
+
+ [32m✓[39m tests/box/verification/relay-lifecycle.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 11440[2mms[22m[39m
+   [32m✓[39m relay lease and lifecycle [2m(5)[22m
+     [33m[2m✓[22m[39m returns unavailable, not stopped, when drain never observes termination[33m 10037[2mms[22m[39m
+   [32m✓[39m exec runner termination accounting [2m(4)[22m
+     [33m[2m✓[22m[39m accounts termination for a hung child without fabricating remote state[33m 505[2mms[22m[39m
+   [32m✓[39m run supervisor gate [2m(2)[22m
+     [33m[2m✓[22m[39m finishes a bounded session and stops when the deadline is tiny[33m 326[2mms[22m[39m
+   [32m✓[39m live wiring: real wrapper round-trip [2m(1)[22m
+     [33m[2m✓[22m[39m runs the actual fixture-exec-runner module and transforms its real envelope[33m 316[2mms[22m[39m
+ [32m✓[39m tests/box/verification/environment-readiness.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 585[2mms[22m[39m
+   [32m✓[39m readiness: database, drift and relay run contract [2m(4)[22m
+     [33m[2m✓[22m[39m bounds DB readiness to at most two attempts and reports unavailable[33m 502[2mms[22m[39m
+ [32m✓[39m tests/box/auth/fixture-transport.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 264[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m60 passed[39m[22m[90m (60)[39m
+[2m   Start at [22m 21:58:47
+[2m   Duration [22m 21.19s[2m (tests 88%, import 7%, transform 3%, worker 2%)[22m
+
+[2m    Isolate [22m [33m3 workers spawned[39m[2m · ~2.37s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~4.74s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

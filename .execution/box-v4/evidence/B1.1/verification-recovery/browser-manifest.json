@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "wave": "W002",
+  "task": "B1.1",
+  "briefDigest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+  "workerDispatchId": "e44008a7",
+  "phase": "1-read-only-inspection",
+  "observedInside": {
+    "container": "w002-b11-ws",
+    "image": "sha256:99fc47dac8b729a5060068378def035fab6542c9be55885187251291e71e65c9",
+    "user": "1000:1000"
+  },
+  "installedPackage": {
+    "name": "playwright-core",
+    "version": "1.63.0",
+    "path": "node_modules/.pnpm/playwright-core@1.63.0/node_modules/playwright-core/browsers.json",
+    "browsersJsonSha256": "545d52f8382c391e605562c330e9c1c534a16045898203037a49bb8bd769a946",
+    "peerPackages": [
+      "playwright@1.63.0",
+      "@playwright/test@1.63.0"
+    ]
+  },
+  "requiredBrowsers": [
+    {
+      "name": "chromium-headless-shell",
+      "revision": "1243",
+      "browserVersion": "153.0.8010.12",
+      "installByDefault": true,
+      "expectedExecutable": ".runtime/browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell",
+      "invokedBy": "tests/auth/bootstrap/browser-cookie.test.ts chromium.launch({headless:true})"
+    },
+    {
+      "name": "chromium",
+      "revision": "1243",
+      "browserVersion": "153.0.8010.12",
+      "installByDefault": true,
+      "note": "full chromium also pinned at revision 1243; headless shell is the launch target in headless mode"
+    }
+  ],
+  "environmentBinding": {
+    "browsersPathSource": "scripts/suite.mjs sets PLAYWRIGHT_BROWSERS_PATH=<root>/.runtime/browsers",
+    "expectedCacheRoot": "/workspace/.runtime/browsers",
+    "existingImageContents": "no chromium/headless_shell executable anywhere in image filesystem (find scan clean); no browser dirs under HOME/.cache or package .local-browsers"
+  },
+  "acquisitionPlan": "Phase 2 only (not executed): one-time 'pnpm exec playwright install chromium' (or install chromium-headless-shell) inside a separate bounded non-root setup container containing only the pinned public toolchain and an empty browser-cache destination, temporary egress limited to the installer-selected official HTTPS artifact host; then stage executable/support files into /workspace/.runtime/browsers. Artifact hashes to be pinned at acquisition and bound in this manifest's r2 update.",
+  "hostCacheNote": "Host .runtime/browsers contains Windows binaries (chromium-1243, chromium_headless_shell-1243, ffmpeg-1011, winldd-1007); unusable for the Linux container and never read beyond directory listing.",
+  "status": "inspection-complete-no-download"
+}

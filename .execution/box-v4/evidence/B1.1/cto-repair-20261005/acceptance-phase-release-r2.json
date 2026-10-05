@@ -1,0 +1,16 @@
+{
+  "kind": "r2_current_full_acceptance_phase_release",
+  "repairId": "W002-CTO-R2",
+  "recordedAtUtc": "2026-10-05T03:34:06.210199+00:00",
+  "authority": ".execution/box-v4/briefings/W002-CTO-R2.md",
+  "review": "independent-review-r2-final.json",
+  "reviewSha256": "ba8292c3a283426a8bd9ea7c5c147369482f0c8aeed0339a131d3a263321b8db",
+  "ready": "independent-environment-ready-r2.json",
+  "readySha256": "5039dede28f37f211c579a22ea12f281c9dcef6013b03bc0140ddc129748c137",
+  "manifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "sourceCount": 456,
+  "release": "Complete unchanged original seven once on frozen candidate, with verified scoped HOME/XDG settings, all8min limits, completeoutput/owneddescendant requirements. Informative launcher repair precedes this release; former firstcommandFAIL preserved.",
+  "newFeatureApproved": false,
+  "oldDevinResumed": false,
+  "productAccepted": false
+}

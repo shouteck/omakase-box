@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "kind": "worker_receipt",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "release": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker-release.json",
+  "worker": "Devin sole implementation worker dispatch (this session); distinct reviewer pending",
+  "baseCommit": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "baseManifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "newManifestDigest": "ebdd89a9ffd1b17fd939ac9d03e5be8830815ee9b019441805cef96055e888bc",
+  "candidateFiles": {
+    "tests/box/verification/environment-readiness.test.ts": {
+      "before": "bab5ddf71e83c87b08f2b6e69c3efc5aea5bca512641e75fc1f7383bbc0ef279",
+      "after": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735"
+    },
+    "tests/box/verification/relay-lifecycle.test.ts": {
+      "before": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825",
+      "after": "91e06903c8b308f7ccf38c397d21d17aa21260eced90d64fc98e80cf3d6d5aa6"
+    },
+    "scripts/box-verification/environment-manifest.json": {
+      "before": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+      "after": "ebdd89a9ffd1b17fd939ac9d03e5be8830815ee9b019441805cef96055e888bc",
+      "change": "refrozen sha256 rows only for the two changed test files"
+    }
+  },
+  "changeSummary": "Replaced untyped static .mjs imports with non-literal dynamic imports (new URL(..., import.meta.url).href) bound to explicit honest module interfaces matching the verified runtime export surface; annotated implicit-any callback parameters; added honest narrowing/optional-chain guards for noUncheckedIndexedAccess and optional result fields. No assertions, expected outcomes, comments, suppressions, casts to any, or test skips. All five imported .mjs helpers are runtime-verified against their declared interfaces via the passing 65-test regression.",
+  "reproducedBug": "independent-seven-r2 command3 node scripts/pnpm.mjs check exit 2 with 26 errors (TS7016 x5, TS7006 x14, TS2532 x2, TS2345 x2, TS18046 x2, TS2769-adjacent) all inside the two leased test files",
+  "checks": [
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "where": "w002-b11-ws:/workspace/.devin-h1-check/src (exact source copy, dep aliases symlinked to /workspace/*/node_modules and /workspace/node_modules)",
+      "exit": 0,
+      "stdoutLines": 0,
+      "stderrLines": 0,
+      "note": "whole tsconfig include set typechecks clean; reproduced failing stage passes"
+    },
+    {
+      "command": "node scripts/suite.mjs box --suite verification",
+      "where": "same copy",
+      "exit": 0,
+      "result": "2 test files passed, 65/65 tests passed, duration 24.38s, all original assertions unchanged"
+    },
+    {
+      "command": "node scripts/pnpm.mjs check",
+      "where": "same copy",
+      "exit": 1,
+      "durationSec": 145,
+      "started": "04:15:12Z",
+      "ended": "04:17:37Z",
+      "note": "tsc stage passed (no output), boundaries passed (checkedSourceFiles 59), bootstrap suite 14/14 passed; auth suite reported 5 failures, all spawn docker ENOENT - the workspace container has no docker CLI and no live fixture env; unrelated to candidate change; contracts/planner suites not reached. Prior run of same check on this copy before dep-alias fix exited 2 with 622 errors including the original 26-file set."
+    }
+  ],
+  "transportProof": "tar|docker exec stream into w002-b11-ws:/workspace/.devin-h1-check/src plus sha256sum parity verified on copied files (host ba30ea.../91e069... matched container); docker cp used to retrieve durable logs",
+  "descendantStatus": "no candidate/test processes remain in w002-b11-ws (polled /proc cmdline after each run); timeout(1) bounded all checks",
+  "unchangedEvidence": [
+    "base copies preserved under devin-h1-worker/base/",
+    "worker-scoped.diff contains full unified diff (381 lines)",
+    "manifest remains lexicographically sorted, 455 rows, only the two leased test rows changed"
+  ],
+  "limitations": [
+    "auth/contracts/planner tail of check cannot run honestly in the side workspace: live tests require the reviewed runner/docker adapter (spawn docker ENOENT) and I am not authorized to provision or mutate DB fixtures; exit-1 tail is environmental, captured verbatim",
+    "interfaces declared in the two leased files are the tests runtime-verified contract surface only; the .mjs implementations keep no declaration files per scope rules",
+    "candidate not overlaid onto w002-b11-linux-r4-env2 /stage; independent review + root release pending",
+    "no acceptance claim; seven-command batch not rerun"
+  ],
+  "notTouched": [
+    "fixture relay poller PID 201644 / mailbox / lease",
+    "runner /stage bytes",
+    "scripts/box-verification/*.mjs implementations",
+    "tsconfig/declaration files/dependencies/tests assertions"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "read_only_resource_observation",
+  "recordedAtUtc": "2026-10-04T23:45:08.065401+00:00",
+  "hostFreePhysicalKiB": 3593320,
+  "hostTotalKiB": 16708716,
+  "dockerMemoryBytes": 8295096320,
+  "runningContainers": 10,
+  "preservedW002Running": 6,
+  "newRepairNamesPresent": false,
+  "observedContainerWorkingSetsMiB": [
+    32.38,
+    49.06,
+    110.4,
+    117.1,
+    101.8,
+    130.7,
+    44.28,
+    78.16,
+    225.7,
+    222.9
+  ],
+  "plannedNewLimitsBytes": [
+    2147483648,
+    1073741824
+  ],
+  "finding": "Observed headroom supports serialized bounded setup; limits are ceilings, not reservations. Recheck identity/OOM and stop on new OOM; no preservation cleanup authorised."
+}

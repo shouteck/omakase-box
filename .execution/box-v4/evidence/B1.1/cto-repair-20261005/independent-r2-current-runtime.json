@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "/root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T03:33:03.364843+00:00",
+  "checks": {
+    "focusedRuntime": true,
+    "source456": true,
+    "relay": true,
+    "runnerIdle": true,
+    "resourcesSameNoOom": true
+  },
+  "relay": {
+    "relay": {
+      "status": "pass",
+      "lease": {
+        "schemaVersion": 1,
+        "runId": "w002-b11-r4-env2",
+        "environmentId": "w002-b11-env-r4-env2",
+        "issuedAt": "2026-10-05T03:11:46.137Z",
+        "expiresAt": "2026-10-05T06:11:46.138Z",
+        "owner": "fixture-exec-host"
+      }
+    },
+    "lifecycle": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "at": "2026-10-05T03:11:46.143Z"
+    },
+    "responses": [],
+    "status": "pass"
+  },
+  "top": {
+    "exit": 0,
+    "stdout": "PID                 PPID                COMMAND\n50551               50524               sleep infinity\n",
+    "stderr": ""
+  },
+  "identities": [
+    {
+      "name": "w002-b11-linux-r4-env2",
+      "expectedId": "9161a456732e470d9fea5a5aeb79849f47508644cda8fe2eb6ac03a9747453c2",
+      "exit": 0,
+      "observation": "9161a456732e470d9fea5a5aeb79849f47508644cda8fe2eb6ac03a9747453c2 true false",
+      "pass": true
+    },
+    {
+      "name": "w002-b11-box-db-r4-env2",
+      "expectedId": "da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86",
+      "exit": 0,
+      "observation": "da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86 true false",
+      "pass": true
+    }
+  ]
+}

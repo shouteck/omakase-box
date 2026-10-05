@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_handover_progress_checkpoint",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "status": "worker_correcting_leased_test_typing",
+  "activeWriter": "box-worker/483988b4",
+  "independentReviewer": "box-reviewer/27f919af",
+  "dispatches": "devin-h1-dispatch-001.json",
+  "diagnosis": "devin-h1-diagnostic-review.json",
+  "acceptanceReleased": false,
+  "productAccepted": false,
+  "oldDevinSuspended": true,
+  "runtimeChangedByActualCeoApproval": true,
+  "relay": "Existing Codex-tree relay remains live and unchanged. No duplicate poller or request replay. Account for exclusive relay usage before current readiness/acceptance release.",
+  "governanceUpdatesForIndependentReview": ["AGENTS.md", "START.md", ".devin/rules/box-kitchen.md", ".cursor/rules/box-kitchen.mdc", ".execution/box-v4/handoffs/cto-repair-20261005.md", ".execution/box-v4/briefings/W002-CTO-R2-Devin-H1.md", ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json"],
+  "checkpointPreflight": {"head": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7", "origin": "https://github.com/shouteck/omakase-box.git", "privateVerifiedBy": "gh repo view --json nameWithOwner,isPrivate,defaultBranchRef", "private": true, "defaultBranch": "master", "stagingStarted": false, "committed": false, "pushed": false},
+  "nextProductProposal": ".execution/box-v4/briefings/W003-delegation-draft.md",
+  "nextProductStatus": "planning_draft_not_frozen_or_approved",
+  "newFeatureApproved": false
+}

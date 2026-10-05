@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual_devin_handover_dispatches",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "runtime": "devin_portable_pstack_adaptation",
+  "topology": "root_direct_sequential",
+  "events": [
+    {"operation": "spawn", "tool": "run_subagent", "profile": "box-reviewer", "agentId": "27f919af", "foreground": true, "purpose": "read_only_failure_source_and_relay_reconciliation", "returned": true, "receipt": "devin-h1-diagnostic-review.json"},
+    {"operation": "spawn", "tool": "run_subagent", "profile": "box-worker", "agentId": "483988b4", "background": true, "purpose": "exclusive_leased_verification_test_typing_fix", "release": "devin-h1-worker-release.json", "returned": false}
+  ],
+  "soleSourceWriter": "box-worker/483988b4",
+  "independentReviewer": "box-reviewer/27f919af",
+  "candidateBaseManifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "modelDiversity": "unverified",
+  "oldAgentsResumed": false,
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

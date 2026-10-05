@@ -41,7 +41,7 @@ Desired user outcome, what this wave will serve, what it will not add, and the C
 
 ## Approval scope
 
-Task IDs, allowed and forbidden paths, dependencies, baseline, runtime and local/cloud placement, available models, concurrency and heavy-check limits, existing-resource/spending limit, exact verification and timebox. Reference GIT-CHECKPOINTS.md for standing authority to save reviewed work by scoped local commit and non-force push to the existing private origin/master; no separate routine approval is needed. Explicitly list whether product writes, plugin setup, model configuration, process startup, merges, other remote destinations/PRs or other external actions are allowed. Default absent actions outside standing authority are not authorized.
+Task IDs, allowed and forbidden paths, dependencies, baseline, runtime and local/cloud placement, available models, concurrency and heavy-check limits, existing-resource/spending limit, exact verification and progress supervision. Default to informative corrections, affected reruns and durable checkpoints; specify command hang protection and any narrow setup/ownership safeguards without an arbitrary overall completion deadline or blanket correction count. Existing frozen limits remain authoritative for the current wave. Reference GIT-CHECKPOINTS.md for standing authority to save reviewed work by scoped local commit and non-force push to the existing private origin/master; no separate routine approval is needed. Explicitly list whether product writes, plugin setup, model configuration, process startup, merges, other remote destinations/PRs or other external actions are allowed. Default absent actions outside standing authority are not authorized.
 
 ## Stop and resume
 

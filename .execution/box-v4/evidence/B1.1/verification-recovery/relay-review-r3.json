@@ -1,0 +1,55 @@
+{
+ "schemaVersion": 1,
+ "kind": "relay-preexecution-review-r3-confirmation",
+ "waveId": "W002",
+ "taskId": "B1.1",
+ "planVersion": "box-v4-2026-10-04.1",
+ "reviewer": "77c88b35",
+ "reviewedAt": "2026-10-04T17:03:43.783Z",
+ "reviewedAtSource": "actual host clock at receipt write",
+ "verdict": "pass",
+ "productVerdict": "not_accepted",
+ "relayAuthorizedToExecute": true,
+ "authorization": {
+  "scope": "Execution is authorized ONLY for this exact reviewed byte set via the bounded W002 mailbox: fixture-exec-host.mjs sha256 5b61aa58227f452919e490a59643fb54a2995c540db041b091401aae28ac7666, fixture-exec-client.mjs sha256 4ae93912a19bfa51793cca69d47a2f8b29451b835f1d1366cdaaf04fde793557, fixture-command-manifest.json sha256 94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7, docker.mjs sha256 f2f6caad839ef11703ea2a601257e7cf9e6d500279262587cdc2e08eec634f7b. Fixture service containers may only be the manifest-named w002-b11-svc-private-api / w002-b11-svc-external-api on the owned isolated synthetic stack.",
+  "exclusions": "No daemon socket mount, no host candidate execution, no browser acquisition under this authorization (separate gated phase), no new commands/services/mounts/networks, no destructive operations without separate specific human confirmation.",
+  "reopen": "ANY byte change to relay, client, manifest or reached verify-* sources reopens this pre-execution review."
+ },
+ "priorReviews": [
+  "relay-review.json (fail - corrected by r2)",
+  "relay-review-r2.json (fail - identified correct digests; prior captured digests retracted as instrumentation artifacts)"
+ ],
+ "r5Verification": {
+  "manifestHostDigest": "94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7 (recomputed, equals r3 bytes)",
+  "manifestStagedDigest": "94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7 (identical /workspace staged bytes)",
+  "diffVsR4": "exactly restores persistence.private-api sourceSha256 8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae and persistence.external-api sourceSha256 63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954; file is byte-identical to the fully verified r3 manifest",
+  "unchangedBytes": "fixture-exec-host 5b61aa58, fixture-exec-client 4ae93912, docker.mjs f2f6caad, vitest.config bcb91022 - identical host and staged; all other 21 candidate files unchanged from the reviewed set; git status shows no extra writes beyond expected product/evidence paths"
+ },
+ "commandsRun": [
+  {
+   "command": "sha256sum host manifest/relay/client/docker/vitest",
+   "result": "all match reviewed digests"
+  },
+  {
+   "command": "sha256sum staged /workspace equivalents",
+   "result": "identical"
+  },
+  {
+   "command": "manifest self-check in w002-b11-ws",
+   "result": "schemaVersion 1, 13 unique entries, @SOURCE@ pairing + 64-hex digests valid; persistence digests confirmed as 8ca8183b / 63e46a09"
+  },
+  {
+   "command": "vitest run tests/box/auth/fixture-transport.test.ts (w002-b11-ws)",
+   "exit": 0,
+   "result": "7 tests passed, 2.56s"
+  }
+ ],
+ "securityReaffirmation": "The relay security review findings from relay-review.json apply unchanged to this exact byte set: argv-array only (no shell), manifest-derived container/workdir/env only, w002-b11-svc-* regex, compose-prefix + exec -T enforcement, strict env regex, @SOURCE@ digest binding verified client- and host-side (now matching actual argv sources), replay denial via persisted seen set, bounded request/input/output/log, 120s timeout cap, fail-closed transport config, requiresSpecificConfirmation denied, no destructive statements in reached sources (DELETE/UPDATE only inside assert.rejects denial probes; CREATE DATABASE only for owned synthetic empty fixture DBs; migratedPool drops only its own w002_b11_test_% idle DBs).",
+ "secrecy": "no secret values, session exports, raw tokens or docker env inspected; synthetic DB password file never read",
+ "resourceState": "w002-b11-ws/db/net preserved and used only for in-workspace checks; no svc-* fixture containers started; no relay executed; no browser bytes downloaded",
+ "limitations": [
+  "mailbox round-trip exercised only via in-workspace test double; first live daemon exec occurs under this authorization and should be logged/monitored",
+  "heavier env-gated suites remain recorded failed (environment-gated), not reclassified"
+ ],
+ "explicitStatement": "PRE-EXECUTION GATE PASS for the reviewed byte set only - NOT r2 approval (already granted by CEO record), NOT product acceptance. B1.1 remains not_accepted. Authorization covers only the five digests named above through the bounded W002 mailbox; any byte change reopens review."
+}

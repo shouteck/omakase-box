@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "20",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import{readFile,readdir}from'node:fs/promises';import{checkRelayRunContract}from'./scripts/box-verification/readiness.mjs';const relay=await checkRelayRunContract('/stage/mailbox',{runId:'w002-b11-r4-env2',environmentId:'w002-b11-env-r4-env2'});const lifecycle=JSON.parse(await readFile('/stage/mailbox/state/lifecycle.json'));const responses=await readdir('/stage/mailbox/responses');console.log(JSON.stringify({relay,lifecycle,responses,status:relay.status==='pass'&&lifecycle.state==='ready'&&responses.length===0?'pass':'failed'}));process.exit(relay.status==='pass'&&lifecycle.state==='ready'&&responses.length===0?0:1)"
+  ],
+  "sourceSha256": "dc3d7ddf984b3d371ec614bb501c364acfa84c409b7622e65f2f9015f3934593"
+}

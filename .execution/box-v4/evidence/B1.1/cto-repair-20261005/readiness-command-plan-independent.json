@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_readiness_command_plan",
+  "reviewer": "Codex /root/recovery_assurance",
+  "recordedAtUtc": "2026-10-04T23:46:27.911712+00:00",
+  "status": "proposed_command_plan_not_run",
+  "recordedRootSamples": {
+    "resourceObservation": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/resource-observation.json",
+    "meaning": "Root supplied sample only; reviewer did not independently observe memory/container runtime",
+    "setupConsumption": "Root reports setupUses0 and absent env2 names; independently reconcile before mutation"
+  },
+  "readinessCommands": [
+    {
+      "phase": "existing workspace read-only image/browser precheck before consuming setup",
+      "commandTemplate": [
+        "docker",
+        "exec",
+        "w002-b11-ws",
+        "node",
+        "--input-type=module",
+        "-e",
+        "Read only installed playwright package/browser manifest and /ms-playwright executable/version/hash through approved exact source; do not install/download or assume browser revision"
+      ],
+      "reason": "If pinned image lacks matching browser or required shared libraries, no downloads allowed in R1; stop before setup consumption"
+    },
+    {
+      "phase": "new runner after released setup",
+      "commandTemplate": [
+        "docker",
+        "exec",
+        "--workdir",
+        "/stage",
+        "w002-b11-linux-r4-env2",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {probeBrowser,probeServiceHealth,checkFixtureEntrypoints,checkStagedMetadata,checkResourceRecord,checkRelayRunContract} from './scripts/box-verification/readiness.mjs'; ..."
+      ],
+      "requiredActualCalls": [
+        "probeBrowser({browserPath:'/ms-playwright',expectedRevision:1243,deadlineMs:30000})",
+        "probeServiceHealth('http://127.0.0.1:4000/healthz')",
+        "probeServiceHealth('http://127.0.0.1:4001/healthz')",
+        "checkFixtureEntrypoints('/stage')",
+        "checkStagedMetadata('/stage', exactReviewedSourceDigestMap)",
+        "checkResourceRecord(currentCreationRecordPath,currentManifest)",
+        "checkRelayRunContract('/stage/mailbox',{runId:actualFreshLeaseRunId,environmentId:currentManifest.environmentId})"
+      ],
+      "additionalRequirements": "Check both actual service fixture entrypoints/hashes through read-only owned-container inspection; /stage source build files alone do not prove service bytes. DB SELECT1 via existing service-scoped pg dependency in runner; never echo secret URL. Record readiness receipt only all gates pass. Each concrete Node-e source is frozen/reviewed before use; ellipsis template is not executable."
+    },
+    {
+      "phase": "fresh DB readiness",
+      "commandTemplate": [
+        "docker",
+        "exec",
+        "--workdir",
+        "/stage",
+        "w002-b11-linux-r4-env2",
+        "node",
+        "--input-type=module",
+        "-e",
+        "Use createRequire('/stage/services/private-api/package.json')('pg').Pool with existing process.env.BOX_TEST_DATABASE_URL; call checkDbReadiness(()=>pool.connect()), end pool, output status only."
+      ],
+      "noClaim": "SELECT1 does not prove fresh migration; test:box-auth performs CREATE/migration/transactions against new approved run namespaces."
+    },
+    {
+      "phase": "independent final seven batch",
+      "commandTemplate": [
+        "docker",
+        "exec",
+        "--workdir",
+        "/stage",
+        "--env",
+        "BOX_VERIFICATION_PROFILE=w002-b11-environment-first-r4",
+        "--env",
+        "BOX_VERIFICATION_BROWSER_PATH=/ms-playwright",
+        "--env",
+        "BOX_VERIFICATION_TRANSPORT=mailbox",
+        "--env",
+        "BOX_VERIFICATION_MAILBOX=/stage/mailbox",
+        "--env",
+        "BOX_VERIFICATION_RUN_ID=<actual-fresh-reviewed-run-id>",
+        "w002-b11-linux-r4-env2",
+        "node",
+        "scripts/box-verification/run-verification.mjs",
+        "scripts/box-verification/environment-manifest.json",
+        "<fresh-owned-results-directory>",
+        "<current-exact-independent-PASS-record>",
+        "<current-ready-environment-receipt>"
+      ],
+      "conditions": "Concrete paths/runId and byte-reviewed source frozen beforehand; new runner create-time BOX_TEST_DATABASE_URL/RUN_ID inherited. Each original command bounded eight minutes. No worker duplicate full batch. Outer transport writes full durable stdout/stderr/literal exit/duration; supervisor independently records each full result and owned completion."
+    }
+  ],
+  "g5Proof": {
+    "event": "Actual CEO stopped Devin and Codex reconciled START/hold plus preserved candidate; historical original G1-G4 evidence retained",
+    "requiredIndependentObservations": [
+      "Read actual START and active selector/current authority/state after real session handoff; verify old Devin authority remains suspended and no unapproved feature dispatch",
+      "Bind final current worker candidate and independent review/receipts to repaired source; reconcile frozen direct-request authority and lease after actual interruption/resumption",
+      "Record truthful runtime placement change as Codex adaptation; never label this native Cursor or resumed old Devin",
+      "If claiming START resumption after another boundary, use actual independent reviewer new-session/task context reading START and reconciling records; no fabricated restart or scheduler"
+    ],
+    "limitation": "A scripted mock, same-session status label or resumed agent alone cannot manufacture G5. Current real user/session handoff can supply event if independent evidence meets original reconciliation obligations."
+  },
+  "operations": "Plan only; no execution, tests or Docker changes"
+}

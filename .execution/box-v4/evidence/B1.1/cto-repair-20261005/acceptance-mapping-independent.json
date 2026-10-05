@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_b11_acceptance_mapping",
+  "reviewer": "Codex /root/recovery_assurance",
+  "recordedAtUtc": "2026-10-04T23:45:30.811735+00:00",
+  "scope": "Static read-only mapping, no product/evidence acceptance",
+  "sources": [
+    "tasks/box-v4-task-graph.json",
+    "milestones/box-v4/B1.md",
+    ".execution/box-v4/briefings/W002.md",
+    ".execution/box-v4/briefings/W002-r2.md",
+    ".execution/box-v4/briefings/W002-D1-r4.md",
+    ".execution/box-v4/briefings/W002-CTO-R1.md"
+  ],
+  "requiredSequence": [
+    "node scripts/pnpm.mjs test:box-contracts",
+    "node scripts/pnpm.mjs test:box-auth",
+    "node scripts/pnpm.mjs check",
+    "node scripts/pnpm.mjs build",
+    "node scripts/pnpm.mjs test:auth",
+    "node scripts/pnpm.mjs test:contracts",
+    "node scripts/pnpm.mjs test:planner"
+  ],
+  "matrix": [
+    {
+      "criterion": "Single-unit/UI-API/UI-API-policy typed Boxes and immutable hashes",
+      "files": [
+        "tests/box/contracts/box-schemas.test.ts",
+        "packages/box-contracts/schemas.ts"
+      ],
+      "checks": [
+        "test:box-contracts"
+      ],
+      "status": "static coverage present; single-unit and UI/API explicitly tested, policy-alone explicitly tested; three-way UI/API/policy composition not explicitly instantiated in current test; runtime acceptance pending"
+    },
+    {
+      "criterion": "Draft/approval/edit invalidation, stale identity/versions and illegal transitions",
+      "files": [
+        "tests/box/auth/box-store.test.ts",
+        "tests/box/contracts/box-schemas.test.ts"
+      ],
+      "checks": [
+        "test:box-auth",
+        "test:box-contracts"
+      ],
+      "status": "real Store operations and rejection assertions present; live PostgreSQL execution pending"
+    },
+    {
+      "criterion": "Scoped token expiry/capability/cross-box and actor boundary",
+      "files": [
+        "tests/box/auth/scopes-idempotency.test.ts",
+        "tests/box/auth/negative-scope.test.ts"
+      ],
+      "checks": [
+        "test:box-auth"
+      ],
+      "status": "explicit negative cases present; live execution pending"
+    },
+    {
+      "criterion": "Distinct behavior approval, independent review and owner merge authority",
+      "files": [
+        "tests/box/auth/roles-merge.test.ts",
+        "tests/box/auth/negative-scope.test.ts"
+      ],
+      "checks": [
+        "test:box-auth"
+      ],
+      "status": "separate exact-candidate review/merge and non-owner denial tests present; live execution pending"
+    },
+    {
+      "criterion": "Fresh complete migrations, real transactions and idempotency",
+      "files": [
+        "tests/box/auth/support.ts",
+        "tests/box/auth/scopes-idempotency.test.ts",
+        "services/private-api/db/migrations/0012_open_box_foundation.sql"
+      ],
+      "checks": [
+        "test:box-auth",
+        "test:auth",
+        "test:contracts"
+      ],
+      "status": "migratedPool creates new run-prefixed DB, runs complete migration directory, preserves DB; four Box-auth beforeAll fixture databases planned below cap12; SELECT1 readiness only does not prove migrations"
+    },
+    {
+      "criterion": "Open trusted profile distinct from restricted and external import boundaries",
+      "files": [
+        "tests/box/contracts/boundary.test.ts",
+        "tests/box/contracts/box-schemas.test.ts"
+      ],
+      "checks": [
+        "test:box-contracts",
+        "check",
+        "build",
+        "test:auth",
+        "test:contracts",
+        "test:planner"
+      ],
+      "status": "negative imports/restricted field rejection present; final exact full regressions pending"
+    },
+    {
+      "criterion": "G1 actual request authority; G2 exact sole-worker candidate; G3 distinct exact reviewer; G4 durable receipts; G5 real START interruption/resumption",
+      "files": [
+        ".execution/box-v4/briefings/W002.md",
+        ".execution/box-v4/briefings/W002-CTO-R1.md",
+        ".execution/box-v4/approvals/W002-CTO-R1-request.json"
+      ],
+      "checks": [
+        "independent pilot evidence"
+      ],
+      "status": "original approval history preserved; current bounded authority explicit; final worker/reviewer binding and actual START/Hold/resumption assessment still required; existing real CEO interruption provides event, but file read alone is not acceptance"
+    }
+  ],
+  "readiness": {
+    "actualInputParity": "Review complete current source map/manifest and stage hashes, real Linux pnpm closure plus tooling binds",
+    "browser": "Find expected revision1243 under /ms-playwright, actual pinned Playwright real launch/page/close within30s; installed package manifest/image must agree. In-image browser availability not established by static config",
+    "services": "Existing private4000/external4001 health two spaced successes within120s; exact built fixture.js plus private intake/session entrypoints must exist with current candidate provenance",
+    "database": "New approved exact Box DB URL/run binding, SELECT1 max2 readiness attempts, real subsequent migration/transaction tests; original OOM DB preserved",
+    "relay": "Fresh exclusive mailbox initialized from unchanged reviewed allowlist with concrete run/environment fields and current unexpired sole lease; actual ready relay, owned descendants, no old eight-request replay",
+    "metadata": "Current reviewed .env.example, infra/compose.yaml, infra/trusted.Dockerfile, research fixtures and named templates; public template hashing does not authorize reading referenced secrets"
+  },
+  "launchContractRequired": {
+    "BOX_VERIFICATION_PROFILE": "w002-b11-environment-first-r4",
+    "BOX_VERIFICATION_BROWSER_PATH": "/ms-playwright",
+    "BOX_VERIFICATION_TRANSPORT": "mailbox",
+    "BOX_VERIFICATION_MAILBOX": "/stage/mailbox",
+    "BOX_VERIFICATION_RUN_ID": "must equal fresh mailbox manifest/lease runId",
+    "BOX_TEST_DATABASE_URL": "created synthetic exact approved new DB; do not log credentials",
+    "BOX_TEST_RUN_ID": "new run-scoped Box DB namespace"
+  },
+  "launchFinding": "runnerCreateArgv supplies only BOX_TEST_DATABASE_URL and BOX_TEST_RUN_ID. Acceptance docker exec launch must explicitly supply reviewed browser/profile/mailbox/run settings; otherwise suite defaults .runtime/browsers and docker.mjs attempts CLI Docker inside no-socket runner. Scoped launch env may satisfy without source edits. Freeze concrete launch before acceptance.",
+  "coverageLimitations": [
+    "Behavior artifact provenance test has a self-equality assertion; other distinct-shape checks exist but this assertion alone supplies no provenance correctness evidence",
+    "Three-way UI/API/policy example not explicitly instantiated; existing UI/API and policy-only test coverage must not be described as an observed three-way test",
+    "Static definitions and worker narrow results do not prove seven-command acceptance or live readiness",
+    "probeBrowser close is best effort under remaining deadline; actual successful clean close needs independent runtime observation before ready receipt"
+  ],
+  "immutableInputs": {
+    "tests/box/auth/support.ts": "10122a9644c9f6f4a01bcea4090cf9fc5b1c26fcdd7b659815eccfab8f3997fd",
+    "scripts/suite.mjs": "56e1b62ad19152adedfd7a5be76a92a1e2d8b9b238d24d219836aa94077675eb",
+    "scripts/box-verification/readiness.mjs": "7bdc452407b07de3f5e96b6244d90f6b0ea7dc94d57ce96f3b7394c328e2adc0",
+    "scripts/docker.mjs": "52a28ccf40172e6884a6b5822cc848d4c0631ab9cc6267e466b8cd697066fc61"
+  },
+  "operations": "Read source/spec files and wrote only this independent receipt; no tests, imports or Docker operations"
+}

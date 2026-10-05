@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W002",
+  "planVersion": "box-v4-2026-10-04.1",
+  "status": "approved",
+  "brief": {
+    "path": ".execution/box-v4/briefings/W002-r2.md",
+    "revision": "2026-10-04-r2",
+    "digest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167"
+  },
+  "approver": "CEO (human operator)",
+  "message": "Approve",
+  "messageContext": "Verbatim human reply in this Devin Desktop conversation immediately following the W002 revision 2 proposed decision card linked to this frozen brief. Approval covers only that named verification recovery amendment and its stated relay, synthetic fixture startup, browser acquisition and tooling permissions. It does not approve B1.2 or later waves.",
+  "observedAt": "2026-10-04T15:50:36.0926937Z",
+  "timestampMeaning": "Host-clock observation after receiving the real reply, not an invented transport timestamp.",
+  "approvedTasks": ["B1.1"],
+  "scopeSource": ".execution/box-v4/briefings/W002-r2.md",
+  "originalAuthority": ".execution/box-v4/approvals/W002-approval.json",
+  "originalProductBase": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "documentaryCheckpoint": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "candidateReconciliation": "All 15 candidate hashes still match reviewer-manifest-r2.json; metadata-created file reports did not produce candidate drift. Documentary-only checkpoint preserved product bytes and did not accept or commit them.",
+  "runtime": "devin_portable_pstack_adaptation, sequential resume platform lead f65bedca -> sole worker e44008a7 -> distinct reviewer 77c88b35; no other writer or flattened replacement",
+  "materialBoundaries": "Independent exact relay/client/allowlist review BEFORE host relay execution. No daemon socket or host candidate execution. Owned isolated synthetic fixture services only. One-time matching pinned Linux Chromium acquisition in separate public-toolchain-only setup container with artifact-only temporary egress; no project code/credentials uploaded. No npm/OS dependencies, other tools/images/models, global settings or paid services. Original expected assertions/regression gates stay mandatory. Specific destructive actions require separate confirmation.",
+  "retryPolicy": "Product retry 1/2 already used; preserved. Two bounded environment preflight attempts per r2; no budget reset or endless retries.",
+  "checkpointAuthority": "Exact-reviewed commits/non-force pushes to existing private origin/master remain under GIT-CHECKPOINTS.md standing authority only. No unaccepted product uploads or unrelated outgoing commits.",
+  "notes": "Frozen r1 and r2 briefs and r1 approval remain unchanged. Approval is bounded and revocable. Material changes/holds stop dispatch; no automatic next-wave authority. G5 remains undemonstrated until real START user-session resumption evidence exists."
+}

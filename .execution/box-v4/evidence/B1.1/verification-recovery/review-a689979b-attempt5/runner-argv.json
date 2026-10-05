@@ -1,0 +1,15 @@
+{
+  "mountCount": 3,
+  "mounts": [
+    "type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2,target=/stage",
+    "type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules,target=/stage/node_modules,readonly",
+    "type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules,target=/stage/scripts/tooling/node_modules,readonly"
+  ],
+  "workdir": "/stage",
+  "user": "1000:1000",
+  "readOnly": true,
+  "capDrop": "ALL",
+  "network": "container:w002-b11-ws",
+  "entrypoint": "sleep",
+  "image": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8"
+}

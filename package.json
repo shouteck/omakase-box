@@ -17,6 +17,8 @@
     "test:bootstrap": "node scripts/suite.mjs bootstrap",
     "test:contracts": "node scripts/suite.mjs contracts",
     "test:auth": "node scripts/suite.mjs auth",
+    "test:box-contracts": "node scripts/suite.mjs box --suite contracts",
+    "test:box-auth": "node scripts/suite.mjs box --suite auth",
     "test:planner": "node scripts/suite.mjs planner",
     "test:analysis": "node scripts/suite.mjs analysis",
     "test:compiler": "node scripts/suite.mjs compiler",

@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stdout": "PID                 PPID                COMMAND\n50551               50524               sleep infinity\n",
+  "stderr": ""
+}

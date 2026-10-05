@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "-i",
+    "w002-b11-ws",
+    "sh",
+    "-c",
+    "mkdir /workspace/.r4-harness-review-cto-r1-independent && tar -xf - -C /workspace/.r4-harness-review-cto-r1-independent"
+  ],
+  "exit": 0,
+  "elapsedMs": 4500,
+  "recordedAtUtc": "2026-10-05T02:32:56.217757+00:00",
+  "stdin": "reviewed456candidatearchive"
+}

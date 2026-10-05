@@ -1,0 +1,18 @@
+{
+  "exit": 0,
+  "elapsedMs": 59063,
+  "argv": [
+    "docker",
+    "exec",
+    "-i",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r1-dependency-fast",
+    "w002-b11-ws",
+    "timeout",
+    "300",
+    "node",
+    "--input-type=module"
+  ],
+  "stdout": "dependency-fast.stdout.log",
+  "stderr": "dependency-fast.stderr.log"
+}

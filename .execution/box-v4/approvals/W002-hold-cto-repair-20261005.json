@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "direct_ceo_hold_and_cto_governance_repair",
+  "waveId": "W002",
+  "decision": "Hold",
+  "recordedAtUtc": "2026-10-04T23:29:40.259192+00:00",
+  "timestampMeaning": "recording clock, not inferred human-message timestamp",
+  "source": "Direct CEO message in Codex chat 01a0f9c5-6bae-7e11-ad83-eae338485a02",
+  "message": "Im stopping the devin kitchen abruptly, im leaving it up to you to fix it for me so that we are right behind a feature.",
+  "scope": "Suspend Devin W002 execution authority; preserve current candidate/evidence/resources; CTO may reconcile, repair kitchen instructions and prepare a concrete recovery proposal. No product acceptance or changed-wave execution approval is inferred.",
+  "resumeAuthorized": false,
+  "productLeaseGranted": false,
+  "runtimeShutdown": "CEO reports stopping Devin; shutdown of individual unavailable agents is not independently confirmed",
+  "snapshot": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate",
+  "candidateManifest": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stop-snapshot.json",
+  "preservation": "No process/container stopped, deleted or restarted by CTO; all databases and original evidence preserved; no ambiguous request replay",
+  "nextDecision": "A frozen recovery briefing binds any runtime/placement/source correction and asks for normal CEO wave approval."
+}

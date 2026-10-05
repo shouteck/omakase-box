@@ -1,0 +1,91 @@
+{
+ "schemaVersion": 1,
+ "kind": "relay-preexecution-review-r2",
+ "waveId": "W002",
+ "taskId": "B1.1",
+ "planVersion": "box-v4-2026-10-04.1",
+ "reviewer": "77c88b35",
+ "reviewedAt": "2026-10-04T17:00:39.323Z",
+ "reviewedAtSource": "actual host clock at receipt write",
+ "verdict": "fail",
+ "productVerdict": "not_accepted",
+ "relayAuthorizedToExecute": false,
+ "priorReview": ".execution/box-v4/evidence/B1.1/verification-recovery/relay-review.json (verdict fail)",
+ "correctionToPriorReview": {
+  "summary": "The r3 manifest digests for persistence.private-api (8ca8183b) and persistence.external-api (63e46a09) were CORRECT. My prior 'actual expanded argv' digests (5e7ae166/5f6bffd4) were artifacts of my own verification instrumentation: my /tmp patch rewrote './dist/*.js' relative imports to '/workspace/...' INSIDE the captured -e template literals, changing the hashed bytes. verify-persistence private template has zero ${} interpolation (literal lines 12-59), so expanded==raw==8ca8183b; external literal contains ${JSON.stringify(contract)} and expands to 63e46a09 with the pinned singleUnitContract input (contract sha256 bcb46146). Clean static expansion performed on host read-only source text confirms this.",
+  "r4ManifestAssessment": "worker applied my incorrect digests in good faith with verbatim disclosure; the r4 manifest therefore contains two WRONG digests and would deterministically deny the real verify-persistence commands (fail closed, no bypass, but the required live tests can never pass through it).",
+  "authoritativeSource": "the actual docker exec argv source is authoritative; captured argv must be captured without mutating the literal bytes. Clean verification method used this round: regex-extract literal from unchanged source, substitute only the literal text ${JSON.stringify(contract)} with the exact JSON.stringify(singleUnitContract()) bytes, sha256 the result. No code mutation of captured content."
+ },
+ "verifiedDigests": {
+  "persistence.private-api": {
+   "actual": "8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae",
+   "r3Manifest": "8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae",
+   "r4Manifest": "5e7ae1664d5d157050fb754fc5314d39ec3310668a5f35fc4627a225a5c00b0d",
+   "r4correct": false,
+   "note": "no interpolation; expanded==raw literal"
+  },
+  "persistence.external-api": {
+   "actual": "63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954",
+   "r3Manifest": "63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954",
+   "r4Manifest": "5f6bffd416e6ce9cd3d7beaec300f2b1baf597f11af035e6990731e366a60595",
+   "r4correct": false,
+   "note": "raw template 82d47e5e; expanded with contract bcb46146 = 63e46a09"
+  },
+  "unchangedEntriesVerified": [
+   "lifecycles.private-api 6f9df38a (raw==expanded==manifest)",
+   "lifecycles.external-api fcace5e1 (expanded==manifest)",
+   "readiness.private-api 01ff0839",
+   "empty-migrations.private-api 22eb9937",
+   "empty-migrations.external-api 0c025099",
+   "doctor.private-api eaac982e",
+   "doctor.external-api 160e418a"
+  ],
+  "note": "prior verified matches remain valid because those -e sources contain no relative ./ imports, so my instrumentation did not alter their captured bytes"
+ },
+ "r4ManifestReview": {
+  "newDigest": "0f43e93ba9ffc125f30c944d8cbd7d4d4121b0d0063408d05f77953fa3bfc2b2 (recomputed, matches claim)",
+  "changesVsR3": "exactly two sourceSha256 fields (persistence.private-api, persistence.external-api); all 13 entries, containers, env, argv, workdir, input modes and notes otherwise identical - verified field-by-field",
+  "relayClientUnchanged": "fixture-exec-host.mjs 5b61aa58, fixture-exec-client.mjs 4ae93912, docker.mjs f2f6caad, vitest.config.mjs bcb91022 - all identical to previously reviewed bytes; security properties unchanged"
+ },
+ "candidateIntegrity": "22-file set recomputed from working bytes: 21 files match r3 digests, manifest file matches r4 digest 0f43e93b; staged /workspace bytes identical for all 22; no extra writes (git status shows only expected product/evidence paths)",
+ "commandsRun": [
+  {
+   "command": "sha256sum fixture-command-manifest.json",
+   "result": "0f43e93b...c2b2 = r4 claim"
+  },
+  {
+   "command": "field-by-field manifest diff vs r3 values",
+   "result": "only the two persistence sourceSha256 fields changed"
+  },
+  {
+   "command": "read-only static expansion of verify-persistence/-lifecycles -e literals",
+   "result": "persistence private 8ca8183b, external expanded 63e46a09; lifecycles external expanded fcace5e1 - all equal r3 manifest values"
+  },
+  {
+   "command": "22-file candidate recompute working+staged",
+   "result": "0 mismatches"
+  },
+  {
+   "command": "vitest run tests/box/auth/fixture-transport.test.ts (w002-b11-ws)",
+   "exit": 0,
+   "result": "7 tests passed"
+  },
+  {
+   "command": "node scripts/pnpm.mjs test:box-auth (w002-b11-ws)",
+   "exit": 0,
+   "result": "5 files, 18 tests passed, 44.96s"
+  }
+ ],
+ "requiredFixes": [
+  "Revert the two manifest digests to the r3 values: persistence.private-api sourceSha256 = 8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae; persistence.external-api sourceSha256 = 63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954. This restores the file to the r3 byte set (sha256 94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7).",
+  "After revert, the reviewed manifest byte set (94fa84a9) is already fully verified by this review - no additional digest work needed; a fresh manifest hash field update in candidate manifest + re-stage is still required.",
+  "Any other byte change reopens this gate."
+ ],
+ "failClosedRationale": "a wrong digest can only deny transport (unlisted_command/source_digest), never bypass - the r4 manifest is safe but functionally broken for the two persistence commands; reverting restores a manifest that is both safe and functionally correct",
+ "limitations": [
+  "mailbox round-trip still exercised only via in-workspace test double; host relay never executed",
+  "intake-fixture/intent-session argv shapes verified by reach-site inspection, not live capture",
+  "heavier env-gated suites (check/test:auth/test:contracts/test:planner) unchanged since r1 review - exits 1 recorded, not reclassified"
+ ],
+ "explicitStatement": "PRE-EXECUTION GATE - NOT r2 approval (already granted by CEO record), NOT product acceptance. B1.1 remains not_accepted. The host relay is NOT authorized to execute with the r4 manifest; authorization requires the corrected bytes (which equal the already-reviewed r3 manifest 94fa84a9) plus unchanged host relay 5b61aa58 / client 4ae93912 through the bounded mailbox. Any byte change reopens this review. I explicitly retract the incorrect digests I supplied in the prior review; the r3 manifest was correct."
+}

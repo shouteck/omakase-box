@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_environment_first_proposal_preparation",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "inspectionClockUtc": "2026-10-04T17:48:59.9808704Z",
+  "timestampMeaning": "Actual host clock sampled during read-only investigation, not an invented human-message timestamp.",
+  "humanRequest": "Amend W002-r4 to stabilize the test environment before resuming verification. Preserve the B1.1 implementation and acceptance requirements. Do not start workers, tests, downloads or container changes yet.",
+  "authority": "Governance amendment and read-only investigation only; no execution approval of the revised proposal.",
+  "brief": ".execution/box-v4/briefings/W002-r4.md",
+  "revision": "2026-10-05-r4-environment-v2",
+  "briefDigest": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721",
+  "approval": null,
+  "supersededProposal": {
+    "archive": ".execution/box-v4/briefings/archive/W002-r4-team-only.md",
+    "digest": "sha256:54069277604005284e6a395512fc86361bd75442c26ea92b8977a67ab8451823",
+    "status": "unapproved original r4 preserved byte-for-byte"
+  },
+  "preservation": {
+    "candidateManifest": ".execution/box-v4/evidence/B1.1/verification-recovery/candidate-manifest-r3.json plus candidate-manifest-r5.json",
+    "candidateFilesCompared": 22,
+    "hostAndStageMismatches": 0,
+    "applicationOrHarnessWritesNow": false,
+    "teamDispatchesNow": 0,
+    "testsOrBuildsNow": 0,
+    "downloadsNow": 0,
+    "containerChangesNow": 0,
+    "cleanupOrDatabaseChangesNow": 0,
+    "historicalApprovalsReviews": "unchanged; no prior evidence re-signed or reclassified as current PASS"
+  },
+  "findings": [
+    {
+      "source": "tests/auth/bootstrap/environment.test.ts",
+      "sourceDigest": "sha256:2adf732100fe819117e2c71495addecb6963bef39f956dcb2a712f9e9cfc7c31",
+      "finding": "External-image exclusion is a static assertion reading infra/trusted.Dockerfile and .env.example, not an actual image build or Docker metadata command.",
+      "stagingObservation": "Both files absent from existing stage; infra contains only compose.yaml.",
+      "proposedRemedy": "Stage exact unchanged tracked public metadata, keeping assertions intact.",
+      "limitation": "Read(.env.*) is denied by current project policy. .env.example contents were not read. Required tool permission must be obtained for the exact public template; no policy change or bypass."
+    },
+    {
+      "source": "templates/workspaces/image/Dockerfile and toolchain/package.json, docker image metadata",
+      "cachedImageId": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+      "metadata": "public-task-toolchain:m4-v1, linux/amd64, user pwuser, workdir /work, size 3927910576 bytes",
+      "finding": "Build recipe uses pinned Playwright 1.63.0 Noble and sets /ms-playwright; public toolchain package pins the same Playwright version as the project.",
+      "proposedRemedy": "New hardened offline Linux runner from this already cached image; no acquisition/download by default or fallback.",
+      "limitation": "No runtime probe was run. Browser revision, actual launch, libraries, Node and staged dependency compatibility still require approved readiness checks. Legacy VM/restricted profile gates are unchanged."
+    },
+    {
+      "source": "scripts/suite.mjs",
+      "finding": "Suite unconditionally sets browser cache to repository .runtime/browsers, so the cached image's /ms-playwright needs a named verification-profile override.",
+      "proposedRemedy": "Explicit suite lease with validated override, unchanged default behavior and unavailable-suite semantics."
+    },
+    {
+      "source": "tests/box/auth/support.ts migratedPool",
+      "finding": "Helper drops idle w002_b11_test_* databases and has three internal setup attempts; original Box DB metadata reports OOMKilled=true.",
+      "proposedRemedy": "Named helper-only lease removes auto-drop and binds new fixtures to a separate fresh run-prefixed Box DB; existing three tmpfs DBs untouched; all real migrations and behavioral assertions retained."
+    },
+    {
+      "source": "scripts/box-verification/fixture-exec-host.mjs and old mailbox metadata",
+      "finding": "Relay loop is indefinite and old queue still has 40 requests/32 responses. Killing host Docker CLI is not proof of remote child termination.",
+      "proposedRemedy": "New empty run-bound mailbox, supervised reviewed relay/owned-child wrapper, readiness lease, finite drain and fail-closed ambiguous execution; old queue never replayed or deleted."
+    }
+  ],
+  "proposedResources": {
+    "newContainers": ["w002-b11-linux-r4-env2", "w002-b11-box-db-r4-env2"],
+    "reuse": "Existing internal network, workspace network-namespace anchor, exact healthy API fixtures and cached images/dependency bytes.",
+    "preserve": "All six old W002 containers, three old tmpfs databases, stopped helper, inert source-image artifact, old stage/mailbox, legacy stack/volumes and previous team evidence.",
+    "permissionBoundary": "Creation, harness edits, readiness probes and verification are proposed only. No existing stops/recreation, cleanup, downloads, security policy/global settings or later wave."
+  },
+  "modelPreflight": {
+    "source": "docs/box-v4/MODEL-POLICY.md",
+    "sourceDigest": "sha256:492203e3cd00e9a39542441177505fb93f69a5691a97d68bf21b5d72db53ea09",
+    "observation": "Later policy/instruction edits appeared during final read-only Git reconciliation; root read them and left all concurrent edits untouched.",
+    "ctoModel": "Preserve CEO selection; no model change performed or proposed.",
+    "proposedChildMode": "Free while quota unknown, only if actual free profile/router assignment is verified before dispatch.",
+    "capabilityGap": "Profiles remain unpinned; run_subagent has no model parameter; agent-readable daily/weekly quota and explicit premium/free variants are unverified. A prompt model name cannot select one.",
+    "excluded": "No child launch until safe assignment verified; no profile/config changes, paid fallback or model routing setup in this environment wave. Unsupported capability gets a separate setup proposal."
+  },
+  "readinessGate": "Model/ownership preflight before child dispatch; new independent exact-byte host/harness review before host execution, then actual browser/local-page, service/static-fixture/DB/source/resource/relay readiness PASS before acceptance batch.",
+  "finiteLimits": {
+    "proposedEnvironmentAttempts": 2,
+    "activeSetupMinutesPerAttempt": 20,
+    "scopedHarnessCorrectionRounds": 1,
+    "fullAcceptanceBatches": "one worker batch and one distinct-reviewer batch",
+    "commandMinutes": 8,
+    "targetedInfrastructureReruns": 1,
+    "totalActiveMinutes": 180,
+    "historicalProductRetries": "1 of 2 preserved",
+    "meaning": "Execution caps proposed for approval, not completion-time estimates; no historical counter reset."
+  },
+  "status": "frozen_proposal_awaiting_actual_ceo_approval",
+  "next": "Present the environment-first W002-r4 decision card; execute nothing until actual approval binds the revised digest."
+}

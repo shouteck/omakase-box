@@ -1,0 +1,151 @@
+{
+  "count": 22,
+  "rows": [
+    {
+      "packageJson": "apps/contributor-portal/package.json",
+      "name": "react",
+      "version": "19.3.0",
+      "resolved": "/workspace/node_modules/.pnpm/react@19.3.0/node_modules/react/index.js"
+    },
+    {
+      "packageJson": "apps/contributor-portal/package.json",
+      "name": "react-dom",
+      "version": "19.3.0",
+      "resolved": "/workspace/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/index.js"
+    },
+    {
+      "packageJson": "apps/private-console/package.json",
+      "name": "react",
+      "version": "19.3.0",
+      "resolved": "/workspace/node_modules/.pnpm/react@19.3.0/node_modules/react/index.js"
+    },
+    {
+      "packageJson": "apps/private-console/package.json",
+      "name": "react-dom",
+      "version": "19.3.0",
+      "resolved": "/workspace/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/index.js"
+    },
+    {
+      "packageJson": "services/external-api/package.json",
+      "name": "drizzle-orm",
+      "version": "0.45.3",
+      "resolved": "/workspace/node_modules/.pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm/index.cjs"
+    },
+    {
+      "packageJson": "services/external-api/package.json",
+      "name": "fastify",
+      "version": "5.12.5",
+      "resolved": "/workspace/node_modules/.pnpm/fastify@5.12.5/node_modules/fastify/fastify.js"
+    },
+    {
+      "packageJson": "services/external-api/package.json",
+      "name": "pg",
+      "version": "8.23.0",
+      "resolved": "/workspace/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/index.js"
+    },
+    {
+      "packageJson": "services/external-api/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "services/external-api/package.json",
+      "name": "@types/pg",
+      "version": "8.23.1",
+      "resolved": "/workspace/node_modules/.pnpm/@types+pg@8.23.1/node_modules/@types/pg/index.d.ts"
+    },
+    {
+      "packageJson": "services/private-api/package.json",
+      "name": "drizzle-orm",
+      "version": "0.45.3",
+      "resolved": "/workspace/node_modules/.pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm/index.cjs"
+    },
+    {
+      "packageJson": "services/private-api/package.json",
+      "name": "fastify",
+      "version": "5.12.5",
+      "resolved": "/workspace/node_modules/.pnpm/fastify@5.12.5/node_modules/fastify/fastify.js"
+    },
+    {
+      "packageJson": "services/private-api/package.json",
+      "name": "pg",
+      "version": "8.23.0",
+      "resolved": "/workspace/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/index.js"
+    },
+    {
+      "packageJson": "services/private-api/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "services/private-api/package.json",
+      "name": "@types/pg",
+      "version": "8.23.1",
+      "resolved": "/workspace/node_modules/.pnpm/@types+pg@8.23.1/node_modules/@types/pg/index.d.ts"
+    },
+    {
+      "packageJson": "services/runner-controller/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "packages/box-contracts/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "packages/contracts/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "packages/runner-protocol/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "examples/private-shop/package.json",
+      "name": "react",
+      "version": "19.3.0",
+      "resolved": "/workspace/node_modules/.pnpm/react@19.3.0/node_modules/react/index.js"
+    },
+    {
+      "packageJson": "examples/private-shop/package.json",
+      "name": "react-dom",
+      "version": "19.3.0",
+      "resolved": "/workspace/node_modules/.pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom/index.js"
+    },
+    {
+      "packageJson": "examples/private-shop/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "resolved": "/workspace/node_modules/.pnpm/zod@4.6.5/node_modules/zod/index.cjs"
+    },
+    {
+      "packageJson": "examples/private-shop/package.json",
+      "name": "fastify",
+      "version": "5.12.5",
+      "resolved": "/workspace/node_modules/.pnpm/fastify@5.12.5/node_modules/fastify/fastify.js"
+    }
+  ],
+  "criticalSubpaths": [
+    [
+      "pg",
+      "/workspace/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/index.js"
+    ],
+    [
+      "drizzle-orm/node-postgres",
+      "/workspace/node_modules/.pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm/node-postgres/index.cjs"
+    ],
+    [
+      "drizzle-orm/node-postgres/migrator",
+      "/workspace/node_modules/.pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm/node-postgres/migrator.cjs"
+    ]
+  ]
+}

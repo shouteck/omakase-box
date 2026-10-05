@@ -1,0 +1,643 @@
+apps/private-console/releases/contents-review.tsx(17,24): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+examples/private-shop/src/policy/loader.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+examples/private-shop/src/selection/api.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+examples/private-shop/src/server.ts(1,21): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+examples/private-shop/src/server.ts(10,32): error TS7006: Parameter 'request' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(10,41): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(10,48): error TS7006: Parameter 'payload' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(17,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(17,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(20,33): error TS7006: Parameter 'request' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(20,42): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(25,30): error TS7006: Parameter '_error' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(25,38): error TS7006: Parameter '_request' implicitly has an 'any' type.
+examples/private-shop/src/server.ts(25,48): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+packages/analyzer/policy/index.ts(41,30): error TS7006: Parameter 'candidate' implicitly has an 'any' type.
+packages/analyzer/policy/index.ts(42,25): error TS7006: Parameter 'candidate' implicitly has an 'any' type.
+packages/compiler/index.ts(16,61): error TS7006: Parameter 'segment' implicitly has an 'any' type.
+packages/compiler/index.ts(42,50): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+packages/compiler/index.ts(47,91): error TS2339: Property 'byteSize' does not exist on type '{}'.
+packages/compiler/index.ts(47,134): error TS2339: Property 'sha256' does not exist on type '{}'.
+packages/compiler/index.ts(51,105): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/index.ts(51,162): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/compiler/index.ts(51,202): error TS2339: Property 'sha256' does not exist on type '{}'.
+packages/compiler/index.ts(51,267): error TS2339: Property 'mediaType' does not exist on type '{}'.
+packages/compiler/workspace.ts(25,40): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/compiler/workspace.ts(26,50): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/compiler/workspace.ts(27,44): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/compiler/workspace.ts(30,58): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(32,57): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(52,51): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(53,61): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(56,23): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ client_wiring: string; frontend_component: string; backend_api: string; backend_pure_module: string; }'.
+packages/compiler/workspace.ts(57,55): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(63,113): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/compiler/workspace.ts(72,46): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/compiler/workspace.ts(74,50): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(76,310): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(76,345): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/compiler/workspace.ts(76,731): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/compiler/workspace.ts(78,239): error TS7006: Parameter 'requirement' implicitly has an 'any' type.
+packages/contracts/auth/http.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/common.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/paths.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/private/analysis.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/private/index.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/private/index.ts(17,17): error TS7006: Parameter 'intent' implicitly has an 'any' type.
+packages/contracts/private/index.ts(17,25): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/private/index.ts(18,25): error TS7006: Parameter 'fact' implicitly has an 'any' type.
+packages/contracts/private/index.ts(19,36): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+packages/contracts/private/index.ts(20,90): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+packages/contracts/private/index.ts(30,17): error TS7006: Parameter 'plan' implicitly has an 'any' type.
+packages/contracts/private/index.ts(30,23): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/private/index.ts(31,55): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+packages/contracts/private/index.ts(31,134): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+packages/contracts/private/index.ts(48,17): error TS7006: Parameter 'result' implicitly has an 'any' type.
+packages/contracts/private/index.ts(48,25): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/private/index.ts(49,60): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/contracts/private/index.ts(49,156): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/private/planning.ts(16,17): error TS7006: Parameter 'proposal' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(16,27): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(17,38): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(31,326): error TS7006: Parameter 'input' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(31,333): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(32,44): error TS7006: Parameter 'source' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(32,98): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(33,105): error TS7006: Parameter 'source' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(34,30): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(35,29): error TS7006: Parameter 'source' implicitly has an 'any' type.
+packages/contracts/private/planning.ts(35,78): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/public/composition.ts(23,17): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(23,23): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(24,24): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly frontend_component: { readonly version: 1; readonly required: readonly ["browser", "static_assets"]; readonly allowed: readonly ["browser", "static_assets", "job_proxy"]; }; readonly backend_pure_module: { ...; }; readonly backend_api: { ...; }; readonly application_policy: { ...; }; }'.
+packages/contracts/public/composition.ts(26,38): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(26,103): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(28,76): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(65,42): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(66,50): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(67,48): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(70,40): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(72,64): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(74,34): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(74,89): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(74,145): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(74,199): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(75,35): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(75,58): error TS2339: Property 'workUnitIds' does not exist on type '{}'.
+packages/contracts/public/composition.ts(76,32): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(76,74): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(77,85): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(77,107): error TS2339: Property 'requirementIds' does not exist on type '{}'.
+packages/contracts/public/composition.ts(83,198): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(91,20): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(93,54): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(94,33): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(94,151): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(96,166): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(96,221): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(96,268): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(97,111): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(99,84): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(99,194): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(112,44): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+packages/contracts/public/composition.ts(120,29): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(120,77): error TS7006: Parameter 'dependency' implicitly has an 'any' type.
+packages/contracts/public/composition.ts(123,27): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/contracts/public/feedback-bridge.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/public/release.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/public/release.ts(25,17): error TS7006: Parameter 'manifest' implicitly has an 'any' type.
+packages/contracts/public/release.ts(25,27): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/public/release.ts(26,49): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+packages/contracts/public/release.ts(27,31): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+packages/contracts/public/release.ts(27,36): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+packages/contracts/public/release.ts(39,17): error TS7006: Parameter 'envelope' implicitly has an 'any' type.
+packages/contracts/public/release.ts(39,27): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/public/response-policy.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/public/response-policy.ts(14,17): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/response-policy.ts(14,24): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/public/response-policy.ts(15,41): error TS7006: Parameter 'policy' implicitly has an 'any' type.
+packages/contracts/public/response-policy.ts(21,116): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/submission.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/public/submission.ts(7,35): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/submission.ts(7,132): error TS7006: Parameter 'value' implicitly has an 'any' type.
+packages/contracts/public/task.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/contracts/public/task.ts(31,17): error TS7006: Parameter 'task' implicitly has an 'any' type.
+packages/contracts/public/task.ts(31,23): error TS7006: Parameter 'context' implicitly has an 'any' type.
+packages/contracts/public/task.ts(34,37): error TS7006: Parameter 'dependency' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(215,114): error TS7006: Parameter 'issue' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(218,67): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(220,36): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly frontend_component: { readonly version: 1; readonly required: readonly ["browser", "static_assets"]; readonly allowed: readonly ["browser", "static_assets", "job_proxy"]; }; readonly backend_pure_module: { ...; }; readonly backend_api: { ...; }; readonly application_policy: { ...; }; }'.
+packages/evaluation/contracts/completeness.ts(231,73): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(233,75): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(233,193): error TS7006: Parameter 'id' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(242,60): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(243,127): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(248,47): error TS7006: Parameter 'requirement' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(249,55): error TS7006: Parameter 'requirement' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(250,49): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(252,86): error TS7006: Parameter 'requirement' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(253,80): error TS7006: Parameter 'requirement' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(254,45): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(254,162): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(255,121): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(387,48): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/evaluation/contracts/completeness.ts(419,31): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+packages/evaluation/contracts/completeness.ts(421,26): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+packages/evaluation/contracts/completeness.ts(426,9): error TS2322: Type 'unknown' is not assignable to type 'string'.
+packages/evaluation/contracts/completeness.ts(427,25): error TS18046: 'check' is of type 'unknown'.
+packages/evaluation/contracts/completeness.ts(431,28): error TS2322: Type 'unknown' is not assignable to type 'string'.
+packages/evaluation/policy/index.ts(11,45): error TS7006: Parameter 'allowed' implicitly has an 'any' type.
+packages/evaluation/policy/index.ts(18,43): error TS7006: Parameter 'allowed' implicitly has an 'any' type.
+packages/evaluation/policy/index.ts(28,3): error TS2322: Type '{ [k: string]: unknown; }' is not assignable to type 'Record<string, string>'.
+  'string' index signatures are incompatible.
+    Type 'unknown' is not assignable to type 'string'.
+packages/planner/partition/compose.ts(229,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly frontend_component: { readonly version: 1; readonly required: readonly ["browser", "static_assets"]; readonly allowed: readonly ["browser", "static_assets", "job_proxy"]; }; readonly backend_pure_module: { ...; }; readonly backend_api: { ...; }; readonly application_policy: { ...; }; }'.
+packages/planner/partition/compose.ts(240,57): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(248,57): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(255,261): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(262,39): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(267,72): error TS7006: Parameter 'example' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(268,77): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(268,137): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(268,191): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(275,61): error TS2322: Type '{} | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+packages/planner/partition/compose.ts(278,58): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(278,89): error TS7006: Parameter 'path' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(284,56): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/planner/partition/compose.ts(288,81): error TS7006: Parameter 'item' implicitly has an 'any' type.
+packages/planner/partition/policy/index.ts(9,55): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+packages/planner/partition/policy/index.ts(24,48): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/planner/partition/policy/index.ts(26,191): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+packages/planner/partition/policy/index.ts(26,284): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+packages/planner/providers/contracts.ts(22,67): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+packages/planner/providers/contracts.ts(24,71): error TS7006: Parameter 'fact' implicitly has an 'any' type.
+packages/planner/providers/contracts.ts(43,82): error TS7006: Parameter 'fact' implicitly has an 'any' type.
+packages/planner/providers/demo-fixtures.ts(27,49): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/runner-protocol/index.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+packages/runner-protocol/index.ts(10,497): error TS7006: Parameter 'job' implicitly has an 'any' type.
+packages/runner-protocol/index.ts(10,502): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+packages/runner-protocol/index.ts(27,125): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly 'pure-module/v1': readonly ["supervise-pure-module"]; readonly 'frontend/v1': readonly ["supervise-browser"]; readonly 'backend-api/v1': readonly ["supervise-api"]; readonly 'application-policy/v1': readonly ["validate-policy"]; readonly 'composed/v1': readonly [...]; }'.
+packages/runner-protocol/index.ts(45,75): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/runner-protocol/index.ts(45,145): error TS7006: Parameter 'check' implicitly has an 'any' type.
+packages/runner-protocol/index.ts(46,57): error TS7006: Parameter 'check' implicitly has an 'any' type.
+services/external-api/auth/fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/auth/resources.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/auth/routes.ts(1,38): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/external-api/auth/routes.ts(10,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/auth/routes.ts(10,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/auth/routes.ts(22,44): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/auth/routes.ts(22,53): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/auth/routes.ts(31,50): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/auth/routes.ts(31,59): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/bootstrap/cookie-policy.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/bootstrap/environment.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/bootstrap/environment.ts(23,106): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+services/external-api/bootstrap/environment.ts(29,48): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(path: PathOrFileDescriptor, options?: { encoding?: null | undefined; flag?: string | undefined; } | null | undefined): NonSharedBuffer', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'PathOrFileDescriptor'.
+  Overload 2 of 3, '(path: PathOrFileDescriptor, options?: BufferEncoding | (ObjectEncodingOptions & { flag?: string | undefined; }) | null | undefined): string | NonSharedBuffer', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'PathOrFileDescriptor'.
+services/external-api/bridge/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/bridge/live-fixture.ts(59,49): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+services/external-api/bridge/packaging.ts(115,68): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+services/external-api/bridge/release.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/db/migrate.ts(3,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/external-api/db/migrate.ts(4,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/external-api/db/migrate.ts(5,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/db/reservation-store.ts(2,27): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/db/schema.ts(1,21): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+services/external-api/db/schema.ts(2,148): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+services/external-api/db/schema.ts(10,163): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/external-api/db/schema.ts(13,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/external-api/db/schema.ts(16,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/external-api/db/schema.ts(19,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/external-api/reservations/assignment-live-fixture.ts(4,44): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/external-api/reservations/assignment-live-fixture.ts(5,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/reservations/assignment-live-fixture.ts(6,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/external-api/reservations/assignment-live-fixture.ts(7,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/external-api/reservations/assignment-protocol.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/reservations/assignment-protocol.ts(6,138): error TS7006: Parameter 'value' implicitly has an 'any' type.
+services/external-api/reservations/assignment-protocol.ts(6,229): error TS7006: Parameter 'value' implicitly has an 'any' type.
+services/external-api/reservations/assignment-protocol.ts(6,236): error TS7006: Parameter 'context' implicitly has an 'any' type.
+services/external-api/reservations/assignment-protocol.ts(12,449): error TS7006: Parameter 'value' implicitly has an 'any' type.
+services/external-api/reservations/assignment-protocol.ts(12,456): error TS7006: Parameter 'context' implicitly has an 'any' type.
+services/external-api/reservations/assignment-receipt.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/reservations/assignment-receiver.ts(3,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/reservations/download.ts(96,47): error TS7006: Parameter 'requirement' implicitly has an 'any' type.
+services/external-api/reservations/download.ts(99,49): error TS7006: Parameter 'dependency' implicitly has an 'any' type.
+services/external-api/reservations/download.ts(103,104): error TS7006: Parameter 'check' implicitly has an 'any' type.
+services/external-api/reservations/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/reservations/live-fixture.ts(5,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/external-api/reservations/live-fixture.ts(6,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/external-api/reservations/reservation-sql.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/reservations/routes.ts(1,68): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/external-api/reservations/routes.ts(101,46): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(101,55): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(113,31): error TS7006: Parameter '_request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(113,41): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(118,39): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(118,48): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(130,53): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(130,62): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(143,45): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(143,54): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(156,42): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(156,51): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(167,50): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(167,59): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(183,55): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(183,64): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(196,58): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(196,67): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(207,59): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/reservations/routes.ts(207,68): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/src/bootstrap/main.ts(2,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/src/bootstrap/server.ts(1,21): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/external-api/src/bootstrap/server.ts(17,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(17,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(42,40): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(42,49): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(44,33): error TS7006: Parameter '_request' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(44,43): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(45,30): error TS7006: Parameter '_error' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(45,38): error TS7006: Parameter '_request' implicitly has an 'any' type.
+services/external-api/src/bootstrap/server.ts(45,48): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/status/routes.ts(1,68): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/external-api/status/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/status/routes.ts(41,42): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/status/routes.ts(41,51): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/status/routes.ts(54,48): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/status/routes.ts(54,57): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/status/store.ts(1,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/submissions/envelope.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/submissions/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/submissions/live-fixture.ts(5,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/external-api/submissions/live-fixture.ts(6,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/external-api/submissions/live-fixture.ts(65,49): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+services/external-api/submissions/protocol.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/submissions/routes.ts(1,68): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/external-api/submissions/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/submissions/routes.ts(51,55): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/submissions/routes.ts(51,64): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/submissions/routes.ts(83,45): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/external-api/submissions/routes.ts(83,54): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/external-api/submissions/store.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/external-api/submissions/store.ts(296,37): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+services/external-api/tasks/projections.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/external-api/tasks/published-store.ts(1,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/acceptance/routes.ts(1,52): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/acceptance/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/acceptance/routes.ts(37,44): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/acceptance/routes.ts(37,53): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/acceptance/routes.ts(44,75): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/acceptance/routes.ts(44,84): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/acceptance/store.ts(1,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/acceptance/store.ts(240,21): error TS7006: Parameter 'row' implicitly has an 'any' type.
+services/private-api/assignments/delivery-live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/assignments/delivery-live-fixture.ts(5,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/private-api/assignments/delivery-live-fixture.ts(6,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/private-api/assignments/delivery.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/assignments/delivery.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/assignments/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/assignments/live-fixture.ts(5,21): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/assignments/live-fixture.ts(10,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/private-api/assignments/live-fixture.ts(11,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/private-api/assignments/readiness.ts(2,33): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/assignments/routes.ts(1,52): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/assignments/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/assignments/routes.ts(16,38): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/assignments/routes.ts(16,47): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/assignments/routes.ts(25,74): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/assignments/routes.ts(25,83): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/assignments/store.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/assignments/store.ts(7,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/auth/fixture.ts(3,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/auth/resources.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/auth/routes.ts(1,38): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/auth/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/auth/routes.ts(16,52): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/auth/routes.ts(16,61): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/auth/routes.ts(22,43): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/auth/routes.ts(22,52): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/bootstrap/cookie-policy.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/bootstrap/environment.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/bootstrap/environment.ts(27,48): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(path: PathOrFileDescriptor, options?: { encoding?: null | undefined; flag?: string | undefined; } | null | undefined): NonSharedBuffer', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'PathOrFileDescriptor'.
+  Overload 2 of 3, '(path: PathOrFileDescriptor, options?: BufferEncoding | (ObjectEncodingOptions & { flag?: string | undefined; }) | null | undefined): string | NonSharedBuffer', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'PathOrFileDescriptor'.
+services/private-api/bootstrap/owner-cli.ts(3,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/bootstrap/owner-store.ts(1,27): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/bootstrap/owner.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/boxes/store/schema.ts(1,21): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+services/private-api/boxes/store/schema.ts(2,118): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+services/private-api/boxes/store/schema.ts(16,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(30,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(40,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(52,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(67,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(98,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(128,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(140,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/schema.ts(163,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/boxes/store/store.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/bridge/release.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/bridge/release.ts(25,58): error TS7006: Parameter 'key' implicitly has an 'any' type.
+services/private-api/bridge/release.ts(26,59): error TS7006: Parameter 'key' implicitly has an 'any' type.
+services/private-api/db/intent-store.ts(1,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/db/intent-store.ts(122,193): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/db/migrate.ts(3,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/private-api/db/migrate.ts(4,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/private-api/db/migrate.ts(5,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/db/schema.ts(1,21): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+services/private-api/db/schema.ts(2,155): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+services/private-api/db/schema.ts(22,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(23,147): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(26,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(29,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(32,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(35,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(42,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(45,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(51,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/db/schema.ts(54,4): error TS7006: Parameter 'table' implicitly has an 'any' type.
+services/private-api/evaluations/pipeline.ts(1,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/evaluations/pipeline.ts(193,22): error TS7006: Parameter 'job' implicitly has an 'any' type.
+services/private-api/feedback/delivery.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/feedback/policy.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/feedback/policy.ts(23,17): error TS7006: Parameter 'policy' implicitly has an 'any' type.
+services/private-api/feedback/policy.ts(23,25): error TS7006: Parameter 'context' implicitly has an 'any' type.
+services/private-api/feedback/store.ts(1,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/intents/orchestrator.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/intents/orchestrator.ts(12,27): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/intents/orchestrator.ts(65,42): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(65,84): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(71,31): error TS7006: Parameter 'fact' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(73,39): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(74,43): error TS7006: Parameter 'item' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(76,57): error TS7006: Parameter 'example' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(76,281): error TS7006: Parameter 'item' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(118,40): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/intents/orchestrator.ts(119,141): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(1,68): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/intents/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/intents/routes.ts(19,47): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(19,56): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(20,45): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(20,54): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(21,44): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(21,53): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(22,48): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(22,57): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(23,48): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(23,57): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(24,48): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(24,57): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(25,47): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/intents/routes.ts(25,56): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/intents/session-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/intents/types.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/intents/types.ts(2,35): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/intents/types.ts(56,66): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+services/private-api/intents/types.ts(58,34): error TS7006: Parameter 'fact' implicitly has an 'any' type.
+services/private-api/jobs/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/jobs/live-fixture.ts(5,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/private-api/jobs/live-fixture.ts(6,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/private-api/jobs/store.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/jobs/store.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/jobs/store.ts(41,97): error TS7006: Parameter 'ids' implicitly has an 'any' type.
+services/private-api/jobs/types.ts(1,35): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/ledger/acceptance-transaction/record.ts(1,33): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/preparations/policy/index.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/preparations/policy/index.ts(11,49): error TS7006: Parameter 'path' implicitly has an 'any' type.
+services/private-api/preparations/policy/index.ts(25,48): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+services/private-api/preparations/policy/index.ts(28,40): error TS7006: Parameter 'path' implicitly has an 'any' type.
+services/private-api/preparations/policy/index.ts(29,111): error TS7006: Parameter 'check' implicitly has an 'any' type.
+services/private-api/preparations/policy/index.ts(31,147): error TS7006: Parameter 'id' implicitly has an 'any' type.
+services/private-api/preparations/policy/index.ts(33,76): error TS7006: Parameter 'output' implicitly has an 'any' type.
+services/private-api/preparations/routes.ts(1,68): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/preparations/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/preparations/routes.ts(19,50): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/preparations/routes.ts(19,59): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/preparations/types.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/preparations/types.ts(2,35): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/readiness/routes.ts(2,52): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/readiness/routes.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/readiness/routes.ts(24,44): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/readiness/routes.ts(24,53): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/readiness/routes.ts(35,67): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/readiness/routes.ts(35,76): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/readiness/routes.ts(46,80): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/readiness/routes.ts(46,89): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/readiness/store.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/readiness/store.ts(35,35): error TS7006: Parameter 'row' implicitly has an 'any' type.
+services/private-api/readiness/store.ts(74,60): error TS7006: Parameter 'row' implicitly has an 'any' type.
+services/private-api/releases/compiler-routes.ts(1,38): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/releases/compiler-routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/releases/compiler-routes.ts(8,57): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/releases/compiler-routes.ts(8,66): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/releases/compiler.ts(2,27): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/releases/compiler.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/releases/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/releases/live-fixture.ts(5,21): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/releases/live-fixture.ts(75,37): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/private-api/releases/live-fixture.ts(76,38): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/private-api/releases/routes.ts(1,52): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/releases/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/releases/routes.ts(14,70): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/releases/routes.ts(14,79): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/releases/routes.ts(20,48): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/releases/routes.ts(20,57): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/releases/routes.ts(26,58): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/releases/routes.ts(26,67): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/releases/staging.ts(13,17): error TS7006: Parameter 'policy' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(13,25): error TS7006: Parameter 'context' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(46,60): error TS7006: Parameter 'a' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(46,63): error TS7006: Parameter 'b' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(47,39): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(48,37): error TS7006: Parameter 'path' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(48,92): error TS7006: Parameter 'item' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(48,130): error TS2339: Property 'sha256' does not exist on type '{}'.
+services/private-api/releases/staging.ts(48,193): error TS2339: Property 'mediaType' does not exist on type '{}'.
+services/private-api/releases/staging.ts(52,29): error TS7031: Binding element 'path' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(52,35): error TS7031: Binding element 'sourceAssetId' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(52,50): error TS7031: Binding element 'mediaType' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(52,61): error TS7031: Binding element 'byteSize' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(52,71): error TS7031: Binding element 'sha256' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(59,92): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(59,148): error TS7006: Parameter 'item' implicitly has an 'any' type.
+services/private-api/releases/staging.ts(59,219): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+services/private-api/releases/store.ts(3,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/releases/store.ts(4,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/requests/intake-fixture.ts(3,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/requests/intake-fixture.ts(4,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/requests/routes.ts(1,68): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/requests/routes.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/requests/routes.ts(21,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(21,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(22,36): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(22,45): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(26,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(26,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(27,38): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(27,47): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(28,72): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(28,81): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(29,59): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(29,68): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(35,53): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/requests/routes.ts(35,62): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/requests/store.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/requests/types.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/requests/types.ts(12,276): error TS7006: Parameter 'manifest' implicitly has an 'any' type.
+services/private-api/requests/types.ts(12,286): error TS7006: Parameter 'context' implicitly has an 'any' type.
+services/private-api/requests/types.ts(13,48): error TS7006: Parameter 'file' implicitly has an 'any' type.
+services/private-api/requests/types.ts(14,30): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+services/private-api/requests/types.ts(14,35): error TS7006: Parameter 'file' implicitly has an 'any' type.
+services/private-api/requests/types.ts(14,100): error TS7006: Parameter 'file' implicitly has an 'any' type.
+services/private-api/requests/types.ts(14,106): error TS7006: Parameter 'index' implicitly has an 'any' type.
+services/private-api/snapshots/importer.ts(4,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/snapshots/importer.ts(10,72): error TS7006: Parameter 'paths' implicitly has an 'any' type.
+services/private-api/snapshots/importer.ts(10,79): error TS7006: Parameter 'context' implicitly has an 'any' type.
+services/private-api/snapshots/importer.ts(12,18): error TS7006: Parameter 'path' implicitly has an 'any' type.
+services/private-api/snapshots/importer.ts(12,102): error TS7006: Parameter 'part' implicitly has an 'any' type.
+services/private-api/snapshots/sources.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/src/bootstrap/main.ts(2,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/src/bootstrap/server.ts(1,21): error TS2307: Cannot find module 'fastify' or its corresponding type declarations.
+services/private-api/src/bootstrap/server.ts(15,27): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/src/bootstrap/server.ts(35,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(35,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(56,42): error TS7006: Parameter 'request' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(56,51): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(58,33): error TS7006: Parameter '_request' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(58,43): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(59,30): error TS7006: Parameter 'error' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(59,37): error TS7006: Parameter '_request' implicitly has an 'any' type.
+services/private-api/src/bootstrap/server.ts(59,47): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+services/private-api/submission-import/importer.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/private-api/submission-import/live-fixture.ts(4,22): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/private-api/submission-import/live-fixture.ts(5,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres' or its corresponding type declarations.
+services/private-api/submission-import/live-fixture.ts(6,25): error TS2307: Cannot find module 'drizzle-orm/node-postgres/migrator' or its corresponding type declarations.
+services/private-api/submission-import/store.ts(2,39): error TS2307: Cannot find module 'pg' or its corresponding type declarations.
+services/runner-controller/composition/aggregate.ts(46,48): error TS7006: Parameter 'check' implicitly has an 'any' type.
+services/runner-controller/composition/aggregate.ts(47,28): error TS7006: Parameter 'check' implicitly has an 'any' type.
+services/runner-controller/config.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/runner-controller/config.ts(14,371): error TS7006: Parameter 'key' implicitly has an 'any' type.
+services/runner-controller/isolation/adversarial.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/runner-controller/isolation/observations.ts(1,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/runner-controller/isolation/plan.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/runner-controller/isolation/plan.ts(33,24): error TS18046: 'envelope' is of type 'unknown'.
+services/runner-controller/isolation/plan.ts(34,17): error TS18046: 'envelope' is of type 'unknown'.
+services/runner-controller/isolation/plan.ts(35,36): error TS18046: 'context' is of type 'unknown'.
+services/runner-controller/isolation/plan.ts(36,53): error TS18046: 'context' is of type 'unknown'.
+services/runner-controller/isolation/plan.ts(36,126): error TS18046: 'context' is of type 'unknown'.
+services/runner-controller/isolation/plan.ts(37,7): error TS18046: 'context' is of type 'unknown'.
+services/runner-controller/isolation/plan.ts(48,101): error TS18046: 'context' is of type 'unknown'.
+services/runner-controller/isolation/run-request.ts(2,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+services/runner-controller/replay.ts(3,19): error TS2307: Cannot find module 'zod' or its corresponding type declarations.
+tests/acceptance/contract-fit/fixtures.ts(48,57): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+tests/acceptance/contract-fit/fixtures.ts(176,85): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+tests/acceptance/policy/policy.test.ts(27,48): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/acceptance/policy/policy.test.ts(28,65): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/acceptance/policy/policy.test.ts(32,49): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/analysis/policy/adapter.test.ts(23,23): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/analysis/policy/adapter.test.ts(24,23): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/analysis/policy/adapter.test.ts(25,25): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/box/auth/box-store.test.ts(17,32): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/auth/box-store.test.ts(68,34): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/auth/negative-scope.test.ts(20,32): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/auth/roles-merge.test.ts(16,32): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/auth/scopes-idempotency.test.ts(16,32): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/auth/scopes-idempotency.test.ts(53,39): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/auth/scopes-idempotency.test.ts(59,36): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/contracts/box-schemas.test.ts(12,34): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/contracts/box-schemas.test.ts(22,32): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/contracts/box-schemas.test.ts(34,36): error TS2741: Property 'artifactId' is missing in type '{ [x: string]: any; schemaVersion: 1; profile: "open_trusted"; intent: { [x: string]: any; }; acceptanceExamples: any[]; assumptions: any[]; unknowns: any[]; scope: { included: any[]; excluded: any[]; }; }' but required in type '{ artifactId: string; }'.
+tests/box/verification/environment-readiness.test.ts(41,49): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/readiness.mjs'. '/workspace/.devin-h1-check/src/scripts/box-verification/readiness.mjs' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(42,61): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/environment-host.mjs'. '/workspace/.devin-h1-check/src/scripts/box-verification/environment-host.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(57,54): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/fixture-exec-host.mjs'. '/workspace/.devin-h1-check/src/scripts/box-verification/fixture-exec-host.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(58,58): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/fixture-exec-runner.mjs'. '/workspace/.devin-h1-check/src/scripts/box-verification/fixture-exec-runner.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(59,56): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/run-verification.mjs'. '/workspace/.devin-h1-check/src/scripts/box-verification/run-verification.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(341,86): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(...items: ConcatArray<string>[]): string[]', gave the following error.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(...items: (string | ConcatArray<string>)[]): string[]', gave the following error.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+tests/box/verification/relay-lifecycle.test.ts(536,75): error TS2322: Type '(_bin: string, _args: string[], options: SpawnOptions) => ChildProcess' is not assignable to type '(bin: string, args: string[], options: SpawnOptions) => SequenceChild'.
+  Call signature return types 'ChildProcess' and 'SequenceChild' are incompatible.
+    The types of 'pid' are incompatible between these types.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+tests/compiler/approval/browser.test.ts(27,45): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/compiler/approval/staging.test.ts(9,45): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/compiler/approval/staging.test.ts(62,38): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+tests/compiler/approval/store.test.ts(22,87): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+tests/compiler/package/approved-only.test.ts(13,45): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/compiler/package/approved-only.test.ts(21,159): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+tests/compiler/package/approved-only.test.ts(94,72): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+tests/compiler/package/approved-store.test.ts(18,39): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+tests/compiler/package/workspace.test.ts(13,42): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/compiler/package/workspace.test.ts(27,53): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/compiler/package/workspace.test.ts(28,46): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/contracts/composition.test.ts(28,60): error TS7006: Parameter 'check' implicitly has an 'any' type.
+tests/contracts/composition.test.ts(31,94): error TS7006: Parameter 'check' implicitly has an 'any' type.
+tests/contracts/fixtures.ts(49,140): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/contracts/fixtures.ts(49,192): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/contracts/graph-hardening.test.ts(8,46): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/contracts/graph-hardening.test.ts(9,85): error TS7006: Parameter 'id' implicitly has an 'any' type.
+tests/contracts/graph-hardening.test.ts(10,50): error TS7006: Parameter 'check' implicitly has an 'any' type.
+tests/contracts/graph-hardening.test.ts(11,91): error TS7006: Parameter 'id' implicitly has an 'any' type.
+tests/contracts/graph-hardening.test.ts(22,28): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/contracts/intent/routes.test.ts(12,35): error TS2307: Cannot find module '../../../services/private-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/e2e/contributor/support.ts(7,21): error TS2307: Cannot find module '../../../services/external-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/e2e/contributor/support.ts(166,35): error TS7006: Parameter 'request' implicitly has an 'any' type.
+tests/e2e/contributor/support.ts(166,44): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+tests/e2e/contributor/support.ts(177,30): error TS7006: Parameter '_error' implicitly has an 'any' type.
+tests/e2e/contributor/support.ts(177,38): error TS7006: Parameter '_request' implicitly has an 'any' type.
+tests/e2e/contributor/support.ts(177,48): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(31,48): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(32,48): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(33,49): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(44,36): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(47,38): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(48,38): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(50,39): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(51,41): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(72,58): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(73,58): error TS7006: Parameter 'mapping' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(74,48): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(80,48): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(84,58): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(94,50): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/planner/partition/composed-selection.test.ts(94,85): error TS7006: Parameter 'checkId' implicitly has an 'any' type.
+tests/planner/partition/fixtures.ts(44,57): error TS7006: Parameter 'decision' implicitly has an 'any' type.
+tests/portal/publication/durable-live.test.ts(24,93): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/portal/publication/fixture.ts(12,45): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/portal/publication/fixture.ts(21,159): error TS7006: Parameter 'asset' implicitly has an 'any' type.
+tests/portal/publication/release.test.ts(90,32): error TS7006: Parameter 'unit' implicitly has an 'any' type.
+tests/portal/publication/release.test.ts(91,33): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/portal/publication/release.test.ts(92,43): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/portal/reservation/reservation.test.ts(1,21): error TS2307: Cannot find module '../../../services/external-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/portal/reservations/owner-assignments.test.ts(3,21): error TS2307: Cannot find module '../../../services/private-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/portal/reservations/reservations.test.ts(9,21): error TS2307: Cannot find module '../../../services/external-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/portal/submissions/submissions.test.ts(1,21): error TS2307: Cannot find module '../../../services/external-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/runner/lifecycle/protocol.test.ts(199,32): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+tests/runner/lifecycle/protocol.test.ts(263,44): error TS7006: Parameter 'detail' implicitly has an 'any' type.
+tests/runner/lifecycle/protocol.test.ts(264,46): error TS7006: Parameter 'detail' implicitly has an 'any' type.
+tests/security/authorization/gates.test.ts(1,21): error TS2307: Cannot find module '../../../services/private-api/node_modules/fastify/fastify.js' or its corresponding type declarations.
+tests/security/authorization/gates.test.ts(33,39): error TS7006: Parameter 'request' implicitly has an 'any' type.
+tests/security/authorization/gates.test.ts(33,47): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+tests/security/authorization/gates.test.ts(34,40): error TS7006: Parameter 'request' implicitly has an 'any' type.
+tests/security/authorization/gates.test.ts(34,48): error TS7006: Parameter 'reply' implicitly has an 'any' type.
+tests/security/output-boundary/output-boundary.test.ts(26,37): error TS2307: Cannot find module '../../../services/private-api/node_modules/@types/pg/index.js' or its corresponding type declarations.
+tests/security/output-boundary/output-boundary.test.ts(76,44): error TS7006: Parameter 'detail' implicitly has an 'any' type.
+tests/security/output-boundary/output-boundary.test.ts(77,44): error TS7006: Parameter 'detail' implicitly has an 'any' type.
+tests/security/output-boundary/output-boundary.test.ts(78,44): error TS7006: Parameter 'detail' implicitly has an 'any' type.
+tests/security/output-boundary/output-boundary.test.ts(97,44): error TS7006: Parameter 'detail' implicitly has an 'any' type.
+tests/security/runtime/plan.test.ts(17,131): error TS7053: Element implicitly has an 'any' type because expression of type 'z.infer<any>' can't be used to index type '{ readonly 'pure-module/v1': "supervise-pure-module"; readonly 'frontend/v1': "supervise-browser"; readonly 'backend-api/v1': "supervise-api"; readonly 'application-policy/v1': "validate-policy"; readonly 'composed/v1': "supervise-composed"; }'.

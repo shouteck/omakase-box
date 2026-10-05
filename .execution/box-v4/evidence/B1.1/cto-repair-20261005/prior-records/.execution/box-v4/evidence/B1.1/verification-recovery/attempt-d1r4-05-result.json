@@ -1,0 +1,25 @@
+{
+  "attempt": "d1-r4-05",
+  "status": "complete_worker_self_check",
+  "preRecordTiming": "attempt-d1r4-05-correction.json persisted strictly before candidate edits",
+  "reviewerFailAddressed": "host-side closure digests mismatched: file rows used Windows separators and package root serialized as absolute host path; canonicalizing rows alone insufficient",
+  "changedLeasedPaths": {
+    "scripts/box-verification/environment-host.mjs": {"before": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59", "after": "b74f2ec5953014094f764642fef35eb995fb8a047839f9906d5f5cdac4ef2200"},
+    "tests/box/verification/environment-readiness.test.ts": {"before": "4ed19d807c775b1757825bf45ec9948b19564da0336bb3399e5a7cb2bb26d78a", "after": "7ba24f3d14eac696009f305ed010c7e3d7c1ce93a2e945c225f78df9b5934321"},
+    "scripts/box-verification/environment-manifest.json": {"before": "c1e1f55ca2196ef3ee5abad341e09f4815e7e38e031ec8a75216e9a8dfff1705", "after": "c45befd226012dd0e5fb22b4ebda0d2df0c410b8e5eba44a28f9804f02f94929"}
+  },
+  "correction": {
+    "canonicalSerialization": "package root = plan.containerRoot + '/'-joined rel under hostRoot (containerRoot when rel empty); sort by canonical root; '/'-canonical file rows; Linux digests provably unchanged",
+    "symmetricRootValidation": "hostRoot strict descendant of workspaceBind.host, containerRoot strict descendant of workspaceBind.container, equal relative paths; applied to linuxDependencies+linuxTooling before each closure verification and inside runnerCreateArgv; mountTarget still strict under /stage read-only",
+    "tests": "canonical nested-file serialization test (manually computed canonical digest) + mismatched relative bind-root rejection; all prior assertions/comments preserved; no comments added"
+  },
+  "linuxChecks": {
+    "canonicalProbe": {"exit": 0, "dep": "ok 44/1153/6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6", "tool": "ok 1/1077/b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6", "argvMounts": "3 exact mounts, both readonly", "mismatchRejected": "dependency_bind_root_mismatch", "evidence": "canonical-probe-d1r4-attempt5.txt"},
+    "vitest": {"literalExit": 0, "testFiles": "3 passed (3)", "tests": "65 passed (65)", "vitestDuration": "19.84s", "stderrBytes": 0, "evidence": "vitest-selection-d1r4-attempt5.stdout.txt/.stderr-status.txt"}
+  },
+  "backgroundedCommands": "d80caa, 6241e3, 07a936, 45deb7, 5479d0, 9bff40 harness-backgrounded; superseded by durable /tmp polls",
+  "stillRunning": "none observed",
+  "forbidden": "none: read-only docker exec probes in existing w002-b11-ws; no Docker create/start, no createResources, no setup/readiness/fixtures/acceptance/Git/DB/API/queue/credentials",
+  "readyForSameReviewerPreExecutionReview": true,
+  "note": "worker self-check only; not independent review or acceptance; setup release still root-suspended"
+}

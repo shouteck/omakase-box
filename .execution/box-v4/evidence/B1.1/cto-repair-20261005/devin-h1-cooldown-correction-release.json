@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "scoped_supervisor_service_state_pacing_correction",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "worker": "box-worker/483988b4",
+  "reviewer": "box-reviewer/27f919af",
+  "diagnosis": "devin-h1-acceptance-failure-checkpoint.json",
+  "baseManifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "permittedPaths": ["scripts/box-verification/run-verification.mjs", "tests/box/verification/relay-lifecycle.test.ts", "scripts/box-verification/environment-manifest.json"],
+  "supportingCause": "Original exact sequence invokes live legacy auth twice against preserved shared services. Unchanged real per-IP login/redeem limiter window is strictly greater than300000ms before natural expiration; second auth invocation begins before reset and reports429 instead of original expected400. Application security behavior must remain unchanged.",
+  "correction": "Minimal fixed approved-profile-only supervisor pacing before the repeated test:auth invocation, allowing the natural limiter window to elapse after check completion. Preserve exact original ordered seven and every actual command/assertion. Keep each actual command eight-minute deadline unchanged; inter-command idle readiness wait is explicitly recorded separately, bounded to only the demonstrated window plus a small justified clock margin, not an arbitrary retry/backoff policy. Regression tests must prove profile/default timing, unchanged sequence/deadlines and durable cooldown accounting without a real five-minute test sleep.",
+  "forbidden": "No application/auth/http/verify-auth/support.ts/tsconfig/security/rate-limit changes, assertion edits/skips/comments, source module/framework/dependency additions, fixture resets/DBdrops/containerrestarts/leaseextensions/relayreplacement or alternative fullbatch bypass. No root product-code authoring.",
+  "workerChecks": "Affected narrow tests and tsc in existing approved Linux copy only; no fullbatch or fixtures. Preserve prior source/candidate/evidence, refreeze changed rows, same worker returns immutable exact receipt for current independent review.",
+  "stageOverlayReleased": false,
+  "acceptanceReleased": false,
+  "nextBatchDbAccounting": "8of12 currently used; one final full batch adds4to12. No further DBmutating batch is implied beyond safe accounted cap.",
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

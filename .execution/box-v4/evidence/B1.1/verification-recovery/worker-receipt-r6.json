@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_actual_worker_receipt",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "authority": ".execution/box-v4/approvals/W002-r6-approval.json",
+  "lead": "9d815787",
+  "worker": "0f83ba36",
+  "evidenceSource": "Actual worker result retrieved directly using read_subagent(0f83ba36), also rolled up by the actual lead; this record is root persistence, not independent verification.",
+  "observedModel": "unobserved",
+  "reportedTiming": {"start": "approximately 19:26Z", "stop": "approximately 19:44Z", "activeMinutes": 18},
+  "timingLimitation": "Approximate future stop conflicts with root recording clock19:39:33Z. Not verified telemetry; root charges full40-minute worker cap conservatively in final reconciliation.",
+  "changedPaths": ["scripts/box-verification/environment-manifest.json", "scripts/box-verification/environment-host.mjs", "scripts/box-verification/readiness.mjs", "scripts/box-verification/run-verification.mjs", "scripts/box-verification/fixture-exec-host.mjs", "scripts/box-verification/fixture-exec-runner.mjs", "scripts/box-verification/fixture-command-manifest.json", "tests/box/auth/support.ts", "tests/box/verification/environment-readiness.test.ts", "tests/box/verification/relay-lifecycle.test.ts"],
+  "unchangedLeasedPaths": ["scripts/box-verification/fixture-exec-client.mjs", "scripts/docker.mjs", "scripts/suite.mjs", "scripts/vitest.config.mjs"],
+  "candidateManifest": "harness-review-r6-final.json candidateFiles, exact full hashes independently supplied by reviewer and recomputed by root",
+  "reportedChanges": ["Manifest-fixed workdir/SYNTHETIC env argv and original fixture result transform", "revision1243 executable layout discovery", "additive hash-listed staging helper and optional sourceFiles input", "crypto.randomBytes synthetic credentials handed to fresh resource create env", "migratedPool dedicated host/run/12-DB cap and connection deadline", "per-request lease/durable started-result state", "owned POSIX process-group signalling", "acceptance CLI digest recomputation and create argv validation"],
+  "reportedCommands": ["date -u, wc -c, ls informational", "node --check on eight harness .mjs files and JSON.parse manifests, reported exit0", "node -e hash maps, reported exit0", "scoped git status read-only", "protected16 baseline hash comparison"],
+  "selfCheckLimitations": "No worker vitest/behavior test run. Worker syntax-check execution location is not established by the returned receipt, so Linux-only compliance is not proven for those checks; they are not acceptance evidence.",
+  "reportedPreservation": "Protected16 unchanged; support.ts confined to migratedPool, original tail/assertions intact, two prior worker comments removed. No new comments reported. Reviewer could not fully validate comment provenance.",
+  "reportedExclusionsObserved": "No new resource/stage population/mailbox/relay, live API/DB contact, credential/env read, downloads, Git stage/commit/push or cleanup. Public .env.example not read.",
+  "workerLimitations": ["Early wrapper spawn failure without stdout is malformed and unconfirmed", "Full sourceFiles stage digest map unsupplied", "POSIX process-group signalling not proof of descendant termination", "Fresh Box DB config only runtime-bound, environment not released"],
+  "acceptance": "Not accepted; subsequent distinct exact review returned FAIL."
+}

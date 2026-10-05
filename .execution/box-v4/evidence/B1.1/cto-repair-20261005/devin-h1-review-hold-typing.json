@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_preexecution_release_withheld",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "review": "devin-h1-review/independent-review-r2-h1.json",
+  "historicalReviewPreserved": true,
+  "reviewerVerdict": "pass_preexecution",
+  "rootRelease": "withheld_pending_precise_type_correction_and_db_consumption_reconciliation",
+  "reason": "Review identified getLifecycle(): Promise<string> although null is possible and buildExecArgv(): string[] although implementation returns {argv,entry}. These are inaccurate module-boundary types, not accepted as nonblocking merely because current assertions pass. Sole worker must correct truthful signatures and refreeze affected rows; reviewer checks current exact bytes again.",
+  "additionalCheck": "Reviewer projected Box DB cap consumption from check/test:auth; inspect actual script suite paths before accepting that projection. Preserve DB count4/12, do not drop/reset/increase cap.",
+  "stageOverlayReleased": false,
+  "acceptanceReleased": false,
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

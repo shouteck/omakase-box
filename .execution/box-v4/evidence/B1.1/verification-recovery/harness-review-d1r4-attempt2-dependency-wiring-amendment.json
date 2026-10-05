@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_harness_preexecution_amendment",
+  "reviewer": "a689979b",
+  "lead": "89140b96",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "attempt": "d1-r4-02",
+  "phaseVerdict": "PRE-EXECUTION FAIL",
+  "supersedesPhaseVerdict": "PRE-EXECUTION PASS",
+  "acceptance": "B1.1 remains unaccepted; no setup/readiness/fixture/release is authorized.",
+  "finding": "The attempt2 manifest/code verifies linuxDependencies under /workspace/node_modules, but the dedicated runner is created with only manifest.stage.rootHost bound to /stage and workdir /stage. It has no /workspace mount, no /stage/node_modules mount or staged dependency tree, and no NODE_PATH. stageFiles forbids top-level node_modules paths. The manifest sourceFilesPlan also lacks scripts/pnpm.mjs and scripts/tooling/node_modules/pnpm/bin/pnpm.cjs, so the fixed command 'node scripts/pnpm.mjs ...' cannot resolve the repository-local pnpm entrypoint. Even if pnpm.mjs were staged, scripts/suite.mjs resolves ../node_modules/vitest/vitest.mjs relative to /stage, which remains absent.",
+  "evidence": {
+    "environment-manifest.json": {
+      "stage.rootContainer": "/stage",
+      "runner binds": ["manifest.stage.rootHost -> /stage"],
+      "linuxDependencies.root": "/workspace/node_modules",
+      "sourceFilesPlanMissing": ["scripts/pnpm.mjs", "scripts/tooling/node_modules/pnpm/bin/pnpm.cjs", "node_modules"]
+    },
+    "environment-host.mjs": {
+      "assertStageableRel": "forbids rel paths beginning node_modules/",
+      "runnerCreateArgv": "uses only the single /stage bind from manifest.stage.rootHost and sets workdir to /stage",
+      "verifyDependencyClosure": "verifies only /workspace/node_modules and performs no staging or runner mount wiring"
+    },
+    "scripts/pnpm.mjs": "requires scripts/tooling/node_modules/pnpm/bin/pnpm.cjs relative to the staged repository root",
+    "scripts/suite.mjs": "requires ../node_modules/vitest/vitest.mjs relative to the staged repository root",
+    "scripts/vitest.config.mjs": "imports vitest/config, requiring normal dependency resolution from the staged root"
+  },
+  "commandsRun": "No Docker command or candidate code was executed for this reassessment; only exact host file bytes were read.",
+  "smallestSafeCorrection": "The same sole worker may make a leased correction that establishes an exact reviewed dependency-resolution path for all seven fixed commands before any setup attempt: stage or read-only-bind the verified Linux dependency closure at the runner's staged repository node_modules location, and similarly provide the repository-local pnpm tooling entrypoint, while preserving forbidden credential/.runtime boundaries and proving the complete 44/1153 digest. The mechanism must be manifest/code-bound; a bare NODE_PATH claim is insufficient for ESM/package resolution.",
+  "requiredNextStep": "Worker correction followed by a fresh exact independent pre-execution review. Do not consume the one setup attempt on attempt2 bytes."
+}

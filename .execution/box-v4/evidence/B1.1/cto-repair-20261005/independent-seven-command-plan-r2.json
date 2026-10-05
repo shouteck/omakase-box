@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "frozen_independent_original_seven_plan",
+  "reviewer": "/root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T03:33:54.174835+00:00",
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "3600",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import{mkdir}from'node:fs/promises';import{spawn}from'node:child_process';const temp='/tmp/cto-r2-acceptance';await mkdir(temp+'/config',{recursive:true});await mkdir(temp+'/cache',{recursive:true});await mkdir(temp+'/data',{recursive:true});const child=spawn(process.execPath,['scripts/box-verification/run-verification.mjs','/stage/.cto-r1-evidence/environment-manifest.json','/stage/.cto-r1-evidence/independent-seven-r2','/stage/.cto-r1-evidence/independent-review-r2-final.json','/stage/.cto-r1-evidence/independent-environment-ready-r2.json'],{stdio:'inherit',env:{...process.env,HOME:temp,XDG_CONFIG_HOME:temp+'/config',XDG_CACHE_HOME:temp+'/cache',XDG_DATA_HOME:temp+'/data',PLAYWRIGHT_BROWSERS_PATH:'/ms-playwright',BOX_VERIFICATION_PROFILE:'w002-b11-environment-first-r4',BOX_VERIFICATION_BROWSER_PATH:'/ms-playwright',BOX_VERIFICATION_TRANSPORT:'mailbox',BOX_VERIFICATION_MAILBOX:'/stage/mailbox',BOX_VERIFICATION_RUN_ID:'w002-b11-r4-env2'}});child.on('error',e=>{console.error(e);process.exit(2)});child.on('exit',(code,signal)=>{if(signal){console.error('supervisor_signal:'+signal);process.exit(2)}process.exit(code??2)})"
+  ],
+  "sourceSha256": "2df02649c8f54e343c0cd809521b3d2e3bcc975a69fd1e6d9b09a5f585c791cb",
+  "manifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "environmentId": "w002-b11-env-r4-env2",
+  "sourceCount": 456,
+  "sequence": [
+    "node scripts/pnpm.mjs test:box-contracts",
+    "node scripts/pnpm.mjs test:box-auth",
+    "node scripts/pnpm.mjs check",
+    "node scripts/pnpm.mjs build",
+    "node scripts/pnpm.mjs test:auth",
+    "node scripts/pnpm.mjs test:contracts",
+    "node scripts/pnpm.mjs test:planner"
+  ],
+  "requiredMetadataCopy": "Current independent-review-r2-final.json and independent-environment-ready-r2.json exact bytes at /stage/.cto-r1-evidence before invocation",
+  "bounds": "Unchanged supervised 8min per command, serial stop on nonPASS/unknown. Outer3600s guard only; output/drain/process confirmation remain supervisor requirements. Host collector must allow outer expiry and capture confirmed remote completion. No auto rerun.",
+  "settingsReason": "Actual R2 proof verifies native loader plus config-owned writable cache and child-only HOME/XDG config/cache/data. Same originalprofile publicbrowserpath/mailbox/run binding. No hostglobalsettings/deps/resources changed.",
+  "authority": "Plan frozen; root current acceptance-phase release required.",
+  "priorBatch": "Original independent-seven-r1 stoppedFAIL beforetests atEROFS; preserved, neverrelabelled. Newcandidate explicitlyrefrozen currentreview+ready."
+}

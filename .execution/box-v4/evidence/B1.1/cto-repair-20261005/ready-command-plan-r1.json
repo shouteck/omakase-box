@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "kind": "frozen_exact_independent_readiness_commands",
+  "reviewer": "Codex /root/recovery_assurance",
+  "repairId": "W002-CTO-R1",
+  "recordedAtUtc": "2026-10-05T02:57:09.970991+00:00",
+  "manifestDigest": "27ba069d980b14844dd38e2bd1b55ad4916d0616766979cf50dc5b395c34dfcb",
+  "steps": [
+    {
+      "id": "runtime-alias",
+      "argv": [
+        "exec",
+        "--workdir",
+        "/stage",
+        "w002-b11-linux-r4-env2",
+        "timeout",
+        "300",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {readFile,writeFile} from 'node:fs/promises';import {createRequire} from 'node:module';import {stageWorkspaceAliases} from './scripts/box-verification/environment-host.mjs';const m=JSON.parse(await readFile('/stage/.cto-r1-evidence/environment-manifest.json'));const result=await stageWorkspaceAliases(m,{stageRoot:'/stage'});const rows=[];for(const a of m.stage.workspaceAliases){const req=createRequire('/stage/'+a.packageJson);let resolved;try{resolved=req.resolve(a.name)}catch(e){if(!a.name.startsWith('@types/'))throw e;resolved=req.resolve(a.name+'/package.json')}rows.push({packageJson:a.packageJson,name:a.name,resolved})}await writeFile('/stage/.cto-r1-evidence/alias-runtime.json',JSON.stringify({result,rows}));console.log(JSON.stringify({result,rows}));process.exit(result.status==='staged'&&rows.length===22?0:1)"
+      ],
+      "collectorSeconds": 340
+    },
+    {
+      "id": "build-private-fixtures",
+      "argv": [
+        "exec",
+        "--workdir",
+        "/stage",
+        "w002-b11-linux-r4-env2",
+        "timeout",
+        "180",
+        "node",
+        "services/private-api/bootstrap/build.mjs"
+      ],
+      "collectorSeconds": 220
+    },
+    {
+      "id": "build-external-fixtures",
+      "argv": [
+        "exec",
+        "--workdir",
+        "/stage",
+        "w002-b11-linux-r4-env2",
+        "timeout",
+        "180",
+        "node",
+        "services/external-api/bootstrap/build.mjs"
+      ],
+      "collectorSeconds": 220
+    },
+    {
+      "id": "preliminary-readiness",
+      "argv": [
+        "exec",
+        "--workdir",
+        "/stage",
+        "w002-b11-linux-r4-env2",
+        "timeout",
+        "300",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {readFile,writeFile} from 'node:fs/promises';import {createHash} from 'node:crypto';import {createRequire} from 'node:module';import {probeBrowser,probeServiceHealth,checkFixtureEntrypoints,checkStagedMetadata,checkResourceRecord,checkDbReadiness} from './scripts/box-verification/readiness.mjs';const meta='/stage/.cto-r1-evidence/';const manifestBytes=await readFile(meta+'environment-manifest.json');const m=JSON.parse(manifestBytes);const review=JSON.parse(await readFile(meta+'independent-review-r1-final.json'));const sourceBad=[];for(const [rel,h]of Object.entries(review.candidateFiles)){if(createHash('sha256').update(await readFile('/stage/'+rel)).digest('hex')!==h)sourceBad.push(rel)}const rootReq=createRequire('/stage/package.json');const testPackage=JSON.parse(await readFile(rootReq.resolve('@playwright/test/package.json')));const testReq=createRequire(rootReq.resolve('@playwright/test'));const pwReq=createRequire(testReq.resolve('playwright'));const corePackage=pwReq.resolve('playwright-core/package.json');const browserManifest=JSON.parse(await readFile(corePackage.replace(/package.json$/,'browsers.json')));const browserRows=browserManifest.browsers.filter(x=>x.name==='chromium'||x.name==='chromium-headless-shell');let closeConfirmed=false;const actual=await import('@playwright/test');const launcher={launch:async options=>{const browser=await actual.chromium.launch(options);const original=browser.close.bind(browser);browser.close=async()=>{await original();closeConfirmed=true};return browser}};const browser=await probeBrowser({browserPath:'/ms-playwright',expectedRevision:1243,deadlineMs:30000,loadChromium:async()=>launcher});const privateHealth=await probeServiceHealth('http://127.0.0.1:4000/healthz');const externalHealth=await probeServiceHealth('http://127.0.0.1:4001/healthz');const fixtureEntries=await checkFixtureEntrypoints('/stage');const metadata=await checkStagedMetadata('/stage',Object.fromEntries(m.stage.sourceFilesPlan.files.map(x=>[x.rel,x.sha256])));const resources=await checkResourceRecord(meta+'environment-creation.json',m);const pg=createRequire('/stage/services/private-api/package.json')('pg');const pool=new pg.Pool({connectionString:process.env.BOX_TEST_DATABASE_URL,max:1,connectionTimeoutMillis:10000});let db;try{db=await checkDbReadiness(()=>pool.connect())}finally{await pool.end()}const artifactHashes={};for(const [svc,names]of Object.entries({'private-api':['fixture.js','intake-fixture.js','session-fixture.js'],'external-api':['fixture.js']})){for(const n of names){artifactHashes[svc+'/'+n]=createHash('sha256').update(await readFile('/stage/services/'+svc+'/dist/'+n)).digest('hex')}}const pinned=testPackage.version==='1.63.0'&&browserRows.some(x=>Number(x.revision)===1243);const pass=sourceBad.length===0&&pinned&&browser.status==='pass'&&closeConfirmed&&[privateHealth,externalHealth,fixtureEntries,metadata,resources,db].every(x=>x.status==='pass');const result={status:pass?'pass':'failed',phase:'preliminary_nonrelay_readiness',sourceBad,manifestDigest:createHash('sha256').update(manifestBytes).digest('hex'),playwrightVersion:testPackage.version,browserRows,browser,closeConfirmed,privateHealth,externalHealth,fixtureEntries,metadata,resources,db,artifactHashes};await writeFile(meta+'preliminary-readiness.json',JSON.stringify(result));console.log(JSON.stringify(result));process.exit(pass?0:1)"
+      ],
+      "collectorSeconds": 340
+    }
+  ],
+  "conditions": "Already rootreleased exact2setup; serialize eachstep andstoponfailure/unknown. No extraresources/downloads/sourceedits/relay/acceptance. Runtime22aliases allowed onlystage writableprojecttree; preliminaryPASS stillrequiresactualserviceartifact/sourceprovenance comparison beforepoller release.",
+  "sourcesSha256": {
+    "alias": "e7d4561025b1421302994239bc3a2da24a2f6243c42cb57e5eb536cdde837039",
+    "preliminary": "ef0b636211037ece69e7d95244a3e5a62d6909306810ce0f5b400b75510e9715"
+  }
+}

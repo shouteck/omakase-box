@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual_independent_review_retraction_and_root_reconciliation",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "recordedAtUtc": "2026-10-04T19:10:54.6862548Z",
+  "authority": ".execution/box-v4/approvals/W002-r4-approval.json",
+  "briefDigest": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721",
+  "lead": "553458f9",
+  "worker": "92162dc8",
+  "reviewer": "424d5727",
+  "evidenceSource": "Actual foreground resumed lead returns: correction-phase worker/reviewer followed by read-only supplemental same-reviewer gate check. Root persists the authentic returned verdicts and independently rehashes actual source, not a root-authored independent PASS.",
+  "verdictHistory": [
+    {"phase": "first harness review", "verdict": "fail", "evidence": "harness-review-r4-first.json", "finding": "Five unchanged fixture-transport assertions fail; policy deviation Windows host unit test disclosed, not accepted."},
+    {"phase": "single correction review", "verdict": "pass", "releaseRequested": "resource/readiness phase only, root had not released it", "checks": "Same worker and reviewer reported three Linux files/44 tests passing, including original fixture transport 7/7; durations 19.78s worker and20.16s reviewer."},
+    {"phase": "supplemental independent wiring check", "verdict": "fail", "reviewerStatement": "SUPPLEMENTAL_HOST_PRE_EXECUTION: FAIL; prior HOST_PRE_EXECUTION: PASS retracted as overbroad", "checks": "Read-only source trace, no edits/new resources/API/DB/tests/host harness execution. Same exact bytes."}
+  ],
+  "effectivePreexecutionVerdict": "fail",
+  "productVerdict": "not_accepted",
+  "candidateFiles": {
+    "scripts/box-verification/environment-manifest.json": "77c655d45c8c3b8f69f671e28d63b41a385e7c1b150175b80b2b63e5f3222d1b",
+    "scripts/box-verification/environment-host.mjs": "9e78c13e7d1bd1c3a22eb872d2cd00fa98e94df1da1646d530fde6b8f2b32ea7",
+    "scripts/box-verification/readiness.mjs": "45d9f11c206386d3691c41ef200be33a333878d389b17fc7d98538880133f9e4",
+    "scripts/box-verification/run-verification.mjs": "1786ffa798d02d07b0f3e4b20e289304fbf220b252426182c92a248ab8173080",
+    "scripts/box-verification/fixture-exec-host.mjs": "4273e4031dc6e8038dffb05cb83de5d9f31215434abdf4caabd0f2eeeb841a00",
+    "scripts/box-verification/fixture-exec-client.mjs": "cec00cf80cbce786bdb9afb16d069a4fbb84ec40d250ad5daf9cace2095083a7",
+    "scripts/box-verification/fixture-exec-runner.mjs": "417a2c445e3146a01f356900e37143debc1931504b31a3872d40a07f95a31b00",
+    "scripts/box-verification/fixture-command-manifest.json": "61eeec79121dcb592de5db5ec9426bff984e47bc8c266baa1ca1e853332a31a1",
+    "scripts/docker.mjs": "52a28ccf40172e6884a6b5822cc848d4c0631ab9cc6267e466b8cd697066fc61",
+    "scripts/suite.mjs": "56e1b62ad19152adedfd7a5be76a92a1e2d8b9b238d24d219836aa94077675eb",
+    "scripts/vitest.config.mjs": "5991e2e726dbdead242a0923059e61479766f4e5691091e6b675becf76f059c2",
+    "tests/box/auth/support.ts": "548e88b843f37d438062af9c0174ceba35059984f1e8f04215ebef849b6e5876",
+    "tests/box/verification/environment-readiness.test.ts": "3b6efe2939364158140d85edfd82c9b355f3bc91b77acd444d84625ef81bd3e7",
+    "tests/box/verification/relay-lifecycle.test.ts": "9c001fd404ac09280efe7bed0a5e2fb54207180aae3dc8c93cf757b21cce46ae"
+  },
+  "rootHashBinding": "Root native Get-FileHash recomputation matches all14 current exact source hashes above. Six of original22 files changed only within leased harness/helper scopes; other16 protected source files match original r3 manifest. All22 old staged candidate files still match historical baseline, isolated harness-review dir is separate.",
+  "independentSupplementalFindings": [
+    "Fixture SYNTHETIC_* environment flags omitted in live wrapper argv, so real fixture commands deny. Reviewer verified existing service workdir is already correct, not an additional defect.",
+    "Runner JSON outcome envelope is forwarded as stdout instead of original fixture stdout; unchanged verify callers receive wrong contract.",
+    "Browser discovery misses pinned modern chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell and full chrome-linux64 layouts.",
+    "Per-dispatch lease expiry and durable started-without-result reconciliation incomplete; missing/uncertain execution must stay fail-closed.",
+    "Only direct child exit is accounted for after timeout; descendants may remain unaccounted.",
+    "Complete reviewed source/Linux-dependency/static-fixture stage population is unimplemented; only two wrapper files staged by tooling.",
+    "Fresh Box DB password generated then discarded; no safe in-memory mechanism to configure runner URL without forbidden credential discovery.",
+    "migratedPool accepts any postgres URL, no dedicated DB-host/run identity or enforced12-database cap/connection deadline.",
+    "Host pre-execution review gate compares supplied strings rather than recomputing exact module/manifest bytes; needs explicit current immutable binding."
+  ],
+  "policyDeviations": [
+    "First reviewer Windows host unit execution reported and disclosed; not repeated after correction, not acceptance evidence.",
+    "Worker added extensive unrequested comments in owned leased files despite developer instruction; protected file comments did not change. Further authorized corrections must remove only its newly introduced comments and preserve all original comments."
+  ],
+  "budget": {
+    "conservativeReportedActiveMinutes": 74,
+    "totalActiveMinuteLimit": 180,
+    "estimatedRemainingApprovedActiveMinutes": 106,
+    "timingAssurance": "Child estimates conservatively retained; not an exact telemetry measurement. Root clock during phase start18:22:19 and final receipt19:10:54 is separate wall observation.",
+    "harnessCorrectionRoundsUsed": 1,
+    "harnessCorrectionRoundLimit": 1,
+    "environmentAttemptsUsed": 0,
+    "environmentAttemptLimit": 2,
+    "acceptanceBatchesRun": 0,
+    "productRetriesUsed": 1,
+    "productRetryLimit": 2
+  },
+  "resources": "Neither proposed r4 container exists/was created; existing six W002 containers retain IDs/running state, original three tmpfs DBs preserved, stage helper stopped, source artifact inert and legacy stack unchanged per read-only metadata. No host relay/new host tooling, API/DB mutation or old mailbox replay in these phases.",
+  "checkpoint": "No product/harness acceptance; no Git staging/commit/push. All candidate changes and authentic governance/evidence remain local/uncommitted and preserved.",
+  "stop": "No environment setup or acceptance release after effective FAIL. Allowed correction1/1 exhausted; further code correction needs an explicit additional bounded amendment, not an automatic retry or hidden new worker.",
+  "nextProposal": ".execution/box-v4/briefings/W002-r5.md"
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r1-independent-final",
+    "w002-b11-ws",
+    "node",
+    "-e",
+    "const fs=require('fs'),crypto=require('crypto'),map=JSON.parse(fs.readFileSync('.independent-source-map.json'));let bad=[];for(const [p,h]of Object.entries(map)){if(crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex')!==h)bad.push(p)}console.log(JSON.stringify({checked:Object.keys(map).length,bad}));process.exit(bad.length?1:0)"
+  ],
+  "exit": 0,
+  "elapsedMs": 1750,
+  "recordedAtUtc": "2026-10-05T02:48:06.738082+00:00"
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "human_harness_closure_approval",
+  "waveId": "W002",
+  "taskIds": ["B1.1"],
+  "revision": "2026-10-05-r7-harness-closure",
+  "brief": ".execution/box-v4/briefings/W002-r7.md",
+  "briefDigest": "sha256:bbf8e4c0533d9cbad9b715b7b5dc4079a27b9e2f09b66877a5f4ec9d2170057b",
+  "inheritedBriefs": {
+    ".execution/box-v4/briefings/W002-r6.md": "sha256:cdf07ae76424d7288fc582173ddd547e4844f566616e0af4ea1392b619c6f2f2",
+    ".execution/box-v4/briefings/W002-r5.md": "sha256:4f45b5bf2861ff05bf485778c30b9a4e0d303fc820c04691cbd3b08b20c3919e",
+    ".execution/box-v4/briefings/W002-r4.md": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721"
+  },
+  "decision": "Approve",
+  "message": "START.MD, Approve briefing W002-r7",
+  "approver": "CEO (human operator)",
+  "evidenceSource": "Actual user message in this START conversation explicitly naming W002-r7; not inferred from a child report.",
+  "recordedAtUtc": "2026-10-04T19:46:46.709Z",
+  "timestampMeaning": "Observed host recording clock, not human-message timestamp. Supplied session date is 2026-10-05; discrepancy preserved.",
+  "approvedScope": "One new harness-only correction on r7's eight named existing files, followed by exact independent Linux harness review through the same required lead9d815787/worker0f83ba36/reviewer8eabd268, sequential depth<=2. No setup/readiness/acceptance continuation even on PASS.",
+  "limits": {"additionalHarnessCorrections": 1, "activeWorkerMinutes": 20, "activeReviewerMinutes": 10, "priorConservativeActiveMinutes": 134, "totalActiveMinuteLimit": 180, "remainingMaximumMinutesBeforeDispatch": 46, "environmentAttemptsUsed": 0, "historicalProductRetriesUsed": 1},
+  "conditionalAuthority": "Approval is valid but no candidate lease or execution release follows until the exact required identities, current verified Free routing and source/ownership preflight are available. All three required identity lookups failed; stop and rebrief per r7 line21.",
+  "preflight": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-r7.json",
+  "excluded": ["replacement identities without amendment approval", "application/assertion changes", "environment resource creation or startup", "stage/mailbox population", "host candidate execution", "live API/DB actions", "acceptance batch", "cleanup/deletion/reset", "downloads/installs", "profile/model/global/security setting changes", "paid/cloud action", "PR/deployment/later wave"]
+}

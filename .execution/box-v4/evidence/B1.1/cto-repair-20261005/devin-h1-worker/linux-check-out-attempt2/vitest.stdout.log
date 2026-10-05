@@ -1,0 +1,67 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/workspace/.devin-h1-check/src[39m
+
+ [31m❯[39m tests/box/verification/relay-lifecycle.test.ts [2m([22m[2m35 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 18999[2mms[22m[39m
+   [32m✓[39m relay lease and lifecycle [2m(5)[22m
+     [32m✓[39m grants one lease and fails closed on a second owner[32m 8[2mms[22m[39m
+     [32m✓[39m rejects expired and mismatched leases[32m 6[2mms[22m[39m
+     [32m✓[39m fails closed on malformed persisted replay state[32m 6[2mms[22m[39m
+     [32m✓[39m moves through draining to stopped via requestDrain[32m 66[2mms[22m[39m
+     [33m[2m✓[22m[39m returns unavailable, not stopped, when drain never observes termination[33m 10045[2mms[22m[39m
+   [32m✓[39m relay request validation and denial [2m(5)[22m
+     [32m✓[39m denies malformed and wrong-run requests[32m 19[2mms[22m[39m
+     [32m✓[39m denies replayed request ids via the seen set[32m 6[2mms[22m[39m
+     [32m✓[39m denies unlisted commands and invalid ids fail closed[32m 2[2mms[22m[39m
+     [32m✓[39m enforces the <=20s ready-profile deadline and wrapper argv on entries[32m 1[2mms[22m[39m
+     [32m✓[39m requires a valid wrapper binding in the manifest[32m 2[2mms[22m[39m
+   [32m✓[39m live argv routing and execution-context binding [2m(5)[22m
+     [32m✓[39m routes live dispatch through the reviewed wrapper, never the fixture argv[32m 2[2mms[22m[39m
+     [32m✓[39m refuses live execution without a reviewed bound context[32m 13[2mms[22m[39m
+     [32m✓[39m refuses dispatch when the manifest digest does not match the bound context[32m 7[2mms[22m[39m
+     [32m✓[39m refuses dispatch while the lifecycle is not ready[32m 5[2mms[22m[39m
+     [32m✓[39m fails unavailable when the durable started record cannot persist[32m 9[2mms[22m[39m
+   [32m✓[39m exec runner termination accounting [2m(4)[22m
+     [32m✓[39m records exited honestly for a completing child[32m 36[2mms[22m[39m
+     [33m[2m✓[22m[39m accounts termination for a hung child without fabricating remote state[33m 506[2mms[22m[39m
+     [32m✓[39m refuses unlisted commands and binds @SOURCE@ by digest[32m 1[2mms[22m[39m
+     [32m✓[39m reports unavailable when a normal direct-child exit leaves surviving group descendants[32m 42[2mms[22m[39m
+   [32m✓[39m verification supervisor sequence and gate [2m(2)[22m
+     [32m✓[39m accepts only the exact original ordered seven commands[32m 1[2mms[22m[39m
+     [32m✓[39m gates on exact manifest digest and environment identity, not loose strings[32m 0[2mms[22m[39m
+   [32m✓[39m run supervisor gate [2m(2)[22m
+     [32m✓[39m rejects a mismatched run binding before any lifecycle start[32m 3[2mms[22m[39m
+     [33m[2m✓[22m[39m finishes a bounded session and stops when the deadline is tiny[33m 323[2mms[22m[39m
+   [32m✓[39m live wiring: manifest env/workdir bound into wrapper invocation [2m(1)[22m
+     [32m✓[39m passes SYNTHETIC_* env flags and workdir through docker exec to the wrapper[32m 1[2mms[22m[39m
+   [32m✓[39m live wiring: wrapper result transform [2m(3)[22m
+     [32m✓[39m restores literal fixture stdout/stderr/code exactly[32m 1[2mms[22m[39m
+     [32m✓[39m restores JSON fixture stdout exactly[32m 0[2mms[22m[39m
+     [32m✓[39m fails closed on malformed and oversized wrapper responses[32m 0[2mms[22m[39m
+   [32m✓[39m live wiring: real wrapper round-trip [2m(1)[22m
+     [32m✓[39m runs the actual fixture-exec-runner module and transforms its real envelope[32m 119[2mms[22m[39m
+   [32m✓[39m live wiring: per-dispatch lease and reconciliation [2m(4)[22m
+     [32m✓[39m stops admission unavailable when the lease expired since session start[32m 8[2mms[22m[39m
+     [32m✓[39m fails closed at session start when a started record has no result[32m 9[2mms[22m[39m
+     [32m✓[39m persists a durable result record for every denial outcome[32m 4[2mms[22m[39m
+     [32m✓[39m refuses to start a session over leftover state beyond the fresh lease[32m 10[2mms[22m[39m
+   [31m❯[39m verification supervisor durable completion [2m(3)[22m
+     [32m✓[39m does not advance after zero parent exit with a surviving owned group[32m 41[2mms[22m[39m
+[31m     [31m×[31m waits for late output and retains complete raw bytes beyond the summary cap[39m[33m 5040[2mms[22m[39m
+[31m     [31m×[31m bounds incomplete drainage, preserves captured bytes and stops the sequence[39m[33m 2650[2mms[22m[39m
+ [31m❯[39m .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/tests/box/verification/relay-lifecycle.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/relay-lifecycle.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 11305[2mms[22m[39m
+   [32m✓[39m relay lease and lifecycle [2m(5)[22m
+     [33m[2m✓[22m[39m returns unavailable, not stopped, when drain never observes termination[33m 10048[2mms[22m[39m
+   [32m✓[39m exec runner termination accounting [2m(4)[22m
+     [33m[2m✓[22m[39m accounts termination for a hung child without fabricating remote state[33m 506[2mms[22m[39m
+   [32m✓[39m run supervisor gate [2m(2)[22m
+     [33m[2m✓[22m[39m finishes a bounded session and stops when the deadline is tiny[33m 325[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m65 passed[39m[22m[90m (67)[39m
+[2m   Start at [22m 04:31:13
+[2m   Duration [22m 39.95s[2m (tests 94%, transform 3%, import 2%, worker 1%)[22m
+
+[2m    Isolate [22m [33m3 workers spawned[39m[2m · ~2.28s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~4.57s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

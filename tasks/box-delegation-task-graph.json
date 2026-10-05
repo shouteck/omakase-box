@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "planVersion": "delegation-focus-2026-10-05",
+  "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
+  "entrypoint": "START.md",
+  "target": "D4",
+  "status": "direction_authorised_implementation_waves_pending",
+  "specification": "docs/box-v4/DELEGATION-MAP.md",
+  "continuity": {
+    "currentGraph": "tasks/box-v4-task-graph.json",
+    "currentState": ".execution/box-v4/state.json",
+    "currentWave": "W002",
+    "activation": "Next approved D wave explicitly activates this graph at a safe ownership boundary. Preserve current W002 authority and all B-series records; do not edit the active selector during another coordinator's execution.",
+    "implementationAuthorisedByThisFile": false
+  },
+  "sharedIntegrationPolicy": "Every approved wave enumerates actual required schema, auth, route, app, package and test-registration paths, their sole writer and affected revalidation. Proposed globs below are planning scope, never an automatic write lease.",
+  "evidenceDirectoryPattern": ".execution/box-v4/evidence/<taskId>/; each approved wave explicitly leases its evidence and handoff paths alongside product paths.",
+  "requiredReads": ["AGENTS.md", "START.md", "PLAN.md", "docs/box-v4/SPEC.md", "docs/box-v4/DELEGATION-MAP.md", "docs/box-v4/delegation/VALIDATION-PLAN.md", "docs/box-v4/ARCHITECTURE.md", "docs/box-v4/KITCHEN.md", "docs/box-v4/STANDING_ORDERS.md", ".execution/box-v4/PROTOCOL.md"],
+  "externalDependencyGraphs": {"B1.1": {"graph": "tasks/box-v4-task-graph.json", "state": ".execution/box-v4/state.json", "requiredStatus": "accepted"}},
+  "tasks": [
+    {
+      "id": "D1.1",
+      "milestone": "D1",
+      "title": "Select the supported delegation case and reconcile reusable foundations",
+      "station": "assurance_research",
+      "dependencies": [],
+      "requiresApprovedWave": true,
+      "writePaths": ["docs/box-v4/delegation/**", ".execution/box-v4/evidence/D1.1/**"],
+      "reuse": ["docs/box-v4/reconciliation/**", "docs/box-v4/REUSE.md", ".execution/box-v4/handoffs/B0.1.md", ".execution/box-v4/evidence/B1.1/**", "packages/box-contracts/**"],
+      "deliverables": [
+        "Record actual W002 acceptance/ownership and the exact reusable Box, auth, Git, environment and evaluation interfaces; distinguish checked source from accepted behavior.",
+        "Specify one modular TypeScript fixture repository and two bounded work requests, including a shared dependency, unrelated excluded owner modules, literal completion examples and an unsupported coupling case.",
+        "Define the initial buyer/job, documented competitive overlap and an ordinary issue-plus-contributor comparison before final results. Predeclare comparable obligations, input/tool/familiarity differences, observations and classification; do not start a customer study or procure vendor access.",
+        "Prepare the first implementation brief with exact integration paths and resource/recipient policy; retain B history and the current implementation candidate."
+      ],
+      "acceptance": [
+        "A reviewer can identify the first supported task, required package inputs, owner integration obligations and why no full owner clone should be necessary.",
+        "The comparison protocol accounts for common onboarding, per-task preparation, recipient setup, owner verification/integration and rework; missing observations and commercial evidence remain unverified.",
+        "No current lease is taken or old task accepted by inference. Dependent implementation awaits independently accepted B1.1 or an explicit separately approved replacement foundation."
+      ],
+      "verification": ["Independent source/interface and fixture-design review; read-only reconciliation, no product test or new resource is required for this planning unit."],
+      "handoff": ".execution/box-v4/handoffs/D1.1.md"
+    },
+    {
+      "id": "D1.2",
+      "milestone": "D1",
+      "title": "Prepare a versioned Box from a work request and completion agreement",
+      "station": "product_experience",
+      "dependencies": ["D1.1", "B1.1"],
+      "requiresApprovedWave": true,
+      "writePaths": ["packages/box-contracts/**", "services/private-api/boxes/preparation/**", "apps/private-console/boxes/preparation/**", "tests/box/delegation/preparation/**", "tests/box/delegation/fixtures/**"],
+      "reuse": ["services/private-api/boxes/store/**", "services/private-api/db/intent-store.ts", "Existing intake/evidence and exact-approval interfaces", "B2.1/B2.2/B4 design seams, not their unverified completion"],
+      "deliverables": [
+        "Instantiate the D1.1 fixture design with a pinned isolated owner Git baseline and reproducible fixture registration; shared helpers and excluded modules must be actual source, not prose placeholders.",
+        "Direct request or pasted issue body plus registered repository/base produces a draft with grounded facts, observable examples, exclusions and unresolved preparation gaps.",
+        "Owner can understand and approve the exact completion agreement through a concise card or input/output example; no mandatory chat, external tracker connector or handwritten technical spec.",
+        "Changed agreement creates a new version and invalidates affected approval; intake remains separate from assignment, execution and bounty publication."
+      ],
+      "acceptance": [
+        "Both supported requests produce inspectable drafts through the same preparation path. A recorded URL is not claimed as fetched content.",
+        "Unresolved consequential requirements and stale approval block readiness. Demo output, live-model evidence and independently assessed requirement quality are distinct.",
+        "A request may contain connected full-stack work; the system does not equate each sentence with a separate Box."
+      ],
+      "verification": ["Real owner UI/API create, approve and amend flow; independent literal agreement/version/role tests and an omitted-obligation negative case."],
+      "handoff": ".execution/box-v4/handoffs/D1.2.md"
+    },
+    {
+      "id": "D2.1",
+      "milestone": "D2",
+      "title": "Export and validate the actual portable work package",
+      "station": "platform_execution",
+      "dependencies": ["D1.2"],
+      "requiresApprovedWave": true,
+      "writePaths": ["packages/box-packaging/**", "services/private-api/boxes/packages/**", "packages/box-workspace/**", "infra/box-workspaces/**", "tests/box/delegation/packaging/**"],
+      "reuse": ["Existing manifest/hash/process interfaces", "B3.1 workspace and B5.1 thin-adapter designs", "Available reviewed dependency/runtime recipes"],
+      "deliverables": [
+        "An owner-reviewed source/dependency manifest with inclusion reasons exports exact relevant source, completion agreement, supported build inputs, fixtures and submission metadata.",
+        "Separate read context, editable scope and owner-side verification scope. Include a shared helper and exclude unrelated fixture modules, owner history, credentials and remote access.",
+        "Fresh validation consumes only the exported package and declared dependency/runtime inputs. Missing dependency or unsupported coupling is an explicit preparation gap, not a silent full-repo fallback.",
+        "Record package inventory/digests and source/dependency transfer sizes. AI-assisted selection is optional and measured separately; no new universal slicing or confidentiality framework.",
+        "Record actual preparation and baseline-readiness effort, failures and owner interventions under the D1 protocol. Instrumentation must not add requester bureaucracy or change acceptance."
+      ],
+      "acceptance": [
+        "A fresh package workspace can build the baseline and run its declared checks without owner repository or history. Expected new-feature failures remain explicit; baseline readiness is not task completion.",
+        "Packaging does not change the approved behavior. Omitted dependency, escaping path/link, unlisted input and attempted owner-only access are rejected or blocked.",
+        "Selected-source export is demonstrated, not merely sparse UI or reduced model context. Full owner source export cannot clear this portability gate."
+      ],
+      "verification": ["Independent fresh-directory/package-only build and declared checks on the supported fixture; inventory/exclusion checks and missing-dependency/boundary negatives. Candidate code runs only in the approved trusted workspace."],
+      "handoff": ".execution/box-v4/handoffs/D2.1.md"
+    },
+    {
+      "id": "D2.2",
+      "milestone": "D2",
+      "title": "Open the package and submit an exact scoped contribution",
+      "station": "platform_execution",
+      "dependencies": ["D2.1"],
+      "requiresApprovedWave": true,
+      "writePaths": ["packages/box-git/**", "packages/box-workbench/**", "packages/box-executors/**", "services/private-api/boxes/attempts/**", "tests/box/delegation/recipient/**"],
+      "reuse": ["B1.2 real Git binding design", "Existing editor/workspace capabilities", "Box attempt and scoped-identity contracts"],
+      "deliverables": [
+        "One thin existing-editor or approved headless adapter opens an exported package with exact Box/base and usable local commands; avoid a bespoke IDE.",
+        "Recipient makes a real scoped diff and submits it bound to package/behavior/base identities through the common attempt API.",
+        "Declare any generated scaffold and map patch paths to owner source explicitly; recipient does not need the owner remote, full checkout or private intent model.",
+        "Record the owner-selected trusted recipient/runtime and its supplied inputs, setup/investigation effort and clarifications. No mandatory vendor workforce or silent substitution is part of the protocol."
+      ],
+      "acceptance": [
+        "An actual trusted recipient adapter completes open/edit/local-check/submit using package material only; simulator output does not prove implementation.",
+        "Out-of-scope edits, wrong Box/base, altered agreement and foreign identity fail server-side. A submitted patch cannot self-review or self-accept.",
+        "Human/agent protocol equality is preserved; an unavailable second adapter is honestly labeled, not a prerequisite to the first delivery proof."
+      ],
+      "verification": ["Independent real package-only attempt/diff submission and wrong-scope/version/identity cases; preserve actual editor or agent runtime receipts."],
+      "handoff": ".execution/box-v4/handoffs/D2.2.md"
+    },
+    {
+      "id": "D3.1",
+      "milestone": "D3",
+      "title": "Verify the contribution in the original repository and integrate it",
+      "station": "assurance_research",
+      "dependencies": ["D2.2"],
+      "requiresApprovedWave": true,
+      "writePaths": ["packages/box-evaluation/**", "packages/box-git/**", "services/private-api/boxes/reviews/**", "services/private-api/boxes/merge-queue/**", "tests/box/delegation/integration/**"],
+      "reuse": ["B3.2 evaluation and B7 review/merge designs", "Existing acceptance and exact-candidate authorization patterns"],
+      "deliverables": [
+        "Owner applies the exact submitted patch to an isolated full-repository candidate and checks approved behavior, interfaces and preservation obligations.",
+        "Distinct reviewer binds current candidate and evidence; stale base/target or failed checks block integration. Authorised synthetic integration records actual Git commits.",
+        "Classify missing package context as preparation defect, environment failures separately and implementation failures against published obligations."
+      ],
+      "acceptance": [
+        "A correct supported contribution integrates into real owner Git history with recoverable Box/attempt/review provenance.",
+        "Local-pass/full-owner-fail, self-review, stale result and absent merge authority cannot become accepted.",
+        "No production release, remote publication or payment is inferred from accepted synthetic integration."
+      ],
+      "verification": ["Independent original-repository behavior/interface checks, real synthetic patch and merge, drift/idempotency/false-local-pass negatives."],
+      "handoff": ".execution/box-v4/handoffs/D3.1.md"
+    },
+    {
+      "id": "D3.2",
+      "milestone": "D3",
+      "title": "Expose the minimal prepare, delegate and accept journey",
+      "station": "product_experience",
+      "dependencies": ["D3.1"],
+      "requiresApprovedWave": true,
+      "writePaths": ["apps/private-console/boxes/**", "services/private-api/boxes/history/**", "tests/box/delegation/journey/**"],
+      "reuse": ["B4 list/detail and B6 truthful history designs", "Existing auth, assignment and safe UI projections"],
+      "deliverables": [
+        "A requester prepares/approves a request, sees package readiness and assigns one trusted recipient; recipient opens/submits; owner sees independent evidence and permitted acceptance/integration action.",
+        "Show concise outcome, actual owner, status, preparation gaps and next action. Detail remains accessible; no raw hashes or dependency editing required for ordinary use.",
+        "Use existing web shell and adapters; avoid mandatory conversation, rich universal previews, marketplace or a general team scheduler.",
+        "Owner selects an authorised trusted contributor/adapter through existing identities and permissions; no provider-supplied workforce is required. Record owner review/integration effort without adding a metrics form to normal use."
+      ],
+      "acceptance": [
+        "A complete supported Box is navigable through the common API with honest proposed, ready, in-progress, review and accepted states.",
+        "Reload/resume preserves server authority, versions and evidence; unsupported/failed work is visible and never displayed as completed.",
+        "The simple UI does not conceal material scope/approval decisions or grant executor acceptance rights."
+      ],
+      "verification": ["Independent browser/API walkthrough, role and stale-state cases, keyboard-readable actions and truthful preparation/acceptance gaps."],
+      "handoff": ".execution/box-v4/handoffs/D3.2.md"
+    },
+    {
+      "id": "D4.1",
+      "milestone": "D4",
+      "title": "Demonstrate independent package-only delegation and counterexamples",
+      "station": "assurance_research",
+      "dependencies": ["D3.2"],
+      "requiresApprovedWave": true,
+      "writePaths": ["tests/box/delegation/full-journey/**", "research/box-delegation/**", "docs/box-v4/delegation/validation.md"],
+      "reuse": ["B8 full-journey and evidence methods", "Existing supported synthetic repository fixture"],
+      "deliverables": [
+        "Run the two supported changes with a fresh approved recipient context using only the exported package; retain supplied-input and command evidence plus owner integration results.",
+        "Exercise missing dependency/obligation, unsupported coupling, local-pass/full-owner-fail, stale version and out-of-scope submission cases.",
+        "State whether the recipient already knew the fixture, which dependencies were cached, and which AI/human claims remain untested.",
+        "Run the predeclared ordinary delegation comparison when the approved wave authorises its runtime/inputs/resources; retain equivalent outcomes and acceptance, disclose access/learning differences and include failed attempts. Missing authority or comparability is an evidence gap, never an invented baseline."
+      ],
+      "acceptance": [
+        "At least two actual package-only contributions complete the full approved loop; full owner source cannot be supplied to manufacture portability.",
+        "At least one unsupported package fails readiness honestly and every required negative case retains its correct non-pass classification.",
+        "A separate-context agent is not called a recruited human or hostile isolation proof. Real participants/external messaging/payments need separate authorised pilots."
+      ],
+      "verification": ["Independent end-to-end input and artifact audit on current source/package/environment/candidate; actual trusted recipient and owner execution receipts."],
+      "handoff": ".execution/box-v4/handoffs/D4.1.md"
+    },
+    {
+      "id": "D4.2",
+      "milestone": "D4",
+      "title": "Assess delegation effort, repeat-use evidence and the next product decision",
+      "station": "assurance_research",
+      "dependencies": ["D4.1"],
+      "requiresApprovedWave": true,
+      "writePaths": ["research/box-delegation/**", "docs/box-v4/delegation/delivery.md", "docs/box-v4/delegation/limitations.md"],
+      "reuse": ["docs/box-v4/RESEARCH.md", "Existing research report instruments"],
+      "deliverables": [
+        "Report owner preparation, recipient setup/investigation, clarification, omissions, source/dependency transfer, verification, integration and rework across successes and failures.",
+        "Compare with an explicitly documented ordinary delegation baseline where actual comparable data exists; absent baseline or paid/customer evidence remains unverified.",
+        "Report software capability, measured effort, actual repeat use and commercial commitment/payment as separate conclusions. Prepare a customer-pilot protocol and blank recording instruments for the initial buyer; no outreach, customer/private-data access or payments occur without a separately approved pilot.",
+        "Recommend extend supported classes, simplify preparation, conduct an authorised customer pilot, or stop/reframe. Bounties/payments, restricted disclosure and broad PM previews remain separate proposals."
+      ],
+      "acceptance": [
+        "Results distinguish portable software capability from utility, demand, novelty, confidentiality and universal task breadth.",
+        "Reported effort includes common onboarding, preparation, recipient work, verification/integration and failures at comparable quality. Interview interest cannot count as repeat use, a pricing answer as payment or synthetic success as customer adoption; absent pilot evidence stays unverified without fabricating a result.",
+        "D4 closure supplies one short evidence-backed CEO decision and reproducible known-supported runbook; it never starts the next stage automatically."
+      ],
+      "verification": ["Independent metric/artifact reconciliation, all-attempt denominator and reproducible fresh-start instructions; empty customer-study data remains explicitly empty."],
+      "handoff": ".execution/box-v4/handoffs/D4.2.md"
+    }
+  ]
+}

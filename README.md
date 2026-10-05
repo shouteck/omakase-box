@@ -1,6 +1,6 @@
 # Box-native development
 
-An existing implementation is being realigned to the Box V4 vision. The next product is a versioned work object over Git with approved behavior, runnable attempts, independent evaluation and normal review/merge provenance. Humans, agents and teams share that object. Restricted proprietary Boxes, semantic transformation and bounties remain later stages.
+The next product prepares **portable Boxes for delegation**: an approved outcome, relevant source and a runnable workspace that another developer or agent can implement without the whole owner repository. Contributions return for independent verification and normal Git integration. Direct requests and pasted issues are initial creation routes; conversation is optional. Restricted proprietary packaging and bounty distribution remain later extensions.
 
 Open this project in Cursor or Codex and give the agent:
 
@@ -8,7 +8,7 @@ Open this project in Cursor or Codex and give the agent:
 
 The CTO and station leads reconcile progress, brief you on the next wave and wait for your explicit go-ahead. The same instruction resumes an interrupted approved wave or prepares the next briefing. No milestone argument is needed.
 
-Read [the plan](PLAN.md), [product specification](docs/box-v4/SPEC.md), [kitchen roles](docs/box-v4/KITCHEN.md), [pstack integration](docs/box-v4/PSTACK.md) and [initial briefing](.execution/box-v4/briefings/W001.md).
+Read [the plan](PLAN.md), [delegation product map](docs/box-v4/DELEGATION-MAP.md), [product specification](docs/box-v4/SPEC.md), [kitchen roles](docs/box-v4/KITCHEN.md) and [pstack integration](docs/box-v4/PSTACK.md). Current W002 remains governed by its exact approval and leases. Future proposals use the focused D1-D4 ladder at the next safe planning boundary; broader B-series work remains reusable history.
 
 Cursor native pstack is primary after installation/capability verification. Codex has a documented portable fallback. This packet does not install pstack or prove runtime activation. Setup and one controlled orchestration rehearsal are first-wave briefing items.
 

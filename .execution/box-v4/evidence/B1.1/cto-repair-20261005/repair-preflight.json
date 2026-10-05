@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_repair_preflight",
+  "recordedAtUtc": "2026-10-04T23:37:21.848140+00:00",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+  "snapshot": ".execution\\box-v4\\evidence\\B1.1\\cto-repair-20261005/stop-snapshot.json",
+  "hostProcessObservation": "Elevated process metadata sample found no matching W002/verification command; inaccessible agents are not claimed stopped.",
+  "containerProcessObservation": "docker top w002-b11-ws -eo pid,ppid,comm showed only sleep at sampling.",
+  "containers": {
+    "w002-b11-ws": "92107bf48d48767f9af619b23e99710eb97f44d8b8ef755f9cc3be37918608f0",
+    "w002-b11-db": "739950c27bd4a7897c4f04bd151fe1054bf84b5493d8e53defcba2f605bc6c2b",
+    "w002-b11-svc-private-api": "cc50b7e2826cd6461f1de07f4da78decdd91e27ae470ba3fe6a863d34c38aa01",
+    "w002-b11-svc-external-api": "334ddb4b12e004f5da650551624ec13a05e1ed6690a348173c613bba6ab78c37",
+    "w002-b11-fixture-db-private": "2553a9a5bbe43098ae1bdd6369144054f9d524719dda426052dbca4cdf5d0752",
+    "w002-b11-fixture-db-external": "e1d136307aee4ab77cc353bd0b0a9d34e8fb02f403d84cb0cbe6084860dacb26"
+  },
+  "historicalOom": "Original w002-b11-db has OOM flag; preserved, not eligible as fresh Box DB. No new OOM observed on other preserved six sample.",
+  "cachedImages": {
+    "toolchain": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+    "postgres": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652"
+  },
+  "imageNote": "Postgres tag absent but exact local pinned image ID exists; existing adapter uses spec.image.id. No retag/download performed.",
+  "oldMutations": "Eight unanswered historical mailbox requests remain unknown and preserved; no replay; fresh namespace required.",
+  "status": "read_only_ownership_samples_passed_new_write_lease_pending_current_source_check"
+}

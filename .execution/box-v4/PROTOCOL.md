@@ -4,6 +4,8 @@
 
 `.execution/ACTIVE_PLAN.json` selects the B-series graph/state. The graph owns dependencies/acceptance. `state.json` owns current task status and wave pointers. Each immutable wave brief and its approval record own execution authority; task state cannot invent approval. Receipts/reviews bind exact candidates. Native pstack state is dispatch bookkeeping, not product authority. The old graph/state and archived instruction snapshot are retained history.
 
+The CEO's 5 October delegation refocus is specified in docs/box-v4/DELEGATION-MAP.md and tasks/box-delegation-task-graph.json. Keep the active selector and canonical B state intact while W002 is owned. At a safe boundary, the next approved D wave explicitly transitions the selector and registers D statuses while preserving B history and external prerequisite evidence. Do not create a second competing execution root, reset existing acceptance or treat the planning request as D implementation approval.
+
 Only the root CTO writes active state/approval indexes. Leads write their assigned inbox/receipt/rollup files; workers write candidates and their own receipts. Replace mutable JSON atomically using a unique temporary sibling and rename. Keep immutable approved briefs, approvals, receipts and reviewer reports append-only. A report claiming human approval is rejected unless backed by actual human input.
 
 ## Wave states and approval

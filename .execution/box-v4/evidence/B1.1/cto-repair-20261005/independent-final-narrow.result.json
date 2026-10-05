@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r1-independent-final",
+    "w002-b11-ws",
+    "sh",
+    "-c",
+    "ln -s /workspace/node_modules node_modules && ln -s /workspace/scripts/tooling/node_modules scripts/tooling/node_modules && timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs"
+  ],
+  "exit": 0,
+  "elapsedMs": 32218,
+  "recordedAtUtc": "2026-10-05T02:48:38.964732+00:00"
+}

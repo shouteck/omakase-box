@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "kind": "readiness_plan_correction",
+  "reviewer": "Codex /root/recovery_assurance",
+  "recordedAtUtc": "2026-10-04T23:47:39.957018+00:00",
+  "supersedesRecommendation": "readiness-command-plan-independent.json readinessCommands[0] browser-before-setup probe",
+  "correction": "Existing w002-b11-ws has different image99fc than pinned new runner imageeb4a84; browser existence there cannot establish readiness or failure of pinned toolchain. No extra probe resource allowed. Read only pinned image metadata before setup; actual pinned-browser executable/version/launch assessed inside permitted named runner during the one setup attempt. Absence in old workspace is not a blocker for new image.",
+  "resourcesUnchanged": true,
+  "priorReceiptPreserved": true,
+  "operations": "Documentation correction only, no image/runtime probing performed"
+}

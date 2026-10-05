@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "15",
+    "node",
+    "-e",
+    "const http=require('http');(async()=>{let rows=[];for(const [port,host]of [[4000,'private.localhost:4000'],[4001,'contributor.localhost:4001']]){rows.push(await new Promise((resolve,reject)=>{const r=http.request({hostname:'127.0.0.1',port,path:'/health',method:'GET',headers:{Host:host},timeout:3000},res=>{let body='';res.on('data',x=>body+=x);res.on('end',()=>resolve({port,host,status:res.statusCode,body:body.slice(0,1000)}))});r.on('error',reject);r.on('timeout',()=>r.destroy(Error('timeout')));r.end()}))}console.log(JSON.stringify(rows))})().catch(e=>{console.error(e);process.exit(1)})"
+  ],
+  "sourceSha256": "81879bd285896aa27b8950e3a18436d99325ae48bfcd174698c839f9e44574cf",
+  "meaning": "Two tiny real HTTP GETs with explicit Host; no probe repetition or mutation"
+}

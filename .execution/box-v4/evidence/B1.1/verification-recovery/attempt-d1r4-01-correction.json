@@ -1,0 +1,16 @@
+{
+  "attempt": "d1-r4-01",
+  "recordedAt": "2026-10-05 worker session, wall clock unverified",
+  "blockerAndHypothesis": "r8 static/runtime evidence (harness-review-r8-final.json rootAdditionalStaticFindings) lists 9 diagnosed defects in the eight leased paths: pnpm seed-link rejection + missing ancestor resolution + row-array closure objects; staging/dependency verification ordered after Docker inspect; missing destination realpath checks; incomplete sourceFilesPlan; broad missing-state handling; response published before durable result record; descendant probe only on timeout; r8-added comments; stale digests.",
+  "candidateIdentity": "current14 per harness-review-r8-final.json candidateFiles; before-sha256 captured in attempt-d1r4-before-sha256.txt",
+  "priorCommandEvidence": "Initial distinct reviewer a689979b PASS per dispatch preamble; root findings enumerated; r6 baseline bytes recovered read-only from /workspace/.r4-harness-review-r6 inside preserved w002-b11-ws via 'docker --context desktop-linux exec w002-b11-ws cat' (MSYS_NO_PATHCONV=1); tests + fixture-command-manifest byte-identical to r6.",
+  "whatChanged": "Scoped correction of the eight leased paths only, no other writes except this evidence record.",
+  "whyDistinguishes": "Each edit maps 1:1 to a diagnosed defect; post-edit Linux self-check will verify behavior rather than source reading.",
+  "expectedObservations": "node --check passes on all edited mjs; manifest JSON parses; Linux three-file vitest selection reports literal counts.",
+  "exactCommand": "file edits via editor tool; then sha256sum after-hashes; then Linux checks per dispatch",
+  "safetyGate": "no Docker mutation, no relay/resource/setup execution, hashing/read only",
+  "mutationFootprint": "8 leased files + evidence dir only; review dir will be fresh additive /workspace/.d1-r4-worker-review-<id>",
+  "outputDestination": "this evidence directory",
+  "commandHangBound": "n/a for edits; 180s timeout wrapper for the vitest selection; 60s for syntax/hash checks",
+  "status": "in_progress"
+}

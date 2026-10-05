@@ -1,0 +1,31 @@
+{
+  "kind": "exact_reviewed_r2_affected_stage_overlay",
+  "recordedAtUtc": "2026-10-05T03:30:47.273856+00:00",
+  "authority": ".execution/box-v4/briefings/W002-CTO-R2.md",
+  "staticReview": "independent-review-r2-static.json",
+  "staticReviewSha256": "6ba7bb0335f65ecdbde94a27a61260a122cc299a3592064f72d2a47042a01db6",
+  "changes": [
+    {
+      "path": "scripts/suite.mjs",
+      "before": "56e1b62ad19152adedfd7a5be76a92a1e2d8b9b238d24d219836aa94077675eb",
+      "after": "32dd144e4ae53b30f8b5194b0ffe328f4038268b0601d78c7a99b9803db5bd84"
+    },
+    {
+      "path": "scripts/vitest.config.mjs",
+      "before": "5991e2e726dbdead242a0923059e61479766f4e5691091e6b675becf76f059c2",
+      "after": "13034a4b012d563bdd4f185e4c3ebb60cdfe64e143c20ea4897a2cfe33c1aef4"
+    },
+    {
+      "path": "scripts/box-verification/environment-manifest.json",
+      "before": "27ba069d980b14844dd38e2bd1b55ad4916d0616766979cf50dc5b395c34dfcb",
+      "after": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594"
+    }
+  ],
+  "previousBytes": "pre-stage-overlay-r2/** local preserved",
+  "candidateManifest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "helpersReplayed": false,
+  "mountResourceChanges": false,
+  "fixtureMutations": false,
+  "acceptanceReleased": false,
+  "requiredNext": "Actualstage readonly focused proof/current456 parity; then independent currentready and original full7."
+}

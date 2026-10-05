@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual_station_return_and_root_gate_reconciliation",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "authority": ".execution/box-v4/approvals/W002-r4-approval.json",
+  "briefDigest": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721",
+  "recordedAtUtc": "2026-10-04T18:49:09.6459024Z",
+  "lead": "553458f9",
+  "worker": "92162dc8",
+  "reviewer": "424d5727",
+  "evidenceSource": "Actual foreground lead 553458f9 returned the nested fresh-worker and distinct-reviewer identities, outcomes and recomputed SHA256 set. Root separately read actual leased source. This record persists returned agent evidence; root did not author the code or independent verdict.",
+  "preexecutionVerdict": "fail",
+  "productVerdict": "not_accepted",
+  "workerSummary": "Named harness implemented; JSON/syntax checks reported passed and new Linux harness tests 25/25 passed. Existing staged candidate/old queue/resources preserved; isolated review directory .r4-harness-review-r1791138886 created under existing stage.",
+  "reviewerSummary": "Recomputed 14 target hashes; review copies match. 25 new Linux harness tests passed. Six of 22 baseline files changed and all six are leased harness/helper paths; support.ts delta confined to migratedPool, tail preserved. Unchanged fixture-transport.test.ts reported 5 failures/2 passes due to mandatory run/profile/deadline validation breaking legacy parser/unit/mailbox expectations.",
+  "policyDeviation": {
+    "actor": "reviewer 424d5727",
+    "reportedAction": "Executed unchanged fixture-transport.test.ts as a pure host unit test on Windows, despite frozen Linux-only candidate/test execution boundary.",
+    "handling": "Disclose and preserve the report; host outcomes are diagnostic history only, never accepted verification. Correction and all subsequent reviewer checks must run in the approved Linux workspace. No authorization inferred from test purity.",
+    "limits": "Lead reported no host relay/fixture/DB/container mutations, no secrets or Git writes. Root has not inspected the full child transcript; no broader absence claim beyond reported evidence."
+  },
+  "rootSourceObservationsForSingleCorrection": [
+    "environment-host.mjs creates containers but lacks approved start/readiness/staging orchestration; runner argv lacks stable workdir/sleep entrypoint and DB argv lacks non-root account/owned tmpfs/read-only policy. Manifest fields are not sufficient validation of exact resource argv; synthetic password generation must use crypto.randomBytes rather than clock/Math.random and remain non-logged.",
+    "Current relay buildExecArgv directly executes original fixture command; wrapper is not in live argv. runDocker timeout only kills host Docker CLI and returns unconfirmed state, while run loop can continue and claim stopped. Changed gate cannot pass without actual owned remote-child termination accounting and stopping admission on unknown-started/remote uncertainty.",
+    "writeRecord swallows durable started-record errors; loadSeen recovers malformed replay state as empty. These cannot authorize execution amid ambiguous state.",
+    "readiness browser callback assumes nonstandard browser.revision and visits about:blank, not real local page round-trip. close/page operations are not fully deadline-bounded; fixture entrypoints are required for both services indiscriminately even though only private service has intake/session entrypoints.",
+    "run-verification sequence accepts duplicate allowed commands instead of exact original ordered seven; gate checks only pass/ready strings rather than exact byte/environment binding; command timeout can wait indefinitely for missing exit and not account for descendant processes.",
+    "Existing protected fixture transport assertions must stay unchanged. Pure parser/denial/test-double compatibility must not permit real host execution of unbound requests; missing execution lease fails closed."
+  ],
+  "budget": {
+    "leadReportedWorkerActiveMinutes": 19,
+    "leadReportedReviewerActiveMinutes": 20,
+    "rootClockNote": "Root sampled 18:22:19 before phase release and 18:49:09 after actual return. Agent-estimated 39 combined active minutes is conservatively retained, not asserted as exact elapsed timing.",
+    "environmentSetupAttemptsUsed": 0,
+    "harnessCorrectionRoundsUsed": 0,
+    "acceptanceBatchesRun": 0,
+    "productRetriesUsed": 1,
+    "productRetryLimit": 2,
+    "totalActiveMinuteLimit": 180
+  },
+  "executionRelease": "No new host tooling/relay or containers/environment setup authorized by this failed verdict. One bounded correction by the SAME sole worker may be released, followed by SAME distinct reviewer on new exact bytes. No additional correction round or expected-outcome changes.",
+  "preservation": "Original implementation, old database contents/container identities/mailbox/evidence preserved. No acceptance, Git stage/commit/push or cleanup."
+}

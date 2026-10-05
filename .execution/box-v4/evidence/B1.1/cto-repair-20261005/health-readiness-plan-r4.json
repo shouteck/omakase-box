@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "40",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import http from 'node:http';import {writeFile} from 'node:fs/promises';import {probeServiceHealth} from './scripts/box-verification/readiness.mjs';const fetchFor=host=>(u,o)=>new Promise((resolve,reject)=>{const url=new URL(u);const r=http.request({hostname:url.hostname,port:url.port,path:url.pathname,method:'GET',headers:{Host:host},signal:o.signal},res=>{res.resume();res.on('end',()=>resolve({status:res.statusCode}))});r.on('error',reject);r.end()});const privateHealth=await probeServiceHealth('http://127.0.0.1:4000/health',{fetchImpl:fetchFor('private.localhost:4000')});const externalHealth=await probeServiceHealth('http://127.0.0.1:4001/health',{fetchImpl:fetchFor('contributor.localhost:4001')});const result={privateHealth,externalHealth,status:privateHealth.status==='pass'&&externalHealth.status==='pass'?'pass':'failed'};await writeFile('/stage/.cto-r1-evidence/health-readiness-r4.json',JSON.stringify(result));console.log(JSON.stringify(result));process.exit(result.status==='pass'?0:1)"
+  ],
+  "sourceSha256": "8d5dc398f259d7f756fb517117e037d17848517b66a63d3ba91db1ee3822c4fc",
+  "reason": "Tiny core http diagnosis established correct real Host produces200; Node fetch override failed. Only affected health gate rerun with real HTTP adapter; same 2 successes5sec apart."
+}

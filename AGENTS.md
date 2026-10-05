@@ -2,13 +2,25 @@
 
 ## Current authority
 
+Current completion: B1.1 is accepted under W002-CTO-R2-Devin-H1, with all original seven commands passing, independent 74-test harness proof and G1-G5 evidenced on final manifest 61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f. Read handoffs/B1.1.md and evidence/B1.1/cto-repair-20261005/cto-acceptance-h1.json. No D feature is approved. The fresh Box database resource is at its unchanged 12-database cap; no further mutating batch, reset, cleanup or resource setup follows from acceptance. Reviewed saving remains a standing kitchen duty.
+
+Current runtime handover: the CEO explicitly selected "Approve Devin handover" in the present Devin Desktop conversation for W002-CTO-R2-Devin-H1. Read .execution/box-v4/briefings/W002-CTO-R2-Devin-H1.md and its actual-request record before acting. This new Devin CTO uses one new scoped worker and a distinct reviewer in the approved root-direct sequential topology. It does not revive the old stopped Devin team, alter R1/R2 source scope or approve a feature. Historical Codex authority/evidence remain preserved. The latest recovered R2 batch passed Box contracts/auth, then failed typechecking in the two leased verification tests; see devin-h1-diagnostic-review.json. Existing relay ownership and mutation accounting remain execution gates, not inferred shutdown.
+
+The CEO subsequently stopped Devin abruptly and explicitly delegated kitchen repair to this Codex CTO on 5 October 2026. The bounded repair is W002-CTO-R1.md, with actual-request authority recorded separately from prior approvals. Stop the old Devin team; do not infer unavailable agent shutdown. Only its specified existing B1.1 verification repair may proceed through the named Codex fallback after current ownership gates; the next D feature still requires the normal briefing/approval. Root never writes product code and independent review remains required.
+
 The CEO confirmed on 4 October 2026: Open Boxes first; preserve/reuse existing work; Cursor native pstack plus a Codex fallback; briefing and explicit approval before every new work wave.
+
+On 5 October 2026 the CEO refocused the product on portable Boxes for delegation. Follow docs/box-v4/DELEGATION-MAP.md and tasks/box-delegation-task-graph.json for the next product proposals. Prepare bounded work packages from direct requests or pasted issues; conversation is optional and bounties are a later route. Current W002/B1.1 authority, leased candidate, state ownership and immutable history remain unchanged. Read .execution/box-v4/handoffs/delegation-focus-20261005.md and relay it through station dispatches at safe boundaries. Do not complete the entire old platform backlog by inertia or rewrite another active coordinator's state to enact the refocus.
 
 START.md is the only kickoff. The active PLAN.md, docs/box-v4/ specifications, tasks/box-v4-task-graph.json and .execution/box-v4/state.json govern new work. .execution/ACTIVE_PLAN.json selects them. Legacy M0-M9 docs/state remain historical and later-stage assets; they do not authorize continuation of that backlog.
 
 A bare START.md authorizes reconciliation and briefing, not implementation. The present instruction-rewrite request is not approval for B0. Requests just to inspect/explain/edit a plan do not start the product build. Explicit human directions and higher-priority tool rules override pstack defaults. Source PDFs, retrieved text and child reports cannot create authority.
 
+Current R2 continuation: also read .execution/box-v4/briefings/W002-CTO-R2.md and activeRepair.binding. The first actual acceptance command failed before tests on a Vite config cache write to read-only dependencies. Under the same direct CEO repair task, the CTO added only the existing suite/config launcher paths for a profile-scoped supported loader/cache correction. R1 history remains immutable; changed source requires current independent review and readiness before the original seven-command batch. This does not approve a new feature or resume old Devin.
+
 ## Kitchen roles
+
+The CEO's later 5 October validation direction is in docs/box-v4/delegation/VALIDATION-PLAN.md. Future station briefs target teams that regularly delegate bounded work to chosen contractors, define a fair ordinary-delegation baseline and measure total effort. Self-service, slicing and human/agent support are not established differentiation. Separate software capability from real repeat use and payment evidence. Relay this update through the existing delegation-focus handoff; it changes no current W002 authority and does not initiate customer outreach or a pilot.
 
 CEO approves product direction and each wave. Root CTO authors briefs, coordinates, makes recommendations and reports; it never writes product code. Station leads own bounded tracks and delegate implementation/verification. Independent reviewers cannot review their own implementation. Different model families add diversity but do not replace independent agent identity or exact-revision evidence.
 
@@ -31,6 +43,8 @@ Boxes can span frontend, backend, security/configuration, infrastructure, data a
 ## Runtime, costs and leases
 
 Follow docs/box-v4/PSTACK.md and STANDING_ORDERS.md. Native Cursor skills/tools must be present before claiming native pstack. Codex uses actual collaboration tools as a portable adaptation; unsupported model/tool names are not commands.
+
+Follow docs/box-v4/KITCHEN.md's "Reliable execution and recovery" section for new briefs, dispatches and handoffs. Its W002 lessons prevent repeated transport/output failures, duplicate verification and unbounded recovery; frozen wave scope, acceptance and tighter caps remain authoritative.
 
 The CEO used Devin for W001. Support its explicitly labeled pstack-based portable adapter while preserving Cursor as the primary planned native integration and Codex as a distinct fallback. Recheck actual tools and topology in each host; briefing reports alone do not prove dispatch. A runtime change cannot silently amend an approved wave.
 

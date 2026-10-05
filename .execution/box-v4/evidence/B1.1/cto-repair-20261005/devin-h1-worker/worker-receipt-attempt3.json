@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "kind": "worker_receipt_attempt3_cooldown_correction",
+  "supersedes": "worker-receipt-attempt2.json (all prior receipts/diffs preserved as immutable history)",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "release": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-cooldown-correction-release.json",
+  "blockerReview": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-review/independent-seven-r2-h1-blocker-review.json",
+  "worker": "box-worker/483988b4 sole source writer under existing H1 lease",
+  "baseCommit": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "candidateFiles": {
+    "scripts/box-verification/run-verification.mjs": {
+      "prior": "a3a30d326a6e2a2935b9e8f0cd22316f5106855ea1f09919c1a6a88aed86e2e8",
+      "candidate": "199021cd141b613138b0839d61ec195d603f3de4b1975ca4cd813f634aed4094"
+    },
+    "tests/box/verification/environment-readiness.test.ts": {
+      "prior": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735",
+      "candidate": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735",
+      "note": "unchanged this attempt"
+    },
+    "tests/box/verification/relay-lifecycle.test.ts": {
+      "prior": "b7cee05122690fa71077161bb6214327c40cfff10beb335890b802bdd4811306",
+      "candidate": "e4d5fd076c1fb3520aa64c4e72253a3d771131b6b8aa6fddd17909af6d082b7d"
+    },
+    "scripts/box-verification/environment-manifest.json": {
+      "prior": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+      "candidate": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+      "refreeze": "byte-level in-place sha256 replacement of the two changed-file rows only; original CRLF preserved (107396 bytes, 2837 CRLF, 455 sorted rows)"
+    }
+  },
+  "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "correction": {
+    "mechanism": "runSequence inserts one fixed pre-command idle wait before REPEATED_AUTH_COMMAND only when profile === APPROVED_VERIFICATION_PROFILE (w002-b11-environment-first-r4, the existing approved BOX_VERIFICATION_PROFILE env discriminator). Idle is REPEATED_AUTH_IDLE_MS = 300000 limiter window + 5000ms clock/scheduling margin. Per-command 8min deadlines, exact seven sequence, runOne drain/descendant/fail-closed semantics all unchanged; absent/wrong profile performs no wait. No new CLI/argv/framework.",
+    "durableRecord": "record.cooldowns[] persists {beforeCommand,reason,idleMs,startedAt,endedAt,durationMs}; entry is persisted BEFORE the wait begins (endedAt null) and again after, so a stall is never silent",
+    "frozenUntouched": [
+      "packages/contracts/auth/http.ts rate policy",
+      "scripts/verify-auth.mjs",
+      "support.ts",
+      "expected 400 outcome",
+      "all security/limiter behavior",
+      "sequence order",
+      "deadlines"
+    ]
+  },
+  "newTests": [
+    "paces the repeated auth command only under the exact approved profile (injected sleep proves 305000ms wait recorded, sequence order and 7 commands unchanged, durable record checked mid-wait and final)",
+    "keeps the original immediate ordering for absent or wrong profiles (undefined, wrong, near-miss profile: zero sleeps, zero cooldowns, unchanged order)"
+  ],
+  "checks": [
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "run": "tsc2",
+      "exit": 0,
+      "started": "04:56:29Z",
+      "ended": "04:57:07Z",
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "note": "prior tsc run exit 2 captured honestly in attempt3 logs: two test-only type errors (VerificationCommandEntry lacked command; profile option needed undefined union for exactOptionalPropertyTypes) corrected before this pass"
+    },
+    {
+      "command": "node scripts/suite.mjs box --suite verification",
+      "exit": 0,
+      "started": "04:57:12Z",
+      "ended": "04:57:43Z",
+      "result": "2 test files passed, 67/67 tests (relay-lifecycle 37 incl 2 new, environment-readiness 30), duration 26.46s"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "run": "tsc (first attempt3 run)",
+      "exit": 2,
+      "started": "04:55:12Z",
+      "ended": "04:55:58Z",
+      "note": "3 errors, all in the test file boundary typing; fixed and rerun"
+    }
+  ],
+  "byteParity": "container sha256 parity verified post-sync for run-verification.mjs 199021cd..., relay-lifecycle.test.ts e4d5fd07..., manifest 61f21cc7...",
+  "descendantStatus": "no node/vitest/tsc descendants in w002-b11-ws post-run (/proc cmdline poll)",
+  "evidence": {
+    "attempt3-prior/": "exact prior bytes of the three inputs (run-verification.mjs original a3a30d32, relay-lifecycle b7cee051, manifest 3555d4dd)",
+    "worker-scoped-attempt3.diff": "133-line unified diff prior->candidate for the three files",
+    "linux-check-out-attempt3/": "all durable stdout/stderr/exit/start/end files for tsc, tsc2, suite"
+  },
+  "limitations": [
+    "focused tsc+suite only per release; no full seven-command batch, no auth fixtures, no /stage overlay",
+    "cooldown exercises the real code path with injected sleep; the real 305s wall-clock wait will occur once under the approved profile during the final batch",
+    "no acceptance claim; independent reviewer binding pending"
+  ],
+  "notTouched": [
+    "relay poller/mailbox/lease",
+    "/stage and frozen runner candidate",
+    "application/auth/verify-auth/support code",
+    "comments or suppressions (none added/removed)",
+    "Git, installs, downloads, DB fixtures, global settings"
+  ]
+}

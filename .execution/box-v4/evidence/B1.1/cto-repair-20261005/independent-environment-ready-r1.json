@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "status": "ready",
+  "environmentId": "w002-b11-env-r4-env2",
+  "manifestDigest": "27ba069d980b14844dd38e2bd1b55ad4916d0616766979cf50dc5b395c34dfcb",
+  "reviewer": "/root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T03:13:11.868726+00:00",
+  "preliminary": "independent-preliminary-ready-r1.json",
+  "relay": {
+    "relay": {
+      "status": "pass",
+      "lease": {
+        "schemaVersion": 1,
+        "runId": "w002-b11-r4-env2",
+        "environmentId": "w002-b11-env-r4-env2",
+        "issuedAt": "2026-10-05T03:11:46.137Z",
+        "expiresAt": "2026-10-05T06:11:46.138Z",
+        "owner": "fixture-exec-host"
+      }
+    },
+    "lifecycle": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "at": "2026-10-05T03:11:46.143Z"
+    },
+    "responses": [],
+    "status": "pass"
+  },
+  "meaning": "All actual nonrelay gates and fresh matching lease/ready lifecycle verified; no fixture dispatch or full batch yet."
+}

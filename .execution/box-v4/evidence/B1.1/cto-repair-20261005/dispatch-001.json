@@ -1,0 +1,10 @@
+{
+  "kind": "actual_collaboration_dispatch",
+  "operation": "spawn_agent",
+  "actor": "/root/verification_repair_worker",
+  "role": "sole_implementation_worker",
+  "reviewer": "/root/recovery_assurance",
+  "recordedAtUtc": "2026-10-04T23:42:40.678011+00:00",
+  "repairId": "W002-CTO-R1",
+  "nestedDispatch": false
+}

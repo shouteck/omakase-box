@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "kind": "frozen_independent_original_seven_plan",
+  "reviewer": "/root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T03:14:03.425553+00:00",
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "3600",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import{mkdir}from'node:fs/promises';import{spawn}from'node:child_process';const temp='/tmp/cto-r1-acceptance';await mkdir(temp+'/config',{recursive:true});await mkdir(temp+'/cache',{recursive:true});const child=spawn(process.execPath,['scripts/box-verification/run-verification.mjs','/stage/.cto-r1-evidence/environment-manifest.json','/stage/.cto-r1-evidence/independent-seven-r1','/stage/.cto-r1-evidence/independent-review-r1-final.json','/stage/.cto-r1-evidence/independent-environment-ready-r1.json'],{stdio:'inherit',env:{...process.env,HOME:temp,XDG_CONFIG_HOME:temp+'/config',XDG_CACHE_HOME:temp+'/cache',PLAYWRIGHT_BROWSERS_PATH:'/ms-playwright',BOX_VERIFICATION_PROFILE:'w002-b11-environment-first-r4',BOX_VERIFICATION_BROWSER_PATH:'/ms-playwright',BOX_VERIFICATION_TRANSPORT:'mailbox',BOX_VERIFICATION_MAILBOX:'/stage/mailbox',BOX_VERIFICATION_RUN_ID:'w002-b11-r4-env2'}});child.on('error',e=>{console.error(e);process.exit(2)});child.on('exit',(code,signal)=>{if(signal){console.error('supervisor_signal:'+signal);process.exit(2)}process.exit(code??2)})"
+  ],
+  "sourceSha256": "d2b3de25ccb796dddbbec305f15ef51b012d2a97f261502cfa98fad9dda8f5e0",
+  "manifestDigest": "27ba069d980b14844dd38e2bd1b55ad4916d0616766979cf50dc5b395c34dfcb",
+  "environmentId": "w002-b11-env-r4-env2",
+  "sourceCount": 456,
+  "sequence": [
+    "node scripts/pnpm.mjs test:box-contracts",
+    "node scripts/pnpm.mjs test:box-auth",
+    "node scripts/pnpm.mjs check",
+    "node scripts/pnpm.mjs build",
+    "node scripts/pnpm.mjs test:auth",
+    "node scripts/pnpm.mjs test:contracts",
+    "node scripts/pnpm.mjs test:planner"
+  ],
+  "requiredMetadataCopy": "independent-environment-ready-r1.json exact reviewed bytes to /stage/.cto-r1-evidence before execution",
+  "bounds": "Unchanged supervised 8min per command, serial stop on nonPASS/unknown. Outer3600s guard only; output/drain/process confirmation remain supervisor requirements. Host collector must allow outer expiry and capture confirmed remote completion. No auto rerun.",
+  "settingsReason": "suite.mjs exact profile enables public /ms-playwright; real auth browser inherits child HOME/XDG verified writable pattern. Environment set only owned acceptance child, no host/global/persistent settings. Fresh Box DB identity already supplied by runner unchanged.",
+  "authority": "Plan frozen only; full batch requires root phase release."
+}

@@ -1,0 +1,26 @@
+tests/box/verification/environment-readiness.test.ts(20,8): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/readiness.mjs'. '/stage/scripts/box-verification/readiness.mjs' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(21,94): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/environment-host.mjs'. '/stage/scripts/box-verification/environment-host.mjs' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(105,46): error TS7006: Parameter 'url' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(111,22): error TS7006: Parameter 'opts' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(209,36): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(213,36): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(372,23): error TS7006: Parameter 'binds' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(389,24): error TS7006: Parameter 'token' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(396,5): error TS2532: Object is possibly 'undefined'.
+tests/box/verification/environment-readiness.test.ts(413,37): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(417,28): error TS7006: Parameter 'item' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(466,30): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+tests/box/verification/environment-readiness.test.ts(467,34): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+tests/box/verification/environment-readiness.test.ts(502,5): error TS2532: Object is possibly 'undefined'.
+tests/box/verification/environment-readiness.test.ts(525,24): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/box/verification/environment-readiness.test.ts(532,80): error TS7006: Parameter 'path' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(19,8): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/fixture-exec-host.mjs'. '/stage/scripts/box-verification/fixture-exec-host.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(20,56): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/fixture-exec-runner.mjs'. '/stage/scripts/box-verification/fixture-exec-runner.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(21,77): error TS7016: Could not find a declaration file for module '../../../scripts/box-verification/run-verification.mjs'. '/stage/scripts/box-verification/run-verification.mjs' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(401,12): error TS18046: 'result' is of type 'unknown'.
+tests/box/verification/relay-lifecycle.test.ts(402,48): error TS18046: 'result' is of type 'unknown'.
+tests/box/verification/relay-lifecycle.test.ts(489,87): error TS7006: Parameter '_bin' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(489,93): error TS7006: Parameter '_args' implicitly has an 'any' type.
+tests/box/verification/relay-lifecycle.test.ts(489,100): error TS7006: Parameter 'options' implicitly has an 'any' type.

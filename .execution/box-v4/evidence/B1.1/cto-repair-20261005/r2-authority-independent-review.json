@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_scoped_r2_authority_review",
+  "reviewer": "/root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T03:20:21.982811+00:00",
+  "verdict": "pass",
+  "briefDigest": "4fff30c2d0dd9eed78af223d32a3930058a6b53b956241047d2a43cecc837323",
+  "bindingDigest": "e338e980564876c8b40341223ba429fe6974fac8672b03b712c7cb486b8dc091",
+  "bindingMatches": true,
+  "scope": "Only2specified launcher/config paths plus prior exact harness overlay; worker sole author, reviewer distinct; unchanged7checks/resource/security/model/preservation bounds; no fabricated approval/newfeature.",
+  "leaseNote": "Parent notified current lease retains R1 briefDigest/phase/usage status at top level; binding is correct and priorR1Lease preserved. Update current bookkeeping before final candidate release.",
+  "execution": "No new candidate executed by reviewer; only installed primary loader/cache source read. Current FAILED fullbatch preserved; current PASS/ready and root release required before rerun."
+}

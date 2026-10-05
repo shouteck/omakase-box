@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_phase_release_suspension_record",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "revision": "2026-10-05-d1-r4",
+  "authority": {
+    "path": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+    "decision": "Approve"
+  },
+  "boundBriefSha256": "13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+  "base": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "documentaryHead": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "priorPhaseReleaseRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json",
+  "revokingReviewAmendment": {
+    "path": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-d1r4-attempt2-dependency-wiring-amendment.json",
+    "sha256": "b6f0fbc98f740f810d4cb23834f1c9284653e7521f2f574fbefc93c2fdbfb830",
+    "reviewer": "a689979b",
+    "phaseVerdict": "PRE-EXECUTION FAIL",
+    "supersedesPhaseVerdict": "PRE-EXECUTION PASS",
+    "attempt": "d1-r4-02"
+  },
+  "rootDecision": "setup_release_suspended_preexecution_fail",
+  "suspendedAtUtc": "2026-10-04T22:30:45Z",
+  "decisionBasis": "The same distinct reviewer a689979b amended the attempt2 pre-execution verdict from PRE-EXECUTION PASS to PRE-EXECUTION FAIL. Root therefore suspends the previously recorded setup/readiness release before any setup attempt was consumed. Setup and resources are again closed pending one scoped in-lease correction and a fresh independent exact-byte PASS. This does not reopen acceptance and does not invalidate preserved evidence.",
+  "concreteDefectSummary": "The attempt2 manifest/code verifies linuxDependencies under /workspace/node_modules, but the dedicated runner is created with only manifest.stage.rootHost bound to /stage and workdir /stage: no /workspace mount, no /stage/node_modules mount or staged dependency tree, and no NODE_PATH. stageFiles forbids top-level node_modules paths. sourceFilesPlan lacks scripts/pnpm.mjs and scripts/tooling/node_modules/pnpm/bin/pnpm.cjs, so the fixed 'node scripts/pnpm.mjs ...' command cannot resolve the repo-local pnpm entrypoint; scripts/suite.mjs also resolves ../node_modules/vitest/vitest.mjs relative to /stage which is absent.",
+  "smallestPermittedInLeaseCorrection": "The same sole worker may make one scoped in-lease harness correction that establishes an exact reviewed dependency-resolution path for all seven fixed commands before any setup attempt: stage (hash-bound, assertStageableRel-conforming) or read-only-bind the verified Linux dependency closure at the runner's staged repository node_modules location, and similarly provide the repository-local pnpm tooling entrypoint (scripts/pnpm.mjs plus scripts/tooling/node_modules/pnpm/bin/pnpm.cjs or equivalent hash-bound staging). No downloads, installs, new resources or credential/.runtime reads; the complete 44/1153 closure digest must still prove. Mechanism must be manifest/code-bound; a bare NODE_PATH claim is insufficient.",
+  "requiredFreshReview": "Worker correction followed by a fresh exact independent pre-execution review by distinct reviewer a689979b returning PASS on the corrected candidate before any new root setup/readiness release. The one setup attempt must not be consumed on attempt2 bytes.",
+  "setupAttemptsUsed": 0,
+  "resourcesCreated": 0,
+  "forbiddenNow": [
+    "any environment setup or setup-attempt consumption until corrected candidate receives fresh independent PASS and root re-release",
+    "resource creation/deletion/recreation or extra resources",
+    "readiness verification commands until re-release",
+    "fixture relay execution until readiness independent PASS",
+    "the seven acceptance commands until reviewer release",
+    "old queue/mailbox replay",
+    "candidate file edits outside the one scoped in-lease correction",
+    "DB reset/drop/truncate",
+    "credentials/.runtime reads",
+    "installs/downloads/model or global config changes",
+    "Git stage/commit/push",
+    "PR/cloud/paid/deploy/later wave actions"
+  ],
+  "acceptance": "B1.1 remains unaccepted; this suspension does not reopen acceptance, invalidate preserved evidence, or authorize fixture/acceptance phases."
+}

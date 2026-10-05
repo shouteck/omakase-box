@@ -1,5 +1,11 @@
 # Box architecture and reuse boundaries
 
+## Delegation focus, 5 October 2026
+
+For future approved work, use [DELEGATION-MAP.md](DELEGATION-MAP.md). Add a focused preparation/package boundary through proposed `packages/box-packaging/**` and `services/private-api/boxes/packages/**`, reusing existing Box, Git, workspace and evaluator seams rather than rebuilding the platform. A request or pasted issue produces an approved agreement and an actual selected-source export. The recipient works from that package; owner-side full-repository verification remains separate.
+
+Keep read context, editable scope and integration checks distinct. A package contains exact baseline/path mapping, selected source, declared dependencies, fixtures, commands and submission identity. Owner-reviewed manifests can prove the first supported handoff; no universal AI slicing is required. Package-local success does not accept the original application change. An unsupported extraction is a preparation gap, not permission to ship the full owner repository under a portability label. The active W002 candidate and approved architecture inputs are preserved; this paragraph governs future proposal design, not current source edits.
+
 ## Extend the current application
 
 Keep the existing private control application and service as the trusted customer control plane. Add Box features in `apps/private-console/boxes/**`, `services/private-api/boxes/**` and `packages/box-contracts/**`; append real migrations under the current private DB migration system. Reuse auth, exact revision approval, private intake/providers and UI patterns through reviewed interfaces. Do not duplicate the whole platform or rewrite existing external/release code.

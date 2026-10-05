@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_conditional_exact_full_acceptance_release",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "reviewer": "box-reviewer/27f919af",
+  "preexecutionReview": "devin-h1-review/independent-review-r2-h1-attempt2-final.json",
+  "overlay": "devin-h1-stage-overlay-performed.json",
+  "manifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "release": "Reviewer may independently verify actual post-overlay456parity, unchanged resources/closure/browser/services/metadata, fresh BoxDB4/12 usage, current live sole relay/lease/mailbox and all mutation accounting. Only if current independently ready receipt binds exact manifest/environment and existing gateStart/verifyReviewDigests pass, execute the original complete seven once on this frozen candidate. Otherwise stop and report failed/unknown gate.",
+  "commands": ["node scripts/pnpm.mjs test:box-contracts", "node scripts/pnpm.mjs test:box-auth", "node scripts/pnpm.mjs check", "node scripts/pnpm.mjs build", "node scripts/pnpm.mjs test:auth", "node scripts/pnpm.mjs test:contracts", "node scripts/pnpm.mjs test:planner"],
+  "runtime": "Existing exact runner, same three mounts, same reviewed supervisor/launcher and child-scoped HOME/XDG/browser/profile/mailbox/run settings as independent-seven-command-plan-r2.json",
+  "relay": "Retain accounted-for existing PID201644 as sole unchanged reviewed poller; not OSsession adoption or new poller. Lease/lifecycle checked before dispatch; no old8replay. Durable requests/results/descendants required.",
+  "limits": "8min per original command; unchanged descendant/drain/output requirements; fresh output namespace; no duplicate full batch; no overall invented deadline",
+  "stopConditions": "Failed/unknown/currenthash drift/resourceidentity drift/unconfirmed descendant or mutation/leaseexpiry/competing writer stops affectedphase; no fixture reset/drop/cap increase or source expansion",
+  "fullBatchPassed": false,
+  "productAccepted": false,
+  "newFeatureApproved": false,
+  "savingReleased": false
+}

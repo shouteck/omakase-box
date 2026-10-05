@@ -1,11 +1,11 @@
 import type { SessionActor } from './store.js';
 
 export type AuthScope = 'private' | 'external';
-export type AuthAction = 'snapshot.read' | 'snapshot.import' | 'request.read' | 'request.write' | 'intent.read' | 'intent.write' | 'intent.approve' | 'release.approve' | 'publication.approve' | 'assignment.approve' | 'acceptance.approve' | 'runtime.configure' | 'evaluation.operate' | 'invitation.create' | 'reservation.read' | 'reservation.write' | 'submission.read' | 'submission.write';
+export type AuthAction = 'snapshot.read' | 'snapshot.import' | 'request.read' | 'request.write' | 'intent.read' | 'intent.write' | 'intent.approve' | 'release.approve' | 'publication.approve' | 'assignment.approve' | 'acceptance.approve' | 'runtime.configure' | 'evaluation.operate' | 'invitation.create' | 'reservation.read' | 'reservation.write' | 'submission.read' | 'submission.write' | 'box.read' | 'box.write' | 'box.behavior.approve' | 'box.assign' | 'box.attempt' | 'box.review' | 'box.merge.approve' | 'box.token.create';
 const privatePermissions: Record<string, readonly AuthAction[]> = {
-  requester: ['snapshot.read', 'request.read', 'request.write', 'intent.read', 'intent.write'],
-  owner: ['snapshot.read', 'snapshot.import', 'request.read', 'request.write', 'intent.read', 'intent.write', 'intent.approve', 'release.approve', 'publication.approve', 'assignment.approve', 'acceptance.approve', 'invitation.create'],
-  operator: ['snapshot.read', 'snapshot.import', 'runtime.configure', 'evaluation.operate']
+  requester: ['snapshot.read', 'request.read', 'request.write', 'intent.read', 'intent.write', 'box.read', 'box.write', 'box.attempt', 'box.review'],
+  owner: ['snapshot.read', 'snapshot.import', 'request.read', 'request.write', 'intent.read', 'intent.write', 'intent.approve', 'release.approve', 'publication.approve', 'assignment.approve', 'acceptance.approve', 'invitation.create', 'box.read', 'box.write', 'box.behavior.approve', 'box.assign', 'box.attempt', 'box.review', 'box.merge.approve', 'box.token.create'],
+  operator: ['snapshot.read', 'snapshot.import', 'runtime.configure', 'evaluation.operate', 'box.read']
 };
 const externalPermissions: Record<string, readonly AuthAction[]> = { contributor: ['reservation.read', 'reservation.write', 'submission.read', 'submission.write'] };
 export function validServiceRole(scope: unknown, role: unknown): role is SessionActor['role'] {

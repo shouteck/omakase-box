@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "preworker_source_hashes",
+  "baseCommit": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "baseManifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "capturedAt": "2026-10-05T04:05:24.853Z",
+  "files": {
+    "tests/box/verification/environment-readiness.test.ts": "bab5ddf71e83c87b08f2b6e69c3efc5aea5bca512641e75fc1f7383bbc0ef279",
+    "tests/box/verification/relay-lifecycle.test.ts": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825",
+    "scripts/box-verification/environment-manifest.json": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594"
+  }
+}

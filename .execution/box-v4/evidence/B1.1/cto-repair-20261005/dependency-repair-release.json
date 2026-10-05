@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "informative_dependency_repair_release",
+  "recordedAtUtc": "2026-10-05T02:34:48.727561+00:00",
+  "actor": "/root/verification_repair_worker",
+  "hypothesis": "Stage excludes workspace aliases although runtime packages exist inside mounted root pnpm store; independently reproduced MODULE_NOT_FOUND. Preserve repaired supervisor, derive hash-bound aliases and full closure using same3mounts/resources.",
+  "allowedPaths": [
+    "scripts/box-verification/environment-host.mjs",
+    "scripts/box-verification/environment-manifest.json",
+    "tests/box/verification/environment-readiness.test.ts"
+  ],
+  "sameScopeAuthority": ".execution/box-v4/briefings/W002-CTO-R1.md",
+  "noNewResources": true,
+  "oldManifestDigest": "48c7aee9d229e7223268f6a12b57567273f36c7b05f676837ab2a2c428b9a5e6",
+  "preservation": "supervisor-checkpoint and worker original receipts remain immutable",
+  "setupReleased": false,
+  "acceptanceReleased": false
+}

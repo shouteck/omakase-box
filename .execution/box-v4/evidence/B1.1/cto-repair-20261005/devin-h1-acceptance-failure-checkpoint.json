@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_failed_acceptance_checkpoint",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "reviewer": "box-reviewer/27f919af",
+  "manifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "result": "devin-h1-review/independent-seven-r2-h1-blocker-review.json",
+  "commandsPassed": ["test:box-contracts", "test:box-auth", "check", "build"],
+  "failure": "Repeated legacy auth test expected400 invalidrolepayload but received429. Shared service per-IP login/redeem limiter increments every request and expires only when now-entry.start>300000; it is not only failed-credentials state as reviewer initially described.",
+  "rootCauseSource": "packages/contracts/auth/http.ts:41-46 and scripts/verify-auth.mjs:33; original check embeds auth suite, original acceptance requires later test:auth again",
+  "candidateApplicationDefectDemonstrated": false,
+  "mutationAccounting": {"freshMailboxRequests": 34, "responses": 34, "unanswered": 0, "old8Replayed": false, "boxDbUsed": 8, "cap": 12, "ownedDescendants": "confirmed_empty"},
+  "acceptanceReleased": false,
+  "sourceExpanded": false,
+  "nextHypothesis": "Respect unchanged service's five-minute limiter window between the two required legacy auth invocations without service reset, assertion edit or timeout extension. Diagnose all later fixture auth uses before deciding a harness correction or launch-only pacing.",
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

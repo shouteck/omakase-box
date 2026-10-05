@@ -1,0 +1,3 @@
+44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59 *scripts/box-verification/environment-host.mjs
+4ed19d807c775b1757825bf45ec9948b19564da0336bb3399e5a7cb2bb26d78a *tests/box/verification/environment-readiness.test.ts
+c1e1f55ca2196ef3ee5abad341e09f4815e7e38e031ec8a75216e9a8dfff1705 *scripts/box-verification/environment-manifest.json

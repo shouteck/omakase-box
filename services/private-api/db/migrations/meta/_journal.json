@@ -85,6 +85,13 @@
       "when": 1791320000000,
       "tag": "0011_feedback_submission",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791390000000,
+      "tag": "0012_open_box_foundation",
+      "breakpoints": true
     }
   ]
 }

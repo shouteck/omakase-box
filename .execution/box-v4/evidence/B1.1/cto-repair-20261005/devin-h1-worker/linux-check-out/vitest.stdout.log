@@ -1,0 +1,24 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/workspace/.devin-h1-check/src[39m
+
+ [32m✓[39m tests/box/verification/relay-lifecycle.test.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 18700[2mms[22m[39m
+   [32m✓[39m relay lease and lifecycle [2m(5)[22m
+     [33m[2m✓[22m[39m returns unavailable, not stopped, when drain never observes termination[33m 10053[2mms[22m[39m
+   [32m✓[39m exec runner termination accounting [2m(4)[22m
+     [33m[2m✓[22m[39m accounts termination for a hung child without fabricating remote state[33m 505[2mms[22m[39m
+   [32m✓[39m run supervisor gate [2m(2)[22m
+     [33m[2m✓[22m[39m finishes a bounded session and stops when the deadline is tiny[33m 321[2mms[22m[39m
+   [32m✓[39m verification supervisor durable completion [2m(3)[22m
+     [33m[2m✓[22m[39m waits for late output and retains complete raw bytes beyond the summary cap[33m 7330[2mms[22m[39m
+ [32m✓[39m tests/box/verification/environment-readiness.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 777[2mms[22m[39m
+   [32m✓[39m readiness: database, drift and relay run contract [2m(4)[22m
+     [33m[2m✓[22m[39m bounds DB readiness to at most two attempts and reports unavailable[33m 502[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m65 passed[39m[22m[90m (65)[39m
+[2m   Start at [22m 04:14:33
+[2m   Duration [22m 24.38s[2m (tests 95%, import 2%, transform 2%, worker 1%)[22m
+
+[2m    Isolate [22m [33m2 workers spawned[39m[2m · ~1.86s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~1.86s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

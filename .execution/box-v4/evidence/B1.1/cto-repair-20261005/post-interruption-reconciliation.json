@@ -1,0 +1,20 @@
+{
+  "kind": "post_interruption_reconciliation",
+  "recordedAtUtc": "2026-10-05T02:30:29.659865+00:00",
+  "workerToolStatus": "errored_usage_limit",
+  "workerReceipt": "worker-correction.json",
+  "candidateCount": 456,
+  "candidateDrift": [],
+  "changedPaths": [
+    "scripts/box-verification/run-verification.mjs",
+    "tests/box/verification/relay-lifecycle.test.ts",
+    "scripts/box-verification/environment-manifest.json"
+  ],
+  "manifestDigest": "48c7aee9d229e7223268f6a12b57567273f36c7b05f676837ab2a2c428b9a5e6",
+  "workerTestExit": 0,
+  "workspaceProcessObservation": "docker top after interruption showed only sleep",
+  "oldDevinAuthority": "suspended",
+  "independentReview": "pending",
+  "newResourcesCreated": 0,
+  "status": "candidate_frozen_for_independent_review"
+}

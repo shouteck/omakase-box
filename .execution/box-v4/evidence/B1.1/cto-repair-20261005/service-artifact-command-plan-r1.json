@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "frozen_service_artifact_core_hash_plan",
+  "reviewer": "Codex /root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T02:59:21.925995+00:00",
+  "sourceSha256": "af388b9a1f4d31a4ad9036d0be298519e9fc0f1a1bfcdb3767474a3fe393d1fb",
+  "source": "const fs=require('fs'),path=require('path'),crypto=require('crypto');let files={};function walk(dir){for(const name of fs.readdirSync(dir).sort()){const p=path.join(dir,name),s=fs.lstatSync(p);if(s.isSymbolicLink())throw Error('unexpected artifact link');if(s.isDirectory())walk(p);else if(name.endsWith('.js')||name.endsWith('.mjs')||name.endsWith('.cjs'))files[p.replace(/\\\\/g,'/')]=crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex')}}walk('dist');console.log(JSON.stringify({files},null,2))",
+  "services": [
+    {
+      "name": "w002-b11-svc-private-api",
+      "cwd": "/workspace/services/private-api",
+      "expectedId": "cc50b7e2826cd6461f1de07f4da78decdd91e27ae470ba3fe6a863d34c38aa01",
+      "required": [
+        "dist/fixture.js",
+        "dist/intake-fixture.js",
+        "dist/session-fixture.js"
+      ]
+    },
+    {
+      "name": "w002-b11-svc-external-api",
+      "cwd": "/workspace/services/external-api",
+      "expectedId": "334ddb4b12e004f5da650551624ec13a05e1ed6690a348173c613bba6ab78c37",
+      "required": [
+        "dist/fixture.js"
+      ]
+    }
+  ],
+  "meaning": "Read-only core hashes of builtJavaScript; no artifact imports/execution; compare actualfixtures and reachablebuiltmodules to freshreviewedbuild, preserveolderextraoutputs. This plan itself starts no service/relay."
+}

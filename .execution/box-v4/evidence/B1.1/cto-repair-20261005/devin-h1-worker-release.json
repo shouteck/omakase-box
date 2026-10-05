@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "exclusive_source_correction_release",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "brief": ".execution/box-v4/briefings/W002-CTO-R2-Devin-H1.md",
+  "diagnosticReview": "devin-h1-diagnostic-review.json",
+  "baseCommit": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "baseManifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "sourceParity": "456 host/stage files independently matched, no competing source writer observed; historical frozen leases remain preserved",
+  "maximumWriters": 1,
+  "writer": "next actual box-worker dispatch, identity to be bound in root dispatch receipt",
+  "release": "Correct reproduced26 typecheck errors inside the two leased test files with truthful explicit types and unchanged assertions. Refreeze affected rows using existing manifest format; informative focused checks only in approved existing Linux workspace.",
+  "primaryPaths": ["tests/box/verification/environment-readiness.test.ts", "tests/box/verification/relay-lifecycle.test.ts", "scripts/box-verification/environment-manifest.json"],
+  "supportingPaths": "Other exact R1/R2 paths only if required by demonstrated supporting cause, recorded explicitly before changing",
+  "forbidden": "tsconfig/declaration modules/dependencies/application/contracts/auth/migrations/support.ts/expected behavior edits; comments added or removed; typecheck suppression or test skip; host candidate execution; relay/mailbox mutation or startup; full acceptance batch; resource creation/cleanup; Git mutations",
+  "stageOverlayReleased": false,
+  "acceptanceReleased": false,
+  "newFeatureApproved": false,
+  "oldTeamResumed": false
+}

@@ -25,7 +25,7 @@ export function allowedExternalSpecifier(value) {
 }
 export function checkExternalBoundaries() {
   const visited = new Set();
-  const forbidden = ['services/private-api/', 'apps/private-console/', 'packages/planner/', 'packages/analyzer/', 'packages/evaluation/', 'packages/contracts/private/', 'examples/', '.runtime/'];
+  const forbidden = ['services/private-api/', 'apps/private-console/', 'packages/planner/', 'packages/analyzer/', 'packages/evaluation/', 'packages/contracts/private/', 'packages/box-', 'examples/', '.runtime/'];
   function inspect(path) {
     path = realpathSync(path);
     const local = relative(root, path).replaceAll('\\', '/').toLowerCase();

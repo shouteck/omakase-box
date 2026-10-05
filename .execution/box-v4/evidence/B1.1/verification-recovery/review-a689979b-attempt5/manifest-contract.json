@@ -1,0 +1,60 @@
+{
+    "revision":  "2026-10-05-d1-r4-environment-v4",
+    "briefDigest":  "sha256:13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+    "environmentId":  "w002-b11-env-r4-env2",
+    "sequence":  [
+                     "node scripts/pnpm.mjs test:box-contracts",
+                     "node scripts/pnpm.mjs test:box-auth",
+                     "node scripts/pnpm.mjs check",
+                     "node scripts/pnpm.mjs build",
+                     "node scripts/pnpm.mjs test:auth",
+                     "node scripts/pnpm.mjs test:contracts",
+                     "node scripts/pnpm.mjs test:planner"
+                 ],
+    "limits":  {
+                   "setupAttempts":  1,
+                   "activeSetupMinutesPerAttempt":  20,
+                   "transferCheckMinutes":  10,
+                   "minutesPerRequiredCommand":  8,
+                   "supervisoryCheckpointMinutes":  15,
+                   "correctionSupervision":  "progress-based informative corrections and affected reruns within the eight leased paths; no blanket correction/rerun count, no overall active-minute cutoff, no unchanged no-evidence retry loop"
+               },
+    "runner":  {
+                   "image":  "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+                   "network":  "container:w002-b11-ws",
+                   "user":  "1000:1000",
+                   "readOnlyRoot":  true,
+                   "capDrop":  [
+                                   "ALL"
+                               ],
+                   "noNewPrivileges":  null,
+                   "memoryBytes":  2147483648,
+                   "cpus":  2,
+                   "pidsLimit":  256,
+                   "tmpfs":  {
+                                 "/tmp":  "rw,noexec,nosuid,size=512m"
+                             },
+                   "ports":  [
+
+                             ],
+                   "egress":  "none",
+                   "daemonSocket":  null,
+                   "binds":  [
+                                 {
+                                     "host":  "C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2",
+                                     "container":  "/stage",
+                                     "readOnly":  false
+                                 },
+                                 {
+                                     "host":  "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules",
+                                     "container":  "/stage/node_modules",
+                                     "readOnly":  true
+                                 },
+                                 {
+                                     "host":  "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules",
+                                     "container":  "/stage/scripts/tooling/node_modules",
+                                     "readOnly":  true
+                                 }
+                             ]
+               }
+}

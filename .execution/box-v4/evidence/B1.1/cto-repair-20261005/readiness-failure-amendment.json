@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "kind": "readiness_failure_and_informative_probe_amendment",
+  "recordedAtUtc": "2026-10-05T03:03:44.189097+00:00",
+  "repairId": "W002-CTO-R1",
+  "failedReceipt": "ready-preliminary-readiness.result.json",
+  "observedExit": 1,
+  "elapsedMs": 107204,
+  "passedReusableEvidence": [
+    "Actual22workspacealiases",
+    "Bothfixturebuilds",
+    "Source456hashparity",
+    "Publicmetadata",
+    "Newresourceidentity",
+    "FreshBoxDBSELECT1"
+  ],
+  "failedGates": [
+    "MatchinginstalledChromiumlaunch failed crashpad database requirement underreadonlydefaultprofile settings",
+    "BothAPIhealthprobes returned403"
+  ],
+  "diagnosisNext": [
+    "Readactual403body/Hostpolicy andtestnamedapprovedHostheaders nonmutating",
+    "Usefreshwritabletemporarybrowserprofile HOME/XDG settingsscopedtoownedChromiumlaunch, preservehardening"
+  ],
+  "rerunScope": "Onlyaffectedbrowser/services checks aftervalidatednewinputs. Preservefailure; noaliashelper/build/fullbatch replay.",
+  "productCandidateChanged": false,
+  "setupAttempt": 1,
+  "setupConsumptionRetained": true,
+  "relayStarted": false,
+  "acceptanceReleased": false,
+  "newFeatureApproved": false
+}

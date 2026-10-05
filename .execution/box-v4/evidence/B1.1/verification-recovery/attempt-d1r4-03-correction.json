@@ -1,0 +1,12 @@
+{
+  "attempt": "d1-r4-03",
+  "superseded": "harness-review-d1r4-attempt2-dependency-wiring-amendment.json PRE-EXECUTION FAIL; root suspended setup release (phase-release-d1r4-setup-suspended.json); setupAttemptsUsed/resourcesCreated remain 0",
+  "blockerAndHypothesis": "Runner w002-b11-linux-r4-env2 binds only rootHost -> /stage with workdir /stage; /workspace is not mounted; /stage/node_modules and /stage/scripts/tooling/node_modules are neither mounted nor staged, so required 'node scripts/pnpm.mjs ...' commands cannot resolve vitest/pnpm tooling (ESM ignores NODE_PATH). Secondary: environment-host verifies a Linux-only '/workspace/...' root via host fs on Windows.",
+  "whatChanged": "manifest: revision -> v4; linuxDependencies gains hostRoot/containerRoot/mountTarget semantics; new linuxTooling closure for repo-local pnpm bound to /stage/scripts/tooling/node_modules; runner binds become exact 3-mount list (/stage rw + two read-only dependency binds). environment-host.mjs: revision literal; verifyDependencyClosure uses plan.hostRoot for host-side verification; runnerCreateArgv validates/emits the exact reviewed read-only mount set; createResources verifies both closures before any Docker call. environment-readiness.test.ts: narrow assertions on mount/tooling contract only if needed.",
+  "whyDistinguishes": "The FAIL is specifically missing dependency/tooling resolution in the runner plus host-side path confusion; binding hash-verified read-only mounts at /stage gives the runner a real ESM path and hostRoot semantics fix the host-side verification — nothing else changes.",
+  "expectedObservations": "JSON/check pass; tooling closure computed exactly under w002-b11-ws; vitest selection again 60/60 exit 0; runner argv contains both read-only mounts.",
+  "exactCommand": "docker exec w002-b11-ws node verifyDependencyClosure on scripts/tooling/node_modules; edits; sha256sum; refresh changed files in review dir; vitest selection; optional pure-argv probe (no Docker create/start)",
+  "safetyGate": "no Docker create/start/inspect mutation beyond read-only exec in existing w002-b11-ws; no setup/resources/readiness/fixtures/acceptance/Git/DB/API/queue/credentials",
+  "mutationFootprint": "environment-manifest.json, environment-host.mjs, possibly environment-readiness.test.ts; refreshed review-dir copies; new evidence files",
+  "status": "in_progress"
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_service_pacing_correction_checkpoint",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "sourceWriter": "box-worker/483988b4_returned_attempt3",
+  "independentReviewer": "box-reviewer/27f919af",
+  "operations": "Same worker follow-up via run_subagent resume483988b4, no new worker; reviewer prior full batch failed honestly, no reset or assertion change",
+  "diagnosis": "devin-h1-acceptance-failure-checkpoint.json",
+  "correctionRelease": "devin-h1-cooldown-correction-release.json",
+  "workerReceipt": "devin-h1-worker/worker-receipt-attempt3.json",
+  "newManifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "workerResults": {"tsc": "exit0", "verificationTests": "67passed_exit0", "initialTypeErrors": "preserved_then_corrected"},
+  "currentReview": "pending_attempt3_exact_independent_review",
+  "stage": "Still previous frozen3555d4dd candidate; changed supervisor/test/manifest overlay not released",
+  "acceptanceReleased": false,
+  "fixtureState": "34freshrequest/results accounted; BoxDB8of12. Next singlefullbatch adds4to12, no resets/drops permitted.",
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

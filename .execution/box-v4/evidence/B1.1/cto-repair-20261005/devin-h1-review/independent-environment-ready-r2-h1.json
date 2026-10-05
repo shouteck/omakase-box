@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_current_environment_ready_r2_h1",
+  "status": "ready",
+  "reviewer": "Devin reviewer27f919af (distinct; not implementer worker483988b4)",
+  "environmentId": "w002-b11-env-r4-env2",
+  "manifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "recordedAtUtc": "2026-10-05T04:40:19.054Z",
+  "currentReview": "independent-review-r2-h1-attempt2-final.json",
+  "currentProof": {
+    "stagePostOverlayParity": "456/456 exact sha256 match at /stage vs embedded candidate map (verified 04:40Z)",
+    "hostParity": "456/456 host match verified attempt2 review",
+    "containerIdentities": {
+      "runner": "9161a456732e470d9fea5a5aeb79849f47508644cda8fe2eb6ac03a9747453c2 up,OOMKilled false,only sleep",
+      "boxDb": "da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86 up,OOMKilled false"
+    },
+    "mounts": "same three original mounts unchanged",
+    "dependencyAliases": "unchanged ro mounts verified at inspect",
+    "relay": {
+      "pid": 201644,
+      "alive": true,
+      "lifecycle": "ready",
+      "lease": {
+        "runId": "w002-b11-r4-env2",
+        "environmentId": "w002-b11-env-r4-env2",
+        "expiresAt": "2026-10-05T06:11:46.138Z"
+      },
+      "requests": 0,
+      "responses": 0,
+      "records": "none: zero mutations at batch start",
+      "sameMailbox": "host Temp dir == /stage/mailbox"
+    },
+    "fixtureDb": {
+      "used": 4,
+      "cap": 12,
+      "projectedPostBatch": 8,
+      "mutation": "only approved synthetic CREATE DATABASE via migratedPool"
+    },
+    "priorFailuresPreserved": true
+  },
+  "reusedUnaffectedEvidence": [
+    "independent-preliminary-ready-r1.json",
+    "service-artifact-comparison-r1.json",
+    "independent-environment-ready-r1.json",
+    "independent-final-closure.result.json",
+    "independent-r2-current-runtime.json"
+  ],
+  "reuseJustification": "Closure/browser/services/metadata unchanged; all inputs reconciled current: stage parity, resource IDs, no OOM, runner idle, lease/lifecycle/mailbox zero-mutation, DB count. No helper/build/browser replay.",
+  "acceptance": false,
+  "note": "supersedes independent-environment-ready-r2.json binding eb328bd4; prior receipt preserved"
+}

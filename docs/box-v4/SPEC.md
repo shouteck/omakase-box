@@ -2,9 +2,13 @@
 
 ## Product and scope
 
+The CEO's 5 October 2026 refocus makes portable work preparation and delegation the next product proof. Read [DELEGATION-MAP.md](DELEGATION-MAP.md) and its D-series graph for future waves. The existing approved W002/B1.1 contract and B history remain unchanged; this specification update does not expand current implementation authority.
+
+The initial buyer hypothesis is a team that regularly delegates bounded changes to contractors it chooses. The common protocol supports owner-selected authorised contributors and agents without a mandatory vendor workforce. Apply [VALIDATION-PLAN.md](delegation/VALIDATION-PLAN.md): measure total preparation/onboarding/acceptance effort against ordinary delegation, and report real repeat use and commercial evidence separately from technical success. Organisation-access execution remains valid under its declared permissions; it proves neither selected-source portability nor confidentiality. No pilot or current-wave expansion is authorised by this specification.
+
 A Box is a deterministic versioned work object over Git. It connects a goal and approved expected behavior to repository/base revision, context, editable surface, environment, evaluator, executor/attempt policy, review and merge provenance. A person opens a Box to work; an agent consumes the same Box API. Frontend, backend, security/configuration, data, infrastructure and tooling are overlapping dimensions, not exclusive Box types.
 
-The first delivery covers trusted synthetic/non-sensitive repositories and approved internal users/executors. Full repository context is permitted when selection is uncertain. Keep the existing TypeScript/React/Fastify/PostgreSQL stack and pinned tooling while reusing current components. Do not build a new VCS, editor engine, public marketplace or semantic-confidentiality compiler for this delivery.
+The first delivery covers trusted synthetic/non-sensitive repositories and approved internal users/executors. It demonstrates a selected-source package with sufficient dependencies, fixtures, approved behavior and patch mapping to work without the owner repository. Full repository context remains permitted for an existing Open Box mode when selection is uncertain, but cannot count as portable-package success. Keep the existing TypeScript/React/Fastify/PostgreSQL stack and pinned tooling while reusing current components. Do not build a new VCS, editor engine, public marketplace or semantic-confidentiality compiler for this delivery.
 
 ## Immutable records
 
@@ -16,13 +20,13 @@ The first delivery covers trusted synthetic/non-sensitive repositories and appro
 
 ## Flow for a requester
 
-1. Select a registered repository and describe the desired outcome, current behavior, constraints and exclusions. Attach optional evidence. No handwritten technical spec is required.
-2. Have a persisted conversation with the intent service. Ground draft facts in the pinned Git revision, tests/docs and supplied evidence. Show explicit assumptions and unknowns. Internal clarification is allowed before approval.
-3. Review examples, before/after flows, state transitions or API interactions. A data-only preview is evidence of desired behavior, not proof the code works. The requester/owner approves the exact behavior artifact.
-4. Prepare the Box with conservative context, explicit paths, a pinned environment and independent evaluator recipe. Unsupported capabilities or unresolved decisions block readiness with a reason. The planner can suggest decomposition; the customer decides whether a coherent feature should remain one Box.
-5. Assign human, agent or hybrid execution. No AI-first default or claimed automatic solver capability. Open a reproducible attempt through the same Box protocol.
-6. Review actual diff and independently evaluated evidence. Classify missing context/criteria as Box defects and infrastructure failure separately from implementation failure.
-7. Approve a normal Git integration after drift checks. A trusted integration worker applies the approved operation; provenance is stored in Box history and optional Git trailers.
+1. Choose work for a registered repository: paste an issue/request body or describe a new change. Tracker selection and API triggers are optional adapters; a URL alone is not fetched evidence. No handwritten technical spec or mandatory conversation is required.
+2. The preparation engine grounds draft facts in the pinned source, tests/docs and supplied evidence. Conversation is available for refinement. Multiple turns can refine one Box and a request can produce several related outcomes; preserve coherent full-stack work rather than forcing one Box per message.
+3. Review the proposed result through a concise example, before/after flow or input/output scenario using current application terminology. Show consequential unresolved choices without exposing internal technical bureaucracy. The owner approves the exact behavior; previews and tests alone do not approve it. A later amendment creates a new agreement version.
+4. Prepare the actual package: relevant source/context, distinct editable scope, declared dependencies/fixtures, environment, independent evaluator and submission mapping. A fresh package-only workspace must be usable; unsupported coupling or missing obligations block readiness with a reason. No silent full owner checkout fallback clears portability.
+5. Assign a trusted human, agent or hybrid executor through the same Box protocol. External bounty publication is a separately authorised later route, not draft creation or automatic task readiness. No forced AI routing or claimed automatic solver capability.
+6. Receive a real scoped patch. Verify it independently in the owner's original repository, including whole-Box interfaces and preservation. Local package checks alone cannot accept it. Classify missing context/criteria as preparation defects and infrastructure failure separately from implementation failure.
+7. Approve normal Git integration after current review and drift checks. Record actual result and provenance; no automatic production publication, payment or later wave follows.
 
 ## Workbench and agent equality
 

@@ -1,0 +1,142 @@
+{
+  "rows": [
+    {
+      "scope": "",
+      "pkg": "@playwright/test",
+      "status": "resolved",
+      "path": "/workspace/node_modules/.pnpm/@playwright+test@1.63.0/node_modules/@playwright/test/index.js"
+    },
+    {
+      "scope": "",
+      "pkg": "@types/node",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "",
+      "pkg": "@types/react",
+      "status": "unavailable",
+      "code": "ERR_PACKAGE_PATH_NOT_EXPORTED"
+    },
+    {
+      "scope": "",
+      "pkg": "@types/react-dom",
+      "status": "unavailable",
+      "code": "ERR_PACKAGE_PATH_NOT_EXPORTED"
+    },
+    {
+      "scope": "",
+      "pkg": "drizzle-kit",
+      "status": "resolved",
+      "path": "/workspace/node_modules/.pnpm/drizzle-kit@0.31.11/node_modules/drizzle-kit/index.js"
+    },
+    {
+      "scope": "",
+      "pkg": "typescript",
+      "status": "resolved",
+      "path": "/workspace/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib/typescript.js"
+    },
+    {
+      "scope": "",
+      "pkg": "vite",
+      "status": "resolved",
+      "path": "/workspace/node_modules/.pnpm/vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1/node_modules/vite/dist/node/index.js"
+    },
+    {
+      "scope": "",
+      "pkg": "vitest",
+      "status": "resolved",
+      "path": "/workspace/node_modules/.pnpm/vitest@5.0.1_@types+node@24.13.6_vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1_/node_modules/vitest/index.cjs"
+    },
+    {
+      "scope": "",
+      "pkg": "yaml",
+      "status": "resolved",
+      "path": "/workspace/node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/index.js"
+    },
+    {
+      "scope": "services/private-api",
+      "pkg": "drizzle-orm",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/private-api",
+      "pkg": "fastify",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/private-api",
+      "pkg": "pg",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/private-api",
+      "pkg": "zod",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/private-api",
+      "pkg": "@types/pg",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/external-api",
+      "pkg": "drizzle-orm",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/external-api",
+      "pkg": "fastify",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/external-api",
+      "pkg": "pg",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/external-api",
+      "pkg": "zod",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "services/external-api",
+      "pkg": "@types/pg",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "apps/private-console",
+      "pkg": "react",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "apps/private-console",
+      "pkg": "react-dom",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "apps/contributor-portal",
+      "pkg": "react",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    },
+    {
+      "scope": "apps/contributor-portal",
+      "pkg": "react-dom",
+      "status": "unavailable",
+      "code": "MODULE_NOT_FOUND"
+    }
+  ]
+}
