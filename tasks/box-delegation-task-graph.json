@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Product: D4 waits for the owner. Kitchen: K4 (numbers and stall guard) -> K5 (no repeat work) -> K6 (template database) -> K7 (typecheck and workers), each measured before and after.",
+    "sequence": "Kitchen: K4 -> K5, then measure. K8 (off-machine run) and K9 (legacy removal) follow; K6 and K7 only if the numbers still call for them. Product: R1 (a real request through the loop) or D4, whichever the owner names.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -403,7 +403,8 @@
       ],
       "deliverables": [
         "node scripts/kitchen-stats.mjs prints one page from .kitchen/runs and Git: verify minutes per step, runs and failed runs per wave branch, wave duration from first commit to merge, and the three largest costs. No new files to maintain; it only reads.",
-        "scripts/verify.mjs counts consecutive non-PASS runs and elapsed time on the current branch from its own run history, and prints a plain STALL line telling the agent to park the wave once a threshold is passed (defaults: 6 consecutive non-PASS committed runs or 90 minutes; thresholds are flags). It never changes the verdict or exit code."
+        "scripts/verify.mjs counts consecutive non-PASS runs and elapsed time on the current branch from its own run history, and prints a plain STALL line telling the agent to park the wave once a threshold is passed (defaults: 6 consecutive non-PASS committed runs or 90 minutes; thresholds are flags). It never changes the verdict or exit code.",
+        "The page also checks the kitchen's own limits and fails loudly when one is broken: AGENTS.md plus KITCHEN.md over 20 KB, kitchen/INBOX.md over ten lines, STATUS.md over one screen (60 lines). It shows usage per wave where wave files record it."
       ],
       "acceptance": [
         "On the 5 October night-run logs the page reproduces the known figures: about 120 verify minutes, check about 45.",
@@ -481,7 +482,8 @@
       "verification": [
         "Reviewer adds a throwaway migration, confirms the next run sees it, removes it, and re-measures."
       ],
-      "handoff": "waves/K6.md"
+      "handoff": "waves/K6.md",
+      "condition": "Run only if the numbers after K5 still show verification above 15% of a run."
     },
     {
       "id": "K7",
@@ -512,7 +514,94 @@
       "verification": [
         "Reviewer introduces a type error and an order-dependent test on a scratch branch and confirms both are caught."
       ],
-      "handoff": "waves/K7.md"
+      "handoff": "waves/K7.md",
+      "condition": "Run only if the numbers after K6 still show verification above 15% of a run."
+    },
+    {
+      "id": "K8",
+      "milestone": "K",
+      "title": "Run the full verify off this machine on every push",
+      "dependencies": [
+        "K5"
+      ],
+      "ownerApproval": "6 October 2026: the owner approved using GitHub Actions on the private repository (free tier, no paid minutes).",
+      "writePaths": [
+        ".github/workflows/verify.yml",
+        "pnpm-workspace.yaml",
+        "scripts/verify.mjs",
+        "README.md"
+      ],
+      "deliverables": [
+        "A GitHub Actions workflow on the private repository runs a frozen install and node scripts/verify.mjs --full on Linux for every push to master, and uploads the run logs.",
+        "The install policy gains the Linux entry embedded-postgres needs. No secrets, no deploys, no other triggers, no paid runners.",
+        "A failed run is surfaced at the next kickoff: START reconciliation reads the latest run result and STATUS says so."
+      ],
+      "acceptance": [
+        "A push with a deliberately broken test on a scratch branch (workflow temporarily pointed at it) fails the run; master passes.",
+        "The workflow uses only the free tier and no secret is configured."
+      ],
+      "verification": [
+        "Reviewer reads the workflow for triggers, permissions and secrets, and checks one real run's log against a local verify on the same commit."
+      ],
+      "handoff": "waves/K8.md"
+    },
+    {
+      "id": "K9",
+      "milestone": "K",
+      "title": "Take the legacy weight out of master",
+      "dependencies": [
+        "K5"
+      ],
+      "ownerApproval": "6 October 2026: the owner approved removing legacy material from master after tagging. Git keeps all of it.",
+      "writePaths": [
+        ".execution/**",
+        "docs/legacy/**",
+        "milestones/**",
+        "tasks/task-graph.json",
+        "tasks/box-v4-task-graph.json",
+        "research/**",
+        "services/external-api/**",
+        "services/runner-controller/**",
+        "infra/**",
+        "apps/contributor-portal/**",
+        "packages/**",
+        "tests/**",
+        "scripts/**",
+        "package.json",
+        "pnpm-lock.yaml",
+        "tsconfig.json",
+        "AGENTS.md",
+        "README.md",
+        "PLAN.md"
+      ],
+      "deliverables": [
+        "Step 1, before anything is removed: an annotated tag legacy-2026-10-06 on master, pushed, and a one-page inventory in the wave file of what will go and what stays, with the reason for each group.",
+        "Step 2: remove from master what nothing on the D roadmap uses: the .execution history, docs/legacy, the M0-M9 and B-series milestone files and graphs, and legacy services, packages, suites and scripts that only the bounty, reservation, release and hostile-runner stages need. Anything the Box loop imports stays.",
+        "AGENTS.md rule 8 and the docs that point at removed paths are updated to name the tag instead."
+      ],
+      "acceptance": [
+        "node scripts/verify.mjs --full exits 0 after the removal, and every Box suite is unchanged.",
+        "git diff legacy-2026-10-06..HEAD --stat shows only deletions and the named doc edits.",
+        "The inventory was written and committed before the first deletion commit."
+      ],
+      "verification": [
+        "Reviewer checks the tag resolves on origin, builds the dependency picture independently to confirm nothing the Box loop imports was removed, and runs verify --full."
+      ],
+      "handoff": "waves/K9.md"
+    },
+    {
+      "id": "R1",
+      "milestone": "R",
+      "title": "Run the delegation loop on a real request",
+      "dependencies": [
+        "D3.1"
+      ],
+      "proposal": "Not approved. The first real request can be one of the kitchen's own waves, for example K6: the head chef exports it as a Box, a blind taster completes it from the folder alone, and box verify applies it to this repository. Record preparation effort, what the taster lacked, disclosed-source share and whether the patch was accepted, under the Evidence station.",
+      "writePaths": [
+        "waves/R1.md",
+        "research/box-delegation/**"
+      ],
+      "handoff": "waves/R1.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"

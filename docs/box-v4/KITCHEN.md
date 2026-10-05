@@ -39,7 +39,7 @@ The verdict carries its level, because "passed" means different things: `ui-veri
 
 **Lenses.** A generalist reviewer looks hardest where it is told to look. The brief therefore ticks the lenses that apply (security, user experience, measurement fairness) and the reviewer must answer each ticked one in the Result. An unanswered ticked lens means the verdict is not PASS. Tick only what applies; most waves need one or none.
 
-**Second model family.** Tick it for the waves where a shared blind spot would be costly: source selection (D2.1) and the comparison (D4). It is best effort. If the other host is unavailable or out of usage, proceed with a separate agent of the same family, record that in the Result, and do not wait. It never blocks a wave.
+**Same model on both sides is normal here.** The pass is a fresh agent with no share in the cook's reasoning; that is the independence the kitchen relies on. What covers a shared blind spot is mechanical: attacks the pass runs, tests that must fail, and the off-machine run on every push.
 
 ## Recipients
 
@@ -60,7 +60,7 @@ When a wave has to choose a design nobody here has built before, do not argue it
 
 - **Empty the inbox at every kickoff.** Each line in `kitchen/INBOX.md` is adopted or dropped, with the reason in the commit message. The inbox holds ten lines at most.
 - **Adopt in the strongest form that fits:** a check in a script (through a kitchen wave); else a line in the wave template or a role file; else a station card line. A new rule in AGENTS.md or this file is the last resort and must replace an old one: the two files together stay under 20 KB.
-- **One wave in six is for the kitchen itself.** Pick it from the numbers, not from opinion, and run it as an experiment with a before and an after (the hillclimb playbook). Improvement does not wait for a mistake: an idea from any agent's report can earn an inbox line.
+- **One wave in six is for the kitchen itself, and no more.** Kitchen waves never queue ahead of an approved product wave. Pick it from the numbers, not from opinion, and run it as an experiment with a before and an after (the hillclimb playbook). Improvement does not wait for a mistake: an idea from any agent's report can earn an inbox line.
 
 ## Resources
 
@@ -68,7 +68,7 @@ Anything a wave creates outside Git (containers, databases, temp directories, ba
 
 ## Records
 
-- `STATUS.md`: one screen, replaced at every wave close. Never appended to.
+- `STATUS.md`: one screen, replaced at every wave close. Never appended to. Only what blocks work now; other leftovers go to `BACKLOG.md`.
 - `waves/<id>.md`: the brief, then the result. One file per wave.
 - Git: history. `git log --first-parent master` is the list of accepted waves.
 - `.kitchen/runs/`: verify logs, ignored by Git. Quote the summary line in the wave file.
@@ -131,6 +131,7 @@ Closing one:
 > **Delivered:** up to three actual outcomes.
 > **Checks:** passed / incomplete / failed, with any material limit.
 > **Saved:** merged and pushed, or the blocker.
+> **See it yourself:** the exact commands or clicks, five minutes, to watch the milestone work.
 > **Next: D3 - proposed.** Outcomes, check, scope.
 > **Recommendation:** approve D3. Reply **Approve** or describe a change.
 

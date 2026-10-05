@@ -26,7 +26,6 @@ The CTO ticks the ones that apply. The reviewer answers every ticked one in the 
 - [ ] **Security:** does this add or change a check that keeps something out (hosts, paths, roles, identities, inputs)? The reviewer attacks it with hostile inputs and says which it tried.
 - [ ] **User experience:** does a person see or operate this? The reviewer uses it as that person would and says what was unclear, without reading the code first.
 - [ ] **Measurement fairness:** does this produce a number or comparison someone will rely on? The reviewer checks both sides had equal obligations, every attempt is counted, missing data is shown as missing, and each number comes with its run count, its spread and what limits it.
-- [ ] **Second model family:** the reviewer should be a different model family from the worker if one is available.
 
 ## Notes for the worker
 
@@ -36,7 +35,7 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 
 ## Result
 
-- Worker: <host / model> · Reviewer: <host / model>
+- Worker: <host / model> · Reviewer: <host / model> · Usage: <elapsed time, and tokens if the host reports them>
 - Commit: `<SHA>`
 - Verify: `<summary line from the reviewer's run>`
 - Verdict: PASS | FAIL · Level: ui-verified | test-verified | typecheck-only

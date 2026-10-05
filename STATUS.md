@@ -15,13 +15,14 @@ Replaced at every wave close. Last written 6 October 2026, ~07:00 (+08), by Devi
 - 5 Oct 2026: lean kitchen, Claude adapter, roadmap resequencing.
 - 5 Oct 2026: hold W005 and finish D1.2 under the new rules; remove the old kitchen's containers; K1.
 - 5 Oct 2026 (overnight message, naming = approval): **D2** and **D3.1**, plus kitchen waves K2 and K3.
+- 6 Oct 2026: an off-machine verify run on GitHub Actions, free tier (K8); removing legacy material from master after tagging (K9); a milestone walkthrough for the owner; no reliance on a second model family.
 
 ## Next
 
 1. The overnight queue is empty — D1.2, K2a, K2b, K3, D2.1-proto, D2.1, D2.2, D3.1 all PASS and merged.
 2. **D4 waits for the owner** — the Box-vs-contractor comparison milestone was not named tonight.
 3. Product option when the owner is back: exercise the loop on a real (non-fixture) request.
-4. Kitchen waves ready under the head chef's authority, each measured before and after: **K4** (numbers page and stall guard), **K5** (stop repeating work), **K6** (template database), **K7** (typecheck and workers). See [kitchen/INBOX.md](kitchen/INBOX.md).
+4. Kitchen waves, capped: **K4** (numbers page, stall guard, limit checks) and **K5** (stop repeating work), then measure. After that **K8** (off-machine verify run) and **K9** (legacy removal). K6 and K7 run only if verification is still above 15% of a run.
 
 ## Night queue
 
@@ -30,25 +31,13 @@ For `START.md overnight`. Work down the list; skip an entry whose dependency is 
 1. ~~D1.2~~ — PASS ui-verified `22ca7ca`, merged `80bbae6`.
 2. ~~K2a~~ — PASS `8c7f6a8` → `6f48940`. ~~K2b~~ — PASS `7583c08` → `1f8ef5d`. ~~K3~~ — PASS `8a53e23` → `661722d`.
 3. ~~D2.1-proto~~ — PASS; design decided (compiler-derived closure). ~~D2.1~~ — PASS `8f03aa3` → `bce810d` after one FAIL round (exclusion bypasses found and closed). ~~D2.2~~ — PASS `93d38f1` → `85035a9` (blind taster ran the real loop). ~~D3.1~~ — PASS `04fb6fc` → `48ac79a` (owner-side verify + scratch merge on the real submission).
-4. K4, K5, K6, K7 in order (kitchen waves). Verification was 30% of the last night run, so these go ahead of the usual one-in-six pace.
+4. K4, K5, then K8 and K9 (kitchen waves). A product wave the owner names goes ahead of any of them.
 5. D4 waits for the owner.
 
 ## Known problems
 
-- None blocking. Recorded residuals worth a later wave:
-- `readContext` is declared in box.json but never ships bytes — the blind taster saw the names, not the content. Decide whether read-context should ship (disclosure tradeoff) or leave the contract as-is.
-- The in-folder seal (`box/submit.mjs`) does not hash generated members (evaluator, scaffolds, the tool itself) — a recipient could weaken its own evaluator and still seal; D3.1 re-verifies owner-side so this is recorded, not fixed.
-- `realpathSync` on Windows preserves declared case — a case-aliased non-excluded input can emit at an alias-spelled path and double-ship under dedupe; cannot leak excluded bytes.
-- Owner checks live in a registry in `packages/box-package/owner-checks.ts` keyed on evaluator generator id — a new request kind needs a registered check or verify refuses as preparation-defect.
-- Patch-apply containment is lexical (`inside()`) — a committed symlink dir under an editable path could redirect a scratch write (no symlinks in this repo today).
-- Other minor items:
-- Ports 4000/4001 are held by Docker Desktop; host tests bind 127.0.0.2 with loopback mirrors (`scripts/host-test-runtime.mjs`).
-- `tests/box/delegation/support.ts` caches its run dir per module — one `delegationPool()` per file; fix when a test needs two.
-- `embedded-postgres` is a beta wrapper release, Windows-only install-policy entry.
-- Requesters see Amend controls on boxes they did not author (server refuses; cosmetic).
-- `doctor.mjs` `databases` check reports `unverified` since the synthetic stack was removed — honest label, not a failure.
-- Worker and reviewer roles on this host are both Devin agents; no second model family available — recorded per wave.
+None blocking. Leftovers are in [BACKLOG.md](BACKLOG.md).
 
 ## Decisions waiting for the CEO
 
-None.
+- **Next product step:** R1 (run the loop on a real request, starting with one of the kitchen's own waves) or D4 (the comparison). Recommendation: R1 first. Name either in a START message to approve it.

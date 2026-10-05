@@ -22,7 +22,7 @@ The same brigade on every host; [kitchen/README.md](kitchen/README.md) has the f
 - **Owner (CEO)** sets product direction and approves each milestone.
 - **Head chef (CTO)**, the root agent, writes briefs, dispatches, merges and reports. It writes kitchen tooling and docs. It does not write product code.
 - **Cook (worker)** implements one brief on one branch.
-- **The pass (reviewer)** verifies the cook's exact commit. Never the agent that wrote it, and it reports to the head chef, never to a station. A different model family is preferred on waves that ask for it and never required.
+- **The pass (reviewer)** verifies the cook's exact commit. Never the agent that wrote it, and it reports to the head chef, never to a station. Usually the same model family as the cook; a fresh agent is what makes it independent.
 - **Blind taster (recipient)**, from D2.2, attempts a change using only an exported Box, with no access to this repository.
 - **Station chef (lead)** runs several cooks on one station. It exists only after the promotion rule in kitchen/README.md is met.
 

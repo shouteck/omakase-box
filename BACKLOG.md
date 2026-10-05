@@ -1,0 +1,20 @@
+# Backlog
+
+Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks work now. The head chef adds a line here when a wave leaves something behind, and removes it when a wave fixes it or the owner drops it. One line each; link the wave file for detail.
+
+## Product
+
+- `readContext` is declared in `box.json` but its files do not ship: the blind taster saw the names, not the content. Decide whether read context ships (it discloses more) or the contract stays as it is. From D2.2.
+- The in-folder seal (`box/submit.mjs`) does not hash generated members (evaluator, scaffolds, the tool itself), so a recipient could weaken its own evaluator and still seal. The owner-side verify catches it today. From D2.2 and D3.1.
+- On Windows a case-aliased input that is not excluded can be emitted under the alias spelling and ship twice. It cannot leak excluded files. From D2.1.
+- Owner checks are a registry in `packages/box-package/owner-checks.ts` keyed on the evaluator generator. A new kind of request needs a registered check, or verify refuses it as a preparation defect. From D3.1.
+- Patch-apply containment is by path text. A committed symlinked directory under an editable path could redirect a scratch write. No symlinks in this repository today. From D3.1.
+- Requesters see Amend controls on Boxes they did not author. The server refuses correctly; the control should be hidden. From D1.2.
+
+## Kitchen and environment
+
+- Ports 4000 and 4001 are held by Docker Desktop when it runs; host tests bind 127.0.0.2 with loopback mirrors (`scripts/host-test-runtime.mjs`).
+- `tests/box/delegation/support.ts` caches its run directory per module, so one `delegationPool()` per test file. Fix when a test needs two.
+- `embedded-postgres` is a beta wrapper release and its install-policy entry covers Windows only. K8 needs the Linux entry.
+- `doctor.mjs` reports the `databases` check as unverified since the synthetic stack was removed. Honest label, not a failure.
+- Cook and pass have been the same model family on every wave so far. Accepted; see "Review" in KITCHEN.md.
