@@ -37,6 +37,7 @@ Milestone: K2 · Station: service-data · Base: master after K2a · Branch: `wav
 - Host binding: without `TRUSTED_CONTAINER_LISTEN` the services bind `127.0.0.1` — that is what we want; do not set it.
 - Playwright resolution uses `--host-resolver-rules` in the verify scripts already; no `/etc/hosts` changes.
 - `embedded-postgres` gives one server per verify run; both services share it via separate databases (`private_task`, `external_task`) — that matches what K2a establishes.
+- Known on this host: `127.0.0.1:4000` can be held by Docker Desktop's backend. Bind the test services to free loopback ports and keep the `Host: private.localhost:4000`-style headers — the tests' Host/Origin headers are the contract, not the bound port. The D1.2 browser test already does this.
 - If loosening the env schema turns out to need a bigger refactor than a scoped host-test mode, stop and report the shape you found rather than rewriting the bootstrap.
 
 ---
