@@ -1,8 +1,7 @@
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { build } from 'vite';
-import { docker } from '../../../scripts/docker.mjs';
-import { composeArguments } from '../../../scripts/synthetic-runtime.mjs';
+import { acquireHostRuntime } from '../../../scripts/host-test-runtime.mjs';
 import { byteHash, canonicalize, contentHash } from '../../../packages/contracts/hash.js';
 import { projectPublicListing } from '../../../packages/contracts/public/task.js';
 import { deterministicZip } from '../../../packages/compiler/zip.js';
@@ -52,15 +51,17 @@ async function bundleFor(entry: string): Promise<string> {
   return chunk.code;
 }
 
-async function runInService(service: 'private-api' | 'external-api', workdir: string, chunkSource: string, call: string, timeout: number): Promise<string> {
+async function runInService(runtime: Awaited<ReturnType<typeof acquireHostRuntime>>, service: 'private-api' | 'external-api', chunkSource: string, call: string, timeout: number): Promise<string> {
   const script = `${chunkSource}\ntry { console.log(JSON.stringify(await ${call})); } catch (error) { console.log(JSON.stringify({ failure: error instanceof Error ? error.message : 'fixture_failure' })); process.exitCode = 1; }\n`;
-  const result = await docker([...composeArguments, 'exec', '-T', '--workdir', `/workspace/services/${workdir}`, service, 'node', '--input-type=module'], { input: script, timeout });
+  const result = await runtime.exec(service, ['--input-type=module'], { input: script, timeout });
   const last = result.stdout.trim().split('\n').at(-1) ?? '';
   expect(result.code, result.stderr.slice(-4000)).toBe(0);
   return last;
 }
 
 it('the signed bridge publishes released data into the external store over real container separation', async () => {
+  const runtime = await acquireHostRuntime();
+  try {
   const releaseKeys = generateKeyPairSync('ed25519');
   const bridgeKeys = generateKeyPairSync('ed25519');
   const release = approvedRelease(true, releaseKeys);
@@ -70,7 +71,7 @@ it('the signed bridge publishes released data into the external store over real 
     transport: { eventId: randomUUID(), nonce: randomUUID(), ttlSeconds: 120 }
   };
   const privateSource = await bundleFor('services/private-api/bridge/live-fixture.ts');
-  const packetJson = await runInService('private-api', 'private-api', privateSource, `runBridgePacketFixture(${JSON.stringify(transportInput)})`, 60000);
+  const packetJson = await runInService(runtime, 'private-api', privateSource, `runBridgePacketFixture(${JSON.stringify(transportInput)})`, 60000);
   const packetFixture = JSON.parse(packetJson) as { packet: unknown; packageBytesBase64: string; sha256: string; manifestHash: string; failure?: string };
   expect(packetFixture.failure).toBeUndefined();
   expect(packetFixture.sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -89,11 +90,12 @@ it('the signed bridge publishes released data into the external store over real 
     conflictPacket: conflict.packet,
     conflictPackageBase64: conflict.packageBytes.toString('base64')
   };
-  const fixtureJson = await runInService('external-api', 'external-api', externalSource, `runBridgeReceiveFixture(${JSON.stringify(receiveInput)})`, 120000);
+  const fixtureJson = await runInService(runtime, 'external-api', externalSource, `runBridgeReceiveFixture(${JSON.stringify(receiveInput)})`, 120000);
   const output = JSON.parse(fixtureJson) as Record<string, unknown>;
   expect(output).toEqual(expect.objectContaining({ assurance: 'tested', published: true, duplicate: true, replay: true, conflict: true, immutableGuards: true, packageValidated: true, retainedAfterGuards: true, boardEntries: 1, claimRows: 1, payloadHashBindsDelivered: true }));
   expect(String(output.database)).toMatch(/^synthetic_bridge_[a-f0-9]{32}$/);
   expect(Array.isArray(output.scopeUnits) && (output.scopeUnits as string[]).length === 3).toBe(true);
   expect(Array.isArray(output.scopeDisciplines) && (output.scopeDisciplines as string[]).length === 3).toBe(true);
   expect(output.scopeReward).toEqual({ currency: 'USD', amountMinor: 10000 });
+  } finally { await runtime.cleanup(); }
 }, 240000);
