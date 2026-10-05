@@ -1,13 +1,13 @@
 # Status
 
-Replaced at every wave close. Last written 6 October 2026, ~07:00 (+08), by Devin as CTO, at overnight run close — the queue is finished.
+Replaced at every wave close. Last written 6 October 2026, ~09:30 (+08), by Devin as CTO, after K4 closed (daytime session).
 
 ## Now
 
-- **Accepted on master:** B0, B1.1, D1.1, the lean kitchen, K1, D1.2, K2a, K2b, K3, **D2.1** (`bce810d`), **D2.2** (`85035a9`), **D3.1** (`48ac79a`).
+- **Accepted on master:** B0, B1.1, D1.1, the lean kitchen, K1, D1.2, K2a, K2b, K3, **D2.1** (`bce810d`), **D2.2** (`85035a9`), **D3.1** (`48ac79a`), **K4** (`01c675b`).
 - **The delegation loop is closed end to end:** `packages/box-package` + `packages/box-cli` export a plain Box folder (box.json, compiler-derived source closure, editable + generated scaffolds, toolchain metadata, per-file SHA-256 provenance, staged lockfile, self-contained `box/submit.mjs`). A blind taster completed Request A from the folder alone and produced a bound `submission.json`; owner-side `box verify` applied it at its base, ran install/compile/outcome checks through the real loader and server, and scratch-merged with attempt identity. A no-op patch provably fails as `implementation-failure`.
 - **Verification is fully Docker-free:** every ordinary suite runs on the host against the disposable embedded Postgres; `test:containers` exists separately and needs Docker + the frozen M-series image.
-- **In flight:** nothing — the overnight queue is complete. Morning card: [waves/night-2026-10-05.md](waves/night-2026-10-05.md).
+- **In flight:** nothing. `node scripts/kitchen-stats.mjs` now reports kitchen numbers from `.kitchen/runs` + Git; verify warns `STALL` past 6 non-PASS runs or 90 min on a branch (flags `--stall-runs`/`--stall-minutes`, never changes exit codes).
 - **Held:** nothing.
 
 ## Approved by the CEO
@@ -31,7 +31,7 @@ For `START.md overnight`. Work down the list; skip an entry whose dependency is 
 1. ~~D1.2~~ — PASS ui-verified `22ca7ca`, merged `80bbae6`.
 2. ~~K2a~~ — PASS `8c7f6a8` → `6f48940`. ~~K2b~~ — PASS `7583c08` → `1f8ef5d`. ~~K3~~ — PASS `8a53e23` → `661722d`.
 3. ~~D2.1-proto~~ — PASS; design decided (compiler-derived closure). ~~D2.1~~ — PASS `8f03aa3` → `bce810d` after one FAIL round (exclusion bypasses found and closed). ~~D2.2~~ — PASS `93d38f1` → `85035a9` (blind taster ran the real loop). ~~D3.1~~ — PASS `04fb6fc` → `48ac79a` (owner-side verify + scratch merge on the real submission).
-4. K4, K5, then K8 and K9 (kitchen waves). A product wave the owner names goes ahead of any of them.
+4. ~~K4~~ — PASS `54ece57` → `01c675b`. K5 next (needs K4 numbers as baseline), then K8 and K9 (kitchen waves). A product wave the owner names goes ahead of any of them.
 5. D4 waits for the owner.
 
 ## Known problems
