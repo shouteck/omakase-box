@@ -166,7 +166,8 @@
       "verification": [
         "Reviewer runs export and the clean-directory checks on the supported fixture and on one slice of this repository, plus the missing-dependency and boundary negatives."
       ],
-      "handoff": "waves/D2.1.md"
+      "handoff": "waves/D2.1.md",
+      "approach": "Start with a prototype wave: two or three small throwaway attempts at selecting source for one fixture change (for example an owner-written manifest checked by import closure, selection derived from the TypeScript program starting at the editable paths, and type-only stubs for everything outside the editable paths). Compare them on the same clean-directory checks, disclosed-source share and preparation effort, then write the real brief from the winner."
     },
     {
       "id": "D2.2",

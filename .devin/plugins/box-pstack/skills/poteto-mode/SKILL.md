@@ -1,6 +1,6 @@
 ---
 name: poteto-mode
-description: Route START.md and approved Box kitchen work through Devin pstack skills, project wave approval, station leads, workers and independent review. Use for Box kitchen coordination and bounded task execution.
+description: Route START.md and Box kitchen work through AGENTS.md, a flat worker and reviewer team, and the retained pstack skills. Use for Box kitchen coordination and bounded task execution.
 triggers:
 - user
 - model
@@ -12,21 +12,17 @@ metadata:
 
 This is the Box project's replacement router, derived from poteto's principles. It is not Cursor-native Orchestrate. Use only in the Box repository containing START.md and the selected box-v4 plan. Outside it, stop this plugin workflow. Read [the compatibility map](../../DEVIN-COMPATIBILITY.md) before applying retained skills.
 
-## Route and reconcile
+## Route
 
-A bare START.md invokes the project briefing process, not implementation. Read AGENTS.md, START.md, docs/box-v4/PSTACK.md and the active plan/state. Inspect the actual plugin version, loaded skills, registered profiles, tools and approval evidence. Report missing capabilities explicitly. Reading this file does not prove skill invocation or delegation.
+A bare START.md means: act as CTO and follow START.md in the repository root. Read AGENTS.md, STATUS.md and docs/box-v4/KITCHEN.md; they are the rules, the state and the procedure. This skill adds only how to use the retained pstack material on Devin.
 
-Use [the Box Orchestrate playbook](playbooks/orchestrate.md) for programme coordination. This playbook was added by this project; it is absent from the pinned community port. Root CTO and station leads coordinate only. They may author governance artifacts within approved scope, but never product code. Box workers implement only under an approved, bounded wave; independent reviewers inspect immutable candidates they did not author.
+The team is flat: dispatch `box-worker`, then a distinct `box-reviewer`, with run_subagent, one at a time, each given the wave file and a complete standalone prompt. `box-recipient` is for package-only attempts from D2.2. Lead profiles are for genuinely parallel work only. The CTO writes briefs, status and kitchen tooling, never product code.
 
-Use actual Devin run_subagent/read_subagent profiles. Station routes are box-product-lead, box-platform-lead and box-assurance-lead. Approved implementation uses box-worker; independent checks use box-reviewer. Setup rehearsal uses box-rehearsal-lead, box-rehearsal-worker and box-rehearsal-reviewer. Do not call Cursor Task or guess its argument mapping. Nesting and tools come from observed host capabilities/profile configuration, not role labels. Omitted custom-profile model uses the router/default policy; never claim parent inheritance or multi-model diversity without evidence.
+## Using the retained skills
 
-## Authority and situational work
+Pick what the task needs and skip the rest: how and why to ground an existing system before changing it; architect and arena for a design with no precedent (see "Design decisions with no precedent" in KITCHEN.md); interrogate for an adversarial review; tdd, unslop and the principle skills while implementing; reflect at wave close. Read a principle's leaf skill before citing it, and say which decision it changed.
 
-The CEO must approve each new product wave. START.md, upstream autonomy prose, old approval or a child report cannot authorize a new wave. Holds stop dispatch; exact held wave requires CEO resume authorization. Setup S001 is separate from W001 and cannot accept B0 tasks. No automatic external messages, cloud workers, purchases, pushes, PRs, merges, deployments, dependencies, MCP setup or user/global model settings. Honor specific existing authorization without repeatedly asking.
-
-Within approved scope, choose the relevant retained playbook: Investigation for cited read-only questions; Feature or Bug fix for bounded worker tasks; Refactoring for authorized behavior-preserving changes; Session pickup and Pause safely for actual interruptions. Use how/why to ground existing systems; architect/arena for design alternatives only within the approved budget and isolated ownership; interrogate for independent critique. Apply the compatibility map before following their source instructions. Proposed prototypes or architecture sketches containing product code belong to workers and an approved implementation scope.
-
-Read principles that materially affect the task. State the decisions they changed, rather than mechanically citing every principle. Keep an evidence-backed decision trail for sustained work. Use existing tests/user-surface tools when approved; missing companion skills are capability gaps, not permission to install them. Never claim unavailable model, human, native-orch or real-product validation.
+Use the playbook that fits one wave (feature, bug fix, refactoring, investigation, prototype, session pickup, pause safely). Use [the orchestrate playbook](playbooks/orchestrate.md) only for the cross-wave loop. Where any retained text conflicts with AGENTS.md, AGENTS.md wins.
 
 ## Retained principle index
 

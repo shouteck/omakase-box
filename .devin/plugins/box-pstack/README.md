@@ -1,3 +1,5 @@
+> Updated 5 October 2026: the kitchen rules changed. AGENTS.md and docs/box-v4/KITCHEN.md govern; station leads, per-wave CEO approval and the documents named below as STANDING_ORDERS, CEO-SERVICE or DEVIN-SETUP are history under docs/legacy/.
+
 # Box pstack for Devin
 
 Project-scoped adaptation of poteto pstack, through HustleCoding/pstack commit e9e225bb1f3362a51ac4e489d16f2d7b13c248ff. Package version 0.11.3-box.1. LICENSE and NOTICE.md retain original terms and attribution unchanged.

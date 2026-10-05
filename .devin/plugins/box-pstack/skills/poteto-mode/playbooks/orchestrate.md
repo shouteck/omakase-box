@@ -1,15 +1,13 @@
-# Box Orchestrate playbook for Devin
+# Box orchestrate playbook for Devin
 
-NEW PROJECT ADAPTATION, not an upstream native pstack playbook/runtime. Derived from poteto principles and this project's kitchen protocol. Use only after reading the replacement poteto-mode and DEVIN-COMPATIBILITY.md.
+Project adaptation, not the upstream playbook. The upstream one is built for multi-day programmes with cloud workers and stacked pull requests, and says itself to drop that machinery when one agent could finish the work in a session. That is the usual case here, so this playbook is short.
 
-1. Reconcile active plan/state, exact approval, actual repository revision, existing edits, agents, leases and capabilities. Bare START.md permits read-only reconciliation and briefing. It cannot start product work.
-2. Gather bounded station reports. Logical station labels are not active agents. Produce one consolidated CEO briefing with scope, outcome, ownership, baseline, budget/tools, verification, integration permissions and stop conditions. Wait for each new wave's explicit human approval.
-3. Dispatch only approved tasks. Root coordinates station leads; leads dispatch registered workers and distinct reviewers. Use verified Devin tools and depth limits. Scope each standalone brief because children do not inherit parent conversation history. Rotate roles sequentially within actual concurrency limits; no blanket upstream panel fan-out.
-4. Give every candidate one writer/worktree and every shared integration path one owner. Workers bind output and actual checks to immutable candidate identity. Leads drain receipts and resolve routine in-scope issues, without writing product code. Changed scope/placement/permissions requires amended briefing and approval.
-5. Independent reviewer checks the exact candidate, approved expectations and actual evidence. It cannot change product code or bless a candidate by editing expectations. CTO alone records product task acceptance after independent evidence; plugin bookkeeping cannot approve completion.
-6. A human hold stops new dispatch; checkpoint children and preserve artifacts. START.md resumes only exact unheld approved unfinished scope. Held or revoked authority requires actual human authorization as specified in the project protocol. Never kill unrelated processes.
-7. At the wave boundary, report delivered artifacts, proof, limitations and next recommendation. Prepare the next briefing and wait again. No automatic PR/push/merge/next stage.
+You own the programme, never the code. Author briefs, dispatch, decide, report.
 
-## Separate setup rehearsal
-
-An explicitly approved S001 may test skill loading and synthetic lead/worker/reviewer dispatch while W001 remains pending. Record setup-only evidence and no B-series acceptance. A read-only rehearsal does not prove real code editing, evaluator behavior, Git merge or Cursor-native orch store. The future approved B1.1 pilot still proves bounded code execution and review.
+1. Read AGENTS.md, STATUS.md and docs/box-v4/KITCHEN.md. Reconcile STATUS.md with Git; Git is right.
+2. Pick the next wave of the approved milestone. If no milestone is approved, prepare the next proposal and present the decision card.
+3. Write the brief from templates/wave.md. The brief is the product: a worker cannot ask you a question. A field you cannot fill is a wave you have not scoped yet.
+4. Dispatch one worker on the wave's branch, then a distinct reviewer on the worker's commit. Completions are events to record, not reasons to review inline: review is the reviewer's job.
+5. On FAIL, run the fix loop in KITCHEN.md. Retry by cause: a transient tool failure, retry as is; a scope or size problem, respawn smaller; two attempts with nothing new, stop and question the shared assumption.
+6. On PASS, merge, push, remove what the wave created, replace STATUS.md, write the two reflect lines and make the change they name.
+7. Reach the CEO only for what AGENTS.md lists. Never ask "should I keep going". While a decision is pending, do the work that does not depend on it.

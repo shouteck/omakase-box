@@ -13,10 +13,13 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 2. **Branch.** `wave/<id>` from current master. Sequential work can use the main checkout. Parallel work gets its own worktree, one writer each.
 3. **Implement.** The worker gets the wave file and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
 4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
-5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new brief, no new approval. Rerunning a check is always allowed.
+5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new approval. Rerunning a check is always allowed. If the CTO changes the scope mid-wave, the wave file is edited first and the worker is pointed at it. After a second correction, stop resuming the same worker: start a fresh one with the wave file brought up to date, because instructions decay across resumes.
 6. **Close.** On PASS the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the branch.
+7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Make that change in the same sitting. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
 
-When the last wave of a milestone closes, send the CEO the finished card with the next proposal.
+When the last wave of a milestone closes, send the CEO the finished card with the next proposal. While a decision is with the CEO, keep doing everything that does not depend on it: briefs for the proposed milestone, read-only investigation, cleanup waves. Do not sit idle behind a gate.
+
+Keep the ceremony in proportion. A wave whose whole check is one cheap command does not need a page of brief; a wave that touches product behaviour does need a reviewer who is not the author.
 
 ## Verification
 
@@ -30,7 +33,9 @@ When the last wave of a milestone closes, send the CEO the finished card with th
 
 ## Review
 
-The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. It may add tests on the branch; it may not weaken existing ones.
+The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. For the third, ask of each new test whether it would still pass if the code under test returned nothing; a test that would is not a check. It may add tests on the branch; it may not weaken existing ones.
+
+The verdict carries its level, because "passed" means different things: `ui-verified` (a person-facing flow was exercised for real), `test-verified` (behavioural tests ran on the commit) or `typecheck-only`. Behavioural work needs better than `typecheck-only`.
 
 **Lenses.** A generalist reviewer looks hardest where it is told to look. The brief therefore ticks the lenses that apply (security, user experience, measurement fairness) and the reviewer must answer each ticked one in the Result. An unanswered ticked lens means the verdict is not PASS. Tick only what applies; most waves need one or none.
 
@@ -42,10 +47,14 @@ From D2.2 on, some waves need a `box-recipient`: an agent given only an exported
 
 ## When work stalls
 
-- Two attempts at the same blocker with no new information: stop. The CTO diagnoses and either simplifies the task, changes the approach or escalates with one recommendation.
+- Two attempts at the same blocker with no new information: stop. Write down the one assumption both attempts shared and question that before trying a third fix. Then the CTO simplifies the task, changes the approach or escalates with one recommendation.
 - A wave running at three times its size guess gets the same treatment.
 - Separate environment failures from product defects in the report. If the environment is the problem, fix the environment as its own small wave before continuing the product task.
 - Never stack unknowns. A wave that changes product code does not also introduce a new runtime, a new verification route or a new agent host.
+
+## Design decisions with no precedent
+
+When a wave has to choose a design nobody here has built before, do not argue it out in a brief. Run a prototype wave first: two or three small throwaway attempts at the same narrow task, each on its own branch or worktree, compared against the same checks. Keep the winner's idea, discard the code, then write the real brief. One at a time on this machine. The first use is D2.1, how a Box selects its source.
 
 ## Resources
 

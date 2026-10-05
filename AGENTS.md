@@ -34,7 +34,7 @@ A bare `START.md` means: read status, then continue the approved milestone or pr
 
 ## Rules that do not bend
 
-1. Reviewed, verified work only on master. Acceptance is the reviewer's PASS on a commit SHA plus a green `node scripts/verify.mjs` run on that SHA.
+1. Product code, tests and tooling reach master only through a reviewed wave. Acceptance is the reviewer's PASS on a commit SHA plus a green `node scripts/verify.mjs` run on that SHA. Kitchen documents (this file, STATUS.md, KITCHEN.md, briefs, agent profiles) are the CTO's to commit directly.
 2. Never edit a test's expected outcome to make a candidate pass. A missing, failed or unknown check is not a pass.
 3. One writer per branch. Parallel work uses separate worktrees.
 4. Report what actually happened. No invented test results, agent identities, model diversity, customer evidence or Git history.
