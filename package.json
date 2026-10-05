@@ -30,6 +30,7 @@
     "test:security": "node scripts/suite.mjs security",
     "test:containers": "node scripts/suite.mjs containers",
     "test:e2e": "node scripts/suite.mjs e2e",
+    "test:kitchen": "node scripts/suite.mjs kitchen",
     "research:report": "node scripts/suite.mjs research-report",
     "verify:mvp": "node scripts/verify-mvp.mjs"
   },
