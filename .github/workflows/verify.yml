@@ -1,0 +1,77 @@
+# Off-machine verify (wave K8): frozen install + the kitchen's acceptance command on a
+# GitHub-hosted Linux runner for every code push to master, logs uploaded for 3 days.
+name: verify
+
+on:
+  push:
+    # Iterating: wave/K8 triggers too; master-only before merge (K8 wave file records the proof).
+    branches: [master, wave/K8]
+    # paths-ignore mirrors the "no test reads these" set (INERT) in scripts/suite.mjs: a push
+    # that only touches docs/process files costs nothing. Anything else still runs.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'waves/**'
+      - 'kitchen/**'
+      - 'templates/**'
+      - 'milestones/**'
+      - 'research/**'
+      - 'tasks/**'
+      - '.devin/**'
+      - '.cursor/**'
+      - '.gitignore'
+
+# A newer push to the same ref cancels the stale run still in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# No secrets are referenced or needed anywhere in this workflow.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # fetch-depth: 0 — verify's scoped-check merge-base and run history read git.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # Same path as the host: repository-local pnpm 10.34.5 (scripts/tooling, lockfile-pinned).
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Install dependencies (frozen lockfile)
+        run: node scripts/pnpm.mjs install --frozen-lockfile
+
+      # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
+      # tests/auth/bootstrap/browser-cookie.test.ts (in `check`) and the e2e suite.
+      - name: Install Chromium for browser-backed tests
+        run: node scripts/pnpm.mjs exec playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
+
+      # Suite-list decision (K8, recorded in waves/K8.md): every package `test:*` suite except
+      # test:containers — that suite needs a local Docker daemon plus the frozen M-series
+      # public image (public-task-toolchain:m4-v1, built locally, not in any registry), which
+      # a hosted runner cannot provide. `check --full` covers bootstrap/auth/contracts/planner;
+      # they are still named here so the list reads as the whole suite set. Never silently
+      # narrowed: the exclusion is this line and the wave file.
+      - name: verify
+        run: node scripts/verify.mjs --full test:bootstrap test:auth test:contracts test:planner test:box-contracts test:box-auth test:box-delegation test:box-package test:analysis test:compiler test:runner test:portal test:acceptance test:security test:e2e test:kitchen
+
+      - name: Upload verify run logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kitchen-runs-${{ github.run_id }}
+          path: .kitchen/runs/
+          retention-days: 3
+          if-no-files-found: ignore
