@@ -58,6 +58,13 @@ jobs:
         env:
           PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
 
+      # check's live tests import services/*/dist bundles (e.g. intent-store.js). The host
+      # always has dist/ from earlier builds; a fresh runner checkout does not, and verify
+      # runs check before build — so build once up front. verify's own build step still
+      # runs for real afterwards (idempotent vite rebuild).
+      - name: Build service bundles for check's live tests
+        run: node scripts/pnpm.mjs build
+
       # Suite-list decision (K8, recorded in waves/K8.md): every package `test:*` suite except
       # test:containers — that suite needs a local Docker daemon plus the frozen M-series
       # public image (public-task-toolchain:m4-v1, built locally, not in any registry), which
