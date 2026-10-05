@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import { docker } from './docker.mjs';
-import { composeArguments } from './synthetic-runtime.mjs';
+import { acquireHostRuntime } from './host-test-runtime.mjs';
 
 let input = ''; for await (const chunk of process.stdin) { input += chunk.toString(); if (input.length > 65536) throw new Error('Fixture input too large.'); }
 const contract = JSON.parse(input);
+const runtime = await acquireHostRuntime();
+try {
 async function run(service, source) {
-  const result = await docker([...composeArguments, 'exec', '-T', '--workdir', `/workspace/services/${service}`, service, 'node', '--input-type=module', '-e', source]);
+  const result = await runtime.exec(service, ['--input-type=module', '-e', source]);
   assert.equal(result.code, 0, `${service} lifecycle guard failed: ${result.stderr.slice(-3000)}`);
   return JSON.parse(result.stdout);
 }
@@ -74,3 +75,4 @@ const externalResult = await run('external-api', `
   } finally { await pool.end(); }
 `);
 console.log(JSON.stringify({ assurance:'tested', private:privateResult, external:externalResult, scope:'synthetic SQL lifecycle/immutability checks only' },null,2));
+} finally { await runtime.cleanup(); }

@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
-import { docker } from './docker.mjs';
-import { composeArguments } from './synthetic-runtime.mjs';
+import { acquireHostRuntime } from './host-test-runtime.mjs';
 
-const result = await docker([...composeArguments, 'exec', '-T', '--workdir', '/workspace/services/private-api', 'private-api', 'node', '--input-type=module', '-e', `
+const runtime = await acquireHostRuntime();
+let result;
+try {
+  result = await runtime.exec('private-api', ['--input-type=module', '-e', `
   import assert from 'node:assert/strict'; import fs from 'node:fs'; import { randomUUID } from 'node:crypto'; import { Pool } from 'pg';
   const pool = new Pool({ host: process.env.PRIVATE_DATABASE_HOST, database: process.env.PRIVATE_DATABASE_NAME, user: process.env.PRIVATE_DATABASE_USER, password: fs.readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE, 'utf8').trim(), max: 2 });
   const deny = (sql, args, match) => assert.rejects(pool.query(sql, args), error => match.test(error.message), sql);
@@ -29,5 +31,6 @@ const result = await docker([...composeArguments, 'exec', '-T', '--workdir', '/w
     console.log(JSON.stringify({ lifecycle: 'tested', immutableRecords: 'tested', immutableDecisions: 'tested', ownerReviewAuthority: 'tested', solveClassification: 'tested', statusReasonShape: 'tested', bindingFormat: 'tested', authority: 'synthetic_schema_test_not_runner_verdict' }));
   } finally { await pool.end(); }
 `], { timeout: 120000 });
+} finally { await runtime.cleanup(); }
 assert.equal(result.code, 0, `readiness guard verification failed: ${result.stderr.slice(-3000)}`);
 console.log(JSON.stringify({ assurance: 'tested', private: JSON.parse(result.stdout) }));
