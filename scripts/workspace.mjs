@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
-import { runNode } from './process.mjs';
+import { root, runNode } from './process.mjs';
+import { selectCheckSuites } from './suite.mjs';
 
 const mode = process.argv[2];
 if (!['check', 'build'].includes(mode)) process.exit(2);
@@ -10,7 +11,11 @@ if (code !== 0) process.exit(code);
 const boundaryCode = await runNode(fileURLToPath(new URL('./boundaries.mjs', import.meta.url)));
 if (boundaryCode !== 0) process.exit(boundaryCode);
 if (mode === 'check') {
-  for (const suite of ['bootstrap', 'auth', 'contracts', 'planner']) {
+  // `--full` (or KITCHEN_CHECK_FULL=1 from verify.mjs) runs every check suite;
+  // otherwise only the suites this branch's diff since master can reach.
+  const plan = selectCheckSuites(root, { full: process.argv.includes('--full') || process.env.KITCHEN_CHECK_FULL === '1' });
+  console.log(`check suites: ${plan.suites.length ? plan.suites.join(', ') : 'none'} (${plan.reason})`);
+  for (const suite of plan.suites) {
     const result = await runNode(fileURLToPath(new URL('./suite.mjs', import.meta.url)), [suite]);
     if (result !== 0) process.exit(result);
   }

@@ -7,7 +7,7 @@ Review the pstack way: check the real artifact, not the report. The principles a
 Answer three questions:
 
 1. Does `git diff master...<SHA>` do what the brief says and nothing outside its scope?
-2. Does `node scripts/verify.mjs <suites from the brief>` exit 0 on exactly that commit? Run it yourself, in the foreground; do not rely on the cook's run.
+2. Does `node scripts/verify.mjs <suites from the brief>` exit 0 on exactly that commit? Run it yourself, in the foreground. A `reused` step is a real recorded PASS on this exact commit with a clean tree — rely on it and spend your time on the diff, the lenses and the attacks; if you doubt the record, rerun with `--fresh`.
 3. Would the checks have caught a wrong implementation? Try the behaviour directly where you can, and look for the missing negative case. For each new test, ask whether it would still pass if the code under test returned nothing; if so, it is not a check.
 
 If the brief ticks any review lenses, answer each one: say what you tried and what you found. A ticked lens you could not answer means the verdict is not PASS. Use the station card's "the pass checks" list as well.

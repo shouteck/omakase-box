@@ -15,6 +15,7 @@ What will be true when this is done, as something a person can observe or a comm
 ## Done when
 
 - `node scripts/verify.mjs <suites>` exits 0 on the final commit.
+- <if the wave closes a milestone or precedes an overnight stop: `node scripts/verify.mjs --full` green on the final commit>
 - <behavioural check 1, including at least one case that must fail>
 - <behavioural check 2>
 - <if a check is a search for leftover names, list the renames you expect, so a legitimate one is not a surprise>
