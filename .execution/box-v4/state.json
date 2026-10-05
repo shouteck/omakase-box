@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "planVersion": "box-v4-2026-10-04.1",
-  "projectStatus": "w004_completed_closure_review_pass_checkpoint_pending_w005_proposed",
+  "projectStatus": "w004_completed_and_saved_w005_awaiting_ceo",
+  "w004Checkpoint": {"commit": "43bcdc2a0a86cccd483332867f8f9747b3d7d676", "record": ".execution/box-v4/evidence/W004-C1/cto/checkpoint-saved.json", "pushed": true},
   "activeDelegationGraph": "tasks/box-delegation-task-graph.json",
   "delegationGraphActivation": ".execution/box-v4/approvals/W003-approval.json",
   "currentRootAcceptance": ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json",

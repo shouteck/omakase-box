@@ -22,6 +22,7 @@
   "executionStatus": "completed_capability_and_closure_review_checkpoint_pending",
   "proofSha256": "3f599412119fe2b1240703d66fa7133a882b65e320d7ac203b763e0f34e564ec",
   "workerHashSupplement": "Same worker hash-only foreground followup completed with no further write",
-  "saving": "independent_closure_and_next_proposal_pass_checkpoint_pending",
+  "saving": "committed_and_confirmed_private_origin_master",
+  "checkpoint": {"commit": "43bcdc2a0a86cccd483332867f8f9747b3d7d676", "record": ".execution/box-v4/evidence/W004-C1/cto/checkpoint-saved.json", "pushed": true},
   "nextProposal": ".execution/box-v4/briefings/W005.md"
 }

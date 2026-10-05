@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_independent_W004_staged_parity",
+  "waveId": "W004",
+  "reviewer": "box-reviewer/f3ab3b2f",
+  "lead": "box-product-lead/362e0c60",
+  "attribution": "Faithful excerpt of actual same-reviewer full stage-parity verdict returned via lead; root persisted after checkpoint, not child-written or inside earlier commit",
+  "verdict": "PASS",
+  "reviewedBase": "fd57788663e2867b46f2f3ce06e419c8fb828bfe",
+  "stagedPathCount": 13,
+  "parity": "Exact declared whitelist and zero scoped unstaged drift across all13staged files",
+  "proofSha256": "3f599412119fe2b1240703d66fa7133a882b65e320d7ac203b763e0f34e564ec",
+  "nextBriefSha256": "4564159d6de8f622f20bbf0baaab69991bbccb0e764d563c931f7fa8347f04f9",
+  "snapshotMetadataHashes": {"state": "5f8017b9911a0469af637fd8bfd4c8abebe53fe43414360b107026fc18014745", "W004binding": "b59bbe987992ff3b3e0818096ee827c39a714a977b3ccf69b8da44ccae5f02cc", "W004wave": "41fd94dcba111ee243cd5d91fb9757b75ceb26da2f27cf5c66ca9e4694c2f5ff", "closureReview": "e92fd03d5b28f6fe50e734d9e56432c913c9e08622d99a5a50bfd87770515d01"},
+  "scopePrivacy": "Owned capability proof and W004 closure/W005 unapproved governance only; no product/design/config/secret bytes, excluded unrelated relay/recovery material remains unstaged",
+  "nextWaveGate": "D1.2 pending and W005 approval null/authorizesDispatch false",
+  "reportedCommands": "Scoped Git cached name-status/diffs/unstaged scoped drift/remote-get-url/rev-parse and actual sha256sum hashes; all exit0, durations not exposed",
+  "readOnlyLimit": "Reviewer declined git write-tree because it writes Git objects; actual committed tree is established by root separately",
+  "factualBookkeepingAllowed": "Only actual commit/push status/SHA/checkpoint pointers and root-attributed staged-review receipt, no substantive re-review for these observed facts; changed proposal/design/actors/resources/approval requires affected review",
+  "notCommitOrPushClaim": true
+}
