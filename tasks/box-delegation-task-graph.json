@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "K1 (done) -> D1.2 (resume from wave/D1.2) -> D2 -> D3.1 -> D4 -> D3.2. K2 and K3 are kitchen cleanup waves that can run whenever a product wave is parked or waiting.",
+    "sequence": "Product: D4 waits for the owner. Kitchen: K4 (numbers and stall guard) -> K5 (no repeat work) -> K6 (template database) -> K7 (typecheck and workers), each measured before and after.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -418,30 +418,101 @@
     {
       "id": "K5",
       "milestone": "K",
-      "title": "Make check cheaper per wave",
+      "title": "Verify speed 1: stop repeating work",
       "dependencies": [
         "K4"
       ],
       "writePaths": [
-        "scripts/workspace.mjs",
         "scripts/verify.mjs",
+        "scripts/workspace.mjs",
         "scripts/suite.mjs",
         "package.json",
-        "templates/wave.md"
+        "tests/kitchen/**",
+        "templates/wave.md",
+        "docs/box-v4/KITCHEN.md",
+        "kitchen/roles/reviewer.md"
       ],
       "deliverables": [
-        "Hillclimb one number: median seconds for the verify run a typical wave needs, measured with K4's page before and after.",
-        "Candidates to try, smallest first: verify skips a suite the brief names when check already ran it in the same run; check stops running legacy suites that the wave did not touch and a full pass moves to milestone close; incremental typecheck. Keep only what the numbers support."
+        "A step that already passed on this exact commit, with a clean tree, is not run again: verify reads its own summaries, reports the step as reused with the run it came from, and --fresh forces a real run. A reused result is never offered for a dirty tree or a different commit.",
+        "A suite named in the brief is not run a second time inside the same invocation when check already ran it.",
+        "check runs the typecheck, the boundary check and only the suites whose paths the branch touched since master; a change to shared tooling (scripts/, package.json, the lockfile, test config) runs everything. --full runs every suite, and the head chef runs --full before a milestone closes and before each overnight stop.",
+        "KITCHEN.md and the reviewer role say what this means for the pass: it may rely on a recorded PASS for the same commit and spend its time on the diff, the lenses and its own attacks; it runs --fresh when it has any reason to doubt the record."
       ],
       "acceptance": [
-        "The before and after figures come from at least five runs each, with spread, on the same commit.",
-        "Every suite still runs at least once before a milestone closes, and no assertion is removed.",
-        "A deliberately broken test in a skipped suite is still caught by the milestone-close run."
+        "Before and after come from scripts/kitchen-stats.mjs (K4), at least five runs each on the same commit, with spread. Keep a change only if the numbers support it.",
+        "A deliberately broken test in a suite the branch did not touch is still caught by --full.",
+        "Changing one byte and committing invalidates every reused result for that branch.",
+        "No assertion is removed or weakened."
       ],
       "verification": [
-        "Reviewer re-measures on its own runs and breaks one test to confirm it is still caught."
+        "Reviewer re-measures on its own runs, breaks one test in an untouched suite to confirm --full catches it, and tries to obtain a reused PASS for a commit that never passed."
       ],
-      "handoff": "waves/K5.md"
+      "handoff": "waves/K5.md",
+      "baseline": "Night run of 5 October 2026: 120 verify minutes in 398; 11 of 25 passing runs repeated suites that had already passed on the same commit (37 minutes); check about 106 s per run; the auth suite ran 18 times.",
+      "lenses": [
+        "security: the reuse record is the thing being trusted; try to get a false PASS out of it",
+        "measurement fairness"
+      ]
+    },
+    {
+      "id": "K6",
+      "milestone": "K",
+      "title": "Verify speed 2: clone a migrated template database",
+      "dependencies": [
+        "K5"
+      ],
+      "writePaths": [
+        "tests/box/auth/support.ts",
+        "tests/box/delegation/support.ts",
+        "scripts/host-test-runtime.mjs",
+        "scripts/verify.mjs",
+        "tests/kitchen/**"
+      ],
+      "deliverables": [
+        "verify migrates one template database per run for each migration set, and test helpers create their database with CREATE DATABASE ... TEMPLATE instead of replaying every migration per test file.",
+        "The template is rebuilt whenever the migration files change (key it on their content), has no open connections when it is cloned, and is dropped with the run.",
+        "One test still migrates from empty, so a broken migration cannot hide behind a stale template."
+      ],
+      "acceptance": [
+        "Before and after come from scripts/kitchen-stats.mjs (K4), at least five runs each on the same commit, with spread. Keep a change only if the numbers support it.",
+        "A migration edited after the template was built is reflected in the next run.",
+        "Nothing is left behind after verify."
+      ],
+      "verification": [
+        "Reviewer adds a throwaway migration, confirms the next run sees it, removes it, and re-measures."
+      ],
+      "handoff": "waves/K6.md"
+    },
+    {
+      "id": "K7",
+      "milestone": "K",
+      "title": "Verify speed 3: typecheck and parallel workers",
+      "dependencies": [
+        "K6"
+      ],
+      "writePaths": [
+        "tsconfig.json",
+        "scripts/workspace.mjs",
+        "scripts/vitest.config.mjs",
+        "scripts/verify.mjs",
+        "package.json",
+        "pnpm-lock.yaml",
+        ".gitignore"
+      ],
+      "deliverables": [
+        "Try, smallest first, and keep only what the numbers support: incremental typecheck with its cache under .kitchen/; two or three test workers instead of one, each with its own database, within the 16 GB limit; the native TypeScript 7 compiler for the typecheck step only.",
+        "packages/analyzer uses the TypeScript 6 compiler API. If TypeScript 7 is adopted for typechecking, the analyzer keeps the version it needs and both are pinned; if that cannot be done cleanly, record why and stop.",
+        "Any test that only passed because it ran alone is fixed or reported by name, not hidden by going back to one worker without saying so."
+      ],
+      "acceptance": [
+        "Before and after come from scripts/kitchen-stats.mjs (K4), at least five runs each on the same commit, with spread. Keep a change only if the numbers support it.",
+        "Typecheck results are identical before and after on a commit with a deliberate type error.",
+        "Peak memory during verify is recorded and stays within what the machine can give."
+      ],
+      "verification": [
+        "Reviewer introduces a type error and an order-dependent test on a scratch branch and confirms both are caught."
+      ],
+      "handoff": "waves/K7.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"
