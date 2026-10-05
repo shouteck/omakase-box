@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "private-shop-request-b",
+    "name": "Non-mutating, deterministic ranking",
+    "version": 1
+  },
+  "outcome": "Ranking silently reorders the caller's array and resolves ties unpredictably. Give me a ranking function that leaves the input untouched and breaks equal scores by the item's ASCII id, ascending. Reject malformed input - non-ASCII ids, non-finite scores, duplicate ids, more than 1000 items - instead of ranking it.",
+  "sourceRoot": "examples/private-shop",
+  "entrypoints": [],
+  "editable": [
+    { "kind": "generated-scaffold", "owner": "src/ranking/rankItems.ts", "box": "src/ranking/rankItems.ts", "generator": "rank-items-contract" }
+  ],
+  "readContext": ["src/ranking/rankPrivateItems.ts", "src/selection/api.ts"],
+  "declaredDependencies": {},
+  "excludedPrefixes": ["src/private/", "reference-solutions/", "node_modules/", "dist/"],
+  "inventoryExcludePrefixes": ["node_modules/", "dist/", ".git/", "reference-solutions/", "box-agreements/"],
+  "toolchain": { "node": ">=24.11.0 <25", "pnpm": "10.34.5", "typescript": "6.0.3", "vitest": "5.0.1", "typesNode": "24.13.6" },
+  "checks": ["pnpm exec tsc --noEmit", "pnpm exec vitest run evaluator/request-b.test.ts"],
+  "evaluator": [
+    { "box": "evaluator/request-b.test.ts", "generator": "private-shop-request-b" }
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "instructions": "Edit only the files listed in box.json editable paths. Return the changed package files; the owner maps src/ranking/rankItems.ts to the new owner path src/ranking/rankItems.ts."
+  }
+}

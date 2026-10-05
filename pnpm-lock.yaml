@@ -72,8 +72,23 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
 
+  packages/box-cli:
+    dependencies:
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
   packages/box-contracts:
     dependencies:
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
+  packages/box-package:
+    dependencies:
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
       zod:
         specifier: 4.6.5
         version: 4.6.5
