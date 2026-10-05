@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released lifecycle under setup-release-2.json (sha256 3a75cc620dd685282582fa1298a05b31a5d0d65eeb48e2ae2a5c2f5348502c49, superseding attempt-1 release); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_DEPS_EACCES",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupRelease2Sha256": "3a75cc620dd685282582fa1298a05b31a5d0d65eeb48e2ae2a5c2f5348502c49 (verified)",
+    "rootSetupRelease": true,
+    "independentReviewVerdict": "PASS_PREEXECUTION (independent-review-round19.json, sha256 1da886c729c399ffec9c36bb38496869f03c64601eca95e6463544691251579d)",
+    "hostMjsSha256": "2df8b379800f32338480e5c4155c6626fca331e3e60ab16878796daa4db1da4b (verified, no drift)",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d (verified, no drift)",
+    "attempt1Reconciliation": "zero W005 resources existed pre-run; none needed"
+  },
+  "modes": [
+    {"mode": "plan", "exit": 0, "durationMs": 5, "result": "full environmentPlan phases returned; the round-19 inspect-format fix resolved the attempt-1 failure"},
+    {"mode": "ledger", "exit": 0, "durationMs": 13, "result": ".execution/box-v4/evidence/D1.2/worker/environment-ledger.json written", "sha256": "f8d48f4774411dac539dd8756e4770e2c019914eb0cb0cbad3ad0130c9de18f7"},
+    {
+      "mode": "deps",
+      "exit": 1,
+      "failure": "Error EACCES: permission denied, lstat 'C:\\Users\\shout\\AppData\\Local\\Temp\\w002-b11-stage\\node_modules\\.pnpm\\@esbuild-kit+core-utils@3.3.2\\node_modules\\source-map-support' at scanLinks (environment-host.mjs:459) inside buildExpectedDependencyInventory (line 478).",
+      "analysis": "Source closure verification itself had already succeeded earlier in the deps mode path (failure occurred AFTER verifyDependencyClosure(source) returned ok, while enumerating .pnpm/*/node_modules link entries for the expected inventory). Post-failure read-only characterization: the entry is a genuine Windows SYMBOLIC LINK (Git Bash stat reports 'symbolic link', target ../../source-map-support@0.5.21/node_modules/source-map-support), NOT a junction. Cygwin stat reads the reparse point fine, but Node fs.lstat throws EACCES on it in this execution context — a Node/Windows symlink-reparse read denial on the historical W002 staged tree, not a code path the worker may weaken. Other .pnpm link entries enumerated before it were junctions or readable links; this is the first true symlink encountered.",
+      "destState": "DEPS_ROOT C:/Users/shout/AppData/Local/Temp/w005-d12-delegation-deps was NEVER created (verified: path absent) — failure occurred before ensureOwnedDir; no partial destination, nothing copied."
+    }
+  ],
+  "modesNotRun": ["create", "start", "verify", "stage", "supervise"],
+  "dockerCalls": "None this attempt; no create/exec/cp/inspect.",
+  "resourcesCreated": [],
+  "receiptsPreserved": {
+    "environment-ledger.json": "f8d48f4774411dac539dd8756e4770e2c019914eb0cb0cbad3ad0130c9de18f7 (valid; deps ordering gate would accept it on any future re-released run)"
+  },
+  "requiredAction": "BLOCKED_NEEDS_HOST_RECONCILIATION: Node fs.lstat is denied (EACCES) on true symbolic-link entries inside the historical W002 staged .pnpm tree, while junctions and Cygwin stat work. Root must decide: run the released deps mode under a Windows account/context with symlink reparse-read rights, or convert the source links to junctions via an authorized source-tree reconciliation (worker has no authority to mutate the source tree or weaken scanLinks). If access is resolved, deps mode alone can re-run under a re-release: the ledger gate is satisfied and DEPS_ROOT was never created, so there is no partial state.",
+  "checksRun": [
+    {"command": "sha256sum release-2 + review-19 + 2 leased files", "exit": 0},
+    {"command": "controller('plan')", "exit": 0},
+    {"command": "controller('ledger')", "exit": 0},
+    {"command": "controller('deps')", "exit": 1, "error": "EACCES lstat .pnpm junction entry"},
+    {"command": "ls DEPS_ROOT (post-failure verification)", "result": "absent"}
+  ],
+  "unperformed": "No create/start/verify/stage/supervise; no password generated; no source edits; no Git writes; no cleanup or teardown."
+}

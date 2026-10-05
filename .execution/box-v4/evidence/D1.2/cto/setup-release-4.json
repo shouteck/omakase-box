@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_setup_release",
+  "supersedes": {
+    "path": ".execution/box-v4/evidence/D1.2/cto/setup-release-3.json",
+    "sha256": "250b87acba1f9492739b0d6a3c28c52074d094581042b82bc9aae986d4eab62f",
+    "note": "The attempt-3 release remains preserved unchanged for history; it bound host sha256 be81885d... which is superseded by the corrected candidate."
+  },
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "recordedAtUtc": "2026-10-05T11:35:54Z",
+  "authority": [
+    ".execution/box-v4/approvals/W005-approval.json",
+    ".execution/box-v4/approvals/W005-r2-approval.json"
+  ],
+  "authorityNote": "The rootSetupRelease:false fields in the approval files reflect the pending state at approval time; this root record is the separate contemplated release those approvals anticipated.",
+  "review": {
+    "path": ".execution/box-v4/evidence/D1.2/cto/independent-review-round21.json",
+    "verdict": "PASS_PREEXECUTION"
+  },
+  "dependencySourceReadiness": {
+    "linuxDependencies": {
+      "status": "ok",
+      "packageCount": 131,
+      "fileCount": 7274,
+      "closureSha256": "d6413531fdfb601a93738990c3e6f8c44e319b7acfc9a1540edecc30f21d66a9",
+      "synthesizedLinks": {
+        "packages": 54,
+        "links": 148,
+        "placement": "sibling positions in containing node_modules"
+      }
+    },
+    "linuxTooling": {
+      "status": "ok",
+      "packageCount": 1,
+      "fileCount": 1077,
+      "closureSha256": "b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6",
+      "synthesizedLinks": {
+        "packages": 0,
+        "links": 0
+      }
+    }
+  },
+  "candidateSnapshot": {
+    "workerReceipt": ".execution/box-v4/evidence/D1.2/worker/correction-receipt-21.json",
+    "workerReceiptSha256": "73ae53e7eab53b67b7d0760c958864bf7b13ac0d8d58c8dc6fe8568c66eccce1",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d",
+    "hostSha256": "27988ab6ec96d2dfff78a107c0d78276188cf44a3e3857fef843991f5631a8a4",
+    "pathMapSha256": "27147a081dd3371a7586b6df00bcf7fe226140ad4ae6e2c45b24c8f1257f4689",
+    "pathMapSha256Methodology": "sha256(JSON.stringify(receipt-21 pathSha256))"
+  },
+  "history": "Attempt 1 (runtime-run-1.json, sha256 72e9b0cd5d4f87d515cb99fa4148ff5c75b7a0037b5a5a0a28bf4ab5953bf200) stopped fail-closed at plan on the inspect-format defect with zero resources created. Attempt 2 (runtime-run-2.json, sha256 e73d9521744a61ed9c875f46e7651866b38f437f7f80230856fc5cc443cac407) stopped fail-closed at deps on an EACCES lstat of a W002 source symlink; DEPS_ROOT was never created. Attempt 3 (runtime-run-3.json, sha256 8f2584d8c59dfed1d02a56398d593bf689f87461632a25e21c68b7d2c0264edd) copied deps fully then failed the post-copy destination verify on wrong-layout dep links; ledger environment-ledger.json f8d48f47... exists and is reusable; zero containers or network were ever created. This is attempt 4 for the corrected candidate.",
+  "rootSetupRelease": true,
+  "authorizedDisposal": {
+    "action": "delete_directory",
+    "target": "C:/Users/shout/AppData/Local/Temp/w005-d12-delegation-deps/node_modules",
+    "scope": "ONE bounded destructive action only: deletion of the W005-owned generated node_modules directory populated with the wrong-layout inventory by attempt 3. It contains solely derived copies of public npm package files — no secrets, no W002 state, no receipts.",
+    "preconditions": "Before removal it must be verified that the path resolves under the owned DEPS_ROOT and contains only expected derived node_modules content.",
+    "exclusions": "No other deletion, cleanup, drop or reconciliation is authorized; everything else stays fail-closed."
+  },
+  "releasedModes": [
+    "plan",
+    "ledger",
+    "deps",
+    "create",
+    "start",
+    "verify",
+    "stage",
+    "supervise"
+  ],
+  "releasedModesPolicy": "Fixed order listed; each controller mode invoked once via controller(mode); stop on first failure or uncertain result; no replay of interrupted/unknown commands without separate authority. final_verify is NOT a controller mode (ALLOWED_MODES excludes it): it is released only as the fixed environmentPlan final_verify argv set (containerInspectArgv for both containers plus networkIdArgv), executed once after supervise completes.",
+  "resumeSemantics": "The ledger already exists; controller('ledger') is idempotent by design (creates only if absent), so the executor may rerun the full ordered sequence including ledger without violating once-only semantics. deps resumes after the single authorized disposal above; create resumes from zero resources.",
+  "releasedResources": {
+    "network": {
+      "name": "w005-d12-delegation-net",
+      "internal": true
+    },
+    "containers": [
+      {
+        "name": "w005-d12-delegation-db",
+        "image": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+        "user": "999:999"
+      },
+      {
+        "name": "w005-d12-delegation-runner",
+        "image": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+        "user": "1000:1000"
+      }
+    ],
+    "alias": "w002-b11-box-db-r4-env2",
+    "constraints": [
+      "Fixed limits/tmpfs",
+      "cap-drop ALL",
+      "no-new-privileges",
+      "read-only roots",
+      "Only two read-only dependency mounts",
+      "No ports",
+      "No extra volumes"
+    ]
+  },
+  "secretHandling": "Synthetic in-memory dbPassword passed to both container creates; never persisted; redacted from records.",
+  "constraints": [
+    "Cumulative DB cap of 12 across prefixes w002_b11_r4run_ and w005_d12_run_ checked before and after each inner command",
+    "Collision, drift or missing inventory fails closed with no delete/reconcile/overwrite beyond the single authorizedDisposal above",
+    "No old W002 mutation",
+    "No cleanup/drop/reset beyond the single authorizedDisposal above",
+    "Preserve resources at interruption or completion",
+    "No commits/pushes until acceptance",
+    "No D2-D4, pilot, outreach, payment or deploy activity"
+  ],
+  "executorInstruction": "node --input-type=module -e invoking controller(mode) once per released mode in fixed order (plan,ledger,deps,create,start,verify,stage,supervise) with the default reviewed manifest path only; final_verify is then run once, not via controller(mode), as the fixed environmentPlan final_verify argv set (containerInspectArgv for both containers plus networkIdArgv) after supervise completes",
+  "hostDockerCallLimit": "Host docker calls limited to controller-generated fixed argv.",
+  "durableInnerRecords": "Durable inner command records must be retrieved and validated before treating commands as run.",
+  "acceptanceReleased": false,
+  "checkpointReleased": false
+}

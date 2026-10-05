@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round4",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r1",
+  "actor": "subagent_general/c0c68c39 (logical role handle; actual returned envelope is supplied/bound externally by lead/root — no execution envelope invented here)",
+  "resumeTarget": "c0c68c39",
+  "previousEnvelope": "e753ad79",
+  "reviewerNote": "Requested reviewer f3ab3b2f; last completion envelope 23bce751 — reported transparently, not proof of name binding.",
+  "inResponseTo": "Root PREEXECUTION_FAIL on host safety: findings 1-7 (image-ID misuse, false host-exit supervision, unbound receipt paths, global 12-DB budget, stage/dependency closure, missing controller, preserve R1-R8/D1-D5)",
+  "status": "SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "leaseCompliance": "Only two leased paths changed this round: tests/box/delegation/environment-host.mjs and tests/box/delegation/environment-manifest.json, plus this append-only receipt. No new source/test/config files, no governance/cto/state writes, no comments added or removed, no dependency/profile/auth/security/original-support/expected-outcome edits.",
+  "corrections": [
+    {"id": 1, "finding": "image refs were repo@digest strings; runner Config.User pwuser vs runtime uid 1000; db uid-999 account unproven", "fix": "RUNNER_IMAGE/DB_IMAGE constants now bare local image IDs sha256:eb4a84ec…/sha256:639ab7ce… used verbatim in docker create; loadEnvironmentManifest hard-asserts bare IDs; imageIdVerifyArgv emits scoped inspect '{{.Id}}' only for the two approved pins; manifest documents the ID-vs-digest distinction. Runner create keeps --user 1000:1000 and verify mode requires exec 'id -u' == 1000 plus scoped HostConfig inspect before readiness. DB uid-999 gate added as dbAccountCheckArgv ('docker exec <db> getent passwd 999'), a fail-closed 'account_gate' phase in environmentPlan and a throwing check in controller verify (environment_db_account_unverified). The only same-image owned resource is the old W002 db container; its reuse authority is ambiguous so NO probe was run and the fact is recorded UNVERIFIED.", "files": ["tests/box/delegation/environment-host.mjs", "tests/box/delegation/environment-manifest.json"]},
+    {"id": 2, "finding": "host docker exec exit must not be claimed as Linux command/descendant completion", "fix": "Replaced host-side supervision with an in-runner supervisor: runnerEntryArgv(i) emits the single reviewed fixed argv 'docker exec --workdir /stage <runner> node /stage/tests/box/delegation/environment-host.mjs supervise <i>'. Inside, superviseInner spawns the literal ALLOWED_COMMANDS[i] via detached node child, records PID/PGID, waits 'exit' AND both stdio stream 'close' events, applies 480000ms -> SIGTERM(-pgid) -> 5000ms -> SIGKILL(-pgid) -> 10000ms drain, then verifies owned-descendant absence with fixed 'ps -eo pid=,pgid=' argv; state is 'completed' only when exit known AND stdio closed AND zero remaining descendants, else 'interrupted'/'unknown'. COMPLETE stdout/stderr stream to digest-addressed files command-<i>-<hash>.stdout/.stderr under the owned receipt dir; records hold paths+sha256+redacted descriptor. Host docker exec exit is transport only.", "files": ["tests/box/delegation/environment-host.mjs"]},
+    {"id": 3, "finding": "receipt/ledger path binding insufficient; superviseBatch persisted nothing before spawn; interrupted state could be treated as unstarted", "fix": "manifest receiptDirs binds the only allowed roots: worker receipts dir, owned stage receipts dir, /stage/receipts. atomicWriteJson resolves canonical root membership, walks every destination ancestor rejecting symlinks, rejects non-regular existing targets, creates tmp via open 'wx' then atomic rename; no arbitrary output path; secrets hashed (sha256Json) never persisted. superviseInner appends a redacted 'started' ledger record before spawn; superviseBatch refuses to replay any index whose ledger shows an 'interrupted' entry — it must be explicitly reconciled, never silently rerun.", "files": ["tests/box/delegation/environment-host.mjs", "tests/box/delegation/environment-manifest.json"]},
+    {"id": 4, "finding": "global 12-DB cap across mixed prefixes; suite parallelism; reserve-ahead budget", "fix": "manifest commands.supervision.maxWorkers=1 fixed; database.runPrefixes lists both w005_d12_run_ and w002_b11_r4run_ with budgetGate text; support.ts delegationPool already counts BOTH prefixes in pg_database before each CREATE and refuses on exhaustion preserving all DBs. superviseBatch accepts countRunDatabases callback: pre-check before each command (fail-closed on unknown/>=12), post-count recorded into the command record ('unknown' on non-numeric). LIMITATION: the pre-existing harness 'migratedPool' helper lives outside the 22 leased paths and its single-prefix count could not be corrected in-lease — flagged for review/amendment.", "files": ["tests/box/delegation/environment-manifest.json"]},
+    {"id": 5, "finding": "dependency mounts/stage closure", "fix": "DEPENDENCY_MOUNTS is now the fixed approved pair only: hostSubpath 'node_modules'->'/stage/node_modules' and 'tooling-node_modules'->'/stage/scripts/tooling/node_modules'; dependencyMountArgv rejects any other hostSubpath/containerTarget and canonicalizes hostSubpath under owned DEPS_ROOT; manifest rule requires resolved pnpm link closure + provenance + digests before any argv. Stage: stageFiles unchanged fail-closed (bound root, per-segment forbidden names incl. .env*, ancestor symlink walk, regular-file sources, realpath containment, 'wx' exclusive); stageCopyArgv() restored argument-free emitting exactly ['cp', STAGE_ROOT+'/.', RUNNER_NAME+':/stage'] of already hash-listed bytes only.", "files": ["tests/box/delegation/environment-host.mjs", "tests/box/delegation/environment-manifest.json"]},
+    {"id": 6, "finding": "no single reviewed controller path", "fix": "controller(mode, manifestPath, options) dispatches only ALLOWED_MODES {plan, ledger, create, start, verify, stage, supervise}: 'ledger' creates the redacted environment-ledger.json under the worker receipt dir before any mutation; 'create' runs only the three fixed create argv (network/db/runner), writes per-resource argvHash (not argv, not secrets) and returned IDs into the ledger for reconciliation, and refuses collisions via inspectResource; 'start' runs the two fixed start argv; 'verify' enforces getent passwd 999 gate, runner id -u == 1000, and exact internal-network ID via scoped inspect — any failure throws (no bypass); 'stage' documents inventory-gated staging; 'supervise' directs to superviseBatch. dbCreateArgv now takes the create-time password as a parameter (validated, never persisted). Invocation after root release: node tests/box/delegation/environment-host.mjs-adjacent call — i.e., a released orchestrator calls controller('plan'|'ledger'|'create'|'start'|'verify') then superviseBatch(0..7); no general command strings are accepted.", "files": ["tests/box/delegation/environment-host.mjs"]},
+    {"id": 7, "finding": "preserve prior corrections", "fix": "No edits to preparation/types, orchestrator, routes, store, schema, migration, console, or test files this round; deterministic case markers, server-side git baseline validation, intent binding, approval/readiness gates, unverified facts, browser negative coverage, D1-D5 and R1-R8 all preserved verbatim.", "files": []}
+  ],
+  "dockerMetadataThisRound": {
+    "probesRun": 0,
+    "note": "No new Docker metadata probes were run this round: W005 names were already proven absent and both image IDs verified cached in the round-3 capture (receipt correction-receipt-2.json). The only owned same-image db resource is w002-b11-box-db-r4-env2; probing it for getent passwd 999 has ambiguous authority so it was deliberately NOT run — the db account gate is encoded fail-closed instead. Resources created by this wave: 0. Databases created: 0."
+  },
+  "commandsRunThisRound": [
+    {"command": "node --check tests/box/delegation/environment-host.mjs", "exit": 0, "kind": "non-executing syntax parse"},
+    {"command": "node -e \"JSON.parse(require('fs').readFileSync('tests/box/delegation/environment-manifest.json','utf8'))\"", "exit": 0, "kind": "non-executing JSON parse"},
+    {"command": "certutil -hashfile <2 changed files> SHA256", "exit": 0, "kind": "core hash"}
+  ],
+  "hashMethodNote": "Honest correction of the round-3 limitation claim: certutil IS available and was used; earlier receipt wording about hash availability was imprecise.",
+  "currentManifest": {
+    "newFiles": [
+      {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8"},
+      {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061"},
+      {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359"},
+      {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8"},
+      {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682"},
+      {"path": "tests/box/delegation/support.ts", "sha256": "792a34e901a58df92d822a6110c7f0daaf744bab4233aeb76df7c8c49f073581"},
+      {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "a9289afcfbbfba95318c182e287287738a44593dc6bab5790bdb4eea4ed516bc"},
+      {"path": "tests/box/delegation/preparation.test.ts", "sha256": "4d03ea2ad58fc653ffee89435c3d36b52a4dd1e6e2463a1242e9e7d884524426"},
+      {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "d0ac29da37c52780c79683c4a85e4284c485fff56488f924f14c5a706013866e"},
+      {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5"},
+      {"path": "tests/box/delegation/environment-manifest.json", "sha256": "06d7fe07c3401ca912c3e2af9b2fa70e72340797938682972beeeeb54fb449df"},
+      {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe"},
+      {"path": "tests/box/delegation/environment-host.mjs", "sha256": "0052bee446f8cb5bb9bce55992a448f36fffd2614b36476311501c52d241283b"}
+    ],
+    "modifiedSharedPaths": [
+      {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986"},
+      {"path": "services/private-api/boxes/store/store.ts", "sha256": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19"},
+      {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234"},
+      {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da"},
+      {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf"},
+      {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787"},
+      {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7"}
+    ]
+  },
+  "unperformed": [
+    "All docker create/start/exec/cp, staging, fixture materialization, the 8 commands, and every test/build/typecheck remain unreleased.",
+    "DB uid-999 account existence is UNVERIFIED (authority-ambiguous W002 probe declined); controller 'verify' + 'account_gate' phase enforce it after release.",
+    "SQL/PG data-dir compatibility of uid-999 postgres start on tmpfs is unproven; if it cannot be cleared safely, setup reports prerequisite blocked."
+  ],
+  "knownLimitations": [
+    "Pre-existing harness migratedPool (outside lease) counts only the legacy run prefix; in-lease enforcement is delegationPool's dual-prefix gate + maxWorkers 1 + supervisor budget callback — amendment needed if review requires editing the shared harness.",
+    "Loose-object git store assumption unchanged; packed commits fail closed as missing_evidence.",
+    "Deps-root provenance/digest map is a setup-phase record; only the fixed mount pairs and rules are pinned in source.",
+    "superviseInner runs inside the runner at /stage; on the Windows host resolve() of '/stage/receipts' differs — the runner-only default is enforced and host callers use atomicWriteJson's Windows-bound roots."
+  ]
+}

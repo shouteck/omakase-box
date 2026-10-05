@@ -118,6 +118,10 @@ export async function readyIntent(intentId: string, expectedVersion: number, exp
 export async function approveIntent(intentId: string, expectedVersion: number, expectedHash: string, csrf: string): Promise<{ version: number; state: string; contentHash: string; approvedHash: string }> {
   return api('POST', `/v1/intents/${intentId}/approval`, { expectedVersion, expectedHash }, csrf);
 }
+export interface BoxRegistrationView { repoId: string; snapshotId: string; snapshotHash: string; fileCount: number; baseCommit: string; contextManifestHash: string }
+export async function registerBoxRepository(input: { sourceId: string; baseCommit: string; operationKey?: string }, csrf: string | null): Promise<BoxRegistrationView> {
+  return api<BoxRegistrationView>('POST', '/v1/box-repositories', input, csrf);
+}
 export function failureText(error: unknown): string {
   if (error instanceof ApiError) return error.reason === null ? `${error.code} (${error.status})` : `${error.code} — ${error.reason} (${error.status})`;
   return 'unexpected client error';

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round2",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r1",
+  "actor": "subagent_general/c0c68c39",
+  "resumeTarget": "c0c68c39",
+  "reviewerNote": "Requested reviewer identity remains f3ab3b2f; last completion envelope returned 23bce751 — reported transparently, not treated as proof of name binding.",
+  "inResponseTo": "revoked preexecution attempt1 PASS recorded at .execution/box-v4/evidence/D1.2/cto/preexecution-attempt1.json; reviewer findings R1-R8",
+  "status": "SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "leaseCompliance": "Edits confined to the 15 approved new paths + 7 shared leased paths + worker receipts. No new product/test/config file, no comment additions/removals, no dependency/config/security changes, no stage/commit/push.",
+  "dockerMetadataCapture": {
+    "daemonAvailable": true,
+    "context": "desktop-linux (default wrapper)",
+    "commands": [
+      {"command": "docker images --no-trunc --format '{{.Repository}}:{{.Tag}} {{.ID}}'", "exit": 0, "facts": "runner image public-task-toolchain:m4-v1 present with ID sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8; postgres image present with ID sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652 (repo postgres, no tag)"},
+      {"command": "docker image inspect sha256:eb4a84ec... --format '{{json .Config}}'", "exit": 0, "facts": "Config.User=pwuser; Cmd=['node','/opt/toolchain/self-check.mjs']; WorkingDir=/work; env includes PLAYWRIGHT_BROWSERS_PATH=/ms-playwright; no Entrypoint key. No Env values beyond the shown prefix were expanded further than the returned JSON head; no secrets read."},
+      {"command": "docker image inspect sha256:639ab7ce... --format '{{json .Config}}'", "exit": 0, "facts": "No Config.User (entrypoint docker-entrypoint.sh drops privileges); ExposedPorts 5432; PGDATA=/var/lib/postgresql/data; StopSignal SIGINT; Volumes declares PGDATA (covered by owned tmpfs in spec)"},
+      {"command": "docker ps -a --format '{{.Names}}|{{.Image}}|{{.Status}}' | grep -E 'w005|w002|delegation'", "exit": 0, "facts": "No w005-d12-* resources exist (zero created by this wave). W002 resources present and untouched: w002-b11-linux-r4-env2 (runner image eb4a84ec), w002-b11-box-db-r4-env2 (db image 639ab7ce), w002-b11-svc-external-api/private-api, w002-b11-fixture-db-*, w002-b11-ws, w002-b11-stage-helper (exited), w002-b11-srcimg (created), w002-b11-db"},
+      {"command": "docker network ls --format '{{.Name}}|{{.ID}}|{{.Driver}}' | grep -E 'w005|w002|delegation'", "exit": 0, "facts": "Only w002-b11-net (bridge) exists; no w005-d12-delegation-net yet"}
+    ],
+    "pullsCreatesStarts": 0,
+    "databasesCreatedByWave": 0
+  },
+  "corrections": [
+    {"id": "R1", "fix": "environment-manifest.json image pins set to exact cached references public-task-toolchain@sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8 and postgres@sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652; verifiedLocalId/verifiedConfigUser recorded as grounding metadata only. environment-host.mjs hard-asserts these IDs in loadEnvironmentManifest (environment_manifest_image).", "files": ["tests/box/delegation/environment-manifest.json", "tests/box/delegation/environment-host.mjs"]},
+    {"id": "R2", "fix": "environment-host.mjs rewritten into a complete minimal fixed-argv host orchestrator: inspectResource distinguishes present/absent/error (no collapse-to-null); containerStartArgv/containerInspectArgv reject unlisted names; alias attached at DB create via --network-alias w002-b11-box-db-r4-env2 (no post-attach); BOX_TEST_DATABASE_URL supplied alongside BOX_DELEGATION_DATABASE_URL; runner env binds BOX_DELEGATION_BASELINE_ROOT/JSON; dependencyMountArgv permits only exact reviewed read-only bind mounts canonicalized under owned DEPS_ROOT; environmentPlan emits the ordered collision/network/db/runner/stage/verify argv set; networkIdArgv verifies exact network ID/Internal flag; FORBIDDEN_ARGV_TOKENS extended (host network/pid/ipc/uts/cgroupns/device).", "files": ["tests/box/delegation/environment-host.mjs", "tests/box/delegation/environment-manifest.json"]},
+    {"id": "R3", "fix": "register-fixture.mjs rewritten: rm() removed entirely; existing workdir is fail-closed validated (non-symlink dir, real git HEAD, exact ls-files inventory, per-file sha256) and reused rather than deleted; creation only into absent owned path /tmp/w005-d12-fixture-baseline with mkdir non-recursive; --out bound to manifest.baselineOut=/tmp/w005-d12-fixture-baseline-out/baseline.json (outside the git workdir so baseline.json never becomes a tracked change); full 19-file owner baselinePaths inventory (fixture.json, demo.mjs, index.html, package.json, vite.config.ts, all reference-solutions) separate from the 10 snapshotPaths; assertRegularInside enforces regular-file+realpath containment; deterministic commit via GIT_AUTHOR_*/GIT_COMMITTER_* env (name/email/date), no git config; baseline JSON records real rev-parse commit + file digests.", "files": ["tests/box/delegation/register-fixture.mjs", "tests/box/delegation/fixture-manifest.json", "tests/box/delegation/fixture-registration.test.ts"]},
+    {"id": "R4", "fix": "BoxStore.registerRepository now runs verifyGitBaseline inside the registration transaction: resolves .git/HEAD (loose ref or packed-refs) and requires equality with client baseCommit; inflates the loose commit/tree objects and requires every registered file's git blob SHA-1 to match the tracked entry — a fabricated 40-hex commit or tampered bytes throw missing_evidence. Happy-path tests now use baselineCommit() from the real materialized baseline instead of random SHA; new negative test asserts commit()/'f'*40 rejection.", "files": ["services/private-api/boxes/store/store.ts", "tests/box/delegation/support.ts", "tests/box/delegation/preparation.test.ts", "tests/box/delegation/agreement-card.test.ts", "tests/box/delegation/fixture-registration.test.ts"]},
+    {"id": "R5", "fix": "SupportedCase gains requiredMarkers; orchestrator.prepare asserts each marker substring against goal/currentBehaviour/desiredBehaviour/constraints/exclusions — mismatched case/request now throws unsupported_case (new negatives: B-text+A-case and A-text+B-case). orchestrator.approve now rechecks exact version, empty artifact.unknowns and a live approved-intent binding (state approved, approval present, not superseded, zero required-unresolved, version+contentHash equality) via intents.review before store call. readiness adds the same approved-intent binding recheck. revise additionally requires artifact.acceptanceExamples ids to equal the current version's published requirement ids.", "files": ["services/private-api/boxes/preparation/types.ts", "services/private-api/boxes/preparation/orchestrator.ts", "tests/box/delegation/preparation.test.ts"]},
+    {"id": "R6", "fix": "support.ts delegationPool now counts pg_database entries matching BOTH w005_d12_run_ and w002_b11_r4run_ prefixes (literal-escaped LIKE) against the shared cap of 12 before any CREATE DATABASE; single-writer test flow keeps concurrency 1; on exhaustion creation is refused and existing DBs preserved. Host constants LEGACY_RUN_DB_PREFIX + database.runPrefixes in manifest record the global accounting rule. Actual DBs created this wave: 0.", "files": ["tests/box/delegation/support.ts", "tests/box/delegation/environment-host.mjs", "tests/box/delegation/environment-manifest.json"]},
+    {"id": "R7", "fix": "environment-host.mjs gains the durable fixed 8-command supervisor: supervisedCommand(index,{leaseOwner,ledger}) builds exec argv only from ALLOWED_COMMANDS, captures literal exit/duration/full stdout/stderr (1 MiB caps), enforces 480000ms timeout -> SIGTERM -> 5000ms grace -> SIGKILL -> 10000ms drain with interrupted-state recording; safeJson/atomicWriteJson provide durable atomic JSON serialization; requiredIdleMs imposes the natural 305000ms idle before repeated legacy-auth commands (indices 2 and 5) preserving the original 5-minute server security limit. Not executed — source for review/release only.", "files": ["tests/box/delegation/environment-host.mjs"]},
+    {"id": "R8", "fix": "stageFiles hardened: stage root is bound to the fixed owned path C:/Users/shout/AppData/Local/Temp/w005-d12-delegation-stage (assertStageRoot rejects any other root); assertStageableRel now rejects forbidden segments (node_modules/.git/.runtime/dist/__pycache__/.env*) anywhere in the path; assertNoSymlinkAncestors validates every destination ancestor; sources must be regular files (lstat.isFile, non-symlink) with realpath containment; writeFile 'wx' remains fail-closed on collisions; stageCopyArgv() takes no arguments and emits the fixed docker cp of the owned stage root into the runner /stage tmpfs.", "files": ["tests/box/delegation/environment-host.mjs", "tests/box/delegation/environment-manifest.json"]}
+  ],
+  "currentManifest": {
+    "newFiles": [
+      {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8"},
+      {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061"},
+      {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359"},
+      {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8"},
+      {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682"},
+      {"path": "tests/box/delegation/support.ts", "sha256": "792a34e901a58df92d822a6110c7f0daaf744bab4233aeb76df7c8c49f073581"},
+      {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "a9289afcfbbfba95318c182e287287738a44593dc6bab5790bdb4eea4ed516bc"},
+      {"path": "tests/box/delegation/preparation.test.ts", "sha256": "4d03ea2ad58fc653ffee89435c3d36b52a4dd1e6e2463a1242e9e7d884524426"},
+      {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "d0ac29da37c52780c79683c4a85e4284c485fff56488f924f14c5a706013866e"},
+      {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5"},
+      {"path": "tests/box/delegation/environment-manifest.json", "sha256": "517af933548ce8ea09feb50f7f97dd777ac0f616995cde7d9568e357e9da3db4"},
+      {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe"},
+      {"path": "tests/box/delegation/environment-host.mjs", "sha256": "64300b15232fcbed6555f26be128d7549ea48d968513072a31dbf0e9b25e2f64"}
+    ],
+    "modifiedSharedPaths": [
+      {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986"},
+      {"path": "services/private-api/boxes/store/store.ts", "sha256": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19"},
+      {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234"},
+      {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da"},
+      {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf"},
+      {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787"},
+      {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7"}
+    ]
+  },
+  "processNotes": [
+    "Dedicated read/edit/write used for all source changes; one exception disclosed: a single sed -i bulk rename (commit() -> await baselineCommit()) was applied to the two leased test files after grep verification; results verified identical to dedicated-edit output.",
+    "node --check used only as a non-executing syntax parse on the two .mjs files (exit 0); node -e used only to JSON.parse the two manifest files (exit 0). No imports of candidate modules, no tests, typecheck, build, runtime, browser, docker create/start/cp, staging or DB operations were executed."
+  ],
+  "unperformed": [
+    "All 8 fixed commands, baseline materialization, staging copy, container/network creation, and suite execution remain for a separately released pre-execution phase.",
+    "Runtime dependency provenance/digest map for the owned deps root is a setup-phase record; manifest declares the rule and mount shape only."
+  ],
+  "knownLimitations": [
+    "Git verification assumes a loose-object object store (true for the fixture-produced fresh commit); packed commit objects would fail closed as missing_evidence.",
+    "Global DB cap relies on the authoritative pg_database count at creation time inside the single delegation DB; a cross-process durable ledger file was not added.",
+    "Typecheck risk items unchanged except where touched; no typecheck executed."
+  ]
+}

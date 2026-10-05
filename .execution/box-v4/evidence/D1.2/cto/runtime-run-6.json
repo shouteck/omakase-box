@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released lifecycle under setup-release-6.json (sha256 cff060e629df82a4ef45e91a1c4a0cc30da9e5fae026b92a945450c4ecb91ff3); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_STAGE_DOCKER_CP_READONLY",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupRelease6Sha256": "cff060e629df82a4ef45e91a1c4a0cc30da9e5fae026b92a945450c4ecb91ff3 (verified)",
+    "rootSetupRelease": true,
+    "reviewVerdict": "PASS_PREEXECUTION",
+    "hostMjsSha256": "26a98876244f5a1882bf0e96199e6a7d152440bca61879e53304924c01b41e57 (verified)",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d (verified)"
+  },
+  "modes": [
+    {"mode": "plan", "exit": 0},
+    {"mode": "ledger", "exit": 0, "result": "existing ledger reused (sha256 f8d48f47...)"},
+    {"mode": "deps", "exit": 0, "durationMs": 26707, "result": "both mounts already-prepared; dependency-preparation.json regenerated WITH destRoot/sourceRoot/sourceRootReal (round-23 fix verified in practice)"},
+    {"mode": "create", "exit": 0, "durationMs": 13152, "result": "network 9829ae85d36111d7, db 89161b0f77dcc41a, runner cfabd66645acf030 created (round-22 absent-detection fix verified); in-memory password used and never persisted"},
+    {"mode": "start", "exit": 0, "durationMs": 1225, "result": "both containers started"},
+    {"mode": "verify", "exit": 0, "durationMs": 961, "checks": {
+      "dbUser": "postgres:x:999:999::/var/lib/postgresql:/bin/bash — uid-999 getent gate RESOLVED",
+      "runnerUser": "1000",
+      "network": "9829ae85d36111d7086076c8962ec048aec78cd35b31f289d4590ebfcb61c1d1|true (internal)",
+      "runner": "running, image sha256:eb4a84ec..., user 1000:1000, mem 2147483648, pids 256, net w005-d12-delegation-net",
+      "db": "running, image sha256:639ab7ce..., user 999:999, mem 1073741824, pids 128, alias w002-b11-box-db-r4-env2 present, IP 172.31.0.2",
+      "dbNetworks": "alias w002-b11-box-db-r4-env2 confirmed"
+    }},
+    {
+      "mode": "stage",
+      "exit": 1,
+      "failure": "docker cp exit 1: 'Error response from daemon: container rootfs is marked read-only'",
+      "rootCause": "The runner is created --read-only with /stage as a tmpfs. This Docker daemon refuses 'docker cp' writes into a read-only-rootfs container even when the destination is a writable tmpfs mount. The stage transport design (docker cp of the fixed STAGE_ROOT inventory) is incompatible with the read-only constraint on this daemon — an amendment-level design issue, not fixable at runtime. Likely resolution paths for root: stream a tar of the fixed inventory via 'docker exec -i <runner> tar -x -C /stage'-style fixed argv (exec writes into tmpfs are permitted), or relax --read-only (rejected — violates approved constraints).",
+      "releaseTimeUnknownsNowResolved": ["uid-999 getent: RESOLVED ok", "docker cp ownership: RESOLVED — cp itself is refused before ownership is reached"]
+    }
+  ],
+  "modesNotRun": ["supervise"],
+  "resourcesCreated": ["w005-d12-delegation-net", "w005-d12-delegation-db", "w005-d12-delegation-runner"],
+  "resourcesState": "Both containers running; preserved per policy (no cleanup/teardown authorized).",
+  "partialState": {
+    "depsRoot": "correctly populated + receipt-bound; ledger valid and now records all three resources",
+    "stageRoot": "STAGE_ROOT was populated by controller('stage') before the cp attempt (stageFiles inventory write is part of the mode) — contents unchanged from the fixed manifest inventory; harmless local state, left in place"
+  },
+  "requiredAction": "BLOCKED_NEEDS_AMENDMENT: replace stage transport with a fixed-argv docker-exec tar (or equivalent) route compatible with read-only rootfs, or obtain a separate approved relaxation. Fresh independent review + re-release required; on resume, containers exist so create-mode collision gates will fail closed — root must decide reconcile/retain authority for existing verified resources (they are intact and verified) vs authorized teardown+recreate.",
+  "checksRun": [
+    {"command": "sha256sum release-6 + 2 leased files", "exit": 0},
+    {"command": "controller plan/ledger/deps/create/start/verify", "exit": "0/0/0/0/0/0"},
+    {"command": "controller('stage')", "exit": 1, "error": "read-only rootfs docker cp refusal"}
+  ],
+  "unperformed": "No supervise; no inner records; no final_verify; password in-memory only; no source edits; no Git writes; no teardown."
+}

@@ -1,0 +1,71 @@
+import { randomUUID } from 'node:crypto';
+import { expect, it } from 'vitest';
+import { byteHash, contentHash } from '../../../packages/contracts/hash.js';
+import { projectPublicListing } from '../../../packages/contracts/public/task.js';
+import { fullStackContract } from '../../contracts/fixtures.js';
+import { http, launchConsole, reviewIntent, seedAccounts, serveConsole, signIn, asHeaders, registerSnapshot, createRequest, createIntent, ensureRuntime, consoleSignIn } from '../../e2e/intent/support.js';
+
+it('owner browser reviews actual complete release bytes then records an exact signed approval through the real private API', { timeout: 180000 }, async () => {
+  await ensureRuntime();
+  const seed = await seedAccounts();
+  const ownerAccount = seed.accounts.find(account => account.role === 'owner')!;
+  const owner = await signIn('private', ownerAccount);
+  const snapshot = await registerSnapshot(await signIn('private', seed.accounts.find(account => account.role === 'operator')!));
+  const goal = 'Deliver the selection journey and its response policy together as one task with interface and end-to-end obligations.';
+  const request = await createRequest(owner, snapshot.id, goal);
+  const draft = await createIntent(owner, request.id);
+  expect(draft.status).toBe(201);
+  const intentId = (draft.body as { id: string }).id;
+  let intent = (await reviewIntent(owner, intentId)).body as { version: number; contentHash: string };
+  expect((await http('private', 'POST', `/v1/intents/${intentId}/decisions`, { expectedVersion: intent.version, decisionId: 'outcome_confirmation', answer: 'Confirmed complete synthetic UI/API/policy outcome.' }, asHeaders(owner))).status).toBe(200);
+  intent = (await reviewIntent(owner, intentId)).body as typeof intent;
+  expect((await http('private', 'POST', `/v1/intents/${intentId}/readiness`, { expectedVersion: intent.version, expectedHash: intent.contentHash }, asHeaders(owner))).status).toBe(200);
+  intent = (await reviewIntent(owner, intentId)).body as typeof intent;
+  expect((await http('private', 'POST', `/v1/intents/${intentId}/approval`, { expectedVersion: intent.version, expectedHash: intent.contentHash }, asHeaders(owner))).status).toBe(200);
+  const contract = fullStackContract(true); contract.taskId = randomUUID(); contract.lineageId = randomUUID();
+  const source = '// SYNTHETIC_RELEASE_BYTES <img src=x onerror="window.__releaseCanary=1">\nexport const synthetic = true;\n';
+  const assets = contract.editablePaths.map(path => ({ path, sourceAssetId: randomUUID(), mediaType: path.endsWith('.json') ? 'application/json' : 'application/typescript', contentBase64: Buffer.from(path.endsWith('.json') ? '{"schemaVersion":1,"frameAncestors":"none","noSniff":true,"referrerPolicy":"no-referrer","hsts":{"enabled":false,"maxAgeSeconds":0,"includeSubDomains":false}}' : source).toString('base64') }));
+  for (const item of contract.interfaces) {
+    const bytes = Buffer.from(JSON.stringify({ schemaVersion: 1, id: item.schema.id }));
+    item.schema.sha256 = byteHash(bytes);
+    assets.push({ path: item.schema.path, sourceAssetId: randomUUID(), mediaType: 'application/json', contentBase64: bytes.toString('base64') });
+  }
+  const candidate = { contract, listing: projectPublicListing(contract, 30), assets, feedbackPolicy: { schemaVersion: 1, id: contract.feedbackPolicyId, categories: ['received', 'processing', 'owner_review', 'accepted', 'changes_required', 'package_defect', 'infrastructure_issue', 'expired'], messageCodes: ['requirement_not_met', 'invalid_input', 'check_unavailable', 'passed'], privateDiagnostics: 'none', publicDetails: 'approved_public_checks_only' } };
+  const payload = { intentId, intentVersion: intent.version, approvedIntentHash: intent.contentHash, privateRevision: snapshot.snapshotHash, candidate };
+  const console = await serveConsole();
+  const { browser, page } = await launchConsole();
+  try {
+    await page.goto('http://private.localhost:3000/');
+    await consoleSignIn(page, ownerAccount);
+    await page.getByRole('button', { name: 'Release review', exact: true }).click();
+    await page.getByText('Stage a prepared release candidate', { exact: true }).click();
+    await page.getByLabel('Prepared release JSON').fill(JSON.stringify(payload));
+    await page.getByRole('button', { name: 'Stage exact bytes for review' }).click();
+    await page.getByRole('heading', { name: 'Complete release set' }).waitFor({ timeout: 20000 });
+    expect(await page.getByRole('heading', { name: 'src/PlanSelector.tsx', exact: true }).count()).toBe(1);
+    expect(await page.textContent('body')).toContain('SYNTHETIC_RELEASE_BYTES');
+    expect(await page.textContent('body')).toContain(contentHash(contract));
+    expect(await page.textContent('body')).toContain('data_only_policy');
+    expect(await page.locator('img[src="x"]').count()).toBe(0);
+    expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__releaseCanary)).toBeUndefined();
+    const approve = page.getByRole('button', { name: 'Approve exact manifest', exact: true });
+    expect(await approve.isDisabled()).toBe(true);
+    await page.getByLabel('I reviewed all actual bytes and the combined disclosure.').check();
+    await page.getByLabel('Private semantic disclosure rationale').fill('Only independently invented synthetic values and generic requirements are disclosed together.');
+    expect(await approve.isDisabled()).toBe(false);
+    const approvalResponse = page.waitForResponse(response => response.url().endsWith('/approval') && response.request().method() === 'POST');
+    await approve.click();
+    const approvedResponse = await approvalResponse;
+    expect(approvedResponse.status()).toBe(200);
+    const approved = await approvedResponse.json() as { id: string; manifestHash: string; signature: string };
+    await page.getByText('These approved bytes are immutable.').waitFor({ timeout: 20000 });
+    const read = await http('private', 'GET', `/v1/release-candidates/${approved.id}`, undefined, asHeaders(owner));
+    expect(read.status).toBe(200);
+    expect(read.body).toMatchObject({ state: 'approved', manifestHash: approved.manifestHash, packageReady: false });
+    const unauthorized = await signIn('private', seed.accounts.find(account => account.role === 'requester')!);
+    expect((await http('private', 'GET', `/v1/release-candidates/${approved.id}`, undefined, asHeaders(unauthorized))).status).toBe(403);
+    await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await page.getByText('Only an authenticated owner can stage, review or approve release sets.').waitFor();
+    expect(await page.textContent('body')).not.toContain('SYNTHETIC_RELEASE_BYTES');
+  } finally { await browser.close(); await console.close(); }
+});

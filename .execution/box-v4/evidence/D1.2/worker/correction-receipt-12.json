@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round12_r2_source_only_reviewer_8_defects",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "subagent_general/c0c68c39 (same logical worker role handle; actual returned envelope bound externally by lead/root)",
+  "resumeTarget": "c0c68c39",
+  "inResponseTo": "Reviewer FAIL_PREEXECUTION with 8 concrete defects against the correction-receipt-11 candidate: (1) controller('stage') never ran docker cp; (2) existing w005-* resource collision was accepted as already-present; (3) image pins were descriptive only, no inspect .Id equality before create; (4) controller('verify') incomplete; (5) manifest database values were type-checked but not value-pinned; (6) post-create ledger write was non-atomic; (7) malformed DB inventory counts could fail open in both test supports and the inner supervisor count gate; (8) directly exported environmentPlan(manifest) could raw-crash on a malformed object. Root has NOT released setup/runtime; this is a SOURCE-ONLY correction by the sole writer inside the existing leased files only.",
+  "status": "SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "setupReadinessClaim": false,
+  "filesChanged": [
+    {
+      "path": "tests/box/delegation/environment-host.mjs",
+      "sha256Before": "9e0383227f8735e0706a87985177435513db0fea25448962ffc7b8ecbc5377b7",
+      "sha256After": "d39a49141fbbffe750ffcd8abe90a9635474b82eb68139531a01a4f0d9b389f4",
+      "changes": [
+        "Defect 1 (stage docker cp): controller('stage') still builds the deterministic manifest-bound inventory (sorted readdir walk of stage.sourceStaging.roots with forbidden-segment pruning and assertStageableRel per entry) and calls stageFiles into the owned STAGE_ROOT; it then invokes the fixed stageCopyArgv() ('cp', '<STAGE_ROOT>/.', 'w005-d12-delegation-runner:/stage') through runCapture('docker', ...). The redacted transport evidence (argvHash prefix, stdout/stderr sha256, transportOnly flag) is returned and persisted atomically via atomicWriteJson to STAGE_RECEIPT_DIR/stage-transport.json after ensureOwnedDir; it is never treated as inner command proof and controller('verify') remains a separate mode.",
+        "Defect 2 (collision fail-closed): in controller('create'), when inspectResource reports any present w005-* resource, the loop now throws envError('environment_resource_collision', ...) with the inspected state instead of pushing 'already-present' and continuing. No reconcile/reuse mode was added; absence gates are otherwise unchanged.",
+        "Defect 3 (image pins executed): before any resource create, controller('create') runs the fixed imageIdVerifyArgv(pin) via runCapture('docker', ...) for both approved bare local ids (RUNNER_IMAGE then DB_IMAGE) and requires the literal trimmed stdout .Id to equal the pinned string; inspect failure, missing output or mismatch throws envError('environment_image_pin_unverified', ...) and aborts create. No pull, no registry reference, no other Docker mutation beyond the fixed inspect.",
+        "Defect 4 (verify completeness): controller('verify') now also runs fixed containerInspectArgv inspects for runner and db with the fixed format '{{.Id}}|{{.Name}}|{{.State.Status}}|{{.Image}}|{{.Config.Image}}|{{.Config.User}}|{{.HostConfig.Memory}}|{{.HostConfig.NanoCpus}}|{{.HostConfig.PidsLimit}}|{{.HostConfig.NetworkMode}}' plus '{{json .NetworkSettings.Networks}}' for the db alias check, and networkIdArgv for the network. expectContainer requires: 64-hex .Id, .Name === '/'+name, .State.Status === 'running', .Image and .Config.Image literal equality with the approved pin, .Config.User === '1000:1000'/'999:999', .HostConfig.Memory/NanoCpus(cpus*1e9)/PidsLimit equal to RUNNER_LIMITS/DB_LIMITS, and .HostConfig.NetworkMode === 'w005-d12-delegation-net'. Network output requires 64-hex id and Internal === 'true'. The db Networks JSON must contain the owned network key with Aliases including 'w002-b11-box-db-r4-env2'. Preserved gates: getent passwd 999 must succeed AND match /^[^\\s:]+:[^:]*:999:/, and runner `id -u` must equal '1000'. Any mismatch/unknown throws a coded envError; return value is redacted and includes runnerId/dbId/networkId.",
+        "Defect 5 (database value pins): new manifestDatabaseEntry() requires database.hostname/username/url/runId strings, then pins username === 'box_fixture', url === 'postgresql://box_fixture@w002-b11-box-db-r4-env2:5432/postgres', runId === 'w005-d12-delegation' (new EXPECTED_DB_* constants), runPrefixes exactly ['w005_d12_run_','w002_b11_r4run_'] and maxRunPrefixedDatabases === 12; violation throws environment_manifest_database. loadEnvironmentManifest uses it; no secret material is read or persisted (url carries no password by design).",
+        "Defect 6 (atomic ledger): the post-create ledger persist now goes through the existing atomicWriteJson(WORKER_RECEIPT_DIR, 'environment-ledger.json', redactSecrets(ledger)) helper (allowed-receipt-root assertion, wx tmp write + rename) instead of a plain writeFile; records and redaction preserved.",
+        "Defect 7 (inner count fail-closed): superviseBatch now requires Number.isInteger(count) && count >= 0 && count < RUN_DB_LIMIT before each command (previously only typeof number / >=12, so NaN/negative/unknown could pass); the post-command databasesAfter count marks state 'unknown' on any non-integer or negative value; innerCountRunDatabases returns 'unknown' unless the psql row parses to a nonnegative integer.",
+        "Defect 8 (environmentPlan crash): environmentPlan(manifest) now normalizes a directly supplied object through manifestContainerEntry for both approved names, manifestDatabaseEntry and the new manifestStageBaseline() (requires stage.fixtureBaseline.workdir/out strings) before dereferencing containers.<name>.image.id or building argv; malformed input yields coded environment_manifest_* errors only.",
+        "containerInspectArgv format allowlist extended to also accept the fixed '{{json .<path>}}' shape (regex ^\\{\\{(?:json )?(?:\\.[A-Za-z.]+)+\\}\\}$) so the db Networks map can be inspected through the same fixed-argv gate; no arbitrary format strings beyond the two literal shapes.",
+        "New constants EXPECTED_DB_USERNAME/EXPECTED_DB_URL/EXPECTED_DB_RUN_ID added next to existing pins. No comments added or removed; no other modes, argv builders or exports changed."
+      ]
+    },
+    {
+      "path": "tests/box/auth/support.ts",
+      "sha256Before": "635e7b2a3474300028840cb14a57395caaf5872097fecfa8141b1571a1855a39",
+      "sha256After": "475f79606e9c22b29f018fda83df62e57aa29cdac7533af5c1932b51941d6abf",
+      "changes": [
+        "Defect 7: migratedPool now converts the dual-prefix count row to a number and throws unless it is a nonnegative integer strictly below MAX_RUN_DATABASES (12); previously Number(row ?? 12) >= 12 let NaN/blank/missing rows pass. Escaped dual-prefix LIKE SQL (w002_b11_r4run_ + w005_d12_run_), cap 12, and no drop/reset/skip/proxy preserved."
+      ]
+    },
+    {
+      "path": "tests/box/delegation/support.ts",
+      "sha256Before": "792a34e901a58df92d822a6110c7f0daaf744bab4233aeb76df7c8c49f073581",
+      "sha256After": "6e7580c1b2a380324a9f34fa0700a22b2f5bba00cd8488437c45bf3acba4a45c",
+      "changes": [
+        "Defect 7: delegationPool applies the identical nonnegative-integer-and-below-12 gate on the escaped dual-prefix count (w005_d12_run_ + w002_b11_r4run_); cap 12 and no drop/reset/skip/proxy preserved."
+      ]
+    }
+  ],
+  "perDefectEvidence": {
+    "1": "controller('stage') now ends with runCapture('docker', stageCopyArgv()), persists redacted transport evidence to <STAGE_ROOT>/receipts/stage-transport.json via ensureOwnedDir + atomicWriteJson, and returns copyTransport marked transportOnly; verify remains a distinct mode.",
+    "2": "state.present now throws environment_resource_collision with the inspected resource; no 'already-present' path and no new reconcile mode exists.",
+    "3": "fixed imageIdVerifyArgv runs for both pins via runCapture('docker', ...) before the create loop; literal returned .Id equality required; environment_image_pin_unverified on inspect failure/missing/mismatch; no pull anywhere (grep-confirmed no 'pull'/'registry' additions).",
+    "4": "verify compares inspect .Id/.Name/.State.Status/.Image/.Config.Image/.Config.User/.HostConfig.Memory/.HostConfig.NanoCpus/.HostConfig.PidsLimit/.HostConfig.NetworkMode against approved constants, network Id+Internal, and db alias membership on the owned network; getent 999 and runner uid 1000 gates preserved; all failures coded.",
+    "5": "manifestDatabaseEntry pins username/url/runId/runPrefixes/maxRunPrefixedDatabases to approved constants (environment_manifest_database); invoked by loadEnvironmentManifest and environmentPlan.",
+    "6": "environment-ledger.json persisted via atomicWriteJson under the exact WORKER_RECEIPT_DIR allowed root with redactSecrets.",
+    "7": "both supports convert the count row and require nonnegative integer < 12; superviseBatch requires integer >=0 <12 and marks unknown on bad post-count; innerCountRunDatabases returns 'unknown' for non-integer/negative parse.",
+    "8": "environmentPlan validates container entries, database block and fixtureBaseline through coded helpers before any dereference; malformed object -> environment_manifest_* errors, no raw TypeError."
+  },
+  "preservedPriorCorrections": [
+    "stage root/parent chain via ensureStageParentChain and assertNoSymlinkAncestors; /stage/receipts owned-dir creation via ensureOwnedDir inside inner supervise/batch",
+    "exactly the two approved read-only dependency mounts via dependencyMountArgv in runnerCreateArgv",
+    "superviseBatch first-fail/unknown stop; host supervise requires inner record completed + exitCode 0 and treats docker exec status as transport evidence only",
+    "fixed batch/result/supervise modes; no arbitrary argv and no host-side product command execution",
+    "bare pinned local image IDs, uid/account/network/alias gates, escaped dual-prefix LIKE SQL, atomic command records",
+    "all 8 command order/timings/descendant/output semantics, 305s legacy-auth idle, redactSecrets on persisted records",
+    "no old W002 resource mutation or reuse; no comments/config/dependency/security changes"
+  ],
+  "intendedPostReleaseInvocationRoute": "After root releases setup/runtime: controller('plan') -> environmentPlan (schema+pins validated) -> controller('ledger') -> controller('create', {dbPassword}) (verifyDependencyMounts -> image .Id pin inspects -> fail-closed collision gates -> fixed network/db/runner creates -> atomic ledger) -> controller('start') -> controller('stage') (manifest-bound walk -> stageFiles -> fixed docker cp into /stage tmpfs -> persisted transport evidence) -> controller('verify') (uid/account/limits/state/network/alias inspects) -> controller('supervise') (one fixed docker exec 'batch'; inner superviseBatch enforces order/idle/cap and writes durable records under /stage/receipts; host retrieves each via fixed 'result <i>' execs requiring completed + exitCode 0) -> controller('verify'). 'supervise <i>' remains the reconciled single-index resume route.",
+  "commandsRunThisRound": [
+    { "command": "node --check tests/box/delegation/environment-host.mjs", "exit": 0, "kind": "non-executing syntax parse" },
+    { "command": "node -e JSON.parse(environment-manifest.json + fixture-manifest.json)", "exit": 0, "kind": "non-executing JSON parse" },
+    { "command": "sha256sum on all 23 leased product paths", "exit": 0, "kind": "core hash" }
+  ],
+  "pathSha256": {
+    "services/private-api/boxes/preparation/types.ts": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8",
+    "services/private-api/boxes/preparation/orchestrator.ts": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061",
+    "services/private-api/boxes/preparation/routes.ts": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359",
+    "services/private-api/db/migrations/0013_delegation_preparation.sql": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8",
+    "apps/private-console/boxes/preparation/preparation-client.ts": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f",
+    "apps/private-console/boxes/preparation/preparation-screen.tsx": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330",
+    "apps/private-console/boxes/preparation/preparation-screen.css": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682",
+    "tests/box/delegation/support.ts": "6e7580c1b2a380324a9f34fa0700a22b2f5bba00cd8488437c45bf3acba4a45c",
+    "tests/box/delegation/fixture-registration.test.ts": "bead39e339fa4a51a366263cfff4c7f906979c26768877fb64116372e4eb2710",
+    "tests/box/delegation/preparation.test.ts": "409dc7c3b81ac039601d86a0e5c98db0191541dcd855b51aacff2e73eaa1f770",
+    "tests/box/delegation/agreement-card.test.ts": "bf25917a766ecc5e4c7b623dc0d7ff22efdd347b941dd0b8d5367eb52e280f9a",
+    "tests/box/delegation/fixture-manifest.json": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5",
+    "tests/box/delegation/environment-manifest.json": "1913ef12a52848649ce9a568cdd13f46493933316141378ab0ee8113e525d29b",
+    "tests/box/delegation/register-fixture.mjs": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe",
+    "tests/box/delegation/environment-host.mjs": "d39a49141fbbffe750ffcd8abe90a9635474b82eb68139531a01a4f0d9b389f4",
+    "services/private-api/boxes/store/schema.ts": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986",
+    "services/private-api/boxes/store/store.ts": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19",
+    "services/private-api/db/migrations/meta/_journal.json": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234",
+    "services/private-api/src/bootstrap/server.ts": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da",
+    "services/private-api/src/bootstrap/main.ts": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf",
+    "apps/private-console/intake/private-client.ts": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787",
+    "apps/private-console/src/bootstrap/main.tsx": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7",
+    "tests/box/auth/support.ts": "475f79606e9c22b29f018fda83df62e57aa29cdac7533af5c1932b51941d6abf"
+  },
+  "unperformed": [
+    "No runtime, tests, typecheck, build, browser, DB, Docker create/exec/cp/inspect, staging or tmpfs creation; STAGE_ROOT, DEPS_ROOT, <STAGE_ROOT>/receipts and /stage/receipts were NOT created now.",
+    "No commits/pushes, no governance/cto/state writes, no comments added or removed in code, no secrets/config/security/dependency edits, no new product paths, no manifest byte changes (environment-manifest.json sha256 unchanged at 1913ef12...)."
+  ],
+  "unresolvedPrerequisites": [
+    "Root has not released setup/runtime; no execution of any kind is authorized from this receipt.",
+    "DEPS_ROOT host population (pnpm store/link closure, per-file digests, provenance record) remains owned elsewhere; verifyDependencyMounts fails closed until the owned deps root and its two fixed subpaths exist as real directories.",
+    "Any pre-existing w005-* resource on the daemon will now fail create closed by design; teardown/reconcile requires separately reviewed authority which does not exist yet.",
+    "Independent reviewer must re-review the exact new candidate bytes (environment-host.mjs sha256 d39a4914..., delegation/support.ts 6e7580c1..., auth/support.ts 475f7960...) before any pre-execution is re-attempted."
+  ],
+  "knownLimitations": [
+    "TypeScript sources were edited without a typecheck run (prohibited this round); the changes are plain const/guard expressions consistent with existing types.",
+    "controller('stage') docker cp runs after stageFiles; a cp transport failure surfaces as a runCapture rejection and the transport receipt records only digests, never raw output or secrets.",
+    "verify compare uses fixed inspect formats; a daemon reporting different field availability fails closed as environment_verify_mismatch rather than passing."
+  ]
+}

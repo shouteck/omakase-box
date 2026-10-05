@@ -152,6 +152,26 @@ export const boxMergeRecords = pgTable('box_merge_records', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 });
 
+export const boxRepositoryRegistrations = pgTable('box_repository_registrations', {
+  repoId: varchar('repo_id', { length: 64 }).primaryKey(),
+  snapshotId: uuid('snapshot_id').notNull(),
+  sourceId: varchar('source_id', { length: 64 }).notNull(),
+  sourceRoot: varchar('source_root', { length: 4096 }).notNull(),
+  baseCommit: char('base_commit', { length: 40 }).notNull(),
+  contextManifest: jsonb('context_manifest').notNull(),
+  contextManifestHash: char('context_manifest_hash', { length: 64 }).notNull(),
+  environmentRef: jsonb('environment_ref').notNull(),
+  evaluatorRef: jsonb('evaluator_ref').notNull(),
+  mergeTarget: jsonb('merge_target').notNull(),
+  registeredBy: uuid('registered_by').notNull().references(() => accounts.id),
+  registeredAt: timestamp('registered_at', { withTimezone: true }).notNull().defaultNow()
+}, table => [
+  unique('box_repository_unique').on(table.snapshotId, table.baseCommit, table.contextManifestHash),
+  check('box_repository_id_syntax', sql`${table.repoId} ~ '^[A-Za-z][A-Za-z0-9_-]{0,63}$'`),
+  check('box_repository_base_commit', sql`${table.baseCommit} ~ '^[a-f0-9]{40}$'`),
+  check('box_repository_manifest_hash', sql`${table.contextManifestHash} ~ '^[a-f0-9]{64}$'`)
+]);
+
 export const boxOperationKeys = pgTable('box_operation_keys', {
   actorId: varchar('actor_id', { length: 128 }).notNull(),
   operation: varchar('operation', { length: 32 }).notNull(),

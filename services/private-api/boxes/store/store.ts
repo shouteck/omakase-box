@@ -1,10 +1,15 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { inflateSync } from 'node:zlib';
 import type { Pool, PoolClient } from 'pg';
 import { tokenHash } from '../../../../packages/contracts/auth/crypto.js';
 import { permits } from '../../../../packages/contracts/auth/policy.js';
 import type { SessionActor } from '../../../../packages/contracts/auth/store.js';
-import { OpaqueIdSchema } from '../../../../packages/contracts/common.js';
-import { contentHash } from '../../../../packages/contracts/hash.js';
+import { IdSchema, OpaqueIdSchema } from '../../../../packages/contracts/common.js';
+import { byteHash, contentHash } from '../../../../packages/contracts/hash.js';
+import { importPinnedSnapshot } from '../../snapshots/importer.js';
+import type { SnapshotSource } from '../../requests/types.js';
 import { WorkflowError } from '../../../../packages/contracts/workflow/index.js';
 import type { ActorRole } from '../../../../packages/contracts/workflow/index.js';
 import {
@@ -17,8 +22,67 @@ export type BoxAuth = SessionActor | { agentToken: string };
 interface ScopedTokenRow { box_id: string; attempt_id: string | null; capability: string; actor_label: string }
 interface BoxRow { box_id: string; version: number; state: string; payload: BoxVersion; content_hash: string; author_id: string }
 interface AttemptRow { attempt_id: string; box_id: string; box_version: number; box_version_hash: string; executor_kind: string; executor_id: string; base_commit: string; worktree_ref: string | null; patch_hash: string | null; environment_digest: string; evaluator_digest: string; state: string; version: number }
+interface RepositoryRow { repo_id: string; snapshot_id: string; source_id: string; source_root: string; base_commit: string; context_manifest: Record<string, unknown>; context_manifest_hash: string; environment_ref: unknown; evaluator_ref: unknown; merge_target: unknown; registered_by: string; registered_at: unknown }
+export interface RepositoryRegistrationPlan { source: SnapshotSource; baseCommit: string; manifest: Record<string, unknown>; environmentRef: unknown; evaluatorRef: unknown; mergeTarget: unknown }
 
 const isSession = (auth: BoxAuth): auth is SessionActor => !('agentToken' in auth);
+
+function gitBlobSha(bytes: Buffer): string {
+  return createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${bytes.length}`), Buffer.from([0]), bytes])).digest('hex');
+}
+async function gitLooseObject(root: string, sha: string): Promise<Buffer | null> {
+  const raw = await readFile(join(root, '.git', 'objects', sha.slice(0, 2), sha.slice(2))).catch(() => null);
+  if (raw === null) return null;
+  try { return inflateSync(raw); } catch { throw new WorkflowError('missing_evidence'); }
+}
+async function gitHeadCommit(root: string): Promise<string | null> {
+  const head = (await readFile(join(root, '.git', 'HEAD'), 'utf8').catch(() => null))?.trim();
+  if (head === undefined || head === null) return null;
+  if (head.startsWith('ref: ')) {
+    const ref = head.slice(5);
+    const loose = await readFile(join(root, '.git', ref), 'utf8').catch(() => null);
+    if (loose !== null && /^[a-f0-9]{40}$/.test(loose.trim())) return loose.trim();
+    const packed = await readFile(join(root, '.git', 'packed-refs'), 'utf8').catch(() => '');
+    for (const line of packed.split('\n')) {
+      const match = /^([a-f0-9]{40}) (\S+)$/.exec(line);
+      if (match && match[2] === ref) return match[1];
+    }
+    return null;
+  }
+  return /^[a-f0-9]{40}$/.test(head) ? head : null;
+}
+async function gitTreeFiles(root: string, treeSha: string, prefix: string, out: Map<string, string>): Promise<void> {
+  const object = await gitLooseObject(root, treeSha);
+  if (object === null) throw new WorkflowError('missing_evidence');
+  const header = object.indexOf(0);
+  if (header < 0 || !object.toString('utf8', 0, header).startsWith('tree ')) throw new WorkflowError('missing_evidence');
+  let index = header + 1;
+  while (index < object.length) {
+    const space = object.indexOf(0x20, index);
+    const mode = object.toString('utf8', index, space);
+    const nul = object.indexOf(0, space + 1);
+    const name = object.toString('utf8', space + 1, nul);
+    const sha = object.subarray(nul + 1, nul + 21).toString('hex');
+    const path = prefix + name;
+    if (mode === '40000') await gitTreeFiles(root, sha, path + '/', out);
+    else out.set(path, sha);
+    index = nul + 21;
+  }
+}
+async function verifyGitBaseline(root: string, baseCommit: string, files: readonly { path: string; content: string }[]): Promise<void> {
+  const head = await gitHeadCommit(root);
+  if (head === null || head !== baseCommit) throw new WorkflowError('missing_evidence');
+  const commitObject = await gitLooseObject(root, baseCommit);
+  if (commitObject === null || !commitObject.toString('utf8', 0, 7).startsWith('commit ')) throw new WorkflowError('missing_evidence');
+  const treeLine = /^tree ([a-f0-9]{40})$/m.exec(commitObject.toString('utf8'));
+  if (treeLine === null) throw new WorkflowError('missing_evidence');
+  const tracked = new Map<string, string>();
+  await gitTreeFiles(root, treeLine[1], '', tracked);
+  for (const file of files) {
+    const blob = gitBlobSha(Buffer.from(file.content, 'utf8'));
+    if (tracked.get(file.path) !== blob) throw new WorkflowError('missing_evidence');
+  }
+}
 
 export class BoxStore {
   constructor(private readonly pool: Pool) {}
@@ -310,6 +374,100 @@ export class BoxStore {
         await client.query('INSERT INTO box_merge_records (merge_id,approval_id,box_id,attempt_id,source_candidate_hash,target_ref,result_commit,state,applied_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)', [record.mergeId, record.approvalId, record.boxId, record.attemptId, record.sourceCandidateHash, record.targetRef, record.resultCommit, record.state, actor.id]);
         return { mergeId: record.mergeId };
       });
+    });
+  }
+
+  async registerRepository(actor: SessionActor, plan: RepositoryRegistrationPlan, key?: string) {
+    if (!/^[a-f0-9]{40}$/.test(plan.baseCommit)) throw new WorkflowError('missing_evidence');
+    if (plan.manifest === null || typeof plan.manifest !== 'object' || Array.isArray(plan.manifest)) throw new WorkflowError('missing_evidence');
+    return this.transaction(async client => {
+      await this.requirePermission(client, actor, 'snapshot.import');
+      return this.idempotent(client, actor.id, 'create', key, { kind: 'box-repository-registration', sourceId: plan.source.id, baseCommit: plan.baseCommit, manifest: plan.manifest, environmentRef: plan.environmentRef, evaluatorRef: plan.evaluatorRef, mergeTarget: plan.mergeTarget }, async () => {
+        const snapshot = await importPinnedSnapshot(plan.source.root, plan.source.paths);
+        await verifyGitBaseline(plan.source.root, plan.baseCommit, snapshot.files);
+        const fileRoles = plan.manifest.fileRoles as Record<string, string> | undefined;
+        const manifest = { ...plan.manifest, schemaVersion: 1, files: snapshot.files.map(file => ({ path: file.path, bytes: file.bytes, sha256: file.sha256, role: typeof fileRoles?.[file.path] === 'string' ? fileRoles[file.path] : 'explanatory' })) };
+        const contextManifestHash = contentHash(manifest);
+        for (const file of snapshot.files) {
+          const bytes = Buffer.from(file.content, 'utf8');
+          const sha256 = byteHash(bytes);
+          if (sha256 !== file.sha256) throw new Error('snapshot_encoding_mismatch');
+          await client.query('INSERT INTO private_intake_objects (sha256,byte_count,payload) VALUES ($1,$2,$3) ON CONFLICT (sha256) DO NOTHING', [sha256, bytes.length, bytes]);
+        }
+        const snapshotManifest = { schemaVersion: 1, files: snapshot.files.map(({ content: _content, ...metadata }) => metadata) };
+        await client.query('INSERT INTO private_snapshots (id,snapshot_hash,manifest,file_count,registered_by) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (snapshot_hash) DO NOTHING', [randomUUID(), snapshot.snapshotHash, snapshotManifest, snapshot.files.length, actor.id]);
+        const snapshotRow = (await client.query('SELECT id,snapshot_hash,file_count FROM private_snapshots WHERE snapshot_hash=$1', [snapshot.snapshotHash])).rows[0];
+        if (!snapshotRow) throw new Error('snapshot_unavailable');
+        await client.query('INSERT INTO private_snapshot_provenance (id,snapshot_id,source_id,source_root,actor_id) VALUES ($1,$2,$3,$4,$5)', [randomUUID(), snapshotRow.id, plan.source.id, plan.source.root, actor.id]);
+        const repoId = 'repo-' + randomUUID();
+        await client.query('INSERT INTO box_repository_registrations (repo_id,snapshot_id,source_id,source_root,base_commit,context_manifest,context_manifest_hash,environment_ref,evaluator_ref,merge_target,registered_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (snapshot_id,base_commit,context_manifest_hash) DO NOTHING', [repoId, snapshotRow.id, plan.source.id, plan.source.root, plan.baseCommit, manifest, contextManifestHash, plan.environmentRef, plan.evaluatorRef, plan.mergeTarget, actor.id]);
+        const row = (await client.query('SELECT repo_id,snapshot_id,base_commit,context_manifest_hash FROM box_repository_registrations WHERE snapshot_id=$1 AND base_commit=$2 AND context_manifest_hash=$3', [snapshotRow.id, plan.baseCommit, contextManifestHash])).rows[0];
+        if (!row) throw new Error('repository_registration_unavailable');
+        return { repoId: String(row.repo_id), snapshotId: String(row.snapshot_id), snapshotHash: String(snapshotRow.snapshot_hash), fileCount: Number(snapshotRow.file_count), baseCommit: String(row.base_commit), contextManifestHash: String(row.context_manifest_hash) };
+      });
+    });
+  }
+  async registeredRepository(actor: SessionActor, repoId: string) {
+    if (!IdSchema.safeParse(repoId).success) throw new WorkflowError('missing_evidence');
+    return this.transaction(async client => {
+      await this.requirePermission(client, actor, 'box.read');
+      const row = (await client.query('SELECT registration.*,snapshot.snapshot_hash FROM box_repository_registrations AS registration JOIN private_snapshots AS snapshot ON snapshot.id=registration.snapshot_id WHERE registration.repo_id=$1', [repoId])).rows[0] as (RepositoryRow & { snapshot_hash: string }) | undefined;
+      if (!row) throw new WorkflowError('missing_evidence');
+      return { repoId: row.repo_id, snapshotId: row.snapshot_id, snapshotHash: row.snapshot_hash, sourceId: row.source_id, sourceRoot: row.source_root, baseCommit: row.base_commit, contextManifest: row.context_manifest, contextManifestHash: row.context_manifest_hash, environmentRef: row.environment_ref, evaluatorRef: row.evaluator_ref, mergeTarget: row.merge_target, registeredBy: row.registered_by, registeredAt: row.registered_at };
+    });
+  }
+  async createPrepared(actor: SessionActor, input: { artifact: unknown; version: unknown }, key?: string) {
+    const artifact = BehaviorArtifactSchema.parse(input.artifact);
+    const payload = BoxVersionSchema.parse(input.version);
+    assertNoRestrictedFields(artifact);
+    assertNoRestrictedFields(payload);
+    if (payload.version !== 1) throw new WorkflowError('invalid_transition');
+    const artifactHash = contentHash(artifact);
+    if (payload.behaviorArtifact.artifactId !== artifact.artifactId || payload.behaviorArtifact.contentHash !== artifactHash || payload.intent.intentId !== artifact.intent.intentId) throw new WorkflowError('missing_evidence');
+    const hash = contentHash(payload);
+    return this.transaction(async client => {
+      await this.requirePermission(client, actor, 'box.write');
+      return this.idempotent(client, actor.id, 'create', key, { input: { artifact, version: payload } }, async () => {
+        await client.query('INSERT INTO box_behavior_artifacts (artifact_id,payload,content_hash,intent_id,created_by) VALUES ($1,$2,$3,$4,$5)', [artifact.artifactId, artifact, artifactHash, artifact.intent.intentId, actor.id]);
+        await client.query('INSERT INTO box_versions (box_id,version,state,payload,content_hash,author_id) VALUES ($1,1,$2,$3,$4,$5)', [payload.boxId, 'draft', payload, hash, actor.id]);
+        await client.query('INSERT INTO box_heads (box_id,current_version) VALUES ($1,1)', [payload.boxId]);
+        return { boxId: payload.boxId, version: 1, contentHash: hash };
+      });
+    });
+  }
+  async revisePrepared(actor: SessionActor, boxId: string, expectedVersion: number, input: { artifact: unknown; version: unknown }, key?: string) {
+    const artifact = BehaviorArtifactSchema.parse(input.artifact);
+    const payload = BoxVersionSchema.parse(input.version);
+    assertNoRestrictedFields(artifact);
+    assertNoRestrictedFields(payload);
+    if (payload.version !== expectedVersion + 1) throw new WorkflowError('invalid_transition');
+    if (payload.boxId !== boxId) throw new WorkflowError('missing_evidence');
+    const artifactHash = contentHash(artifact);
+    if (payload.behaviorArtifact.artifactId !== artifact.artifactId || payload.behaviorArtifact.contentHash !== artifactHash || payload.intent.intentId !== artifact.intent.intentId) throw new WorkflowError('missing_evidence');
+    const hash = contentHash(payload);
+    return this.transaction(async client => {
+      const role = await this.requirePermission(client, actor, 'box.write');
+      const current = await this.head(client, boxId, expectedVersion);
+      if (role !== 'owner' && current.author_id !== actor.id) throw new WorkflowError('forbidden_role');
+      return this.idempotent(client, actor.id, 'revise', key, { boxId, expectedVersion, input: { artifact, version: payload } }, async () => {
+        await client.query('INSERT INTO box_behavior_artifacts (artifact_id,payload,content_hash,intent_id,created_by) VALUES ($1,$2,$3,$4,$5)', [artifact.artifactId, artifact, artifactHash, artifact.intent.intentId, actor.id]);
+        await client.query('INSERT INTO box_versions (box_id,version,state,payload,content_hash,author_id) VALUES ($1,$2,$3,$4,$5,$6)', [payload.boxId, payload.version, 'draft', payload, hash, current.author_id]);
+        await client.query('UPDATE box_heads SET current_version=$2 WHERE box_id=$1 AND current_version=$3', [payload.boxId, payload.version, expectedVersion]);
+        return { boxId: payload.boxId, version: payload.version, contentHash: hash, approvalInvalidated: true };
+      });
+    });
+  }
+  async readPrepared(actor: SessionActor, boxId: string) {
+    const head = await this.read(actor, boxId);
+    return this.transaction(async client => {
+      await this.requirePermission(client, actor, 'box.read');
+      const artifact = (await client.query('SELECT payload FROM box_behavior_artifacts WHERE artifact_id=$1 AND content_hash=$2', [head.version_payload.behaviorArtifact.artifactId, head.version_payload.behaviorArtifact.contentHash])).rows[0];
+      if (!artifact) throw new WorkflowError('missing_evidence');
+      const repoId = (head.version_payload as { repoId?: unknown }).repoId;
+      const repository = typeof repoId === 'string'
+        ? (await client.query('SELECT * FROM box_repository_registrations WHERE repo_id=$1', [repoId])).rows[0] as RepositoryRow | undefined
+        : undefined;
+      return { ...head, artifact: artifact.payload as unknown, repository: repository ?? null };
     });
   }
 }

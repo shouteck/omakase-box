@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Complete allowlist for the W002/B1.1 verification fixture transport. Every entry is a fixed argument-array 'docker exec' into one of two W002-owned synthetic service containers; env, workdir, argv and container come only from this manifest, never from client strings. -e entries bind an exact sha256 of the expanded literal source.",
+  "containers": {
+    "private-api": "w002-b11-svc-private-api",
+    "external-api": "w002-b11-svc-external-api"
+  },
+  "notes": {
+    "destructiveAudit": "No DROP/TRUNCATE/database-reset commands exist in any reached script. empty-migrations sources run CREATE DATABASE synthetic_empty_<32-hex> (creation on the owned synthetic postgres; names are randomUUID-derived hex, never client SQL). readiness/private source contains DELETE/UPDATE statements only inside assert.rejects denial probes that the immutable-readiness triggers must reject. All other sources are INSERT/SELECT/transaction probes on synthetic fixture databases.",
+    "contractBinding": "persistence/lifecycles sources embed JSON.stringify(singleUnitContract()); digests computed for contract sha256 bcb46146f2b32049c471fa92fb74a7e9d9ba42a704e916993aba529db66eb4b2. A changed fixture contract produces a new digest and therefore denies transport.",
+    "doctorEntries": "Reached by scripts/verify-mvp.mjs only when a local docker binary probe passes; unreachable inside the isolated workspace but listed for completeness."
+  },
+  "entries": [
+    {
+      "id": "auth-fixture.private-api",
+      "reachedBy": [
+        "scripts/verify-auth.mjs",
+        "scripts/verify-intake.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [
+        "SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic"
+      ],
+      "argv": [
+        "node",
+        "dist/fixture.js"
+      ],
+      "input": "json",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "dist/fixture.js"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "auth-fixture.external-api",
+      "reachedBy": [
+        "scripts/verify-auth.mjs",
+        "scripts/verify-intake.mjs"
+      ],
+      "service": "external-api",
+      "workdir": "/workspace/services/external-api",
+      "env": [
+        "SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic"
+      ],
+      "argv": [
+        "node",
+        "dist/fixture.js"
+      ],
+      "input": "json",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "dist/fixture.js"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "intent-session.private-api",
+      "reachedBy": [
+        "scripts/verify-intent-sessions.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [
+        "SYNTHETIC_INTENT_FIXTURE=private-task-mvp-synthetic"
+      ],
+      "argv": [
+        "node",
+        "dist/session-fixture.js"
+      ],
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "dist/session-fixture.js"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "intake-fixture.private-api",
+      "reachedBy": [
+        "scripts/verify-intake.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [
+        "SYNTHETIC_INTAKE_FIXTURE=private-task-mvp-synthetic"
+      ],
+      "argv": [
+        "node",
+        "dist/intake-fixture.js"
+      ],
+      "input": "json",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "dist/intake-fixture.js"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "empty-migrations.private-api",
+      "reachedBy": [
+        "scripts/verify-empty-migrations.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "22eb9937a0078305c11f52abc003b1c0fd2dc0e2503a48120290c784fdf45bf5",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "empty-migrations.external-api",
+      "reachedBy": [
+        "scripts/verify-empty-migrations.mjs"
+      ],
+      "service": "external-api",
+      "workdir": "/workspace/services/external-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "0c025099331caeea2c7f69f1ac855789aaf79d67d34bc6c96715689ea6d840a6",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "readiness.private-api",
+      "reachedBy": [
+        "scripts/verify-readiness.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "01ff0839c8812675fa1061ac66abbed38400493ae11178da7a304ca9df13f0d6",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "persistence.private-api",
+      "reachedBy": [
+        "scripts/verify-persistence.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "persistence.external-api",
+      "reachedBy": [
+        "scripts/verify-persistence.mjs"
+      ],
+      "service": "external-api",
+      "workdir": "/workspace/services/external-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "lifecycles.private-api",
+      "reachedBy": [
+        "scripts/verify-lifecycles.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "6f9df38ab00d938ab7c3b6b44549ae83f95ed442f3e3b20e00e1bc91b31d08af",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "lifecycles.external-api",
+      "reachedBy": [
+        "scripts/verify-lifecycles.mjs"
+      ],
+      "service": "external-api",
+      "workdir": "/workspace/services/external-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "fcace5e199d6529c5cfeeb7731d86f3b9d16ba299624627f19e8e636066f4485",
+      "input": "none",
+      "timeoutMs": 20000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "doctor.private-api",
+      "reachedBy": [
+        "scripts/doctor.mjs",
+        "scripts/verify-mvp.mjs"
+      ],
+      "service": "private-api",
+      "workdir": "/workspace/services/private-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "eaac982ed7f75b210acfeec5a63f6aaff3b1e19604297db18a128a17b06905c0",
+      "input": "none",
+      "timeoutMs": 5000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    },
+    {
+      "id": "doctor.external-api",
+      "reachedBy": [
+        "scripts/doctor.mjs",
+        "scripts/verify-mvp.mjs"
+      ],
+      "service": "external-api",
+      "workdir": "/workspace/services/external-api",
+      "env": [],
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "sourceSha256": "160e418a55545cb49cb57bce0e807aef4dfff60495caea10a894691b2740ef42",
+      "input": "none",
+      "timeoutMs": 5000,
+      "runnerArgv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "@SOURCE@"
+      ],
+      "wrapper": "scripts/box-verification/fixture-exec-runner.mjs"
+    }
+  ],
+  "runId": "w002-b11-r4-env2",
+  "environmentId": "w002-b11-env-r4-env2",
+  "reviewGate": "Host/relay/client/manifest/wrapper bytes require independent exact-byte pre-execution review; any change reopens review.",
+  "deadlinePolicy": "readyProfileCommandDeadlineMs=20000; drainDeadlineMs=10000; supervisor per-command=480000",
+  "liveDispatch": "Host builds docker exec argv as --workdir <entry.workdir> --env <each entry.env> <container> node <wrapper.path> <wrapper.manifestPath> <entry.id>; manifest-fixed env (SYNTHETIC_* flags) and workdir reach the fixture through the wrapper's inherited environment. Wrapper stdout is a JSON outcome envelope that the host validates and transforms back into the original fixture {code, stdout, stderr} contract; malformed or oversized envelopes never reach callers.",
+  "wrapper": {
+    "path": "/workspace/.r4-harness/fixture-exec-runner.mjs",
+    "manifestPath": "/workspace/.r4-harness/fixture-command-manifest.json",
+    "sha256": "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+    "note": "Reviewed container-side wrapper staged read-only inside the shared /workspace bind; services cannot mutate it. Live dispatch always routes through this wrapper; direct fixture commands are denied."
+  }
+}
