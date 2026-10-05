@@ -5,7 +5,7 @@ Replaced at every wave close. Last written 5 October 2026, 21:05 (+08), by Claud
 ## Now
 
 - **Accepted on master:** B0, B1.1 (versioned Box store), D1.1 (delegation design), the lean kitchen, K1 (verification on the host with an embedded Postgres, no Docker).
-- **In flight:** D1.2 resumption. Brief ready at [waves/D1.2.md](waves/D1.2.md); not yet dispatched. Planned hosts: Devin as CTO and worker, Claude as independent reviewer.
+- **In flight:** D1.2 resumption. Brief ready at [waves/D1.2.md](waves/D1.2.md); not yet dispatched. Planned host: Devin as CTO, dispatching its own worker and a separate reviewer.
 - **Held:** D1.2 (create and approve a Box from a request). Unaccepted code and the old kitchen's records are on the local branch `wave/D1.2` (not pushed).
 
 ## Approved by the CEO
