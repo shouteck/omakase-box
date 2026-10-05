@@ -253,7 +253,7 @@ export async function acquireHostRuntime() {
   // this runtime's databases — the host replacement for the docker-exec fixture calls.
   async function runFixture(service, entry, command, flag = 'SYNTHETIC_AUTH_FIXTURE') {
     const file = writeBundle(service, 'host-fixture', await bundle(service, entry));
-    const result = await exec(service, [file], { input: JSON.stringify(command), env: { [flag]: 'private-task-mvp-synthetic' } });
+    const result = await exec(service, [file], { input: JSON.stringify(command), env: { [flag]: 'synthetic-fixture' } });
     if (result.code !== 0) throw new Error(`Host fixture ${service}:${entry} failed: ${result.stderr.slice(-2048)}`);
     return JSON.parse(result.stdout.trim().split('\n').at(-1));
   }
@@ -329,7 +329,7 @@ export async function acquireHostRuntime() {
       for (const [service, port, hostHeader] of [['private-api', 4000, 'private.localhost:4000'], ['external-api', 4001, 'contributor.localhost:4001']]) {
         const code = await bundle(service, 'src/bootstrap/main');
         const extra = { SYNTHETIC_HOST_TEST: 'true', SYNTHETIC_HOST_TEST_BIND: host, AUTH_MODE: 'localhost_demo' };
-        if (service === 'private-api') Object.assign(extra, { SYNTHETIC_SNAPSHOT_SOURCE: 'private-task-mvp-synthetic', SYNTHETIC_SNAPSHOT_ROOT: join(root, 'examples', 'private-shop') });
+        if (service === 'private-api') Object.assign(extra, { SYNTHETIC_SNAPSHOT_SOURCE: 'synthetic-fixture', SYNTHETIC_SNAPSHOT_ROOT: join(root, 'examples', 'private-shop') });
         const { child, record } = spawnService(service, code, extra);
         await waitForHealth(service, host, port, hostHeader, record, child);
       }

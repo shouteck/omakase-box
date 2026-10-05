@@ -46,7 +46,7 @@ services:
       PRIVATE_DATABASE_USER: private_service
       PRIVATE_DATABASE_PASSWORD_FILE: /run/secrets/private_db_password
       PRIVATE_STORAGE_ROOT: /data/private
-      SYNTHETIC_SNAPSHOT_SOURCE: private-task-mvp-synthetic
+      SYNTHETIC_SNAPSHOT_SOURCE: synthetic-fixture
       PRIVATE_SESSION_KEY_FILE: /run/secrets/private_session_key
       PRIVATE_OWNER_BOOTSTRAP_FILE: /run/secrets/private_owner_bootstrap
       PRIVATE_RELEASE_KEY_FILE: /run/secrets/private_release_key

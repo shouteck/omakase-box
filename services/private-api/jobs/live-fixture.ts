@@ -38,7 +38,7 @@ interface Fixture {
 }
 
 async function createFixture(): Promise<Fixture> {
-  assert.equal(process.env.SYNTHETIC_JOB_FIXTURE, 'private-task-mvp-synthetic');
+  assert.equal(process.env.SYNTHETIC_JOB_FIXTURE, 'synthetic-fixture');
   assert.equal(process.env.PRIVATE_DATABASE_NAME, 'private_task');
   assert.ok(process.env.PRIVATE_DATABASE_HOST && process.env.PRIVATE_DATABASE_USER && process.env.PRIVATE_DATABASE_PASSWORD_FILE);
   const configuration = { host: process.env.PRIVATE_DATABASE_HOST, user: process.env.PRIVATE_DATABASE_USER, password: readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE!, 'utf8').trim(), max: 4 };

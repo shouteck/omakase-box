@@ -7,7 +7,7 @@ import { hashPassword } from '../../../packages/contracts/auth/crypto.js';
 import { PrivateIntentStore } from '../db/intent-store.js';
 import { WorkflowError } from '../../../packages/contracts/workflow/index.js';
 
-if (process.env.SYNTHETIC_INTENT_FIXTURE !== 'private-task-mvp-synthetic') process.exit(2);
+if (process.env.SYNTHETIC_INTENT_FIXTURE !== 'synthetic-fixture') process.exit(2);
 const pool = new Pool({ host: process.env.PRIVATE_DATABASE_HOST, database: process.env.PRIVATE_DATABASE_NAME, user: process.env.PRIVATE_DATABASE_USER, password: readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE!, 'utf8').trim(), max: 2 });
 try {
   const sessions = new SessionStore(pool,'private',readFileSync(process.env.PRIVATE_SESSION_KEY_FILE!));

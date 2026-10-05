@@ -16,7 +16,7 @@ function runViteBundle(entry: string) {
 
 async function runScenario(runtime: Awaited<ReturnType<typeof acquireHostRuntime>>, sourceChunk: string, name: string): Promise<ScenarioReport> {
   const source = `${sourceChunk}\ntry { console.log(JSON.stringify(await runScenario(${JSON.stringify(name)}))); } catch (error) { console.error(error instanceof Error ? error.message : 'fixture_scenario_failed'); process.exitCode = 1; }\n`;
-  const result = await runtime.exec('private-api', ['--input-type=module'], { input: source, timeout: 60000, env: { SYNTHETIC_JOB_FIXTURE: 'private-task-mvp-synthetic' } });
+  const result = await runtime.exec('private-api', ['--input-type=module'], { input: source, timeout: 60000, env: { SYNTHETIC_JOB_FIXTURE: 'synthetic-fixture' } });
   if (result.code !== 0) throw new Error(`Synthetic job lifecycle scenario ${name} failed: ${result.stderr.slice(-4000)}`);
   const report = JSON.parse(result.stdout.trim().split('\n').at(-1)!) as ScenarioReport;
   return report;
