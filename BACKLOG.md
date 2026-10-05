@@ -13,6 +13,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
+- Verify reuse trusts `.kitchen/runs` records by consistency, not signature — a hand-forged fully-consistent run dir can fake a reused PASS. Accepted; `--fresh` is the antidote and the pass uses it when it doubts a record. From K5.
+- The `check` path→suite table covers direct imports only; a transitive edge can slip scoped `check`. `--full` is the documented backstop. From K5.
+
 - Ports 4000 and 4001 are held by Docker Desktop when it runs; host tests bind 127.0.0.2 with loopback mirrors (`scripts/host-test-runtime.mjs`).
 - `tests/box/delegation/support.ts` caches its run directory per module, so one `delegationPool()` per test file. Fix when a test needs two.
 - `embedded-postgres` is a beta wrapper release and its install-policy entry covers Windows only. K8 needs the Linux entry.
