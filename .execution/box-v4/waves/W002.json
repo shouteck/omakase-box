@@ -98,10 +98,10 @@
     "Follow existing hand-authored migration convention with new 0012 SQL and journal idx 12; no new snapshot",
     "Colocate Box table definitions in the store tree; defer existing schema/auth session/bootstrap edits and public routes"
   ],
-  "checkpointStatus": "B1.1 accepted, current reviewed private-origin checkpoint pending; prior CP001/CP002/documentary checkpoints preserved.",
+  "checkpointStatus": "B1.1 accepted and reviewedsource/evidence saved a38c1e01cdf139af31a80d816efce8b9e023513a onprivateorigin/master. PriorCP001/CP002/historypreserved; W003approvalpending.",
   "historicalCheckpointStatusAtCtoRepair": "Prior accepted W001/S001 checkpoint recorded at CP001; W002 candidate remains unaccepted/uncommitted/unstaged. No blocked product checkpoint; routine accepted exact-reviewed saving still requires current destination/history checks.",
-  "executionStatus": "completed_b11_accepted_h1_saving_pending",
-  "currentCheckpoint": "pending_reviewed_scope_checkpoint_under_GIT_CHECKPOINTS",
+  "executionStatus": "completed_b11_accepted_h1_source_saved",
+  "currentCheckpoint": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/checkpoint-h1-saved.json",
   "r4Assignments": {
     "lead": "box-platform-lead/89140b96",
     "worker": "box-worker/0efad945",
@@ -445,7 +445,7 @@
   "activeRepair": {
     "id": "W002-CTO-R2-Devin-H1",
     "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
-    "status": "accepted_saving_pending",
+    "status": "completed_source_saved",
     "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
     "acceptance": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/cto-acceptance-h1.json",
     "worker": "box-worker/483988b4",
@@ -498,9 +498,9 @@
     "currentReview": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-review-r2-final.json",
     "currentReady": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-environment-ready-r2.json"
   },
-  "nextProposal": ".execution/box-v4/briefings/W003-delegation-draft.md",
+  "nextProposal": ".execution/box-v4/briefings/W003.md",
   "historicalR2Proposal": ".execution/box-v4/briefings/W002-CTO-R2.md",
   "previousProposalBindingAtCtoRepair": null,
-  "nextProposalBinding": null,
+  "nextProposalBinding": ".execution/box-v4/evidence/W003-proposal-binding.json",
   "historicalR2ProposalBinding": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-binding-r2.json"
 }

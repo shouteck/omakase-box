@@ -1,0 +1,7 @@
+{
+  "staged": 552,
+  "checked": 552,
+  "mismatch": [
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-review/checkpoint-selection-manifest.json"
+  ]
+}

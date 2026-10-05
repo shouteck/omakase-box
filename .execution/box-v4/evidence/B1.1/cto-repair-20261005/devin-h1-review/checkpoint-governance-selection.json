@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewer_governance_commit_selection",
+  "reviewer": "Devin reviewer27f919af",
+  "generated": "2026-10-05T05:45:35.797Z",
+  "excludedLocally": [
+    "devin-h1-worker/checkpoint-pathspec.txt",
+    "independent-*.tar",
+    "stopped-candidate/",
+    "pre-stage-overlay-*/",
+    "pre-launcher-r2/",
+    "supervisor-checkpoint/",
+    "parity-attempt3-linux.out",
+    ".runtime/secrets"
+  ],
+  "files": {
+    ".execution/box-v4/state.json": "18023acd55e5f5200162123f8516df0c7bd6422956b39c909fc5638874ac5886",
+    ".execution/box-v4/waves/W002.json": "d13599f3944e440c8860684aab18d0041a20bcf9d512fa0706d66466b84d878f",
+    ".execution/box-v4/briefings/W003.md": "491074d91dc72f7fc130fd2adabd8dcbf3d6c5a16889a26639b8df8b4455ec8c",
+    ".execution/box-v4/evidence/W003-proposal-binding.json": "1b5e0665d956f831e80bf8a1274377fcc7e5382ac2bd293740646133d0884503",
+    ".execution/box-v4/waves/W003.json": "639cfa4e27aca0f65465ea3ec2025a49f1a462619c6ab6f9d441751a6f055092",
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/checkpoint-h1-saved.json": "9b2b9dc86af7c8974754d511fb640a1741f659c98d8a8aa09dc4da51e7d1a714",
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-git-checkpoint-release.json": "bf6c89b7ab87ef0ba4953fe8ec98512cf9aa8fb524ad70d2e4e2197e1da6348f",
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-receipt-checkpoint.json": "8fc138f9bc702d1c93c0eb99bf54776d6ebd42a6c0a23d789e01a90021a1b79b",
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/index-parity.txt": "26d364e0eb9e8f7d9bbe5a174b102c1892c28188f9ac380ae9aaedc33b47ce3d",
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/post-commit-status.txt": "df20d2bbf4aaac2af1e195f4502eeefe79bb3118fc808e032552e811f6a25cd4"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_exact_reviewed_git_checkpoint_release",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "integrationWorker": "box-worker/483988b4",
+  "authority": "docs/box-v4/GIT-CHECKPOINTS.md standing CEO routine commit/non-force push direction",
+  "acceptance": "cto-acceptance-h1.json",
+  "review": "devin-h1-review/independent-checkpoint-review-r2-h1.json",
+  "selection": "devin-h1-review/checkpoint-selection-manifest.json",
+  "selectionSha256": "e39d1d67a1a8e51afe076653e87e08dceb4bce82f0a3e35b1f9d0adca9c8bf3a",
+  "reviewedFiles": 989,
+  "additionalReviewMetadata": [".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-review/checkpoint-selection-manifest.json", ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-review/independent-checkpoint-review-r2-h1.json"],
+  "scope": "Stage only exact reviewed selection and its two immutable reviewer metadata records after rehash; no blanket gitadd. Verify exact stagedbytes/pathscope and outgoing history/privacy. Ordinary localcommit with required Devintrailers and non-force push only origin/master. No source edits, expectations, models/resources/test reruns or history rewrite.",
+  "headExpected": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "authorizedOrigin": "https://github.com/shouteck/omakase-box.git",
+  "authorizedBranch": "master",
+  "privateConfirmed": "Root ghrepo verification returned isPrivate:true defaultBranchmaster after scopedreview; integrationworker recheck immediatelybeforepush",
+  "holds": "ScopedH1 repair accepted, active executionHold allows routineacceptedcheckpoint; stoppedoldDevin r4 authority and nextfeaturegate not resumed",
+  "stop": "Any selectedhashdrift, unrelatedstaged/outgoingcommit, changed/nonprivateorigin, remoteadvance/conflict, auth/permissiondenial stops checkpoint; preserve work, no resetforce/bypass",
+  "checkpointStatus": "released_not_yet_committed_or_pushed",
+  "newFeatureApproved": false
+}
