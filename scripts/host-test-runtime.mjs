@@ -2,11 +2,16 @@
 // on the disposable BOX_TEST_DATABASE_URL server, applies each service's migrations, seeds the
 // synthetic bootstrap owner, mints per-run secret files under the OS temp dir, and spawns
 // service-directory children with the PRIVATE_/EXTERNAL_* environment the fixtures expect.
+// K2b adds startServices/runFixture: the real service bootstraps run as host children under
+// SYNTHETIC_HOST_TEST (the container schema is untouched) on a dedicated loopback bind, and the
+// fixture entries run through exec exactly like the K2a tests drive them.
 // pg never sees the URL: its parser lets query parameters such as host override the validated
 // hostname, so the URL may carry none and every pool is built from the explicit fields here.
 import { spawn } from 'node:child_process';
 import { generateKeyPairSync, randomBytes, randomUUID, scryptSync } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { request as httpRequest } from 'node:http';
+import { createConnection, createServer as createTcpServer } from 'node:net';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -142,11 +147,24 @@ function sweepStaleDirectories() {
   } catch { /* stale temp dirs are best-effort cleanup only */ }
 }
 
+// Service bundles are written under each service's dist/ so bare imports resolve from the
+// service's own node_modules (a file under the temp dir would find none). A killed run can
+// leave one behind; like the temp dirs above it is stale by definition on the next run.
+function sweepStaleServiceFiles() {
+  for (const service of Object.keys(SERVICES)) {
+    const dist = join(root, 'services', service, 'dist');
+    try {
+      for (const entry of readdirSync(dist)) if (/^host-(main|fixture)-[0-9a-f]+\.mjs$/.test(entry)) rmSync(join(dist, entry), { force: true });
+    } catch { /* a missing dist directory is fine */ }
+  }
+}
+
 // Fixtures never set a port; pg falls back to the PGPORT environment variable for any config
 // field it is not given, so the disposable server's port reaches every child through it.
 export async function acquireHostRuntime() {
   const server = disposableServer();
   sweepStaleDirectories();
+  sweepStaleServiceFiles();
   const directory = mkdtempSync(join(tmpdir(), TEMP_PREFIX));
   const roles = { private_service: randomBytes(32).toString('hex'), external_service: randomBytes(32).toString('hex') };
   const secretEnv = materializeSecrets(directory, roles);
@@ -176,11 +194,15 @@ export async function acquireHostRuntime() {
   }
   await admin.end().catch(() => undefined);
 
-  function exec(service, args, { input, timeout = 120000, env: extra = {} } = {}) {
-    if (!SERVICES[service]) throw new Error(`Unknown service ${service}.`);
+  function childEnv(service, extra = {}) {
     const env = {};
     for (const [key, value] of Object.entries(process.env)) if (!/^(PRIVATE_|EXTERNAL_|SYNTHETIC_|PG|BOX_)/.test(key)) env[key] = value;
-    Object.assign(env, environments[service], extra);
+    return Object.assign(env, environments[service], extra);
+  }
+
+  function exec(service, args, { input, timeout = 120000, env: extra = {} } = {}) {
+    if (!SERVICES[service]) throw new Error(`Unknown service ${service}.`);
+    const env = childEnv(service, extra);
     return new Promise((resolve, reject) => {
       const child = spawn(process.execPath, args, { cwd: join(root, 'services', service), env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
       let stdout = ''; let stderr = '';
@@ -194,10 +216,141 @@ export async function acquireHostRuntime() {
     });
   }
 
+  // Bundles are built once per entry per runtime, exactly like the K2a tests build fixtures.
+  const bundles = new Map();
+  function bundle(service, entry) {
+    const key = `${service}/${entry}`;
+    if (!bundles.has(key)) {
+      const pending = import('vite').then(({ build }) => build({
+        configFile: false,
+        logLevel: 'silent',
+        build: { ssr: join(root, 'services', service, `${entry}.ts`), write: false, minify: false, sourcemap: false, rollupOptions: { output: { inlineDynamicImports: true } } }
+      })).then(result => {
+        const chunks = Array.isArray(result) ? result : result.output ?? [];
+        const chunk = chunks.find(item => item.type === 'chunk' && typeof item.code === 'string');
+        if (!chunk || chunk.code === undefined) throw new Error(`Bundle ${key} produced no chunk.`);
+        return chunk.code;
+      });
+      pending.catch(() => bundles.delete(key));
+      bundles.set(key, pending);
+    }
+    return bundles.get(key);
+  }
+
+  // The real bootstraps and fixture entries run from bundle files in each service's gitignored
+  // dist/, so 'pg'/'fastify' resolve from its node_modules and fixtures keep their real stdin
+  // (stdin-delivered code would starve the fixture's command JSON of its input).
+  const serviceFiles = new Set();
+  function writeBundle(service, prefix, code) {
+    const file = join(root, 'services', service, 'dist', `${prefix}-${randomBytes(4).toString('hex')}.mjs`);
+    mkdirSync(join(root, 'services', service, 'dist'), { recursive: true });
+    writeFileSync(file, code, { mode: 0o600 });
+    serviceFiles.add(file);
+    return file;
+  }
+
+  // Runs the checked-in fixture entries (auth/fixture, requests/intake-fixture, ...) against
+  // this runtime's databases — the host replacement for the docker-exec fixture calls.
+  async function runFixture(service, entry, command, flag = 'SYNTHETIC_AUTH_FIXTURE') {
+    const file = writeBundle(service, 'host-fixture', await bundle(service, entry));
+    const result = await exec(service, [file], { input: JSON.stringify(command), env: { [flag]: 'private-task-mvp-synthetic' } });
+    if (result.code !== 0) throw new Error(`Host fixture ${service}:${entry} failed: ${result.stderr.slice(-2048)}`);
+    return JSON.parse(result.stdout.trim().split('\n').at(-1));
+  }
+
+  // The real bootstraps run as long-lived children. The prepended watchdog makes the service
+  // exit when this process's stdin pipe dies, so even a killed run leaks no process.
+  // cleanup() still stops children first and deletes every bundle file.
+  const WATCHDOG = "process.stdin.resume();process.stdin.on('end',()=>process.exit(0));process.stdin.on('close',()=>process.exit(0));\n";
+  const serviceChildren = new Map();
+  function spawnService(service, code, extra) {
+    const file = writeBundle(service, 'host-main', WATCHDOG + code);
+    const child = spawn(process.execPath, [file], { cwd: join(root, 'services', service), env: childEnv(service, extra), stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const record = { stderr: '' };
+    serviceChildren.set(child, record);
+    child.stderr.on('data', chunk => { record.stderr = (record.stderr + chunk.toString()).slice(-8192); });
+    child.stdout.resume();
+    child.on('exit', () => serviceChildren.delete(child));
+    child.on('error', () => serviceChildren.delete(child));
+    return { child, record };
+  }
+
+  async function waitForHealth(service, host, port, hostHeader, record, child) {
+    const deadline = Date.now() + 30000;
+    const probe = () => new Promise(resolve => {
+      const req = httpRequest({ host, port, path: '/health', headers: { Host: hostHeader }, timeout: 2000 }, response => {
+        let body = ''; response.on('data', chunk => { body += chunk; });
+        response.on('end', () => resolve(response.statusCode === 200 && body.includes(`"${service}"`)));
+      });
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => { req.destroy(); resolve(false); });
+      req.end();
+    });
+    while (Date.now() < deadline) {
+      if (child.exitCode !== null) throw new Error(`${service} exited before health: ${record.stderr.slice(-2048)}`);
+      if (await probe()) return;
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
+    throw new Error(`${service} did not become healthy: ${record.stderr.slice(-2048)}`);
+  }
+
+  // Driver-side callers (Playwright route.fetch, plain http) never see --host-resolver-rules:
+  // the OS resolves *.localhost to ::1 or 127.0.0.1, and 127.0.0.1 may already be held. TCP
+  // mirrors forward the default loopback answers to the real bind wherever they are free, so
+  // driver-side calls still reach these services with the contract headers untouched.
+  const mirrors = [];
+  const mirrorSockets = new Set();
+  async function mirrorLoopback(port, target) {
+    for (const candidate of ['::1', '127.0.0.1']) {
+      if (candidate === target) continue;
+      const server = createTcpServer(socket => {
+        mirrorSockets.add(socket);
+        const upstream = createConnection({ host: target, port });
+        socket.on('close', () => { mirrorSockets.delete(socket); upstream.destroy(); });
+        socket.pipe(upstream);
+        upstream.pipe(socket);
+        const drop = () => { socket.destroy(); upstream.destroy(); };
+        socket.on('error', drop);
+        upstream.on('error', drop);
+      });
+      await new Promise(resolve => {
+        server.once('error', () => resolve());
+        server.listen(port, candidate, () => { mirrors.push(server); resolve(); });
+      });
+    }
+  }
+
+  // Starts both APIs on one loopback bind (127.0.0.2 by default: Docker Desktop can hold
+  // 127.0.0.1:4000, and the whole 127/8 block is loopback — the Host/Origin contract headers
+  // are unchanged). Callers get the bound host so their HTTP and browser mappings agree.
+  let servicesStarted;
+  async function startServices({ host = '127.0.0.2' } = {}) {
+    servicesStarted ??= (async () => {
+      for (const [service, port, hostHeader] of [['private-api', 4000, 'private.localhost:4000'], ['external-api', 4001, 'contributor.localhost:4001']]) {
+        const code = await bundle(service, 'src/bootstrap/main');
+        const extra = { SYNTHETIC_HOST_TEST: 'true', SYNTHETIC_HOST_TEST_BIND: host, AUTH_MODE: 'localhost_demo' };
+        if (service === 'private-api') Object.assign(extra, { SYNTHETIC_SNAPSHOT_SOURCE: 'private-task-mvp-synthetic', SYNTHETIC_SNAPSHOT_ROOT: join(root, 'examples', 'private-shop') });
+        const { child, record } = spawnService(service, code, extra);
+        await waitForHealth(service, host, port, hostHeader, record, child);
+      }
+      await mirrorLoopback(4000, host);
+      await mirrorLoopback(4001, host);
+      return { host };
+    })();
+    try { return await servicesStarted; } catch (error) { servicesStarted = undefined; throw error; }
+  }
+
   let cleaned;
   async function cleanup() {
     if (cleaned) return cleaned;
     cleaned = (async () => {
+      for (const child of [...serviceChildren.keys()]) { try { child.kill(); } catch { /* already gone */ } }
+      const killDeadline = Date.now() + 5000;
+      while (serviceChildren.size && Date.now() < killDeadline) await new Promise(resolve => setTimeout(resolve, 100));
+      for (const child of [...serviceChildren.keys()]) { try { child.kill('SIGKILL'); } catch { /* already gone */ } }
+      for (const socket of mirrorSockets) socket.destroy();
+      for (const server of mirrors) server.close();
+      for (const file of serviceFiles) rmSync(file, { force: true });
       let failure;
       try {
         const adminPool = await readyPool(server, { max: 1 });
@@ -215,5 +368,5 @@ export async function acquireHostRuntime() {
     })();
     return cleaned;
   }
-  return { exec, cleanup };
+  return { exec, runFixture, startServices, cleanup };
 }

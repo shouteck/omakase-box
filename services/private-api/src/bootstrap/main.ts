@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
 import { Pool } from 'pg';
 import { createPrivateApi } from './server.js';
 import { SessionStore } from '../../../../packages/contracts/auth/store.js';
@@ -58,10 +59,14 @@ try {
     pool = new Pool({ host: config.PRIVATE_DATABASE_HOST, database: config.PRIVATE_DATABASE_NAME, user: config.PRIVATE_DATABASE_USER, password: readFileSync(config.PRIVATE_DATABASE_PASSWORD_FILE,'utf8').trim(), max: 3, connectionTimeoutMillis: 5000 });
     const sources = await loadSnapshotSources(process.env.PRIVATE_SNAPSHOT_SOURCES_FILE);
     if (process.env.SYNTHETIC_SNAPSHOT_SOURCE === 'private-task-mvp-synthetic') {
-      const fixture = JSON.parse(readFileSync('/workspace/examples/private-shop/fixture.json', 'utf8'));
+      // Host test mode takes the fixture root from the environment; the container keeps the
+      // baked-in workspace path. Only the directory moves — the fixture contract is unchanged.
+      const shopRoot = process.env.SYNTHETIC_HOST_TEST === 'true' ? process.env.SYNTHETIC_SNAPSHOT_ROOT : '/workspace/examples/private-shop';
+      if (typeof shopRoot !== 'string' || !isAbsolute(shopRoot)) throw new Error('Invalid synthetic snapshot fixture.');
+      const fixture = JSON.parse(readFileSync(join(shopRoot, 'fixture.json'), 'utf8'));
       if (fixture.kind !== 'synthetic-private-shop' || fixture.schemaVersion !== 1) throw new Error('Invalid synthetic snapshot fixture.');
-      sources.push({ id: 'synthetic-shop', root: '/workspace/examples/private-shop', paths: fixture.snapshotPaths });
-      sources.push({ id: 'private-shop', root: '/workspace/examples/private-shop', paths: fixture.snapshotPaths });
+      sources.push({ id: 'synthetic-shop', root: shopRoot, paths: fixture.snapshotPaths });
+      sources.push({ id: 'private-shop', root: shopRoot, paths: fixture.snapshotPaths });
     }
     const releaseKey = readFileSync(config.PRIVATE_RELEASE_KEY_FILE);
     const gate = releaseReadinessGate(createPublicKey(releaseKey));
@@ -82,7 +87,11 @@ try {
   }
   const app = createPrivateApi(auth);
   app.addHook('onClose', async () => { if (dispatchTimer) clearInterval(dispatchTimer); if (importTimer) clearInterval(importTimer); if (feedbackTimer) clearInterval(feedbackTimer); await pool?.end(); });
-  const host = !synthetic && process.env.TRUSTED_CONTAINER_LISTEN === 'true' ? '0.0.0.0' : '127.0.0.1';
+  // Host test mode may move the loopback bind (127.0.0.2 dodges anything already holding
+  // 127.0.0.1:4000); the Host/Origin contract headers stay the same and only 127.x is accepted.
+  const hostTestBind = process.env.SYNTHETIC_HOST_TEST === 'true' ? process.env.SYNTHETIC_HOST_TEST_BIND : undefined;
+  if (hostTestBind !== undefined && !/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostTestBind)) throw new Error('Host test bind must be a 127.x loopback address.');
+  const host = !synthetic && process.env.TRUSTED_CONTAINER_LISTEN === 'true' ? '0.0.0.0' : hostTestBind ?? '127.0.0.1';
   await app.listen({ host, port: 4000 });
   console.log('Private API listening on port 4000; MVP delivery remains unverified.');
   for (const signal of ['SIGINT','SIGTERM'] as const) process.on(signal, () => { void app.close(); });

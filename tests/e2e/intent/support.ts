@@ -2,57 +2,46 @@ import { execFileSync } from 'node:child_process';
 import { createServer, request as httpRequest } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
+import { afterAll } from 'vitest';
 import { chromium } from '@playwright/test';
-import { docker } from '../../../scripts/docker.mjs';
-import { composeArguments } from '../../../scripts/synthetic-runtime.mjs';
+import { acquireHostRuntime, type HostRuntime } from '../../../scripts/host-test-runtime.mjs';
 
 export const root = process.cwd();
 const DIST = join(root, 'apps', 'private-console', 'dist');
 const BROWSERS = join(root, '.runtime', 'browsers');
 
-export function run(script: string, args: string[], timeout = 180000): number {
-  try { execFileSync(process.execPath, [script, ...args], { cwd: root, stdio: 'ignore', timeout, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSERS } }); return 0; }
-  catch (error) { return (error as { status?: number }).status ?? 1; }
-}
+// Both APIs run as host children on 127.0.0.2: Docker Desktop can hold 127.0.0.1:4000 and the
+// whole 127/8 block is loopback, so the private.localhost:4000/3000 contract headers are kept.
+export const API_HOST = '127.0.0.2';
 
-function probeHealth(): Promise<boolean> {
-  return new Promise(resolve => {
-    const req = httpRequest({ host: '127.0.0.1', port: 4000, path: '/health', headers: { Host: 'private.localhost:4000' }, timeout: 4000 }, response => {
-      let body = ''; response.on('data', chunk => { body += chunk; });
-      response.on('end', () => resolve(response.statusCode === 200 && body.includes('private-api')));
-    });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
-    req.end();
-  });
-}
-
-let runtimeReady = false;
+let runtime: HostRuntime | undefined;
 export async function ensureRuntime(): Promise<void> {
-  if (runtimeReady || await probeHealth()) { runtimeReady = true; return; }
-  if (run('scripts/synthetic-runtime.mjs', ['up']) !== 0) {
-    if (run('scripts/synthetic-runtime.mjs', ['build'], 600000) !== 0) throw new Error('Synthetic runtime build failed.');
-    if (run('scripts/synthetic-runtime.mjs', ['up']) !== 0) throw new Error('Synthetic runtime start failed.');
+  if (runtime) return;
+  const acquired = await acquireHostRuntime();
+  try {
+    await acquired.startServices({ host: API_HOST });
+  } catch (error) {
+    await acquired.cleanup();
+    throw error;
   }
-  if (run('scripts/migrate-runtime.mjs', [], 120000) !== 0) throw new Error('Synthetic runtime migration failed.');
-  if (!await probeHealth()) throw new Error('Synthetic private API is unavailable after start.');
-  runtimeReady = true;
+  runtime = acquired;
 }
+
+afterAll(async () => {
+  const acquired = runtime;
+  runtime = undefined;
+  await acquired?.cleanup();
+});
 
 export interface Account { id: string; username: string; role: string }
 export async function seedAccounts(): Promise<{ accounts: Account[]; intentId?: string }> {
-  const result = await docker([...composeArguments, 'exec', '-T', '--env', 'SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic', '--workdir', '/workspace/services/private-api', 'private-api', 'node', 'dist/fixture.js'], { input: JSON.stringify({ action: 'seed' }) });
-  if (result.code !== 0) throw new Error('Synthetic private account fixture failed.');
-  return JSON.parse(result.stdout) as { accounts: Account[] };
+  return await runtime!.runFixture('private-api', 'auth/fixture', { action: 'seed' }) as { accounts: Account[] };
 }
 export async function fixtureAction(command: Record<string, unknown>): Promise<void> {
-  const result = await docker([...composeArguments, 'exec', '-T', '--env', 'SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic', '--workdir', '/workspace/services/private-api', 'private-api', 'node', 'dist/fixture.js'], { input: JSON.stringify(command) });
-  if (result.code !== 0) throw new Error('Synthetic private fixture action failed.');
+  await runtime!.runFixture('private-api', 'auth/fixture', command);
 }
 export async function externalSeed(): Promise<{ accounts: Account[] }> {
-  const result = await docker([...composeArguments, 'exec', '-T', '--env', 'SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic', '--workdir', '/workspace/services/external-api', 'external-api', 'node', 'dist/fixture.js'], { input: JSON.stringify({ action: 'seed' }) });
-  if (result.code !== 0) throw new Error('Synthetic external account fixture failed.');
-  return JSON.parse(result.stdout) as { accounts: Account[] };
+  return await runtime!.runFixture('external-api', 'auth/fixture', { action: 'seed' }) as { accounts: Account[] };
 }
 
 export interface HttpResponse { status: number; body: unknown; text: string; headers: Record<string, string | string[] | undefined> }
@@ -61,7 +50,7 @@ export function http(scope: 'private' | 'external', method: 'GET' | 'POST', path
   const host = scope === 'private' ? 'private.localhost' : 'contributor.localhost';
   const origin = scope === 'private' ? 'http://private.localhost:3000' : 'http://contributor.localhost:3001';
   return new Promise((resolve, reject) => {
-    const req = httpRequest({ host: '127.0.0.1', port, path, method, headers: { Host: `${host}:${port}`, Origin: origin, 'Content-Type': 'application/json', ...headers }, timeout: 30000 }, response => {
+    const req = httpRequest({ host: API_HOST, port, path, method, headers: { Host: `${host}:${port}`, Origin: origin, 'Content-Type': 'application/json', ...headers }, timeout: 30000 }, response => {
       const chunks: Buffer[] = []; let size = 0;
       response.on('data', (chunk: Buffer) => { size += chunk.length; if (size > 2097152) { response.destroy(new Error('Bounded e2e response exceeded.')); return; } chunks.push(chunk); });
       response.on('error', reject);
@@ -74,13 +63,7 @@ export function http(scope: 'private' | 'external', method: 'GET' | 'POST', path
 }
 export interface Session { Cookie: string; 'X-CSRF-Token': string }
 export async function signIn(scope: 'private' | 'external', account: Account, password = 'synthetic-auth-password-only'): Promise<Session> {
-  const attempt = async () => http(scope, 'POST', '/v1/auth/login', { username: account.username, password });
-  let response = await attempt();
-  if (response.status === 429) {
-    await docker([...composeArguments, 'restart', scope === 'private' ? 'private-api' : 'external-api']);
-    for (let waited = 0; waited < 30000 && !await (scope === 'private' ? probeHealth() : Promise.resolve(true)); waited += 1000) await new Promise(resolve => setTimeout(resolve, 1000));
-    response = await attempt();
-  }
+  const response = await http(scope, 'POST', '/v1/auth/login', { username: account.username, password });
   if (response.status !== 200) throw new Error(`Synthetic sign-in failed with ${response.status}.`);
   const cookie = response.headers['set-cookie'];
   const raw = Array.isArray(cookie) ? cookie[0] : cookie;
@@ -132,33 +115,25 @@ export async function serveConsole(): Promise<ConsoleHandle> {
       response.end(bytes);
     } catch { response.writeHead(404, { 'Content-Type': 'application/json' }); response.end('{"error":"not_found"}'); }
   });
-  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(3000, '127.0.0.1', () => resolve()); });
+  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(3000, API_HOST, () => resolve()); });
   return { server, close: () => new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())) };
 }
 
 export async function launchConsole() {
-  const browser = await chromium.launch({ headless: true, args: ['--host-resolver-rules=MAP private.localhost 127.0.0.1'] });
+  const browser = await chromium.launch({ headless: true, args: [`--host-resolver-rules=MAP private.localhost ${API_HOST}`] });
   const context = await browser.newContext();
   const page = await context.newPage();
   return { browser, context, page };
 }
 export async function consoleSignIn(page: import('@playwright/test').Page, account: Account) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    if (attempt > 0) { await page.reload(); await page.getByRole('button', { name: 'Sign in' }).waitFor({ timeout: 20000 }); }
-    await page.getByLabel('Username').fill(account.username);
-    await page.getByLabel('Password').fill('synthetic-auth-password-only');
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    const outcome = await Promise.race([
-      page.getByText('Signed in as').waitFor({ timeout: 20000 }).then(() => 'ok' as const),
-      page.getByText('Sign-in failed:').waitFor({ timeout: 20000 }).then(() => 'failed' as const)
-    ]).catch(() => 'timeout' as const);
-    if (outcome === 'ok') return;
-    const status = await page.getByRole('status').first().textContent().catch(() => null);
-    if (outcome === 'failed' && attempt === 0 && status !== null && status.includes('rate_limited')) {
-      await docker([...composeArguments, 'restart', 'private-api']);
-      for (let waited = 0; waited < 30000 && !await probeHealth(); waited += 1000) await new Promise(resolve => setTimeout(resolve, 1000));
-      continue;
-    }
-    throw new Error(`Synthetic console sign-in failed (${outcome}): ${status ?? 'no status shown'}.`);
-  }
+  await page.getByLabel('Username').fill(account.username);
+  await page.getByLabel('Password').fill('synthetic-auth-password-only');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  const outcome = await Promise.race([
+    page.getByText('Signed in as').waitFor({ timeout: 20000 }).then(() => 'ok' as const),
+    page.getByText('Sign-in failed:').waitFor({ timeout: 20000 }).then(() => 'failed' as const)
+  ]).catch(() => 'timeout' as const);
+  if (outcome === 'ok') return;
+  const status = await page.getByRole('status').first().textContent().catch(() => null);
+  throw new Error(`Synthetic console sign-in failed (${outcome}): ${status ?? 'no status shown'}.`);
 }
