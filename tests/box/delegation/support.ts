@@ -1,7 +1,11 @@
+import { execFile } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { signSession, tokenHash } from '../../../packages/contracts/auth/crypto.js';
 import { SessionStore } from '../../../packages/contracts/auth/store.js';
 import { PrivateIntakeStore } from '../../../services/private-api/requests/store.js';
@@ -11,11 +15,12 @@ import { BoxStore } from '../../../services/private-api/boxes/store/store.js';
 import { boxPreparationOrchestration } from '../../../services/private-api/boxes/preparation/orchestrator.js';
 import { createPrivateApi } from '../../../services/private-api/src/bootstrap/server.js';
 import { PRIVATE_SHOP_FILE_ROLES } from '../../../services/private-api/boxes/preparation/types.js';
+import { migratedPool } from '../auth/support.js';
 
-const requireService = createRequire(fileURLToPath(new URL('../../../services/private-api/package.json', import.meta.url)));
-const { Pool } = requireService('pg') as { Pool: new (config: Record<string, unknown>) => PgPool };
-const { drizzle } = requireService('drizzle-orm/node-postgres') as { drizzle: (pool: PgPool) => unknown };
-const { migrate } = requireService('drizzle-orm/node-postgres/migrator') as { migrate: (db: unknown, options: { migrationsFolder: string }) => Promise<void> };
+const run = promisify(execFile);
+const REGISTER_FIXTURE = fileURLToPath(new URL('./register-fixture.mjs', import.meta.url));
+const FIXTURE_MANIFEST = fileURLToPath(new URL('./fixture-manifest.json', import.meta.url));
+const PRIVATE_SHOP_ROOT = fileURLToPath(new URL('../../../examples/private-shop', import.meta.url));
 
 interface PgClient { query(sql: string, parameters?: unknown[]): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>; release(): void }
 interface PgPool { query: PgClient['query']; connect(): Promise<PgClient>; end(): Promise<void> }
@@ -46,44 +51,61 @@ export const REQUEST_B_TEXT = {
   exclusions: ['Do not edit rankPrivateItems.ts or its callers.', 'Do not implement the change; only prepare the Box.']
 };
 
-const APPROVED_FIXTURE_DB_ALIAS = 'w002-b11-box-db-r4-env2';
-const RUN_DB_PREFIX = 'w005_d12_run_';
-const LEGACY_RUN_DB_PREFIX = 'w002_b11_r4run_';
-const MAX_RUN_DATABASES = 12;
-const CONNECTION_DEADLINE_MS = 10000;
-export const BASELINE_WORKDIR = '/tmp/w005-d12-fixture-baseline';
-export const BASELINE_OUT = '/tmp/w005-d12-fixture-baseline-out/baseline.json';
-
+// The suite gets a disposable Postgres URL from scripts/verify.mjs in BOX_DELEGATION_DATABASE_URL. All database
+// lifecycle rules live in migratedPool in tests/box/auth/support.ts (loopback-only, no query or fragment, pools
+// built from the validated fields, database dropped when the pool ends); this wrapper hands it the delegation
+// variable so the suite does not depend on the auth suite's variable.
 export async function delegationPool(): Promise<{ pool: PgPool; database: string }> {
   const adminUrl = process.env.BOX_DELEGATION_DATABASE_URL;
-  if (typeof adminUrl !== 'string' || !adminUrl.startsWith('postgresql://')) throw new Error('BOX_DELEGATION_DATABASE_URL is not configured.');
-  const runId = process.env.BOX_TEST_RUN_ID;
-  if (typeof runId !== 'string' || !/^[A-Za-z0-9_.-]{4,64}$/.test(runId)) throw new Error('BOX_TEST_RUN_ID is not configured.');
-  const url = new URL(adminUrl);
-  if (url.hostname !== APPROVED_FIXTURE_DB_ALIAS) throw new Error('BOX_DELEGATION_DATABASE_URL is not bound to the approved network-local alias.');
-  const database = RUN_DB_PREFIX + runId.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 24) + '_' + hex(8);
-  const admin = new Pool({ connectionString: adminUrl, max: 1, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
-  let pool: PgPool | undefined;
-  try {
-    let ready = false;
-    let lastReadinessError: unknown;
-    for (let attempt = 0; attempt < 2 && !ready; attempt += 1) {
-      try { await admin.query('SELECT 1'); ready = true; }
-      catch (error) { lastReadinessError = error; await new Promise(resolve => setTimeout(resolve, 500)); }
-    }
-    if (!ready) throw lastReadinessError;
-    const owned = await admin.query("SELECT count(*)::int AS n FROM pg_database WHERE datname LIKE '" + RUN_DB_PREFIX.replace(/_/g, '\\_') + "%' ESCAPE '\\' OR datname LIKE '" + LEGACY_RUN_DB_PREFIX.replace(/_/g, '\\_') + "%' ESCAPE '\\'");
-    const ownedCount = Number(owned.rows[0]?.n);
-    if (!Number.isInteger(ownedCount) || ownedCount < 0 || ownedCount >= MAX_RUN_DATABASES) throw new Error('delegation fixture database cap reached or inventory unknown.');
-    await admin.query('CREATE DATABASE ' + database);
-    url.pathname = '/' + database;
-    pool = new Pool({ connectionString: url.toString(), max: 4, connectionTimeoutMillis: CONNECTION_DEADLINE_MS });
-    await migrate(drizzle(pool), { migrationsFolder: fileURLToPath(new URL('../../../services/private-api/db/migrations/', import.meta.url)) });
-    return { pool, database };
-  } catch (error) {
-    if (pool !== undefined) await pool.end().catch(() => undefined);
-    throw error;
-  } finally { await admin.end().catch(() => undefined); }
+  if (typeof adminUrl !== 'string' || !adminUrl.startsWith('postgres://')) throw new Error('BOX_DELEGATION_DATABASE_URL is not configured.');
+  process.env.BOX_TEST_DATABASE_URL = adminUrl;
+  const migrated = await migratedPool();
+  const end = migrated.pool.end.bind(migrated.pool);
+  let ended: Promise<void> | undefined;
+  migrated.pool.end = () => ended ??= end().finally(() => removeRunDirectory());
+  return migrated;
+}
+
+// Every run materializes the fixture git baseline in its own directory under the OS temp directory. The
+// directory is removed when the suite's pool ends and, as a backstop, when the process exits; nothing is
+// shared or left behind between runs.
+let runDirectory: string | undefined;
+function removeRunDirectory(): void {
+  if (runDirectory !== undefined) rmSync(runDirectory, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+}
+function runRoot(): string {
+  if (runDirectory === undefined) {
+    runDirectory = mkdtempSync(join(tmpdir(), 'box-d12-delegation-'));
+    process.once('exit', removeRunDirectory);
+  }
+  return runDirectory;
+}
+
+export function baselineWorkdir(): string {
+  return join(runRoot(), 'fixture-baseline');
+}
+
+export function baselineOut(): string {
+  return join(runRoot(), 'baseline-out', 'baseline.json');
+}
+
+let runManifest: Promise<string> | undefined;
+function manifestPath(): Promise<string> {
+  return runManifest ??= (async () => {
+    const template = JSON.parse(await readFile(FIXTURE_MANIFEST, 'utf8')) as Record<string, unknown>;
+    const path = join(runRoot(), 'fixture-manifest.json');
+    await writeFile(path, JSON.stringify({ ...template, sourceRoot: PRIVATE_SHOP_ROOT, baselineWorkdir: baselineWorkdir(), baselineOut: baselineOut() }, null, 2) + '\n');
+    return path;
+  })();
+}
+
+export interface FixtureBaseline { baseCommit: string; fileCount: number }
+
+export async function materializeFixtureBaseline(): Promise<FixtureBaseline> {
+  await run('node', [REGISTER_FIXTURE, '--manifest', await manifestPath(), '--out', baselineOut()], { timeout: 60000 });
+  const baseline = JSON.parse(await readFile(baselineOut(), 'utf8')) as { baseCommit?: unknown; fileCount?: unknown };
+  if (typeof baseline.baseCommit !== 'string' || !/^[a-f0-9]{40}$/.test(baseline.baseCommit) || typeof baseline.fileCount !== 'number') throw new Error('baseline_invalid');
+  return { baseCommit: baseline.baseCommit, fileCount: baseline.fileCount };
 }
 
 export interface DelegationAccount { id: string; role: 'requester' | 'owner' | 'operator'; sessionHash: string; csrfHash: string; cookie: string; csrf: string }
@@ -100,18 +122,11 @@ export async function account(pool: PgPool, role: DelegationAccount['role']): Pr
 }
 
 export function sourceRoot(): string {
-  const root = process.env.BOX_DELEGATION_BASELINE_ROOT;
-  if (typeof root !== 'string' || root === '') throw new Error('BOX_DELEGATION_BASELINE_ROOT is not configured.');
-  const resolved = new URL('file://' + root).pathname;
-  if (resolved !== BASELINE_WORKDIR) throw new Error('BOX_DELEGATION_BASELINE_ROOT must equal the owned baseline workdir.');
-  return root;
+  return baselineWorkdir();
 }
 
 export async function baselineCommit(): Promise<string> {
-  const path = process.env.BOX_DELEGATION_BASELINE_JSON ?? BASELINE_OUT;
-  const baseline = JSON.parse(await readFile(path, 'utf8')) as { baseCommit?: unknown; fileCount?: unknown };
-  if (typeof baseline.baseCommit !== 'string' || !/^[a-f0-9]{40}$/.test(baseline.baseCommit)) throw new Error('baseline_json_commit_missing');
-  return baseline.baseCommit;
+  return (await materializeFixtureBaseline()).baseCommit;
 }
 
 export function delegationSources() {

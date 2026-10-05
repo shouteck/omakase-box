@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { lstat, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
-import { dirname, resolve, sep } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, isAbsolute, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
@@ -73,10 +74,15 @@ const sourceRoot = manifest.sourceRoot;
 const workdir = manifest.baselineWorkdir;
 const outPath = manifest.baselineOut;
 const paths = manifest.baselinePaths;
-if (typeof sourceRoot !== 'string' || !sourceRoot.startsWith('/')) throw new Error('fixture_manifest_root');
-if (workdir !== '/tmp/w005-d12-fixture-baseline') throw new Error('fixture_manifest_workdir');
-if (outPath !== '/tmp/w005-d12-fixture-baseline-out/baseline.json') throw new Error('fixture_manifest_out');
-if (resolve(options['--out']) !== resolve(outPath)) throw new Error('fixture_out_binding');
+if (typeof sourceRoot !== 'string' || !isAbsolute(sourceRoot)) throw new Error('fixture_manifest_root');
+// The manifest binds the fixture to disposable locations only: the staged workdir and the baseline output
+// must be absolute paths inside the OS temp directory, and --out must equal the manifest's baselineOut.
+const tempRoot = resolve(tmpdir());
+const resolvedWorkdir = typeof workdir === 'string' ? resolve(workdir) : '';
+const resolvedOut = typeof outPath === 'string' ? resolve(outPath) : '';
+if (resolvedWorkdir === '' || !resolvedWorkdir.startsWith(tempRoot + sep)) throw new Error('fixture_manifest_workdir');
+if (resolvedOut === '' || !resolvedOut.startsWith(tempRoot + sep)) throw new Error('fixture_manifest_out');
+if (resolve(options['--out']) !== resolvedOut) throw new Error('fixture_out_binding');
 if (!Array.isArray(paths) || paths.length < 1 || paths.length > 256) throw new Error('fixture_manifest_paths');
 if (!Array.isArray(manifest.snapshotPaths) || manifest.snapshotPaths.length < 1) throw new Error('fixture_manifest_paths');
 for (const path of [...paths, ...manifest.snapshotPaths]) assertRel(path);

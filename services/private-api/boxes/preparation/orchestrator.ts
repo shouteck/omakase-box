@@ -188,7 +188,7 @@ export class BoxPreparationOrchestrator implements BoxPreparationOrchestration {
     for (const path of descriptor.editableSurface) if (PRIVATE_SHOP_PROTECTED_PATHS.includes(path as never)) throw new WorkflowError('missing_evidence');
     const artifact = this.deriveArtifact(descriptor, request, intent);
     const version = this.deriveVersion(descriptor, artifact, contentHash(artifact), repository, intent, randomUUID(), 1);
-    const created = await this.boxes.createPrepared(actor, { artifact, version }, input.operationKey);
+    const created = await this.boxes.createPrepared(actor, { artifact, version }, input.operationKey, { requestId: input.requestId, repositoryId: input.repositoryId, supportedCaseId: input.supportedCaseId });
     const agreement = await this.agreement(actor, created.boxId);
     return { boxId: created.boxId, version: created.version, state: 'draft', contentHash: created.contentHash, agreement };
   }

@@ -4,9 +4,9 @@
   "revision": "2026-10-05-d1.2-r1",
   "sourceId": "private-shop",
   "label": "private-shop-before-v1",
-  "sourceRoot": "/stage/examples/private-shop",
-  "baselineWorkdir": "/tmp/w005-d12-fixture-baseline",
-  "baselineOut": "/tmp/w005-d12-fixture-baseline-out/baseline.json",
+  "sourceRoot": "<set per run by tests/box/delegation/support.ts>",
+  "baselineWorkdir": "<set per run by tests/box/delegation/support.ts>",
+  "baselineOut": "<set per run by tests/box/delegation/support.ts>",
   "baselinePaths": [
     "config/response-security.json",
     "demo.mjs",

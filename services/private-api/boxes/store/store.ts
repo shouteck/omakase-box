@@ -74,7 +74,11 @@ async function verifyGitBaseline(root: string, baseCommit: string, files: readon
   if (head === null || head !== baseCommit) throw new WorkflowError('missing_evidence');
   const commitObject = await gitLooseObject(root, baseCommit);
   if (commitObject === null || !commitObject.toString('utf8', 0, 7).startsWith('commit ')) throw new WorkflowError('missing_evidence');
-  const treeLine = /^tree ([a-f0-9]{40})$/m.exec(commitObject.toString('utf8'));
+  // The tree pointer is the first line of the commit body, directly after the NUL header terminator.
+  const bodyStart = commitObject.indexOf(0) + 1;
+  const bodyEnd = commitObject.indexOf(0x0a, bodyStart);
+  const firstLine = bodyEnd < 0 ? commitObject.toString('utf8', bodyStart) : commitObject.toString('utf8', bodyStart, bodyEnd);
+  const treeLine = /^tree ([a-f0-9]{40})$/.exec(firstLine);
   if (treeLine === null) throw new WorkflowError('missing_evidence');
   const tracked = new Map<string, string>();
   await gitTreeFiles(root, treeLine[1], '', tracked);
@@ -416,7 +420,7 @@ export class BoxStore {
       return { repoId: row.repo_id, snapshotId: row.snapshot_id, snapshotHash: row.snapshot_hash, sourceId: row.source_id, sourceRoot: row.source_root, baseCommit: row.base_commit, contextManifest: row.context_manifest, contextManifestHash: row.context_manifest_hash, environmentRef: row.environment_ref, evaluatorRef: row.evaluator_ref, mergeTarget: row.merge_target, registeredBy: row.registered_by, registeredAt: row.registered_at };
     });
   }
-  async createPrepared(actor: SessionActor, input: { artifact: unknown; version: unknown }, key?: string) {
+  async createPrepared(actor: SessionActor, input: { artifact: unknown; version: unknown }, key?: string, operationRequest?: unknown) {
     const artifact = BehaviorArtifactSchema.parse(input.artifact);
     const payload = BoxVersionSchema.parse(input.version);
     assertNoRestrictedFields(artifact);
@@ -427,7 +431,9 @@ export class BoxStore {
     const hash = contentHash(payload);
     return this.transaction(async client => {
       await this.requirePermission(client, actor, 'box.write');
-      return this.idempotent(client, actor.id, 'create', key, { input: { artifact, version: payload } }, async () => {
+      // Derived payloads carry fresh random ids, so a supplied operation request is what the key binds:
+      // an identical request replays the recorded result and a different one conflicts.
+      return this.idempotent(client, actor.id, 'create', key, operationRequest ?? { input: { artifact, version: payload } }, async () => {
         await client.query('INSERT INTO box_behavior_artifacts (artifact_id,payload,content_hash,intent_id,created_by) VALUES ($1,$2,$3,$4,$5)', [artifact.artifactId, artifact, artifactHash, artifact.intent.intentId, actor.id]);
         await client.query('INSERT INTO box_versions (box_id,version,state,payload,content_hash,author_id) VALUES ($1,1,$2,$3,$4,$5)', [payload.boxId, 'draft', payload, hash, actor.id]);
         await client.query('INSERT INTO box_heads (box_id,current_version) VALUES ($1,1)', [payload.boxId]);

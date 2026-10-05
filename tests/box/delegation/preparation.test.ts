@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { chromium } from '@playwright/test';
+import { chromium, expect as locatorExpect } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { account, approvedIntentFor, baselineCommit, delegationPool, delegationServices, delegationApi, http, REQUEST_A_CASE, REQUEST_B_CASE, REQUEST_A_TEXT, REQUEST_B_TEXT, UNSUPPORTED_COUPLING_CASE, uuid } from './support.js';
 import { contentHash } from '../../../packages/contracts/hash.js';
@@ -177,10 +177,12 @@ describe('delegation box preparation flow', () => {
       const { preparation } = delegationServices(pool);
       const registration = await preparation.registerRepository(owner, { sourceId: 'private-shop', baseCommit: base }) as { repoId: string; snapshotId: string };
       const { request } = await approvedIntentFor(pool, owner, REQUEST_A_TEXT, registration.snapshotId);
-      await app.listen({ host: '127.0.0.1', port: 4000 });
-      vite = await createServer({ root: consoleRoot, server: { host: '127.0.0.1', port: 3000, strictPort: true }, logLevel: 'silent' });
+      // 127.0.0.2 keeps the demo's pinned private.localhost:4000/3000 host headers while avoiding services
+      // already bound on 127.0.0.1 (the whole 127.0.0.0/8 block is loopback).
+      await app.listen({ host: '127.0.0.2', port: 4000 });
+      vite = await createServer({ root: consoleRoot, server: { host: '127.0.0.2', port: 3000, strictPort: true }, logLevel: 'silent' });
       await vite.listen();
-      browser = await chromium.launch({ headless: true, args: ['--host-resolver-rules=MAP private.localhost 127.0.0.1'] });
+      browser = await chromium.launch({ headless: true, args: ['--host-resolver-rules=MAP private.localhost 127.0.0.2'] });
       const context = await browser.newContext();
       await context.addCookies([{ name: 'private_session', value: owner.cookie, url: 'http://private.localhost:4000/' }]);
       const page = await context.newPage();
@@ -190,12 +192,12 @@ describe('delegation box preparation flow', () => {
       await page.getByRole('button', { name: 'Box preparation' }).click();
       await page.locator('#prep-box').fill('not-a-uuid');
       await page.getByRole('button', { name: 'Open', exact: true }).click();
-      await expect(page.locator('.preparation-failure')).toContainText('invalid');
+      await locatorExpect(page.locator('.preparation-failure')).toContainText('invalid');
       await page.locator('#prep-request').fill(request.id);
       await page.locator('#prep-repo').fill(registration.repoId);
       await page.locator('form[aria-label="Prepare Box"]').getByRole('button', { name: 'Prepare' }).click();
       const card = page.locator('article[aria-label="Box agreement"]');
-      await expect(card).toContainText('Agreement — version 1 (draft)');
+      await locatorExpect(card).toContainText('Agreement — version 1 (draft)');
       const boxId = (await card.locator('dt:has-text("Box") + dd code').innerText()).trim();
       expect(boxId).toMatch(/^[0-9a-f-]{36}$/);
       const apiDenial = await page.evaluate(async id => {
@@ -204,19 +206,19 @@ describe('delegation box preparation flow', () => {
       }, boxId);
       expect(apiDenial).toBeGreaterThanOrEqual(400);
       await card.getByRole('button', { name: 'Approve exact version' }).click();
-      await expect(page.locator('.preparation-notice')).toContainText('approval');
-      await expect(card).toContainText('Approved artifact');
+      await locatorExpect(page.locator('.preparation-notice')).toContainText('approval');
+      await locatorExpect(card).toContainText('Approved artifact');
       await page.locator('#prep-assumptions').fill('Owner requested one wording amendment.');
       await card.getByRole('button', { name: 'Amend' }).click();
-      await expect(page.locator('.preparation-notice')).toContainText('version 2');
-      await expect(card).toContainText('superseded');
+      await locatorExpect(page.locator('.preparation-notice')).toContainText('version 2');
+      await locatorExpect(card).toContainText('superseded');
       await page.reload();
       await page.getByRole('button', { name: 'Box preparation' }).click();
       await page.locator('#prep-box').fill(boxId);
       await page.getByRole('button', { name: 'Open', exact: true }).click();
       const reloaded = page.locator('article[aria-label="Box agreement"]');
-      await expect(reloaded).toContainText('Agreement — version 2 (draft)');
-      await expect(reloaded).toContainText('superseded');
+      await locatorExpect(reloaded).toContainText('Agreement — version 2 (draft)');
+      await locatorExpect(reloaded).toContainText('superseded');
       await context.close();
       const requester = await account(pool, 'requester');
       const deniedContext = await browser.newContext();
@@ -228,9 +230,9 @@ describe('delegation box preparation flow', () => {
       await deniedPage.getByRole('button', { name: 'Box preparation' }).click();
       await deniedPage.locator('#prep-box').fill(boxId);
       await deniedPage.getByRole('button', { name: 'Open', exact: true }).click();
-      await expect(deniedPage.locator('article[aria-label="Box agreement"]')).toContainText('version 2');
-      await expect(deniedPage.getByRole('button', { name: 'Approve exact version' })).toHaveCount(0);
-      await expect(deniedPage.locator('article[aria-label="Box agreement"]')).toContainText('Only the owner approves');
+      await locatorExpect(deniedPage.locator('article[aria-label="Box agreement"]')).toContainText('version 2');
+      await locatorExpect(deniedPage.getByRole('button', { name: 'Approve exact version' })).toHaveCount(0);
+      await locatorExpect(deniedPage.locator('article[aria-label="Box agreement"]')).toContainText('Only the owner approves');
       await deniedContext.close();
     } finally {
       await browser?.close();
