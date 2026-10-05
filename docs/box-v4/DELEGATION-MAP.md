@@ -49,24 +49,32 @@ Human, agent and hybrid execution use the same obligations. The initial proof us
 
 ## Delivery ladder
 
-The detailed preparation backlog is [the delegation graph](../../tasks/box-delegation-task-graph.json). Its implementation units remain pending until their named wave is approved.
+Tasks are in [the delegation graph](../../tasks/box-delegation-task-graph.json). The order follows risk: prove the package before building more screens.
 
-| Milestone | Concrete outcome | Reuse from B-series |
+| Step | Concrete outcome | Form |
 |---|---|---|
-| D1 | Supported task class, request intake and owner-approved completion agreement | B0 census; B1.1 identity/version foundation; focused B2/B4 seams |
-| D2 | Exported package opens and runs without the complete owner repository; recipient can submit a real patch | B1.2 Git binding; B3 workspace; B5 thin adapter |
-| D3 | Owner verifies and integrates the exact contribution; one minimal web journey shows truthful status | Focused B3 evaluation, B4 control and B7 integration |
-| D4 | Fresh-recipient delegation, counterexamples, comparison of total effort and separately labeled commercial evidence | B8 validation methods; only necessary B6 ownership/dependency semantics |
+| D1 | Supported task class, request intake and owner-approved completion agreement | Existing web console and API |
+| D2 | A Box exports as a plain folder, proves itself in a clean directory, and a recipient submits a real patch from it | Command line and file format |
+| D3.1 | The owner verifies the exact patch in the original repository and merges it | Command line |
+| D4 | Fresh-recipient delegation, counterexamples, effort and disclosure compared with ordinary delegation, separately labeled commercial evidence | Measured runs and a report |
+| D3.2 | One minimal web journey for prepare, delegate and accept | Web, after the D4 decision |
 
-D4 is the next product-proof target. Completing the entire broader B0-B8 platform is not a prerequisite for learning whether portable delegation works. Reuse existing source after checking fit; do not rename every module or rebuild accepted components. A reuse reference is not automatic acceptance of a new D unit.
+A Box is a folder: `box.json` (outcome, base commit, read context, editable paths, checks, submission contract), the selected source, the lockfile and tool versions, and non-sensitive fixtures. Three commands cover the loop: export, submit, verify. None needs a server, a database, accounts or a container. The recipient's environment recipe is a Node version and a lockfile; a container image is an optional convenience, never a requirement.
 
-## Current-wave continuity
+The existing B-series code is a parts list. Reuse the Box contracts and hashing from B1.1 and whatever analyzer and patch-validation code fits. The versioned Box store and the D1 intake remain valid as one source of agreements; the package proof does not depend on them.
 
-W001/B0 history remains accepted history. Current W002/B1.1 and its frozen D1-r4 approval, leased source, checks and phase releases remain governed by their exact records. The recovery revision named W002-D1-r4 is unrelated to the new product milestone D1. This refocus neither holds nor resumes W002, takes its lease, starts D tasks, weakens acceptance, changes models/resources nor authorises cleanup.
+## Where a Box has to win
 
-At the next safe planning boundary, reconcile actual W002 outcomes. If it is progressing, finish its approved useful foundation. If a concrete stall leaves no informative in-scope step, preserve work and present the smallest explicit recovery or transition decision; do not silently accept it or extend its scope. Future proposals use this delivery ladder rather than automatically scheduling the whole old platform.
+For a contributor the owner already trusts with the repository, "grant access and point at the issue" is the baseline, and it is cheap. A Box earns its preparation cost in two situations, and both are measurable:
 
-The existing active selector/state/graph remain intact while W002 is owned. The next approved D wave must explicitly record activation of the delegation graph, new D task entries and continued references to B history. Root performs that governance transition after accounting for current writers; no acceptance status is copied by inference. Normal wave approval supplies the implementation decision, not an extra recurring plan-approval ceremony.
+- **Limited disclosure.** The owner will not or cannot share the whole repository. Report, for every Box, the share of owner source the recipient received.
+- **Agent context.** A small, verified context makes an agent cheaper and more reliable than the full repository does. Compare the same agent with the Box and with the full repository: success, tokens, elapsed time, owner interventions.
+
+Total owner effort still matters and is still recorded. If neither wedge shows an advantage in D4, that is the finding.
+
+## The kitchen is the first customer
+
+A wave brief is already a Box in prose: outcome, base commit, editable paths, checks, independent verification in the original repository. From D2.2 on, the kitchen delivers its own briefs to its workers as exported Boxes and records what the worker lacked. This is real repeat use by a team that delegates daily. It is not independent customer evidence and is reported separately from it.
 
 ## Validation and later extensions
 

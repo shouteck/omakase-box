@@ -1,61 +1,45 @@
 # Portable Box delegation plan
 
-On 5 October 2026 the CEO refocused the product on **portable Boxes for delegation**: prepare a runnable work package for a bounded change in an existing codebase, let another developer or agent implement it without the whole repository, and verify/integrate the contribution. Conversation is one creation route. Bounties are a later distribution mode. Git remains durable history; preserve and reuse the existing work.
+**Product:** turn a bounded change in an existing codebase into a runnable work package (a Box) that a chosen developer or agent can implement without the owner repository, then verify and integrate the patch in the original repository.
 
-The authoritative next product map is [DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md), with [eight D-series units](tasks/box-delegation-task-graph.json) targeting D4. It supplies explicit supported scope and portability/acceptance criteria. This refocus is not evidence of novelty, demand, universal extraction or proprietary confidentiality.
+**What must be proven, in order of risk:**
 
-The CEO's subsequent 5 October direction makes **reduced delegation effort and repeat use** the product validation goal. First target engineering teams that regularly use contractors for bounded changes; let owners choose their own trusted contributors or agents. Self-service, slicing and human/agent support are positioning hypotheses, not proven advantages. Follow [VALIDATION-PLAN.md](docs/box-v4/delegation/VALIDATION-PLAN.md): define the ordinary delegation comparison in D1, collect actual effort throughout D2-D3 and report technical capability separately from customer value in D4. Real customer participation and commercial experiments require their own approved pilot; prepare the protocol now without inventing results or adding outreach to W002.
+1. A selected-source package really builds and passes its checks with the rest of the repository absent.
+2. A recipient who has never seen the repository can finish the change from the package alone.
+3. That costs the owner less total effort than ordinary delegation, or discloses far less source for similar effort.
+4. Someone chooses it again for their next delegation, and will pay.
 
-## Run the plan
+Details are in [DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md) and [VALIDATION-PLAN.md](docs/box-v4/delegation/VALIDATION-PLAN.md). Tasks are in [the delegation graph](tasks/box-delegation-task-graph.json). Current state is in [STATUS.md](STATUS.md).
 
-Invoke [START.md](START.md). Reconcile the actual current wave through [the existing selector](.execution/ACTIVE_PLAN.json), [B-series graph](tasks/box-v4-task-graph.json) and [state](.execution/box-v4/state.json). W002/B1.1 remains governed by its exact current approval and leases. No running scope or frozen requirement changes because the roadmap was edited.
+## Sequence
 
-At the next safe planning boundary, prepare the next proposal using the D-series map. Its approved wave explicitly activates that graph and adds D task state while retaining B history. Do not schedule the entire old B8 target by inertia. Every named implementation wave still receives one concise CEO briefing and waits for actual approval; START alone does not execute the refocus.
-
-Each milestone has two bounded units with dependencies, owner, files, delivered behavior and verification. A wave may contain several ready units and is not synonymous with a milestone. Native Cursor pstack is adapted to project policies; Codex uses the labeled fallback. This plan is not implementation approval.
-
-## Next product milestones
-
-| Milestone | Outcome |
-|---|---|
-| D1 | Select supported work and turn a direct request or pasted issue into an owner-approved completion agreement. |
-| D2 | Export a genuinely runnable selected-source package; a recipient opens it and submits a real scoped patch without the owner repository. |
-| D3 | Independently verify the contribution in the original repository, integrate it and expose one minimal prepare/delegate/accept journey. |
-| D4 | Demonstrate fresh-recipient delegation and failure cases; compare total effort with ordinary delegation and separately assess available repeat-use/payment evidence. Recommend the next product decision. |
-
-Start with modular trusted TypeScript examples and known tooling. Full-stack and broader codebase tasks remain valid; supported breadth grows through evidence. An owner-reviewed selection manifest is sufficient for the first packaging experiment. Universal AI selection, arbitrary interactive previews, a marketplace and a bespoke IDE are not prerequisites.
-
-## Existing B-series component map
-
-| Milestone | Outcome | Units |
+| Step | Outcome | Form |
 |---|---|---|
-| B0 | Reconcile legacy evidence, runtime, trust profile and Git baseline plan. | [B0](milestones/box-v4/B0.md) |
-| B1 | Versioned Box/attempt schema and real Git-backed attempts/diffs/provenance. | [B1](milestones/box-v4/B1.md) |
-| B2 | Persisted intent conversation and approved expected behavior with uncertainty. | [B2](milestones/box-v4/B2.md) |
-| B3 | Trusted reproducible Open Box environment and independent evaluator evidence. | [B3](milestones/box-v4/B3.md) |
-| B4 | Box Web list/detail/control flow over the common service. | [B4](milestones/box-v4/B4.md) |
-| B5 | Existing-workbench Box opening and headless/hybrid execution over the same API. | [B5](milestones/box-v4/B5.md) |
-| B6 | Assignments, cross-Box dependencies, concurrency and durable team history. | [B6](milestones/box-v4/B6.md) |
-| B7 | Review, drift/revalidation and safe Git merge queue with provenance. | [B7](milestones/box-v4/B7.md) |
-| B8 | Independent delivery review, reproducible walkthrough and research instruments. | [B8](milestones/box-v4/B8.md) |
+| D1 | A direct request or pasted issue becomes an owner-approved completion agreement. | Existing web console and API (D1.2, in flight) |
+| K1 | The kitchen verifies on the host with no Docker. | Kitchen tooling |
+| D2 | A Box exports as a plain folder, proves itself in a clean directory, and a recipient submits a patch from it. | Command line and file format |
+| D3.1 | The owner verifies the patch in the original repository and merges it. | Command line |
+| D4 | Fresh recipients complete real Boxes; counterexamples fail honestly; effort and disclosure are compared with ordinary delegation. A recommendation follows. | Measured runs and a report |
+| D3.2 | A minimal web journey for prepare, delegate, accept. | Web, only if D4 says continue |
 
-These 18 definitions and their existing evidence remain intact. B0 reconciliation/design was accepted; other status is read from actual current records. Their interfaces and code are reuse candidates for D units, not automatic acceptance or a requirement to implement every platform capability before testing delegation value.
+Why this order: D2 is where the idea can fail, so it comes before more screens. A Box that is a folder plus three commands (`export`, `submit`, `verify`) needs no server, database, accounts or containers, and can be tested this week. The web journey is worth building once D4 shows what users actually need from it.
 
-## Product ladder and gates
+## Decisions built into the plan
 
-The original B-series ladder organised the nucleus, workbench and team platform. The focused D ladder now prioritises one complete delegation loop using the necessary parts of that foundation. Existing B1.1 acceptance remains required where the D graph names it; do not waive it or copy a legacy pass. Keep task preparation, package usability, independent acceptance and authorised integration separate.
+- **Format first.** A Box is `box.json` plus selected source, lockfile, tool versions and fixtures. Any editor or agent can open it. The recipe is "this Node version, this lockfile"; a container is optional and never required.
+- **Selection is checked by execution.** Start from an owner-reviewed manifest, follow imports to find what leaves the selection, then install and run the checks in a clean directory. What fails there is a named preparation gap. Excluded modules may be replaced by type-only stubs.
+- **The kitchen is the first customer.** Every wave brief already has an outcome, a base commit, editable paths and checks. From D2.2 on, workers receive their briefs as Boxes. That produces real delegation data with no outreach.
+- **Two measurable wedges.** Limited disclosure (how little source the recipient needed) and agent context (same agent, Box versus full repository: success, tokens, time). Self-service and human/agent support are not differentiators on their own.
+- **The existing platform is kept, not extended.** B1.1's versioned Box store and D1.2's intake stay as they are. The bounty, reservation, release and hostile-runner code from M0-M9 is frozen for later stages and is not run in ordinary verification.
 
-[Later research](docs/box-v4/RESEARCH.md) retains stages 4-7: restricted disclosure, semantic transformation, external routing and optional bounties. Dedicated hostile-runner/release gates remain unmet and cannot be renamed away. Passing B8 does not authorize later-stage implementation or real participant studies. A twelve-week programme in the supplement is a planning hypothesis, not an agent deadline.
+## In parallel, by the CEO
 
-## Delivered software
+Five to ten conversations with engineering leads who use contractors for bounded work. They need nothing from D1-D4. Ask what they hand over today, how long onboarding takes, what they refuse to share, and how they decide the work is acceptable. This is not a kitchen task and no agent sends messages.
 
-A trusted synthetic/non-sensitive repository has real Git history. A direct work request or imported issue body becomes an approved versioned Box. The recipient receives only relevant owner source and required supporting material, opens a reproducible workspace, implements and submits a scoped diff. The owner independently evaluates that contribution in the original repository, reviews it and lands an explicitly authorised Git change with provenance. A full-repository workspace is not a successful portable-package demonstration.
+## Later, each needing its own decision
 
-A coherent full-stack feature and a codebase policy example demonstrate nonexclusive scope. Dependencies, stale bases, evaluator drift, failed checks, retries and concurrent attempts behave honestly. No custom IDE engine or marketplace is required.
+Restricted proprietary packaging with a disclosure policy; hostile-code execution in disposable VMs; bounty distribution and payments; tracker and backlog integrations; automatic selection; a customer pilot with real participants.
 
-Native pstack needs actual capability/dispatch receipts before being called verified. Fallback can proceed when approved, but cannot masquerade as native execution. Live intent-model quality, human pilot and restricted-hostile execution stay separately labeled.
+## History
 
-## Preserve and reuse
-
-[The reuse audit](docs/box-v4/REUSE.md) maps legacy checked/blocked work, historical approvals and 426 preserved files into the foundation. Reuse actual interfaces/evidence, not completion summaries. The former unborn-Git statement described initial planning and is stale; read actual current HEAD, dirty work and source bindings without inventing a base. Approval/payment/release semantics remain later-profile assets, not mandatory fields for every Open Box.
-
+B0, B1.1 and D1.1 are accepted. The original B0-B8 platform ladder is in [tasks/box-v4-task-graph.json](tasks/box-v4-task-graph.json) and `milestones/box-v4/`; it is a parts list to reuse from, not a backlog to finish. M0-M9 material is under `docs/legacy/`.

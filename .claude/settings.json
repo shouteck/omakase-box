@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.runtime/**)",
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./secrets/**)"
+    ]
+  }
+}

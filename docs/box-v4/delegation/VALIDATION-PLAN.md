@@ -54,8 +54,29 @@ Prepare a customer-pilot protocol and blank recording instruments as part of the
 
 The core pilot question is whether the team chooses Boxes for its next delegation and why. Pilot thresholds and price experiments are frozen in the future pilot brief; the kitchen does not invent a passing threshold afterward.
 
+## Two wedges to measure
+
+Effort alone is unlikely to beat "give the contractor repository access" when the owner trusts the contractor. Record two further measures for every Box, from D2 onward:
+
+- **Disclosure:** the share of owner source files and lines the recipient received, and whether the task completed without asking for more.
+- **Agent context:** the same agent run with the Box and with the full repository, on the same task and checks. Record success, tokens, elapsed time and owner interventions for both. Run each side more than once where practical and report every run.
+
+The kitchen's own waves, delivered as Boxes, are a standing source of both measures. Label them as internal use.
+
+## Conversations the CEO can start now
+
+These do not depend on any milestone and are not a kitchen task; no agent contacts anyone. Five to ten engineering leads who use contractors for bounded changes. Ask about the last time they did it:
+
+1. What did you hand over, and how long did it take to prepare?
+2. How long before the contractor produced something useful, and what did they ask you?
+3. What would you not share with them, and what did you do about that?
+4. How did you decide the work was acceptable, and what did integration cost you?
+5. What do you pay for this today, in money and in your own hours?
+
+Record answers as interview interest, not as demand.
+
 ## Next decision
 
 Recommend one of: extend the supported task class where capability and effort results justify it; simplify packaging where preparation outweighs savings; conduct the smallest authorised customer pilot where usefulness is unknown; or reframe/stop where the measured job is served better by ordinary delegation. Paid adoption or repeat use is not assumed from a successful demo. A marketplace, custom IDE and universal extraction are not responses to missing differentiation evidence.
 
-Station responsibilities: product owns buyer/job and understandable workflow; platform owns usable packages and preparation/setup instrumentation; assurance owns fair comparisons, independent acceptance, denominators and claim limits. Root relays this direction into future briefs and reports one concise CEO decision. Current W002 scope, candidate, authority, models and acceptance remain unchanged.
+The reviewer of each D wave owns the fairness of its comparison: equal obligations on both sides, every attempt counted, missing observations left missing.

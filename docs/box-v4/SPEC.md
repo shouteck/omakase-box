@@ -36,7 +36,7 @@ The headless executor opens the same Box version, receives the same approved con
 
 ## Trust profiles
 
-`open_trusted` uses a deliberately approved synthetic/non-sensitive repository, trusted pinned build/evaluator recipe and explicit executor policy. It may use existing local Dev Containers/Docker with bounded resources and no unnecessary credentials, daemon mounts or egress. It does not safely admit arbitrary strangers or secret-bearing code. Host execution is limited to reviewed Git/bookkeeping tooling; repository, candidate and generated code run in the declared workspace, not directly on the workstation.
+`open_trusted` uses a deliberately approved synthetic/non-sensitive repository, trusted pinned build/evaluator recipe and explicit executor policy. It may use existing local Dev Containers/Docker with bounded resources and no unnecessary credentials, daemon mounts or egress. It does not safely admit arbitrary strangers or secret-bearing code. The repository's own first-party code, written and reviewed by the kitchen, builds and tests directly on the development host. Code from an untrusted third party never does; it belongs to the later profiles below.
 
 `restricted_private` and `hostile_external` remain later-stage profiles governed by legacy release/private acceptance and dedicated disposable VM requirements. Never route those jobs through open_trusted or claim that Docker, sparse checkout or a private model solves semantic confidentiality. Profile transitions require a new reviewed design and CEO authorization.
 

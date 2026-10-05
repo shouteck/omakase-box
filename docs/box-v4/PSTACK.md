@@ -1,51 +1,18 @@
-# Native pstack and the portable fallback
+# Hosts and the pstack method
 
-_Revision note — 2026-10-04 (W001/B0.2):_ sections "Cursor adapter", "Devin adapter" and "Prove the integration before scaling" were refreshed under wave W001 (CEO "Approve", 2026-10-04T07:11:18Z, brief `.execution/box-v4/briefings/W001.md` r4, sha256:573e2e68dddd3b7d50414f815eb168241b1e830f09835f37db6dcd5642ae45d1), base commit `2ad7e35c7cebc9141503c3042fb81edbb40cbd0c`, to reflect S001 verification results and the actual project permission policy. Earlier sections unchanged.
+The kitchen borrows its method from Lauren Tan's (poteto) pstack: small verifiable units, proof against the real artifact, lessons encoded in tools, a human who supervises instead of gating every step. The rules in [AGENTS.md](../../AGENTS.md) and the procedure in [KITCHEN.md](KITCHEN.md) are the same on every host. Where a host's plugin text disagrees with them (station leads, per-wave CEO approval, nested dispatch), AGENTS.md wins.
 
-## What is incorporated
+Any host can take any role. Prefer a reviewer from a different host or model family than the worker, and record who did what in the wave file. Never claim a model, tool or diversity that was not actually used.
 
-The official [pstack plugin](https://github.com/cursor/plugins/tree/main/pstack) by Lauren Tan / poteto is the Cursor execution-method layer. Use its installed `poteto-mode` routing and [Orchestrate playbook](https://github.com/cursor/plugins/blob/main/pstack/skills/poteto-mode/playbooks/orchestrate.md) for the programme, with relevant investigation/design/review skills for bounded work. Native pstack supplies workflow skills and agent orchestration conventions, not the Box product, a model server or proof that our code is correct.
+| Host | CTO | Worker | Reviewer | Setup in this repository |
+|---|---|---|---|---|
+| Claude Code | yes | `box-worker` | `box-reviewer` | `CLAUDE.md`, `.claude/agents/`, `.claude/skills/kitchen/` |
+| Devin | yes | `box-worker` | `box-reviewer` | `.devin/rules/`, `.devin/agents/`, `.devin/plugins/box-pstack/` |
+| Cursor | yes | built-in agent | built-in agent | `.cursor/rules/box-kitchen.mdc`; native pstack is not installed on this machine |
+| Codex | yes | collaboration tools | collaboration tools | reads `AGENTS.md` directly |
 
-The reviewed upstream manifest reported version 0.15.9 on 4 October 2026. This is an observed version, not an installed version or immutable commit pin. Check the actual installed manifest/skill contents before use and record versions/digests. Do not silently substitute a community fork or mutable upstream behavior.
+Notes:
 
-## Setup once, then START.md
-
-Official setup uses `/add-plugin pstack` and `/setup-pstack`. Installation, user-level model rules and any optional cursor-team-kit companion are not performed by this planning revision. In the initial briefing, inspect installed skills and ask only for genuine setup prerequisites. Do not change global settings or download dependencies without appropriate authorization.
-
-The project [Cursor rule](../../.cursor/rules/box-kitchen.mdc) routes a bare START.md to our briefing/approval process. Once native skills are available, the agent explicitly applies the installed poteto-mode/orchestrate workflow under these standing orders. A Markdown rule does not execute a slash command or guarantee skill activation. If that runtime requires a one-time explicit mode invocation, record it as a setup prerequisite and verify the subsequent START.md routing. Do not ask the CEO to type a new routing command every wave.
-
-## Project overrides
-
-Our CEO wave gate takes precedence over upstream autonomy. Read-only framing is allowed; product implementation waits for approval. CTO and station leads coordinate, workers implement, and an independent verifier judges the exact candidate. The proposed native setup is local-first on existing resources. Cloud workers require the CEO to approve repository access, environment, model/cost and remote destinations in the wave. START.md alone does not authorize publication or shipping. Later CEO standing direction in GIT-CHECKPOINTS.md authorizes routine reviewed commits/non-force pushes to the existing private origin/master without per-wave permission; other destinations/actions remain outside that authority.
-
-Read actual pstack model-role configuration and available models. Preserve existing choices until explicitly approved; never copy upstream defaults blindly. A missing model is a capability gap, not permission to switch to a paid provider. The project retains mandatory independent acceptance while scaling review effort to risk, and replaces upstream blanket ten-live-lane/per-PR ceremony with task-specific behavioral, integration and performance evidence. Record this as an intentional adaptation. Do not claim a custom plan passed upstream check-plan.mjs.
-
-## Cursor adapter
-
-Use actual Cursor Task capabilities and installed native skills. Coordinators/leads are local; worker placement follows the approved wave. Use native pstack delegate types where the installed workflow specifies them. Station labels are roles in the brief, not an invented Task tool or a guessed custom-agent slug.
-
-Full native Orchestrate also needs its actual installed orch bookkeeping runtime and writable native store. B0.2 inspected this host on 2026-10-04 (read-only): `~/.cursor` exists (extensions/plans/projects/worktrees present) but `~/.cursor/plugins` does not exist — no native pstack plugin or orch store is installed here. Native Cursor pstack is ABSENT and unverified on this host; it remains the primary planned integration pending verification on a host where it is actually installed. Skills and Task alone are not proof of full native orchestration. If the native runtime/store is missing, record incomplete native capability and use an explicitly approved labeled adaptation. Where present, use native units/inbox/frontier only as dispatch bookkeeping. Persist mapping from native units to B-series task/wave IDs and receipt paths in the project. The project approval/state record alone determines wave authority and product completion. Native ledger discrepancies stop new dispatch until reconciled. Do not run an invented orch command or add an orchestration CLI just to satisfy a diagram.
-
-## Codex adapter
-
-Use available collaboration tools to spawn leads/workers, send messages and receive results, with project files as portable state. This is a pstack-based fallback, not native Cursor plugin execution. Status 2026-10-04: documented, unrehearsed — no Codex dispatch evidence exists; it remains a distinct labeled adapter, never silently substituted for either native Cursor or the Devin adapter. Check real nesting/slots and inherit the user's configured model unless a supported override is explicitly chosen. Keep the same brief, approval, ownership, exact-revision review and reporting contract. If tools or independent reviewers are absent, report degraded capability without marking its gates passed.
-
-## Devin adapter
-
-The CEO used Devin for the W001 briefing. Devin can follow this project's pstack-based coordination method without claiming to run the native Cursor plugin. Label it `devin_portable_pstack_adaptation`, separately from the Codex adapter. Native Cursor remains the primary planned integration; portable hosts retain the same wave authority, task contracts, ownership, receipt and independent-review requirements.
-
-W001's presenter reported the built-in read-only/general profiles without nested subagents; that observation was superseded by the project profiles below. Devin disables nesting by default, while the installed project custom profiles opt in explicitly. Verified frontmatter (`.devin/agents/`, read 2026-10-04): `box-platform-lead`, `box-product-lead`, `box-assurance-lead` and `box-rehearsal-lead` carry `max-nesting: 2` with `run_subagent`/`read_subagent` allowed; `box-worker`, `box-reviewer`, `box-rehearsal-worker` and `box-rehearsal-reviewer` are terminal (no `max-nesting`, no `run_subagent`). S001 verified the nested topology root → lead → worker/reviewer at depth ≤2 on a synthetic read-only fixture only (receipt `.execution/box-v4/setup/S001/receipt.json`: dispatches `86e9c015` box-rehearsal-lead depth 1, `41c04fd6` box-rehearsal-worker depth 2, `d7d9c915` box-rehearsal-reviewer depth 2; checks `rootDelegatedOnlyToLead`, `leadDelegatedToWorkerThenDistinctReviewer`, `terminalChildrenDidNotDelegate`, `reviewBoundToExactWorkerCandidate` all true). Product-work dispatch remains UNPROVEN. If nesting is absent in a given host, leads prepare scoped worker briefs and the root dispatches on their behalf only under an explicitly approved flattened contract — a labeled fallback per KITCHEN.md, not the default. The root remains coordinator and does not implement product code. Do not fabricate standing lead agents, cross-model review or native orch-store execution.
-
-Available delegation does not establish a successful orchestration pilot. The first separately approved coding unit still needs actual worker and distinct-reviewer receipts, exact candidate binding and demonstrated resume behavior. Switching runtime or placement after a wave brief is approved is a material change requiring an amended brief and approval. Devin use does not authorize remote/cloud placement, purchases, plugin installation or the next wave.
-
-Effective project permission policy (`.devin/config.json`, read 2026-10-04, verbatim): `"subagents_enabled": true` plus a deny-only list — `Read(.runtime/**)`, `Read(.env)`, `Read(.env.*)`, `Read(secrets/**)`, `Write(.execution/state.json)`, `Write(tasks/task-graph.json)`. The stricter allow/deny policy in `.execution/box-v4/setup/S001/receipt.json` (`launch.configuredPermissionPolicy`; mirrored in `pilot.config.json`) was launch-scoped for the rehearsal — it was never project policy; do not describe it as removed or as the current project policy.
-
-Models are deliberately unpinned: the actual Devin configuration/router chooses, and project profiles carry no model slug. All observed agents in S001 were SWE-2 High (`receipt.json`: `observedModel: "SWE-2 High"`, `modelDiversity: false`) — separate identities, no claimed model-family diversity. Report actual availability; never invent diversity.
-
-## Configured Devin plugin
-
-The CEO separately authorized S001 setup. The reviewed local `box-pstack` plugin v0.11.3-box.1 packages actual pinned pstack skills with Devin compatibility mapping, replacement mode/setup entrypoints and a clearly labeled project Orchestrate playbook. Local registration succeeded; this is separate from native Cursor pstack and from the earlier manual adaptation. Read [Devin setup](DEVIN-SETUP.md) and .execution/box-v4/setup/S001/ for current behavioral evidence. Installation alone cannot prove invocation, nested delegation or product correctness. Refresh W001's pending runtime contract before its approval; setup does not approve B0.
-
-## Prove the integration before scaling
-
-B0.2's orchestration pilot recipe lives in `.execution/box-v4/evidence/B0.2/pilot-recipe.md`. W001 is approved (2026-10-04T07:11:18Z) and executing its docs/evidence scope with real lead→worker/reviewer dispatch under `devin_portable_pstack_adaptation` — that is live dispatch evidence for docs-scope work, but S001's synthetic fixture and W001's docs dispatches do not satisfy B1.1's product-coding pilot. The separately approved first coding wave uses B1.1 to prove root-to-lead-to-worker dispatch where supported, bounded output/independent verdict, durable receipt and START.md resumption before parallel fan-out; gates G1–G5 in the pilot recipe must all pass first. In Cursor, the receipt includes actual installed skill/tool/agent evidence. In fallback, it explicitly identifies Codex tools. S001 separately installed the local Devin adapter and observed native poteto-mode invocation. Its setup-only delegation results belong in S001 evidence; they cannot satisfy B1.1's real product-work acceptance criteria. This is development-team tooling; it neither exposes customer code to external agents nor changes the product's private intent-model boundary.
+- The Devin plugin is a community port (HustleCoding/pstack at a pinned commit) with project adaptations; see its `PROVENANCE.json`. Its skills are useful as reference. Its station-lead routing and lead profiles are no longer the default; use them only for genuinely parallel work.
+- Installing native Cursor pstack, changing models or adding cloud workers is a CEO decision.
+- Switching host mid-wave is fine: the branch and the wave file carry everything. Say so in the wave file.
