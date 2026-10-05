@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "planVersion": "box-v4-2026-10-04.1",
-  "projectStatus": "w003_completed_independently_reviewed_checkpoint_pending_w004_capability_proposed",
+  "projectStatus": "w003_completed_design_saved_w004_capability_awaiting_ceo",
   "activeDelegationGraph": "tasks/box-delegation-task-graph.json",
   "delegationGraphActivation": ".execution/box-v4/approvals/W003-approval.json",
   "currentRootAcceptance": ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json",
@@ -35,7 +35,7 @@
   },
   "approvedRecovery": ".execution/box-v4/briefings/W002-D1-r4.md",
   "historicalApprovedRecovery": ".execution/box-v4/briefings/W002-D1-r2.md",
-  "executionPrerequisite": "D1.1 exact design independently passed and root accepted; all writer/reviewer calls returned. Current root governance/profile/next-proposal review and scoped standing checkpoint remain. W004 capability-only proposal awaits CEO approval; D1.2 and all runtime/W002 mutation remain forbidden.",
+  "executionPrerequisite": "D1.1 exact design/root governance independently reviewed and accepted; reviewed34-file checkpoint245c520 confirmed privateorigin/master. All writer/reviewer calls returned. W004 capability-only proposal awaits CEO approval; D1.2 and all runtime/W002 mutation remain forbidden.",
   "historicalR4ExecutionPrerequisite": "Actual r4 approval and fresh root transfer checks recorded; establish one actual lead and exclusive harness lease. No source execution/setup/acceptance phase until current independent gates pass.",
   "lastCompletedWave": "W003",
   "currentCheckpointStatus": "accepted_source_committed_and_private_origin_confirmed",
@@ -45,7 +45,7 @@
     "waveId": "W003",
     "revision": "2026-10-05-d1.1-r3",
     "record": ".execution/box-v4/approvals/W003-r3-approval.json",
-    "status": "completed_design_scope_current_checkpoint_review_pending_no_d12_approval"
+    "status": "completed_design_scope_saved_no_d12_or_w004_approval"
   },
   "originalW003Approval": {"record": ".execution/box-v4/approvals/W003-approval.json", "revision": "2026-10-05-d1.1-r1", "status": "preserved_stopped_tool_violation_design_reopened"},
   "completedFoundationApproval": {
@@ -228,7 +228,8 @@
       }
     ]
   },
-  "w003CheckpointStatus": "independent_design_and_governance_pass_exact_scoped_checkpoint_pending",
+  "w003CheckpointStatus": "committed_and_private_origin_master_confirmed",
+  "w003Checkpoint": {"commit": "245c5200aa6090d8ead0bfe24ff933047e607576", "record": ".execution/box-v4/evidence/D1.1/cto-r3/checkpoint-saved.json", "pushed": true},
   "milestones": {
     "D1": "pending",
     "D2": "pending",
@@ -245,7 +246,7 @@
     "B8": "pending"
   },
   "tasks": {
-    "D1.1": {"status": "accepted", "implementationStatus": "checked_design_only", "independentReviewStatus": "passed", "waveId": "W003", "revision": "2026-10-05-d1.1-r3", "owner": "box-assurance-lead/cfd46892_returned", "lease": null, "candidate": ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json", "worker": "box-worker/7759c6eb", "reviewer": "box-reviewer/6f9cae38", "historicalReviewer": "box-reviewer/c34c32ac", "receipts": [".execution/box-v4/evidence/D1.1/cto-r3/worker-correction2.json", ".execution/box-v4/evidence/D1.1/cto-r3/review-correction2.json", ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json", ".execution/box-v4/handoffs/D1.1.md"], "blockers": [], "limitations": ["Design/source review only; no new feature or runtime proof", "New-file implementation writer still unverified; separate W004 capability-only proposal pending", "Original failures/tool deviations preserved as history"], "phase": "accepted_design_current_governance_checkpoint_review_pending"},
+    "D1.1": {"status": "accepted", "implementationStatus": "checked_design_only", "independentReviewStatus": "passed", "waveId": "W003", "revision": "2026-10-05-d1.1-r3", "owner": "box-assurance-lead/cfd46892_returned", "lease": null, "candidate": ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json", "worker": "box-worker/7759c6eb", "reviewer": "box-reviewer/6f9cae38", "historicalReviewer": "box-reviewer/c34c32ac", "receipts": [".execution/box-v4/evidence/D1.1/cto-r3/worker-correction2.json", ".execution/box-v4/evidence/D1.1/cto-r3/review-correction2.json", ".execution/box-v4/evidence/D1.1/cto-r3/acceptance.json", ".execution/box-v4/handoffs/D1.1.md"], "blockers": [], "limitations": ["Design/source review only; no new feature or runtime proof", "New-file implementation writer still unverified; separate W004 capability-only proposal pending", "Original failures/tool deviations preserved as history"], "phase": "accepted_design_saved_next_capability_proposal_pending"},
     "D1.2": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
     "D2.1": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},
     "D2.2": {"status": "pending", "implementationStatus": "pending", "independentReviewStatus": "pending", "waveId": null, "owner": null, "lease": null, "candidate": null, "reviewer": null, "receipts": [], "blockers": []},

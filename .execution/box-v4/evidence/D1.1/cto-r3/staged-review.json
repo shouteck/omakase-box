@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_independent_staged_parity_review",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r3",
+  "reviewer": "box-reviewer/6f9cae38",
+  "lead": "box-assurance-lead/cfd46892",
+  "attribution": "Faithful attributed excerpt of actual STAGED-PARITY REVIEW RECEIPT returned through lead, persisted by root after the reviewed commit, not reviewer-written or inside that earlier commit",
+  "verdict": "PASS",
+  "baseHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "reviewedStagedTree": "f401aff025585517245d6c1b538e9787698f3f7a",
+  "stagedPathCount": 34,
+  "scope": "Exactly earlier reviewed whitelist: two profiles, selector/state/W003 authority/evidence/design/closure and unapproved W004 proposal only",
+  "candidate": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "7d039c1035931f6bc76bc860096f35008e47cd60db87c26d2a0b13b94da085bf",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "0c8c80297186b10017a5ab8ff5d82ad167521cfbe87652a9bfaa7ec764dc7cb7",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "4875d4427493be2077d6fa046cc82c7db4285197ac201d15e0f9f9f4d527d4a5"
+  },
+  "nextBriefHash": "8a93ce56a15c84810936301530239bc01373a4445cd544eff25b02bc77094638",
+  "metadataHashesAtStage": {
+    "state": "e9a63300536de26c3638cfa2374c1e7d95f6bf6084662f7de3f648e8abd5c9fb",
+    "W003-r3": "f14ed9122cd945e5a8abbc96e7772883a48eafcc967741741564a965b414b3cd",
+    "W003": "312d061804299d17b028f45fbec48d78d12267d43c87e3b19150080432f34efa",
+    "closureReview": "854c2c7bae8a9517cbe2422690c71a9df95a36c819b892e615f51a675c1c7215"
+  },
+  "reportedChecks": ["Scoped Git cached names/count, unstaged names/status, HEAD, write-tree and state diff", "sha256sum current design/brief/closure/profile/selector/state/handoff bytes", "Dedicated read of closure-review and current W003-r3 wave"],
+  "reportedExits": "All0, durations not exposed",
+  "parity": "All34 staged paths equal working bytes; only unrelated relay stdout remained tracked unstaged drift",
+  "exclusionsPreserved": "relay stdout/result, old snapshots/archives/pathspec and both parity outputs remain unstaged",
+  "privacy": "Metadata/hashes only; no credential/environment/source/machine exports staged",
+  "factualMetadataTransitions": "PASS completion/acceptance/checkpoint-pending current fields with R1 history preserved; subsequent observed saved SHA/result bookkeeping allowed by closure review",
+  "notCheckpointExecution": true,
+  "limits": "Remote state independently checked by root, not reviewer; index hash binds this exact precommit snapshot; post-push receipts not part of the reviewed tree"
+}
