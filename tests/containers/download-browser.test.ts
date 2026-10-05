@@ -1,10 +1,12 @@
+// Containers suite: covers the frozen M-series public-image approval path; preserved with the
+// Docker-dependent tests (see tests/containers/README.md). Not run by check or ordinary verification.
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { preparePublicWorkspace } from '../../../packages/compiler/workspace.js';
-import { PUBLIC_IMAGE_PROFILE } from '../../../templates/workspaces/public-image-profile.js';
-import { projectPublicListing } from '../../../packages/contracts/public/task.js';
-import { singleUnitContract } from '../../contracts/fixtures.js';
-import { http, reviewIntent, seedAccounts, serveConsole, launchConsole, signIn, asHeaders, registerSnapshot, createRequest, createIntent, ensureRuntime, consoleSignIn } from '../../e2e/intent/support.js';
+import { preparePublicWorkspace } from '../../packages/compiler/workspace.js';
+import { PUBLIC_IMAGE_PROFILE } from '../../templates/workspaces/public-image-profile.js';
+import { projectPublicListing } from '../../packages/contracts/public/task.js';
+import { singleUnitContract } from '../contracts/fixtures.js';
+import { http, reviewIntent, seedAccounts, serveConsole, launchConsole, signIn, asHeaders, registerSnapshot, createRequest, createIntent, ensureRuntime, consoleSignIn } from '../e2e/intent/support.js';
 
 it('owner downloads the exact approved workspace through the real browser/API, without publication or readiness claims', { timeout: 180000 }, async () => {
   await ensureRuntime();

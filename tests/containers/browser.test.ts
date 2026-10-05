@@ -1,9 +1,11 @@
+// Containers suite: covers the frozen M-series public-image approval path; preserved with the
+// Docker-dependent tests (see tests/containers/README.md). Not run by check or ordinary verification.
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { byteHash, contentHash } from '../../../packages/contracts/hash.js';
-import { projectPublicListing } from '../../../packages/contracts/public/task.js';
-import { fullStackContract } from '../../contracts/fixtures.js';
-import { http, launchConsole, reviewIntent, seedAccounts, serveConsole, signIn, asHeaders, registerSnapshot, createRequest, createIntent, ensureRuntime, consoleSignIn } from '../../e2e/intent/support.js';
+import { byteHash, contentHash } from '../../packages/contracts/hash.js';
+import { projectPublicListing } from '../../packages/contracts/public/task.js';
+import { fullStackContract } from '../contracts/fixtures.js';
+import { http, launchConsole, reviewIntent, seedAccounts, serveConsole, signIn, asHeaders, registerSnapshot, createRequest, createIntent, ensureRuntime, consoleSignIn } from '../e2e/intent/support.js';
 
 it('owner browser reviews actual complete release bytes then records an exact signed approval through the real private API', { timeout: 180000 }, async () => {
   await ensureRuntime();

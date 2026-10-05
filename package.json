@@ -27,6 +27,7 @@
     "test:portal": "node scripts/suite.mjs portal",
     "test:acceptance": "node scripts/suite.mjs acceptance",
     "test:security": "node scripts/suite.mjs security",
+    "test:containers": "node scripts/suite.mjs containers",
     "test:e2e": "node scripts/suite.mjs e2e",
     "research:report": "node scripts/suite.mjs research-report",
     "verify:mvp": "node scripts/verify-mvp.mjs"
