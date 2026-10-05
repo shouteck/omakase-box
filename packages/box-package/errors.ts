@@ -16,6 +16,18 @@ export class ExportFailed extends Error {
     this.name = 'ExportFailed';
   }
 }
+export class GitFailed extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GitFailed';
+  }
+}
+export class SubmissionFailed extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SubmissionFailed';
+  }
+}
 export function describeGap(gap: SelectionGap): string {
   const chain = gap.chain.length > 1 ? ` (via ${gap.chain.join(' -> ')})` : '';
   switch (gap.kind) {

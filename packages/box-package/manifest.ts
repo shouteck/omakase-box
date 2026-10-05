@@ -34,6 +34,7 @@ export const BoxManifestSchema = z.strictObject({
   evaluator: z.array(z.strictObject({ box: PortablePath, generator: z.string() })).min(1),
   submission: z.strictObject({
     format: z.literal('editable-overlay'),
+    tool: z.literal('box/submit.mjs'),
     editable: z.array(z.strictObject({ box: PortablePath, owner: PortablePath })).min(1),
     instructions: z.string().min(1)
   }),

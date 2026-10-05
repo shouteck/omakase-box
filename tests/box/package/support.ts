@@ -130,3 +130,23 @@ export function cleanCheck(boxDir: string, evaluatorCheck: string): CleanRun {
 export function requirePnpmTooling(): void {
   if (!existsSync(PNPM_CJS)) throw new Error('repository-local pnpm is unavailable');
 }
+
+// Copies an exported Box into a fresh directory outside the repo and hands it to the
+// emitted submit tool exactly as a recipient would: plain `node box/submit.mjs`, no
+// box-cli, no repository.
+export function copyBox(boxDir: string, label = 'worked'): string {
+  const dest = join(runRoot(label), 'box');
+  mkdirSync(dest, { recursive: true });
+  for (const entry of readdirSync(boxDir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules') continue;
+    cpSync(join(boxDir, entry.name), join(dest, entry.name), { recursive: true });
+  }
+  return dest;
+}
+
+export interface SubmitRun { readonly status: number | null; readonly stdout: string; readonly stderr: string }
+export function runSubmitTool(dir: string, outArg?: string): SubmitRun {
+  const args = [join(dir, 'box', 'submit.mjs'), ...(outArg !== undefined ? [outArg] : [])];
+  const result = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
+}
