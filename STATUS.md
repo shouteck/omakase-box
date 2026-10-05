@@ -1,12 +1,12 @@
 # Status
 
-Replaced at every wave close. Last written 6 October 2026, ~01:30 (+08), by Devin as CTO, during the overnight run, after K3 closed.
+Replaced at every wave close. Last written 6 October 2026, ~02:15 (+08), by Devin as CTO, during the overnight run, after D2.1-proto closed.
 
 ## Now
 
 - **Accepted on master:** B0, B1.1, D1.1, the lean kitchen, K1, D1.2, K2a, K2b, **K3** (container harness deleted; `private-task-mvp-synthetic-*` stack down, volumes/networks gone; hostile-runner tests preserved in `tests/containers/`).
 - **Verification is fully Docker-free:** every ordinary suite runs on the host against the disposable embedded Postgres; `test:containers` exists separately and needs Docker + the frozen M-series image.
-- **In flight:** overnight run. Next wave: D2.1-proto (brief ready at [waves/D2.1-proto.md](waves/D2.1-proto.md)).
+- **In flight:** overnight run. D2.1-proto closed (PASS; winning design: compiler-derived closure + agreement surface + closure verifier). Next wave: D2.1 — brief ready at [waves/D2.1.md](waves/D2.1.md).
 - **Held:** nothing.
 
 ## Approved by the CEO
@@ -17,7 +17,7 @@ Replaced at every wave close. Last written 6 October 2026, ~01:30 (+08), by Devi
 
 ## Next
 
-1. **D2.1-proto** — three throwaway source-selection attempts on `examples/private-shop` Request A, compared in the wave file.
+1. ~~D2.1-proto~~ — done. **D2.1** — export a Box folder + clean-directory proof ([waves/D2.1.md](waves/D2.1.md)).
 2. **D2.1** — export a Box as a folder and prove it in a clean directory (brief written after the proto result).
 3. **D2.2** — a `box-recipient` completes a change from the Box and submits a patch.
 4. **D3.1** — owner-side verify + merge of the patch.
@@ -28,7 +28,7 @@ For `START.md overnight`. Work down the list; skip an entry whose dependency is 
 
 1. ~~D1.2~~ — PASS ui-verified `22ca7ca`, merged `80bbae6`.
 2. ~~K2a~~ — PASS `8c7f6a8` → `6f48940`. ~~K2b~~ — PASS `7583c08` → `1f8ef5d`. ~~K3~~ — PASS `8a53e23` → `661722d`.
-3. D2.1-proto → D2.1 → D2.2 → D3.1 (D2, D3.1 named tonight).
+3. ~~D2.1-proto~~ — PASS; design decided (compiler-derived closure). D2.1 → D2.2 → D3.1 remain.
 4. Nothing after that tonight: D4 waits for the owner.
 
 ## Known problems
