@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # fetch-depth: 0 — verify's scoped-check merge-base and run history read git.
+      # fetch-depth: 0 — verify's merge-base and run-history reads need full git history.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
