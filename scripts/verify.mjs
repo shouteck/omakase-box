@@ -1,8 +1,11 @@
-// The kitchen's single acceptance command: node scripts/verify.mjs [--only] [--db=auto|embedded|docker|none] [suite...]
+// The kitchen's single acceptance command: node scripts/verify.mjs [--only] [--full] [--fresh] [--db=auto|embedded|docker|none] [suite...]
 // Runs check, build and the named package scripts on the host against a disposable Postgres (embedded by default;
 // KITCHEN_PG_URL under auto uses a provided server, --db=docker a throwaway container),
 // writes one log per step plus summary.json under .kitchen/runs/, and exits 0 only when every step passed
 // on a committed tree.
+// K5: a step already PASS on this exact commit with a clean tree reports `reused` (~0s) instead of re-running —
+// the recorded summary.json is the trust anchor, `--fresh` forces real runs. `check` runs only the suites this
+// branch's diff can reach (`--full` runs them all), and no suite runs twice inside one invocation.
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createWriteStream, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -13,9 +16,12 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { docker } from './docker.mjs';
 import { root } from './process.mjs';
+import { reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only');
+const fresh = args.includes('--fresh');
+const full = args.includes('--full');
 const dbMode = (args.find(arg => arg.startsWith('--db=')) ?? '--db=auto').slice(5);
 const suites = args.filter(arg => !arg.startsWith('--'));
 const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
@@ -127,15 +133,41 @@ function runStep(name, env) {
 let db = { kind: 'none', stop: async () => undefined };
 const results = [];
 let failure;
+// checkPlan: which suites this invocation's check covers — used to keep a named
+// suite from running twice and to demand enough coverage from a reused check.
+const checkPlan = steps.includes('check') ? selectCheckSuites(root, { full }) : null;
+const checkCovered = new Set();
+const ran = new Set();
+const runsDir = join(root, '.kitchen', 'runs');
 const stopAndExit = () => db.stop().finally(() => process.exit(130));
 process.on('SIGINT', stopAndExit);
 process.on('SIGTERM', stopAndExit);
 try {
   db = await database();
-  const env = { ...process.env, ...(db.url ? { BOX_TEST_DATABASE_URL: db.url, BOX_DELEGATION_DATABASE_URL: db.url, BOX_TEST_RUN_ID: `v${sha.slice(0, 12)}` } : {}) };
+  const env = { ...process.env, ...(full ? { KITCHEN_CHECK_FULL: '1' } : {}), ...(db.url ? { BOX_TEST_DATABASE_URL: db.url, BOX_DELEGATION_DATABASE_URL: db.url, BOX_TEST_RUN_ID: `v${sha.slice(0, 12)}` } : {}) };
   for (const name of steps) {
+    // A suite check already ran this invocation, or a step named twice, costs nothing.
+    const key = suiteKey(scripts[name]);
+    if (ran.has(name) || (key && checkCovered.has(key))) {
+      results.push({ name, exit: 0, seconds: 0, reused: 'this run' });
+      ran.add(name);
+      console.log(`verify: ${name} already covered by this run — reused`);
+      continue;
+    }
+    // A recorded PASS on this exact commit with a clean tree stands in; a dirty
+    // tree or --fresh always runs for real.
+    const hit = fresh || dirty ? null : reusableStep(runsDir, sha, name, name === 'check' ? { suites: checkPlan.suites } : {});
+    if (hit) {
+      results.push({ name, exit: 0, seconds: 0, reused: hit.run, reusedSeconds: hit.seconds });
+      ran.add(name);
+      console.log(`verify: ${name} reused a recorded PASS from ${hit.run}`);
+      if (name === 'check') for (const suite of checkPlan.suites) checkCovered.add(suite);
+      continue;
+    }
     const result = await runStep(name, env);
     results.push(result);
+    ran.add(name);
+    if (name === 'check' && result.exit === 0) for (const suite of checkPlan.suites) checkCovered.add(suite);
     if (result.exit !== 0) break;
   }
 } catch (error) { failure = error instanceof Error ? error.message : String(error); }
@@ -145,8 +177,8 @@ const passed = !failure && results.length === steps.length && results.every(resu
 const verdict = !passed ? 'FAIL' : dirty ? 'UNCOMMITTED' : 'PASS';
 const notRun = steps.slice(results.length);
 const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
-const line = `verify ${sha.slice(0, 7)}${dirty ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
-writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, steps: results, notRun, failure: failure ?? null, line }, null, 2) + '\n');
+const line = `verify ${sha.slice(0, 7)}${dirty ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.reused ? `reused@${result.reused}` : result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
+writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, line }, null, 2) + '\n');
 console.log(`\n${line}\nLogs: ${runDirectory}`);
 
 // Stall guard (advisory only): when this branch keeps producing non-PASS runs,

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "check": "node scripts/workspace.mjs check",
+    "check:full": "node scripts/workspace.mjs check --full",
     "build": "node scripts/workspace.mjs build",
     "doctor": "node scripts/doctor.mjs",
     "demo:seed": "node scripts/demo-seed.mjs",

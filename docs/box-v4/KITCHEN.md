@@ -26,6 +26,8 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 `node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, boundary checks, build and the named suites on the host, gives them a disposable Postgres, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
 - The candidate's identity is its commit SHA. Verify refuses to call a run with uncommitted changes acceptable.
+- A step already PASS on this exact commit with a clean tree is `reused` instead of re-run; the recorded `summary.json` (commit, clean flag, step verdict) is the trust anchor, and `--fresh` forces a real run when anyone doubts the record.
+- `check` runs typecheck, the boundary check and only the suites the branch's diff since master can reach; touching shared tooling or passing `--full` runs them all. A suite named in the invocation never runs twice.
 - Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
 - Tests named `*-live.test.ts` shell into the old container stack and are not part of ordinary verification until they are ported to the disposable database.
 - A lost or unclear result is fixed by running it again. Databases are created per run and destroyed after it, so a rerun costs nothing.
