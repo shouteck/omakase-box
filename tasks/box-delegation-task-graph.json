@@ -387,6 +387,61 @@
         "Reviewer greps for leftovers and confirms no test outside the old harness was removed or changed."
       ],
       "handoff": "waves/K3.md"
+    },
+    {
+      "id": "K4",
+      "milestone": "K",
+      "title": "Kitchen numbers page and a stall guard in verify",
+      "dependencies": [
+        "K1"
+      ],
+      "writePaths": [
+        "scripts/kitchen-stats.mjs",
+        "scripts/verify.mjs",
+        "tests/kitchen/**",
+        "package.json"
+      ],
+      "deliverables": [
+        "node scripts/kitchen-stats.mjs prints one page from .kitchen/runs and Git: verify minutes per step, runs and failed runs per wave branch, wave duration from first commit to merge, and the three largest costs. No new files to maintain; it only reads.",
+        "scripts/verify.mjs counts consecutive non-PASS runs and elapsed time on the current branch from its own run history, and prints a plain STALL line telling the agent to park the wave once a threshold is passed (defaults: 6 consecutive non-PASS committed runs or 90 minutes; thresholds are flags). It never changes the verdict or exit code."
+      ],
+      "acceptance": [
+        "On the 5 October night-run logs the page reproduces the known figures: about 120 verify minutes, check about 45.",
+        "A test feeds verify a fabricated run history and sees the STALL line appear at the threshold and not before.",
+        "PASS, FAIL and UNCOMMITTED verdicts and exit codes are unchanged."
+      ],
+      "verification": [
+        "Reviewer recomputes two figures by hand from the summaries and runs the stall test with thresholds on both sides."
+      ],
+      "handoff": "waves/K4.md"
+    },
+    {
+      "id": "K5",
+      "milestone": "K",
+      "title": "Make check cheaper per wave",
+      "dependencies": [
+        "K4"
+      ],
+      "writePaths": [
+        "scripts/workspace.mjs",
+        "scripts/verify.mjs",
+        "scripts/suite.mjs",
+        "package.json",
+        "templates/wave.md"
+      ],
+      "deliverables": [
+        "Hillclimb one number: median seconds for the verify run a typical wave needs, measured with K4's page before and after.",
+        "Candidates to try, smallest first: verify skips a suite the brief names when check already ran it in the same run; check stops running legacy suites that the wave did not touch and a full pass moves to milestone close; incremental typecheck. Keep only what the numbers support."
+      ],
+      "acceptance": [
+        "The before and after figures come from at least five runs each, with spread, on the same commit.",
+        "Every suite still runs at least once before a milestone closes, and no assertion is removed.",
+        "A deliberately broken test in a skipped suite is still caught by the milestone-close run."
+      ],
+      "verification": [
+        "Reviewer re-measures on its own runs and breaks one test to confirm it is still caught."
+      ],
+      "handoff": "waves/K5.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"

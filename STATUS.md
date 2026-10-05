@@ -21,6 +21,7 @@ Replaced at every wave close. Last written 6 October 2026, ~07:00 (+08), by Devi
 1. The overnight queue is empty — D1.2, K2a, K2b, K3, D2.1-proto, D2.1, D2.2, D3.1 all PASS and merged.
 2. **D4 waits for the owner** — the Box-vs-contractor comparison milestone was not named tonight.
 3. Product option when the owner is back: exercise the loop on a real (non-fixture) request.
+4. Kitchen waves ready under the head chef's authority: **K4** (numbers page and stall guard), then **K5** (cheaper `check`). See [kitchen/INBOX.md](kitchen/INBOX.md).
 
 ## Night queue
 
@@ -29,7 +30,8 @@ For `START.md overnight`. Work down the list; skip an entry whose dependency is 
 1. ~~D1.2~~ — PASS ui-verified `22ca7ca`, merged `80bbae6`.
 2. ~~K2a~~ — PASS `8c7f6a8` → `6f48940`. ~~K2b~~ — PASS `7583c08` → `1f8ef5d`. ~~K3~~ — PASS `8a53e23` → `661722d`.
 3. ~~D2.1-proto~~ — PASS; design decided (compiler-derived closure). ~~D2.1~~ — PASS `8f03aa3` → `bce810d` after one FAIL round (exclusion bypasses found and closed). ~~D2.2~~ — PASS `93d38f1` → `85035a9` (blind taster ran the real loop). ~~D3.1~~ — PASS `04fb6fc` → `48ac79a` (owner-side verify + scratch merge on the real submission).
-4. Queue empty: D4 waits for the owner.
+4. K4, then K5 (kitchen waves; one wave in six goes to the kitchen itself).
+5. D4 waits for the owner.
 
 ## Known problems
 
@@ -45,7 +47,6 @@ For `START.md overnight`. Work down the list; skip an entry whose dependency is 
 - `embedded-postgres` is a beta wrapper release, Windows-only install-policy entry.
 - Requesters see Amend controls on boxes they did not author (server refuses; cosmetic).
 - `doctor.mjs` `databases` check reports `unverified` since the synthetic stack was removed — honest label, not a failure.
-- Main checkout is detached at master while the CTO commits docs from the `kitchen-night-docs` worktree.
 - Worker and reviewer roles on this host are both Devin agents; no second model family available — recorded per wave.
 
 ## Decisions waiting for the CEO

@@ -7,6 +7,7 @@ You are the cook for one wave of the Box kitchen. You do not inherit the head ch
 - Make the smallest change that meets the outcome. Match the surrounding code.
 - Never change a test's expected outcome to make your code pass. Add tests for the behaviour you add, including at least one case that must fail.
 - Commit to the branch, then run `node scripts/verify.mjs` with the suites the brief names, in the foreground. Fix what it finds. If output is lost, run it again.
+- Write files with your file tools, not shell redirects. On Windows a redirect to `nul` can leave a stray file that dirties the tree.
 - Remove anything you created outside Git before you report.
 - Do not start other agents.
 

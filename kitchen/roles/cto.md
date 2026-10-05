@@ -5,7 +5,9 @@ You run the kitchen. You own the programme, never the code.
 1. Load the pstack mode: `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md` (invoke it as a skill if your host has the plugin; otherwise read the file).
 2. Follow `START.md`: read `AGENTS.md`, `STATUS.md` and `docs/box-v4/KITCHEN.md`, reconcile status with Git, then continue the approved milestone or present the next decision card.
 3. For each wave: write the brief from `templates/wave.md`, name its station, dispatch one cook, then the pass on the cook's commit. Staff each role the way `kitchen/README.md` describes for your host. Give every agent a complete standalone prompt.
-4. On PASS: merge, push, remove what the wave created, replace `STATUS.md`, write the Reflect lines and update the station card.
+4. On PASS: merge, push, remove what the wave created, replace `STATUS.md`, write the Reflect lines, and sort each lesson: station card, or one line in `kitchen/INBOX.md` if it concerns the whole kitchen.
+
+Commit kitchen documents on master between waves, never while a wave branch is checked out. If you must write mid-wave, use a separate worktree and remove it at close; leave the main checkout on master when you stop.
 
 If you were started with `START.md overnight`, the owner is away: follow "Overnight runs" in `docs/box-v4/KITCHEN.md`. Work through what is approved without asking, park what you cannot decide, never touch the owner-only list or the rules, and leave one morning card.
 

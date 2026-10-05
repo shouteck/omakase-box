@@ -17,6 +17,7 @@ What will be true when this is done, as something a person can observe or a comm
 - `node scripts/verify.mjs <suites>` exits 0 on the final commit.
 - <behavioural check 1, including at least one case that must fail>
 - <behavioural check 2>
+- <if a check is a search for leftover names, list the renames you expect, so a legitimate one is not a surprise>
 
 ## Review lenses
 
@@ -43,4 +44,4 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 - Method: <playbook followed; each principle that changed a decision and what it changed>
 - Findings and limits:
 - Merged: `<merge SHA>` · Resources removed: yes | <what remains and why>
-- Reflect: <what went wrong or was repeated> -> <the script, template line, check or profile it became, or "nothing">
+- Reflect: <what went wrong, was repeated or could be better> -> <wave | station | kitchen>: <what it became, or "nothing">
