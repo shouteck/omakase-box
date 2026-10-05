@@ -1,7 +1,7 @@
 // R1 preparation proof: the committed R1 agreement exports a working Box of the
 // real .mjs kitchen-stats closure — no engine widening — and its generated
-// evaluator is the failing contract being delegated: it fails on the unmodified
-// script (Usage still printed) and on a blanked editable (no output at all).
+// evaluator is the delegated contract: green on the integrated script, failing
+// on a variant that still prints Usage and on a blanked editable.
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -54,7 +54,7 @@ describe('R1 kitchen-stats-no-usage box', () => {
     expect(check?.source).toContain('kitchen-stats.mjs');
   });
 
-  it('exports the real Box and its evaluator fails on the unmodified and on a blanked script', { timeout: HEAVY }, () => {
+  it('exports the real Box; its evaluator passes the integrated script and fails Usage-printing and blank variants', { timeout: HEAVY }, () => {
     const { repo, baseCommit } = miniOwnerRepo();
     const exported = runExport(r1Agreement(repo, baseCommit), repo);
     expect(exported.files).toContain(EDITABLE_BOX);
@@ -64,7 +64,7 @@ describe('R1 kitchen-stats-no-usage box', () => {
     // real-repo disclosure is recorded by the driver run in notes.md.
     expect(exported.disclosure.shippedOwnerFiles).toBe(2);
 
-    // One install in the clean directory, then both negatives reuse it.
+    // One install in the clean directory, then the variants reuse it.
     const dest = join(runRoot('r1-clean'), 'box');
     mkdirSync(dest, { recursive: true });
     for (const entry of readdirSync(exported.outDir)) cpSync(join(exported.outDir, entry), join(dest, entry), { recursive: true });
@@ -72,9 +72,16 @@ describe('R1 kitchen-stats-no-usage box', () => {
     expect(pnpm(['install', '--frozen-lockfile']).status).toBe(0);
     expect(pnpm(['exec', 'tsc', '--noEmit']).status).toBe(0);
 
-    const unmodified = pnpm(['exec', 'vitest', 'run', EVALUATOR_FILE]);
-    expect(unmodified.status).not.toBe(0);
-    expect(`${unmodified.stdout}${unmodified.stderr}`).toMatch(/usage/i);
+    const integrated = pnpm(['exec', 'vitest', 'run', EVALUATOR_FILE]);
+    expect(integrated.status, `${integrated.stdout}${integrated.stderr}`).toBe(0);
+
+    // A variant that still prints the obsolete section must fail — the phase-1
+    // reproduction ran this exact negative against the pre-change script.
+    const original = readFileSync(join(dest, EDITABLE_BOX), 'utf8');
+    writeFileSync(join(dest, EDITABLE_BOX), original + "\nconsole.log('Usage per wave (obsolete section)');\n");
+    const regressed = pnpm(['exec', 'vitest', 'run', EVALUATOR_FILE]);
+    expect(regressed.status).not.toBe(0);
+    expect(`${regressed.stdout}${regressed.stderr}`).toMatch(/usage/i);
 
     writeFileSync(join(dest, EDITABLE_BOX), '');
     const blanked = pnpm(['exec', 'vitest', 'run', EVALUATOR_FILE]);
