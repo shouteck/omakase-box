@@ -148,4 +148,21 @@ const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
 const line = `verify ${sha.slice(0, 7)}${dirty ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
 writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, steps: results, notRun, failure: failure ?? null, line }, null, 2) + '\n');
 console.log(`\n${line}\nLogs: ${runDirectory}`);
+
+// Stall guard (advisory only): when this branch keeps producing non-PASS runs,
+// print a STALL line telling the agent to park the wave. It never changes the
+// verdict text or the exit code. Keying: a run counts when its summary sha — or
+// its dir-name sha when no summary was written — is a commit unique to this
+// branch (merge-base..HEAD) or the branch point itself, so dirty runs made
+// before the first commit lands still count; only a clean PASS breaks the streak.
+try {
+  const { readRuns, stallCheck } = await import('./kitchen-stats.mjs');
+  const stallRuns = Number(args.find(arg => arg.startsWith('--stall-runs='))?.slice(13)) || 6;
+  const stallMinutes = Number(args.find(arg => arg.startsWith('--stall-minutes='))?.slice(16)) || 90;
+  const branch = ((await git(['rev-parse', '--abbrev-ref', 'HEAD'])) ?? '').trim() || 'HEAD';
+  const base = branch !== 'master' && branch !== 'HEAD' ? ((await git(['merge-base', 'HEAD', 'master'])) ?? '').trim() : null;
+  const listed = (await git(base ? ['rev-list', `${base}..HEAD`] : ['rev-list', 'HEAD'])) ?? '';
+  const stall = stallCheck(readRuns(join(root, '.kitchen', 'runs')), new Set([...listed.split('\n').map(item => item.trim()).filter(Boolean), sha, base].filter(Boolean)), { maxRuns: stallRuns, maxMinutes: stallMinutes });
+  if (stall) console.log(`STALL ${branch === 'HEAD' ? 'on detached HEAD' : `on branch ${branch}`}: ${stall.triggers.join('; ')} — park the wave and report what was tried instead of re-running verify`);
+} catch { /* advisory only: a broken stall check must not change the verdict */ }
 process.exit(verdict === 'PASS' ? 0 : verdict === 'UNCOMMITTED' ? 3 : 1);
