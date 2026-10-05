@@ -1,6 +1,6 @@
 # Status
 
-Replaced at every wave close. Last written 6 October 2026, ~23:20 (+08), by Devin as CTO, after K8 closed.
+Replaced at every wave close. Last written 6 October 2026 by Claude as CTO, after the owner stopped the run that closed K4, K5 and K8.
 
 ## Now
 
@@ -19,20 +19,21 @@ Replaced at every wave close. Last written 6 October 2026, ~23:20 (+08), by Devi
 
 ## Next
 
-1. The overnight queue is empty — D1.2, K2a, K2b, K3, D2.1-proto, D2.1, D2.2, D3.1 all PASS and merged.
-2. **D4 waits for the owner** — the Box-vs-contractor comparison milestone was not named tonight.
-3. Product option when the owner is back: exercise the loop on a real (non-fixture) request.
-4. Kitchen waves, capped: **K4** (numbers page, stall guard, limit checks) and **K5** (stop repeating work), then measure. After that **K8** (off-machine verify run) and **K9** (legacy removal). K6 and K7 run only if verification is still above 15% of a run.
+Nothing runs until the owner's next START message. Options, in the order I would take them:
+
+1. **R1:** run the delegation loop on a real request, using one of the kitchen's own waves. Not yet approved; `START.md: R1` approves and runs it. It is also the first product wave under the faster verify, so it gives the before-and-after K5 still needs.
+2. **K9:** remove legacy material from master behind the tag `legacy-2026-10-06`. Brief ready at [waves/K9.md](waves/K9.md), nothing started. `START.md: K9`.
+3. **D4:** the Box-versus-contractor comparison. `START.md: D4`.
 
 ## Night queue
 
-For `START.md overnight`. Work down the list; skip an entry whose dependency is parked and come back if it clears. Entries marked "needs naming" run only if the owner names that milestone in the overnight message.
+For `START.md overnight`. Entries marked "needs naming" run only if the owner names them in that message.
 
-1. ~~D1.2~~ — PASS ui-verified `22ca7ca`, merged `80bbae6`.
-2. ~~K2a~~ — PASS `8c7f6a8` → `6f48940`. ~~K2b~~ — PASS `7583c08` → `1f8ef5d`. ~~K3~~ — PASS `8a53e23` → `661722d`.
-3. ~~D2.1-proto~~ — PASS; design decided (compiler-derived closure). ~~D2.1~~ — PASS `8f03aa3` → `bce810d` after one FAIL round (exclusion bypasses found and closed). ~~D2.2~~ — PASS `93d38f1` → `85035a9` (blind taster ran the real loop). ~~D3.1~~ — PASS `04fb6fc` → `48ac79a` (owner-side verify + scratch merge on the real submission).
-4. ~~K4~~ — PASS `54ece57` → `01c675b`. ~~K5~~ — PASS `01261e5` → `13f7daa` (~95% repeat-run saving, measured). ~~K8~~ — PASS `df7b752` → `2a9114d` (Actions verify live, real run evidence). Next kitchen wave: K9 (legacy removal); K6/K7 only if verify is still >15% of a run. A product wave the owner names goes ahead of any of them.
-5. D4 waits for the owner.
+1. R1 (needs naming).
+2. K9 (needs naming).
+3. K6, then K7: only if `node scripts/kitchen-stats.mjs` shows verification above 15% of a run after R1.
+
+D4 is not on the night queue: the owner should read its result before anything is built on it.
 
 ## Known problems
 
@@ -40,4 +41,4 @@ None blocking. Leftovers are in [BACKLOG.md](BACKLOG.md).
 
 ## Decisions waiting for the CEO
 
-- **Next product step:** R1 (run the loop on a real request, starting with one of the kitchen's own waves) or D4 (the comparison). Recommendation: R1 first. Name either in a START message to approve it.
+- Which to run next: R1, K9 or D4. Recommendation: R1.

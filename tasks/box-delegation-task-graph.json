@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Kitchen: K4 -> K5, then measure. K8 (off-machine run) and K9 (legacy removal) follow; K6 and K7 only if the numbers still call for them. Product: R1 (a real request through the loop) or D4, whichever the owner names.",
+    "sequence": "Product next: R1 (a real request through the loop) or D4, whichever the owner names. Kitchen: K9 when named; K6 and K7 only if verification is still above 15% of a run once a product wave has been measured under K5.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -591,7 +591,8 @@
       "verification": [
         "Reviewer checks the tag resolves on origin, builds the dependency picture independently to confirm nothing the Box loop imports was removed, and runs verify --full."
       ],
-      "handoff": "waves/K9.md"
+      "handoff": "waves/K9.md",
+      "needsNaming": "A large removal from master: runs only when the owner names K9 in a START message."
     },
     {
       "id": "R1",

@@ -1,6 +1,6 @@
 # <id>: <one-line outcome>
 
-Milestone: <D2> · Station: <packaging | service-data | console | evidence> · Base: `<master SHA>` · Branch: `wave/<id>` · Timebox: <hours; at expiry, report partial findings and stop>
+Milestone: <D2> · Station: <packaging | service-data | console | evidence> · Base: `<master SHA>` · Branch: `wave/<id>` · Timebox: <minutes; waves here have taken 15 to 50; at expiry, report partial findings and stop>
 
 ## Outcome
 
@@ -19,6 +19,7 @@ What will be true when this is done, as something a person can observe or a comm
 - <behavioural check 1, including at least one case that must fail>
 - <behavioural check 2>
 - <if a check is a search for leftover names, list the renames you expect, so a legitimate one is not a surprise>
+- <if this wave removes, skips or speeds up a check: first write the test that proves a real break is still caught, then make the change>
 
 ## Review lenses
 
@@ -36,7 +37,7 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 
 ## Result
 
-- Worker: <host / model> · Reviewer: <host / model> · Usage: <elapsed time, and tokens if the host reports them>
+- Worker: <host / model> · Reviewer: <host / model>
 - Commit: `<SHA>`
 - Verify: `<summary line from the reviewer's run>`
 - Verdict: PASS | FAIL · Level: ui-verified | test-verified | typecheck-only

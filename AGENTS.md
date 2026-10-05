@@ -44,9 +44,7 @@ The CTO decides everything else and reports afterwards: briefs, task order insid
 
 Stop and bring the CEO one recommendation when a milestone outcome cannot be met as written, when a CEO-only decision is needed, or when two consecutive attempts at the same blocker produced no new information.
 
-A bare `START.md` means: read status, then continue the approved milestone or present the next proposal.
-
-`START.md overnight` is the second route: the owner is away and the kitchen runs on its own until morning. It works through what is already approved, plus any milestone the owner names in that same message, and never waits on a question. The limits and the morning report are in "Overnight runs" in KITCHEN.md. Nothing on the owner-only list above happens overnight, whatever the reason. Requests to inspect, explain or edit the plan do not start product work.
+How much the kitchen cooks is set by the START message, not by what happens to be ready. `START.md` runs one wave and stops. `START.md: <waves>` or `START.md xN` runs those and stops. `START.md overnight` runs the night queue unattended, under docs/box-v4/OVERNIGHT.md. Kitchen waves run only when named or from the night queue. Nothing on the owner-only list above happens overnight, whatever the reason. Requests to inspect, explain or edit the plan do not start product work.
 
 ## Rules that do not bend
 
