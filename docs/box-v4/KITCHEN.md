@@ -30,7 +30,15 @@ When the last wave of a milestone closes, send the CEO the finished card with th
 
 ## Review
 
-The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. It may add tests on the branch; it may not weaken existing ones. Different model family or host from the worker when available; say plainly when it was not.
+The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. It may add tests on the branch; it may not weaken existing ones.
+
+**Lenses.** A generalist reviewer looks hardest where it is told to look. The brief therefore ticks the lenses that apply (security, user experience, measurement fairness) and the reviewer must answer each ticked one in the Result. An unanswered ticked lens means the verdict is not PASS. Tick only what applies; most waves need one or none.
+
+**Second model family.** Tick it for the waves where a shared blind spot would be costly: source selection (D2.1) and the comparison (D4). It is best effort. If the other host is unavailable or out of usage, proceed with a separate agent of the same family, record that in the Result, and do not wait. It never blocks a wave.
+
+## Recipients
+
+From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder, with no access to the owner repository, standing in for an outside contributor. It is a third role, separate from worker and reviewer. Its report of what was missing or unclear is evidence for the wave, not a defect in the recipient. The CTO gives it the folder path and nothing else, and places the folder outside the repository checkout. An agent run this way is not an independent human and is never reported as one.
 
 ## When work stalls
 

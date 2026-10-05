@@ -18,6 +18,15 @@ What will be true when this is done, as something a person can observe or a comm
 - <behavioural check 1, including at least one case that must fail>
 - <behavioural check 2>
 
+## Review lenses
+
+The CTO ticks the ones that apply. The reviewer answers every ticked one in the Result.
+
+- [ ] **Security:** does this add or change a check that keeps something out (hosts, paths, roles, identities, inputs)? The reviewer attacks it with hostile inputs and says which it tried.
+- [ ] **User experience:** does a person see or operate this? The reviewer uses it as that person would and says what was unclear, without reading the code first.
+- [ ] **Measurement fairness:** does this produce a number or comparison someone will rely on? The reviewer checks both sides had equal obligations, every attempt is counted and missing data is shown as missing.
+- [ ] **Second model family:** the reviewer should be a different model family from the worker if one is available.
+
 ## Notes for the worker
 
 Decisions already made, interfaces to reuse, traps. Keep it short; link instead of pasting.
@@ -30,5 +39,6 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 - Commit: `<SHA>`
 - Verify: `<summary line from the reviewer's run>`
 - Verdict: PASS | FAIL
+- Lenses: <one line per ticked lens: what was tried and what was found>
 - Findings and limits:
 - Merged: `<merge SHA>` · Resources removed: yes | <what remains and why>

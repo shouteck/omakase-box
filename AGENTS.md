@@ -11,7 +11,8 @@ Portable Boxes for delegation: package a bounded change with only the source it 
 - **CEO** sets product direction and approves each milestone.
 - **CTO** (the root agent) writes briefs, dispatches, merges and reports. It writes kitchen tooling and docs. It does not write product code.
 - **Worker** implements one brief on one branch.
-- **Reviewer** verifies the worker's exact commit. Never the agent that wrote it; a different model family or host when one is available.
+- **Reviewer** verifies the worker's exact commit. Never the agent that wrote it. A different model family is preferred on waves that ask for it and never required.
+- **Recipient** (from D2.2) attempts a change using only an exported Box, with no access to this repository.
 
 The team is flat: CTO, one worker, one reviewer. Add a lead only when two or more workers run in parallel.
 
