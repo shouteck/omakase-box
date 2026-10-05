@@ -15,6 +15,7 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 - **Windows paths.** This machine uses backslashes and the recipient's may not. Store paths in the Box with forward slashes, build them with path functions, and test both forms.
 - **The silent fallback.** If export cannot find something, it reports a named preparation gap. It never reaches back into the owner repository to fill the hole, and exporting the full source can never count as a pass.
 - **The clean directory must be outside this checkout**, or module resolution will find the repository's `node_modules` on the way up.
+- **Exclusion runs on the canonical path, not the spelling.** Two D2.1 bypasses proved it: a case-aliased entrypoint and an in-root junction both shipped `src/private/*` bytes while the declared path looked clean. `realpathSync` before BOTH the containment and the exclusion check; fold case on both sides; emit under the canonical path only. Note Windows realpath keeps declared case, so alias spellings can still reach emission on non-excluded paths — normalize if patch mapping ever sees them.
 
 ## The pass checks
 
