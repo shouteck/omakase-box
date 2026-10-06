@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Next, when named: R2 (delegate without request-specific code), then R3 (a public repository that is not ours). Kitchen improvements (K7, K9) pause until both are done unless one blocks them. D4 waits for the lab's benchmark.",
+    "sequence": "Next, when named: milestone A (A1 to A4, a repository-agnostic core), then R3b (a replay of fixed issues on a public repository). Kitchen improvements pause unless one blocks milestone A. D4 waits for the lab's benchmark.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -668,6 +668,144 @@
         "measurement fairness: preparation time and manual steps are complete"
       ],
       "handoff": "waves/R3.md"
+    },
+    {
+      "id": "A1",
+      "milestone": "A",
+      "title": "A neutral agreement format",
+      "dependencies": [
+        "R2"
+      ],
+      "ownerApproval": "6 October 2026: milestone A approved; the first wave still waits for \"go\" on its pre-cook card.",
+      "writePaths": [
+        "packages/box-package/**",
+        "packages/box-cli/**",
+        "tests/box/package/**",
+        "research/box-delegation/**"
+      ],
+      "deliverables": [
+        "An agreement declares setup commands and check commands as a program plus arguments, for any program, each with its working directory, role (guard or outcome), who runs it (owner or recipient) and a timeout. No enumerated list of tools.",
+        "An agreement describes the environment the solver needs in plain terms (programs and versions the owner states), as information for the solver. The core does not require or interpret tool versions.",
+        "Every existing agreement, fixture and test moves to the new format in this wave, and the old format, its tool list and the pnpm-specific handling of declared commands are deleted. One format, not two.",
+        "Behaviour that must not change: checks are run on the untouched code at export and recorded; a do-nothing submission is rejected; edits outside the editable paths are rejected; the product makes no sandbox claim for declared commands."
+      ],
+      "acceptance": [
+        "No file under packages/box-package names pnpm, TypeScript or a test runner in the agreement schema or in how declared commands are run.",
+        "Every existing Box test passes after migration with no assertion weakened; tests of the deleted pnpm verb handling are removed with it and listed.",
+        "node scripts/verify.mjs --full test:box-package test:kitchen exits 0 inside the budget."
+      ],
+      "verification": [
+        "Reviewer greps the schema and command runner for tool names, re-runs R2's delegation through the migrated agreement, and confirms the base-check and no-op evidence is unchanged."
+      ],
+      "lenses": [
+        "security: declared commands still spawn from an argument array with no shell, inside the checked directory"
+      ],
+      "handoff": "waves/A1.md"
+    },
+    {
+      "id": "A2",
+      "milestone": "A",
+      "title": "Neutral file selection",
+      "dependencies": [
+        "A1"
+      ],
+      "writePaths": [
+        "packages/box-package/**",
+        "packages/box-cli/**",
+        "tests/box/package/**",
+        "research/box-delegation/**"
+      ],
+      "deliverables": [
+        "The default way to choose a Box's files is an owner-declared list (paths and patterns), checked for exclusions and containment on canonical paths exactly as today.",
+        "Export proves the list by execution: setup and guard checks run in a clean folder outside the repository that holds only the Box. A missing file shows up as a failing guard on the untouched code and is reported as a named gap.",
+        "Following TypeScript imports moves out of the core into an optional helper that proposes a file list for the owner to accept. The core works with the helper absent.",
+        "The project's own dependency manifest and lockfile travel unchanged. The core does not rebuild a lockfile."
+      ],
+      "acceptance": [
+        "With the TypeScript helper removed from the run, export still produces a working Box from a declared list.",
+        "A declared list that omits a needed file is caught at export, by name.",
+        "The excluded-path protections from D2.1 hold: case-aliased and junctioned paths cannot ship excluded files."
+      ],
+      "verification": [
+        "Reviewer exports with and without the helper, removes one needed file from a list to see the gap named, and replays the D2.1 exclusion attacks."
+      ],
+      "lenses": [
+        "security: exclusion and containment on canonical paths"
+      ],
+      "handoff": "waves/A2.md"
+    },
+    {
+      "id": "A3",
+      "milestone": "A",
+      "title": "Export and verify with no built-in package manager",
+      "dependencies": [
+        "A2"
+      ],
+      "writePaths": [
+        "packages/box-package/**",
+        "packages/box-cli/**",
+        "tests/box/package/**",
+        "research/box-delegation/**"
+      ],
+      "deliverables": [
+        "Export and owner-side verify run the agreement's declared setup commands instead of a hard-coded install. Nothing in the core spawns pnpm by name.",
+        "Generated TypeScript scaffolding (package manifest, compiler configuration, generated evaluators) leaves the core. What a Box needs to build is what the owner's files and setup commands provide.",
+        "The submission tool and owner-side verification work from file contents and hashes only, for files of any type."
+      ],
+      "acceptance": [
+        "A repository-wide search of the core for pnpm, tsc, vitest, tsconfig and package.json finds none outside the optional helper and tests.",
+        "R1's and R2's delegations still pass end to end through the neutral path.",
+        "node scripts/verify.mjs --full test:box-package test:kitchen exits 0 inside the budget."
+      ],
+      "verification": [
+        "Reviewer runs the search, re-runs R2 end to end, and confirms a do-nothing submission is still rejected."
+      ],
+      "handoff": "waves/A3.md"
+    },
+    {
+      "id": "A4",
+      "milestone": "A",
+      "title": "Proof on two projects unlike ours",
+      "dependencies": [
+        "A3"
+      ],
+      "writePaths": [
+        "examples/**",
+        "tests/box/package/**",
+        "research/box-delegation/a4/**",
+        "waves/A4.md"
+      ],
+      "deliverables": [
+        "Two small committed fixture projects written for this purpose: one JavaScript project managed by npm, and one Python project with no JavaScript in it. Each has a guard test and a request with a check that fails on the untouched code.",
+        "The whole loop on each with no code written for either project: export, checks on the untouched code, a blind recipient working from the folder alone, owner-side verify, a do-nothing submission rejected.",
+        "A short report: what the owner had to declare for each, how long preparation took, and anything the core still assumed."
+      ],
+      "acceptance": [
+        "Both loops complete with zero lines added under packages/ for either project.",
+        "Dependency setup for the fixtures runs with install scripts disabled where the tool supports it, and the fixtures have no third-party install scripts.",
+        "Anything the core still assumed is listed as a gap, not patched around."
+      ],
+      "verification": [
+        "Reviewer repeats both exports and owner-side verifies, and reads the diff for anything project-specific."
+      ],
+      "lenses": [
+        "measurement fairness: preparation time and manual steps are complete"
+      ],
+      "handoff": "waves/A4.md"
+    },
+    {
+      "id": "R3b",
+      "milestone": "R",
+      "title": "Replay recently fixed issues on a public repository",
+      "dependencies": [
+        "A4"
+      ],
+      "proposal": "Not started and not yet named by the owner. Recently fixed issues, on the code as it was just before each fix, with the maintainers' own test as the check; so the issue is known to be solvable and the real fix can be compared with what the Box contained. Label results as a replay: the check was written with hindsight, and an agent may have seen the public fix. Same safeguards as R3: nothing sent to the project; its code runs in a container with install scripts disabled.",
+      "writePaths": [
+        "waves/R3b.md",
+        "research/box-delegation/r3b/**"
+      ],
+      "handoff": "waves/R3b.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"

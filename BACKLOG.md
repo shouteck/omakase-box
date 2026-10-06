@@ -20,6 +20,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
+- A verify run that is killed leaves its embedded database processes and data folder behind (six processes after the stopped R3 run). Have verify clear its own stale database when it starts.
+- Declared pnpm commands: the code that locates the verb can disagree with pnpm's own parser for unusual option spellings, so an install-like command can pass as a run command. Accepted by the owner on 6 October 2026; removed by A1. From R3.
+
 - The packaging tests and the K6 budget recorder leave their temp folders and log files behind (`box-d21-*`, `box-k6-*` in the system temp folder). 1,590 had built up by midday on 6 October 2026 and were removed by hand once the kitchen was idle. Make the tests remove what they create; until then, clear them at wave close.
 
 - Prior K6 temp buildup was cleared manually while idle, per owner commit `326ee7d`; that historical ownership blocker is resolved. The exit-cleanup leak remains; each new wave must inventory and remove its own resources, not bulk-delete unknown data.

@@ -22,6 +22,21 @@ Agreed with the owner on 6 October 2026. The product is useful when all of this 
 
 Everything before that is a working mechanism, not a useful product. Two steps get there, in order: **R2**, a real request of our own prepared without request-specific code; then **R3**, the same on a public repository that is not ours. Until both are done, kitchen improvements pause (except fixing something that blocks them) and the lab stays on its first line of research. The owner's conversations with people who hand work to outsiders run alongside.
 
+## Milestone A: a repository-agnostic core
+
+Approved by the owner on 6 October 2026, after R3 could not prepare a Box for a project outside the product's own ecosystem. The product should work on any repository. The principle: **the core knows files, commands, exit codes and patches, and nothing else.** Anything that understands a language, a package manager or a test runner is an optional helper that makes a Box leaner or easier to prepare, never a requirement for making one.
+
+| Wave | Outcome |
+|---|---|
+| A1 | A neutral agreement format: the owner declares setup commands and check commands for any program, and what the solver needs installed. No required tool versions, no fixed list of tools. Existing agreements and tests move to it in the same wave; the old format is deleted. |
+| A2 | Neutral file selection: the owner lists the files, and export proves the list by running the checks in a clean folder. Following TypeScript imports becomes an optional helper that proposes files. The project's own dependency files travel unchanged. |
+| A3 | Export and owner-side verify run the declared setup and checks, whatever they are. No hard-coded package manager anywhere in the core; generated TypeScript scaffolding leaves the core. |
+| A4 | Proof on two projects that are not like ours: one managed by npm, and one that is not JavaScript at all (Python is installed on this machine). The whole loop on each: export, base checks, a blind recipient, owner-side verify, a do-nothing submission rejected. |
+
+Known limits, stated up front: the product's own command-line tool still needs Node to run, though the repository it works on can be anything. Without a language helper a Box is less lean. "Any repository" means any whose setup and checks can run in a clean folder; projects that need running services are harder.
+
+The next attempt on an outside repository (R3b, a replay of recently fixed issues) follows milestone A.
+
 ## Sequence
 
 | Step | Outcome | Form |
