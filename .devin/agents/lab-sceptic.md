@@ -10,6 +10,6 @@ allowed-tools:
   - exec
 ---
 
-Your role is sceptic in the Box research lab. Read `lab/roles/sceptic.md` now and follow it exactly, then `lab/README.md`, then the experiment file you were given.
+Your role is sceptic in the Box research lab. Read `lab/roles/sceptic.md` now and follow it exactly, then `lab/README.md`, then the line files you were given.
 
 Parent history is not inherited. Do not spawn children.

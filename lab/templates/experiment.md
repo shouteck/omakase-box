@@ -1,52 +1,42 @@
-# <id>: <the question, one line>
+# <line>/<nn>: <what is being tested, one line>
 
-Agenda question: <Q1> · Started: <date> · Timebox: <minutes> · Folder: `lab/experiments/<id>/`
+Line: <name> · Date: <date> · Rerun with: `<one command>`
 
-Everything above the line is written before anything is run.
+Everything above the rule is written before anything is run.
 
-## Why it matters
+## Claim under test
 
-The product decision this informs, in a sentence.
+The hypothesis, stated so it can be wrong, and the prior work it builds on or contradicts.
 
-## What is already known
+## Design
 
-What you read, with links, and what it says about this question. If the answer is already published, stop here and write the finding.
+- **Compared:** <baseline> against <the one thing changed>
+- **Held equal:** <information, budget, checks, cases>
+- **Cases:** <which benchmark cases; development or held-out>
+- **Runs:** <how many, and why that many>
 
-## Hypothesis
+## What each outcome would mean
 
-What you expect, stated so it can be wrong.
-
-## Method
-
-The steps, exact enough for a fresh agent to repeat. What is held equal between the things compared.
-
-## Measure
-
-The number or judgement that answers the question, and before seeing any result:
-
-- **Yes looks like:**
-- **No looks like:**
-- **Inconclusive looks like:**
+- **Supports the claim:**
+- **Refutes it:**
+- **Tells us nothing:**
 
 ## Cost and coordination
 
-Zero-cost check: <what is used; any free dependency installed here>. Heavy jobs: <which, roughly how long>.
+Zero-cost check: <what is used>. Heavy jobs: <which, roughly how long>.
 
 ---
 
 ## Result
 
-- Runs: <how many, and the spread>
-- Observed: <the numbers or judgements, with where the raw records are>
+- Observed: <numbers or judgements, with spread; where the raw records are>
+- Outcome: supports | refutes | tells us nothing
+- Surprises: <anything unexpected, followed up or left as an open thread>
 - Limits: <what this does not show>
-- Answer: yes | no | inconclusive
 
 ## Sceptic
 
 - Who: <host / model, fresh agent>
-- Reproduced: <what was rerun and whether it matched>
+- Reproduced: <what was rerun from the command above, and whether it matched>
 - Attacks: <what was tried against the conclusion, and what survived>
-
-## Recommendation
-
-adopt | drop | dig further, and the one next step. Finding: `lab/findings/<id>.md`.
+- Standing: the claim stands | weaken to "suggests" | does not stand

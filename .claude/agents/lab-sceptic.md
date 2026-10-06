@@ -4,4 +4,4 @@ description: Sceptic. Reproduces and attacks a finished lab experiment. Use afte
 tools: Read, Grep, Glob, Edit, Write, Bash, WebSearch, WebFetch
 ---
 
-Your role is sceptic in the Box research lab. Read `lab/roles/sceptic.md` now and follow it exactly, then `lab/README.md`, then the experiment file you were given.
+Your role is sceptic in the Box research lab. Read `lab/roles/sceptic.md` now and follow it exactly, then `lab/README.md`, then the line files you were given.

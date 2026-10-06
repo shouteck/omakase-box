@@ -1,76 +1,109 @@
 # The research lab
 
-The kitchen delivers known work. The lab answers open questions the product depends on, where the honest result may be "this does not work". The lab produces findings; the kitchen turns adopted findings into product.
+A small frontier research lab attached to a product. The kitchen ships what is known how to build. The lab works on what is not known: problems where the field has partial answers, the right method is unclear, and "this does not work, and here is why" is a result worth having.
 
-| | Kitchen | Lab |
+The lab's standing is earned the way any lab's is: by knowing the literature, measuring honestly, and being right more often than it is confident.
+
+## What the lab is for
+
+The product needs answers in a few problem areas (they are listed in [PROGRAMME.md](PROGRAMME.md)). The owner's and the CTO's ideas about how to solve them are hypotheses with no special standing; a published method that already works beats any of them. The lab's job is to find out what is true and hand the kitchen something it can build.
+
+It produces three things, in this order of lasting value:
+
+1. **Instruments:** benchmarks, labelled sets and evaluation harnesses that make a vague question measurable. These outlive any single result.
+2. **Findings:** short memos stating a claim, the evidence, and the limits.
+3. **Transfers:** a finding the kitchen adopts and rebuilds as product.
+
+## How research is organised
+
+Work is organised into **lines of inquiry**, not tasks. A line is one problem pursued over many sessions. Each line lives in `lab/lines/<name>/` and moves through these stages; skipping one is the commonest way to waste a month.
+
+1. **Survey.** What does the field already know? Who has worked on this, under what names, with what results and what open problems? Written up as `related-work.md` with sources. If the problem is solved, say so and move to transfer.
+2. **Formulate.** State the problem precisely enough to be wrong about it: definitions, what a solution must do, the metric, and what would count as progress. Vague problems produce unfalsifiable results.
+3. **Instrument.** Build the benchmark before the method: a fixed set of cases with known answers, a harness that scores any approach on them, and a held-out part that is not looked at while developing.
+4. **Baseline.** Run the simplest thing and the best published thing on the benchmark. A new idea means nothing until it is compared with these.
+5. **Experiment.** One change at a time against the baseline, each written down before it is run.
+6. **Write up and transfer.** A memo; then adopt, drop, or continue.
+
+A line has a `README.md` (the problem, the metric, the current best answer and how sure), a `notebook.md` (append-only: every session, what was tried, what happened, including dead ends), and its benchmark and experiments.
+
+## Culture
+
+- **Know the field.** Reading is work, not preparation for work. Cite what you build on. Reinventing a published result is a failure of scholarship, however well executed.
+- **Taste over volume.** Few lines, chosen because an answer would change what the product does. Prefer the experiment most likely to change your mind, and the cheapest one that could.
+- **Strong opinions, held loosely, written down first.** State the hypothesis and the result that would refute it before running. Then follow the data.
+- **Surprises are the point.** An unexpected result is investigated, not averaged away. Budget part of every session for following one.
+- **Negative results are results.** They go in the notebook and the memo with the same care. A line closed for a good reason is a success.
+- **Internal review is adversarial and impersonal.** The sceptic's job is to break the claim. A claim that survives is stronger; one that does not was never ready.
+- **Calibrated language.** "Shows", "suggests" and "is consistent with" mean different things. Say how sure, and on what.
+- **No demos.** A hand-picked example is an illustration, never evidence.
+
+## The pstack principles, in a lab
+
+The same principles the kitchen works by apply here, but they mean something different when the output is knowledge. Read the principle skills in `.devin/plugins/box-pstack/skills/principle-*/SKILL.md` and apply them in this sense:
+
+| Principle | In the kitchen | In the lab |
 |---|---|---|
-| Output | Merged, tested code | A finding and a recommendation |
-| Done when | Tests pass on a commit | The question is answered with evidence, including "no" |
-| Failure | A problem | A valid result, recorded |
-| Code | Kept | Thrown away; only the idea survives |
+| Prove it works | Run the real artifact | A result is real when a fresh agent reproduces it from the written method |
+| Build the lever | Build the tool that does the job | Build the benchmark and harness; the instrument is what others rerun |
+| Sequence verifiable units | Small waves, each checked | The smallest experiment that could change your mind; one variable at a time |
+| Exhaust the design space | Prototype two or three designs | Competing hypotheses and published methods as baselines, on one benchmark |
+| Explain the number | Trust a measurement only with its limiter | Variance, run count, what else it could be measuring, leakage from development into test |
+| Attack the premise | Question the assumption behind failed fixes | Question the question: after two failed approaches, revisit the formulation |
+| Laziness, subtract before you add | Smallest change, delete first | Simplest explanation, existing method first; invent only when the field has nothing |
+| Model the domain | Name the data shape | Define the problem and the metric before any method |
+| Fix root causes | Trace the bug to its cause | Explain anomalies; do not smooth them over |
+| Test behaviour, not implementation | Assert observable results | Score outcomes on held-out cases, never a proxy that is easier to move |
+| Make operations idempotent | Reruns converge | One command reruns an experiment: fixed inputs, recorded versions and seeds |
+| Encode lessons in structure | Lessons become checks | Lessons become benchmark cases and harness checks |
+| Guard the context window | Summaries, not payloads | Distil the survey; hand a researcher the memo, not forty papers |
+| Never block on the human | Proceed on reversible work | The lab chooses its questions and methods; the owner is asked only for what only they can give |
+| Experience first | User delight over convenience | Every line states what changes for the product's user if it succeeds |
+| Outcome-oriented | Converge on the target | Drive to an answer; close lines that are not converging |
 
 ## People
 
-- **Lab lead:** owns the agenda, designs experiments, writes findings and lab notes. [roles/researcher.md](roles/researcher.md).
-- **Researcher:** runs one experiment. Same role file; on a small experiment the lab lead does this itself.
-- **Sceptic:** a fresh agent that tries to reproduce the result and break the conclusion. Never the agent that ran the experiment. [roles/sceptic.md](roles/sceptic.md).
+- **Lab lead:** sets direction, chooses and closes lines, writes the programme and the lab notes, decides what is ready to transfer. Taste and honesty are the job. [roles/researcher.md](roles/researcher.md).
+- **Researcher:** carries one line forward for a session. Same role file; on small steps the lab lead does this itself.
+- **Sceptic:** a fresh agent acting as the hostile reviewer every paper deserves. Never the agent that produced the result. [roles/sceptic.md](roles/sceptic.md).
 
-Staff them the way `kitchen/README.md` describes for any host: a named profile if the host has one, otherwise a fresh agent given the role file and the experiment file.
+Staff them as `kitchen/README.md` describes for any host: a named profile where the host has one, otherwise a fresh agent given the role file and the line's files.
 
-## How an experiment runs
-
-1. **Question.** Take it from [AGENDA.md](AGENDA.md). It must name the product decision it informs.
-2. **Read first.** These are studied problems. Before designing anything, find what is already known (papers, documented systems, prior experiments here) and cite it in the experiment file. Do not rediscover a published result at the owner's expense.
-3. **Write the experiment file before running it**, from [templates/experiment.md](templates/experiment.md): hypothesis, method, the measure, and what result would count as yes, as no, and as inconclusive. Deciding this afterwards is not research.
-4. **Run it** in `lab/experiments/<id>/`. Prototype code is throwaway and stays on this branch.
-5. **Sceptic.** A fresh agent reruns the key measurement from the recorded steps and attacks the conclusion.
-6. **Finding.** One page in `lab/findings/<id>.md`: what was asked, what was found, how sure, what it means for the product, and one recommendation: **adopt**, **drop** or **dig further**.
-7. **Hand off.** Adopted findings and any request to the kitchen go in [HANDOFF.md](HANDOFF.md). Update the agenda. Commit and push this branch.
-
-## Standards
+## Standards of evidence
 
 - A number comes with its run count, its spread and what limits it. One run is an anecdote; say so.
-- Negative and inconclusive results are recorded with the same care as positive ones.
-- Counts over stopwatches where possible; this machine is shared and timings are noisy.
-- Separate what was observed from what is inferred. Never claim customer value, novelty or generality from a lab result.
-- An AI judging something (a design, a screenshot, a piece of writing) is a measuring instrument. Before its verdicts are used, measure how often it agrees with the owner on examples the owner has labelled, and report that agreement with the result.
-- The pstack method applies: investigation, prototype, hillclimb and eval playbooks; explain-the-number, prove-it-works, exhaust-the-design-space.
+- Development cases and held-out cases are kept apart. A method tuned on the test set has shown nothing.
+- Compared things are given the same information, budget and checks, and the comparison says so.
+- A model used as a judge is an instrument that must be calibrated: report its agreement with labelled human judgements, and its agreement with itself across runs, before using its verdicts.
+- Separate what was observed from what is inferred. No claims of novelty without the survey to back them, and no claims about customers at all.
 
 ## Cost: zero
 
-No paid services, paid models, paid APIs, cloud machines or purchases, whatever the reason. Use what the session already includes (the agent's own reasoning and vision, web reading where the host has it) and free, open-source tools. A free dependency may be installed inside this folder only, and is recorded in the experiment file. If a question cannot be answered at zero cost, say so in the finding and stop; that is the owner's decision.
+No paid services, paid models, paid APIs, cloud machines or purchases, whatever the reason. Use what the session already includes (the agent's own reasoning and vision, web reading where the host has it), open-access papers, and free open-source tools. A free dependency may be installed inside this folder only and is recorded in the notebook. Zero cost limits sample sizes; say what the limit was and what a larger study would need. If a question cannot be answered at zero cost, that is the finding.
 
 ## Working beside the kitchen
 
-The lab runs at the same time as the kitchen. It must never be the reason a kitchen wave fails or slows.
+The lab runs at the same time as the kitchen and must never be the reason a kitchen wave fails or slows.
 
 **Nothing shared in Git.**
 
 - Work only in this folder and only on branches named `lab` or `lab/...`. Never write to `master`, to a `wave/...` branch, or to the main checkout at `private-task-mvp`. Never run a Git command there that changes anything.
-- The lab never merges into master. An adopted finding is rebuilt by the kitchen as a normal reviewed wave.
+- The lab never merges into master. A transferred finding is rebuilt by the kitchen as a normal reviewed wave.
 - Reading the kitchen is always fine: `git show origin/master:<path>`, or reading files in the main checkout.
 
-**One heavy job at a time on this machine.** A heavy job is anything that installs packages, builds, runs a test suite, starts a database or opens a browser. Before each one:
+**One heavy job at a time on this machine.** A heavy job installs packages, builds, runs a test suite, starts a database or opens a browser. Before each one run `node lab/tools/kitchen-busy.mjs`. If it prints `busy`, wait and ask again in a minute, doing light work meanwhile; after fifteen minutes carry on with something else and come back. Light work (reading, analysis, writing, scripts under a minute) runs any time. Use temp directories prefixed `lab-`, let the system pick free ports, never bind 4000, 4001 or the kitchen's test addresses, and remove what you created.
 
-- Run `node lab/tools/kitchen-busy.mjs`. If it prints `busy`, the kitchen is verifying: wait and ask again in a minute, and meanwhile do work that is not heavy (reading, analysis, writing).
-- If it is still busy after fifteen minutes, carry on with other work and come back later. Never race the kitchen.
-- Light work (reading, thinking, small scripts under a minute) runs any time.
-- Use your own temp directories, prefixed `lab-`, and let the system pick free ports. Never bind 4000, 4001 or the addresses the kitchen's tests use. Remove what you created when the experiment ends.
-
-**Talking to the kitchen.**
-
-- Lab to kitchen: [HANDOFF.md](HANDOFF.md) on this branch. The head chef reads it at kickoff.
-- Kitchen to lab: the "For the lab" section of `BACKLOG.md` on master. The lab lead reads it at every start.
-- If an experiment truly needs the kitchen to change something (a hook in the product, a fixture, a measurement recorded during waves), ask in HANDOFF.md and continue with what does not depend on it. Do not make the change yourself.
+**Talking to the kitchen.** Lab to kitchen: [HANDOFF.md](HANDOFF.md) on this branch. Kitchen to lab: the "For the lab" section of `BACKLOG.md` on master. If a line needs the kitchen to change something, ask there and continue with what does not depend on it.
 
 ## Talking to the owner
 
-One lab note per run, under 150 words, plain language:
+The owner is not a research scientist and is never asked to choose between methods. One lab note per run, under 150 words, plain language:
 
-> **Lab note: <question in one line>**
-> **Found:** the answer, in a sentence or two.
+> **Lab note: <the problem, one line>**
+> **Where the field is:** one sentence, if this run surveyed.
+> **Found:** the answer or the progress, in a sentence or two.
 > **How sure:** what it rests on, and its limits.
 > **For the product:** what this changes, if anything.
-> **Next:** adopt / drop / dig further, and what the lab does next.
+> **Next:** what the lab does next.
 
-Methods, citations and numbers stay in the finding. Ask the owner only for what only they can give: a judgement on examples, or a decision on the owner-only list.
+Ask the owner only for what only they can give: judgements on examples, or a decision on the owner-only list in `AGENTS.md`.
