@@ -1,41 +1,31 @@
-import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AgreementInvalid, ExportFailed, PreparationGap } from '../../../packages/box-package/index.js';
+import { AgreementInvalid, parseAgreement, PreparationGap, proposeSelection } from '../../../packages/box-package/index.js';
 import { agreementFile, fixtureCommit, fixtureRepo, materializeFixtureRepo, requirePnpmTooling, runExport, runRoot } from './support.js';
 
 requirePnpmTooling();
 
 describe('box export negatives', () => {
-  it('fails naming a reachable-but-excluded protected module with its import chain', () => {
-    const agreement = agreementFile('request-a', {
+  it('names a reachable-but-excluded protected module with its import chain in the optional proposal helper', () => {
+    const path = agreementFile('request-a', {
       mutate: value => { value.entrypoints = ['src/server.ts']; }
     });
-    try {
-      runExport(agreement);
-      expect.unreachable('export should have failed');
-    } catch (error) {
-      expect(error).toBeInstanceOf(PreparationGap);
-      const gaps = (error as PreparationGap).gaps;
-      const excluded = gaps.find(gap => gap.kind === 'reachable-excluded' && gap.detail === 'src/private/eligibility.ts');
-      expect(excluded?.chain.join(' -> ')).toBe('src/server.ts -> src/selection/api.ts -> src/private/eligibility.ts');
-      expect(error).not.toBeInstanceOf(ExportFailed);
-    }
+    const agreement = parseAgreement(JSON.parse(readFileSync(path, 'utf8')) as unknown);
+    const gaps = proposeSelection(agreement, join(fixtureRepo().repo, 'examples', 'private-shop')).gaps;
+    const excluded = gaps.find(gap => gap.kind === 'reachable-excluded' && gap.detail === 'src/private/eligibility.ts');
+    expect(excluded?.chain.join(' -> ')).toBe('src/server.ts -> src/selection/api.ts -> src/private/eligibility.ts');
   });
 
-  it('fails naming an undeclared dependency', () => {
-    const agreement = agreementFile('request-a', {
+  it('names an undeclared dependency in the optional proposal helper', () => {
+    const path = agreementFile('request-a', {
       mutate: value => { value.entrypoints = ['src/server.ts']; }
     });
-    try {
-      runExport(agreement);
-      expect.unreachable('export should have failed');
-    } catch (error) {
-      expect(error).toBeInstanceOf(PreparationGap);
-      const details = (error as PreparationGap).gaps.filter(gap => gap.kind === 'undeclared-dependency').map(gap => gap.detail);
-      expect(details).toContain('fastify');
-      expect(details).not.toContain('zod'); // declared
-    }
+    const agreement = parseAgreement(JSON.parse(readFileSync(path, 'utf8')) as unknown);
+    const gaps = proposeSelection(agreement, join(fixtureRepo().repo, 'examples', 'private-shop')).gaps;
+    const details = gaps.filter(gap => gap.kind === 'undeclared-dependency').map(gap => gap.detail);
+    expect(details).toContain('fastify');
+    expect(details).not.toContain('zod');
   });
 
   it('fails on a wrong base commit', () => {
@@ -139,7 +129,7 @@ describe('box export negatives', () => {
     const baseCommit = fixtureCommit(repo.repo, 'linked-private');
     const agreement = agreementFile('request-a', {
       baseCommit,
-      mutate: value => { value.entrypoints = ['src/policy/vault/scoring.ts']; }
+      mutate: value => { value.files = [{ owner: 'src/policy/vault/scoring.ts' }]; }
     });
     try {
       runExport(agreement, repo.repo);
@@ -165,27 +155,36 @@ describe('box export negatives', () => {
     }
   });
 
-  it('fails on an unresolved import inside the closure', () => {
+  it('names an unresolved import inside the proposal closure', () => {
     const repo = materializeFixtureRepo();
     writeFileSync(join(repo.repo, 'examples', 'private-shop', 'src', 'policy', 'broken.ts'), "import { nothing } from './nowhere.js';\nexport const value = nothing;\n");
     const baseCommit = fixtureCommit(repo.repo, 'broken-import');
-    const agreement = agreementFile('request-a', {
+    const path = agreementFile('request-a', {
       baseCommit,
       mutate: value => { value.entrypoints = ['src/policy/broken.ts']; }
     });
+    const agreement = parseAgreement(JSON.parse(readFileSync(path, 'utf8')) as unknown);
+    const gaps = proposeSelection(agreement, join(repo.repo, 'examples', 'private-shop')).gaps;
+    expect(gaps.some(gap => gap.kind === 'unresolved-import' && gap.detail === './nowhere.js')).toBe(true);
+  });
+
+  it('fails on a selected file that does not exist', () => {
+    const agreement = agreementFile('request-a', {
+      mutate: value => { value.files = [{ owner: 'src/not-there.mjs' }]; }
+    });
     try {
-      runExport(agreement, repo.repo);
+      runExport(agreement);
       expect.unreachable('export should have failed');
     } catch (error) {
       expect(error).toBeInstanceOf(PreparationGap);
-      expect((error as PreparationGap).gaps.some(gap => gap.kind === 'unresolved-import' && gap.detail === './nowhere.js')).toBe(true);
+      expect((error as PreparationGap).gaps.some(gap => gap.kind === 'missing-input')).toBe(true);
     }
   });
 
   it('writes nothing to the out directory when selection has gaps', () => {
     const outDir = join(runRoot('blocked'), 'box');
     const agreement = agreementFile('request-a', {
-      mutate: value => { value.entrypoints = ['src/server.ts']; }
+      mutate: value => { value.files = [{ owner: 'src/private/scoring.ts' }]; }
     });
     expect(() => runExport(agreement, fixtureRepo().repo, outDir)).toThrowError(PreparationGap);
     expect(existsSync(outDir)).toBe(false);

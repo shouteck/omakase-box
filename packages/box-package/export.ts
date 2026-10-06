@@ -1,12 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
 import type { BoxAgreement } from './agreement.js';
 import { materializeTooling, preflightPrograms, runDeclaredChecks, runSetup } from './commands.js';
 import type { CheckRecord } from './commands.js';
+import type { CommandCheck } from './agreement.js';
 import { ExportFailed, PreparationGap } from './errors.js';
 import { git } from './git.js';
 import { productInstallArgs } from './install.js';
@@ -131,10 +132,12 @@ export function exportBox(options: ExportOptions): ExportResult {
   }
 
   if (agreement.nodejs !== undefined) {
-    const manifestText = packageManifest(agreement);
-    ship('package.json', null, 'generated', manifestText, false);
-    ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
-    ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
+    const manifestText = existsSync(join(staging, 'package.json'))
+      ? readFileSync(join(staging, 'package.json'), 'utf8')
+      : packageManifest(agreement);
+    if (!written.has('package.json')) ship('package.json', null, 'generated', manifestText, false);
+    if (!written.has('tsconfig.json')) ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
+    if (!written.has('pnpm-lock.yaml')) ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
   }
   for (const check of agreement.evaluator) ship(check.box, null, 'generated', generate(check.generator), false);
   // The submission tool travels inside the folder: the recipient seals its work with
@@ -157,13 +160,19 @@ export function exportBox(options: ExportOptions): ExportResult {
     requires: []
   }, staging);
 
+  const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
+  const ownerChecks = agreement.commands.filter(check => check.context === 'owner');
+  const recipientSetup = agreement.setup.filter(command => command.context === 'recipient');
+  const recipientChecks = agreement.commands.filter(check => check.context === 'recipient');
+  const pairBase = new Map<string, CheckRecord>();
+  const paired: { check: CommandCheck; owner: CheckRecord; box: CheckRecord }[] = [];
+  let basePairRoot: string | undefined;
+
   // Every declared owner-context check runs on the untouched base in a
   // disposable clone — never in the real owner repository, which approved
   // commands must leave unchanged. A red guard is a preparation/environment
   // gap: the base the agreement claims to start from does not hold.
-  const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
-  const ownerChecks = agreement.commands.filter(check => check.context === 'owner');
-  if (ownerSetup.length > 0 || ownerChecks.length > 0) {
+  if (ownerSetup.length > 0 || ownerChecks.length > 0 || recipientSetup.length > 0 || recipientChecks.length > 0) {
     const baseWork = mkdtempSync(join(tmpdir(), 'box-base-'));
     try {
       const clone = join(baseWork, 'owner');
@@ -176,6 +185,15 @@ export function exportBox(options: ExportOptions): ExportResult {
         throw new ExportFailed(`setup command '${setup.name}' did not exit 0 on the untouched base (context ${setup.context}, result: ${setup.result}, exit ${setup.exit}): ${setup.log}`);
       }
       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, 'owner'));
+      if (recipientSetup.length > 0 || recipientChecks.length > 0) {
+        const baseSub = agreement.sourceRoot === '.' ? clone : join(clone, ...toPosix(agreement.sourceRoot).split('/'));
+        if (!statSync(baseSub, { throwIfNoEntry: false })?.isDirectory()) throw new ExportFailed(`source root ${agreement.sourceRoot} is absent from the base clone, so the declared recipient checks cannot be paired against it`);
+        basePairRoot = realpathSync(baseSub);
+        for (const record of runSetup(agreement.setup, baseSub, 'recipient')) {
+          if (record.result !== 'pass') throw new ExportFailed(`setup command '${record.name}' did not exit 0 on the untouched base subtree (context ${record.context}, result: ${record.result}, exit ${record.exit}): ${record.log}`);
+        }
+        for (const record of runDeclaredChecks(agreement.commands, baseSub, 'recipient')) pairBase.set(record.name, record);
+      }
     } finally {
       rmSync(baseWork, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
     }
@@ -191,8 +209,6 @@ export function exportBox(options: ExportOptions): ExportResult {
   // the declared commands execute there. A red guard (a runtime-path gap in the
   // package is exactly that) refuses the export even when owner checks are
   // green; the result is recorded either way.
-  const recipientSetup = agreement.setup.filter(command => command.context === 'recipient');
-  const recipientChecks = agreement.commands.filter(check => check.context === 'recipient');
   if (recipientSetup.length > 0 || recipientChecks.length > 0) {
     const runRootDir = mkdtempSync(join(tmpdir(), 'box-recipient-'));
     try {
@@ -203,7 +219,29 @@ export function exportBox(options: ExportOptions): ExportResult {
       if (setup !== undefined) {
         throw new ExportFailed(`setup command '${setup.name}' did not exit 0 in the staged Box (context ${setup.context}, result: ${setup.result}, exit ${setup.exit}): ${setup.log}`);
       }
-      baseChecks.push(...runDeclaredChecks(agreement.commands, box, 'recipient'));
+      const boxRuns = runDeclaredChecks(agreement.commands, box, 'recipient');
+      baseChecks.push(...boxRuns);
+      const boxRoot = realpathSync(box);
+      for (const check of recipientChecks) {
+        const owner = pairBase.get(check.name);
+        const isolated = boxRuns.find(record => record.name === check.name);
+        if (owner === undefined || isolated === undefined || basePairRoot === undefined) throw new ExportFailed(`paired check '${check.name}' has no counterpart record to compare against`);
+        if (owner.result === 'error' || owner.result === 'timeout' || isolated.result === 'error' || isolated.result === 'timeout') {
+          throw new ExportFailed(`paired check '${check.name}' could not be compared (base: ${owner.result} exit ${owner.exit}; box: ${isolated.result} exit ${isolated.exit}): ${(owner.result === 'fail' || owner.result === 'pass' ? isolated : owner).log}`);
+        }
+        if (owner.result !== isolated.result || owner.exit !== isolated.exit) {
+          throw new ExportFailed(`paired check '${check.name}' disagrees between the untouched base and the isolated Box (base ${owner.result} exit ${owner.exit}; box ${isolated.result} exit ${isolated.exit}): ${isolated.log}`);
+        }
+        const normalize = (log: string, root: string): string => {
+          let out = log.replace(/\r\n/g, '\n');
+          for (const spelling of new Set([root, toPosix(root)])) if (spelling !== '') out = out.split(spelling).join('<root>');
+          return out;
+        };
+        if (normalize(owner.log, basePairRoot) !== normalize(isolated.log, boxRoot)) {
+          throw new ExportFailed(`paired check '${check.name}' exits identically but fails differently in the isolated Box than on the untouched base — a missing selected file cannot masquerade as the declared outcome. base: ${normalize(owner.log, basePairRoot).slice(-800)} | box: ${normalize(isolated.log, boxRoot).slice(-800)}`);
+        }
+        paired.push({ check, owner, box: isolated });
+      }
     } finally {
       rmSync(runRootDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
     }
@@ -211,6 +249,9 @@ export function exportBox(options: ExportOptions): ExportResult {
     if (guard !== undefined) {
       throw new ExportFailed(`guard check '${guard.name}' does not pass on the untouched base (context ${guard.context}, result: ${guard.result}, exit ${guard.exit}): ${guard.log}`);
     }
+  }
+  if (recipientChecks.length === 0) {
+    warnings.push('no runnable recipient-context checks are declared: the explicit selection is not proven inside the emitted Box');
   }
   if (baseChecks.length > 0 && !baseChecks.some(record => record.role === 'outcome' && record.result === 'fail')) {
     warnings.push('no declared outcome check fails on the untouched base: the declared checks cannot evidence change');
@@ -240,6 +281,11 @@ export function exportBox(options: ExportOptions): ExportResult {
       name: record.name, program: record.program, argv: [...record.declaredArgv], cwd: record.cwd,
       context: record.context, role: record.role, exit: record.exit, result: record.result,
       log: record.log, seconds: record.seconds
+    })),
+    paired: paired.map(pair => ({
+      name: pair.check.name, program: pair.check.program, argv: [...pair.check.args], cwd: pair.check.cwd,
+      owner: { exit: pair.owner.exit, result: pair.owner.result, log: pair.owner.log, seconds: pair.owner.seconds },
+      box: { exit: pair.box.exit, result: pair.box.result, log: pair.box.log, seconds: pair.box.seconds }
     })),
     warnings,
     submission: { format: 'editable-overlay', tool: SUBMIT_TOOL_PATH, editable, instructions: agreement.submission.instructions },

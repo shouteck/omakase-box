@@ -7,6 +7,10 @@
   },
   "outcome": "Harden the shop's response headers. Set frame-ancestors to 'none', turn on X-Content-Type-Options nosniff, set Referrer-Policy to no-referrer, and enable HSTS with a one-year max-age (no includeSubDomains). Keep /health exempt from all of it.",
   "sourceRoot": "examples/private-shop",
+  "files": [
+    { "owner": "src/policy/loader.ts", "box": "src/policy/loader.ts" },
+    { "owner": "src/policy/strict-json.ts", "box": "src/policy/strict-json.ts" }
+  ],
   "entrypoints": ["src/policy/loader.ts"],
   "editable": [
     { "kind": "copy", "owner": "config/response-security.json", "box": "src/config/response-security.json" }

@@ -12,6 +12,12 @@ const PortablePath = z.string().refine(isPortablePath, 'Unsafe portable relative
 const Prefix = z.string().refine(value => value.endsWith('/') && isPortablePath(value.slice(0, -1)), 'Excluded prefixes must be portable paths ending in "/".');
 const GeneratorId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 
+export const SelectedFileEntrySchema = z.strictObject({
+  owner: PortablePath,
+  box: PortablePath.optional()
+});
+export type SelectedFileEntry = z.infer<typeof SelectedFileEntrySchema>;
+
 export const EditableEntrySchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('copy'), owner: PortablePath, box: PortablePath }),
   z.strictObject({ kind: z.literal('generated-scaffold'), owner: PortablePath, box: PortablePath, generator: GeneratorId })
@@ -78,7 +84,8 @@ export const BoxAgreementSchema = z.strictObject({
   outcome: z.string().min(1).max(16000),
   baseCommit: GitCommitSchema.optional(),
   sourceRoot: z.string().refine(value => value === '.' || isPortablePath(value), 'sourceRoot must be "." or a portable path.'),
-  entrypoints: z.array(PortablePath).max(64),
+  files: z.array(SelectedFileEntrySchema).max(256).default([]),
+  entrypoints: z.array(PortablePath).max(64).default([]),
   editable: z.array(EditableEntrySchema).min(1).max(64),
   readContext: z.array(PortablePath).max(64).default([]),
   declaredDependencies: z.record(z.string().min(1).max(128), z.string().min(1).max(64)),

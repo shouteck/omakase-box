@@ -95,3 +95,35 @@ non-JavaScript project carries none of it. Installs the product itself spawns
 (lockfile resolution, verify's scratch install) still carry `--ignore-scripts`
 through the install boundary; declared commands are owner-approved execution
 authority, not a sandbox.
+
+## Explicit file selection and paired checks (A2)
+
+`files` is now the sole authority for what owner source a Box ships. Each entry
+names an owner path and the box destination it lands at; omitting `box` ships
+the file under its canonical owner path. Selection is extension-neutral: any
+file type can be listed, nothing is inferred from imports or language, and no
+file enters the Box unless the owner listed it or it is a declared generated
+artifact (the `nodejs` helper files, `evaluator/*`, `box/submit.mjs`,
+`box.json`).
+
+`entrypoints` is now only an optional hint for `proposeSelection`, a proposal
+helper that runs the TypeScript import traversal and returns a candidate
+`files` list plus named gaps. The owner reviews and edits that proposal into
+`files`; the helper never adds files to an export on its own.
+
+Selected dependency files — `package.json`, a lockfile, a workspace manifest —
+are copied byte-for-byte when listed in `files` (or `editable`), and generated
+artifacts never overwrite a selected path. Their bytes and SHA-256 are recorded
+in `box.json` `files` like any other selected file.
+
+Export also runs each declared recipient-context command twice: once inside a
+disposable clone of the owner base and once inside the staged Box in a clean
+directory outside the checkout, with the same program, argv and cwd semantics.
+The paired exit codes, results and root-normalized diagnostics are recorded in
+`box.json` `paired`. Export refuses with `ExportFailed` when the two
+observations do not match in result, exit and meaningful diagnostics — the same
+nonzero exit from a different cause (for example a missing file in the Box
+versus the real defect in the base) is a refusal, not evidence. Matching
+observations are evidence that the Box reproduces the base behavior, not causal
+proof of a fix; a Box with no runnable recipient-context checks exports with a
+warning and claims no proven selection.
