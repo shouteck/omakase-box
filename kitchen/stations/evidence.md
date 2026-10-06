@@ -13,7 +13,7 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 
 - **Every attempt counts.** Failures, abandoned runs and unsupported requests stay in the denominator.
 - **Missing is not zero.** An observation nobody recorded is reported as missing.
-- **A number without its story is not evidence.** Each one needs its run count, its spread and what limits it. One run is an anecdote.
+- **A number without its story is not evidence.** Name run count, spread and limits; one run is an anecdote. For disclosure, distinguish tracked-file and filesystem inventories, list exclusions, and exclude worktree metadata: R1's live 1834-file denominator was only 694 tracked non-excluded files.
 - **Unequal sides.** Both routes must carry the same outcome and the same acceptance checks. Differences in access are the thing being tested and are stated, not hidden.
 - **A blind taster on this machine is not blind by force.** The recipient is told not to look outside the Box folder, but nothing stops it. Say so with every result, and for results that matter run the recipient where the repository is not present.
 - **An agent is not a human participant**, interest is not demand, and a trial is not revenue.
