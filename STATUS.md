@@ -1,6 +1,6 @@
 # Status
 
-Replaced at every wave close. Last written 6 October 2026 by Claude as CTO, at the close of A0.
+Replaced at every wave close. A0 closed by Claude on 6 October 2026; A1 kickoff hold recorded by Devin later that day.
 
 ## Now
 
@@ -9,7 +9,7 @@ Replaced at every wave close. Last written 6 October 2026 by Claude as CTO, at t
 - **A0's result: the neutral design holds, on small projects.** A throwaway loop that knows only files, commands, exit codes and patches prepared, set up, checked and solved a change on an npm project, a Python project and a multi-package repository under both npm and pnpm. 18 trials, 10 worked, reproduced by the reviewer. None of the projects had outside dependencies, and it ran on this one Windows machine.
 - **What A0 changed in the plan:** a clean setup is never evidence (a locked install exits 0 with a needed package missing); a check must fail for the right reason, so it is compared with the same check in the full repository; starting a program on Windows needs one fixed rule; outside dependencies get their own test in A4. Detail: `waves/A0.md`, `research/box-delegation/a0/RESULT.md`.
 - **In flight:** nothing.
-- **Held:** nothing.
+- **Held:** A1 brief prepared by Devin; awaiting the owner's go for removing the old live agreement format, as START.md requires for removals. No worker dispatched and no product code changed.
 
 ## Approved by the CEO
 
@@ -20,7 +20,7 @@ Replaced at every wave close. Last written 6 October 2026 by Claude as CTO, at t
 
 No wave starts without a START message and its pre-cook card.
 
-1. **A1: a neutral agreement format**, including one rule for starting declared programs and a check that every declared program can be found. `START.md: A1`. It continues an approved milestone the owner has been briefed on, so its card does not wait for "go".
+1. **A1: a neutral agreement format**, including one rule for starting declared programs and a check that every declared program can be found. Requested with `START.md: A1`; brief in `waves/A1.md`. Milestone A is already approved, but removing the old live format needs the pre-cook "go" under START.md.
 2. **A2, A3, A4** follow in order; see `PLAN.md`.
 3. **R3b**, a replay of recently fixed issues on a public repository, after milestone A.
 
