@@ -104,12 +104,47 @@ describe('declared command checks: export on the untouched base', () => {
     });
     const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(agreement).outDir, 'box.json'), 'utf8')));
     expect(manifest.baseChecks.map(record => `${record.name}:${record.result}:${record.exit}`)).toEqual(['base-guard:pass:0', 'base-outcome:fail:1']);
-    expect(manifest.warnings).toEqual([]);
+    // The legacy 'checks' strings are descriptions: named unsupported gap, never a claim.
+    expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/)]);
     expect(manifest.commands[0]?.tool).toBe('node');
 
     const green = agreementFile('request-a', { mutate: value => { value.commands = [check({ name: 'only-green', role: 'outcome' })]; } });
     const warned = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(green).outDir, 'box.json'), 'utf8')));
-    expect(warned.warnings[0]).toMatch(/cannot evidence change/);
+    expect(warned.warnings.some(warning => /cannot evidence change/.test(warning))).toBe(true);
+  });
+
+  it('records recipient-context base results on the installed staged Box', () => {
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.commands = [
+          check({ name: 'pkg-guard', context: 'recipient', role: 'guard' }),
+          check({ name: 'pkg-outcome', context: 'recipient', role: 'outcome', args: ['-e', 'process.exit(1)'] })
+        ];
+      }
+    });
+    const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(agreement).outDir, 'box.json'), 'utf8')));
+    expect(manifest.baseChecks.map(record => `${record.context}:${record.name}:${record.result}`)).toEqual(['recipient:pkg-guard:pass', 'recipient:pkg-outcome:fail']);
+  });
+
+  it('refuses when a recipient-context guard fails on the staged Box, owner checks green or not', () => {
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.commands = [
+          check({ name: 'owner-ok' }),
+          // A runtime-path gap in the package: the guard names a file the Box
+          // never shipped, so it fails inside the staged folder.
+          check({ name: 'pkg-missing', context: 'recipient', args: ['src/definitely-not-shipped.js'] })
+        ];
+      }
+    });
+    expect(() => runExport(agreement)).toThrowError(ExportFailed);
+  });
+
+  it('keeps a legacy evaluator-only agreement exporting, with the named gap recorded', () => {
+    const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(agreementFile('request-a')).outDir, 'box.json'), 'utf8')));
+    expect(manifest.baseChecks).toEqual([]);
+    expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/)]);
+    expect(manifest.evaluator).toHaveLength(1);
   });
 
   it('refuses to export when a declared guard is red on the untouched base', () => {

@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
@@ -89,36 +89,58 @@ export function exportBox(options: ExportOptions): ExportResult {
   if (!statSync(sourceRoot, { throwIfNoEntry: false })?.isDirectory()) throw new ExportFailed(`source root ${sourceRoot} does not exist`);
   const baseCommit = resolveBaseCommit(agreement, repo, agreement.sourceRoot);
 
+  // A nonempty output is refused before any declared command executes or any
+  // input is written — the exporter never deletes or clobbers another directory.
+  const outDir = resolve(options.outDir);
+  if (existsSync(outDir) && readdirSync(outDir).length > 0) throw new ExportFailed(`out directory ${outDir} is not empty`);
+
   const selection = deriveSelection(agreement, sourceRoot);
   if (selection.gaps.length > 0) throw new PreparationGap(selection.gaps);
 
-  // Every declared owner-context check runs on the untouched base before a byte
-  // is shipped: the record is what gives a post-patch green its meaning. A red
-  // guard is a preparation or environment gap — the base the agreement claims
-  // to start from does not hold. All-green outcome checks are recorded with a
-  // warning that the declared checks cannot evidence change. Recipient-context
-  // commands are carried in the manifest for the recipient recipe; they are not
-  // executed here.
-  const baseChecks: CheckRecord[] = runDeclaredChecks(agreement.commands, repo, options.pnpm, 'owner');
   const warnings: string[] = [];
-  const failedGuard = baseChecks.find(record => record.role === 'guard' && record.result !== 'pass');
-  if (failedGuard !== undefined) {
-    throw new ExportFailed(`guard check '${failedGuard.name}' does not pass on the untouched base (result: ${failedGuard.result}, exit ${failedGuard.exit}): ${failedGuard.log}`);
+  if (agreement.checks.length > 0) {
+    warnings.push(`${agreement.checks.length} legacy 'checks' entr(ies) are owner-readable descriptions, not runnable descriptors — no base results recorded for them`);
   }
-  if (baseChecks.length > 0 && !baseChecks.some(record => record.role === 'outcome' && record.result === 'fail')) {
-    warnings.push('no declared outcome check fails on the untouched base: the declared checks cannot evidence change');
+  const baseChecks: CheckRecord[] = [];
+  const failedGuard = (): CheckRecord | undefined => baseChecks.find(record => record.role === 'guard' && record.result !== 'pass');
+
+  // Every declared owner-context check runs on the untouched base in a
+  // disposable clone — never in the real owner repository, which approved
+  // commands must leave unchanged. A red guard is a preparation/environment
+  // gap: the base the agreement claims to start from does not hold.
+  const ownerChecks = agreement.commands.filter(check => check.context === 'owner');
+  if (ownerChecks.length > 0) {
+    const baseWork = mkdtempSync(join(tmpdir(), 'box-base-'));
+    try {
+      const clone = join(baseWork, 'owner');
+      git(repo, ['clone', '--local', '--quiet', repo, clone]);
+      git(clone, ['checkout', '--quiet', baseCommit]);
+      if (ownerChecks.some(check => check.tool !== 'node')) {
+        const install = spawnSync(options.pnpm.command, [...options.pnpm.args, 'install', '--frozen-lockfile'], { cwd: clone, encoding: 'utf8', timeout: 600_000, windowsHide: true });
+        if (install.status !== 0) throw new ExportFailed(`base checkout install failed: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);
+      }
+      baseChecks.push(...runDeclaredChecks(agreement.commands, clone, options.pnpm, 'owner'));
+    } finally {
+      rmSync(baseWork, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+    }
+    const guard = failedGuard();
+    if (guard !== undefined) {
+      throw new ExportFailed(`guard check '${guard.name}' does not pass on the untouched base (context ${guard.context}, result: ${guard.result}, exit ${guard.exit}): ${guard.log}`);
+    }
   }
 
-  const outDir = resolve(options.outDir);
-  if (existsSync(outDir) && readdirSync(outDir).length > 0) throw new ExportFailed(`out directory ${outDir} is not empty`);
-  mkdirSync(outDir, { recursive: true });
+  // The folder is emitted into a sibling staging directory and renamed into
+  // place only after every declared check has a recorded base result, so a
+  // failed export never leaves a partial Box behind.
+  const staging = mkdtempSync(join(dirname(outDir), '.box-staging-'));
+  try {
 
   const files: BoxManifest['files'][number][] = [];
   const written = new Set<string>();
   const ship = (box: string, owner: string | null, origin: 'runnable' | 'editable' | 'generated', content: Buffer | string, record: boolean): void => {
     if (written.has(box.toLowerCase())) throw new ExportFailed(`two inputs map to the same package path ${box}`);
     written.add(box.toLowerCase());
-    write(outDir, box, content);
+    write(staging, box, content);
     if (record) files.push({ box, owner, origin, sha256: sha256(content), bytes: typeof content === 'string' ? Buffer.byteLength(content) : content.length });
   };
   for (const file of selection.files) {
@@ -137,6 +159,35 @@ export function exportBox(options: ExportOptions): ExportResult {
   // `node box/submit.mjs`, no box-cli or repository needed.
   ship(SUBMIT_TOOL_PATH, null, 'generated', SUBMIT_TOOL, false);
   ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
+
+  // Every declared recipient-context check runs on the emitted folder at the
+  // base state: the staging tree is copied to a run directory outside the
+  // checkout, installed from its own lockfile when a pinned tool needs it, and
+  // the declared commands execute there. A red guard (a runtime-path gap in the
+  // package is exactly that) refuses the export even when owner checks are
+  // green; the result is recorded either way.
+  const recipientChecks = agreement.commands.filter(check => check.context === 'recipient');
+  if (recipientChecks.length > 0) {
+    const runRootDir = mkdtempSync(join(tmpdir(), 'box-recipient-'));
+    try {
+      const box = join(runRootDir, 'box');
+      cpSync(staging, box, { recursive: true });
+      if (recipientChecks.some(check => check.tool !== 'node')) {
+        const install = spawnSync(options.pnpm.command, [...options.pnpm.args, 'install', '--frozen-lockfile'], { cwd: box, encoding: 'utf8', timeout: 600_000, windowsHide: true });
+        if (install.status !== 0) throw new ExportFailed(`recipient check install failed in staged Box: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);
+      }
+      baseChecks.push(...runDeclaredChecks(agreement.commands, box, options.pnpm, 'recipient'));
+    } finally {
+      rmSync(runRootDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+    }
+    const guard = failedGuard();
+    if (guard !== undefined) {
+      throw new ExportFailed(`guard check '${guard.name}' does not pass on the untouched base (context ${guard.context}, result: ${guard.result}, exit ${guard.exit}): ${guard.log}`);
+    }
+  }
+  if (baseChecks.length > 0 && !baseChecks.some(record => record.role === 'outcome' && record.result === 'fail')) {
+    warnings.push('no declared outcome check fails on the untouched base: the declared checks cannot evidence change');
+  }
 
   const inventory = inventoryCount(sourceRoot, agreement.inventoryExcludePrefixes);
   const shippedOwner = files.filter(file => file.origin !== 'generated').length;
@@ -172,9 +223,15 @@ export function exportBox(options: ExportOptions): ExportResult {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const target = join(dir, entry.name);
       if (entry.isDirectory()) walk(target);
-      else produced.push(toPosix(relative(outDir, target)));
+      else produced.push(toPosix(relative(staging, target)));
     }
   };
-  walk(outDir);
+  walk(staging);
+  if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
+  renameSync(staging, outDir);
   return { outDir, baseCommit, files: produced.sort(), disclosure: manifest.disclosure };
+  } catch (error) {
+    rmSync(staging, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+    throw error;
+  }
 }

@@ -56,8 +56,8 @@
     "typesNode": "24.13.6"
   },
   "checks": [
-    "owner outcome: tsc --noUnusedParameters on tests/box/package/r1-kitchen-stats.test.ts (descriptor unused-param-outcome)",
-    "owner guard: vitest run tests/box/package/r1-kitchen-stats.test.ts (descriptor r1-behavior-guard)"
+    "owner outcome: tsc --noUnusedParameters on tests/box/package/r1-kitchen-stats.test.ts; owner guard: vitest run of the same file",
+    "recipient outcome: tsc --noUnusedParameters on src/tests/box/package/r1-kitchen-stats.test.ts; recipient guard: tsc --noEmit package typecheck"
   ],
   "evaluator": [],
   "commands": [
@@ -100,6 +100,45 @@
       "context": "owner",
       "role": "guard",
       "timeoutMs": 600000
+    },
+    {
+      "name": "package-typecheck-guard",
+      "tool": "tsc",
+      "args": [
+        "--noEmit"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 300000
+    },
+    {
+      "name": "package-unused-param-outcome",
+      "tool": "tsc",
+      "args": [
+        "--ignoreConfig",
+        "--noEmit",
+        "--noUnusedParameters",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--exactOptionalPropertyTypes",
+        "--verbatimModuleSyntax",
+        "--esModuleInterop",
+        "--skipLibCheck",
+        "--types",
+        "node",
+        "src/tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 300000
     }
   ],
   "submission": {
