@@ -38,10 +38,12 @@ control only. No checkout hooks run (git hooks never enabled; clone only).
 Command form: `cd /src/zod && nub exec --node vitest run <paths>` from repo ROOT
 (repo's own `test` script shape). Results:
 
-- Predeclared sample (declared BEFORE results, evidence/predeclared-sample.md),
-  4/202 files: string.test.ts, codec.test.ts, mini object.test.ts,
-  issue-schema.test.ts → **all green**, 315 tests, ~32 s incl. typecheck
-  (evidence/sample-tests-root.log).
+- Intended predeclared sample (evidence/predeclared-sample.md), 4/202 files:
+  string.test.ts, codec.test.ts, mini object.test.ts, issue-schema.test.ts →
+  **all green**, 315 tests, ~32 s incl. typecheck
+  (evidence/sample-tests-root.log). Reviewer correction: the evidence file says
+  it was recorded at ~04:55Z, while the sample result starts at 04:46:27Z;
+  the records therefore do not prove the sample was declared before results.
 - Whole `packages/zod` vitest project: **588 files / 8299 tests, all green**,
   typecheck no errors, 198 s (evidence/zod-package-suite.log).
 - Other workspace projects (resolution, integration, tsc, treeshake, mini, docs):
@@ -107,3 +109,70 @@ Command form: `cd /src/zod && nub exec --node vitest run <paths>` from repo ROOT
   issue. Per the wave rule this is a preparation gap → park; no fabricated red.
 - Issue-prep clock: no issue selected, so no prep stage. Stage clocks in
   waves/R3.md.
+
+## Independent reviewer re-run (2026-10-06, review root `kitchen-r3-review-a9f0b1c`)
+
+Review image inspected before use: `kitchen-r3-421d276a-tools` image/config digest
+`sha256:cf1565a4891942ee65819e1e278e8df5cf28a5299a60ba0677a9e004f73c38af`;
+base `node:24.11.0-bookworm-slim@sha256:76d0...152`, workdir `/work`, default
+entrypoint `docker-entrypoint.sh`, no Docker socket mounted. Reviewer-owned
+volumes were `kitchen-r3-review-a9f0b1c-{src,product,out}`; all containers used
+`--network none`, UID/GID 65534 for work runs, `--cap-drop ALL`,
+`--security-opt no-new-privileges`, `--read-only`, memory/CPU/PID limits, and no
+credentials or private-owner mounts. A root setup container had only `CHOWN`
+added to make copied data writable by UID 65534.
+
+Baseline reproduction (own copied source at pin, writable review volume):
+
+```text
+docker run --rm --network none --user 65534:65534 --cap-drop ALL \
+  --security-opt no-new-privileges --read-only --memory 2g --cpus 2 \
+  --pids-limit 256 --name kitchen-r3-review-a9f0b1c-vitest2 \
+  -v kitchen-r3-review-a9f0b1c-src:/src -w /src/zod \
+  kitchen-r3-421d276a-tools sh -c \
+  'node node_modules/vitest/vitest.mjs run packages/zod/src/v4/mini/tests/object.test.ts; code=$?; echo REVIEW_VITEST_EXIT=$code; exit $code'
+=> 3 test files passed, 54 tests passed, no type errors, REVIEW_VITEST_EXIT=0
+```
+
+Export-gap reproduction used reviewer-owned minimal agreement data (same
+`object.test.ts` editable/entrypoint; baseCommit pinned to `0b216ef...822`; one
+owner `vitest` guard) and a controlled `/out/pnpm-ignore` wrapper that records
+arguments, accepts only `install`, and appends `--ignore-scripts` before running
+pnpm:
+
+```text
+docker run --rm --network none --user 65534:65534 --cap-drop ALL \
+  --security-opt no-new-privileges --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=64m --memory 2g --cpus 2 \
+  --pids-limit 256 --name kitchen-r3-review-a9f0b1c-export \
+  -e TMPDIR=/src/tmp \
+  -v kitchen-r3-review-a9f0b1c-src:/src \
+  -v kitchen-r3-review-a9f0b1c-product:/product:ro \
+  -v kitchen-r3-review-a9f0b1c-out:/out \
+  kitchen-r3-421d276a-tools sh -c \
+  'node /product/cli.mjs export /out/review-agreement.json --repo /src/zod --out /out/box --pnpm /out/pnpm-ignore; code=$?; echo REVIEW_EXPORT_EXIT=$code; exit $code'
+=> export failed: base checkout install failed: WRAPPER_ARGS:install --frozen-lockfile
+   WARN The "workspaces" field in package.json is not supported by pnpm...
+   ERROR This project is configured to use nub
+   REVIEW_EXPORT_EXIT=1
+```
+
+This independently confirms two things: the product invoked the supplied install
+command as `install --frozen-lockfile` with **no `--ignore-scripts`** (the
+reviewer wrapper added it), and pnpm's package-manager guard refused before any
+upstream lifecycle script could run. It also confirms the nub/package-manager
+export blocker. No Box was emitted.
+
+Recount: `find packages -path '*/node_modules' -prune -o -name '*.test.ts'`
+= **202** test files; `packages/zod` alone = **196**. The 588 in
+`zod-package-suite.log` is Vitest project instances/files (each source test can
+appear under normal, compile-mode and TS projects), not a filesystem file-count
+denominator. `git ls-files` at the pin inside the clone = **742** tracked files.
+
+Chronology findings: image created 2026-10-06T04:43:46Z; sample result starts
+04:46:27Z; `predeclared-sample.md` says ~04:55Z; the candidate commit is
+2026-10-06T05:04:13Z while the wave says issue reads ~05:05Z and report/close
+~05:20–05:35Z. Several worker raw logs append `EXIT=0` after visibly failed
+commands (`probe-export*.log`, `sample-tests.log`, `other-projects-suite.log`,
+`build.log`), so those markers are not exact exit records. The independent
+export above records the actual exit as 1.
