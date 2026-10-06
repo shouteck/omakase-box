@@ -8,6 +8,7 @@ How much you run is set by the message that started you, and you stop when that 
 |---|---|---|
 | `LAB.md` | One session on the highest-priority line that can make progress (the first ever session is the survey) | Lab note to the owner, and stop |
 | `LAB.md x3` or `LAB.md: <line>` | That many sessions, or sessions on the named line | Lab note, and stop |
+| `LAB.md sync` | No research. Catch up with the kitchen: merge its accepted work, read "For the lab", correct anything in the line pages and the brief that the kitchen has overtaken, answer the CTO, and put anything urgent for a wave in flight at the top of the brief | Replace the brief, and stop |
 | `LAB.md overnight` | Sessions across the active lines until morning, a stop time, or nothing useful is left | One morning note, and stop |
 
 Before the first session of a run:
