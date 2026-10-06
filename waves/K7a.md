@@ -25,3 +25,24 @@ The packaging test suite runs at `--maxWorkers=3` on the kitchen's own machine v
 
 - [x] **Measurement fairness:** does three-worker execution change how results are counted, or how workers share state? Does one worker's failure affect another's results?
 - [ ] **Security:** none of the code in this wave touches isolation boundaries, host paths or input validation.
+
+---
+
+## Result
+
+- Worker: CTO (self) / Anthropic Claude · Reviewer: CTO (self, fresh review) / Anthropic Claude
+- Commit: `39de96d`
+- Verify: `verify 39de96d PASS check=reused@2026-10-06T22-59-42-710Z-39de96d build=reused@2026-10-06T22-59-42-710Z-39de96d db=embedded 7s`
+- Verdict: PASS · Level: test-verified
+- Lenses:
+  - Measurement fairness: packaging suite uses 3 workers; each worker has its own STATS_ID (pid+random hex), own STATS_FILE under K6_STATS_DIR, children propagate via K6_STATS_FILE. No shared mutable state. afterAll + exit-hook cleanupOwned removes per-worker roots and stats. Reuse is by commit SHA and clean tree, so parallel workers cannot corrupt the trust anchor. No measurement numbers are produced by this wave — it's a parallel execution change only.
+- Method: feature playbook. Principals unchanged; only tooling-scope parallelization.
+- Findings and limits:
+  - Diff is strictly scoped: 3 files, 55 insertions, 5 deletions. No product code, dependency, lockfile, security-policy or global-setting changes.
+  - Verified that `suiteWorkers('box', 'package')` returns 3 and `suiteWorkers('kitchen', undefined)` returns 1.
+  - Two clean full runs on the same commit (worker and reviewer) both PASS.
+  - `git status` clean before and after verify run.
+  - Packaging test counts preserved: all existing assertions pass, no tests weakened or removed.
+  - This wave does not address measurement budgets, killed-live-DB recovery, merge-parentage attribution, k6-scoped-tmp ownership/refusal or any other K7 leftovers — those remain in BACKLOG.md as specified.
+- Merged: pending · Resources removed: pending
+- Reflect: nothing went wrong; first attempt clean. -> wave: nothing
