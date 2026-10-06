@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { AgreementInvalid, BoxManifestSchema, CheckOutsideRoot, ExportFailed, parseAgreement, runDeclaredCheck, verifySubmission } from '../../../packages/box-package/index.js';
 import type { CommandCheck } from '../../../packages/box-package/index.js';
@@ -147,9 +147,6 @@ describe('declared command checks: runner', () => {
 });
 
 describe('declared command checks: the Windows command-file launch rule', () => {
-  // An npm-style shim: a .cmd wrapper that delegates to a script under its own
-  // directory with %* forwarding. The rule starts it through cmd.exe — keyed on
-  // the resolved file kind, with no package-manager knowledge anywhere.
   function npmStyleShim(dir: string, name: string): { shim: string; target: string } {
     const target = join(dir, `${name}-tool.mjs`);
     const shim = join(dir, `${name}.cmd`);
@@ -181,7 +178,7 @@ if (argv[0] === '--exit') process.exit(Number(argv[1]));
   it('carries metacharacter arguments through a command file verbatim', () => {
     const dir = runRoot('shim-meta');
     npmStyleShim(dir, 'probe');
-    const hostile = ['a & echo pwned > pwned.txt', 'b | tee x', 'c; d', 'star*', 'care^t', '(paren)', '<tag>'];
+    const hostile = ['a & echo pwned > pwned.txt', 'b | tee x', 'c; d', 'star*', 'care^t', '(paren)', '<tag>', 'src\\lib'];
     const record = runDeclaredCheck(check({ name: 'meta', program: join(dir, 'probe.cmd'), args: hostile }), dir);
     expect(record.result, record.log).toBe('pass');
     expect(JSON.parse(readFileSync(join(dir, 'probe-argv.json'), 'utf8'))).toEqual(hostile);
@@ -201,8 +198,40 @@ if (argv[0] === '--exit') process.exit(Number(argv[1]));
       expect(record.exit, arg).toBeNull();
       expect(record.log, arg).toMatch(/cannot be carried/i);
     }
-    // Only the --exit run executed: the refused arguments never reached the shim.
     expect(JSON.parse(readFileSync(join(dir, 'exiter-argv.json'), 'utf8'))).toEqual(['--exit', '7']);
+  });
+
+  it('refuses an argument ending in a backslash rather than corrupting the argv that reaches the shim', () => {
+    const dir = runRoot('shim-backslash');
+    npmStyleShim(dir, 'carrier');
+    const record = runDeclaredCheck(check({ name: 'trailing', program: join(dir, 'carrier.cmd'), args: ['trail\\', 'second arg', 'a & b'] }), dir);
+    expect(record.result).toBe('error');
+    expect(record.exit).toBeNull();
+    expect(record.log).toMatch(/trailing backslash/);
+    expect(existsSync(join(dir, 'carrier-argv.json'))).toBe(false);
+  });
+});
+
+describe('declared command checks: spelled-out program paths', () => {
+  it('resolves a relative program path against the context root, not the host cwd', () => {
+    const dir = runRoot('relprog');
+    mkdirSync(join(dir, 'tools'));
+    writeFileSync(join(dir, 'tools', 'probe.cmd'), '@echo off\r\necho %*> "%CD%\\rel-argv.json"\r\n');
+    const record = runDeclaredCheck(check({ name: 'rel', program: 'tools/probe.cmd', args: ['ok'] }), dir);
+    expect(record.result, record.log).toBe('pass');
+    expect(record.command).toBe(join(dir, 'tools', 'probe.cmd'));
+    expect(readFileSync(join(dir, 'rel-argv.json'), 'utf8')).toContain('ok');
+  });
+
+  it('refuses a spelled-out relative program that resolves outside the context root', () => {
+    const dir = runRoot('relprog-inside');
+    const outside = runRoot('relprog-out');
+    writeFileSync(join(outside, 'tool.cmd'), '@echo off\r\necho ran> "%CD%\\escape-ran.txt"\r\n');
+    const record = runDeclaredCheck(check({ name: 'esc', program: `../${basename(outside)}/tool.cmd`, args: [] }), dir);
+    expect(record.result).toBe('error');
+    expect(record.exit).toBeNull();
+    expect(record.log).toMatch(/outside the context root/);
+    expect(existsSync(join(dir, 'escape-ran.txt'))).toBe(false);
   });
 });
 

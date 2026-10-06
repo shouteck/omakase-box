@@ -54,8 +54,12 @@ report names which source decided (`baseSource`). Verify + merge is D3.1.
 
 An agreement declares programs, not tools. `setup[]` and `commands[]` are the same
 shape — `{name, program, args, cwd, context, timeoutMs}` — with `commands[]` adding
-`role: "guard" | "outcome"`. `program` is an executable name resolved on PATH (on
-Windows with each `PATHEXT` extension in turn) or a spelled-out path; `args` reaches
+`role: "guard" | "outcome"`. `program` is a bare executable name resolved on PATH (on
+Windows with each `PATHEXT` extension in turn), an absolute path, or a relative
+spelled-out path resolved against the command's context root on its canonical
+path — a relative spelling that lands outside the context root is refused, so
+`tools/x.cmd` always means the file inside the checkout or staged Box, never a
+host-cwd accident. `args` reaches
 the program verbatim with no shell anywhere; `cwd` must resolve inside the context
 root on its canonical path. `setup[]` prepares a context before its checks and may
 be empty. `requires[]` is `{program, version?}` — what a solver needs installed,
@@ -63,7 +67,10 @@ with an optional human-readable version, never a pinned toolchain the product
 enforces.
 
 Every declared program (setup, checks and `requires[]`) is resolved before the
-first command executes; a missing one is named and nothing has run. A timeout or
+first command executes in its context — owner-context programs and `requires[]`
+against the owner repository before the disposable clone exists, recipient-context
+programs against the staged Box folder before its setup runs; a missing one is
+named and nothing has run in that context. A timeout or
 spawn failure is a named result, never a pass and never a red outcome check.
 
 One operating-system launch rule covers Windows command files: a program that
@@ -71,7 +78,9 @@ resolves to a `.cmd`/`.bat` (npm and pnpm are `npm.cmd`/`pnpm.cmd` shims) is
 started through `cmd.exe /d /s /c` with the resolved path and each argument in
 double quotes. The rule keys on the resolved file kind, never the program's
 name. Arguments containing `"`, `%`, `!` or a line break cannot be carried on a
-command line and are refused as an unsafe launch case.
+command line and are refused as an unsafe launch case; so is an argument ending
+in a backslash, whose `\` would escape the closing quote under
+CommandLineToArgvW and silently merge the next argument.
 
 `package.json`/`tsconfig.json`/`pnpm-lock.yaml` are emitted only when the
 agreement opts into the `nodejs` helper configuration; a Box for a

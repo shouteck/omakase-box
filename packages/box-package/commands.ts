@@ -5,14 +5,14 @@ import type { CommandCheck, SetupCommand } from './agreement.js';
 import { ExportFailed } from './errors.js';
 import { toPosix } from './selection.js';
 
-// Runs the agreement's declared setup commands and command checks. Commands are
-// data parsed at the agreement boundary — an arbitrary program name or path,
-// verbatim argv with no shell expansion, and a cwd that must resolve inside the
-// context root on its canonical path. Every run records the exact resolved
-// program, context and role, exit status, a bounded output tail and the elapsed
-// seconds; a timeout or spawn failure is a named result, never a pass. Child
-// environments are inherited (the tools need PATH/HOME) but nothing the runner
-// emits includes environment data.
+// Runs the agreement's declared command checks. Commands are data parsed at the
+// agreement boundary — a pinned tool (node, pnpm, tsc, vitest via the declared
+// pnpm toolchain), verbatim argv with no shell expansion, and a cwd that must
+// resolve inside the context root on its canonical path. Every run records the
+// exact command, context and role, exit status, a bounded output tail and the
+// elapsed seconds; a timeout or spawn failure is a named result, never a pass.
+// Child environments are inherited (the tools need PATH/HOME) but nothing the
+// runner emits includes environment data.
 
 export type CheckContext = 'owner' | 'recipient';
 export type CheckResult = 'pass' | 'fail' | 'timeout' | 'error';
@@ -64,15 +64,7 @@ interface ResolvedProgram { readonly path: string; readonly kind: 'executable' |
 const COMMAND_FILE = /\.(cmd|bat)$/i;
 const pathExtensions = (): string[] => (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').map(ext => ext.toLowerCase()).filter(ext => ext !== '');
 
-// The single documented launch rule, an operating-system fact rather than tool
-// dispatch. A declared program is a spelled-out path that must exist, or a bare
-// name searched on PATH (on Windows with each PATHEXT extension in turn).
-// Whatever the name resolves to decides how it starts — never the name itself:
-// on Windows a resolved .cmd/.bat command file is launched through
-// `cmd.exe /d /s /c` with the resolved path and every argument in double
-// quotes. An argument containing `"`, `%`, `!` or a line break cannot be
-// carried on that command line and is refused as an unsafe launch case.
-export function resolveProgram(program: string): ResolvedProgram {
+export function resolveProgram(program: string, root?: string): ResolvedProgram {
   const candidates: string[] = [];
   const push = (base: string): void => {
     candidates.push(base);
@@ -80,23 +72,28 @@ export function resolveProgram(program: string): ResolvedProgram {
       for (const ext of pathExtensions()) candidates.push(base + ext);
     }
   };
-  if (isAbsolute(program) || program.includes('/') || program.includes('\\')) push(resolve(program));
+  if (isAbsolute(program)) push(resolve(program));
+  else if (program.includes('/') || program.includes('\\')) push(resolve(root ?? process.cwd(), program));
   else for (const dir of (process.env.PATH ?? '').split(delimiter)) { if (dir !== '') push(join(dir, program)); }
   for (const candidate of candidates) {
     if (existsSync(candidate) && statSync(candidate).isFile()) {
+      if (root !== undefined && !isAbsolute(program) && (program.includes('/') || program.includes('\\'))) {
+        const canonicalRoot = realpathSync(root);
+        const offset = relative(canonicalRoot, realpathSync(candidate));
+        if (offset === '' || offset.startsWith('..') || isAbsolute(offset)) {
+          throw new ProgramLaunchUnsupported(`declared program path '${program}' resolves outside the context root`);
+        }
+      }
       return { path: candidate, kind: COMMAND_FILE.test(candidate) ? 'command-file' : 'executable' };
     }
   }
   throw new ProgramUnavailable(program);
 }
 
-// Every declared program — setup, checks and solver prerequisites — must
-// resolve before the first command executes anywhere, so a missing program is
-// named with no earlier setup side effect having run.
-export function preflightPrograms(agreement: { readonly setup: readonly SetupCommand[]; readonly commands: readonly CommandCheck[]; readonly requires: readonly { readonly program: string }[] }): void {
+export function preflightPrograms(agreement: { readonly setup: readonly SetupCommand[]; readonly commands: readonly CommandCheck[]; readonly requires: readonly { readonly program: string }[] }, root?: string): void {
   const declared = [...agreement.setup.map(command => command.program), ...agreement.commands.map(command => command.program), ...agreement.requires.map(tool => tool.program)];
   const missing = [...new Set(declared)].filter(program => {
-    try { resolveProgram(program); return false; }
+    try { resolveProgram(program, root); return false; }
     catch (error) { if (error instanceof ProgramUnavailable) return true; throw error; }
   });
   if (missing.length > 0) throw new ProgramUnavailable(missing.join(', '));
@@ -107,6 +104,7 @@ function launch(resolved: ResolvedProgram, args: readonly string[], cwd: string,
     if (process.platform !== 'win32') throw new ProgramLaunchUnsupported(`command file ${resolved.path} can only be launched on Windows`);
     for (const token of [resolved.path, ...args]) {
       if (/["%!\r\n]/.test(token)) throw new ProgramLaunchUnsupported(`argument ${JSON.stringify(token)} cannot be carried to a Windows command file: '"', '%', '!' and line breaks are refused`);
+      if (/\\$/.test(token)) throw new ProgramLaunchUnsupported(`argument ${JSON.stringify(token)} cannot be carried to a Windows command file: a trailing backslash would escape the closing quote and merge the next argument`);
     }
     const line = `"${[resolved.path, ...args].map(token => `"${token}"`).join(' ')}"`;
     return spawnSync('cmd.exe', ['/d', '/s', '/c', line], { cwd, encoding: 'utf8', timeout: timeoutMs, windowsHide: true, windowsVerbatimArguments: true });
@@ -137,11 +135,9 @@ export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: strin
   let run: ReturnType<typeof launch>;
   const began = Date.now();
   try {
-    resolved = resolveProgram(check.program);
+    resolved = resolveProgram(check.program, realpathSync(root));
     run = launch(resolved, check.args, cwd, check.timeoutMs);
   } catch (error) {
-    // A program that cannot be found or launched safely is a named 'error'
-    // record — the evidence, never a silent pass and never a red outcome.
     if (error instanceof ProgramUnavailable || error instanceof ProgramLaunchUnsupported) {
       return { name: check.name, program: check.program, declaredArgv: check.args, command: check.program, argv: [], cwd: rel(cwd), context: check.context, role, exit: null, result: 'error', log: error instanceof Error ? error.message : String(error), seconds: (Date.now() - began) / 1000 };
     }

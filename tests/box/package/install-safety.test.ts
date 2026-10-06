@@ -29,9 +29,6 @@ const check = (over: Partial<CommandCheck>): CommandCheck => ({
   context: 'owner', role: 'guard', timeoutMs: 30_000, ...over
 });
 
-// Declared commands are arbitrary owner-approved programs: the runner carries
-// their argv verbatim with no verb gate and no lifecycle flag injection. The
-// --ignore-scripts boundary applies only to installs the product itself spawns.
 describe('install boundary: declared commands are owner authority', () => {
   it('runs a declared install-like command verbatim, flags and all', () => {
     for (const args of [
@@ -55,8 +52,6 @@ describe('install boundary: declared commands are owner authority', () => {
     const record = runDeclaredCheck(check({ name: 'owner-install', args: [FAKE_PNPM, 'install'] }), dir);
     expect(record.result).toBe('pass');
     expect(calls(dir).map(call => call.argv)).toEqual([['install']]);
-    // What a real lifecycle script would have run is the sentinel's job to mark:
-    // it proves the declared command executed unmodified.
     expect(sentinel(dir)).toBe(true);
   });
 });
@@ -79,9 +74,6 @@ describe('install boundary: export installs', () => {
     const exported = runExport(agreement, fixtureRepo().repo, undefined, fakePnpm(dir));
     const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(exported.outDir, 'box.json'), 'utf8')));
     const installCalls = calls(dir).filter(call => call.argv.includes('install'));
-    // Product lockfile resolution plus the owner-declared setup install — and
-    // every install-like call that ran did carry --ignore-scripts (the declared
-    // one carried it verbatim, by the owner's own declaration).
     expect(installCalls.length).toBe(2);
     for (const call of installCalls) expect(call.argv, call.argv.join(' ')).toContain('--ignore-scripts');
     expect(calls(dir).some(call => call.argv.includes('--lockfile-only'))).toBe(true);

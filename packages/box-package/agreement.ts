@@ -20,14 +20,12 @@ export type EditableEntry = z.infer<typeof EditableEntrySchema>;
 
 export const DEFAULT_INVENTORY_EXCLUDE = ['node_modules/', 'dist/', '.git/', 'reference-solutions/'];
 
-// A declared command is agreement data, not registered code: an arbitrary program
-// (a bare name resolved on PATH, or a spelled-out path), its literal argv, the
-// directory it runs in (relative to the context root), where it runs (owner: the
-// owner repository/scratch clone; recipient: the exported box folder) and a
-// timeout. There is no shell — argv reaches the program verbatim. Setup commands
-// prepare a context and may be absent entirely; checks add a role saying what a
-// nonzero exit means (guard: preexisting behavior that must stay green; outcome:
-// the requested change that the untouched base must fail).
+// A declared check is agreement data, not registered code: a pinned tool name, its
+// argv, the directory it runs in (relative to the context root), where it runs
+// (owner: the owner repository/scratch clone; recipient: the exported box folder)
+// and what a nonzero exit means (guard: preexisting behavior that must stay green;
+// outcome: the requested change that the untouched base must fail). There is no
+// shell — argv reaches the tool verbatim.
 const CommandName = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const Program = z.string().min(1).max(260).refine(value => value.trim().length > 0, 'program must not be blank');
 const CommandArgs = z.array(z.string().min(1).max(512)).max(64);
@@ -55,19 +53,12 @@ export const CommandCheckSchema = z.strictObject({
 });
 export type CommandCheck = z.infer<typeof CommandCheckSchema>;
 
-// What a solver needs installed: arbitrary program names with an optional version
-// description — a declaration for humans and preflight, never a mandatory pinned
-// version the product enforces.
 export const RequiredToolSchema = z.strictObject({
   program: Program,
   version: z.string().min(1).max(120).optional()
 });
 export type RequiredTool = z.infer<typeof RequiredToolSchema>;
 
-// Optional helper configuration for the generated Node/pnpm/TypeScript scaffold:
-// present only when the Box needs the product-generated package.json/tsconfig/
-// lockfile (e.g. for generated evaluator tests). Never required by the neutral
-// agreement itself.
 export const NodejsHelperSchema = z.strictObject({
   node: z.string().min(1).max(64),
   pnpm: z.string().min(1).max(64),

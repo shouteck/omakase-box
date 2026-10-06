@@ -19,7 +19,7 @@ function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
     if (value === undefined) usage('--pnpm needs a command or pnpm.cjs path');
     return value.endsWith('.cjs') ? { command: process.execPath, args: [value] } : { command: value, args: [] };
   }
-  // In a repo checkout prefer the pinned tooling pnpm for the product's own installs.
+  // In a repo checkout prefer the pinned tooling pnpm so export uses the declared toolchain.
   const local = fileURLToPath(new URL('../../../scripts/tooling/node_modules/pnpm/bin/pnpm.cjs', import.meta.url));
   if (existsSync(local)) return { command: process.execPath, args: [local] };
   return { command: 'pnpm', args: [] };

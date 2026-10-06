@@ -167,11 +167,12 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
     return fail('preparation-defect', 'no-owner-check', `no owner-side check is registered for generator(s): ${unchecked.join(', ')}`, base);
   }
 
-  // Availability preflight: every program the agreement declares (setup, checks
-  // and solver prerequisites) must resolve before the scratch checkout runs a
-  // single declared command.
   try {
-    preflightPrograms(agreement);
+    preflightPrograms({
+      setup: agreement.setup.filter(command => command.context === 'owner'),
+      commands: agreement.commands.filter(command => command.context === 'owner'),
+      requires: agreement.requires
+    }, resolve(options.repoPath));
   } catch (error) {
     return fail('environment-failure', 'program-unavailable', error instanceof Error ? error.message : String(error), base);
   }

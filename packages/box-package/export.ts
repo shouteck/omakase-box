@@ -88,10 +88,11 @@ export function exportBox(options: ExportOptions): ExportResult {
   const repo = resolve(options.repoPath);
   const sourceRoot = resolve(repo, agreement.sourceRoot === '.' ? '' : agreement.sourceRoot);
   if (!statSync(sourceRoot, { throwIfNoEntry: false })?.isDirectory()) throw new ExportFailed(`source root ${sourceRoot} does not exist`);
-  // Availability preflight: every declared setup/check program and solver
-  // prerequisite must resolve before the first command executes anywhere — a
-  // missing program is named here, before the disposable clone exists.
-  preflightPrograms(agreement);
+  preflightPrograms({
+    setup: agreement.setup.filter(command => command.context === 'owner'),
+    commands: agreement.commands.filter(command => command.context === 'owner'),
+    requires: agreement.requires
+  }, repo);
   if (agreement.evaluator.length > 0 && agreement.nodejs === undefined) {
     throw new ExportFailed('evaluator entries are emitted as vitest test files: declare the nodejs helper configuration or drop evaluator');
   }
@@ -162,8 +163,6 @@ export function exportBox(options: ExportOptions): ExportResult {
     ship(file.box, file.owner, file.origin, readFileSync(join(sourceRoot, file.owner)), true);
   }
 
-  // package.json/tsconfig/pnpm-lock are emitted only under the optional nodejs
-  // helper configuration — a Box for a non-JavaScript project carries none of it.
   if (agreement.nodejs !== undefined) {
     const manifestText = packageManifest(agreement);
     ship('package.json', null, 'generated', manifestText, false);
@@ -175,11 +174,12 @@ export function exportBox(options: ExportOptions): ExportResult {
   // `node box/submit.mjs`, no box-cli or repository needed.
   ship(SUBMIT_TOOL_PATH, null, 'generated', SUBMIT_TOOL, false);
 
-  // Every declared recipient-context setup command and check runs on the
-  // emitted folder at the base state: the staging tree is copied to a run
-  // directory outside the checkout and the declared commands execute there. A
-  // red guard (a runtime-path gap in the package is exactly that) refuses the
-  // export even when owner checks are green; the result is recorded either way.
+  // Every declared recipient-context check runs on the emitted folder at the
+  // base state: the staging tree is copied to a run directory outside the
+  // checkout, installed from its own lockfile when a pinned tool needs it, and
+  // the declared commands execute there. A red guard (a runtime-path gap in the
+  // package is exactly that) refuses the export even when owner checks are
+  // green; the result is recorded either way.
   const recipientSetup = agreement.setup.filter(command => command.context === 'recipient');
   const recipientChecks = agreement.commands.filter(check => check.context === 'recipient');
   if (recipientSetup.length > 0 || recipientChecks.length > 0) {
@@ -187,6 +187,11 @@ export function exportBox(options: ExportOptions): ExportResult {
     try {
       const box = join(runRootDir, 'box');
       cpSync(staging, box, { recursive: true });
+      preflightPrograms({
+        setup: agreement.setup.filter(command => command.context === 'recipient'),
+        commands: agreement.commands.filter(command => command.context === 'recipient'),
+        requires: []
+      }, box);
       baseChecks.push(...runSetup(agreement.setup, box, 'recipient'));
       const setup = baseChecks.find(record => record.role === 'setup' && record.result !== 'pass');
       if (setup !== undefined) {

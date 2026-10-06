@@ -34,14 +34,12 @@ export const BoxManifestSchema = z.strictObject({
   readContext: z.array(PortablePath),
   checks: z.array(z.string().min(1)).min(1),
   evaluator: z.array(z.strictObject({ box: PortablePath, generator: z.string() })).max(16).default([]),
-  // Command data is the agreement's own shape: the manifest derives it from the
-  // agreement boundary rather than duplicating a second command schema.
   setup: z.array(SetupCommandSchema).max(16).default([]),
   commands: z.array(CommandCheckSchema).max(16).default([]),
-  // The untouched-base record for each declared owner-context setup command and
-  // check, captured at export: the declared program/argv/cwd, context and role,
-  // exit, bounded log, seconds. The declared command is recorded, not the
-  // resolved host path — the folder must carry no owner-machine absolute paths.
+  // The untouched-base record for each declared owner-context check, captured at
+  // export: the declared tool/argv/cwd, context and role, exit, bounded log,
+  // seconds. The declared command is recorded, not the resolved host path — the
+  // folder must carry no owner-machine absolute paths.
   baseChecks: z.array(z.strictObject({
     name: z.string().min(1),
     program: z.string().min(1),

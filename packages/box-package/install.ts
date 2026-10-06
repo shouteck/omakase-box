@@ -2,15 +2,10 @@ import { ExportFailed } from './errors.js';
 import type { PnpmInvocation } from './export.js';
 
 // The single product-controlled install boundary. Every dependency install the
-// product itself spawns — export's lockfile resolution and owner verify's
-// scratch install — goes through here and always carries --ignore-scripts; any
-// config/flag that could re-enable lifecycle execution is refused before
-// anything spawns. No caller override, no unsafe fallback.
-//
-// Declared agreement commands are a different thing: arbitrary owner-approved
-// programs run verbatim by the declared-command runner (commands.ts). The
-// product makes no sandbox claim for them — they are execution authority, and
-// their safety depends on where they are run.
+// product spawns — export's lockfile resolution and base/recipient installs,
+// and owner verify's scratch install — goes through here and always carries
+// --ignore-scripts; any config/flag that could re-enable lifecycle execution is
+// refused before anything spawns. No caller override, no unsafe fallback.
 export const IGNORE_SCRIPTS = '--ignore-scripts';
 
 // Any token mentioning a lifecycle/config switch is refused outright (the one
