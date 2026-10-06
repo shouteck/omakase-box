@@ -1,6 +1,6 @@
 # Status
 
-Replaced 6 October 2026 by Devin as CTO after R2's reviewed merge; prior K6 cleanup ownership remains unresolved.
+Updated 6 October 2026 by Devin as CTO at R3 kickoff; owner cleanup record reconciled, container prerequisite blocked.
 
 ## Now
 
@@ -11,9 +11,9 @@ Replaced 6 October 2026 by Devin as CTO after R2's reviewed merge; prior K6 clea
 - **Limits:** editable test is also the owner guard. Reviewer proved weakening its assertions can pass the commands. This is passes the agreed checks, not verified correct or a complete preservation guarantee. Manifest hash is self-declared without a pristine `--box`; execution still comes from owner agreement. No error rate inferred.
 - **Preparation evidence:** agreement/instructions only for the request, zero bespoke package code/evaluator/test/driver; reusable product development counted separately. Preparation <10 minutes and generic ~26 minutes are worker estimates, not timed stage measurements. No controlled R1 saving claim.
 - **Disclosure:** 20 files / 135643 B of 717 eligible tracked files / 4678854 B (~2.79% files, 2.90% bytes). Unfiltered history denominator 3513 and live-FS count1857 are different measures, not the preferred source share.
-- **In flight:** nothing for R2. This run stops here. Named R2 Box/scratch resources removed after raw evidence archival; normal build output and verification records retained.
-- **CI:** merge-triggered `37413634118` last observed in progress; not waited for. Check at next kickoff/before merge; red means fix next. K8 host-bound exclusions remain.
-- **K6 cleanup:** 725 ambiguous temp directories and previously reported leftovers remain untouched pending ownership/exact deletion approval. R2 did not authorize their removal. Lab worktree unchanged; any unattributable scratch is not deleted.
+- **In flight:** R3 briefing only, named by `START.MD R3`; `waves/R3.md` ready, awaiting pre-cook Go. Container prerequisite blocked: Docker Linux engine unreachable. No upstream project chosen, installed or executed.
+- **CI:** R2 master run `37413634118` completed SUCCESS, confirmed at R3 kickoff. K8 host-bound exclusions remain.
+- **Cleanup:** owner commit `326ee7d` records 1590 accumulated packaging temp folders/logs removed manually while idle. Historical K6 cleanup ownership blocker resolved; lifecycle leak remains in BACKLOG. R3 must inventory/clean only its own resources.
 
 ## Approved by the CEO
 
@@ -24,13 +24,13 @@ Prior milestones plus `START.md: R2` and Go for R2 only, 90-minute active cook c
 No further wave without a new START and required pre-cook Go. Agreed useful direction is R2 then R3.
 
 1. **R3:** public-repository readiness report and issue experiment, no request-specific code; name `START.md: R3`.
-2. Resolve old cleanup ownership without bulk deletion of unidentified data.
+2. Keep new resource inventories explicit; owner already cleared the old buildup. No paused kitchen wave starts unless it blocks R3.
 
 K7, K9 and other kitchen work paused unless they block R2/R3. D4 awaits the lab benchmark. R2 is mechanism evidence; the useful milestone still requires someone else's issue prepared in measured minutes.
 
 ## Night queue
 
-Only a new named overnight request and pre-cook Go: R3; old cleanup remains a separate permission/ownership matter. No kitchen queue while the pause holds; no D4.
+Only a new named overnight request and pre-cook Go: R3, with container prerequisites met. No kitchen queue while the pause holds; no D4.
 
 ## Known problems
 
@@ -38,4 +38,4 @@ Only a new named overnight request and pre-cook Go: R3; old cleanup remains a se
 
 ## Decision waiting for the CEO
 
-Name R3 when ready. Also resolve exact old-temp ownership/deletion scope; nothing starts automatically.
+Start Docker Desktop's Linux engine, then reply Go to the R3 pre-cook card. Naming R3 approves that experiment only; no host-execution fallback, upstream write or extra wave.
