@@ -46,15 +46,35 @@ describe('install boundary: declared pnpm checks', () => {
     expect(record.argv.filter(arg => arg === '--ignore-scripts')).toHaveLength(1);
   });
 
+  it('treats an install verb hidden behind flags as install-like', () => {
+    const dir = runRoot('decl-dir-install');
+    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['--dir', '.', 'install'] }), dir, fakePnpm(dir));
+    expect(record.result).toBe('pass');
+    expect(record.argv).toContain('--ignore-scripts');
+    expect(sentinel(dir)).toBe(false);
+  });
+
   it('refuses, without spawning, a declared install that re-enables lifecycle scripts', () => {
-    for (const flag of ['--no-ignore-scripts', '--ignore-scripts=false', '--config.ignore-scripts=false', '--config.dangerously-allow-all-builds=true']) {
+    const unsafe: string[][] = [
+      ['install', '--no-ignore-scripts'],
+      ['install', '--ignore-scripts=false'],
+      ['install', '--ignore-scripts', 'false'],
+      ['install', '--config.ignore-scripts=false'],
+      ['install', '--config=ignore-scripts=false'],
+      ['install', '--config', 'ignore-scripts=false'],
+      ['install', '--config.dangerously-allow-all-builds=true'],
+      // A lifecycle override hides in a non-install command too.
+      ['exec', 'tsc', '--config.ignore-scripts=false'],
+      ['--config=ignore-scripts=false', 'exec', 'vitest']
+    ];
+    for (const args of unsafe) {
       const dir = runRoot('decl-unsafe');
-      const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['install', flag] }), dir, fakePnpm(dir));
-      expect(record.result, flag).toBe('error');
-      expect(record.exit, flag).toBeNull();
-      expect(record.log, flag).toContain('lifecycle');
-      expect(calls(dir), flag).toEqual([]);
-      expect(sentinel(dir), flag).toBe(false);
+      const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, fakePnpm(dir));
+      expect(record.result, args.join(' ')).toBe('error');
+      expect(record.exit, args.join(' ')).toBeNull();
+      expect(record.log, args.join(' ')).toContain('refused');
+      expect(calls(dir), args.join(' ')).toEqual([]);
+      expect(sentinel(dir), args.join(' ')).toBe(false);
     }
   });
 

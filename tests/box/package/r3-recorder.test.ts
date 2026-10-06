@@ -1,10 +1,14 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { ROOT } from './support.js';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain-JS research tool, no declaration file
 import { runDeclaration, sealDeclaration } from '../../../research/box-delegation/r3/recorder/run-recorder.mjs';
 import { runRoot } from './support.js';
+
+const RECORDER = join(ROOT, 'research', 'box-delegation', 'r3', 'recorder', 'run-recorder.mjs');
 
 // R3 correction: the reusable run recorder must prove exact exits, UTC bounds,
 // sealed pre-run declarations and safe output handling. Fixtures are generic:
@@ -51,6 +55,34 @@ describe('r3 run recorder: sealed declaration boundary', () => {
     const dir = runRoot('rec-reseal');
     const path = SEALED(dir, [NODE('process.exit(0)')]);
     expect(() => sealDeclaration(path)).toThrowError(/already exists/);
+  });
+
+  it('runs a sealed declaration exactly once — a second out dir is refused', () => {
+    const dir = runRoot('rec-once');
+    const path = SEALED(dir, [NODE('process.exit(0)')]);
+    expect(runDeclaration(path, join(dir, 'run-a')).status).toBe('complete');
+    expect(() => runDeclaration(path, join(dir, 'run-b'))).toThrowError(/already claimed/);
+    expect(existsSync(join(dir, 'run-b'))).toBe(false);
+  });
+
+  it('refuses a symlink output dir', () => {
+    const dir = runRoot('rec-symlink');
+    const path = SEALED(dir, [NODE('process.exit(0)')]);
+    symlinkSync(dir, join(dir, 'linked'), 'junction');
+    expect(() => runDeclaration(path, join(dir, 'linked'))).toThrowError(/link/);
+    // The failed attempt must not burn the single-use claim.
+    expect(runDeclaration(path, join(dir, 'run')).status).toBe('complete');
+  });
+
+  it('CLI exits nonzero when any recorded command fails, even if a later one passes', () => {
+    const dir = runRoot('rec-cli');
+    const path = SEALED(dir, [
+      { name: 'fails', argv: [process.execPath, '-e', 'process.exit(7)'] },
+      { name: 'formats', argv: [process.execPath, '-e', 'process.exit(0)'] }
+    ]);
+    const run = spawnSync(process.execPath, [RECORDER, 'run', '--declaration', path, '--out', join(dir, 'run')], { encoding: 'utf8' });
+    expect(run.status).toBe(1);
+    expect(run.stdout).toContain('fails:fail:7');
   });
 });
 

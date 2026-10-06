@@ -21,7 +21,7 @@
 // they do not authenticate the host or the operator.
 import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -47,15 +47,18 @@ function loadDeclaration(path) {
   return parsed;
 }
 
-export function sealDeclaration(declarationPath, sealedAt = utc()) {
+export function sealDeclaration(declarationPath) {
   const target = resolve(declarationPath);
   const declaration = loadDeclaration(target);
   const sealPath = `${target}.seal.json`;
   if (existsSync(sealPath)) fail(`seal already exists for ${declarationPath} — a sealed declaration is immutable`);
+  const sealedAt = utc(); // the clock is the recorder's own; callers cannot supply it
   const sha256 = createHash('sha256').update(readFileSync(target)).digest('hex');
   writeFileSync(sealPath, JSON.stringify({ runId: declaration.runId, sha256, sealedAt }, null, 2) + '\n');
   return { sealPath, runId: declaration.runId, sha256, sealedAt };
 }
+
+const validInstant = (value) => typeof value === 'string' && !Number.isNaN(Date.parse(value)) && Date.parse(value) <= Date.now();
 
 function checkSeal(declarationPath) {
   const target = resolve(declarationPath);
@@ -65,6 +68,7 @@ function checkSeal(declarationPath) {
   const sha256 = createHash('sha256').update(readFileSync(target)).digest('hex');
   if (seal.sha256 !== sha256) fail(`declaration changed after sealing (seal ${seal.sha256}, current ${sha256})`);
   if (seal.runId !== declaration.runId) fail(`seal runId ${seal.runId} does not match declaration runId ${declaration.runId}`);
+  if (!validInstant(seal.sealedAt)) fail('seal timestamp missing, unparseable or in the future');
   return { declaration, seal };
 }
 
@@ -97,7 +101,22 @@ function runCommand(command, invocationId) {
 export function runDeclaration(declarationPath, outDir) {
   const { declaration, seal } = checkSeal(declarationPath);
   const out = resolve(outDir);
-  if (existsSync(out) && readdirSync(out).length > 0) fail(`output dir ${out} is not empty — refusing to touch an existing or incomplete run`);
+  // Validate the output target BEFORE burning the run claim: existing bytes
+  // (populated, or an interrupted run's own output) or a symlink are refused;
+  // nothing existing is ever deleted or overwritten to allow a restart.
+  if (existsSync(out)) {
+    if (lstatSync(out).isSymbolicLink()) fail(`output dir ${out} is a link — refusing`);
+    if (readdirSync(out).length > 0) fail(`output dir ${out} is not empty — refusing to touch an existing or incomplete run`);
+  }
+  // One sealed declaration runs once: an atomically-created claim marker beside
+  // the declaration. A second run — same or different output dir — is refused;
+  // an interrupted run keeps its marker and its unknown-state run.json.
+  const claimedPath = `${resolve(declarationPath)}.claimed.json`;
+  try {
+    writeFileSync(claimedPath, JSON.stringify({ runId: declaration.runId, out, claimedAt: utc() }, null, 2) + '\n', { flag: 'wx' });
+  } catch {
+    fail(`run ${declaration.runId} was already claimed — declarations are single-use`);
+  }
   mkdirSync(out, { recursive: true });
   const runFile = join(out, 'run.json');
   const state = { runId: declaration.runId, seal: { sha256: seal.sha256, sealedAt: seal.sealedAt }, startedAt: utc(), endedAt: null, status: 'unknown', records: [] };
@@ -131,7 +150,9 @@ function main(argv) {
       if (declaration === undefined || out === undefined || rest.indexOf('--declaration') < 0 || rest.indexOf('--out') < 0) return usage();
       const state = runDeclaration(declaration, out);
       console.log(JSON.stringify({ runId: state.runId, status: state.status, results: state.records.map(record => `${record.name}:${record.result}:${record.exit ?? ''}`) }));
-      return 0;
+      // A recorded run is only exit 0 when every command passed — a failed
+      // command followed by a passing one is still a failed RUN.
+      return state.status === 'complete' && state.records.every(record => record.result === 'pass') ? 0 : 1;
     }
     return usage();
   } catch (error) {

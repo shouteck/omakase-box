@@ -3,19 +3,24 @@ import type { PnpmInvocation } from './export.js';
 
 // The single product-controlled install boundary. Every dependency install the
 // product spawns — export's lockfile resolution and base/recipient installs,
-// owner verify's scratch install, and declared `pnpm` checks that are installs —
-// goes through here and carries --ignore-scripts, so upstream lifecycle scripts
-// never execute. There is no caller override and no unsafe fallback: an
-// invocation (caller prefix or agreement argv) carrying a flag that re-enables
-// lifecycle execution is refused before anything spawns.
+// owner verify's scratch install, and declared `pnpm` checks — goes through
+// here. The scan is a conservative grammar over the WHOLE effective argv, not a
+// first-token heuristic: an install verb anywhere (`--dir /tmp install`, a flag
+// value containing an install-word segment) forces --ignore-scripts, and any
+// config/flag that could re-enable lifecycle execution is refused before
+// anything spawns. No caller override, no unsafe fallback.
 export const IGNORE_SCRIPTS = '--ignore-scripts';
 
 // Install-like pnpm subcommands: anything that resolves or links a dependency
 // tree is where lifecycle scripts would run.
 const INSTALL_VERBS = new Set(['install', 'i', 'add', 'update', 'up', 'remove', 'rm', 'uninstall', 'rebuild', 'import', 'fetch', 'create', 'dlx']);
 
-// Flags that would re-enable lifecycle or build-script execution.
-const SCRIPT_ENABLING = /^--(no-ignore-scripts|ignore-scripts=false|enable-pre-post-scripts|dangerously-allow-all-builds(=.*)?|config\.(ignore-scripts|dangerously-allow-all-builds|enable-pre-post-scripts)=)/;
+// Any token mentioning a lifecycle/config switch is refused outright (the one
+// allowed token is the exact literal '--ignore-scripts'). This covers
+// --no-ignore-scripts, --ignore-scripts=*, --config X / --config=X /
+// --config.X=* and dangerously-allow-all-builds in every spelling, wherever the
+// token sits — caller prefix or declared args alike.
+const UNSAFE_FLAG = /^--config([.=]|$)|ignore-scripts|dangerously-allow-all-builds|enable-pre-post-scripts/i;
 
 export class UnsafeInstall extends ExportFailed {
   constructor(detail: string) {
@@ -24,27 +29,48 @@ export class UnsafeInstall extends ExportFailed {
   }
 }
 
-const firstVerb = (argv: readonly string[]): string | undefined => argv.find(arg => !arg.startsWith('-'));
-export const isInstallLike = (argv: readonly string[]): boolean => INSTALL_VERBS.has(firstVerb(argv) ?? '');
+// Scans the effective argv, throwing UnsafeInstall on any lifecycle-enabling or
+// ambiguous flag, and returns whether the command is install-like.
+export function scanPnpmArgv(argv: readonly string[]): boolean {
+  let installLike = false;
+  for (const [index, raw] of argv.entries()) {
+    if (!raw.startsWith('-')) {
+      if (INSTALL_VERBS.has(raw)) installLike = true;
+      continue;
+    }
+    if (raw === IGNORE_SCRIPTS) {
+      const next = argv[index + 1];
+      if (next === 'false' || next === 'true') throw new UnsafeInstall(`ambiguous value '${next}' after ${IGNORE_SCRIPTS}`);
+      continue;
+    }
+    if (UNSAFE_FLAG.test(raw)) throw new UnsafeInstall(`lifecycle/config override flag in invocation: ${raw}`);
+    const eq = raw.indexOf('=');
+    if (eq > 0 && raw.slice(eq + 1).split(/[\/]/).some(segment => INSTALL_VERBS.has(segment))) installLike = true;
+  }
+  return installLike;
+}
 
-// Returns argv guaranteed script-safe: --ignore-scripts appended when absent
-// (a later duplicate is harmless; pnpm honors the flag anywhere). Throws
-// UnsafeInstall when argv tries to re-enable lifecycle execution — checking the
-// whole effective argv means a hostile --pnpm prefix cannot slip one past.
+export function isInstallLike(argv: readonly string[]): boolean {
+  return scanPnpmArgv(argv);
+}
+
+// Returns argv guaranteed script-safe: --ignore-scripts appended when absent.
+// Throws UnsafeInstall when argv tries to re-enable lifecycle execution.
 export function enforcedInstallArgs(argv: readonly string[]): string[] {
-  const unsafe = argv.filter(arg => SCRIPT_ENABLING.test(arg));
-  if (unsafe.length > 0) throw new UnsafeInstall(`lifecycle-enabling flag(s) in invocation: ${unsafe.join(', ')}`);
+  scanPnpmArgv(argv);
   return argv.includes(IGNORE_SCRIPTS) ? [...argv] : [...argv, IGNORE_SCRIPTS];
 }
 
-// Product-spawned installs: caller prefix plus the operation, enforced as one.
+// Product-spawned installs: caller prefix plus the operation, enforced as one —
+// always install-like, always enforced.
 export function productInstallArgs(pnpm: PnpmInvocation, args: readonly string[]): string[] {
   return enforcedInstallArgs([...pnpm.args, ...args]);
 }
 
-// Declared `pnpm` command checks: an install-like declared command is forced
-// safe the same way; anything else passes through verbatim.
+// Declared `pnpm` command checks: unsafe flags are refused on EVERY pnpm call
+// (a non-install command must not hide a lifecycle override), and an
+// install-like declared command additionally gains --ignore-scripts.
 export function declaredPnpmArgs(pnpm: PnpmInvocation, checkArgs: readonly string[]): string[] {
   const argv = [...pnpm.args, ...checkArgs];
-  return isInstallLike(checkArgs) ? enforcedInstallArgs(argv) : argv;
+  return scanPnpmArgv(argv) ? enforcedInstallArgs(argv) : argv;
 }

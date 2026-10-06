@@ -33,11 +33,12 @@ untouched.
 fixture: logs argv, drops `lifecycle-ran.sentinel` when an install-like call
 lacks `--ignore-scripts`, emits a stub lockfile for `--lockfile-only`).
 
-- RED (before product change, scoped run 13:38:49Z): "forces --ignore-scripts"
+- RED (before product change, scoped run 05:38:49Z UTC — the runner log's
+  "13:38:49" is host-local UTC+08, not UTC): "forces --ignore-scripts"
   FAIL (`expected [...] to include '--ignore-scripts'`); "refuses … re-enables
   lifecycle scripts" FAIL (`expected 'pass' to be 'error'`) — the sentinel would
   have been written.
-- GREEN (after fix, scoped run 13:40:25Z): 12/12 pass — forced flag, idempotent
+- GREEN (after fix, scoped run 05:40:25Z UTC / 13:40:25+08): 12/12 pass — forced flag, idempotent
   flag, refusal-without-spawn for `--no-ignore-scripts`,
   `--ignore-scripts=false`, `--config.ignore-scripts=false`,
   `--config.dangerously-allow-all-builds=true`, non-install argv untouched,
@@ -93,3 +94,42 @@ refused; output bounded.
   now fail as a named gap.
 - Recorder runs are synchronous and sequential by design; no parallel-record
   claims.
+
+## Round 2 (independent review FAIL on c9fc833 → this commit)
+
+Reviewer findings and fixes, all in the same two files:
+
+- **Install grammar was a first-token blacklist.** Replaced with
+  `scanPnpmArgv`: every token of the effective argv is scanned, so
+  `--dir . install` and flag-values containing an install-word path segment are
+  install-like and gain `--ignore-scripts`; ANY token mentioning
+  `ignore-scripts`/`--config`/`dangerously-allow-all-builds`/
+  `enable-pre-post-scripts` other than the exact literal `--ignore-scripts` is
+  refused before spawn, on install AND non-install pnpm checks alike;
+  `--ignore-scripts false|true` (ambiguous separated value) is refused.
+  Regression tests cover every reviewer-named evasion.
+- **Real-pnpm container sentinel** (`dryrun/pnpm-sentinel.log`, image
+  node@sha256:76d0ed…152, UID 65534, --network none, --read-only, tmpfs only):
+  pinned pnpm 10.34.5 `install` on a fixture whose postinstall writes
+  /out/postinstall-ran → `CONTROL_EXIT=0 CONTROL_SENTINEL=WRITTEN`;
+  `install --ignore-scripts` → `FIXED_EXIT=0 FIXED_SENTINEL=absent`. The flag
+  the boundary emits really suppresses lifecycle scripts.
+- **Recorder CLI exit**: `run` now exits 1 unless every record is `pass` (a
+  failed child followed by a passing formatter stays a failed run).
+- **Single-use identity**: `<declaration>.claimed.json` is created atomically
+  (`wx`) before the out dir is touched — a second run with any out dir is
+  refused; an interrupted run keeps marker + `run.json` status `unknown`.
+  Output dir validated (non-empty or symlink → refuse) BEFORE the claim is
+  burned. Callers can no longer supply `sealedAt`; seal time is the recorder's
+  own clock and must parse and not be future at run time.
+- **Honest cleanup note**: this cook removed 977 `box-*` dirs under `$TEMP` with
+  glob `box-*`/`box-d21-*` etc. All were created today after 12:00 local during
+  this session's test runs (mtime check), matching the known test-scratch
+  naming, but I cannot cryptographically prove none held another process's
+  bytes; ownership is asserted by name pattern + freshness, not proven. No
+  further mass deletes were run. New resources are named `kitchen-r3-fix*`
+  only: containers `--rm`, tmpfs mounts, no volumes/images created.
+
+Known limits unchanged: records are forgeable by a local writer (K5-class);
+verify PASS on c9fc833 was a worker run — the reviewer's own verify on the new
+SHA is authoritative.
