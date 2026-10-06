@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,8 +9,13 @@ import type { ExportResult } from '../../../packages/box-package/index.js';
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const FIXTURE = join(ROOT, 'examples', 'private-shop');
 export const PNPM_CJS = join(ROOT, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin', 'pnpm.cjs');
+export const PNPM_SHIM = join(ROOT, 'tests', 'box', 'package', 'pnpm-shim.mjs');
 export const AGREEMENTS = join(FIXTURE, 'box-agreements');
 export const CANARY_TOKENS = ['SYNTHETIC_PRIVATE', 'PRIVATE_ELIGIBILITY_CANARY', 'PRIVATE_SCORING_CANARY'];
+export const STATS_FILE = join(tmpdir(), `box-k6-stats-${process.pid}.jsonl`);
+export function recordOp(op: string, seconds?: number): void {
+  try { appendFileSync(STATS_FILE, JSON.stringify({ op, seconds }) + '\n'); } catch { }
+}
 
 const runDirectories: string[] = [];
 export function runRoot(label: string): string {
@@ -21,6 +26,26 @@ export function runRoot(label: string): string {
 process.once('exit', () => {
   for (const dir of runDirectories) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 });
+
+// K6 trust boundary: lockfile reuse is invocation-local and owned here. An
+// inherited caller cache dir is deleted outright so nothing forwards it to a
+// child process. The committed pnpm-shim.mjs never caches; this invocation
+// materializes its own copy inside a fresh run root, and only that copy gets a
+// sibling `pnpm-shim.cachedir` naming a directory this invocation created.
+// Uncached mode writes no cachedir file, so every resolution is real.
+delete process.env.BOX_K6_LOCKFILE_CACHE;
+let invocationShim: string | undefined;
+function lockfileShim(): string {
+  if (invocationShim === undefined) {
+    const dir = runRoot('lockfile-shim');
+    invocationShim = join(dir, 'pnpm-shim.mjs');
+    cpSync(PNPM_SHIM, invocationShim);
+    if (process.env.K6_LOCKFILE_MODE !== 'uncached') {
+      writeFileSync(join(dir, 'pnpm-shim.cachedir'), join(runRoot('lockfile-cache'), 'cache') + '\n');
+    }
+  }
+  return invocationShim;
+}
 
 export function listFiles(dir: string): string[] {
   const files: string[] = [];
@@ -127,7 +152,9 @@ export function materializeOwnerRepo(): FixtureRepo {
     }
   };
   copy(FIXTURE, target);
+  const installBegan = Date.now();
   const install = spawnSync(process.execPath, [PNPM_CJS, 'install'], { cwd: repo, encoding: 'utf8', timeout: 300000 });
+  recordOp('owner-install', (Date.now() - installBegan) / 1000);
   if (install.status !== 0) throw new Error(`owner fixture install failed: ${install.stderr ?? install.stdout}`);
   fixtureGit(repo, ['init', '-b', 'main']);
   return { repo, baseCommit: fixtureCommit(repo, 'private-shop-before-v1') };
@@ -150,15 +177,20 @@ export function agreementFile(name: 'request-a' | 'request-b', overrides: Agreem
 }
 
 export function runExport(agreementPath: string, repo?: string, outDir?: string): ExportResult {
-  return exportBox({
-    agreementPath,
-    repoPath: repo ?? fixtureRepo().repo,
-    outDir: outDir ?? join(runRoot('out'), 'box'),
-    pnpm: { command: process.execPath, args: [PNPM_CJS] }
-  });
+  const began = Date.now();
+  try {
+    return exportBox({
+      agreementPath,
+      repoPath: repo ?? fixtureRepo().repo,
+      outDir: outDir ?? join(runRoot('out'), 'box'),
+      pnpm: { command: process.execPath, args: [lockfileShim(), PNPM_CJS] }
+    });
+  } finally {
+    recordOp('export', (Date.now() - began) / 1000);
+  }
 }
 
-export interface CleanRun { ok: boolean; steps: Array<{ command: string; code: number | null; output: string }> }
+export interface CleanRun { ok: boolean; steps: Array<{ command: string; code: number | null; output: string; seconds: number }> }
 
 // The packaging proof: copy the produced folder into a clean directory outside the repo,
 // install only from its own lockfile, and run its declared checks. The temp directory is
@@ -172,14 +204,19 @@ export function cleanCheck(boxDir: string, evaluatorCheck: string): CleanRun {
   }
   const steps: CleanRun['steps'] = [];
   const step = (command: string, args: string[]): number | null => {
+    const began = Date.now();
     const result = spawnSync(command, args, { cwd: dest, encoding: 'utf8', timeout: 300000 });
-    steps.push({ command: `${command} ${args.join(' ')}`, code: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}`.slice(0, 4000) });
+    steps.push({ command: `${command} ${args.join(' ')}`, code: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}`.slice(0, 4000), seconds: (Date.now() - began) / 1000 });
     return result.status;
   };
-  const pnpm = (args: string[]): number | null => step(process.execPath, [PNPM_CJS, ...args]);
-  let ok = pnpm(['install', '--frozen-lockfile']) === 0;
-  ok = pnpm(['exec', 'tsc', '--noEmit']) === 0 && ok;
-  ok = pnpm(['exec', 'vitest', 'run', evaluatorCheck]) === 0 && ok;
+  const pnpm = (op: string, args: string[]): number | null => {
+    const code = step(process.execPath, [PNPM_CJS, ...args]);
+    recordOp(op, steps.at(-1)?.seconds);
+    return code;
+  };
+  let ok = pnpm('box-install', ['install', '--frozen-lockfile']) === 0;
+  ok = pnpm('box-typecheck', ['exec', 'tsc', '--noEmit']) === 0 && ok;
+  ok = pnpm('box-suite', ['exec', 'vitest', 'run', evaluatorCheck]) === 0 && ok;
   return { ok, steps };
 }
 

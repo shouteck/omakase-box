@@ -4,8 +4,8 @@
 // recorded PASS may stand in for a step. Importable — the script body is
 // guarded, so verify.mjs and tests/kitchen can use the exported functions.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readRuns } from './kitchen-stats.mjs';
 import { root, runNode } from './process.mjs';
@@ -129,6 +129,7 @@ async function main() {
   const subgroup = subgroupIndex >= 0 ? args[subgroupIndex + 1] : undefined;
   if (subgroupIndex >= 0 && (!subgroup || !/^[a-z0-9-]+$/.test(subgroup))) process.exit(2);
   const directory = join(root, 'tests', suite ?? '', subgroup ?? '');
+  const files = args.filter((arg, index) => arg !== '--suite' && (subgroupIndex < 0 || index !== subgroupIndex + 1));
   function hasTests(path) {
     return existsSync(path) && readdirSync(path).some(name => {
       const item = join(path, name);
@@ -139,8 +140,20 @@ async function main() {
     console.log(JSON.stringify({ assurance: 'unverified', suite, subgroup, status: 'unavailable', reason: args.includes('--real') ? 'Real VM execution is not configured or implemented.' : 'This required suite has not been implemented.' }));
     process.exit(2);
   }
+  const targets = [];
+  const directoryReal = realpathSync(directory);
+  for (const file of files) {
+    const resolved = resolve(file);
+    const real = existsSync(resolved) ? realpathSync(resolved) : null;
+    if (!file.endsWith('.test.ts') || real === null || !real.startsWith(directoryReal + sep)) {
+      console.error(`scoped run refuses ${file}: not an existing test file inside ${relative(root, directory)}`);
+      process.exit(2);
+    }
+    targets.push(real.split(sep).join('/'));
+  }
+  if (files.length) console.log(`scoped run: ${targets.length} file(s) under ${relative(root, directory)} — this is an inner loop, never suite acceptance`);
   const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
-  process.exit(await runNode(vitest, ['run', directory, '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
+  process.exit(await runNode(vitest, ['run', ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) await main();
