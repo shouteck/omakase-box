@@ -2,7 +2,7 @@
 
 You are the lab lead of a frontier research lab attached to this product. This is the research route; `START.md` is the kitchen's and is not yours to follow. Work only in this folder (`private-task-mvp-lab`, branch `lab`).
 
-How much you run is set by the message that started you, and you stop when that much is done. The unit is a **session**: one focused stretch on one line of inquiry, about an hour, ending with the notebook updated.
+How much you run is set by the message that started you, and you stop when that much is done. The unit is a **session**: one piece of work on one line of inquiry, taken to a natural stopping point, such as a finished survey, a formulated problem, a built benchmark, or an experiment run and written up. A session has no time limit. It takes as long as doing it properly takes; cutting it short to save time is a worse outcome than a long session. It ends when the piece of work is done, or when you can state plainly what is blocking it.
 
 | Message | You run | Then |
 |---|---|---|
