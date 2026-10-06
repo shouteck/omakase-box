@@ -24,7 +24,7 @@ Out of scope: judging outcomes no test can express (parked), ranking several can
 
 ## Where the field is
 
-Called the test oracle problem, fail-to-pass testing, patch plausibility versus correctness, reproduction-test generation and intent formalisation. Hand-written tests from the original developers accept roughly one wrong solution in five on the best-studied benchmark and reject valid ones often enough that a third of audited hard cases were unfair. Models now write a usable failing test from a bug report about 63% of the time in Python, but generated tests tend to encode current behaviour. Asking the requester to confirm a few generated tests is the one route with a human study behind it, at single-function scale. Most real pull requests carry no test, and benchmarks exclude exactly those. Detail in [related-work.md](related-work.md).
+Called the test oracle problem, fail-to-pass testing, patch plausibility versus correctness, reproduction-test generation and intent formalisation. Hand-written tests from the original developers pass some wrong solutions on the best-studied benchmark (estimates from about 1% to 20% by method) and can reject valid ones (61% of a random sample flagged as at risk; rarely observed directly). Models now write a test that goes red-to-green on the known fix for about 63% of Python bug reports, which is not yet a trustworthy check, and generated tests tend to encode current behaviour. Asking the requester to confirm generated tests has one small favourable study and older unfavourable ones. Most real pull requests carry no test, and benchmarks exclude exactly those. Detail in [related-work.md](related-work.md).
 
 ## Metric and benchmark
 
@@ -32,13 +32,15 @@ Not built yet. The first instrument is the map: a fixed sample of real requests,
 
 ## Baselines
 
-None yet. When methods are compared: the simplest is "existing tests only"; the best published are a generated fail-to-pass test (e-Otter++ style) and requester-confirmed tests (TiCoder style).
+None yet. When methods are compared: the simplest is "existing tests only"; the best published are a generated fail-to-pass test (e-Otter++ style) and requester-confirmed tests (TiCoder style). Read Liang et al. (arXiv:2609.12012) before fixing this list.
 
 ## Current best answer
 
-- The literature **shows** that passing tests is not the same as being right, in both directions, even with developer-written tests. Rests on several independent re-evaluations of one benchmark family (Python libraries, agent-written patches).
-- It **suggests** the cheapest trustworthy route for a new behaviour is a model-drafted failing check that the requester confirms. Rests on one 15-person study at function scale plus fail-to-pass rates measured on bug reports.
-- **Unknown:** what share of real requests each route covers, and what any route costs a requester on repository-sized work.
+After the sceptic's review (`sceptic-survey.md`):
+
+- The literature **shows** that passing tests is not the same as being right, even with developer-written tests. Wrong work accepted: shown, at a rate that depends on the method (about 1% to 20%). Right work rejected: shown to be possible and widely flagged, not measured as a rate. One benchmark family: Python libraries, agent-written patches.
+- **Hypothesis, not a finding:** a model-drafted failing check that the requester confirms is a cheap, trustworthy route for new behaviour. The first draft said the literature suggests this; the sceptic showed it does not. There is no cost comparison, no error rate for confirmed checks, and older studies find people approve many wrong generated checks. It goes to the benchmark as one candidate among several.
+- **Unknown:** what share of real requests each route covers, and what a generated check costs a requester on repository-sized work.
 
 ## Open threads
 

@@ -32,3 +32,25 @@ Append-only. Newest entry last.
 **Sceptic.** A fresh agent was dispatched on the survey's scholarship and framing. Its report is `sceptic-survey.md`; corrections made after it are listed in the next entry.
 
 **Next.** Formulate: fix the definitions in the README, write the labelling guide for the map (kinds of check, plus whether the outcome is observable at a command line), and label this repository's own wave files as a pilot before sampling public trackers. Settle the R1 open thread from recorded evidence first; it is cheap.
+
+## 6 October 2026, session 1, after the sceptic
+
+**Sceptic's verdict** (`sceptic-survey.md`; same model family as the lab lead, so independent by being fresh, not by being different). No invented source, author or number. One wrong comparison and several numbers quoted without the qualifier beside them in the source, each making the draft read stronger than the evidence.
+
+**Corrected in the survey, related work, README and brief:**
+
+- "One in five accepted solutions is wrong" did not stand as a general statement. Estimates run from about 1% to 20% by method; the 19.71% comes from model-written tests that themselves wrongly rejected valid fixes on about a tenth of tasks.
+- METR: "about half" was already adjusted for the 68% human baseline; the draft quoted both. Raw figure is a third to a half.
+- SWT-Bench: precision doubled at 20% recall. The draft left the recall out.
+- TiCoder: 3 small tasks; only the yes/no variant was significant; the large gain assumes a requester who is never wrong.
+- "The literature suggests requester-confirmed generated checks are the cheapest trustworthy route" did not stand. It is now a hypothesis. The sceptic found older human studies (Staats et al. 2012; Fraser et al. 2015) that point the other way, which the first search missed entirely.
+- Line 2: the draft's prior that the effect on success would be small came from studies that add context, not remove source. Withdrawn. What stands is the cost of measuring: tasks, not runs, are the limit.
+- "No requester-cost evidence" was too strong: acceptance-test experiments from 2006 to 2009 exist and are unread.
+
+**Lesson for the instrument stage.** The lab lead's errors all ran one way: toward the tidier story. The map's labelling guide should be written so a second labeller cannot see the first's labels, for the same reason.
+
+**Added from the Git record after the first entry** (observation, not a rerun). `tests/kitchen/kitchen-stats.test.ts` existed at R1's base `e412e08`: 193 lines covering `readRuns`, `stallCheck`, `checkLimits`, exit codes and the printed page, with no mention of Usage, and unchanged by R1. R1 added about 400 lines of checks and check plumbing across five files (`git diff --stat e412e08 ddeb3ab`, excluding research and wave files). So most of R1's "preserve" clause had a guard already; the new part was one condition. Not checked: whether that existing test runs inside a Box, and whether it covers R1's fixtures.
+
+**Still unverified:** Qi 2015 and Smith 2015 (cited from search summaries), the 90,000 pull-request figure, the agent-pull-request task shares, the 7.3% enhancement share, and the model-judge papers.
+
+**Next, revised.** Before formulating: read Liang et al. (arXiv:2609.12012), Staats et al. 2012 and the Fit-table experiments. Then the labelling guide and the pilot on this repository's wave files.
