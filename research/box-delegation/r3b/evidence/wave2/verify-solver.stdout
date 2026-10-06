@@ -1,0 +1,183 @@
+{
+  "verdict": "pass",
+  "box": {
+    "id": "variadic-option-placeholders",
+    "name": "Unicode option placeholders are not recognized as variadic",
+    "version": 1
+  },
+  "baseCommit": "5841f7a4ac0b4a5eea364300b1f43775513b2dab",
+  "expectedBaseCommit": "5841f7a4ac0b4a5eea364300b1f43775513b2dab",
+  "attemptSha256": "c89a23aab5e3043951f90e8c37f0fc6888f9f74e902a49883881b76f0d4a3b3b",
+  "applies": [
+    {
+      "owner": "lib/argument.js",
+      "box": "lib/argument.js",
+      "changed": false,
+      "sha256": "a86c43174d904198b92ece266e97b6b711e640f3b89ac45291b682a753e145e4",
+      "bytes": 3134
+    },
+    {
+      "owner": "lib/command.js",
+      "box": "lib/command.js",
+      "changed": false,
+      "sha256": "dcbd11950fba5545a6bab5313609331ce286032c8db20c0eb68d3a091000bd6d",
+      "bytes": 87652
+    },
+    {
+      "owner": "lib/error.js",
+      "box": "lib/error.js",
+      "changed": false,
+      "sha256": "98ac5e1b63894792fa7740e5fb2b79ef8c016d94fc41e55bb6ff85fff3346e72",
+      "bytes": 1089
+    },
+    {
+      "owner": "lib/help.js",
+      "box": "lib/help.js",
+      "changed": false,
+      "sha256": "c1a58d89555b8c0cef5c3da9b173c998ce1faf43fe2cdcb331c0fd2c3a455c38",
+      "bytes": 20812
+    },
+    {
+      "owner": "lib/option.js",
+      "box": "lib/option.js",
+      "changed": true,
+      "sha256": "c33b352bd3b45b0896d02442e26f69c28a315e21b8edec739cc68358c5ef080e",
+      "bytes": 10386
+    },
+    {
+      "owner": "lib/suggestSimilar.js",
+      "box": "lib/suggestSimilar.js",
+      "changed": false,
+      "sha256": "eaa0c4bd9f4d51259c9107e65173f7de37a5413cbd5de39a5795d83d3c7deb3f",
+      "bytes": 2735
+    }
+  ],
+  "checks": [],
+  "commandChecks": [
+    {
+      "name": "install",
+      "program": "npm",
+      "declaredArgv": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "command": "/usr/local/bin/npm",
+      "argv": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "setup",
+      "exit": 0,
+      "result": "pass",
+      "log": "added 206 packages in 3s",
+      "outputSha256": "3f7b44faaef816024fb231ace7c702df13922796c4498e9be251ad158fec26a1",
+      "seconds": 3.524
+    },
+    {
+      "name": "variadic-outcome",
+      "program": "node",
+      "declaredArgv": [
+        "--test",
+        "tests/options.variadic.test.js"
+      ],
+      "command": "/usr/local/bin/node",
+      "argv": [
+        "--test",
+        "tests/options.variadic.test.js"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 0,
+      "result": "pass",
+      "log": "▶ variadic options\n  ▶ variadic option with required option-argument\n    ✔ when variadic with value missing then error (4.315732ms)\n    ✔ when variadic with one value then set in array (1.729893ms)\n    ✔ when variadic with two values then set in array (0.244013ms)\n    ✔ when variadic with repeated values then set in array (0.413622ms)\n    ✔ when variadic used with choices and one value then set in array (0.345118ms)\n    ✔ when variadic used with choices and two values then set in array (0.310417ms)\n    ✔ when variadic with short combined argument then not variadic (0.754841ms)\n    ✔ when variadic with long combined argument then not variadic (0.346219ms)\n    ✔ when variadic with value followed by option then option not eaten (0.55913ms)\n    ✔ when variadic with no value and default then set to default (0.475425ms)\n    ✔ when variadic with coercion then coercion sets value (0.444124ms)\n  ✔ variadic option with required option-argument (11.584823ms)\n  ▶ variadic option with optional option-argument\n    ✔ when variadic not specified then value undefined (0.298816ms)\n    ✔ when variadic used as boolean flag then value true (0.159908ms)\n    ✔ when variadic with one value then set in array (0.215511ms)\n    ✔ when variadic with two values then set in array (0.212612ms)\n  ✔ variadic option with optional option-argument (1.154562ms)\n  ▶ variadic special cases\n    ✔ when option flags has word character before dots then is variadic (0.18571ms)\n    ✔ when option flags has non-ASCII character before dots then is variadic (0.613633ms)\n    ✔ when option flags has special characters before dots then not variadic (0.151808ms)\n  ✔ variadic special cases (1.135861ms)\n  ✔ when option has default array then specified value is used instead of default (not appended) (0.205712ms)\n✔ variadic options (14.792696ms)\nℹ tests 19\nℹ suites 4\nℹ pass 19\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 110.117621",
+      "outputSha256": "5a467f83af0e005543fd201cbb56a4af35271f77471c43fc8a31cbeb3fbb80a0",
+      "seconds": 0.15
+    },
+    {
+      "name": "options-guard",
+      "program": "node",
+      "declaredArgv": [
+        "--test",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "command": "/usr/local/bin/node",
+      "argv": [
+        "--test",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "pecified as str and short flag concatenated with value then value is as specified (0.516328ms)\n  ✔ when option with required value specified as str and long flag followed by value then value is as specified (0.506828ms)\n  ✔ when option with required value specified as str and long flag = value then value is as specified (0.37392ms)\n  ✔ when option with required value specified as 80 and short flag followed by value then value is as specified (1.375174ms)\n  ✔ when option with required value specified as 80 and short flag concatenated with value then value is as specified (0.232113ms)\n  ✔ when option with required value specified as 80 and long flag followed by value then value is as specified (0.200811ms)\n  ✔ when option with required value specified as 80 and long flag = value then value is as specified (0.466825ms)\n  ✔ when option with required value specified as - and short flag followed by value then value is as specified (0.714238ms)\n  ✔ when option with required value specified as - and short flag concatenated with value then value is as specified (0.764441ms)\n  ✔ when option with required value specified as - and long flag followed by value then value is as specified (0.19291ms)\n  ✔ when option with required value specified as - and long flag = value then value is as specified (0.148708ms)\n  ✔ when option with required value specified as -5 and short flag followed by value then value is as specified (0.093405ms)\n  ✔ when option with required value specified as -5 and short flag concatenated with value then value is as specified (0.429923ms)\n  ✔ when option with required value specified as -5 and long flag followed by value then value is as specified (0.141808ms)\n  ✔ when option with required value specified as -5 and long flag = value then value is as specified (0.311317ms)\n  ✔ when option with required value specified as --flag and short flag followed by value then value is as specified (0.18131ms)\n  ✔ when option with required value specified as --flag and short flag concatenated with value then value is as specified (0.244113ms)\n  ✔ when option with required value specified as --flag and long flag followed by value then value is as specified (0.275215ms)\n  ✔ when option with required value specified as --flag and long flag = value then value is as specified (0.17711ms)\n✔ option with required option-argument (17.368134ms)\n▶ option with optional option-argument\n  ✔ when short flag followed by value then value is as specified (0.360819ms)\n  ✔ when short flag concatenated with value then value is as specified (0.197011ms)\n  ✔ when long flag followed by value then value is as specified (0.190011ms)\n  ✔ when long flag = value then value is as specified (0.163809ms)\n  ✔ when long flag followed empty string then value is empty string (0.17671ms)\n✔ option with optional option-argument (1.359673ms)\n▶ Command.version()\n  ✔ when no .version and specify --version then unknown option error (9.393505ms)\n  ✔ when no .version then helpInformation does not include version (2.666044ms)\n  ✔ when specify default short flag then display version (0.805143ms)\n  ✔ when specify default long flag then display version (0.340318ms)\n  ✔ when default .version then helpInformation includes default version help (0.359519ms)\n  ✔ when specify custom short flag then display version (0.337918ms)\n  ✔ when specify just custom short flag then display version (0.526828ms)\n  ✔ when specify custom long flag then display version (0.443824ms)\n  ✔ when specify just custom long flag then display version (0.415622ms)\n  ✔ when custom .version then helpInformation includes custom version help (0.529429ms)\n  ✔ when have .version+version and specify version then command called (1.034056ms)\n  ✔ when have .version+version and specify --version then version displayed (0.378821ms)\n  ✔ when specify version then can get version (0.110806ms)\n✔ Command.version() (19.14693ms)\nℹ tests 354\nℹ suites 64\nℹ pass 354\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 958.188128",
+      "outputSha256": "29365d9c2692566e74ab9af91b3714755bc8d0fc811b3ae2e958fb24d10aa9fa",
+      "seconds": 0.996
+    }
+  ],
+  "merge": {
+    "branch": "box-verify/variadic-option-placeholders-v1-c89a23aab5e3",
+    "commit": "6243ae5ffb13f4ea0a1ea870c679b36fa20a8f40",
+    "message": "box-verify: variadic-option-placeholders v1 attempt c89a23aab5e3\n\nApplied an editable-overlay submission on base 5841f7a4ac0b4a5eea364300b1f43775513b2dab.\nbox: variadic-option-placeholders v1\nattempt: c89a23aab5e3043951f90e8c37f0fc6888f9f74e902a49883881b76f0d4a3b3b\nbase: 5841f7a4ac0b4a5eea364300b1f43775513b2dab\nfiles: lib/option.js\nowner checks: variadic-outcome, options-guard — pass",
+    "scratch": null
+  }
+}
