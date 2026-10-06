@@ -27,6 +27,10 @@ process.once('exit', () => {
   for (const dir of runDirectories) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 });
 
+if (process.env.K6_LOCKFILE_MODE !== 'uncached' && !process.env.BOX_K6_LOCKFILE_CACHE) {
+  process.env.BOX_K6_LOCKFILE_CACHE = join(runRoot('lockfile-cache'), 'cache');
+}
+
 export function listFiles(dir: string): string[] {
   const files: string[] = [];
   const walk = (current: string): void => {

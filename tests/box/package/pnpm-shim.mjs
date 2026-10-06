@@ -13,8 +13,12 @@ const passthrough = () => {
 };
 
 if (args.length === 2 && args[0] === 'install' && args[1] === '--lockfile-only' && existsSync(join(process.cwd(), 'package.json'))) {
+  const dir = process.env.BOX_K6_LOCKFILE_CACHE || null;
+  if (!dir) {
+    record('lockfile-real');
+    passthrough();
+  }
   const key = createHash('sha256').update(readFileSync(join(process.cwd(), 'package.json'))).digest('hex');
-  const dir = join(tmpdir(), 'box-k6-lockfile-cache');
   const cached = join(dir, key + '.yaml');
   const produced = join(process.cwd(), 'pnpm-lock.yaml');
   if (existsSync(cached)) {

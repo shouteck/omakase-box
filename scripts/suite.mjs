@@ -4,7 +4,7 @@
 // recorded PASS may stand in for a step. Importable — the script body is
 // guarded, so verify.mjs and tests/kitchen can use the exported functions.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readRuns } from './kitchen-stats.mjs';
@@ -141,13 +141,15 @@ async function main() {
     process.exit(2);
   }
   const targets = [];
+  const directoryReal = realpathSync(directory);
   for (const file of files) {
     const resolved = resolve(file);
-    if (!file.endsWith('.test.ts') || !resolved.startsWith(directory + sep) || !existsSync(resolved)) {
+    const real = existsSync(resolved) ? realpathSync(resolved) : null;
+    if (!file.endsWith('.test.ts') || real === null || !real.startsWith(directoryReal + sep)) {
       console.error(`scoped run refuses ${file}: not an existing test file inside ${relative(root, directory)}`);
       process.exit(2);
     }
-    targets.push(resolved.split(sep).join('/'));
+    targets.push(real.split(sep).join('/'));
   }
   if (files.length) console.log(`scoped run: ${targets.length} file(s) under ${relative(root, directory)} — this is an inner loop, never suite acceptance`);
   const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
