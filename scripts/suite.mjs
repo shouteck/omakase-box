@@ -113,6 +113,13 @@ export function reusableStep(runsDir, sha, stepName, { suites = null } = {}) {
   return null;
 }
 
+// K7a: the packaging suite's test files run in parallel; every other suite
+// keeps one worker. Each packaging file owns its temp folders and its own
+// stats id, so workers never share mutable state.
+export function suiteWorkers(suite, subgroup) {
+  return suite === 'box' && subgroup === 'package' ? 3 : 1;
+}
+
 // `test:*` package scripts are `node scripts/suite.mjs <suite> [--suite <sub>]`;
 // the key is the suite's argument list, so verify knows `check` already ran it.
 export function suiteKey(command) {
@@ -153,7 +160,7 @@ async function main() {
   }
   if (files.length) console.log(`scoped run: ${targets.length} file(s) under ${relative(root, directory)} — this is an inner loop, never suite acceptance`);
   const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
-  process.exit(await runNode(vitest, ['run', ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
+  process.exit(await runNode(vitest, ['run', `--maxWorkers=${suiteWorkers(suite, subgroup)}`, ...(targets.length ? targets : [directory]), '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(root, '.runtime', 'browsers') } }));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) await main();
