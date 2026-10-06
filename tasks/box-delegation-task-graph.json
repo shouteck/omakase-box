@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Next, when named: K7 (parallel packaging tests; un-paused because verification is half of each wave), then A3 and A4, then R3b. D4 waits for the lab's benchmark.",
+    "sequence": "Milestone A is delivered (A1 to A4). Next, when named: K7 in the daytime (verification is still half of each wave), and R3b, a replay of fixed issues on a public repository. D4 waits for the lab's benchmark.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -531,7 +531,9 @@
       "baseline": "Executed, passing runs on 6 October 2026: the packaging suite took 172 to 235 s (it was 25 to 34 s on 5 October), check about 86 s, build about 18 s; a full run is about 5 to 6.5 minutes. The suite runs its 19 test files one at a time (maxWorkers 1). Slowest files: verify.test.ts 55 s, command-checks.test.ts 43 s, submission.test.ts 23 s. The time budget from K6 reported MISSING because the latest run of its one named profile had no summary, and A2 used a different profile, so the ratchet saw nothing.",
       "lenses": [
         "measurement fairness: before and after on the same commit, five runs each, with spread"
-      ]
+      ],
+      "daytimeOnly": "Edits scripts/verify.mjs, which is read-only overnight. Parked at kickoff on the night of 6 October 2026 for that reason and because the night's one-run limit ruled out its measurement.",
+      "measurementAllowance": "Up to ten executed full verify runs in this wave: five on the base commit and five on the final commit, back to back, no waiting between them. This is the one exception to \"one executed full run per candidate\"."
     },
     {
       "id": "K8",

@@ -23,6 +23,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
+- The optional Node helper (generated package manifest, compiler configuration, lockfile resolution, generated evaluators) still lives inside `export.ts` and `verify.ts`, behind an opt-in. A3 made it unnecessary for a neutral agreement but did not move it out of the core files as its brief asked. Move it to its own module when those files are next touched. From the CTO's review of A3.
+- `kitchen-stats` cannot attribute verify runs to A3, A4, K7-ci or K7-ci2 ("no merged branch found"), so wave durations and verify minutes for the overnight run are missing from the numbers page. Fold into K7.
+
 - K7-ci2 replaces POSIX-incompatible rmdir fixture cleanup with a guarded link-only unlink; real populated directories/files refuse and survive. Final verify summary/console now distinguishes dirty paths from unreadable Git. Hosted confirmation pending at close, not Linux green by inference. Remaining pre-existing k6-scoped-tmp fixed-directory cleanup hazard is in kitchen/INBOX.md.
 
 - A4 accepted executed profile is 325s against 330s, only 5s headroom; future run noise may exceed it. First candidate failed budget at 364s, corrected by isolated copies of invocation-local pristine fixtures. Extra dirty same-SHA full verify remains a recorded violation. K7-ci now refuses dirty state before expensive work; same-SHA repeat-run and cooldown accounting still belong to K7.
