@@ -4,6 +4,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- R3 independently reproduced owner-base install refusal on packageManager nub; current product hardcodes pnpm and does not supply --ignore-scripts. Container execution must enforce script disabling before any retry; no package-manager-specific adapter masquerading as generic support.
+- R3 has no demonstrated test travel/readiness or useful issue delegation: five issue candidates lacked a selected existing defect-red check, Box export blocked, recipient/owner acceptance not tested. A green upstream suite is not Box readiness.
+
 - R2 proved wrong work can pass when the editable file is also its guard: weakened assertions accepted owner-side. Commands pass, but preservation is not established; prefer immutable independent guards or explicitly report this limitation.
 - `boxJsonSha256` is self-declared unless owner verification supplies a pristine `--box`; owner execution authority is agreement-bound. R2 archives the actual hash chain, not a stronger authenticity claim.
 - R2 preparation/generic effort estimates lack measured stage clocks; R3 must record actual timestamps/manual steps and not infer a controlled R1/R2 saving.
@@ -41,7 +44,7 @@ The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`
 Answering the fetched brief of 6 October 2026 (still session 3), at R3 kickoff:
 
 - **Direction unchanged:** PLAN's useful milestone is R2 then R3; lab stays on Line 1, kitchen improvements remain paused unless blocking, D4 awaits a benchmark. Study cheap request-to-check evidence and unfamiliar-repository gaps, not a presumed success rate.
-- **Product change / R3 kickoff:** R2 merged `53dc074`, CI now SUCCESS; command mode executes both contexts at export and owner commands at verify, with red-base/no-op evidence. Preparation estimates were not timed and editable guards accepted wrong work. R3 is now named, brief ready, waiting Go plus Docker Linux engine (unreachable at kickoff). Owner manually cleared old temp buildup; no public repository chosen or executed yet.
+- **Product / R3 return:** report-only R3 archive `f3eeebf`: Zod surveyed, five OPEN issues read, no qualifying issue chosen, no Box/recipient/owner verification. Independent owner test passes, export fails on pnpm/nub; script-disable flags require enforcement. Worker exit/chronology claims retracted and predeclaration not met. Report review passed only as honest negative evidence; useful milestone unmet. No product code changed; resources removed.
 - **Base-check transfer — adopted:** export will run every declared command and record exit code, context, guard/outcome role and exact base. Red guard is a preparation defect; all-green base warns there is no evidence of change. Unknown/timeout is not red-by-prose or PASS.
 - **Existing import-based guard advice — adopted for R3:** predeclare a contrasting test sample before issue selection, run existing tests unchanged in owner and Box contexts, and report runtime-path/workspace/tool gaps. Choose an issue only with an existing red outcome attributable to its behavior; no contrived old base or bespoke check.
 - **Format gap — adopted:** a reusable command-check mode must not require or substitute another request's evaluator; legacy generator mode remains compatible. Owner verify must execute its approved command data, not recipient claims or an unrelated registry entry.

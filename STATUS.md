@@ -1,41 +1,38 @@
 # Status
 
-Updated 6 October 2026 by Devin as CTO at R3 kickoff; owner cleanup record reconciled, container prerequisite blocked.
+Replaced 6 October 2026 by Devin as CTO after R3's reviewed negative report; the useful milestone remains unmet.
 
 ## Now
 
-- **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1–K6 (except unstarted K7), K8, D1.2, D2.1, D2.2, D3.1, R1, **R2** (`53dc074`). K9 remains unstarted.
-- **R2 delivered:** generic agreement command checks (no request registry), owner checks in disposable clones, recipient checks in clean installed packages, recorded untouched-base exits, red-guard refusal and all-green warning. Legacy check strings remain descriptions with an explicit unsupported-base-results warning.
-- **Internal delegation:** existing tsc --noUnusedParameters was red on the base; existing owner behavior test and package compiler guard were green. Fresh folder-only recipient renamed the unused parameter to `_repo`; both outcome commands became green. Owner verified actual submission; no-op failed. Assertions/comments in the actual accepted change are preserved.
-- **Checks:** reviewer PASS on exact `6841963`: full `verify --full test:box-package test:kitchen`, 293s elapsed, 284s executed ≤330s, all steps real. Reviewer independently re-exported original prep base `41fdf38`: two guards pass, two outcomes fail exit 2 TS6133, all 20 shipped file hashes match.
-- **Limits:** editable test is also the owner guard. Reviewer proved weakening its assertions can pass the commands. This is passes the agreed checks, not verified correct or a complete preservation guarantee. Manifest hash is self-declared without a pristine `--box`; execution still comes from owner agreement. No error rate inferred.
-- **Preparation evidence:** agreement/instructions only for the request, zero bespoke package code/evaluator/test/driver; reusable product development counted separately. Preparation <10 minutes and generic ~26 minutes are worker estimates, not timed stage measurements. No controlled R1 saving claim.
-- **Disclosure:** 20 files / 135643 B of 717 eligible tracked files / 4678854 B (~2.79% files, 2.90% bytes). Unfiltered history denominator 3513 and live-FS count1857 are different measures, not the preferred source share.
-- **In flight:** R3 briefing only, named by `START.MD R3`; `waves/R3.md` ready, awaiting pre-cook Go. Container prerequisite blocked: Docker Linux engine unreachable. No upstream project chosen, installed or executed.
-- **CI:** R2 master run `37413634118` completed SUCCESS, confirmed at R3 kickoff. K8 host-bound exclusions remain.
-- **Cleanup:** owner commit `326ee7d` records 1590 accumulated packaging temp folders/logs removed manually while idle. Historical K6 cleanup ownership blocker resolved; lifecycle leak remains in BACKLOG. R3 must inventory/clean only its own resources.
+- **Accepted product:** prior milestones through R2 (`53dc074`), K6 and K8. K7/K9/D4 unstarted. **R3 report archived** (`f3eeebf`), not a successful issue delegation; no product-code change.
+- **R3 partial/blocked:** surveyed Zod at `0b216ef674e297ebe41d8bf902262e56f8755822` and five OPEN issues; none selected with a defensible existing red outcome. No Box emitted, recipient dispatched, no-op verified or owner acceptance performed.
+- **Independent evidence:** one owner-context test: 54 tests over 3 Vitest project instances, exit 0 offline/non-root. Export probe: pnpm refuses the repository's nub package manager, exit 1; product command omitted --ignore-scripts, reviewer wrapper added it before the guard blocked execution. Tests travelling into Boxes remain not tested.
+- **Evidence quality:** first report FAIL; corrected report PASS only for auditable negative archival (`01b95af`, review `f0c3cf3`). Original worker exit markers were pipeline artifacts and are retracted; predeclaration chronology not proven. Worker image defaulted root and tool setup ran an installer without full checksum/ignore-script evidence. No observed upstream writes, secrets mounts or host upstream execution; complete security-policy compliance is not claimed.
+- **Useful conditions:** external repo/open-issue survey met; qualifying issue selected not met; required predeclared sample not met; Box prepared in measured minutes, fresh solve and owner agreed-check acceptance not tested.
+- **In flight:** nothing. This START stops at R3's partial result. Docker image and all three named worker volumes removed, reviewer resources removed; no kitchen-r3 containers/volumes/image remain. Existing resources, lab and owner files untouched.
+- **CI:** latest code-triggered master result remains R2 SUCCESS (`37413634118`). R3 changes reports only; no unrelated full product verification run claimed or CI waiting.
+- **R2 retained:** generic command mode, actual base/no-op evidence and accepted internal edit. Editable-guard false pass and unmeasured preparation estimates remain known limits; passing agreed checks is not verified correct.
 
 ## Approved by the CEO
 
-Prior milestones plus `START.md: R2` and Go for R2 only, 90-minute active cook ceiling. Cook completed within the boundary; no R3 work began.
+R3 named plus Go cleared one 90-minute bounded experiment. Negative result preserved without switching repository, inventing a test, widening scope or starting another wave. Prior owner manual cleanup remains recorded; packaging lifecycle leak unresolved.
 
 ## Next
 
-No further wave without a new START and required pre-cook Go. Agreed useful direction is R2 then R3.
+No work without a new START and its pre-cook Go.
 
-1. **R3:** public-repository readiness report and issue experiment, no request-specific code; name `START.md: R3`.
-2. Keep new resource inventories explicit; owner already cleared the old buildup. No paused kitchen wave starts unless it blocks R3.
+Recommendation: a narrowly bounded R3 blocker correction for safe installs/container execution and exact run recording, then retry readiness on a compatible public repository. Do not treat a package-manager swap alone as satisfying the useful milestone; a real existing red outcome is still required.
 
-K7, K9 and other kitchen work paused unless they block R2/R3. D4 awaits the lab benchmark. R2 is mechanism evidence; the useful milestone still requires someone else's issue prepared in measured minutes.
+K7/K9/other kitchen work paused unless blocking R3; D4 waits for lab benchmark. No public-project publication authorized.
 
 ## Night queue
 
-Only a new named overnight request and pre-cook Go: R3, with container prerequisites met. No kitchen queue while the pause holds; no D4.
+Only a new named overnight request and pre-cook Go for a bounded R3 correction/retry with safety prerequisites. No automatic kitchen queue or D4.
 
 ## Known problems
 
-[BACKLOG.md](BACKLOG.md) records editable-guard risk, legacy-command gaps, manifest-hash limitations, preparation timing and K6 cleanup. R2 raw proof is under `research/box-delegation/r2/evidence/`.
+[BACKLOG.md](BACKLOG.md): package-manager portability, missing script-disable flags, immutable guards, lifecycle cleanup and truthful timestamps/exit capture. Readiness and raw/retracted records: `research/box-delegation/r3/READINESS.md`.
 
 ## Decision waiting for the CEO
 
-Start Docker Desktop's Linux engine, then reply Go to the R3 pre-cook card. Naming R3 approves that experiment only; no host-execution fallback, upstream write or extra wave.
+Name the next bounded correction/retry, or stop the experiment. The useful milestone is not yet demonstrated.
