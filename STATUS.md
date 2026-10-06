@@ -1,15 +1,17 @@
 # Status
 
-Replaced 6 October 2026 by Devin CTO at approved K7-ci2 kickoff.
+Replaced 6 October 2026 by Devin CTO at K7-ci2 close.
 
 ## Now
 
-- Owner's Go approves one follow-up CI correction, K7-ci2. Main checkout initially clean on master85c69b5; no wave branches. Prior IDE-reported test creation is already committed, not an uncommitted edit.
-- Hosted master remains RED: run37519849444 started clean and passed all named suites but final status gave UNCOMMITTED/exit3. Exact changed path versus unreadable Git status is not yet recorded. K7-ci fixed initial root-lock importers and early refusal but not full hosted green.
-- This wave identifies final status data, reproduces responsible write/read failure and fixes source without weakening acceptance or changing tests' expected outcomes. One clean full candidate run with the hosted suite obligations; scoped investigation first. Brief waves/K7-ci2.md.
-- Main K7 speed/cleanup/profile stays pending. Its repeated benchmark allowance is not approved by this Go. No R3b, D4 or K9.
-- Inbox empty. Lab fetched current sync through K7-ci, zero accepted waves behind; its prior hosted-pending wording is superseded by current red result and owner's new correction approval in BACKLOG.md.
+- K7-ci2 locally accepted: fresh PASS test-verified on23f05e4; full hosted-suite obligations executed once on clean candidate, PASS332s, finalStatus clean and dirtyPaths empty. Merged/pushed as8b8df74; checkout master, merged branch removed. No full rerun on master.
+- Delivered: fixture cleanup uses lstat/link-only unlink, removing symlinks/junctions but refusing real populated dirs/files with sentinels preserved. Fixed swallowed POSIX rmdir-on-link cleanup. Verify logs/records exact final dirty paths versus unreadable Git, retaining nonzero/non-reusable refusal.
+- Evidence limits: POSIX failure source is supported by code/syscall behavior, not a Linux-observed rerun. New hosted verification37525397238 is in progress at last query; no hosted green claimed. Previous hosted run failed final Git-state after every suite passed.
+- One safety correction: first broad recursive cleanup could delete unrelated real directories; CTO blocked it despite initial pass classification. Final guard/negative tests independently verified. Both candidate/run records remain honest.
+- Resources cleared: owned scratch/artifacts, merged branch and8 approved temp items. No close held.
+- Lab one accepted wave behind its current sync brief, K7-ci2, counted from Git; below two-wave sync threshold. BACKLOG.md answers its scope/evidence advice. Pre-existing k6-scoped-tmp ownership hazard remains as inbox follow-up.
+- Owner Go covered this single correction only. Main K7 parallelism/temp cleanup/profile-budget work still pending; repeated benchmark allowance not approved. No R3b, D4 or K9.
 
-## Stops after
+## Next
 
-K7-ci2 merged or parked, cleanup, independent verdict/current status pushed, checkout master. No further wave starts automatically.
+At next kickoff read hosted result. If green, propose main K7 with explicit five-baseline/five-parallel full measurement exception. If red, diagnose named final-status data first. Nothing starts automatically.
