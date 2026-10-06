@@ -1,48 +1,41 @@
 # Status
 
-Replaced at wave close. Last written 6 October 2026 by Claude as CTO, after reviewing the R1 run.
+Replaced 6 October 2026 by Devin as CTO after K6 was parked at its approved timebox.
 
 ## Now
 
-- **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1, D1.2, K2a, K2b, K3, D2.1 (`bce810d`), D2.2 (`85035a9`), D3.1 (`48ac79a`), K4 (`01c675b`), K5 (`13f7daa`), K8 (`2a9114d`), **R1** (`ddeb3ab`).
-- **R1 delivered a real internal request:** a fresh package-only agent removed obsolete Usage reporting from `kitchen-stats`; owner `box verify` accepted the sealed artifact and rejected a no-op. Its verified scratch result was integrated and independently reviewed. Raw artifacts and reports are in `research/box-delegation/r1/evidence/`.
-- **Disclosure:** 2 owner files, 19402 B; 2/694 tracked files outside declared exclusions (~0.29%). The live filesystem inventory gave 2/1834 (~0.11%), including untracked/non-source files. Both denominators are recorded; neither proves customer value.
-- **Checks:** reviewer `node scripts/verify.mjs --full test:box-package test:kitchen` PASS on `cbd2302`, all steps executed, 269s. Preparation-driver deletion/collision defect fixed with red-first tests and independently re-attacked. Master CI run `37393662780` completed SUCCESS (job 4m14s); the documented K8 host-bound exclusions remain.
-- **What R1 showed:** the 8-line change needed about 470 lines written for that one request (a hand-written evaluator and owner check in `packages/box-package`, a driver, three test files), and 46 minutes of which 22.5 were verification. Preparation cost is now the main product risk.
-- **In flight:** no implementation. `START.md: K6` names K6; brief ready at `waves/K6.md`, awaiting the pre-cook **go** required by START.md. This run stops after K6. R2 and K9 remain unstarted.
-- **Held:** nothing. Ordinary verification uses disposable embedded Postgres; hostile/container suites remain separate. `--fresh` forces execution; `--full` is the scoping backstop.
+- **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1, D1.2, K2a, K2b, K3, D2.1, D2.2, D3.1, K4, K5, K8, R1 (`ddeb3ab`). No K6 code merged.
+- **In flight:** no active worker. Owner approved a K6 correction run; updated brief awaits pre-cook **go** for a renewed 60-minute timebox. Prior candidate `feb99b2` / FAIL review `4a3000f` remain preserved on local `wave/K6`.
+- **K6 blockers:** scoped tests can escape through junctions; global lockfile cache trusts preseeded bytes and persists across commits; invalid/failed/missing timing can be labeled budget PASS. The reported 42% saving is a unit model, not a measured paired baseline.
+- **Verification:** targeted reviewer attacks reproduced the defects; a full acceptance run was deliberately not spent on a known-invalid candidate. Latest master Actions result remains SUCCESS, run `37393662780`; K6's local failure is not a red master CI run.
+- **Cleanup:** K6 worker/reviewer scratch removed; main checkout is clean on master after the park commit. Candidate branch retained for recovery; preexisting resources and the unrelated lab worktree untouched.
+- **R1 remains delivered:** package-only agent changed kitchen-stats; sealed artifact accepted owner-side, no-op rejected, independent review and CI passed. Raw records are in `research/box-delegation/r1/evidence/`.
+- **R1 limits:** request-specific preparation remains expensive; 2 owner files / 694 tracked non-excluded files (~0.29%), 19402 B. Isolation instructional; no comparator, customer evidence, or measured speed advantage.
 
 ## Approved by the CEO
 
-- 5 Oct: lean kitchen, D1.2, K1–K3, D2 and D3.1.
-- 6 Oct: K8 free-tier Actions, K9 legacy removal after tagging, owner walkthrough, no second-model-family requirement.
-- This message: `START.md: R1` approves R1 only, then stop.
+- Prior approvals: lean kitchen, D1.2, K1–K3, D2/D3.1, K8 free-tier Actions, K9 behind a tag, owner walkthrough, R1.
+- This run: `START.md: K6` plus **Go** cleared K6 only, for 60 minutes active cook work. It is now parked; no silent extension.
 
 ## Next
 
-No wave starts without a new START message. Every run opens with a pre-cook card (START.md).
+Nothing starts without a new START message and the required pre-cook go.
 
-1. **R2:** delegate a second real request with no request-specific code, by letting an agreement name existing commands as its checks. Not approved; `START.md: R2`.
-2. **K9:** legacy removal behind `legacy-2026-10-06`; brief ready, nothing started. `START.md: K9`.
-3. **K6:** cut the largest verify cost (`test:box-package`, about 2 minutes a run). `START.md: K6`.
-4. **D4:** Box-versus-contractor comparison. `START.md: D4`.
+1. **Resume K6:** invocation-local trusted setup, canonical scoped containment, fail-closed budget observations, actual paired measurement, independent full acceptance.
+2. **R2:** second real request using existing command checks, no request-specific code; not approved.
+3. **K9:** legacy removal behind a tag; brief ready, unstarted.
+4. **D4:** comparison; unstarted. K7 also unstarted.
 
-Recommendation: K6, then R2 (`START.md: K6, R2`). Verification is growing with every wave (the packaging suite went from under a minute to two in six hours of waves), and R2 works in that suite. D4 would measure a preparation cost R1 already showed is too high.
+Recommendation: resume and narrow K6 before R2; do not ship its current cache/budget shortcuts.
 
 ## Night queue
 
-Only for `START.md overnight`; each entry needs naming in that message.
-
-1. R2.
-2. K9.
-3. K6, then K7.
-
-D4 stays outside the night queue so the owner can read its results.
+Only under a new named overnight request and pre-cook go: K6 correction, R2, K9, or K7 as named. D4 remains outside the night queue.
 
 ## Known problems
 
-No blocking product defect. Non-blocking gaps are in [BACKLOG.md](BACKLOG.md); R1 isolation was instructional, not enforced, and required a request-specific check adapter. No full-repo comparator or reliable recipient token/wall-time measurements were collected.
+K6 acceptance blockers are above and in [waves/K6.md](waves/K6.md); non-blocking product gaps remain in [BACKLOG.md](BACKLOG.md).
 
-## Decisions waiting for the CEO
+## Decision waiting for the CEO
 
-- Which to run next: K6, R2, K9 or D4. Recommendation: K6, then R2.
+K6 correction is approved in principle; reply **go** to the pre-cook card to start the renewed bounded run. No implementation has restarted.

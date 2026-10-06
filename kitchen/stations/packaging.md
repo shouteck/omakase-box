@@ -19,7 +19,7 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 
 ## The pass checks
 
-- Run the export and the declared checks in a fresh directory outside the repository, yourself.
+- Run export and declared checks outside the repository. Shared test setup must be invocation-local and isolated for mutation; try poisoned/preseeded cache bytes before trusting a speedup (K6 failed this check).
 - Confirm the excluded modules are really absent from the package.
 - Try each negative: omitted dependency, path or link escaping the selection, unlisted input, edit outside the editable paths, wrong base commit, altered agreement.
 - Record the share of owner source the package disclosed.
