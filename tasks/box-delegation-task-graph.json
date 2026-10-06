@@ -508,6 +508,7 @@
         "package.json"
       ],
       "deliverables": [
+        "Stop the leaks first, because they grow with every run: each packaging test removes the temp folders it creates when it finishes, pass or fail; the time-budget recorder removes its own files; and verify, when it starts, stops and clears any embedded database a killed earlier run left behind (its own data folders only). On 6 October 2026 one afternoon left 5,805 test folders, 206 recorder files and an orphaned database that had run for over two hours.",
         "Run the packaging suite's test files in parallel, three workers to start (six cores, 16 GB), leaving every other suite as it is. Each test file already makes its own temp folders; find and fix anything files share (caches, fixed folder names, ports) before turning parallelism on, with a test written first that shows the collision.",
         "Then take the two slowest test files and remove repeated setup inside them, only where the numbers show it.",
         "The time budget applies to whichever verify profile a wave actually ran, per profile, and reads the latest run that has a summary. A killed run is reported as killed, not as a missing budget.",
@@ -518,7 +519,8 @@
         "Five consecutive executed full runs pass on the same commit with parallel workers; a single flaky failure in those five means the wave is not done.",
         "No assertion is removed or weakened, and the same number of tests run as before.",
         "A deliberately broken packaging test still fails the run.",
-        "Peak memory during the suite stays under what the machine can give with the kitchen's agents running; record the figure."
+        "Peak memory during the suite stays under what the machine can give with the kitchen's agents running; record the figure.",
+        "After a full run the system temp folder holds no box-d21-*, box-k6-* or kitchen-verify-pg* items and no database process is left; after a run that is killed part-way, the next run clears what it left."
       ],
       "verification": [
         "Reviewer checks the test count is unchanged, breaks one packaging test on a scratch branch to see the run fail, and reads the five-run record; it does not need to repeat all five."

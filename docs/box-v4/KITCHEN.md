@@ -69,7 +69,7 @@ When a wave has to choose a design nobody here has built before, do not argue it
 
 ## Resources
 
-Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. After a wave closes, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
+Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. The owner has given standing approval (6 October 2026) to delete, at every wave close and with no test running, the items in the system temp folder named `box-d21-*`, `box-k6-*` and `kitchen-verify-pg*`, and to stop an embedded test database left by a killed verify with its own stop command: they are only ever created by this kitchen's tests. Do it without asking. After a wave closes, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
 
 ## Records
 
