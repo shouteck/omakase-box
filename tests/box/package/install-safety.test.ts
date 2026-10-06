@@ -29,29 +29,53 @@ const check = (over: Partial<CommandCheck>): CommandCheck => ({
   context: 'owner', role: 'guard', timeoutMs: 30_000, ...over
 });
 
+// Declared pnpm checks may only RUN things: the six run-verb spellings pass
+// verbatim, every other verb is refused before anything is spawned.
+const RUN_VERBS = ['exec', 'e', 'run', 'run-script', 'test', 't'];
+const REFUSED_VERBS = [
+  'install', 'i', 'add', 'dedupe', 'it', 'install-test', 'ln', 'link', 'prune', 'deploy', 'rb', 'rebuild',
+  'publish', 'setup', 'self-update', 'config', 'store', 'dlx', 'create', 'update', 'up', 'remove', 'rm',
+  'import', 'fetch', 'patch-commit', 'totally-new-verb', 'shiny-installer'
+];
+
+function expectRefused(args: string[]): void {
+  const label = args.join(' ');
+  const dir = runRoot('decl-refused');
+  const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, fakePnpm(dir));
+  expect(record.result, label).toBe('error');
+  expect(record.exit, label).toBeNull();
+  expect(record.argv, label).toEqual([]);
+  expect(record.log, label).toContain('refused');
+  expect(calls(dir), label).toEqual([]);
+  expect(sentinel(dir), label).toBe(false);
+}
+
 describe('install boundary: declared pnpm checks', () => {
-  it('forces --ignore-scripts onto a declared install and proves it in the recorded argv', () => {
-    const dir = runRoot('decl-install');
-    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['install', '--frozen-lockfile'] }), dir, fakePnpm(dir));
-    expect(record.result).toBe('pass');
-    expect(record.argv).toContain('--ignore-scripts');
-    expect(calls(dir).at(-1)?.argv).toContain('--ignore-scripts');
-    expect(sentinel(dir)).toBe(false);
+  it('refuses every verb outside the six run spellings before spawn, bare or behind --dir', () => {
+    for (const verb of REFUSED_VERBS) {
+      expect(RUN_VERBS, verb).not.toContain(verb);
+      expectRefused([verb]);
+      expectRefused(['--dir', '/tmp/pkg', verb]);
+    }
   });
 
-  it('leaves a declared install already carrying --ignore-scripts untouched', () => {
-    const dir = runRoot('decl-ok');
-    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['install', '--frozen-lockfile', '--ignore-scripts'] }), dir, fakePnpm(dir));
-    expect(record.result).toBe('pass');
-    expect(record.argv.filter(arg => arg === '--ignore-scripts')).toHaveLength(1);
+  it('refuses a declared install even when it already carries --ignore-scripts', () => {
+    expectRefused(['install', '--frozen-lockfile']);
+    expectRefused(['install', '--frozen-lockfile', '--ignore-scripts']);
+    expectRefused(['--dir', '.', 'install']);
   });
 
-  it('treats an install verb hidden behind flags as install-like', () => {
-    const dir = runRoot('decl-dir-install');
-    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['--dir', '.', 'install'] }), dir, fakePnpm(dir));
-    expect(record.result).toBe('pass');
-    expect(record.argv).toContain('--ignore-scripts');
-    expect(sentinel(dir)).toBe(false);
+  it('passes each of the six run spellings through verbatim', () => {
+    for (const verb of RUN_VERBS) {
+      for (const args of [[verb, 'tsc', '--noEmit'], ['--dir', '.', verb, 'tsc', '--noEmit']]) {
+        const dir = runRoot(`decl-run-${verb}`);
+        const pnpm = fakePnpm(dir);
+        const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, pnpm);
+        expect(record.result, args.join(' ')).toBe('pass');
+        expect(record.argv, args.join(' ')).toEqual([...pnpm.args, ...args]);
+        expect(calls(dir).map(call => call.argv), args.join(' ')).toEqual([args]);
+      }
+    }
   });
 
   it('refuses, without spawning, a declared install that re-enables lifecycle scripts', () => {
@@ -78,42 +102,8 @@ describe('install boundary: declared pnpm checks', () => {
     }
   });
 
-  it('forces --ignore-scripts onto every install-like verb, including aliases and dedupe', () => {
-    for (const verb of ['dedupe', 'it', 'install-test', 'ln', 'link', 'prune', 'deploy', 'rb', 'rebuild', 'add', 'dlx']) {
-      const dir = runRoot(`decl-verb-${verb}`);
-      const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['--dir', '.', verb] }), dir, fakePnpm(dir));
-      expect(record.result, verb).toBe('pass');
-      expect(record.argv, verb).toContain('--ignore-scripts');
-      expect(calls(dir).at(-1)?.argv, verb).toContain('--ignore-scripts');
-      expect(sentinel(dir), verb).toBe(false);
-    }
-  });
-
-  it('refuses an install-like verb hidden behind a valued leading option', () => {
-    const dir = runRoot('decl-hidden-dedupe');
-    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['--dir', '/tmp/pkg', 'dedupe'] }), dir, fakePnpm(dir));
-    expect(record.result).toBe('pass');
-    expect(record.argv).toContain('--ignore-scripts');
-    expect(sentinel(dir)).toBe(false);
-  });
-
-  it('refuses unknown pnpm verbs before spawn instead of passing them through', () => {
-    for (const args of [['totally-new-verb'], ['shiny-installer'], ['--future-opt', 'x', 'install'], ['--reporter', 'json', 'mystery']]) {
-      const dir = runRoot('decl-unknown');
-      const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, fakePnpm(dir));
-      expect(record.result, args.join(' ')).toBe('error');
-      expect(record.exit, args.join(' ')).toBeNull();
-      expect(record.log, args.join(' ')).toContain('refused');
-      expect(calls(dir), args.join(' ')).toEqual([]);
-      expect(sentinel(dir), args.join(' ')).toBe(false);
-    }
-  });
-
-  it('does not touch non-install pnpm commands', () => {
-    const dir = runRoot('decl-other');
-    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['exec', 'tsc', '--noEmit'] }), dir, fakePnpm(dir));
-    expect(record.result).toBe('pass');
-    expect(record.argv).not.toContain('--ignore-scripts');
+  it('refuses an unknown or ambiguous leading option that could hide the verb', () => {
+    for (const args of [['--future-opt', 'x', 'install'], ['--future-opt', 'exec', 'tsc'], ['--reporter', 'json', 'mystery']]) expectRefused(args);
   });
 });
 

@@ -3,35 +3,19 @@ import type { PnpmInvocation } from './export.js';
 
 // The single product-controlled install boundary. Every dependency install the
 // product spawns — export's lockfile resolution and base/recipient installs,
-// owner verify's scratch install, and declared `pnpm` checks — goes through
-// here. The scan is a conservative grammar over the WHOLE effective argv, not a
-// first-token heuristic: an install verb anywhere (`--dir /tmp install`, a flag
-// value containing an install-word segment) forces --ignore-scripts, and any
-// config/flag that could re-enable lifecycle execution is refused before
-// anything spawns. No caller override, no unsafe fallback.
+// and owner verify's scratch install — goes through here and always carries
+// --ignore-scripts; any config/flag that could re-enable lifecycle execution is
+// refused before anything spawns. No caller override, no unsafe fallback.
+//
+// Declared `pnpm` checks are a different thing: they may only RUN something
+// (RUN_VERBS), never manage packages. They are owner-approved code and the
+// product makes no sandbox claim for them; their safety depends on where they
+// are run.
 export const IGNORE_SCRIPTS = '--ignore-scripts';
 
-// Install-like pnpm subcommands: anything that resolves or links a dependency
-// tree is where lifecycle scripts would run. Includes install-adjacent
-// aliases (it/install-test, ln/link, rb) and other dependency-mutating
-// commands (dedupe, prune, deploy).
-const INSTALL_VERBS = new Set([
-  'install', 'i', 'it', 'install-test', 'add', 'update', 'up', 'dedupe',
-  'remove', 'rm', 'uninstall', 'rebuild', 'rb', 'import', 'fetch', 'create',
-  'dlx', 'ln', 'link', 'prune', 'deploy', 'patch-commit', 'store', 'server'
-]);
-
-// Declared `pnpm` verbs that are safe to run verbatim: they never resolve or
-// mutate the dependency tree. This allowlist, not INSTALL_VERBS, is the
-// fail-closed boundary — a verb absent from BOTH sets is refused before
-// spawn, so a new/alias pnpm command can never reach a child process
-// without --ignore-scripts by accident.
-const SAFE_VERBS = new Set([
-  'exec', 'e', 'run', 'run-script', 'test', 't', 'start', 'list', 'ls', 'la',
-  'll', 'why', 'outdated', 'audit', 'info', 'view', 'version', 'bin', 'root',
-  'env', 'config', 'help', 'licenses', 'cat-file', 'cat-index', 'find-hash',
-  'patch', 'publish', 'pack', 'self-update', 'setup', 'init', 'doctor'
-]);
+// The only verbs a declared `pnpm` check may use, passed through verbatim.
+// Every other verb — install-like, package-management or unknown — is refused.
+const RUN_VERBS = new Set(['exec', 'e', 'run', 'run-script', 'test', 't']);
 
 // Leading pnpm options that consume the NEXT argv token as their value; they
 // must be skipped while locating the verb or a value would hide the command.
@@ -66,48 +50,31 @@ export class UnsafeInstall extends ExportFailed {
 }
 
 // Scans the effective argv, throwing UnsafeInstall on any lifecycle-enabling or
-// ambiguous flag, and returns whether the command is install-like.
-export function scanPnpmArgv(argv: readonly string[]): boolean {
-  let installLike = false;
+// ambiguous flag.
+function scanPnpmArgv(argv: readonly string[]): void {
   for (const [index, raw] of argv.entries()) {
-    if (!raw.startsWith('-')) {
-      if (INSTALL_VERBS.has(raw)) installLike = true;
-      continue;
-    }
     if (raw === IGNORE_SCRIPTS) {
       const next = argv[index + 1];
       if (next === 'false' || next === 'true') throw new UnsafeInstall(`ambiguous value '${next}' after ${IGNORE_SCRIPTS}`);
-      continue;
+    } else if (raw.startsWith('-') && UNSAFE_FLAG.test(raw)) {
+      throw new UnsafeInstall(`lifecycle/config override flag in invocation: ${raw}`);
     }
-    if (UNSAFE_FLAG.test(raw)) throw new UnsafeInstall(`lifecycle/config override flag in invocation: ${raw}`);
-    const eq = raw.indexOf('=');
-    if (eq > 0 && raw.slice(eq + 1).split(/[\/]/).some(segment => INSTALL_VERBS.has(segment))) installLike = true;
   }
-  return installLike;
 }
 
-export function isInstallLike(argv: readonly string[]): boolean {
-  return scanPnpmArgv(argv);
-}
-
-// Returns argv guaranteed script-safe: --ignore-scripts appended when absent.
-// Throws UnsafeInstall when argv tries to re-enable lifecycle execution.
-export function enforcedInstallArgs(argv: readonly string[]): string[] {
-  scanPnpmArgv(argv);
-  return argv.includes(IGNORE_SCRIPTS) ? [...argv] : [...argv, IGNORE_SCRIPTS];
-}
-
-// Product-spawned installs: caller prefix plus the operation, enforced as one —
-// always install-like, always enforced.
+// Product-spawned installs: caller prefix plus the operation, scanned as one,
+// with --ignore-scripts appended when absent.
 export function productInstallArgs(pnpm: PnpmInvocation, args: readonly string[]): string[] {
-  return enforcedInstallArgs([...pnpm.args, ...args]);
+  const argv = [...pnpm.args, ...args];
+  scanPnpmArgv(argv);
+  return argv.includes(IGNORE_SCRIPTS) ? argv : [...argv, IGNORE_SCRIPTS];
 }
 
-// Locates the declared pnpm verb: the first non-dash token after the caller
-// prefix, skipping recognised value options. Throws UnsafeInstall on an
-// ambiguous leading option (unknown bare flags may hide the verb).
-function declaredVerb(argv: readonly string[], startIndex: number): string | undefined {
-  for (let index = startIndex; index < argv.length; index++) {
+// Locates the declared pnpm verb: the first non-dash token, skipping
+// recognised value options. Throws UnsafeInstall on an ambiguous leading
+// option (unknown bare flags may hide the verb).
+function declaredVerb(argv: readonly string[]): string | undefined {
+  for (let index = 0; index < argv.length; index++) {
     const raw = argv[index];
     if (raw === undefined) break;
     if (!raw.startsWith('-')) return raw;
@@ -116,19 +83,16 @@ function declaredVerb(argv: readonly string[], startIndex: number): string | und
     if (BOOLEAN_OPTIONS.has(raw)) continue;
     throw new UnsafeInstall(`ambiguous leading pnpm option '${raw}': cannot locate the declared verb`);
   }
-  return undefined; // `pnpm --version`-style: no verb, nothing installs
+  return undefined; // `pnpm --version`-style: no verb, nothing runs or installs
 }
 
-// Declared `pnpm` command checks: unsafe flags are refused on EVERY pnpm call
-// (a non-install command must not hide a lifecycle override). The grammar is
-// fail-closed, not a growing denylist: verbs in SAFE_VERBS pass verbatim,
-// install-like verbs gain --ignore-scripts, and ANY unknown verb is refused
-// before spawn so new pnpm install aliases cannot slip through.
+// Declared `pnpm` command checks: lifecycle/config override flags are refused
+// on every call, and any verb outside RUN_VERBS is refused before spawn. What
+// is left passes through verbatim.
 export function declaredPnpmArgs(pnpm: PnpmInvocation, checkArgs: readonly string[]): string[] {
-  scanPnpmArgv([...pnpm.args, ...checkArgs]); // refuses lifecycle/config overrides everywhere
-  const verb = declaredVerb(checkArgs, 0);
-  if (verb === undefined) return [...pnpm.args, ...checkArgs];
-  if (INSTALL_VERBS.has(verb)) return enforcedInstallArgs([...pnpm.args, ...checkArgs]);
-  if (!SAFE_VERBS.has(verb)) throw new UnsafeInstall(`unsupported declared pnpm verb '${verb}': not provably script-safe`);
-  return [...pnpm.args, ...checkArgs];
+  const argv = [...pnpm.args, ...checkArgs];
+  scanPnpmArgv(argv);
+  const verb = declaredVerb(checkArgs);
+  if (verb !== undefined && !RUN_VERBS.has(verb)) throw new UnsafeInstall(`declared pnpm verb '${verb}' is not a run verb: only ${[...RUN_VERBS].join(', ')} may be declared`);
+  return argv;
 }
