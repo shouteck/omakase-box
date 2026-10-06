@@ -19,10 +19,11 @@ import type { SubmissionApply, SubmissionArtifact, SubmissionRejection, Submissi
 // validateSubmission proves the artifact binds to the agreement, box and base commit;
 // this proves the patch WORKS in the owner repository: a clean clone at the base
 // commit, the exact overlay applied to the declared owner paths, then the owner-side
-// checks — a full compile plus a generated outcome check that drives the applied file
-// through the real owner modules. On pass the change lands as an ordinary git commit
-// on a scratch branch inside the throwaway clone, with box/attempt identity in the
-// message. The clone is removed afterwards; real history is never touched.
+// checks — the agreement's declared commands always; install/compile plus generated
+// outcome checks only when the agreement opts into the nodejs helper and evaluator
+// generators. On pass the change lands as an ordinary git commit on a scratch branch
+// inside the throwaway clone, with box/attempt identity in the message. The clone is
+// removed afterwards; real history is never touched.
 //
 // Failure classification (every failure names its class; none is silent):
 // - preparation-defect: the submission was rejected at the binding boundary
@@ -74,7 +75,7 @@ export interface VerifyOptions {
   readonly repoPath: string;
   readonly baseCommit?: string;
   readonly boxDir?: string;
-  readonly pnpm: PnpmInvocation;
+  readonly pnpm?: PnpmInvocation; // needed only when the agreement opts into the nodejs helper (install/compile) or names registered owner checks (outcome)
   readonly workRoot?: string;   // parent for the scratch clone; defaults to the OS temp dir
   readonly keepScratch?: boolean;
 }
@@ -217,20 +218,31 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
       return fail('environment-failure', 'operational', `apply failed: ${error instanceof Error ? error.message : String(error)}`, { ...base, checks: runChecks });
     }
 
-    // Phase 5: owner checks, in order, fail-fast. install prepares the checkout
-    // (an infrastructure concern); compile and outcome judge the patch itself.
-    // The outcome step exists only when evaluator generators named registered
-    // owner checks — a bare `vitest run` would execute the clone's whole suite.
-    // The install step goes through the shared boundary: the recorded argv is
-    // the exact effective invocation, --ignore-scripts included. UnsafeInstall
-    // propagates out of the try as a hard failure (environment, not a pass).
-    const steps: Array<{ name: VerifyCheckName; args: string[] }> = [
-      { name: 'install', args: productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']) },
-      { name: 'compile', args: [...options.pnpm.args, 'exec', 'tsc', '--noEmit'] },
-      ...(checks.length > 0 ? [{ name: 'outcome' as const, args: [...options.pnpm.args, 'exec', 'vitest', 'run', ...checks.map(check => check.file)] }] : [])
-    ];
+    // Phase 5: ecosystem owner checks, in order, fail-fast — optional, never required
+    // for a neutral agreement. install prepares the checkout (an infrastructure
+    // concern); compile and outcome judge the patch itself. install/compile exist only
+    // when the agreement declares the nodejs helper; the outcome step exists only when
+    // evaluator generators named registered owner checks — a bare `vitest run` would
+    // execute the clone's whole suite. The install step goes through the shared
+    // boundary: the recorded argv is the exact effective invocation, --ignore-scripts
+    // included. UnsafeInstall propagates out of the try as a hard failure
+    // (environment, not a pass).
+    const steps: Array<{ name: VerifyCheckName; command: string; args: string[] }> = [];
+    if (agreement.nodejs !== undefined || checks.length > 0) {
+      if (options.pnpm === undefined) {
+        return fail('environment-failure', 'operational', 'the agreement declares the nodejs helper or evaluator generators but no pnpm invocation was supplied', { ...base, checks: runChecks });
+      }
+      const pnpm = options.pnpm;
+      if (agreement.nodejs !== undefined) {
+        steps.push(
+          { name: 'install', command: pnpm.command, args: productInstallArgs(pnpm, ['install', '--frozen-lockfile']) },
+          { name: 'compile', command: pnpm.command, args: [...pnpm.args, 'exec', 'tsc', '--noEmit'] }
+        );
+      }
+      if (checks.length > 0) steps.push({ name: 'outcome', command: pnpm.command, args: [...pnpm.args, 'exec', 'vitest', 'run', ...checks.map(check => check.file)] });
+    }
     for (const [index, current] of steps.entries()) {
-      const result = step(options.pnpm.command, clone, current.args);
+      const result = step(current.command, clone, current.args);
       if (result.status === 0) {
         runChecks.push({ name: current.name, status: 'pass', argv: current.args });
         continue;
@@ -272,7 +284,7 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
       `attempt: ${attemptSha256}`,
       `base: ${artifact.baseCommit}`,
       `files: ${applied.length === 0 ? 'no changed files' : applied.join(', ')}`,
-      'owner checks: install, compile, outcome — pass'
+      `owner checks: ${[...runChecks.map(check => check.name), ...(commandChecks ?? []).filter(record => record.role !== 'setup').map(record => record.name)].join(', ') || 'none declared'} — pass`
     ].join('\n');
     let commit: string;
     try {

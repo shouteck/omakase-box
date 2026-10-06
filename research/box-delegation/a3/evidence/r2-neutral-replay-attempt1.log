@@ -1,0 +1,112 @@
+scoped run: 1 file(s) under tests\box\package — this is an inner loop, never suite acceptance
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+ [31m❯[39m tests/box/package/a3-r2-replay.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[33m 73791[2mms[22m[39m
+   [31m❯[39m A3 R2 neutral replay — the five-candidate matrix by declarations [2m(6)[22m
+[31m     [31m×[31m positive: the upstream fix (repo -> _repo) verifies and lands in scratch history[39m[33m 12530[2mms[22m[39m
+[31m     [31m×[31m no-op: an untouched editable file fails the declared outcome check[39m[33m 11381[2mms[22m[39m
+[31m     [31m×[31m wrong edit: the param stays unused while behavior is untouched — outcome red[39m[33m 11890[2mms[22m[39m
+[31m     [31m×[31m guard failure: the diagnostic is fixed but an assertion is broken — guard red[39m[33m 11953[2mms[22m[39m
+[31m     [31m×[31m alternative solution: consuming the parameter also clears the diagnostic[39m[33m 12797[2mms[22m[39m
+[31m     [31m×[31m known limit: a weakened editable guard still verifies — honest blind spot, reported[39m[33m 13237[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 6 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/box/package/a3-r2-replay.test.ts[2m:71[22m[2m > [22mA3 R2 neutral replay — the five-candidate matrix by declarations[2m > [22mpositive: the upstream fix (repo -> _repo) verifies and lands in scratch history
+[31m[1mExportFailed[22m: setup command 'install' did not exit 0 on the untouched base (context owner, result: fail, exit 2): Repository-local pnpm is unavailable. Run npm ci --prefix scripts/tooling --ignore-scripts.[39m
+[36m [2m❯[22m exportBox packages/box-package/export.ts:[2m188:15[22m[39m
+    [90m186|[39m       const setup = baseChecks.find(record => record.role === 'setup' …
+    [90m187|[39m       if (setup !== undefined) {
+    [90m188|[39m         throw new ExportFailed(`setup command '${setup.name}' did not …
+    [90m   |[39m               [31m^[39m
+    [90m189|[39m       }
+    [90m190|[39m       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, …
+[90m [2m❯[22m prepare tests/box/package/a3-r2-replay.test.ts:[2m47:18[22m[39m
+[90m [2m❯[22m attempt tests/box/package/a3-r2-replay.test.ts:[2m53:43[22m[39m
+[90m [2m❯[22m tests/box/package/a3-r2-replay.test.ts:[2m72:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/box/package/a3-r2-replay.test.ts[2m:77[22m[2m > [22mA3 R2 neutral replay — the five-candidate matrix by declarations[2m > [22mno-op: an untouched editable file fails the declared outcome check
+[31m[1mExportFailed[22m: setup command 'install' did not exit 0 on the untouched base (context owner, result: fail, exit 2): Repository-local pnpm is unavailable. Run npm ci --prefix scripts/tooling --ignore-scripts.[39m
+[36m [2m❯[22m exportBox packages/box-package/export.ts:[2m188:15[22m[39m
+    [90m186|[39m       const setup = baseChecks.find(record => record.role === 'setup' …
+    [90m187|[39m       if (setup !== undefined) {
+    [90m188|[39m         throw new ExportFailed(`setup command '${setup.name}' did not …
+    [90m   |[39m               [31m^[39m
+    [90m189|[39m       }
+    [90m190|[39m       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, …
+[90m [2m❯[22m prepare tests/box/package/a3-r2-replay.test.ts:[2m47:18[22m[39m
+[90m [2m❯[22m attempt tests/box/package/a3-r2-replay.test.ts:[2m53:43[22m[39m
+[90m [2m❯[22m tests/box/package/a3-r2-replay.test.ts:[2m78:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/box/package/a3-r2-replay.test.ts[2m:85[22m[2m > [22mA3 R2 neutral replay — the five-candidate matrix by declarations[2m > [22mwrong edit: the param stays unused while behavior is untouched — outcome red
+[31m[1mExportFailed[22m: setup command 'install' did not exit 0 on the untouched base (context owner, result: fail, exit 2): Repository-local pnpm is unavailable. Run npm ci --prefix scripts/tooling --ignore-scripts.[39m
+[36m [2m❯[22m exportBox packages/box-package/export.ts:[2m188:15[22m[39m
+    [90m186|[39m       const setup = baseChecks.find(record => record.role === 'setup' …
+    [90m187|[39m       if (setup !== undefined) {
+    [90m188|[39m         throw new ExportFailed(`setup command '${setup.name}' did not …
+    [90m   |[39m               [31m^[39m
+    [90m189|[39m       }
+    [90m190|[39m       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, …
+[90m [2m❯[22m prepare tests/box/package/a3-r2-replay.test.ts:[2m47:18[22m[39m
+[90m [2m❯[22m attempt tests/box/package/a3-r2-replay.test.ts:[2m53:43[22m[39m
+[90m [2m❯[22m tests/box/package/a3-r2-replay.test.ts:[2m86:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/box/package/a3-r2-replay.test.ts[2m:92[22m[2m > [22mA3 R2 neutral replay — the five-candidate matrix by declarations[2m > [22mguard failure: the diagnostic is fixed but an assertion is broken — guard red
+[31m[1mExportFailed[22m: setup command 'install' did not exit 0 on the untouched base (context owner, result: fail, exit 2): Repository-local pnpm is unavailable. Run npm ci --prefix scripts/tooling --ignore-scripts.[39m
+[36m [2m❯[22m exportBox packages/box-package/export.ts:[2m188:15[22m[39m
+    [90m186|[39m       const setup = baseChecks.find(record => record.role === 'setup' …
+    [90m187|[39m       if (setup !== undefined) {
+    [90m188|[39m         throw new ExportFailed(`setup command '${setup.name}' did not …
+    [90m   |[39m               [31m^[39m
+    [90m189|[39m       }
+    [90m190|[39m       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, …
+[90m [2m❯[22m prepare tests/box/package/a3-r2-replay.test.ts:[2m47:18[22m[39m
+[90m [2m❯[22m attempt tests/box/package/a3-r2-replay.test.ts:[2m53:43[22m[39m
+[90m [2m❯[22m tests/box/package/a3-r2-replay.test.ts:[2m93:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/box/package/a3-r2-replay.test.ts[2m:102[22m[2m > [22mA3 R2 neutral replay — the five-candidate matrix by declarations[2m > [22malternative solution: consuming the parameter also clears the diagnostic
+[31m[1mExportFailed[22m: setup command 'install' did not exit 0 on the untouched base (context owner, result: fail, exit 2): Repository-local pnpm is unavailable. Run npm ci --prefix scripts/tooling --ignore-scripts.[39m
+[36m [2m❯[22m exportBox packages/box-package/export.ts:[2m188:15[22m[39m
+    [90m186|[39m       const setup = baseChecks.find(record => record.role === 'setup' …
+    [90m187|[39m       if (setup !== undefined) {
+    [90m188|[39m         throw new ExportFailed(`setup command '${setup.name}' did not …
+    [90m   |[39m               [31m^[39m
+    [90m189|[39m       }
+    [90m190|[39m       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, …
+[90m [2m❯[22m prepare tests/box/package/a3-r2-replay.test.ts:[2m47:18[22m[39m
+[90m [2m❯[22m attempt tests/box/package/a3-r2-replay.test.ts:[2m53:43[22m[39m
+[90m [2m❯[22m tests/box/package/a3-r2-replay.test.ts:[2m103:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/box/package/a3-r2-replay.test.ts[2m:109[22m[2m > [22mA3 R2 neutral replay — the five-candidate matrix by declarations[2m > [22mknown limit: a weakened editable guard still verifies — honest blind spot, reported
+[31m[1mExportFailed[22m: setup command 'install' did not exit 0 on the untouched base (context owner, result: fail, exit 2): Repository-local pnpm is unavailable. Run npm ci --prefix scripts/tooling --ignore-scripts.[39m
+[36m [2m❯[22m exportBox packages/box-package/export.ts:[2m188:15[22m[39m
+    [90m186|[39m       const setup = baseChecks.find(record => record.role === 'setup' …
+    [90m187|[39m       if (setup !== undefined) {
+    [90m188|[39m         throw new ExportFailed(`setup command '${setup.name}' did not …
+    [90m   |[39m               [31m^[39m
+    [90m189|[39m       }
+    [90m190|[39m       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, …
+[90m [2m❯[22m prepare tests/box/package/a3-r2-replay.test.ts:[2m47:18[22m[39m
+[90m [2m❯[22m attempt tests/box/package/a3-r2-replay.test.ts:[2m53:43[22m[39m
+[90m [2m❯[22m tests/box/package/a3-r2-replay.test.ts:[2m110:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[90m (6)[39m
+[2m   Start at [22m 20:04:13
+[2m   Duration [22m 74.89s[2m (tests 99%, import 1%)[22m
+
+replay exit=1
