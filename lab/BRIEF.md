@@ -12,7 +12,8 @@ One line per product need in PROGRAMME.md: the current belief, how sure (shows /
 2. Judging what tests cannot: unknown. Not yet surveyed.
 3. Specifying acceptance cheaply: unknown. Not yet surveyed.
 4. What expected behaviour covers: unknown. Not yet surveyed.
-5. Whether less context helps: unknown. Not yet surveyed.
+5. Certainty that can be trusted: unknown. Not yet surveyed.
+6. Whether less context helps: unknown. Not yet surveyed.
 
 ## Ready to transfer
 
