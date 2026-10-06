@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Next, when named: milestone A (A1 to A4, a repository-agnostic core), then R3b (a replay of fixed issues on a public repository). Kitchen improvements pause unless one blocks milestone A. D4 waits for the lab's benchmark.",
+    "sequence": "Next, when named: K7 (parallel packaging tests; un-paused because verification is half of each wave), then A3 and A4, then R3b. D4 waits for the lab's benchmark.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -494,34 +494,42 @@
     {
       "id": "K7",
       "milestone": "K",
-      "title": "Verify speed 3: typecheck and parallel workers",
+      "title": "Verify speed 3: run the packaging tests in parallel and make the time budget see every run",
       "dependencies": [
         "K6"
       ],
       "writePaths": [
-        "tsconfig.json",
-        "scripts/workspace.mjs",
         "scripts/vitest.config.mjs",
+        "scripts/suite.mjs",
         "scripts/verify.mjs",
-        "package.json",
-        "pnpm-lock.yaml",
-        ".gitignore"
+        "scripts/kitchen-stats.mjs",
+        "tests/box/package/**",
+        "tests/kitchen/**",
+        "package.json"
       ],
       "deliverables": [
-        "Try, smallest first, and keep only what the numbers support: incremental typecheck with its cache under .kitchen/; two or three test workers instead of one, each with its own database, within the 16 GB limit; the native TypeScript 7 compiler for the typecheck step only.",
-        "packages/analyzer uses the TypeScript 6 compiler API. If TypeScript 7 is adopted for typechecking, the analyzer keeps the version it needs and both are pinned; if that cannot be done cleanly, record why and stop.",
-        "Any test that only passed because it ran alone is fixed or reported by name, not hidden by going back to one worker without saying so."
+        "Run the packaging suite's test files in parallel, three workers to start (six cores, 16 GB), leaving every other suite as it is. Each test file already makes its own temp folders; find and fix anything files share (caches, fixed folder names, ports) before turning parallelism on, with a test written first that shows the collision.",
+        "Then take the two slowest test files and remove repeated setup inside them, only where the numbers show it.",
+        "The time budget applies to whichever verify profile a wave actually ran, per profile, and reads the latest run that has a summary. A killed run is reported as killed, not as a missing budget.",
+        "Lower the budget to the new measured time plus a small margin, and record before and after: seconds and peak memory for one full run, as the median of five executed runs on the same commit.",
+        "Any test that only passed because it ran alone is fixed or reported by name. Going back to one worker without saying so is not an option."
       ],
       "acceptance": [
-        "Before and after come from scripts/kitchen-stats.mjs (K4), at least five runs each on the same commit, with spread. Keep a change only if the numbers support it.",
-        "Typecheck results are identical before and after on a commit with a deliberate type error.",
-        "Peak memory during verify is recorded and stays within what the machine can give."
+        "Five consecutive executed full runs pass on the same commit with parallel workers; a single flaky failure in those five means the wave is not done.",
+        "No assertion is removed or weakened, and the same number of tests run as before.",
+        "A deliberately broken packaging test still fails the run.",
+        "Peak memory during the suite stays under what the machine can give with the kitchen's agents running; record the figure."
       ],
       "verification": [
-        "Reviewer introduces a type error and an order-dependent test on a scratch branch and confirms both are caught."
+        "Reviewer checks the test count is unchanged, breaks one packaging test on a scratch branch to see the run fail, and reads the five-run record; it does not need to repeat all five."
       ],
       "handoff": "waves/K7.md",
-      "condition": "Run only if the numbers after K6 still show verification above 15% of a run."
+      "condition": "Run only if the numbers after K6 still show verification above 15% of a run.",
+      "unpaused": "By the CTO on 6 October 2026: verification was 32 of 70 minutes on A1 and 38 of 71 on A2, so it now blocks milestone A in practice. The owner raised the same concern.",
+      "baseline": "Executed, passing runs on 6 October 2026: the packaging suite took 172 to 235 s (it was 25 to 34 s on 5 October), check about 86 s, build about 18 s; a full run is about 5 to 6.5 minutes. The suite runs its 19 test files one at a time (maxWorkers 1). Slowest files: verify.test.ts 55 s, command-checks.test.ts 43 s, submission.test.ts 23 s. The time budget from K6 reported MISSING because the latest run of its one named profile had no summary, and A2 used a different profile, so the ratchet saw nothing.",
+      "lenses": [
+        "measurement fairness: before and after on the same commit, five runs each, with spread"
+      ]
     },
     {
       "id": "K8",
