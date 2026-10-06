@@ -77,4 +77,26 @@ Zero-cost check: Node, pnpm and vitest already pinned by the repository; nothing
 
 ## Sceptic
 
-Pending.
+Full report in [SCEPTIC.md](SCEPTIC.md); its added cases are in `sceptic-run.mjs` and `sceptic-results.json`.
+
+- Who: a fresh agent on the same Windows host, same model family as the lab lead. Independent by being fresh, not by being different.
+- Reproduced: yes. All eight verdicts for both checks match; `results.json` came out byte-identical.
+- Attacks: ten added candidates. On six further wrong ones the two checks agree on only one. The custom check rejects two the cheap check accepts (another heading deleted; every "missing" label replaced). The cheap check rejects three the custom check accepts (unattributed runs dropped; the stall guard weakened; a limit loosened from 10 to 100). Of three right candidates, each check wrongly rejects one: both fail when the word "usage" appears in a printed path or wave name.
+- Standing: the observed table and "partly supports" stand. **Weaken to "suggests"** that the cheap check judges R1 about as well as the custom one. **Does not stand:** "the rest restated the existing test" and "misses one case, one line".
+
+## Corrections to the Result above, after the sceptic
+
+The Result is left as first written. These are its errors:
+
+1. "Three of the six wrong candidates" should be three of seven.
+2. "Two full passes" is true but not in the record: the runner was run twice and the two outputs compared, then the first output was deleted. The sceptic's rerun is the recorded second pass.
+3. "It misses one case" and "the rest restated the existing test" are wrong. Neither check contains the other. Over all 13 wrong candidates (seven here, six from the sceptic) each check rejects seven, and not the same seven. Not a rate: every case was hand-made by someone who had read both checks.
+4. The cases chosen flattered the cheap check. C6 deletes one of the only two headings the existing test does not protect, and C7 replaces one "missing" label of several.
+5. "83 lines against 0 lines + 1 command" compares the two judgements, not R1's cost. R1 was 827 added lines in 18 files for a 9-line change, and the check's body exists three times (the test, the generator and the owner check). Whether the cheap check can be delivered into a Box without that plumbing was not tested, so this experiment says nothing about how much of R1's preparation cost was avoidable.
+6. The cheap check's command ignores the exit code, and its verdict on some candidates depends on what happens to be in the repository's wave files.
+
+## What the experiment now supports
+
+- **Shows** (on R1, reproduced): R1's purpose-written check accepts wrong work, including a version that rewords the section instead of removing it, and rejects right work when "usage" appears in a path. The test that already existed catches wrong work the purpose-written one misses.
+- **Suggests:** for a "remove this, keep the rest" request, the existing tests are a better guard than a freshly written one, and the new part worth writing is small: the condition that makes the request, plus whatever the existing tests do not protect.
+- **Does not show:** that R1's cost was avoidable, or any rate.

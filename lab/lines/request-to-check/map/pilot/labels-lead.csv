@@ -1,0 +1,80 @@
+id,label,observable,notes
+D1.2.1,COMMAND,y,compound; new suite plus leftovers check
+D1.2.2,NEW-TEST,y,
+D1.2.3,NEW-TEST,y,five negatives
+D1.2.4,READ,n,
+D2.1-proto.1,READ,n,
+D2.1-proto.2,READ,n,
+D2.1-proto.3,READ,n,compound; git part is a command
+D2.1.1,COMMAND,y,suite created by this request
+D2.1.2,EXAMPLE,y,exact file lists given
+D2.1.3,NEW-TEST,y,
+D2.1.4,NEW-TEST,y,
+D2.1.5,COMMAND,y,look for keys in box.json
+D2.1.6,NEW-TEST,y,
+D2.2.1,EXISTING,y,
+D2.2.2,COMMAND,y,run the validator on the artifact
+D2.2.3,NEW-TEST,y,
+D2.2.4,READ,n,
+D3.1.1,EXISTING,y,
+D3.1.2,COMMAND,y,unsure; several steps
+D3.1.3,NEW-TEST,y,
+D3.1.4,NEW-TEST,y,
+D3.1.5,NEW-TEST,y,
+K1.1,COMMAND,y,
+K1.2,COMMAND,y,compound; unsure
+K1.3,NEW-TEST,y,
+K1.4,COMMAND,y,
+K1.5,EXISTING,y,unsure whether the rejection test existed
+K1.6,READ,n,
+K2a.1,COMMAND,y,compound; the how-ensured statement is read
+K2a.2,READ,n,
+K2a.3,COMMAND,y,
+K2a.4,COMMAND,y,
+K2a.5,READ,n,
+K2b.1,EXISTING,y,
+K2b.2,READ,n,
+K2b.3,NEW-TEST,y,compound; failed-run case must be constructed
+K2b.4,READ,n,
+K3.1,EXISTING,y,
+K3.2,COMMAND,y,
+K3.3,COMMAND,y,
+K4.1,COMMAND,y,new suite
+K4.2,NEW-TEST,y,
+K4.3,MEASURE,y,
+K4.4,NEW-TEST,y,
+K4.5,NEW-TEST,y,
+K4.6,NEW-TEST,y,
+K4.7,COMMAND,y,
+K5.1,EXISTING,y,
+K5.2,NEW-TEST,y,
+K5.3,NEW-TEST,y,unsure; could be a command on the log
+K5.4,NEW-TEST,y,
+K5.5,MEASURE,y,
+K5.6,NEW-TEST,y,
+K5.7,NEW-TEST,y,
+K5.8,READ,n,
+K5.9,READ,n,compound
+K6.1,READ,n,compound; test plus no-weakening
+K6.2,MEASURE,y,
+K6.3,NEW-TEST,y,
+K6.4,READ,n,compound; run plus records
+K6.5,NEW-TEST,y,
+K6.6,READ,n,about the reviewer not the change
+K8.1,EXISTING,y,
+K8.2,COMMAND,y,
+K8.3,COMMAND,y,
+K8.4,COMMAND,y,
+K8.5,COMMAND,y,
+K8.6,READ,n,
+K9.1,EXISTING,y,
+K9.2,COMMAND,y,
+K9.3,COMMAND,y,
+K9.4,COMMAND,y,unsure; comparing with the inventory is reading
+K9.5,COMMAND,y,unsure; a demonstration not a kept test
+R1.1,NEW-TEST,y,
+R1.2,READ,n,compound
+R1.3,READ,n,about how the work was done
+R1.4,COMMAND,y,
+R1.5,READ,n,compound; suite plus reviewer
+R1.6,READ,n,

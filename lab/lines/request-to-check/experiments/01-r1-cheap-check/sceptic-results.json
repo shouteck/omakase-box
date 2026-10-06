@@ -1,0 +1,190 @@
+{
+  "base": "e412e08",
+  "accepted": "ddeb3ab",
+  "node": "v24.11.0",
+  "results": [
+    {
+      "candidate": "K0 accepted change (control)",
+      "right": true,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "A_failed": [],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "accept"
+    },
+    {
+      "candidate": "S1 \"Verify runs\" heading deleted",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  1 failed | 3 passed (4)",
+      "A_failed": [
+        "× prints every verification section and no usage output, populated or absent",
+        "FAIL  tests/kitchen/lab-sceptic-custom.test.ts > kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent"
+      ],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2860,
+      "B": "accept"
+    },
+    {
+      "candidate": "S2 every missing label printed as 0 or n/a",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  1 failed | 3 passed (4)",
+      "A_failed": [
+        "× labels missing data instead of printing zeros or crashing",
+        "FAIL  tests/kitchen/lab-sceptic-custom.test.ts > kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing"
+      ],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2860,
+      "B": "accept"
+    },
+    {
+      "candidate": "S3 section kept, shown only when a wave records usage",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  1 failed | 3 passed (4)",
+      "A_failed": [
+        "× prints every verification section and no usage output, populated or absent",
+        "FAIL  tests/kitchen/lab-sceptic-custom.test.ts > kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent"
+      ],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "fail",
+      "B2_matching_lines": 1,
+      "B2_first_match": "Usage per wave (agent usage as recorded in each wave file Result)",
+      "page_exit": 0,
+      "page_chars": 3275,
+      "B": "reject"
+    },
+    {
+      "candidate": "S4 unattributed runs no longer listed",
+      "right": false,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "A_failed": [],
+      "B1_existing_test": "fail",
+      "B1_tally": "Tests  1 failed | 9 passed (10)",
+      "B1_failed": [
+        "× prints fabricated runs as counted data, never silently dropped",
+        "FAIL  tests/kitchen/lab-sceptic-existing.test.ts > the page itself > prints fabricated runs as counted data, never silently dropped"
+      ],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "reject"
+    },
+    {
+      "candidate": "S5 stall guard counts a dirty PASS as a PASS",
+      "right": false,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "A_failed": [],
+      "B1_existing_test": "fail",
+      "B1_tally": "Tests  1 failed | 9 passed (10)",
+      "B1_failed": [
+        "× lets a clean committed PASS break the streak, and only that",
+        "FAIL  tests/kitchen/lab-sceptic-existing.test.ts > stallCheck — the same function verify.mjs calls for its STALL line > lets a clean committed PASS break the streak, and only that"
+      ],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "reject"
+    },
+    {
+      "candidate": "S6 inbox limit loosened from 10 to 100",
+      "right": false,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "A_failed": [],
+      "B1_existing_test": "fail",
+      "B1_tally": "Tests  1 failed | 9 passed (10)",
+      "B1_failed": [
+        "× fails each fabricated violation by name — all three limits must trip",
+        "FAIL  tests/kitchen/lab-sceptic-existing.test.ts > checkLimits — the kitchen-size guards the page enforces > fails each fabricated violation by name — all three limits must trip"
+      ],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "reject"
+    },
+    {
+      "candidate": "R1 correct, written differently",
+      "right": true,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "A_failed": [],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "accept"
+    },
+    {
+      "candidate": "R2 accepted change, temp directory named lab-usage-tmp",
+      "right": true,
+      "A": "reject",
+      "A_tally": "Tests  2 failed | 2 passed (4)",
+      "A_failed": [
+        "× prints every verification section and no usage output, populated or absent",
+        "× labels missing data instead of printing zeros or crashing",
+        "FAIL  tests/kitchen/lab-sceptic-custom.test.ts > kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+        "FAIL  tests/kitchen/lab-sceptic-custom.test.ts > kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing"
+      ],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "pass",
+      "B2_matching_lines": 0,
+      "B2_first_match": "",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "accept"
+    },
+    {
+      "candidate": "R3 accepted change, repository has a wave file named lab-usage-probe",
+      "right": true,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "A_failed": [],
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B1_failed": [],
+      "B2_no_usage_in_output": "fail",
+      "B2_matching_lines": 1,
+      "B2_first_match": "lab-usage-probe 0 runs (0 PASS · 0 FAIL · 0 UNCOMMITTED · 0 no summary) · verify 0.0 min · duration ",
+      "page_exit": 0,
+      "page_chars": 3025,
+      "B": "reject"
+    }
+  ]
+}

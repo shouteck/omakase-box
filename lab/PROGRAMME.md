@@ -19,7 +19,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 ### Line 1. From a request to a check
 
-**Stage (kept by the lab lead):** survey done 6 October 2026; formulate next. Files in `lab/lines/request-to-check/`; cross-line survey in `lab/survey.md`.
+**Stage (kept by the lab lead):** survey and formulation done 6 October 2026; instrument next (labelling guide version 1, then the map; candidate sets for the benchmark). Files in `lab/lines/request-to-check/`; cross-line survey in `lab/survey.md`.
 
 **The problem for the product.** Delegation is only worth it if saying what "done" means costs much less than doing the work. R1 showed it currently costs far more. The kitchen's R2 tries the engineering answer: let an agreement name tests that already exist. That covers changes to behaviour that is already tested. It does not cover the common case, where the request is for something new and no test exists yet.
 
@@ -77,4 +77,7 @@ None yet.
 
 ## Instruments the lab owns
 
-None yet. List each benchmark, labelled set and harness here with its location, size and what it measures.
+List each benchmark, labelled set and harness here with its location, size and what it measures.
+
+- **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
+- **R1 candidate set.** `lab/lines/request-to-check/experiments/01-r1-cheap-check/`. 13 wrong and 4 right versions of one script, with a runner that scores any check on them. One request, no held-out part.

@@ -54,3 +54,27 @@ Append-only. Newest entry last.
 **Still unverified:** Qi 2015 and Smith 2015 (cited from search summaries), the 90,000 pull-request figure, the agent-pull-request task shares, the 7.3% enhancement share, and the model-judge papers.
 
 **Next, revised.** Before formulating: read Liang et al. (arXiv:2609.12012), Staats et al. 2012 and the Fit-table experiments. Then the labelling guide and the pilot on this repository's wave files.
+
+## 6 October 2026, session 2: formulate
+
+**Set out to do.** Read what the sceptic found, settle the R1 thread, fix the definitions, write the labelling guide and try it on our own wave briefs.
+
+**Before starting.** Merged `origin/master`: K6 is accepted there, not parked as the last brief said. Master now has "For the lab" in BACKLOG.md; the CTO took the R2 and D4 advice and asked that the R1 claim be settled before it is quoted. Installed the repository's pinned tooling and dependencies inside the lab folder (free; `npm ci --prefix scripts/tooling`, then a frozen pnpm install) after `kitchen-busy` said idle.
+
+**Reading.** Poor yield. Liang et al. (arXiv:2609.12012): abstract only; it separates test availability, test validity, feedback use and evaluation independence, which matches this line's frame. Ricca et al. 2009: summary only; acceptance tables helped students understand requirements without significant extra effort, which is about reading tests, not writing them. Staats et al. 2012, Melnik et al. 2006 and Barr et al. 2015: could confirm they exist, could not open them. The human-confirmation question stays open and unread.
+
+**Experiment 01** (`experiments/01-r1-cheap-check/`). Plan committed before the run (`b899611`). Eight candidates, two checks. All 16 predictions came true; the lead's Result said the cheap check matched R1's custom check on 7 of 8 and that the custom test mostly restated the existing one.
+
+**The sceptic broke the second half.** Ten more candidates: on its six wrong ones the checks agree once. Each check catches wrong work the other accepts, and each rejects one right candidate because it searches for a word. It also found an arithmetic slip (three of seven, not six), an unrecorded second pass, flattering case selection, and that the cost comparison was of judgements, not of R1's 827 added lines. Standing: table stands, "about as well" weakens to suggests, "restated" does not stand.
+
+**What changed my mind.** I went in expecting to show R1's cost was avoidable. What the evidence supports is narrower and more useful: the existing test and the new test protect different things, the new test was the weaker of the two in places, and the avoidable-cost question turns on delivery into a Box, which nobody has tested.
+
+**Second time the lead's draft ran ahead of the evidence in the same direction.** Both times the cause was the same: cases and readings chosen by the person holding the hypothesis. Made structural: the formulation now requires candidates written by an agent that has not seen the checks.
+
+**Formulation.** Fixed in the README: request, clause, candidate, right and wrong, check (evidence of change plus guard), route; three measures; what would show it wrong.
+
+**Map pilot** (`map/pilot/`). 79 bullets, two blind labellers, kappa 0.71 on kind of check, 0.74 on observable. The guide's faults: the bullet is the wrong unit, "record it" riders inflate READ, two kinds of condition have no label, one default was wrong. Version 1 specified in `map/pilot/RESULT.md`.
+
+**Dead ends.** The older human studies could not be opened at zero cost through this host's reader. The call-graph PDF from session 1 is still unread for the same reason (no PDF tool).
+
+**Next.** Instrument. Guide version 1: split bullets into atomic conditions, add the red-or-green-on-base column, re-test agreement on the same 79. Then the first sample from outside this repository. In parallel, when the kitchen is idle: try to run the existing kitchen-stats test inside an exported Box, which is the test of whether R1's cost was avoidable.

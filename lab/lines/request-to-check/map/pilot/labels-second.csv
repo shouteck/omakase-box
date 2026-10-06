@@ -1,0 +1,80 @@
+id,label,observable,notes
+D1.2.1,COMMAND,y,compound; test:box-delegation script is added by this wave so rule 2 gives COMMAND; leftover check is also COMMAND
+D1.2.2,NEW-TEST,y,compound; needs seeded repo and two requests driven over API and browser; same preparation path part is only visible by reading code
+D1.2.3,NEW-TEST,y,compound; five constructed negatives; rule 3
+D1.2.4,READ,n,weakening is a judgement; exception is defined outside the clause
+D2.1-proto.1,READ,n,compound; rule 4; core is three runs of one check which would be COMMAND; honest failures is not decidable
+D2.1-proto.2,READ,n,pure judgement of a written recommendation
+D2.1-proto.3,READ,n,compound; rule 4 on wave file states; pushed nowhere part is COMMAND and visible in git
+D2.1.1,COMMAND,y,suite is created by this wave per waves/D2.1.md so rule 2 gives COMMAND
+D2.1.2,READ,n,compound; READ only from the record it rider; core is EXAMPLE and observable in the file system; guide table quotes this clause as EXAMPLE; scaffold plus evaluator is not an exact list
+D2.1.3,NEW-TEST,y,clause demands a suite test; behaviour itself is visible at a command line
+D2.1.4,NEW-TEST,y,compound; four constructed negatives plus a byte scan that alone would be COMMAND
+D2.1.5,READ,y,rule 4 forced by the word records; misleading because box.json is machine readable and a field check would be COMMAND or EXAMPLE
+D2.1.6,NEW-TEST,y,rule 3 the test proves it; works on forward-slash paths is vague
+D2.2.1,EXISTING,y,suite existed since D2.1
+D2.2.2,COMMAND,y,run the validator on the artifact; whether the run was real cannot be decided mechanically and would need READ; validator is new in this wave
+D2.2.3,NEW-TEST,y,compound; three constructed negatives
+D2.2.4,READ,n,rule 4
+D3.1.1,EXISTING,y,
+D3.1.2,COMMAND,y,compound; verify then merge then grep the message; scratch clone is set-up so borderline NEW-TEST; real artifact is not a fabricated input
+D3.1.3,NEW-TEST,y,rule 3; includes at least one assertion part is only checkable by reading unless the no-op failure is taken as proof
+D3.1.4,READ,n,compound; READ only from pick and document and with reasoning riders; core is NEW-TEST and observable
+D3.1.5,NEW-TEST,y,needs one constructed failure per class; whether a class is the right one is judgement
+K1.1,COMMAND,y,compound; install is an existing command; resolves zod needs one extra short command
+K1.2,COMMAND,y,compound; several commands; pin check is a grep; keep working for docker mode needs Docker running; by default and deletes afterwards borderline READ
+K1.3,READ,n,compound; has no database cap is an absence claim about code; drop part could be NEW-TEST but the server is destroyed so nothing is checkable afterwards
+K1.4,COMMAND,y,compound; run part alone would be EXISTING; leftover check is COMMAND
+K1.5,COMMAND,y,rule 3 exception; one command with the variable set on the real repo; word still hints an existing test so EXISTING is possible
+K1.6,READ,n,rule 4 record the result; core is EXISTING and observable; second sentence is scope not a condition
+K2a.1,READ,n,compound; READ only from state in the report rider; core is EXISTING plus a docker ps COMMAND and observable
+K2a.2,READ,n,report of a diff; same things is judgement
+K2a.3,COMMAND,y,grep one file
+K2a.4,NEW-TEST,y,compound; first sentence is COMMAND; dropped after each test cannot be seen after the disposable server is gone so it needs test code or reading the harness
+K2a.5,READ,n,compound; exist is COMMAND; excluded the same way and do not weaken need reading; clause contains a conditional permission
+K2b.1,COMMAND,y,compound; runs alone would be EXISTING if test:e2e existed which I assumed; no containers precondition is COMMAND; flake gone is not proven by two runs
+K2b.2,READ,n,compound; same JSON keys is a diff plus judgement; runs for real is judgement of a log
+K2b.3,NEW-TEST,y,compound; ports and processes after a run are COMMAND; including a failed run needs a constructed failure
+K2b.4,READ,n,compound; compose file part is a grep COMMAND; cannot be activated accidentally and explicit are judgement
+K3.1,EXISTING,y,all suites assumed to exist before K3
+K3.2,COMMAND,y,guide table example
+K3.3,COMMAND,y,
+K4.1,COMMAND,y,clause says new suite; rule 2
+K4.2,COMMAND,y,run it and search output for the listed sections; computed from runs and Git only is not checkable without READ; correctness of numbers not covered
+K4.3,MEASURE,y,guide table example; depends on host local data
+K4.4,NEW-TEST,y,compound; guide table example; today all three pass part is COMMAND
+K4.5,NEW-TEST,y,compound; needs fabricated run history; never changes verdict is a universal claim
+K4.6,NEW-TEST,y,clause names the test
+K4.7,COMMAND,y,rule 3 exception; before and after diff of summary lines; MEASURE also fits loosely; as written only PASS is exercised and FAIL and UNCOMMITTED would need construction
+K5.1,EXISTING,y,compound of two existing commands
+K5.2,NEW-TEST,y,compound; reuse and fresh are COMMAND; about 0 s is MEASURE; never reused on dirty tree or other commit is a constructed negative
+K5.3,COMMAND,y,run once and count the suite in the output
+K5.4,NEW-TEST,y,compound; needs constructed diffs per case; mapping lives somewhere readable is READ and was treated as incidental
+K5.5,READ,n,rule 4 forced by recorded and report; guide table quotes this clause as MEASURE; no threshold is given so keep only if supported is judgement
+K5.6,NEW-TEST,y,rule 3; a scripted demo is not test code and leaves nothing rerunnable
+K5.7,NEW-TEST,y,needs a scratch commit and seeded reuse records; borderline COMMAND if done by hand on a throwaway branch
+K5.8,READ,n,doc content; a grep could find the full line but not that the contract is stated
+K5.9,READ,n,compound; no assertion weakened is READ; STALL still works is EXISTING
+K6.1,READ,n,compound; core is NEW-TEST; share only immutable setup and keep every assertion and no link back need reading; First is an ordering claim visible in git
+K6.2,READ,n,compound; core is MEASURE with no threshold; report and clearly label force rule 4; keep only demonstrated gains is judgement
+K6.3,NEW-TEST,y,compound; last sentence restates final acceptance and is EXISTING; not mistaken for full acceptance is partly judgement
+K6.4,READ,n,compound; process clause about who runs what; only the one full run is mechanically checkable
+K6.5,READ,n,compound; core is NEW-TEST and observable; justified by measured results with stated tolerance and never auto-rises need reading; last sentence is a rule for later briefs not a condition
+K6.6,READ,n,instruction to the reviewer not a property of the change; only evidence is the reviewer report
+K8.1,EXISTING,y,
+K8.2,READ,n,compound; READ only from wave file records minutes rider; core is a gh COMMAND and observable
+K8.3,COMMAND,y,gh run view shows the red run; the broken push is a constructed negative but not test code
+K8.4,COMMAND,y,compound; gh run list decides it; clause itself allows a READ fallback of reviewing config
+K8.5,COMMAND,y,
+K8.6,READ,n,rule 4
+K9.1,COMMAND,y,compound; verify part is EXISTING; unchanged is ambiguous and I read it as git diff on suite paths shows nothing
+K9.2,COMMAND,y,guide table example; on master-before-K9 needs a second git command
+K9.3,COMMAND,y,commit order in git log; clause points outside itself to the inventory
+K9.4,COMMAND,y,command is given; matching the stat against the inventory needs a person or a script so borderline READ
+K9.5,NEW-TEST,y,rule 3; constructed negative done once by hand and not test code; nothing remains to check afterwards so in practice it is READ of a report
+R1.1,NEW-TEST,n,compound; fixtures cover is only visible by reading tests; negatives are observable; keep existing tests unchanged is a git COMMAND
+R1.2,READ,n,compound; export only required source is COMMAND; reproducible and no bypass and no hand-built manifest are provenance claims
+R1.3,READ,n,compound; changes only one file is COMMAND; sees only that directory and worker must not implement are process claims with no mechanical check
+R1.4,NEW-TEST,y,compound; accept is COMMAND; no-op rejection is a constructed negative; untouched until integrated is git history
+R1.5,READ,n,compound; verify part is EXISTING; reviewer independently verifies is a process claim
+R1.6,READ,n,rule 4; last two sentences are prohibitions on claims
