@@ -1,0 +1,725 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "variadic-option-placeholders",
+    "name": "Unicode option placeholders are not recognized as variadic",
+    "version": 1
+  },
+  "outcome": "Please fix the problem described in REQUEST.md: an option whose placeholder ends in a non-ASCII character, such as --tag <值...>, should be treated as variadic. I have added a failing test in tests/options.variadic.test.js; make it pass without breaking the existing option tests. Change only files under lib/.",
+  "baseCommit": "5841f7a4ac0b4a5eea364300b1f43775513b2dab",
+  "agreementSha256": "032ad5493007674933aa58e6ec553a2c45961b8236bca8895f21fb6bcefc7c76",
+  "sourceRoot": ".",
+  "requires": [
+    {
+      "program": "node",
+      "version": ">=22.12.0"
+    },
+    {
+      "program": "npm"
+    }
+  ],
+  "declaredDependencies": {},
+  "files": [
+    {
+      "box": "package.json",
+      "owner": "package.json",
+      "origin": "runnable",
+      "sha256": "9b42e0f1d628ebdbfff155a94f30ff695d4450da9e58b055844aeb9a78d59801",
+      "bytes": 1668
+    },
+    {
+      "box": "package-lock.json",
+      "owner": "package-lock.json",
+      "origin": "runnable",
+      "sha256": "6e843be6f9f0b5aeacc0853eb03b4a37d29d663349d2bd0b69b3903ea6f6aa32",
+      "bytes": 96378
+    },
+    {
+      "box": "index.js",
+      "owner": "index.js",
+      "origin": "runnable",
+      "sha256": "3b1110c896b70704627d415e6658953a5a6f099e0b141311c73dfb06e55bdbcc",
+      "bytes": 711
+    },
+    {
+      "box": "REQUEST.md",
+      "owner": "REQUEST.md",
+      "origin": "runnable",
+      "sha256": "d6e8470de29d40be2871f5d460b199a3374e018cf91e4ef0cbaf5e93918bfa92",
+      "bytes": 1662
+    },
+    {
+      "box": "tests/testHelpers.js",
+      "owner": "tests/testHelpers.js",
+      "origin": "runnable",
+      "sha256": "b9c9d5b92691b0ee944528097d4e3da77d1ae1b1dd885d830c0bfa80c3dafbd4",
+      "bytes": 463
+    },
+    {
+      "box": "tests/options.variadic.test.js",
+      "owner": "tests/options.variadic.test.js",
+      "origin": "runnable",
+      "sha256": "ed072726f25c9c1ce7688908d15b86baa3dae3f89d7da54294a6243ad502ccb2",
+      "bytes": 6898
+    },
+    {
+      "box": "tests/args.variadic.test.js",
+      "owner": "tests/args.variadic.test.js",
+      "origin": "runnable",
+      "sha256": "90e438d9ffd9b117fba448d1b2b922111623b826dd6cbc1074d67751d5a0d692",
+      "bytes": 2834
+    },
+    {
+      "box": "tests/argument.variadic.test.js",
+      "owner": "tests/argument.variadic.test.js",
+      "origin": "runnable",
+      "sha256": "8822b7547e167422f7330418507db733c4aa9a1f5fd8f4f68359432372106765",
+      "bytes": 4220
+    },
+    {
+      "box": "tests/option.bad-flags.test.js",
+      "owner": "tests/option.bad-flags.test.js",
+      "origin": "runnable",
+      "sha256": "289e966204451dfb8ea48048707c736376ba551c43e054c004906d68f3fe6d7f",
+      "bytes": 1741
+    },
+    {
+      "box": "tests/option.chain.test.js",
+      "owner": "tests/option.chain.test.js",
+      "origin": "runnable",
+      "sha256": "f5714b859c82147fe8a89ad8568a9e9f7802e7f72ea7815031be198a894f9910",
+      "bytes": 1788
+    },
+    {
+      "box": "tests/options.bool.combo.test.js",
+      "owner": "tests/options.bool.combo.test.js",
+      "origin": "runnable",
+      "sha256": "f5b3dac9d4e89da192df20b39e1eb1023539e9754d6beb824dc1c7cd71e4dc1c",
+      "bytes": 7418
+    },
+    {
+      "box": "tests/options.bool.small.combined.test.js",
+      "owner": "tests/options.bool.small.combined.test.js",
+      "origin": "runnable",
+      "sha256": "aa54ebdddd01c997040cc310ecde4be378424494722b3dcc6a90076651584fbe",
+      "bytes": 485
+    },
+    {
+      "box": "tests/options.bool.test.js",
+      "owner": "tests/options.bool.test.js",
+      "origin": "runnable",
+      "sha256": "a3bf767163f659ddd7aa20db1003f9341b0d2a675377f435606f5f38f3675237",
+      "bytes": 4915
+    },
+    {
+      "box": "tests/options.camelcase.test.js",
+      "owner": "tests/options.camelcase.test.js",
+      "origin": "runnable",
+      "sha256": "edb092d292363eda9e643a5b074acef70828836ca7a20411496611e463a73aa9",
+      "bytes": 2072
+    },
+    {
+      "box": "tests/options.choices.test.js",
+      "owner": "tests/options.choices.test.js",
+      "origin": "runnable",
+      "sha256": "fd14bca5e46fbcffb173c1de3ab102ae5de851a201b810c0c49a6050c6cdff96",
+      "bytes": 2316
+    },
+    {
+      "box": "tests/options.conflicts.test.js",
+      "owner": "tests/options.conflicts.test.js",
+      "origin": "runnable",
+      "sha256": "2d4bd07f0345f652612f7b232781c75672b80c956a97953b0b9d614e3f1a4238",
+      "bytes": 11983
+    },
+    {
+      "box": "tests/options.custom-processing.test.js",
+      "owner": "tests/options.custom-processing.test.js",
+      "origin": "runnable",
+      "sha256": "f17e133877b9915df9b6d6ddb4468bf6fcf1944e3f6f954fdd8b799bb032c90e",
+      "bytes": 5378
+    },
+    {
+      "box": "tests/options.default.test.js",
+      "owner": "tests/options.default.test.js",
+      "origin": "runnable",
+      "sha256": "7b47784fe245f7e48318cd21c030a5b1156912ffa2f40e16e91f6a0cdd2fa436",
+      "bytes": 8251
+    },
+    {
+      "box": "tests/options.dual-options.test.js",
+      "owner": "tests/options.dual-options.test.js",
+      "origin": "runnable",
+      "sha256": "e72d8e24c25b9331eb0216b7836891020c3b1c09f2c44a6ec1e955a6240176f7",
+      "bytes": 3912
+    },
+    {
+      "box": "tests/options.env.test.js",
+      "owner": "tests/options.env.test.js",
+      "origin": "runnable",
+      "sha256": "9ff1e75057f4157541ad85af60ff2cfc7ef45d3ee01d22d62aef791df8178061",
+      "bytes": 14687
+    },
+    {
+      "box": "tests/options.flags.test.js",
+      "owner": "tests/options.flags.test.js",
+      "origin": "runnable",
+      "sha256": "24e2c44de3a782c52cb3ae838668a40a08a15b306139988756d9e5ae71f56cef",
+      "bytes": 3016
+    },
+    {
+      "box": "tests/options.getset.test.js",
+      "owner": "tests/options.getset.test.js",
+      "origin": "runnable",
+      "sha256": "b3965ec19b5ccc00d11d9d8fcc8546c4e5601fae0fbc4a3efeb87f2b7fd5f80f",
+      "bytes": 3137
+    },
+    {
+      "box": "tests/options.implies.test.js",
+      "owner": "tests/options.implies.test.js",
+      "origin": "runnable",
+      "sha256": "0602a1e039ba586e5c64cba9801f1f1591a56f7c08d27a760f089c2ef973e0a8",
+      "bytes": 8506
+    },
+    {
+      "box": "tests/options.mandatory.test.js",
+      "owner": "tests/options.mandatory.test.js",
+      "origin": "runnable",
+      "sha256": "ba3a006d2f0b83b77eeeb3f5b35d0136383b05d19a63ec3c1b1fa30873968024",
+      "bytes": 8366
+    },
+    {
+      "box": "tests/options.optional.test.js",
+      "owner": "tests/options.optional.test.js",
+      "origin": "runnable",
+      "sha256": "1751ffd14a0f0e65f6d9df9959a55a8c03e7091eee002dc52c693b755ef4e474",
+      "bytes": 2914
+    },
+    {
+      "box": "tests/options.opts.test.js",
+      "owner": "tests/options.opts.test.js",
+      "origin": "runnable",
+      "sha256": "f7d3921b63d650f1d1ea9371a057b743cbbe9727723dea88b7741483e99a63c4",
+      "bytes": 3631
+    },
+    {
+      "box": "tests/options.optsWithGlobals.test.js",
+      "owner": "tests/options.optsWithGlobals.test.js",
+      "origin": "runnable",
+      "sha256": "84ef7e985948043a8e5b8927431f5dc40b42d000f0784decfe6cf2fb6c5111a6",
+      "bytes": 4035
+    },
+    {
+      "box": "tests/options.preset.test.js",
+      "owner": "tests/options.preset.test.js",
+      "origin": "runnable",
+      "sha256": "93f9413f3e8b8dea1096e320f370006b0eaef92d8f21e2ecdea85f8f449e2c3f",
+      "bytes": 2543
+    },
+    {
+      "box": "tests/options.registerClash.test.js",
+      "owner": "tests/options.registerClash.test.js",
+      "origin": "runnable",
+      "sha256": "ba438887a780558a8ab13bdf0ba601954502a9ed5d3bb08986de5739b6c3c371",
+      "bytes": 1846
+    },
+    {
+      "box": "tests/options.required.test.js",
+      "owner": "tests/options.required.test.js",
+      "origin": "runnable",
+      "sha256": "39cbc745464f09c4251d85fe88ecaea41e6e191edb1a1b99b32c822240ebfe7c",
+      "bytes": 2453
+    },
+    {
+      "box": "tests/options.twice.test.js",
+      "owner": "tests/options.twice.test.js",
+      "origin": "runnable",
+      "sha256": "3990a1d1a35803ba15ec98ab7faa6e3222f3e5b545930d33d4a7681df9f9b7dd",
+      "bytes": 2037
+    },
+    {
+      "box": "tests/options.values.test.js",
+      "owner": "tests/options.values.test.js",
+      "origin": "runnable",
+      "sha256": "275084cec6120bd96c13b3c29dbba7113d20f66e5dcead1293442a51a9e0f23f",
+      "bytes": 3428
+    },
+    {
+      "box": "tests/options.version.test.js",
+      "owner": "tests/options.version.test.js",
+      "origin": "runnable",
+      "sha256": "32c6d66fc968f62383dbcf54728027e76222f84784364fa5783b539a519b3601",
+      "bytes": 6140
+    },
+    {
+      "box": "lib/argument.js",
+      "owner": "lib/argument.js",
+      "origin": "editable",
+      "sha256": "a86c43174d904198b92ece266e97b6b711e640f3b89ac45291b682a753e145e4",
+      "bytes": 3134
+    },
+    {
+      "box": "lib/command.js",
+      "owner": "lib/command.js",
+      "origin": "editable",
+      "sha256": "dcbd11950fba5545a6bab5313609331ce286032c8db20c0eb68d3a091000bd6d",
+      "bytes": 87652
+    },
+    {
+      "box": "lib/error.js",
+      "owner": "lib/error.js",
+      "origin": "editable",
+      "sha256": "98ac5e1b63894792fa7740e5fb2b79ef8c016d94fc41e55bb6ff85fff3346e72",
+      "bytes": 1089
+    },
+    {
+      "box": "lib/help.js",
+      "owner": "lib/help.js",
+      "origin": "editable",
+      "sha256": "c1a58d89555b8c0cef5c3da9b173c998ce1faf43fe2cdcb331c0fd2c3a455c38",
+      "bytes": 20812
+    },
+    {
+      "box": "lib/option.js",
+      "owner": "lib/option.js",
+      "origin": "editable",
+      "sha256": "29fc1d0311f16f33fd0df2d8589c93b0a7e37fb89afd852672ba3b7083fa1515",
+      "bytes": 10237
+    },
+    {
+      "box": "lib/suggestSimilar.js",
+      "owner": "lib/suggestSimilar.js",
+      "origin": "editable",
+      "sha256": "eaa0c4bd9f4d51259c9107e65173f7de37a5413cbd5de39a5795d83d3c7deb3f",
+      "bytes": 2735
+    }
+  ],
+  "editable": [
+    {
+      "box": "lib/argument.js",
+      "owner": "lib/argument.js"
+    },
+    {
+      "box": "lib/command.js",
+      "owner": "lib/command.js"
+    },
+    {
+      "box": "lib/error.js",
+      "owner": "lib/error.js"
+    },
+    {
+      "box": "lib/help.js",
+      "owner": "lib/help.js"
+    },
+    {
+      "box": "lib/option.js",
+      "owner": "lib/option.js"
+    },
+    {
+      "box": "lib/suggestSimilar.js",
+      "owner": "lib/suggestSimilar.js"
+    }
+  ],
+  "readContext": [],
+  "checks": [
+    "declared setup: npm ci --ignore-scripts --no-audit --no-fund; declared outcome: node --test tests/options.variadic.test.js (exit code only inside the Box); declared guard: node --test over the other option and variadic test files"
+  ],
+  "evaluator": [],
+  "setup": [
+    {
+      "name": "install",
+      "program": "npm",
+      "args": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "timeoutMs": 300000
+    },
+    {
+      "name": "box-install",
+      "program": "npm",
+      "args": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "timeoutMs": 300000
+    }
+  ],
+  "commands": [
+    {
+      "name": "variadic-outcome",
+      "program": "node",
+      "args": [
+        "--test",
+        "tests/options.variadic.test.js"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "outcome",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "options-guard",
+      "program": "node",
+      "args": [
+        "--test",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-variadic-outcome",
+      "program": "node",
+      "args": [
+        "--test",
+        "--test-reporter=lcov",
+        "tests/options.variadic.test.js"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-options-guard",
+      "program": "node",
+      "args": [
+        "--test",
+        "--test-reporter=dot",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 120000
+    }
+  ],
+  "baseChecks": [
+    {
+      "name": "install",
+      "program": "npm",
+      "argv": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "setup",
+      "exit": 0,
+      "result": "pass",
+      "log": "added 206 packages in 3s",
+      "seconds": 3.065
+    },
+    {
+      "name": "variadic-outcome",
+      "program": "node",
+      "argv": [
+        "--test",
+        "tests/options.variadic.test.js"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "▶ variadic options\n  ▶ variadic option with required option-argument\n    ✔ when variadic with value missing then error (2.514916ms)\n    ✔ when variadic with one value then set in array (1.202456ms)\n    ✔ when variadic with two values then set in array (0.221711ms)\n    ✔ when variadic with repeated values then set in array (1.237857ms)\n    ✔ when variadic used with choices and one value then set in array (1.73898ms)\n    ✔ when variadic used with choices and two values then set in array (0.487022ms)\n    ✔ when variadic with short combined argument then not variadic (0.759135ms)\n    ✔ when variadic with long combined argument then not variadic (0.318214ms)\n    ✔ when variadic with value followed by option then option not eaten (0.546625ms)\n    ✔ when variadic with no value and default then set to default (0.386918ms)\n    ✔ when variadic with coercion then coercion sets value (0.299114ms)\n  ✔ variadic option with required option-argument (10.981306ms)\n  ▶ variadic option with optional option-argument\n    ✔ when variadic not specified then value undefined (0.256312ms)\n    ✔ when variadic used as boolean flag then value true (0.181409ms)\n    ✔ when variadic with one value then set in array (0.205009ms)\n    ✔ when variadic with two values then set in array (0.20221ms)\n  ✔ variadic option with optional option-argument (1.032748ms)\n  ▶ variadic special cases\n    ✔ when option flags has word character before dots then is variadic (0.199309ms)\n    ✖ when option flags has non-ASCII character before dots then is variadic (1.232857ms)\n    ✔ when option flags has special characters before dots then not variadic (0.20761ms)\n  ✖ variadic special cases (1.844885ms)\n  ✔ when option has default array then specified value is used instead of default (not appended) (0.193409ms)\n✖ variadic options (14.812781ms)\nℹ tests 19\nℹ suites 4\nℹ pass 18\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 104.318299\n\n✖ failing tests:\n\ntest at tests/options.variadic.test.js:172:5\n✖ when option flags has non-ASCII character before dots then is variadic (1.232857ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  false !== true\n  \n      at TestContext.<anonymous> (file://<root>/tests/options.variadic.test.js:176:14)\n      at Test.runInAsyncScope (node:async_hooks:214:14)\n      at Test.run (node:internal/test_runner/test:1106:25)\n      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)\n      at Test.postRun (node:internal/test_runner/test:1235:19)\n      at Test.run (node:internal/test_runner/test:1163:12)\n      at async Promise.all (index 0)\n      at async Suite.run (node:internal/test_runner/test:1516:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }",
+      "seconds": 0.145
+    },
+    {
+      "name": "options-guard",
+      "program": "node",
+      "argv": [
+        "--test",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "fied as str and short flag concatenated with value then value is as specified (0.297914ms)\n  ✔ when option with required value specified as str and long flag followed by value then value is as specified (0.317315ms)\n  ✔ when option with required value specified as str and long flag = value then value is as specified (0.351716ms)\n  ✔ when option with required value specified as 80 and short flag followed by value then value is as specified (0.245112ms)\n  ✔ when option with required value specified as 80 and short flag concatenated with value then value is as specified (0.174808ms)\n  ✔ when option with required value specified as 80 and long flag followed by value then value is as specified (0.186008ms)\n  ✔ when option with required value specified as 80 and long flag = value then value is as specified (0.273813ms)\n  ✔ when option with required value specified as - and short flag followed by value then value is as specified (0.298814ms)\n  ✔ when option with required value specified as - and short flag concatenated with value then value is as specified (0.379217ms)\n  ✔ when option with required value specified as - and long flag followed by value then value is as specified (0.199509ms)\n  ✔ when option with required value specified as - and long flag = value then value is as specified (0.254812ms)\n  ✔ when option with required value specified as -5 and short flag followed by value then value is as specified (0.188008ms)\n  ✔ when option with required value specified as -5 and short flag concatenated with value then value is as specified (0.245211ms)\n  ✔ when option with required value specified as -5 and long flag followed by value then value is as specified (0.128706ms)\n  ✔ when option with required value specified as -5 and long flag = value then value is as specified (0.166808ms)\n  ✔ when option with required value specified as --flag and short flag followed by value then value is as specified (0.303214ms)\n  ✔ when option with required value specified as --flag and short flag concatenated with value then value is as specified (0.165207ms)\n  ✔ when option with required value specified as --flag and long flag followed by value then value is as specified (0.137206ms)\n  ✔ when option with required value specified as --flag and long flag = value then value is as specified (0.121406ms)\n✔ option with required option-argument (13.661828ms)\n▶ option with optional option-argument\n  ✔ when short flag followed by value then value is as specified (0.242111ms)\n  ✔ when short flag concatenated with value then value is as specified (0.176008ms)\n  ✔ when long flag followed by value then value is as specified (0.135806ms)\n  ✔ when long flag = value then value is as specified (0.143107ms)\n  ✔ when long flag followed empty string then value is empty string (0.171908ms)\n✔ option with optional option-argument (1.108151ms)\n▶ Command.version()\n  ✔ when no .version and specify --version then unknown option error (4.245896ms)\n  ✔ when no .version then helpInformation does not include version (1.399264ms)\n  ✔ when specify default short flag then display version (0.789736ms)\n  ✔ when specify default long flag then display version (0.518524ms)\n  ✔ when default .version then helpInformation includes default version help (0.666531ms)\n  ✔ when specify custom short flag then display version (0.64033ms)\n  ✔ when specify just custom short flag then display version (1.175054ms)\n  ✔ when specify custom long flag then display version (0.498623ms)\n  ✔ when specify just custom long flag then display version (0.66573ms)\n  ✔ when custom .version then helpInformation includes custom version help (0.660531ms)\n  ✔ when have .version+version and specify version then command called (2.767128ms)\n  ✔ when have .version+version and specify --version then version displayed (1.668877ms)\n  ✔ when specify version then can get version (0.509223ms)\n✔ Command.version() (18.463649ms)\nℹ tests 354\nℹ suites 64\nℹ pass 354\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 792.286149",
+      "seconds": 0.833
+    },
+    {
+      "name": "box-install",
+      "program": "npm",
+      "argv": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "setup",
+      "exit": 0,
+      "result": "pass",
+      "log": "added 206 packages in 3s",
+      "seconds": 3.214
+    },
+    {
+      "name": "box-variadic-outcome",
+      "program": "node",
+      "argv": [
+        "--test",
+        "--test-reporter=lcov",
+        "tests/options.variadic.test.js"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "",
+      "seconds": 0.136
+    },
+    {
+      "name": "box-options-guard",
+      "program": "node",
+      "argv": [
+        "--test",
+        "--test-reporter=dot",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n..................",
+      "seconds": 0.867
+    }
+  ],
+  "paired": [
+    {
+      "name": "box-variadic-outcome",
+      "program": "node",
+      "argv": [
+        "--test",
+        "--test-reporter=lcov",
+        "tests/options.variadic.test.js"
+      ],
+      "cwd": ".",
+      "owner": {
+        "exit": 1,
+        "result": "fail",
+        "log": "",
+        "outputSha256": "439083f38956ba51ece90631552c6ea23c5c29570d3d5710e408e77e01ba7375",
+        "seconds": 0.187
+      },
+      "box": {
+        "exit": 1,
+        "result": "fail",
+        "log": "",
+        "outputSha256": "439083f38956ba51ece90631552c6ea23c5c29570d3d5710e408e77e01ba7375",
+        "seconds": 0.136
+      }
+    },
+    {
+      "name": "box-options-guard",
+      "program": "node",
+      "argv": [
+        "--test",
+        "--test-reporter=dot",
+        "tests/args.variadic.test.js",
+        "tests/argument.variadic.test.js",
+        "tests/option.bad-flags.test.js",
+        "tests/option.chain.test.js",
+        "tests/options.bool.combo.test.js",
+        "tests/options.bool.small.combined.test.js",
+        "tests/options.bool.test.js",
+        "tests/options.camelcase.test.js",
+        "tests/options.choices.test.js",
+        "tests/options.conflicts.test.js",
+        "tests/options.custom-processing.test.js",
+        "tests/options.default.test.js",
+        "tests/options.dual-options.test.js",
+        "tests/options.env.test.js",
+        "tests/options.flags.test.js",
+        "tests/options.getset.test.js",
+        "tests/options.implies.test.js",
+        "tests/options.mandatory.test.js",
+        "tests/options.optional.test.js",
+        "tests/options.opts.test.js",
+        "tests/options.optsWithGlobals.test.js",
+        "tests/options.preset.test.js",
+        "tests/options.registerClash.test.js",
+        "tests/options.required.test.js",
+        "tests/options.twice.test.js",
+        "tests/options.values.test.js",
+        "tests/options.version.test.js"
+      ],
+      "cwd": ".",
+      "owner": {
+        "exit": 0,
+        "result": "pass",
+        "log": "....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n..................",
+        "outputSha256": "2d5983fc0f88e93abe94c0be99eff651ca47efb8944cd74d30b1bd906050c3da",
+        "seconds": 1.316
+      },
+      "box": {
+        "exit": 0,
+        "result": "pass",
+        "log": "....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n....................\n..................",
+        "outputSha256": "2d5983fc0f88e93abe94c0be99eff651ca47efb8944cd74d30b1bd906050c3da",
+        "seconds": 0.867
+      }
+    }
+  ],
+  "warnings": [
+    "1 legacy 'checks' entr(ies) are owner-readable descriptions, not runnable descriptors — no base results recorded for them"
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "tool": "box/submit.mjs",
+    "editable": [
+      {
+        "box": "lib/argument.js",
+        "owner": "lib/argument.js"
+      },
+      {
+        "box": "lib/command.js",
+        "owner": "lib/command.js"
+      },
+      {
+        "box": "lib/error.js",
+        "owner": "lib/error.js"
+      },
+      {
+        "box": "lib/help.js",
+        "owner": "lib/help.js"
+      },
+      {
+        "box": "lib/option.js",
+        "owner": "lib/option.js"
+      },
+      {
+        "box": "lib/suggestSimilar.js",
+        "owner": "lib/suggestSimilar.js"
+      }
+    ],
+    "instructions": "Run the declared setup first. Read REQUEST.md. Change only the files listed as editable in box.json (the files under lib/); every other file is read-only. Run the declared checks: the outcome check must go green and the guard check must stay green. Then seal your work with node box/submit.mjs and return submission.json."
+  },
+  "disclosure": {
+    "shippedOwnerFiles": 39,
+    "inventoryFiles": 217,
+    "share": 0.17972350230414746
+  }
+}

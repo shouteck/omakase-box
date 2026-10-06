@@ -1,0 +1,1 @@
+export failed: ENOENT: no such file or directory, mkdtemp '/src/out/attempt-2/.box-staging-XXXXXX'

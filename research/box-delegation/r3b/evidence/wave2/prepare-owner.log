@@ -1,0 +1,32 @@
+STEP clone exit=0
+STEP checkout-base exit=0
+TRACKED_FILES_AT_BASE 219
+TRACKED_BYTES_AT_BASE 993396
+GITATTRIBUTES: # disable line-ending changes (otherwise Windows developers with default settings from git install see Prettier wanting to fix every file);* -text;
+STEP request-name-free exit=0
+STEP take-test exit=0
+STEP commit-test exit=0
+OWNER_TEST_COMMIT 3b25bc97b46f11ce511ac1f1defc26749ac191a3
+3b25bc97b46f11ce511ac1f1defc26749ac191a3
+Add failing test for the reported behaviour
+
+ tests/options.variadic.test.js | 7 +++++++
+ 1 file changed, 7 insertions(+)
+STEP copy-request exit=0
+STEP add-request exit=0
+STEP commit-request exit=0
+OWNER_BASE_COMMIT 5841f7a4ac0b4a5eea364300b1f43775513b2dab
+5841f7a4ac0b4a5eea364300b1f43775513b2dab
+Add the request text
+
+ REQUEST.md | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+STATUS: []
+
+added 206 packages in 5s
+STEP warm-npm-ci exit=0
+CLI_SHA256 e7ef9ce1e1d26721b83c394e299d4dae8c9891639cac674f80a23d45b5a6fe2e
+
+added 1 package in 1s
+STEP install-zod exit=0
+NODE v24.11.0 NPM 11.6.1 GIT git version 2.39.5

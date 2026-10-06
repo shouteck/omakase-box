@@ -1,0 +1,36 @@
+keys: schemaVersion, box, outcome, baseCommit, agreementSha256, sourceRoot, requires, declaredDependencies, files, editable, readContext, checks, evaluator, setup, commands, baseChecks, paired, warnings, submission, disclosure
+files recorded: 39; owner files: 39, 357491 bytes; editable: 6, 125659 bytes
+product disclosure: {"shippedOwnerFiles":39,"inventoryFiles":217,"share":0.17972350230414746}
+warnings: ["1 legacy 'checks' entr(ies) are owner-readable descriptions, not runnable descriptors — no base results recorded for them"]
+base  install context=owner role=setup exit=0 result=pass seconds=3.065 logChars=24
+base  variadic-outcome context=owner role=outcome exit=1 result=fail seconds=0.145 logChars=2899
+base  options-guard context=owner role=guard exit=0 result=pass seconds=0.833 logChars=4000
+base  box-install context=recipient role=setup exit=0 result=pass seconds=3.214 logChars=24
+base  box-variadic-outcome context=recipient role=outcome exit=1 result=fail seconds=0.136 logChars=0
+base  box-options-guard context=recipient role=guard exit=0 result=pass seconds=0.867 logChars=438
+pair  box-variadic-outcome: node --test --test-reporter=lcov ...
+      owner: exit=1 result=fail seconds=0.187 outputSha256=439083f38956ba51ece90631552c6ea23c5c29570d3d5710e408e77e01ba7375 log=""
+      box: exit=1 result=fail seconds=0.136 outputSha256=439083f38956ba51ece90631552c6ea23c5c29570d3d5710e408e77e01ba7375 log=""
+      match: exit true, result true, output digest true
+pair  box-options-guard: node --test --test-reporter=dot ...
+      owner: exit=0 result=pass seconds=1.316 outputSha256=2d5983fc0f88e93abe94c0be99eff651ca47efb8944cd74d30b1bd906050c3da log="....................\n....................\n....................\n....................\n....................\n....................\n....................\n............."
+      box: exit=0 result=pass seconds=0.867 outputSha256=2d5983fc0f88e93abe94c0be99eff651ca47efb8944cd74d30b1bd906050c3da log="....................\n....................\n....................\n....................\n....................\n....................\n....................\n............."
+      match: exit true, result true, output digest true
+disclosure scan of box.json (case-insensitive count):
+  "2615": 0
+  "pull": 0
+  "ID_Continue": 0
+  "github": 0
+  "shout": 0
+  "private-task": 0
+  "Desktop": 0
+  "C:\\\\": 0
+  "/src/": 0
+  "commander": 0
+  "tj/": 0
+  "a9f06dd": 0
+  "ae60352": 0
+  "kitchen": 0
+  "r3b": 0
+  "<root>": 1
+  "requester": 0
