@@ -12,7 +12,7 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 
 ## Traps
 
-- **Workspace links hide missing dependencies.** In this pnpm workspace a package can appear to work because a sibling installed its dependency. `packages/box-contracts` shipped without a lockfile entry for exactly this reason. A package is only proven when it installs and runs in a directory that contains nothing else.
+- **Workspace links and frozen installs:** missing dependency declarations can work via siblings, so prove a package outside the checkout. Pinned pnpm also backfills absent empty workspace importers during --frozen-lockfile, dirtying Git; K7-ci's importer-parity regression guards new manifests. Adding workspace package.json files requires root lock parity even with no dependencies.
 - **Windows paths.** This machine uses backslashes and the recipient's may not. Store paths in the Box with forward slashes, build them with path functions, and test both forms.
 - **The silent fallback.** If export cannot find something, it reports a named preparation gap. It never reaches back into the owner repository to fill the hole, and exporting the full source can never count as a pass.
 - **The clean directory must be outside this checkout**, or module resolution will find the repository's `node_modules` on the way up.

@@ -23,7 +23,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
-- A4 accepted executed profile is 325s against 330s, only 5s headroom; future run noise may exceed it. First candidate failed budget at 364s, corrected by invocation-local pristine fixtures with isolated copies. Extra dirty same-SHA full verify breached the one-run limit and remains recorded; preflight lesson is in kitchen/INBOX.md.
+- A4 accepted executed profile is 325s against 330s, only 5s headroom; future run noise may exceed it. First candidate failed budget at 364s, corrected by isolated copies of invocation-local pristine fixtures. Extra dirty same-SHA full verify remains a recorded violation. K7-ci now refuses dirty state before expensive work; same-SHA repeat-run and cooldown accounting still belong to K7.
 
 - A verify run that is killed leaves its embedded database processes and data folder behind (six processes after the stopped R3 run). Have verify clear its own stale database when it starts.
 - A1 removed the old declared-pnpm verb gate and fixed-tool dispatch. Declared arbitrary commands are now owner-approved execution authority, not a sandbox; remaining product-owned installs retain script disabling. Windows shims refuse unsafe tokens including trailing backslashes; non-Windows launches are unproven. Export checks solver prerequisites on its own host. See `waves/A1.md`.
@@ -51,7 +51,10 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the 6 October 2026 sync brief replaced after A3, fetched at daytime K7 kickoff. One accepted wave, A4, has closed since its last brief commit. K7 is redirected to a single red-master repair, K7-ci: hosted A4 verification passed tests but finished UNCOMMITTED. Cause not yet established. No second sync threshold reached yet.
+Answering the 6 October 2026 sync brief replaced after A3, fetched again before the K7-ci pass. Two accepted waves since it, A4 and K7-ci, counted from first-parent merges; run a fresh read/write-only lab sync before closing this run.
+
+- K7-ci accepted: hosted A4 UNCOMMITTED was reproduced by cook and pass as pinned frozen pnpm adding two missing empty A4 root-lock importers. Root lock normalized with no version changes, importer-parity regression added. Verify refuses dirty starts before expensive work, rechecks end state and cannot call mid-run dirt or unreadable Git status PASS. Single clean Windows acceptance and independent attacks passed. Hosted repair run remains in progress at last query, not yet new Linux evidence.
+- Main K7 speed/cleanup/profile work was not run. START.md red-master rule redirected the sole allowed wave to this repair. Five baseline and five parallel full measurements still require a bounded exception to the one-full-run rule; no measurement gain or full K7 completion claimed.
 
 - Most urgent A4 advice adopted: every no-op/empty/deleted/wrong/tamper/alternative verdict has its own mutation/log; actual sealed folder-only agent submissions owner-verify against pristine exported manifests. Check authorship and fixture construction are separated from approximate declaration/export clocks and manual steps. Timing is not a controlled owner-effort comparison.
 - Dependency retention advice adopted: pinned picocolors@1.1.1, recorded integrity, no dependency/install scripts, declared npm.cmd ci --ignore-scripts. Reviewer repeated from offline cache. Original manifests/lockfiles unchanged, excluded member source absent and checks execute selected source plus real package. An install exit alone was never acceptance.
