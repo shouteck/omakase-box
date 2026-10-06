@@ -31,7 +31,33 @@ export const BoxManifestSchema = z.strictObject({
   editable: z.array(z.strictObject({ box: PortablePath, owner: PortablePath })).min(1),
   readContext: z.array(PortablePath),
   checks: z.array(z.string().min(1)).min(1),
-  evaluator: z.array(z.strictObject({ box: PortablePath, generator: z.string() })).min(1),
+  evaluator: z.array(z.strictObject({ box: PortablePath, generator: z.string() })).max(16).default([]),
+  commands: z.array(z.strictObject({
+    name: z.string().min(1),
+    tool: z.enum(['node', 'pnpm', 'tsc', 'vitest']),
+    args: z.array(z.string()),
+    cwd: z.string().min(1),
+    context: z.enum(['owner', 'recipient']),
+    role: z.enum(['guard', 'outcome']),
+    timeoutMs: z.number().int().positive()
+  })).default([]),
+  // The untouched-base record for each declared owner-context check, captured at
+  // export: the declared tool/argv/cwd, context and role, exit, bounded log,
+  // seconds. The declared command is recorded, not the resolved host path — the
+  // folder must carry no owner-machine absolute paths.
+  baseChecks: z.array(z.strictObject({
+    name: z.string().min(1),
+    tool: z.enum(['node', 'pnpm', 'tsc', 'vitest']),
+    argv: z.array(z.string()),
+    cwd: z.string().min(1),
+    context: z.enum(['owner', 'recipient']),
+    role: z.enum(['guard', 'outcome']),
+    exit: z.number().int().nullable(),
+    result: z.enum(['pass', 'fail', 'timeout', 'error']),
+    log: z.string(),
+    seconds: z.number().nonnegative()
+  })).default([]),
+  warnings: z.array(z.string()).default([]),
   submission: z.strictObject({
     format: z.literal('editable-overlay'),
     tool: z.literal('box/submit.mjs'),

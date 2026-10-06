@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "r2-unused-repo-param",
+    "name": "Remove the unused repo parameter in the R1 kitchen-stats test",
+    "version": 1
+  },
+  "outcome": "In tests/box/package/r1-kitchen-stats.test.ts, the helper r1Agreement(repo, baseCommit) declares a parameter 'repo' that is never read; the TypeScript compiler under --noUnusedParameters reports error TS6133 at line 30 column 22. Fix the unused-parameter diagnostic while preserving every assertion, comment and behavior of the test. Edit only the declared editable file.",
+  "sourceRoot": ".",
+  "entrypoints": [
+    "tests/box/package/r1-kitchen-stats.test.ts"
+  ],
+  "editable": [
+    {
+      "kind": "copy",
+      "owner": "tests/box/package/r1-kitchen-stats.test.ts",
+      "box": "src/tests/box/package/r1-kitchen-stats.test.ts"
+    }
+  ],
+  "readContext": [],
+  "declaredDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "5.0.1",
+    "zod": "4.6.5"
+  },
+  "excludedPrefixes": [
+    "node_modules/",
+    "dist/",
+    ".git/",
+    ".kitchen/",
+    ".runtime/",
+    "secrets/",
+    ".execution/",
+    "docs/legacy/"
+  ],
+  "inventoryExcludePrefixes": [
+    "node_modules/",
+    "dist/",
+    ".git/",
+    ".kitchen/",
+    ".runtime/",
+    "secrets/",
+    ".execution/",
+    "docs/legacy/",
+    "coverage/",
+    "data/",
+    "test-results/",
+    "playwright-report/",
+    "__pycache__/"
+  ],
+  "toolchain": {
+    "node": ">=24.11.0 <25",
+    "pnpm": "10.34.5",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1",
+    "typesNode": "24.13.6"
+  },
+  "checks": [
+    "owner outcome: tsc --noUnusedParameters on tests/box/package/r1-kitchen-stats.test.ts; owner guard: vitest run of the same file",
+    "recipient outcome: tsc --noUnusedParameters on src/tests/box/package/r1-kitchen-stats.test.ts; recipient guard: tsc --noEmit package typecheck"
+  ],
+  "evaluator": [],
+  "commands": [
+    {
+      "name": "unused-param-outcome",
+      "tool": "tsc",
+      "args": [
+        "--ignoreConfig",
+        "--noEmit",
+        "--noUnusedParameters",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--exactOptionalPropertyTypes",
+        "--verbatimModuleSyntax",
+        "--esModuleInterop",
+        "--skipLibCheck",
+        "--types",
+        "node",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "outcome",
+      "timeoutMs": 300000
+    },
+    {
+      "name": "r1-behavior-guard",
+      "tool": "vitest",
+      "args": [
+        "run",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "guard",
+      "timeoutMs": 600000
+    },
+    {
+      "name": "package-typecheck-guard",
+      "tool": "tsc",
+      "args": [
+        "--noEmit"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 300000
+    },
+    {
+      "name": "package-unused-param-outcome",
+      "tool": "tsc",
+      "args": [
+        "--ignoreConfig",
+        "--noEmit",
+        "--noUnusedParameters",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--exactOptionalPropertyTypes",
+        "--verbatimModuleSyntax",
+        "--esModuleInterop",
+        "--skipLibCheck",
+        "--types",
+        "node",
+        "src/tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 300000
+    }
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "instructions": "Edit only the file listed in box.json editable paths (src/tests/box/package/r1-kitchen-stats.test.ts). It maps back to tests/box/package/r1-kitchen-stats.test.ts in the owner repository. The request: make the unused-parameter diagnostic in the helper r1Agreement go away while keeping every assertion, comment and test behavior identical — the existing test is the guard. Seal the work with node box/submit.mjs and return submission.json."
+  }
+}

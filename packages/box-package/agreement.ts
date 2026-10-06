@@ -20,6 +20,25 @@ export type EditableEntry = z.infer<typeof EditableEntrySchema>;
 
 export const DEFAULT_INVENTORY_EXCLUDE = ['node_modules/', 'dist/', '.git/', 'reference-solutions/'];
 
+// A declared check is agreement data, not registered code: a pinned tool name, its
+// argv, the directory it runs in (relative to the context root), where it runs
+// (owner: the owner repository/scratch clone; recipient: the exported box folder)
+// and what a nonzero exit means (guard: preexisting behavior that must stay green;
+// outcome: the requested change that the untouched base must fail). There is no
+// shell — argv reaches the tool verbatim.
+export const CheckToolSchema = z.enum(['node', 'pnpm', 'tsc', 'vitest']);
+export type CheckTool = z.infer<typeof CheckToolSchema>;
+export const CommandCheckSchema = z.strictObject({
+  name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
+  tool: CheckToolSchema,
+  args: z.array(z.string().min(1).max(512)).max(32),
+  cwd: z.string().refine(value => value === '.' || isPortablePath(value), 'cwd must be "." or a portable path.'),
+  context: z.enum(['owner', 'recipient']),
+  role: z.enum(['guard', 'outcome']),
+  timeoutMs: z.number().int().positive().max(600_000).default(120_000)
+});
+export type CommandCheck = z.infer<typeof CommandCheckSchema>;
+
 export const BoxAgreementSchema = z.strictObject({
   schemaVersion: z.literal(1),
   box: z.strictObject({
@@ -44,12 +63,16 @@ export const BoxAgreementSchema = z.strictObject({
     typesNode: z.string().min(1).max(64)
   }),
   checks: z.array(z.string().min(1).max(256)).min(1).max(16),
-  evaluator: z.array(z.strictObject({ box: PortablePath, generator: GeneratorId })).min(1).max(16),
+  evaluator: z.array(z.strictObject({ box: PortablePath, generator: GeneratorId })).max(16).default([]),
+  commands: z.array(CommandCheckSchema).max(16).default([]),
   submission: z.strictObject({
     format: z.literal('editable-overlay'),
     instructions: z.string().min(1).max(4000)
   })
-});
+}).refine(
+  value => value.evaluator.length > 0 || value.commands.length > 0,
+  'agreement must declare at least one evaluator generator or command check'
+);
 export type BoxAgreement = z.infer<typeof BoxAgreementSchema>;
 
 export class AgreementInvalid extends Error {
