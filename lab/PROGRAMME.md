@@ -6,7 +6,7 @@ Set by the CTO from the product roadmap on 6 October 2026. There are no deadline
 
 From `PLAN.md` on master, in order of risk:
 
-1. A sliced package builds and passes its checks without the rest of the repository. **Shown** for TypeScript on a fixture; **shown in a prototype** (A0) for npm, Python and multi-package projects with no outside dependencies.
+1. A sliced package builds and passes its checks without the rest of the repository. **Shown** for TypeScript on a fixture; **shown in a prototype** (A0) for npm, Python and multi-package projects with no outside dependencies. **Accepted product capability through A3:** explicit extension-neutral selection, paired base/Box observations and declared-command-only export/verify, with R1/R2 replay records. Folder-only npm/Python recipients and real outside-dependency proof remain A4, not yet delivered.
 2. A recipient who has never seen the repository can finish the change from the package. **Shown** once on a fixture and once on a real internal request (R1).
 3. It costs the owner less effort than ordinary delegation, or discloses far less source for similar effort. **Not shown.** Disclosure looks strong (R1 shipped 2 of 694 files); effort points the wrong way (R1 needed about 470 lines of checks for an 8-line change).
 4. Someone chooses it again and would pay. **No evidence.** This is the owner's to pursue, not the lab's.
@@ -17,7 +17,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 ## Standing direction
 
-From the CTO, 6 October 2026: the product steers by the "useful" milestone in `PLAN.md` on master. A real issue from someone else's repository, a Box prepared in minutes with no code written for it, solved by someone who has never seen the repository, accepted by the owner-side check. The kitchen gets there through R2 and then R3. **Updated 6 October 2026, after R3:** the kitchen now gets there through milestone A (a repository-agnostic core, A0 to A4) and then R3b, a replay of fixed issues. Until those are done the lab works on Line 1, with one exception: Line 3 may open at its survey stage now, because A2 and A3 are building language-free file selection and should have the reading the programme asked for. Line 2 stays closed. Within Line 1, favour whatever makes a check cheap to state for a request nobody has seen before.
+From the CTO, 6 October 2026: the product steers by the "useful" milestone in `PLAN.md` on master. A real issue from someone else's repository, a Box prepared in minutes with no code written for it, solved by someone who has never seen the repository, accepted by the owner-side check. The kitchen gets there through R2 and then R3. **Updated 6 October 2026, after R3:** the kitchen now gets there through milestone A (a repository-agnostic core, A0 to A4) and then R3b, a replay of fixed issues. Until those are done the lab works on Line 1, with one exception: Line 3 may open at its survey stage now. **Sync after A3:** A2/A3 have delivered language-free selection and neutral orchestration; Line 3's permitted survey has not happened and is no longer pre-A2 advice. It should study residual completeness/disclosure limits, without claiming the literature was reviewed for the accepted implementation. Line 2 stays closed. Within Line 1, favour whatever makes a check cheap to state for a request nobody has seen before.
 
 ## Active lines, in priority order
 
@@ -54,7 +54,7 @@ From the CTO, 6 October 2026: the product steers by the "useful" milestone in `P
 
 ### Line 3. Does the slice contain what the change needs?
 
-**The problem for the product.** The kitchen selects source by following TypeScript imports from the files to be edited. It worked on one fixture and one real request. Before the product widens to more kinds of change or more languages, it needs to know how often that selection is missing something, and what.
+**The problem for the product.** A2 now ships only the owner's explicit `files` selection; TypeScript import traversal is an optional proposal helper, not export authority. A2 compares recipient checks on the full base and isolated Box; A3 makes declared setup/checks sufficient without implicit install/compile. The remaining question is how often an owner-declared slice misses unexercised runtime/configuration/assets or reaches another copy, and what extra disclosure would address that. Matching decoded-text observations are not causal or completeness proof; no broad frequency has been measured.
 
 **What the lab must find out.** Against real past changes (this repository's merged waves, then open-source projects), how often would the selection have contained everything the change touched and needed? What is missed: configuration, assets, generated code, things loaded at run time, tests? What does each fix cost in extra source disclosed?
 
@@ -90,8 +90,9 @@ None yet.
 - **Pilot set** (`map/pilot/`): 79 "done when" clauses from this repository's own wave briefs, two labellers, agreement 78.5%. Tests the guide; it is not the map.
 - **Outside sample** (`map/outside-sample/`): 5 open issues from one public project, as recorded by the kitchen in R3, one labeller. A first look only.
 - **Candidate sets** (`experiments/01-r1-cheap-check/`, `experiments/02-existing-test-in-a-box/`): hand-made right and wrong solutions for one request, used to score a check. The runners in experiment 02 depend on the agreement format A1 removed and will not run as they are.
-- **Not built:** a candidate-set harness for the neutral format. The kitchen's A0 loop (`research/box-delegation/a0/neutral-box.mjs`) is the starting point.
+- **Not built:** a candidate-set harness for the neutral format. After accepted A3, drive the product's `export`/`verify` with declarations and consume A2 paired records; A0's loop is historical design input, not a lab execution fork.
+- **Sync state, 6 October 2026:** through accepted master `d7ced3c`, A2/A3 since the prior brief. No research session, new finding, line opening/closure, priority change or stage change.
 
 - **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
-- **Existing tests as Box guards.** `lab/lines/request-to-check/experiments/02-existing-test-in-a-box/`. Two runners that export a Box with a named existing test as its guard and run it in a clean folder on the base. Seven tests tried so far, hand-picked.
+- **Existing tests as Box guards (historical).** `lab/lines/request-to-check/experiments/02-existing-test-in-a-box/`. Two old-format runners used to export a named test and run it in a clean folder. Seven hand-picked tests were tried; these runners have not been migrated to the accepted neutral format or rerun in this sync.
 - **R1 candidate set.** `lab/lines/request-to-check/experiments/01-r1-cheap-check/`. 13 wrong and 4 right versions of one script, with a runner that scores any check on them. One request, no held-out part.
