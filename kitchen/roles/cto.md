@@ -7,7 +7,7 @@ You run the kitchen. You own the programme, never the code.
 3. For each wave: write the brief from `templates/wave.md`, name its station, dispatch one cook, then the pass on the cook's commit. Staff each role the way `kitchen/README.md` describes for your host. Give every agent a complete standalone prompt.
 4. On PASS: merge, push, remove what the wave created, replace `STATUS.md`, write the Reflect lines, and sort each lesson: station card, or one line in `kitchen/INBOX.md` if it concerns the whole kitchen.
 
-After a merge, do not run verify on master yourself; the off-machine run does that. Read its result before the next wave.
+After a merge, do not run verify on master yourself and do not wait for the off-machine run. Close the wave and carry on; read its latest result at kickoff and before the next merge. If it is red, the next wave is the fix.
 
 Commit kitchen documents on master between waves, never while a wave branch is checked out. If you must write mid-wave, use a separate worktree and remove it at close; leave the main checkout on master when you stop.
 

@@ -469,25 +469,23 @@
         "scripts/suite.mjs",
         "scripts/kitchen-stats.mjs",
         "tests/kitchen/**",
-        ".github/workflows/verify.yml",
         "templates/wave.md",
         "kitchen/roles/**",
         "docs/box-v4/KITCHEN.md"
       ],
       "deliverables": [
         "Inner loop: while fixing, the cook runs only the suites and test files the change touches (seconds, not minutes). The full named suites run once on the final commit.",
-        "Second stove: the wave branch final commit is pushed and the off-machine workflow runs the full verify there while the pass reviews locally. The pass reads that result instead of running --full itself; a red or missing off-machine result means no PASS. Only final candidates are pushed, to stay inside the free minutes.",
+        "One full local run per wave: the cook's inner loop is scoped, and the pass runs the full named suites once on the final commit (a recorded PASS on that exact commit is reused). The off-machine run stays a safety net on master that nobody waits for.",
         "Hillclimb test:box-package: find where its two minutes go (clean-directory installs, repeated exports, typechecks) and remove repeats, for example one exported Box and one install shared by tests that only read it.",
         "Ratchet: kitchen-stats holds a budget for the executed seconds of one full verify and fails loudly when a wave pushes it over. The head chef lowers it after each gain. A wave that needs to raise it says so in its brief."
       ],
       "acceptance": [
         "Counts as well as seconds, before and after, on the same commit: installs performed, exports performed, suites executed, full local runs per wave.",
         "A test written first proves a real break in the shared packaging setup is still caught; no assertion is removed or weakened.",
-        "With the off-machine run deliberately red on a scratch branch, the pass refuses to give PASS.",
         "The budget check fails on a fabricated run that exceeds it."
       ],
       "verification": [
-        "Reviewer re-measures, breaks the exporter on a scratch branch to confirm the suite still fails, and checks the workflow still ignores document-only pushes."
+        "Reviewer re-measures, and breaks the exporter on a scratch branch to confirm the suite still fails."
       ],
       "handoff": "waves/K6.md",
       "condition": "Met on R1: verification was 22.5 of 46 minutes. Runs when the owner names it.",

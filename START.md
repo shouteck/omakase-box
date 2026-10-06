@@ -14,7 +14,7 @@ Before the first wave:
 
 1. Read [AGENTS.md](AGENTS.md), [STATUS.md](STATUS.md) and [docs/box-v4/KITCHEN.md](docs/box-v4/KITCHEN.md).
 2. Check that STATUS.md matches Git: current branch, last commit on master, any `wave/*` branch, uncommitted changes. If they disagree, Git is right; fix STATUS.md. Then empty `kitchen/INBOX.md` ("Getting better" in KITCHEN.md).
-3. Check the off-machine run: `gh run list -R shouteck/omakase-box --limit 3`. A red run on master comes first: the one wave this run may cook is the fix, and STATUS.md says so while it is red.
+3. Read the latest off-machine result (do not wait for a run in progress): `gh run list -R shouteck/omakase-box --limit 3`. A red run on master comes first: the one wave this run may cook is the fix, and STATUS.md says so while it is red.
 
 4. Show the owner the pre-cook card, then start or wait as the table says.
 

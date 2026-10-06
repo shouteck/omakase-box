@@ -23,7 +23,7 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 
 ## Verification
 
-- **Off-machine verify.** Pushes to master run `verify` on GitHub Actions (free tier, master-only, code pushes). The head chef checks `gh run list -R shouteck/omakase-box` at every kickoff and after every merge; a red master run blocks new waves until a fix wave turns it green and STATUS.md names the block while it stands.
+- **Off-machine verify.** Code pushes to master run `verify --full` on GitHub Actions (free tier). It is a safety net, never a step to wait for: the local verify on the same commit is what gates a merge. Read the latest result with `gh run list -R shouteck/omakase-box --limit 3` at kickoff and before the next merge. If it is red, the next wave is the fix.
 
 `node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, boundary checks, build and the named suites on the host, gives them a disposable Postgres, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
