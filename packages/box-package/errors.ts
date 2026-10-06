@@ -36,6 +36,8 @@ export function describeGap(gap: SelectionGap): string {
     case 'unresolved-import': return `import '${gap.detail}' cannot be resolved${chain}`;
     case 'escapes-root': return `${gap.detail} resolves outside the source root${chain}`;
     case 'missing-editable': return `editable owner file ${gap.detail} does not exist`;
+    case 'missing-input': return `selected owner file ${gap.detail} does not exist`;
+    case 'duplicate-destination': return `two selected inputs map to the same package path ${gap.detail}${chain}`;
     case 'excluded-input': return `declared input ${gap.detail} is under an excluded prefix`;
     case 'dynamic-import': return `dynamic import in ${gap.detail} cannot be statically resolved${chain}`;
   }

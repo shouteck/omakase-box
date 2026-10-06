@@ -1,7 +1,7 @@
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AgreementInvalid, ExportFailed, PreparationGap } from '../../../packages/box-package/index.js';
+import { AgreementInvalid, ExportFailed, parseAgreement, PreparationGap, proposeSelection } from '../../../packages/box-package/index.js';
 import { agreementFile, fixtureCommit, materializeFixtureRepo, privateByteLeaks, requirePnpmTooling, runExport } from './support.js';
 
 requirePnpmTooling();
@@ -12,26 +12,21 @@ requirePnpmTooling();
 // a mixed-case prefix declared in the agreement itself, an editable copy under a case
 // alias, a box destination under an excluded prefix, and schema-level '.'/'..' spellings.
 describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
-  it('rejects an import specifier that reaches an excluded file through a case alias', () => {
+  it('names an import specifier that reaches an excluded file through a case alias', () => {
     // The alias lives in owner source, not in the agreement: on a case-insensitive
     // filesystem '../PRIVATE/scoring.js' resolves to src/private/scoring.ts.
     const repo = materializeFixtureRepo();
     const src = join(repo.repo, 'examples', 'private-shop', 'src');
     writeFileSync(join(src, 'policy', 'trojan.ts'), "import { PRIVATE_SCORING_CANARY } from '../PRIVATE/scoring.js';\nexport const leaked = PRIVATE_SCORING_CANARY;\n");
     const baseCommit = fixtureCommit(repo.repo, 'case-aliased-import');
-    const agreement = agreementFile('request-a', {
+    const path = agreementFile('request-a', {
       baseCommit,
       mutate: value => { value.entrypoints = ['src/policy/trojan.ts']; }
     });
-    let leaks: string[] | undefined;
-    try {
-      leaks = privateByteLeaks(runExport(agreement, repo.repo).outDir);
-    } catch (error) {
-      expect(error).toBeInstanceOf(PreparationGap);
-      return;
-    }
-    expect(leaks, 'export shipped protected bytes through a case-aliased import').toEqual([]);
-    expect.unreachable('export should have failed as a preparation gap');
+    const agreement = parseAgreement(JSON.parse(readFileSync(path, 'utf8')) as unknown);
+    const selection = proposeSelection(agreement, join(repo.repo, 'examples', 'private-shop'));
+    expect(selection.gaps.some(gap => gap.kind === 'reachable-excluded' && gap.detail.toLowerCase() === 'src/private/scoring.ts')).toBe(true);
+    expect(selection.files.some(file => file.owner.startsWith('src/private/'))).toBe(false);
   });
 
   it('rejects an entrypoint naming an excluded file through a link two levels down', () => {
@@ -43,7 +38,7 @@ describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
     const baseCommit = fixtureCommit(repo.repo, 'linked-deep-private');
     const agreement = agreementFile('request-a', {
       baseCommit,
-      mutate: value => { value.entrypoints = ['src/policy/vault/secret.ts']; }
+      mutate: value => { value.files = [{ owner: 'src/policy/vault/secret.ts' }]; }
     });
     try {
       runExport(agreement, repo.repo);
@@ -82,7 +77,7 @@ describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
     const baseCommit = fixtureCommit(repo.repo, 'linked-sibling');
     const agreement = agreementFile('request-a', {
       baseCommit,
-      mutate: value => { value.entrypoints = ['src/selection/up/loader.ts']; }
+      mutate: value => { value.files = [{ owner: 'src/selection/up/loader.ts' }]; }
     });
     const result = runExport(agreement, repo.repo);
     expect(result.files).toContain('src/policy/loader.ts');
@@ -109,7 +104,7 @@ describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
     const agreement = agreementFile('request-a', {
       mutate: value => {
         value.excludedPrefixes = ['SRC/PRIVATE/', 'REFERENCE-SOLUTIONS/', 'NODE_MODULES/', 'DIST/'];
-        value.entrypoints = ['src/private/scoring.ts'];
+        value.files = [{ owner: 'src/private/scoring.ts' }];
       }
     });
     try {
@@ -165,7 +160,7 @@ describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
 
   it('fails closed on agreement spellings the schema cannot normalize', () => {
     for (const spelling of ['src/./policy/loader.ts', 'src/policy/../server.ts', 'src//policy//loader.ts', 'src/PRIVAT~1/scoring.ts', 'src/private/scoring.ts:stream']) {
-      const agreement = agreementFile('request-a', { mutate: value => { value.entrypoints = [spelling]; } });
+      const agreement = agreementFile('request-a', { mutate: value => { value.files = [{ owner: spelling }]; } });
       expect(() => runExport(agreement), `spelling ${spelling}`).toThrowError(AgreementInvalid);
     }
   });
@@ -173,7 +168,7 @@ describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
   it('still exports request A bytes when a non-excluded entrypoint is spelled under a case alias', () => {
     // Alias spellings are not rejected wholesale and cannot smuggle excluded bytes: the
     // real loader.ts/strict-json.ts ship, the share stays 3/15, and nothing private leaks.
-    const agreement = agreementFile('request-a', { mutate: value => { value.entrypoints = ['SRC/POLICY/LOADER.TS']; } });
+    const agreement = agreementFile('request-a', { mutate: value => { value.files = [{ owner: 'SRC/POLICY/LOADER.TS' }, { owner: 'src/policy/strict-json.ts' }]; } });
     const result = runExport(agreement);
     expect(result.files.some(file => file.toLowerCase().endsWith('policy/loader.ts'))).toBe(true);
     expect(result.disclosure.shippedOwnerFiles).toBe(3);

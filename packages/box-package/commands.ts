@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cpSync, existsSync, realpathSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, relative, resolve } from 'node:path';
 import type { CommandCheck, SetupCommand } from './agreement.js';
@@ -30,6 +31,7 @@ export interface CheckRecord {
   readonly exit: number | null;
   readonly result: CheckResult;
   readonly log: string;
+  readonly outputSha256: string;
   readonly seconds: number;
 }
 
@@ -129,22 +131,32 @@ function containedCwd(root: string, cwd: string): string {
 
 export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: string): CheckRecord {
   const role: CommandRole = 'role' in check ? check.role : 'setup';
-  const rel = (target: string): string => { const offset = relative(realpathSync(root), target); return offset === '' ? '.' : toPosix(offset); };
-  const cwd = containedCwd(root, check.cwd);
+  const canonicalRoot = realpathSync(root);
+  const rel = (target: string): string => { const offset = relative(canonicalRoot, target); return offset === '' ? '.' : toPosix(offset); };
+  const normalize = (text: string): string => {
+    let out = text.replace(/\r\n/g, '\n');
+    for (const spelling of new Set([canonicalRoot, toPosix(canonicalRoot)])) if (spelling !== '') out = out.split(spelling).join('<root>');
+    return out;
+  };
+  const digest = (stdout: string, stderr: string): string => createHash('sha256').update(JSON.stringify([normalize(stdout), normalize(stderr)])).digest('hex');
+  const cwd = containedCwd(canonicalRoot, check.cwd);
   let resolved: ResolvedProgram;
   let run: ReturnType<typeof launch>;
   const began = Date.now();
   try {
-    resolved = resolveProgram(check.program, realpathSync(root));
+    resolved = resolveProgram(check.program, canonicalRoot);
     run = launch(resolved, check.args, cwd, check.timeoutMs);
   } catch (error) {
     if (error instanceof ProgramUnavailable || error instanceof ProgramLaunchUnsupported) {
-      return { name: check.name, program: check.program, declaredArgv: check.args, command: check.program, argv: [], cwd: rel(cwd), context: check.context, role, exit: null, result: 'error', log: error instanceof Error ? error.message : String(error), seconds: (Date.now() - began) / 1000 };
+      const message = error instanceof Error ? error.message : String(error);
+      return { name: check.name, program: check.program, declaredArgv: check.args, command: check.program, argv: [], cwd: rel(cwd), context: check.context, role, exit: null, result: 'error', log: message, outputSha256: digest(message, ''), seconds: (Date.now() - began) / 1000 };
     }
     throw error;
   }
   const seconds = (Date.now() - began) / 1000;
-  const log = `${run.stdout ?? ''}${run.stderr ?? ''}`.trim().slice(-LOG_TAIL);
+  const stdout = run.stdout ?? '';
+  const stderr = run.stderr ?? '';
+  const log = `${normalize(stdout)}${normalize(stderr)}`.trim().slice(-LOG_TAIL);
   let result: CheckResult;
   if (run.error !== undefined) result = (run.error as NodeJS.ErrnoException).code === 'ETIMEDOUT' || run.signal === 'SIGTERM' ? 'timeout' : 'error';
   else result = run.status === 0 ? 'pass' : 'fail';
@@ -161,6 +173,7 @@ export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: strin
     exit: run.status,
     result,
     log: detail,
+    outputSha256: digest(stdout, stderr),
     seconds
   };
 }

@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { deriveSelection, generate, ownerCheck, parseAgreement } from '../../../packages/box-package/index.js';
+import { generate, ownerCheck, parseAgreement, proposeSelection } from '../../../packages/box-package/index.js';
 import { fixtureCommit, fixtureGit, PNPM_CJS, requirePnpmTooling, ROOT, runExport, runRoot } from './support.js';
 
 requirePnpmTooling();
@@ -32,6 +32,7 @@ function r1Agreement(_repo: string, baseCommit: string): string {
   agreement.nodejs = agreement.toolchain;
   delete agreement.toolchain;
   agreement.baseCommit = baseCommit;
+  agreement.files = [{ owner: 'scripts/process.mjs', box: 'src/scripts/process.mjs' }];
   const path = join(runRoot('r1-agreement'), 'agreement.json');
   writeFileSync(path, JSON.stringify(agreement, null, 2));
   return path;
@@ -44,7 +45,7 @@ describe('R1 kitchen-stats-no-usage box', () => {
     raw.nodejs = raw.toolchain;
     delete raw.toolchain;
     const agreement = parseAgreement(raw);
-    const selection = deriveSelection(agreement, repo);
+    const selection = proposeSelection(agreement, repo);
     expect(selection.gaps).toEqual([]);
     expect(selection.files.map(file => `${file.owner}->${file.box}:${file.origin}`)).toEqual([
       'scripts/kitchen-stats.mjs->src/scripts/kitchen-stats.mjs:editable',

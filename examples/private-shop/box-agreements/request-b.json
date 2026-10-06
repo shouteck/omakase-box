@@ -7,6 +7,7 @@
   },
   "outcome": "Ranking silently reorders the caller's array and resolves ties unpredictably. Give me a ranking function that leaves the input untouched and breaks equal scores by the item's ASCII id, ascending. Reject malformed input - non-ASCII ids, non-finite scores, duplicate ids, more than 1000 items - instead of ranking it.",
   "sourceRoot": "examples/private-shop",
+  "files": [],
   "entrypoints": [],
   "editable": [
     { "kind": "generated-scaffold", "owner": "src/ranking/rankItems.ts", "box": "src/ranking/rankItems.ts", "generator": "rank-items-contract" }
