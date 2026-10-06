@@ -1,8 +1,10 @@
 import { spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { afterAll } from 'vitest';
 import { exportBox } from '../../../packages/box-package/index.js';
 import type { ExportResult, PnpmInvocation } from '../../../packages/box-package/index.js';
 
@@ -12,7 +14,15 @@ export const PNPM_CJS = join(ROOT, 'scripts', 'tooling', 'node_modules', 'pnpm',
 export const PNPM_SHIM = join(ROOT, 'tests', 'box', 'package', 'pnpm-shim.mjs');
 export const AGREEMENTS = join(FIXTURE, 'box-agreements');
 export const CANARY_TOKENS = ['SYNTHETIC_PRIVATE', 'PRIVATE_ELIGIBILITY_CANARY', 'PRIVATE_SCORING_CANARY'];
-export const STATS_FILE = join(tmpdir(), `box-k6-stats-${process.pid}.jsonl`);
+// K7a: one stats file per worker-module instance: a bare pid or a time window is
+// not a safe identity once files run in parallel workers. K6_STATS_DIR points
+// a measurement driver at its own owned folder; the file is still removed at
+// exit unless the driver asked to keep it.
+export const STATS_ID = `${process.pid}-${randomBytes(4).toString('hex')}`;
+export const STATS_FILE = join(process.env.K6_STATS_DIR ?? tmpdir(), `box-k6-stats-${STATS_ID}.jsonl`);
+// Children this module spawns (the pnpm shim, fixture installs) append their
+// own op records to this file instead of opening per-pid files nobody removes.
+process.env.K6_STATS_FILE = STATS_FILE;
 export function recordOp(op: string, seconds?: number): void {
   try { appendFileSync(STATS_FILE, JSON.stringify({ op, seconds }) + '\n'); } catch { }
 }
@@ -23,9 +33,15 @@ export function runRoot(label: string): string {
   runDirectories.push(dir);
   return dir;
 }
-process.once('exit', () => {
-  for (const dir of runDirectories) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
-});
+// K7a: each test file removes the folders and the stats file it created when it
+// finishes, pass or fail — the exit hook is only the last-ditch sweep for a
+// worker that never reached its afterAll.
+function cleanupOwned(): void {
+  for (const dir of runDirectories.splice(0)) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+  if (!process.env.K6_STATS_KEEP) rmSync(STATS_FILE, { force: true });
+}
+afterAll(cleanupOwned);
+process.once('exit', cleanupOwned);
 
 // K6 trust boundary: lockfile reuse is invocation-local and owned here. An
 // inherited caller cache dir is deleted outright so nothing forwards it to a
