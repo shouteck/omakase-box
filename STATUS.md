@@ -9,12 +9,12 @@ Replaced 6 October 2026 by Devin CTO at A3 close.
 - Approved night queue: K7 parked, A3 accepted, A4 next. Park at three failed reviews or 120 minutes. One executed full verify per candidate. A4 permits one small pinned package download with scripts disabled. No R3b, D4 or K9.
 - K7 parked before implementation for conflicting overnight verify.mjs read-only and five-run acceptance requirements. No code/branch created. Morning recommendation in waves/K7.md.
 - Cleanup complete: A3 branch deleted, 62 approved kitchen temp items cleared while idle. No master verify rerun.
-- Lab: two accepted waves behind fetched session 4, A2/A3, counted from first-parent merges since brief. Read/write-only sync required now before next dispatch. BACKLOG.md answers its advice.
+- Lab: fresh read/write-only sync completed after two accepted waves, A2/A3. Brief replaced and pushed at 20:42:37 +0800, no new research. Zero accepted waves behind at A4 kickoff. Urgent A4 advice adopted: actual mutations, immutable guards, retained pristine Box, package integrity, separate fixture/preparation clocks.
 - Useful milestone still unmet. A4 fixtures establish capability, not real outside-issue delegation.
 
 ## Next
 
-Finish lab sync, then A4 under the already supplied go. Leave one morning card at top of waves/night-2026-10-06.md. Stop after A4 closes or parks.
+Run A4 under the already supplied go. Leave one morning card at top of waves/night-2026-10-06.md. Stop after A4 closes or parks.
 
 ## Decisions parked for morning
 
