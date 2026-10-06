@@ -79,4 +79,27 @@ Raw records in `results.json` (last run). The runner was run three times: the fi
 
 ## Sceptic
 
-Pending.
+Full report in [SCEPTIC.md](SCEPTIC.md); its six added cases are in `sceptic-run.mjs` and `sceptic-results.json`.
+
+- Who: a fresh agent on the same Windows host, same model family as the lab lead.
+- Reproduced: yes, every line of the table. (Its rerun reports 3 owner files of 746, not 745: the count is of the exported commit, which by then included this experiment's `results.json`.)
+- Checked and sound: the rebuilt base matches R1's diff line for line; the folder is isolated; the test runs the Box's copy of the script; `tsc` does check the shipped test.
+- Attacks: six other existing tests sent through the same route. All six exported. Three were green in the folder and three were red for reasons unrelated to any change, and in all three the exporter named no gap. Also: a recipient who changes nothing passes every check the Box declares.
+- Standing: **stands as one case** that this test travelled and worked as a guard. **Does not stand:** "one command gave the evidence of change, red on the base". **Weaken to "suggests":** that existing tests in general can be the guard.
+
+## Corrections to the Result above, after the sceptic
+
+The Result is left as first written. These are its errors:
+
+1. **The evidence-of-change check was not a check.** The third line in the agreement's `checks` is a command followed by a comment saying when it should fail. Run as written it exits 0 on the base. "Red on the base" was computed by this experiment's runner, which is in no Box. So in the exported Box nothing declared fails on the base, and a recipient who changes nothing passes all three declared checks. The claim "one command gave the evidence of change" is withdrawn; what was shown is that the guard half works.
+2. `tsc --noEmit` cannot see the `.mjs` script at all. Its exit 0 in both states says nothing about the change.
+3. "A new request must write a generator" overstates the code. The format accepts any registered generator, including one written for a different request, and then ships that unrelated evaluator into the Box and, by the code, would run its owner check. That is worse than a refusal: the format can be satisfied with a check that has nothing to do with the request.
+4. The Limits paragraph guessed wrong about which tests travel. Tests tied to the repository by imports travel (two of the sceptic's cases, once their package dependency was declared). Tests that start or read other files by path do not, and the exporter cannot tell: it named no gap for any of the three that failed.
+5. Only the last run is recorded; the first two exist only in this file's account of them.
+
+## What the experiment now supports
+
+- **Shows** (one case, reproduced): a test the repository already had can be shipped by today's exporter with no new code and work as a guard in a clean folder: green on the base, green after the right change, red on two wrong ones.
+- **Suggests** (seven hand-picked tests, four green in the folder): whether an existing test travels depends on how it reaches the code. By import, it travels. By a path it builds at run time, it arrives broken, and export reports success.
+- **Shows** (by running the declared checks): nothing in today's Box format makes a check red on the base, and the format can be satisfied by an unrelated registered evaluator.
+- **Does not show:** a rate; anything owner-side; that R1's cost was avoidable end to end.

@@ -1,0 +1,560 @@
+{
+  "node": "v24.11.0",
+  "labHead": "1b47212b6f9bd04facca435502de354f92e1bc13",
+  "temp": "C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc",
+  "part1": {
+    "baseFidelity": {
+      "r1Removed": [
+        "    const usage = (text.match(/Usage:[ \\t]*(\\S[^\\n]*)/) || [])[1] || null;",
+        "    waves.push({ id: file.slice(0, -3), commits, merge, branches, usage });",
+        "  out.push('Usage per wave (agent usage as recorded in each wave file Result)');",
+        "  const usage = readWaves(root);",
+        "  if (usage.every(wave => !wave.usage)) out.push('  missing — no wave file records a Usage value; nothing to report, not zero');",
+        "  else for (const wave of usage) out.push('  ' + wave.id + ': ' + (wave.usage || 'missing'));",
+        "  out.push('');",
+        ""
+      ],
+      "r1Added": [
+        "    waves.push({ id: file.slice(0, -3), commits, merge, branches });"
+      ],
+      "reconstructionRemoved": [
+        "    const usage = (text.match(/Usage:[ \\t]*(\\S[^\\n]*)/) || [])[1] || null;",
+        "    waves.push({ id: file.slice(0, -3), commits, merge, branches, usage });",
+        "  out.push('Usage per wave (agent usage as recorded in each wave file Result)');",
+        "  const usage = readWaves(root);",
+        "  if (usage.every(wave => !wave.usage)) out.push('  missing — no wave file records a Usage value; nothing to report, not zero');",
+        "  else for (const wave of usage) out.push('  ' + wave.id + ': ' + (wave.usage || 'missing'));",
+        "  out.push('');",
+        ""
+      ],
+      "reconstructionAdded": [
+        "    waves.push({ id: file.slice(0, -3), commits, merge, branches });"
+      ],
+      "identical": true
+    },
+    "disclosure": {
+      "report": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 746,
+        "share": 0.004021447721179625
+      },
+      "boxJson": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 746,
+        "share": 0.004021447721179625
+      },
+      "ownerFilesInBoxJson": [
+        "scripts/kitchen-stats.mjs",
+        "scripts/process.mjs",
+        "tests/kitchen/kitchen-stats.test.ts"
+      ]
+    },
+    "install": {
+      "exit": 0,
+      "tail": "Lockfile is up to date, resolution step is skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +40\n++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 40, reused 40, downloaded 0, added 40, done\n\ndependencies:\n+ vitest 5.0.1\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 814ms using pnpm v10.34.5"
+    },
+    "isolation": {
+      "ancestorsWithAnything": [],
+      "vitestAndTypescriptResolveTo": [
+        "C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-C\\node_modules\\.pnpm\\vitest@5.0.1_@types+node@24_8b4fb1a58410ec37cf001870116047d7\\node_modules\\vitest\\package.json",
+        "C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-C\\node_modules\\.pnpm\\typescript@6.0.3\\node_modules\\typescript\\package.json"
+      ],
+      "insideBox": true
+    },
+    "tscReachesTheTest": {
+      "cleanExit": 0,
+      "withTypeErrorExit": 2,
+      "message": "src/tests/kitchen/kitchen-stats.test.ts(195,14): error TS2322: Type 'string' is not assignable to type 'number'."
+    },
+    "tscReachesTheScript": {
+      "withSyntaxErrorInScriptExit": 0
+    },
+    "literalChecks": [
+      {
+        "state": "base, nothing changed",
+        "check1TscExit": 0,
+        "check2GuardExit": 0,
+        "check3AsWrittenExit": 0,
+        "check3StdoutHasUsagePerWave": true
+      },
+      {
+        "state": "after the accepted change",
+        "check1TscExit": 0,
+        "check2GuardExit": 0,
+        "check3AsWrittenExit": 0,
+        "check3StdoutHasUsagePerWave": false
+      },
+      {
+        "state": "wrong: section kept, heading reworded",
+        "check1TscExit": 0,
+        "check2GuardExit": 0,
+        "check3AsWrittenExit": 0,
+        "check3StdoutHasUsagePerWave": false,
+        "runnerRuleVerdict": "green",
+        "evaluator": {
+          "state": "wrong: section kept, heading reworded",
+          "exit": 1,
+          "files": "Test Files  1 failed (1)",
+          "tests": "Tests  2 failed | 2 passed (4)",
+          "failed": [
+            "prints every verification section and no usage output, populated or absent 234ms",
+            "labels missing data instead of printing zeros or crashing 98ms",
+            "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+            "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing"
+          ]
+        }
+      }
+    ],
+    "plainVitest": [
+      {
+        "state": "base",
+        "exit": 1,
+        "files": "Test Files  1 failed | 1 passed (2)",
+        "tests": "Tests  2 failed | 12 passed (14)",
+        "failed": [
+          "prints every verification section and no usage output, populated or absent 277ms",
+          "labels missing data instead of printing zeros or crashing 116ms",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing"
+        ],
+        "filesMentioned": [
+          "evaluator/kitchen-stats-no-usage.test.ts"
+        ],
+        "tail": "tain('1 runs with summary.json');\n     55|       expect(run.stdout).toContain('61');\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing\nAssertionError: expected 'kitchen stats — 2026-10-06T02:51:55.1…' not to match /usage/i\n\n- Expected:\n/usage/i\n\n+ Received:\n\"kitchen stats — 2026-10-06T02:51:55.153Z\nsource: C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\r1-eval-KH1OCx\\\\.kitchen\\\\runs (0 run dirs) + git log; read-only, nothing written\n\nVerify runs\n  0 runs with summary.json · 0 without — none\n  verdicts: 0 PASS · 0 FAIL · 0 UNCOMMITTED · 0 other\n  total verify time: 0.0 min across 0 runs (runs without summary carry no timing)\n\nVerify minutes per step (sum of step seconds; runs without a summary add nothing)\n  missing — no run summaries found\n\nRuns per wave branch (a run belongs to the wave whose merged branch holds its commit)\n\nLargest costs\n  missing — no run data\n\nUsage per wave (agent usage as recorded in each wave file Result)\n  missing — no wave file records a Usage value; nothing to report, not zero\n\nKitchen limits\n  MISSING AGENTS.md + docs/box-v4/KITCHEN.md combined size: missing (limit 20480 B)\n  MISSING kitchen/INBOX.md entry lines: missing (limit 10)\n  MISSING STATUS.md lines: missing (limit 60)\n  MISSING acceptance profile \\\"verify --full test:box-package test:kitchen\\\" executed seconds: missing (limit 330s)\n\"\n\n ❯ evaluator/kitchen-stats-no-usage.test.ts:63:28\n     61|     expect(run.status, run.stderr).toBe(0);\n     62|     expect(run.stdout).toContain('missing');\n     63|     expect(run.stdout).not.toMatch(/usage/i);\n       |                            ^\n     64|   });\n     65|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯"
+      },
+      {
+        "state": "after the accepted change",
+        "exit": 0,
+        "files": "Test Files  2 passed (2)",
+        "tests": "Tests  14 passed (14)",
+        "failed": [],
+        "filesMentioned": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-C\n\n\n Test Files  2 passed (2)\n      Tests  14 passed (14)\n   Start at  10:52:02\n   Duration  1.58s (tests 94%, transform 3%, import 2%, worker 1%)"
+      }
+    ],
+    "evaluatorAlone": [
+      {
+        "state": "base",
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  2 failed | 2 passed (4)",
+        "failed": [
+          "prints every verification section and no usage output, populated or absent 247ms",
+          "labels missing data instead of printing zeros or crashing 97ms",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing"
+        ]
+      },
+      {
+        "state": "after the accepted change",
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  4 passed (4)",
+        "failed": []
+      }
+    ]
+  },
+  "part2": [
+    {
+      "id": "T1",
+      "test": "tests/kitchen/verify-reuse.test.ts",
+      "target": "scripts/suite.mjs",
+      "why": "same shape as the experiment test: node -e probes from a root computed relative to the test",
+      "attempts": [
+        {
+          "declared": {
+            "vitest": "5.0.1"
+          },
+          "exit": 0,
+          "stderr": ""
+        }
+      ],
+      "exported": true,
+      "inRepository": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  10 passed (10)",
+        "failed": []
+      },
+      "ownerFiles": [
+        "editable: scripts/suite.mjs",
+        "runnable: scripts/kitchen-stats.mjs",
+        "runnable: scripts/process.mjs",
+        "runnable: tests/kitchen/verify-reuse.test.ts"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 4,
+        "inventoryFiles": 746,
+        "share": 0.005361930294906166
+      },
+      "install": {
+        "exit": 0,
+        "tail": "pped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +40\n++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 40, reused 40, downloaded 0, added 40, done\n\ndependencies:\n+ vitest 5.0.1\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 868ms using pnpm v10.34.5"
+      },
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guardInFolder": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  10 passed (10)",
+        "failed": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T1-0\n\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  10:52:25\n   Duration  1.99s (tests 97%, transform 2%, import 1%)"
+      },
+      "listedEvaluatorInFolder": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  4 passed (4)",
+        "failed": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T1-0\n\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  10:52:28\n   Duration  1.06s (tests 94%, transform 3%, import 2%, worker 1%)"
+      }
+    },
+    {
+      "id": "T2",
+      "test": "tests/kitchen/k6-scope-budget.test.ts",
+      "target": "scripts/kitchen-stats.mjs",
+      "why": "same script; builds paths to other repository files at run time",
+      "attempts": [
+        {
+          "declared": {
+            "vitest": "5.0.1"
+          },
+          "exit": 0,
+          "stderr": ""
+        }
+      ],
+      "exported": true,
+      "inRepository": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  1 failed | 4 passed (5)",
+        "failed": [
+          "runs named files only, propagates a real failure, and writes no run record 5ms",
+          "tests/kitchen/k6-scope-budget.test.ts > suite.mjs file-scoped inner loop > runs named files only, propagates a real failure, and writes no run record"
+        ]
+      },
+      "ownerFiles": [
+        "editable: scripts/kitchen-stats.mjs",
+        "runnable: scripts/process.mjs",
+        "runnable: tests/kitchen/k6-scope-budget.test.ts"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 746,
+        "share": 0.004021447721179625
+      },
+      "install": {
+        "exit": 0,
+        "tail": "pped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +40\n++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 40, reused 40, downloaded 0, added 40, done\n\ndependencies:\n+ vitest 5.0.1\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 866ms using pnpm v10.34.5"
+      },
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guardInFolder": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  2 failed | 3 passed (5)",
+        "failed": [
+          "rejects a missing file, an out-of-suite file and a non-test file 55ms",
+          "runs named files only, propagates a real failure, and writes no run record 2ms",
+          "src/tests/kitchen/k6-scope-budget.test.ts > suite.mjs file-scoped inner loop > rejects a missing file, an out-of-suite file and a non-test file",
+          "src/tests/kitchen/k6-scope-budget.test.ts > suite.mjs file-scoped inner loop > runs named files only, propagates a real failure, and writes no run record"
+        ],
+        "tail": ", propagates a real failure, and writes no run record 2ms\n\n Test Files  1 failed (1)\n      Tests  2 failed | 3 passed (5)\n   Start at  10:52:36\n   Duration  846ms (tests 92%, transform 4%, import 3%, worker 1%)\n\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/tests/kitchen/k6-scope-budget.test.ts > suite.mjs file-scoped inner loop > rejects a missing file, an out-of-suite file and a non-test file\nAssertionError: tests/kitchen/does-not-exist.test.ts: node:internal/modules/cjs/loader:1423\r\n  throw err;\r\n  ^\r\n\r\nError: Cannot find module 'C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-T2-0\\src\\scripts\\suite.mjs'\r\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1420:15)\r\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1058:19)\r\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1063:22)\r\n    at Module._load (node:internal/modules/cjs/loader:1226:37)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)\r\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\r\n    at node:internal/main/run_main_module:33:47 {\r\n  code: 'MODULE_NOT_FOUND',\r\n  requireStack: []\r\n}\r\n\r\nNode.js v24.11.0\r\n: expected 1 to be 2 // Object.is equality\n\n- Expected\n+ Received\n\n- 2\n+ 1\n\n ❯ src/tests/kitchen/k6-scope-budget.test.ts:56:65\n     54|     ]) {\n     55|       const run = scoped([file]);\n     56|       expect(run.status, `${file}: ${run.stdout}${run.stderr}`).toBe(2…\n       |                                                                 ^\n     57|       expect(`${run.stdout}${run.stderr}`).toContain('refuses');\n     58|     }\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  src/tests/kitchen/k6-scope-budget.test.ts > suite.mjs file-scoped inner loop > runs named files only, propagates a real failure, and writes no run record\nError: ENOENT: no such file or directory, scandir 'C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-T2-0\\src\\.kitchen\\runs'\n ❯ src/tests/kitchen/k6-scope-budget.test.ts:65:20\n     63|     writeFileSync(join(scratch, 'k6-pass.test.ts'), \"import { it, expe…\n     64|     writeFileSync(join(scratch, 'k6-fail.test.ts'), \"import { it, expe…\n     65|     const before = readdirSync(runsDir).length;\n       |                    ^\n     66|     const pass = scoped(['tests/kitchen/k6-scoped-tmp/k6-pass.test.ts'…\n     67|     expect(pass.status, `${pass.stdout}${pass.stderr}`).toBe(0);\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯"
+      },
+      "listedEvaluatorInFolder": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  4 passed (4)",
+        "failed": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T2-0\n\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  10:52:38\n   Duration  1.29s (tests 95%, transform 3%, import 2%, worker 1%)"
+      }
+    },
+    {
+      "id": "T3",
+      "test": "tests/kitchen/k6-corrections.test.ts",
+      "target": "scripts/kitchen-stats.mjs",
+      "why": "same script; needs suite.mjs, a pnpm shim and the pinned pnpm by path",
+      "attempts": [
+        {
+          "declared": {
+            "vitest": "5.0.1"
+          },
+          "exit": 0,
+          "stderr": ""
+        }
+      ],
+      "exported": true,
+      "inRepository": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  10 passed (10)",
+        "failed": []
+      },
+      "ownerFiles": [
+        "editable: scripts/kitchen-stats.mjs",
+        "runnable: scripts/process.mjs",
+        "runnable: tests/kitchen/k6-corrections.test.ts"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 746,
+        "share": 0.004021447721179625
+      },
+      "install": {
+        "exit": 0,
+        "tail": "skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +40\n++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 40, reused 40, downloaded 0, added 40, done\n\ndependencies:\n+ vitest 5.0.1\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 1s using pnpm v10.34.5"
+      },
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guardInFolder": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  1 failed | 9 passed (10)",
+        "failed": [
+          "a junction inside the suite cannot reach a test file outside it 64ms",
+          "src/tests/kitchen/k6-corrections.test.ts > suite.mjs scoped containment is canonical > a junction inside the suite cannot reach a test file outside it"
+        ],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T3-0\n\n ❯ src/tests/kitchen/k6-corrections.test.ts (10 tests | 1 failed) 784ms\n   ❯ suite.mjs scoped containment is canonical (1)\n     × a junction inside the suite cannot reach a test file outside it 64ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 9 passed (10)\n   Start at  10:52:51\n   Duration  1.10s (tests 88%, transform 8%, import 4%, worker 1%)\n\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/tests/kitchen/k6-corrections.test.ts > suite.mjs scoped containment is canonical > a junction inside the suite cannot reach a test file outside it\nAssertionError: node:internal/modules/cjs/loader:1423\r\n  throw err;\r\n  ^\r\n\r\nError: Cannot find module 'C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-T3-0\\src\\scripts\\suite.mjs'\r\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1420:15)\r\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1058:19)\r\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1063:22)\r\n    at Module._load (node:internal/modules/cjs/loader:1226:37)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)\r\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\r\n    at node:internal/main/run_main_module:33:47 {\r\n  code: 'MODULE_NOT_FOUND',\r\n  requireStack: []\r\n}\r\n\r\nNode.js v24.11.0\r\n: expected 1 to be 2 // Object.is equality\n\n- Expected\n+ Received\n\n- 2\n+ 1\n\n ❯ src/tests/kitchen/k6-corrections.test.ts:103:54\n    101|     symlinkSync(outside, junction, 'junction');\n    102|     const run = spawnSync(process.execPath, [suiteScript, 'kitchen', j…\n    103|     expect(run.status, `${run.stdout}${run.stderr}`).toBe(2);\n       |                                                      ^\n    104|     expect(`${run.stdout}${run.stderr}`).toContain('refuses');\n    105|   });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯"
+      },
+      "listedEvaluatorInFolder": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  4 passed (4)",
+        "failed": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T3-0\n\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  10:52:53\n   Duration  1.40s (tests 94%, transform 3%, import 2%, worker 1%)"
+      }
+    },
+    {
+      "id": "T4",
+      "test": "tests/contracts/paths.test.ts",
+      "target": "packages/contracts/paths.ts",
+      "why": "imports repository helpers and a third-party package",
+      "attempts": [
+        {
+          "declared": {
+            "vitest": "5.0.1"
+          },
+          "exit": 3,
+          "stderr": "export failed: 1 preparation gap(s)\n  - import of undeclared dependency 'zod' (via packages/contracts/paths.ts -> zod)"
+        },
+        {
+          "declared": {
+            "vitest": "5.0.1",
+            "zod": "4.6.5"
+          },
+          "exit": 0,
+          "stderr": ""
+        }
+      ],
+      "exported": true,
+      "inRepository": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  34 passed (34)",
+        "failed": []
+      },
+      "ownerFiles": [
+        "editable: packages/contracts/paths.ts",
+        "runnable: packages/contracts/hash.ts",
+        "runnable: tests/contracts/paths.test.ts"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 746,
+        "share": 0.004021447721179625
+      },
+      "install": {
+        "exit": 0,
+        "tail": "s: resolved 1, reused 0, downloaded 0, added 0\nPackages: +41\n+++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 41, reused 41, downloaded 0, added 41, done\n\ndependencies:\n+ vitest 5.0.1\n+ zod 4.6.5\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 1.4s using pnpm v10.34.5"
+      },
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guardInFolder": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  34 passed (34)",
+        "failed": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T4-1\n\n\n Test Files  1 passed (1)\n      Tests  34 passed (34)\n   Start at  10:53:04\n   Duration  349ms (import 61%, transform 29%, tests 6%, worker 4%)"
+      },
+      "listedEvaluatorInFolder": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  4 failed (4)",
+        "failed": [
+          "prints every verification section and no usage output, populated or absent 60ms",
+          "labels missing data instead of printing zeros or crashing 67ms",
+          "still exits nonzero and names the broken limit 64ms",
+          "keeps the exported helpers verify.mjs reuses 51ms",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > still exits nonzero and names the broken limit",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > keeps the exported helpers verify.mjs reuses"
+        ],
+        "tail": "resolve:864:10)\r\n    at defaultResolve (node:internal/modules/esm/resolve:990:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)\r\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)\r\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)\r\n    at #link (node:internal/modules/esm/module_job:208:49) {\r\n  code: 'ERR_MODULE_NOT_FOUND',\r\n  url: 'file:///C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T4-1/src/scripts/kitchen-stats.mjs'\r\n}\r\n\r\nNode.js v24.11.0\r\n: expected 1 to be +0 // Object.is equality\n\n- Expected\n+ Received\n\n- 0\n+ 1\n\n ❯ evaluator/kitchen-stats-no-usage.test.ts:78:40\n\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯"
+      }
+    },
+    {
+      "id": "T5",
+      "test": "tests/contracts/composition.test.ts",
+      "target": "packages/contracts/public/index.ts",
+      "why": "imports repository helpers and a fixtures module",
+      "attempts": [
+        {
+          "declared": {
+            "vitest": "5.0.1"
+          },
+          "exit": 3,
+          "stderr": "export failed: 6 preparation gap(s)\n  - import of undeclared dependency 'zod' (via packages/contracts/public/index.ts -> packages/contracts/public/task.ts -> zod)\n  - import of undeclared dependency 'zod' (via packages/contracts/public/index.ts -> packages/contracts/public/composition.ts -> zod)\n  - import of undeclared dependency 'zod' (via packages/contracts/public/index.ts -> packages/contracts/public/release.ts -> zod)\n  - import of undeclared dependency 'zod' (via packages/contracts/public/index.ts -> packages/contracts/public/submission.ts -> zod)\n  - import of undeclared dependency 'zod' (via packages/contracts/public/index.ts -> packages/contracts/common.ts -> zod)\n  - import of undeclared dependency 'zod' (via packages/contracts/public/index.ts -> packages/contracts/paths.ts -> zod)"
+        },
+        {
+          "declared": {
+            "vitest": "5.0.1",
+            "zod": "4.6.5"
+          },
+          "exit": 0,
+          "stderr": ""
+        }
+      ],
+      "exported": true,
+      "inRepository": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  25 passed (25)",
+        "failed": []
+      },
+      "ownerFiles": [
+        "editable: packages/contracts/public/index.ts",
+        "runnable: packages/contracts/common.ts",
+        "runnable: packages/contracts/paths.ts",
+        "runnable: packages/contracts/public/composition.ts",
+        "runnable: packages/contracts/public/release.ts",
+        "runnable: packages/contracts/public/submission.ts",
+        "runnable: packages/contracts/public/task.ts",
+        "runnable: tests/contracts/composition.test.ts",
+        "runnable: tests/contracts/fixtures.ts"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 9,
+        "inventoryFiles": 746,
+        "share": 0.012064343163538873
+      },
+      "install": {
+        "exit": 0,
+        "tail": "+41\n+++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 41, reused 41, downloaded 0, added 40\nProgress: resolved 41, reused 41, downloaded 0, added 41, done\n\ndependencies:\n+ vitest 5.0.1\n+ zod 4.6.5\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 1.9s using pnpm v10.34.5"
+      },
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guardInFolder": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  25 passed (25)",
+        "failed": [],
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T5-1\n\n\n Test Files  1 passed (1)\n      Tests  25 passed (25)\n   Start at  10:53:17\n   Duration  720ms (import 48%, transform 38%, tests 13%, worker 1%)"
+      },
+      "listedEvaluatorInFolder": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  4 failed (4)",
+        "failed": [
+          "prints every verification section and no usage output, populated or absent 79ms",
+          "labels missing data instead of printing zeros or crashing 55ms",
+          "still exits nonzero and names the broken limit 73ms",
+          "keeps the exported helpers verify.mjs reuses 55ms",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > still exits nonzero and names the broken limit",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > keeps the exported helpers verify.mjs reuses"
+        ],
+        "tail": "resolve:864:10)\r\n    at defaultResolve (node:internal/modules/esm/resolve:990:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)\r\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)\r\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)\r\n    at #link (node:internal/modules/esm/module_job:208:49) {\r\n  code: 'ERR_MODULE_NOT_FOUND',\r\n  url: 'file:///C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T5-1/src/scripts/kitchen-stats.mjs'\r\n}\r\n\r\nNode.js v24.11.0\r\n: expected 1 to be +0 // Object.is equality\n\n- Expected\n+ Received\n\n- 0\n+ 1\n\n ❯ evaluator/kitchen-stats-no-usage.test.ts:78:40\n\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯"
+      }
+    },
+    {
+      "id": "T6",
+      "test": "tests/contracts/boundaries.test.ts",
+      "target": "scripts/boundaries.mjs",
+      "why": "reads repository files by paths relative to the working directory",
+      "attempts": [
+        {
+          "declared": {
+            "vitest": "5.0.1"
+          },
+          "exit": 3,
+          "stderr": "export failed: 1 preparation gap(s)\n  - import of undeclared dependency 'typescript' (via scripts/boundaries.mjs -> typescript)"
+        },
+        {
+          "declared": {
+            "vitest": "5.0.1",
+            "typescript": "6.0.3"
+          },
+          "exit": 0,
+          "stderr": ""
+        }
+      ],
+      "exported": true,
+      "inRepository": {
+        "exit": 0,
+        "files": "Test Files  1 passed (1)",
+        "tests": "Tests  4 passed (4)",
+        "failed": []
+      },
+      "ownerFiles": [
+        "editable: scripts/boundaries.mjs",
+        "runnable: scripts/process.mjs",
+        "runnable: tests/contracts/boundaries.test.ts"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 746,
+        "share": 0.004021447721179625
+      },
+      "install": {
+        "exit": 0,
+        "tail": "skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +40\n++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 40, reused 40, downloaded 0, added 40, done\n\ndependencies:\n+ typescript 6.0.3\n+ vitest 5.0.1\n\ndevDependencies:\n+ @types/node 24.13.6\n\nDone in 1s using pnpm v10.34.5"
+      },
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guardInFolder": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  3 failed | 1 passed (4)",
+        "failed": [
+          "has no generic root contracts export and keeps private schemas out of public exports 5ms",
+          "rejects private package imports and handles static imports, reexports and dynamic imports 51ms",
+          "walks real external source import closures without private source access 46ms",
+          "src/tests/contracts/boundaries.test.ts > public/private import export boundaries > has no generic root contracts export and keeps private schemas out of public exports",
+          "src/tests/contracts/boundaries.test.ts > public/private import export boundaries > rejects private package imports and handles static imports, reexports and dynamic imports",
+          "src/tests/contracts/boundaries.test.ts > public/private import export boundaries > walks real external source import closures without private source access"
+        ],
+        "tail": "lve:274\r\n    throw new ERR_MODULE_NOT_FOUND(\r\n          ^\r\n\r\nError [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-T6-1\\scripts\\boundaries.mjs' imported from C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-T6-1\\[eval1]\r\n    at finalizeResolution (node:internal/modules/esm/resolve:274:11)\r\n    at moduleResolve (node:internal/modules/esm/resolve:864:10)\r\n    at defaultResolve (node:internal/modules/esm/resolve:990:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)\r\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)\r\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)\r\n    at #link (node:internal/modules/esm/module_job:208:49) {\r\n  code: 'ERR_MODULE_NOT_FOUND',\r\n  url: 'file:///C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T6-1/scripts/boundaries.mjs'\r\n}\r\n\r\nNode.js v24.11.0\r\n\n ❯ run src/tests/contracts/boundaries.test.ts:5:37\n\n ❯ src/tests/contracts/boundaries.test.ts:13:20\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  src/tests/contracts/boundaries.test.ts > public/private import export boundaries > walks real external source import closures without private source access\nError: Command failed: C:\\Program Files\\nodejs\\node.exe scripts/boundaries.mjs\nnode:internal/modules/cjs/loader:1423\r\n  throw err;\r\n  ^\r\n\r\nError: Cannot find module 'C:\\Users\\shout\\AppData\\Local\\Temp\\lab-sceptic02-FTELLc\\box-T6-1\\scripts\\boundaries.mjs'\r\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1420:15)\r\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1058:19)\r\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1063:22)\r\n    at Module._load (node:internal/modules/cjs/loader:1226:37)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)\r\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\r\n    at node:internal/main/run_main_module:33:47 {\r\n  code: 'MODULE_NOT_FOUND',\r\n  requireStack: []\r\n}\r\n\r\nNode.js v24.11.0\r\n\n ❯ src/tests/contracts/boundaries.test.ts:22:20\n     20|   });\n     21|   it('walks real external source import closures without private sourc…\n     22|     const output = execFileSync(process.execPath, ['scripts/boundaries…\n       |                    ^\n     23|     expect(JSON.parse(output)).toMatchObject({ assurance: 'tested', st…\n     24|   });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯"
+      },
+      "listedEvaluatorInFolder": {
+        "exit": 1,
+        "files": "Test Files  1 failed (1)",
+        "tests": "Tests  4 failed (4)",
+        "failed": [
+          "prints every verification section and no usage output, populated or absent 62ms",
+          "labels missing data instead of printing zeros or crashing 47ms",
+          "still exits nonzero and names the broken limit 53ms",
+          "keeps the exported helpers verify.mjs reuses 48ms",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > prints every verification section and no usage output, populated or absent",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > labels missing data instead of printing zeros or crashing",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > still exits nonzero and names the broken limit",
+          "evaluator/kitchen-stats-no-usage.test.ts > boxed kitchen-stats: Usage output removed, everything else intact > keeps the exported helpers verify.mjs reuses"
+        ],
+        "tail": "resolve:864:10)\r\n    at defaultResolve (node:internal/modules/esm/resolve:990:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)\r\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)\r\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)\r\n    at #link (node:internal/modules/esm/module_job:208:49) {\r\n  code: 'ERR_MODULE_NOT_FOUND',\r\n  url: 'file:///C:/Users/shout/AppData/Local/Temp/lab-sceptic02-FTELLc/box-T6-1/src/scripts/kitchen-stats.mjs'\r\n}\r\n\r\nNode.js v24.11.0\r\n: expected 1 to be +0 // Object.is equality\n\n- Expected\n+ Received\n\n- 0\n+ 1\n\n ❯ evaluator/kitchen-stats-no-usage.test.ts:78:40\n\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯"
+      }
+    }
+  ],
+  "tempRemoved": true
+}

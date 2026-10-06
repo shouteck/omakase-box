@@ -36,7 +36,7 @@ Session 1, 6 October 2026. Line 1 surveyed properly; Lines 2 and 3 skimmed for n
 
 **Is it answered?** Not for this product's method. What the field does say:
 
-- Static analysis of JavaScript is known to miss edges created at run time (dynamic property access, computed imports, registries). Laursen, Xu and Møller (PLDI 2024) report call-graph recall of 75.9% for static analysis on 36 projects, rising to 88.1% with run-time hints; confirmed at search-summary level only.
+- Static analysis of JavaScript is known to miss edges created at run time (dynamic property access, computed imports, registries). Laursen, Xu and Møller (PLDI 2024, abstract read from the paper in session 3) report average call-graph recall of 75.9% for static analysis on 36 projects, rising to 88.1% with run-time hints. That is call edges inside programs, not which files a change needs, so it shows the kind of gap, not its size for this product.
 - Debloating research selects code by what the tests exercise, as the product's "checked by execution" step does, and inherits the same limit: whatever the checks do not exercise can be missing without anyone noticing.
 - "edit2ripple" in Agent Retrieval Bench is the same question from the retrieval side: given an edit, which other files must change.
 

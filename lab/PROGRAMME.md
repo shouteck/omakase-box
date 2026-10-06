@@ -80,4 +80,5 @@ None yet.
 List each benchmark, labelled set and harness here with its location, size and what it measures.
 
 - **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
+- **Existing tests as Box guards.** `lab/lines/request-to-check/experiments/02-existing-test-in-a-box/`. Two runners that export a Box with a named existing test as its guard and run it in a clean folder on the base. Seven tests tried so far, hand-picked.
 - **R1 candidate set.** `lab/lines/request-to-check/experiments/01-r1-cheap-check/`. 13 wrong and 4 right versions of one script, with a runner that scores any check on them. One request, no held-out part.

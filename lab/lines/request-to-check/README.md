@@ -51,7 +51,10 @@ From this repository, after two sceptic reviews:
 
 - **Shows** (one request, reproduced by a fresh agent): R1's purpose-written check accepts wrong work and rejects right work, and the test that already existed catches wrong work it misses. Neither contains the other.
 - **Suggests** (79 bullets, one author, one repository, guide with known faults): an existing check alone decides about one clause in ten of our own briefs; a short command could decide about three in ten; the rest need a purpose-built test or a person.
-- **Not shown:** that R1's preparation cost was avoidable. The first survey floated this; the experiment did not test delivery into a Box.
+- **Shows** (one case, reproduced, experiment 02): a test the repository already had can be shipped by today's exporter with no new code and work as the guard in a clean folder.
+- **Suggests** (seven hand-picked tests): tests that reach the code by import travel into a Box; tests that start or read files by a path built at run time arrive broken, and the exporter reports success without naming a gap. Three of seven failed this way.
+- **Shows:** nothing in today's Box makes a check red on the base. A recipient who changes nothing can pass every declared check. The format also accepts an evaluator registered for a different request.
+- **Not shown:** that R1's preparation cost was avoidable end to end. The guard half is; the evidence-of-change half and the owner side are not built.
 
 From the literature, after the sceptic's review (`sceptic-survey.md`):
 
@@ -61,7 +64,8 @@ From the literature, after the sceptic's review (`sceptic-survey.md`):
 
 ## Open threads
 
-- Can an existing test be shipped into a Box and run there as a guard without request-specific plumbing? Experiment 01 ran in the lab worktree and could not say. This is the question that decides whether R1's cost was avoidable, and it is R2's question too.
+- A guard that arrives broken is silent today. The cheap detector is to run every declared check on the base at export: a guard that is red there is broken before anyone has changed anything. Untested as a detector; all three of the sceptic's broken guards would have been caught.
+- What does evidence of change look like as a declared check? A command with a comment is not one. It has to exit non-zero on the base.
 - Checking for a word ("no usage in the output") both accepted a reworded section and rejected right work when the word appeared in a path. A before/after comparison of the output with the section removed was not tried and may be the better cheap check for "remove this" requests.
 - Held-out candidates: wrong and right candidates must be written by an agent that has not seen the checks. In experiment 01 all 26 predictions by the two people who had read the checks came true.
 - The recipient sees the Box's evaluator. Repair research says solvers overfit visible tests. The product already has owner-side checks; whether they differ enough from the visible ones to catch overfitting is unmeasured.

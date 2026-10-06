@@ -2,49 +2,49 @@
 
 From the lab lead to the CTO. Replaced, not appended, at the end of every lab run; history is in Git and the notebooks. One screen. The CTO reads it at every kitchen kickoff with `git show origin/lab:lab/BRIEF.md` and answers in the "For the lab" section of `BACKLOG.md` on master.
 
-As of 6 October 2026, after session 2 (formulate). Detail: `lab/lines/request-to-check/` (README, `experiments/01-r1-cheap-check/`, `map/pilot/RESULT.md`). Both results below were attacked by a fresh sceptic or re-labelled blind; what did not survive has been removed.
+As of 6 October 2026, after session 3. Detail: `lab/lines/request-to-check/` (README; `experiments/01-r1-cheap-check/`; `experiments/02-existing-test-in-a-box/`; `map/pilot/RESULT.md`). Every result below was reproduced and attacked by a fresh sceptic; what did not survive has been removed. Nothing here has a rate behind it: the cases are few and hand-picked.
 
 ## What the lab now believes
 
-1. **From a request to a check.**
-   - *Shows* (R1, one request, reproduced): R1's purpose-written check accepts wrong work and rejects right work. It passes a version that rewords the Usage section instead of removing it, and it fails the accepted change if the word "usage" appears in a printed path. The 193-line test that existed before R1 catches wrong work the new one misses (a weakened stall guard, a loosened limit, dropped runs), and misses things the new one catches (a deleted heading, missing-data labels). Neither contains the other.
-   - *Suggests* (79 bullets from our 15 wave briefs, two blind labellers, kappa 0.71): an existing check alone decides about one clause in ten; a short command could decide about three in ten; about three in ten need a purpose-built test; a quarter or more need a person to read. Our briefs are more checkable than outside requests will be.
-   - *Withdrawn:* "R1's cost was largely avoidable." You were right to hold it as a lead. The experiment compared two checks' verdicts in the lab worktree; it did not test whether an existing test can be delivered into a Box without the plumbing R1 wrote. That is untested.
-   - From the literature, unchanged: passing tests is not being right; requester-confirmed generated checks are a hypothesis only. The older human studies could not be opened this session.
-2. **Does a Box help.** Unchanged: not answered in the field; a success comparison needs over a hundred tasks.
-3. **Does the slice contain what the change needs.** Unchanged: not answered for import-following.
+1. **From a request to a check.** R2's premise splits into two halves, and they are in very different states.
+   - **The guard half works, for some tests.** *Shows* (one case, reproduced): with today's exporter and no new code, R1's request exported with the test the repository already had as its guard. The cost was one more entrypoint, one declared dependency and a check line. In a clean folder it was green on the base, green after the right change and red on two wrong ones. *Suggests* (seven hand-picked tests): tests that reach their code by import travel; tests that start or read other files by a path built at run time arrive broken. Three of seven arrived broken, and **export reported success and named no gap for any of them.**
+   - **The evidence-of-change half does not exist in the product.** *Shows:* in the exported Box no declared check is red on the base, so a recipient who changes nothing passes all of them. Nothing runs the checks on the base at export. Owner verify runs install, `tsc` and registered owner checks, never the agreement's commands. R1 got its evidence of change from the purpose-written evaluator; that is the part R2 has no cheap substitute for yet.
+   - **The agreement format can be satisfied by another request's evaluator.** It demands at least one generator but accepts any registered one; the unrelated evaluator is then shipped, and by the code its owner check would run.
+   - Carried over from session 2: R1's purpose-written check accepts wrong work and rejects right work; in our own briefs an existing check alone decides about one clause in ten.
+   - From the literature, now read in full: when 30 students were asked to confirm machine-written checks, they wrongly approved 26% to 59% of the incorrect ones and wrongly rejected 9% to 32% of the correct ones (Staats et al. 2012). They did not own the code, but it counts against "the requester just confirms a generated check" as a safe cheap route.
+2. **Does a Box help.** Unchanged.
+3. **Does the slice contain what the change needs.** One new data point from this run: selection by imports silently misses files a test reaches by path. This is the first measured instance of what Line 3 is about, on tests instead of on changes.
 
 ## Ready to transfer
 
-Nothing as a wave. One thing usable now without building: the list of wrong-candidate kinds below.
+One finding is ready, small enough to be a clause in the R2 brief instead of its own wave:
+
+- **Run every declared check on the base at export, and record red or green for each.** You already took this for R2. The lab's evidence adds two reasons and one rule. A guard that is red on the base is broken before anyone has touched anything, which is exactly how the three broken guards would have been caught. A Box with no check red on the base cannot tell done from not done, which is the state of every Box the exporter makes today. Rule: a check counts as red only by its exit code.
+- How the kitchen will know it works: export the experiment's Box; the report says guard green, nothing red, and warns. Export the sceptic's T2, T3 or T6; the report says the guard is red on the base and refuses or warns.
 
 ## Advice on work in flight or planned
 
 **R2.**
 
-- **Use the existing tests as the guard, and write only what they do not protect.** On R1 the existing test was the stronger guard in places. The new part worth writing was small: the condition that makes the request, plus the two things the existing test left open. R2's premise holds up on this evidence; what it must find out is whether an existing test can run inside a Box unchanged.
-- **Do not check for a word.** "No 'usage' in the output" was wrong in both directions. For a "remove this" request, a before/after comparison of the output with the section taken out is the obvious alternative; untested.
-- **Try every check against these wrong candidates before trusting it:** no change; an empty file; the surface reworded; something next to the target deleted too; a preserved interface broken; leftovers the request said to remove. R1's check was only tried against the first two, and fails the third and sixth. This is a few minutes per request and needs no new tooling.
-- **And against a second right solution,** written by someone who has not seen the check.
-- **From your reply:** agreed on all points; nothing further on D4 or the wording of the promise.
-
-**K6 cleanup:** nothing from research.
+- **Choose a request whose existing test imports what it tests.** That guard will travel. Avoid, for the first R2, tests that shell out to other scripts or read repository files.
+- **Decide what evidence of change is before choosing the request.** The options the lab can see: an existing test that is already failing; a declared command that exits non-zero on the base; or accepting that the Box shows only "nothing broke" and saying so. R1's kind of request ("remove this") has no existing red test by nature.
+- **An agreement should be able to name an existing test file as a check.** Today the only doors are the entrypoint list and a free-text command, and the format still demands a generated evaluator. This is a format decision and yours.
+- **`tsc` in the Box says nothing about `.mjs` files.** For R1's script it was a check that could not fail.
+- Carried over: do not check for a word; try each check against the six kinds of wrong candidate and a second right one.
 
 ## Is the programme aimed right?
 
-Yes. One thing for you to weigh, not a request to change the page: the pilot says the unit that matters is the clause, not the request, and that a large share of what our own briefs ask for is about how the work was done or what was recorded, which no check on the result can decide. If outside requests look similar, "what the MVP can honestly promise to verify" is a per-clause answer.
+Yes. Line 1's order stands. Line 3 has just shown itself relevant earlier than planned: the same import-following that selects source also decides whether a check works when it arrives.
 
 ## What the lab needs from the product
 
-- The per-run records you already agreed to, from R2 on.
-- If R2 exports a Box that carries an existing test as its guard, keep that Box's folder listing in the evidence. It answers the lab's open question for free.
+- The per-run records you agreed to, from R2 on.
 - Nothing from the owner.
 
 ## Replies to the CTO
 
-- K6 accepted: noted; the last brief was written against an older master.
-- "Settle R1 before it is quoted": done, and the answer is that it should not be quoted. See above.
+Your reply still answers the session 1 brief; nothing new to answer. The R1 question you asked to have settled: the guard half of R1's cost was avoidable; the evidence-of-change half and the owner side were not, with the product as it is.
 
 ## Next lab session
 
-Instrument Line 1: labelling guide version 1 (bullets split into single conditions; a column for red or green on the base), re-tested on the same 79; then a first sample of requests from outside this repository.
+Instrument Line 1: labelling guide version 1 re-tested on the same 79 clauses; and turn experiment 02 into a harness run over every test file in the repository, so "three of seven arrive broken" becomes a count.

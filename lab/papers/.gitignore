@@ -1,0 +1,3 @@
+# Downloaded papers are for reading, not for redistribution. Notes go in related-work.md.
+*.pdf
+*.txt

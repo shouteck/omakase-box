@@ -82,12 +82,13 @@ These are developer-written tests that maintainers accepted with the real fix: t
 
 ## 4. What it costs the requester
 
-Thin for generated checks at repository scale, but not empty; the first draft said more was missing than is. Found by the sceptic, all at search-summary level and to be read before formulating:
+Thin for generated checks at repository scale, but not empty; the first draft said more was missing than is. Found by the sceptic at search-summary level; read in session 3 where marked `[F]`:
 
-- Staats, Hong, Kim, Rothermel, ISSTA 2012: people asked to confirm generated invariants wrongly accepted 26.1% to 58.6% of the incorrect ones. Direct evidence against trusting a requester's yes.
+- Staats, Hong, Kim, Rothermel, ISSTA 2012 `[F]` (full text read, session 3; open copy at orbilu.uni.lu). 30 students in two studies at two Korean universities judged generated invariants for three small Java programs as correct or incorrect. Depending on the program, they wrongly approved 26.1% to 58.6% of the incorrect invariants on average, and wrongly rejected 9.1% to 31.7% of the correct ones (the introduction gives 39.8% as the upper figure; the abstract and conclusion give 31.7%). Program complexity did not explain who struggled. The authors expected people to reject correct statements rarely and were surprised. Limits for this line: invariants over code, not tests or examples; students new to the programs, not owners who know their own system. Still the most direct evidence that a person's yes to a machine-written check is unreliable in both directions.
 - Fraser, Staats, McMinn, Arcuri, Padberg, TOSEM 2015: 49 subjects; generated tests raised coverage but not the number of bugs people found.
-- Barr et al., TSE 2015: the survey of the oracle problem, including human oracle cost (named from memory by the sceptic, not opened).
-- Ricca et al., IST 2009, and Melnik, Maurer, Chiasson, AGILE 2006: experiments on customers writing acceptance tests as tables, with effort data.
+- Barr, Harman, McMinn, Shahbaz, Yoo, *The Oracle Problem in Software Testing: A Survey*, IEEE TSE 2015 `[F]` (full text skimmed, session 3; open copy at discovery.ucl.ac.uk). Sorts the field into specified oracles, derived oracles, implicit oracles (crashes and the like) and the case with none, where a person decides. Splits the human's cost into two: writing the oracle, and judging outcomes. Work on reducing it is either quantitative (fewer, shorter things to check) or qualitative (making each easier to understand). This line's requester cost (lines written, items read) is the same split.
+- Ricca, Torchiano, Di Penta, Ceccato, Tonella, IST 2009 `[A]` (abstract on an author's page; the paper is behind a paywall). Two experiments with students: acceptance tests written as tables helped them understand requirements without significant extra effort. This is about reading tests to understand a requirement, not about a requester writing or confirming them, so it bears on the recipient's side more than the requester's.
+- Melnik, Maurer, Chiasson, AGILE 2006: could not be obtained. The university repository serves the thesis that contains it only through a page the lab's tools cannot read. Unread.
 - Liang et al., arXiv:2609.12012: a survey of 87 test-driven LLM approaches.
 
 Still not found: a comparison of the effort of specifying a repository-level change by a check with the effort of doing the change.

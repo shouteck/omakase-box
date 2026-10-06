@@ -78,3 +78,28 @@ Append-only. Newest entry last.
 **Dead ends.** The older human studies could not be opened at zero cost through this host's reader. The call-graph PDF from session 1 is still unread for the same reason (no PDF tool).
 
 **Next.** Instrument. Guide version 1: split bullets into atomic conditions, add the red-or-green-on-base column, re-test agreement on the same 79. Then the first sample from outside this repository. In parallel, when the kitchen is idle: try to run the existing kitchen-stats test inside an exported Box, which is the test of whether R1's cost was avoidable.
+
+## 6 October 2026, session 3: the two leftovers from session 2
+
+**Set out to do.** Read the papers that could not be opened (the owner approved the downloads), and test whether an existing test can travel into a Box as the guard.
+
+**Before starting.** `origin/master` already merged; "For the lab" still answers the session 1 brief. Kitchen idle throughout by `kitchen-busy`.
+
+**Reading.** The host already had a free PDF library (`pypdf`), so nothing was installed. Downloaded two PDFs into `lab/papers/` (kept out of Git): Staats et al. 2012 from the University of Luxembourg's repository after the KAIST link returned 404, and Barr et al. 2015 from UCL. Ricca et al. 2009 is paywalled; abstract only. Melnik et al. 2006 could not be obtained: the Calgary repository serves the file through a page these tools cannot read. Also read the abstract of the call-graph paper saved in session 1. Notes are in `related-work.md`.
+
+- Staats et al., from the full text: 30 students wrongly approved 26.1% to 58.6% of incorrect generated invariants and wrongly rejected 9.1% to 31.7% of correct ones. The sceptic's summary-level figure was right. This counts against "the requester confirms a generated check" as a cheap safe route, with the caveat that the subjects did not own the code.
+- Barr et al.: human oracle cost splits into writing the oracle and judging outcomes. Same split as this line's cost measure; adopted the vocabulary, changed nothing.
+
+**Experiment 02** (`experiments/02-existing-test-in-a-box/`). Plan committed before the run (`dfb4f31`). First run died at setup: R1's recorded patch no longer reverses cleanly after K6. Fixed by restoring the lines by text. Every prediction then held: the agreement format refused an empty evaluator list; export named `vitest` as undeclared; with that declared the Box exported with three owner files; in a clean folder the existing test was green on the base and after the accepted change. Added after seeing that: two wrong candidates, both red.
+
+**The sceptic's corrections.**
+
+- The "evidence of change" check was a command with a comment. As declared it exits 0 on the base. The runner computed red, not the Box. Withdrawn. This is the third session in which the lead's draft claimed more than was run, and the first where the gap was in the experiment itself and not its wording.
+- Six more tests through the same route: three arrive broken with no gap named, because they start or read files by path. So "an existing test can be the guard" is true of some tests, and the exporter cannot tell which.
+- The format can be satisfied with another request's evaluator.
+
+**What I believe now that I did not this morning.** R2's premise splits in two. The guard half is real and nearly free for tests that import what they test. The evidence-of-change half does not exist in the product in any form: no declared check is red on the base, nothing runs checks on the base, and the owner side never runs declared commands. R1 got its evidence of change from the custom evaluator, which is the expensive part.
+
+**Dead ends.** KAIST's PDF link (404). Calgary's repository (script-only page). The first attempt to rebuild the base by patch.
+
+**Next.** Unchanged from session 2: guide version 1 and the map. One addition for the instrument stage: turn experiment 02's runner into a small harness that takes any test and reports "travels / arrives broken", and run it over every test file in this repository, so the three-of-seven becomes a count over all of them instead of a hand-picked handful.
