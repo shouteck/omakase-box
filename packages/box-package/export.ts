@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
 import type { BoxAgreement } from './agreement.js';
-import { runDeclaredChecks } from './commands.js';
+import { materializeTooling, runDeclaredChecks } from './commands.js';
 import type { CheckRecord } from './commands.js';
 import { ExportFailed, PreparationGap } from './errors.js';
 import { git } from './git.js';
@@ -115,6 +115,7 @@ export function exportBox(options: ExportOptions): ExportResult {
       const clone = join(baseWork, 'owner');
       git(repo, ['clone', '--local', '--quiet', repo, clone]);
       git(clone, ['checkout', '--quiet', baseCommit]);
+      materializeTooling(repo, clone);
       if (ownerChecks.some(check => check.tool !== 'node')) {
         const install = spawnSync(options.pnpm.command, [...options.pnpm.args, 'install', '--frozen-lockfile'], { cwd: clone, encoding: 'utf8', timeout: 600_000, windowsHide: true });
         if (install.status !== 0) throw new ExportFailed(`base checkout install failed: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);

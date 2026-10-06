@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { cpSync, existsSync, realpathSync } from 'node:fs';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import type { CommandCheck } from './agreement.js';
 import type { PnpmInvocation } from './export.js';
 import { toPosix } from './selection.js';
@@ -33,6 +33,17 @@ export interface CheckRecord {
 }
 
 const LOG_TAIL = 4000;
+
+// A disposable clone carries tracked files only; the pinned local toolchain
+// (scripts/tooling, e.g. the repository-local pnpm bundle) is installed, not
+// committed. Declared checks run with the same pinned tools the worktree has:
+// if the owner repo has a scripts/tooling directory it is copied into the clone
+// before any command executes. This is toolchain materialization, not source —
+// it changes nothing the commands measure.
+export function materializeTooling(repo: string, clone: string): void {
+  const source = join(repo, 'scripts', 'tooling');
+  if (existsSync(source)) cpSync(source, join(clone, 'scripts', 'tooling'), { recursive: true });
+}
 
 // Pinned tool resolution: 'node' is the running runtime (the declared toolchain's
 // own interpreter on this host), 'pnpm' is the caller's pinned invocation, and

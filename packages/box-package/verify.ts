@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
-import { runDeclaredChecks } from './commands.js';
+import { materializeTooling, runDeclaredChecks } from './commands.js';
 import type { CheckRecord } from './commands.js';
 import type { PnpmInvocation } from './export.js';
 import { git } from './git.js';
@@ -233,6 +233,7 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
     // met (a no-op patch keeps the untouched-base result).
     let commandChecks: CheckRecord[] | undefined;
     if (agreement.commands.length > 0) {
+      materializeTooling(repo, clone);
       commandChecks = runDeclaredChecks(agreement.commands, clone, options.pnpm, 'owner');
       const failed = commandChecks.find(record => record.result !== 'pass');
       if (failed !== undefined) {
