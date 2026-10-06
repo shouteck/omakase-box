@@ -1,10 +1,11 @@
 # Station: Packaging
 
-Selecting source for a Box, exporting it as a folder, proving it in a clean directory, submitting a patch from it, verifying that patch in the owner repository. D2/D3.1 and declared-command checks are built. A1 makes agreements neutral; A2 makes selection explicit and compares full-base/Box observations. A3 still owns neutral product orchestration.
+Selecting source for a Box, exporting it as a folder, proving it in a clean directory, submitting a patch from it, verifying that patch in the owner repository. D2/D3.1 and declared-command checks are built. A1 makes agreements neutral; A2 makes selection explicit and compares full-base/Box observations. A3 makes declared commands sufficient for neutral orchestration; ecosystem generation/install/compile remains explicit opt-in only.
 
 ## What this station knows
 
-- A Box is a plain folder with `box.json`, selected source and declared setup/check commands. A1 prerequisites are arbitrary programs with optional version descriptions, not a fixed toolchain. Current private-shop fixtures opt into Node scaffolding; removing ecosystem-specific orchestration is A3.
+- A Box is a plain folder with `box.json`, selected source and declared setup/check commands. Prerequisites are arbitrary programs. Neutral A3 export/verify needs no pnpm or generated files; private-shop fixtures explicitly opt into the retained nodejs helper. Paired recipient checks require the same sourceRoot-relative paths in full base and Box.
+- Name negative candidates by the actual source mutation. A cosmetic unused parameter is not the removed-parameter/unchanged-caller probe; a green alternative solution is not a wrong candidate.
 - The design for the first fixture is in `docs/box-v4/delegation/SUPPORTED-CASE.md`: the `examples/private-shop` fixture, two supported requests (A: response security policy; B: deterministic ranking), the modules that must be absent from the export, and one unsupported coupling case.
 - Reuse before writing: `packages/box-contracts` (Box schemas and hashing), `packages/analyzer` (import scanning), `packages/evaluation/patch-validation`.
 - A2's `files` is the sole owner-source shipping authority. TypeScript `proposeSelection` supplies suggestions from entrypoints, never implicit export inputs. Owner-selected dependency files retain their bytes and provenance; optional generated helpers cannot overwrite them.
