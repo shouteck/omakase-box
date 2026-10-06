@@ -14,13 +14,22 @@ function neutralRepo(): { repo: string; baseCommit: string } {
   write('src/feature.mjs', "export const feature = input => 'WRONG:' + input;\n");
   write('src/outcome.mjs', [
     "import { readFileSync } from 'node:fs';",
+    "const pad = 'Z'.repeat(6000);",
     "let mod;",
     "try { mod = await import('./feature.mjs'); }",
-    "catch (error) { console.log('LOAD-FAILED ' + error.message); process.exit(7); }",
+    "catch (error) { console.log('LOAD-FAILED ' + error.message + '\\n' + pad); process.exit(7); }",
     "const out = mod.feature(readFileSync('data/input.txt', 'utf8').trim());",
-    "if (out !== 'seed') { console.log('DEFECT feature=' + JSON.stringify(out)); process.exit(7); }",
+    "if (out !== 'seed') { console.log('DEFECT feature=' + JSON.stringify(out) + '\\n' + pad); process.exit(7); }",
     "console.log('outcome-met');"
   ].join('\n') + '\n');
+  write('src/streams.mjs', [
+    "import { existsSync } from 'node:fs';",
+    "const tag = 'SIGNAL\\n' + 'Z'.repeat(6000);",
+    "if (existsSync('config/stream-flag.txt')) process.stdout.write(tag);",
+    "else process.stderr.write(tag);",
+    "process.exit(7);"
+  ].join('\n') + '\n');
+  write('config/stream-flag.txt', 'on\n');
   write('src/check.mjs', [
     "import { existsSync } from 'node:fs';",
     "const missing = ['data/input.txt', 'config/flag.txt'].filter(path => !existsSync(path));",
@@ -99,6 +108,10 @@ describe('a2 explicit selection', () => {
     }
     expect(manifest.paired[1]?.box.result).toBe('fail');
     expect(manifest.paired[1]?.box.exit).toBe(7);
+    for (const pair of manifest.paired) {
+      expect(pair.owner.outputSha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(pair.owner.outputSha256).toEqual(pair.box.outputSha256);
+    }
     expect(manifest.baseChecks.filter(record => record.context === 'owner')).toEqual([]);
     expect(manifest.baseChecks.filter(record => record.context === 'recipient').map(record => record.name)).toEqual(['layout-guard', 'feature-outcome']);
   });
@@ -148,6 +161,35 @@ describe('a2 explicit selection', () => {
     }
     expect(existsSync(outDir)).toBe(false);
     expect(fixtureGit(repo, ['status', '--porcelain']).trim()).toBe('');
+  });
+
+  it('refuses export when the box emits identical bytes on a different stream', () => {
+    const { repo, baseCommit } = neutralRepo();
+    const outDir = join(runRoot('a2-stream'), 'out');
+    const agreement = neutralAgreement(baseCommit, {
+      files: [{ owner: 'src/streams.mjs' }],
+      commands: [
+        { name: 'stream-check', program: 'node', args: ['src/streams.mjs'], cwd: '.', context: 'recipient', role: 'outcome', timeoutMs: 30000 }
+      ]
+    });
+    try {
+      runExport(agreement, repo, outDir);
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ExportFailed);
+      expect((error as ExportFailed).message).toMatch(/stream-check/);
+      expect((error as ExportFailed).message).toMatch(/differently/);
+    }
+    expect(existsSync(outDir)).toBe(false);
+    expect(fixtureGit(repo, ['status', '--porcelain']).trim()).toBe('');
+  });
+
+  it('accepts true matching long output and records the comparison digest', () => {
+    const { repo, baseCommit } = neutralRepo();
+    const manifest = manifestOf(runExport(neutralAgreement(baseCommit), repo).outDir);
+    const outcome = manifest.paired.find(pair => pair.name === 'feature-outcome');
+    expect(outcome?.owner.log.length).toBeGreaterThan(3000);
+    expect(outcome?.owner.outputSha256).toBe(outcome?.box.outputSha256);
   });
 
   it('recovers identical paired results once the omitted file is restored', () => {

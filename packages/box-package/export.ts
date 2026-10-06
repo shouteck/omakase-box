@@ -221,7 +221,6 @@ export function exportBox(options: ExportOptions): ExportResult {
       }
       const boxRuns = runDeclaredChecks(agreement.commands, box, 'recipient');
       baseChecks.push(...boxRuns);
-      const boxRoot = realpathSync(box);
       for (const check of recipientChecks) {
         const owner = pairBase.get(check.name);
         const isolated = boxRuns.find(record => record.name === check.name);
@@ -232,13 +231,8 @@ export function exportBox(options: ExportOptions): ExportResult {
         if (owner.result !== isolated.result || owner.exit !== isolated.exit) {
           throw new ExportFailed(`paired check '${check.name}' disagrees between the untouched base and the isolated Box (base ${owner.result} exit ${owner.exit}; box ${isolated.result} exit ${isolated.exit}): ${isolated.log}`);
         }
-        const normalize = (log: string, root: string): string => {
-          let out = log.replace(/\r\n/g, '\n');
-          for (const spelling of new Set([root, toPosix(root)])) if (spelling !== '') out = out.split(spelling).join('<root>');
-          return out;
-        };
-        if (normalize(owner.log, basePairRoot) !== normalize(isolated.log, boxRoot)) {
-          throw new ExportFailed(`paired check '${check.name}' exits identically but fails differently in the isolated Box than on the untouched base — a missing selected file cannot masquerade as the declared outcome. base: ${normalize(owner.log, basePairRoot).slice(-800)} | box: ${normalize(isolated.log, boxRoot).slice(-800)}`);
+        if (owner.outputSha256 !== isolated.outputSha256) {
+          throw new ExportFailed(`paired check '${check.name}' exits identically but fails differently in the isolated Box than on the untouched base — a missing selected file cannot masquerade as the declared outcome. base: ${owner.log.slice(-800)} | box: ${isolated.log.slice(-800)}`);
         }
         paired.push({ check, owner, box: isolated });
       }
@@ -284,8 +278,8 @@ export function exportBox(options: ExportOptions): ExportResult {
     })),
     paired: paired.map(pair => ({
       name: pair.check.name, program: pair.check.program, argv: [...pair.check.args], cwd: pair.check.cwd,
-      owner: { exit: pair.owner.exit, result: pair.owner.result, log: pair.owner.log, seconds: pair.owner.seconds },
-      box: { exit: pair.box.exit, result: pair.box.result, log: pair.box.log, seconds: pair.box.seconds }
+      owner: { exit: pair.owner.exit, result: pair.owner.result, log: pair.owner.log, outputSha256: pair.owner.outputSha256, seconds: pair.owner.seconds },
+      box: { exit: pair.box.exit, result: pair.box.result, log: pair.box.log, outputSha256: pair.box.outputSha256, seconds: pair.box.seconds }
     })),
     warnings,
     submission: { format: 'editable-overlay', tool: SUBMIT_TOOL_PATH, editable, instructions: agreement.submission.instructions },

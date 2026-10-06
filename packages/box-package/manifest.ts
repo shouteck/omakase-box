@@ -57,8 +57,8 @@ export const BoxManifestSchema = z.strictObject({
     program: z.string().min(1),
     argv: z.array(z.string()),
     cwd: z.string().min(1),
-    owner: z.strictObject({ exit: z.number().int().nullable(), result: z.enum(['pass', 'fail', 'timeout', 'error']), log: z.string(), seconds: z.number().nonnegative() }),
-    box: z.strictObject({ exit: z.number().int().nullable(), result: z.enum(['pass', 'fail', 'timeout', 'error']), log: z.string(), seconds: z.number().nonnegative() })
+    owner: z.strictObject({ exit: z.number().int().nullable(), result: z.enum(['pass', 'fail', 'timeout', 'error']), log: z.string(), outputSha256: z.string(), seconds: z.number().nonnegative() }),
+    box: z.strictObject({ exit: z.number().int().nullable(), result: z.enum(['pass', 'fail', 'timeout', 'error']), log: z.string(), outputSha256: z.string(), seconds: z.number().nonnegative() })
   })).default([]),
   warnings: z.array(z.string()).default([]),
   submission: z.strictObject({
