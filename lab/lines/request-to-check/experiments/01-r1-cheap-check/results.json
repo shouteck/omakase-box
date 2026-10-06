@@ -1,0 +1,103 @@
+{
+  "base": "e412e08",
+  "accepted": "ddeb3ab",
+  "node": "v24.11.0",
+  "results": [
+    {
+      "candidate": "C0 no change",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  2 failed | 2 passed (4)",
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B2_no_usage_in_output": "fail",
+      "page_exit": 0,
+      "page_chars": 3275,
+      "B": "reject"
+    },
+    {
+      "candidate": "C1 accepted change",
+      "right": true,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "accept"
+    },
+    {
+      "candidate": "C2 empty file",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  4 failed (4)",
+      "B1_existing_test": "fail",
+      "B1_tally": "Tests  10 failed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 0,
+      "B": "reject"
+    },
+    {
+      "candidate": "C3 section reworded",
+      "right": false,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 3276,
+      "B": "accept"
+    },
+    {
+      "candidate": "C4 helper no longer exported",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  1 failed | 3 passed (4)",
+      "B1_existing_test": "fail",
+      "B1_tally": "Tests  3 failed | 7 passed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "reject"
+    },
+    {
+      "candidate": "C5 dead parsing left in",
+      "right": false,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 2872,
+      "B": "accept"
+    },
+    {
+      "candidate": "C6 another heading deleted",
+      "right": false,
+      "A": "reject",
+      "A_tally": "Tests  1 failed | 3 passed (4)",
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 2858,
+      "B": "accept"
+    },
+    {
+      "candidate": "C7 a missing label became 0",
+      "right": false,
+      "A": "accept",
+      "A_tally": "Tests  4 passed (4)",
+      "B1_existing_test": "pass",
+      "B1_tally": "Tests  10 passed (10)",
+      "B2_no_usage_in_output": "pass",
+      "page_exit": 0,
+      "page_chars": 2841,
+      "B": "accept"
+    }
+  ]
+}

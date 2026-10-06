@@ -54,3 +54,27 @@ Whatever happens, eight hand-made cases on one request say nothing about rates.
 Zero-cost check: Node, pnpm and vitest already pinned by the repository; nothing paid. Heavy jobs: one frozen install in the lab folder and sixteen short vitest runs, after `node lab/tools/kitchen-busy.mjs` says idle. The runner swaps `scripts/kitchen-stats.mjs` in the lab worktree and restores it from Git when it finishes or fails.
 
 ---
+
+## Result
+
+- Observed (two full passes, identical verdicts; raw records in `results.json`):
+
+| Case | Right? | A custom (83 lines) | B cheap (0 lines + 1 command) | Predicted |
+|---|---|---|---|---|
+| C0 no change | no | reject | reject (the command) | yes |
+| C1 accepted change | yes | accept | accept | yes |
+| C2 empty file | no | reject | reject (existing test, 10 of 10 fail) | yes |
+| C3 section reworded | no | **accept** | **accept** | yes |
+| C4 helper not exported | no | reject | reject (existing test) | yes |
+| C5 dead parsing left in | no | **accept** | **accept** | yes |
+| C6 another heading deleted | no | reject | **accept** | yes |
+| C7 a missing label became 0 | no | **accept** | **accept** | yes |
+
+- Outcome: **partly supports.** The cheap check agrees with the custom check on 7 of 8 cases, including the three R1 required (accept the real change, reject no change, reject an empty file). It misses one case the custom check catches: a neighbouring heading deleted. The custom check catches that with one line listing the five headings that must still print.
+- So on these cases, what R1's custom test bought over what the repository already had is: the one condition that makes the request (no "usage" in the output) and one list of headings to keep. The rest restated the existing test.
+- Surprise, not followed further here: the custom check itself accepts three of the six wrong candidates (C3, C5, C7). The test R1 paid for can be passed by rewording the section instead of removing it. It checks for a word, not for the section. This is the survey's "tests accept wrong work" seen on our own check.
+- Limits: eight hand-made cases by someone who had read both checks; not a rate, and all sixteen predictions came true, which means the cases probed what was already understood. One request, of the "remove something" kind, where "everything else unchanged" is the bulk of the requirement and an existing test happened to cover it. Run in the lab worktree, not inside a Box: whether the existing test can ship in a Box and run there is untested (it shells out to the real script and reads the real repository, so it may need the same packaging work R1 did). No second correct solution was tried, so nothing is shown about either check rejecting right work.
+
+## Sceptic
+
+Pending.
