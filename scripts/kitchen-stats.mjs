@@ -109,10 +109,15 @@ export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-package', 'test:kit
 export const ACCEPTANCE_BUDGET_SECONDS = 330;
 export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPTANCE_STEPS, budgetSeconds = ACCEPTANCE_BUDGET_SECONDS } = {}) {
   const label = `acceptance profile "${profile}" executed seconds`;
-  const observations = runs.filter(run => run.summary === 'ok' && run.profile === profile);
-  if (!observations.length) return { label, actual: 'missing', limit: `${budgetSeconds}s`, ok: 'missing' };
-  const latest = observations[observations.length - 1];
+  // The latest run dir that could be a profile observation is the only thing
+  // judged: a valid run of this profile, or one whose summary is missing or
+  // unparseable and so cannot be scoped to any profile. Uncertainty is judged
+  // invalid — never skipped toward an older pass.
+  const candidates = runs.filter(run => run.summary !== 'ok' || run.profile === profile);
+  if (!candidates.length) return { label, actual: 'missing', limit: `${budgetSeconds}s`, ok: 'missing' };
+  const latest = candidates[candidates.length - 1];
   const invalid = reason => ({ label, actual: `invalid latest run ${latest.name}: ${reason}`, limit: `${budgetSeconds}s`, ok: 'missing' });
+  if (latest.summary !== 'ok') return invalid(`summary ${latest.summary}`);
   if (latest.verdict !== 'PASS' || latest.dirty !== false) return invalid(`verdict ${latest.verdict ?? 'missing'}${latest.dirty !== false ? ', dirty tree' : ''}`);
   const bad = latest.steps.find(step => step.reused || step.exit !== 0 || typeof step.seconds !== 'number' || !Number.isFinite(step.seconds) || step.seconds < 0);
   if (bad) return invalid(`step ${bad.name} ${bad.reused ? 'was reused' : bad.exit !== 0 ? `exited ${bad.exit}` : 'seconds missing or invalid'}`);

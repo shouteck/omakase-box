@@ -66,6 +66,24 @@ describe('budgetCheck fails closed on the latest profile observation', () => {
     const hit = budget(dir, { budgetSeconds: 330 });
     expect(hit.ok).not.toBe(true);
   });
+  it('a malformed latest summary is judged invalid, not skipped for an older PASS', () => {
+    const dir = temp();
+    run(dir, NOW - 60000, sha('a'), STEPS(10));
+    const bad = join(dir, '.kitchen', 'runs', dirName(NOW, sha('b')));
+    mkdirSync(bad, { recursive: true });
+    writeFileSync(join(bad, 'summary.json'), '{not json');
+    const hit = budget(dir, { budgetSeconds: 330 });
+    expect(hit.ok).not.toBe(true);
+    expect(hit.actual).not.toBe('160s');
+  });
+  it('a newest run dir with no summary.json never falls back to an older PASS', () => {
+    const dir = temp();
+    run(dir, NOW - 60000, sha('a'), STEPS(10));
+    mkdirSync(join(dir, '.kitchen', 'runs', dirName(NOW, sha('b'))), { recursive: true });
+    const hit = budget(dir, { budgetSeconds: 330 });
+    expect(hit.ok).not.toBe(true);
+    expect(hit.actual).not.toBe('160s');
+  });
   it('readRuns keeps per-step reused metadata so a partially reused run is visible', () => {
     const dir = temp();
     run(dir, NOW, sha('a'), STEPS(10).map(step => ({ ...step, reused: 'earlier-run' })));
@@ -101,5 +119,23 @@ describe('pnpm-shim never trusts preexisting global cache bytes', () => {
     const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env });
     expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
     rmSync(planted, { force: true });
+  });
+  it('a caller-supplied BOX_K6_LOCKFILE_CACHE is never consulted', () => {
+    const project = temp();
+    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
+    writeFileSync(join(project, 'package.json'), manifest);
+    const callerCache = temp();
+    writeFileSync(join(callerCache, createHash('sha256').update(manifest).digest('hex') + '.yaml'), 'lockfileVersion: 9.0\nimporters: {}\n');
+    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env: { ...process.env, BOX_K6_LOCKFILE_CACHE: callerCache } });
+    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
+  });
+  it('K6_LOCKFILE_MODE=uncached resolves for real even when a cache env is supplied', () => {
+    const project = temp();
+    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
+    writeFileSync(join(project, 'package.json'), manifest);
+    const callerCache = temp();
+    writeFileSync(join(callerCache, createHash('sha256').update(manifest).digest('hex') + '.yaml'), 'lockfileVersion: 9.0\nimporters: {}\n');
+    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env: { ...process.env, BOX_K6_LOCKFILE_CACHE: callerCache, K6_LOCKFILE_MODE: 'uncached' } });
+    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
   });
 });

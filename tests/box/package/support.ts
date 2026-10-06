@@ -12,7 +12,7 @@ export const PNPM_CJS = join(ROOT, 'scripts', 'tooling', 'node_modules', 'pnpm',
 export const PNPM_SHIM = join(ROOT, 'tests', 'box', 'package', 'pnpm-shim.mjs');
 export const AGREEMENTS = join(FIXTURE, 'box-agreements');
 export const CANARY_TOKENS = ['SYNTHETIC_PRIVATE', 'PRIVATE_ELIGIBILITY_CANARY', 'PRIVATE_SCORING_CANARY'];
-export const STATS_FILE = join(tmpdir(), 'box-k6-stats.jsonl');
+export const STATS_FILE = join(tmpdir(), `box-k6-stats-${process.pid}.jsonl`);
 export function recordOp(op: string, seconds?: number): void {
   try { appendFileSync(STATS_FILE, JSON.stringify({ op, seconds }) + '\n'); } catch { }
 }
@@ -27,8 +27,24 @@ process.once('exit', () => {
   for (const dir of runDirectories) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 });
 
-if (process.env.K6_LOCKFILE_MODE !== 'uncached' && !process.env.BOX_K6_LOCKFILE_CACHE) {
-  process.env.BOX_K6_LOCKFILE_CACHE = join(runRoot('lockfile-cache'), 'cache');
+// K6 trust boundary: lockfile reuse is invocation-local and owned here. An
+// inherited caller cache dir is deleted outright so nothing forwards it to a
+// child process. The committed pnpm-shim.mjs never caches; this invocation
+// materializes its own copy inside a fresh run root, and only that copy gets a
+// sibling `pnpm-shim.cachedir` naming a directory this invocation created.
+// Uncached mode writes no cachedir file, so every resolution is real.
+delete process.env.BOX_K6_LOCKFILE_CACHE;
+let invocationShim: string | undefined;
+function lockfileShim(): string {
+  if (invocationShim === undefined) {
+    const dir = runRoot('lockfile-shim');
+    invocationShim = join(dir, 'pnpm-shim.mjs');
+    cpSync(PNPM_SHIM, invocationShim);
+    if (process.env.K6_LOCKFILE_MODE !== 'uncached') {
+      writeFileSync(join(dir, 'pnpm-shim.cachedir'), join(runRoot('lockfile-cache'), 'cache') + '\n');
+    }
+  }
+  return invocationShim;
 }
 
 export function listFiles(dir: string): string[] {
@@ -167,7 +183,7 @@ export function runExport(agreementPath: string, repo?: string, outDir?: string)
       agreementPath,
       repoPath: repo ?? fixtureRepo().repo,
       outDir: outDir ?? join(runRoot('out'), 'box'),
-      pnpm: { command: process.execPath, args: [PNPM_SHIM, PNPM_CJS] }
+      pnpm: { command: process.execPath, args: [lockfileShim(), PNPM_CJS] }
     });
   } finally {
     recordOp('export', (Date.now() - began) / 1000);
@@ -193,10 +209,14 @@ export function cleanCheck(boxDir: string, evaluatorCheck: string): CleanRun {
     steps.push({ command: `${command} ${args.join(' ')}`, code: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}`.slice(0, 4000), seconds: (Date.now() - began) / 1000 });
     return result.status;
   };
-  const pnpm = (args: string[]): number | null => step(process.execPath, [PNPM_CJS, ...args]);
-  let ok = pnpm(['install', '--frozen-lockfile']) === 0;
-  ok = pnpm(['exec', 'tsc', '--noEmit']) === 0 && ok;
-  ok = pnpm(['exec', 'vitest', 'run', evaluatorCheck]) === 0 && ok;
+  const pnpm = (op: string, args: string[]): number | null => {
+    const code = step(process.execPath, [PNPM_CJS, ...args]);
+    recordOp(op, steps.at(-1)?.seconds);
+    return code;
+  };
+  let ok = pnpm('box-install', ['install', '--frozen-lockfile']) === 0;
+  ok = pnpm('box-typecheck', ['exec', 'tsc', '--noEmit']) === 0 && ok;
+  ok = pnpm('box-suite', ['exec', 'vitest', 'run', evaluatorCheck]) === 0 && ok;
   return { ok, steps };
 }
 
