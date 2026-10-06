@@ -1,0 +1,79 @@
+npm-altright start 13:08:06Z
+{
+  "submission": "C:\\Users\\shout\\Desktop\\a4-boxes\\neg\\npm-altright\\submission.json",
+  "box": "a4-npm-cli-paint",
+  "version": 1,
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "files": 1,
+  "changed": 1
+}
+submit exit=0
+{
+  "verdict": "pass",
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "expectedBaseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "attemptSha256": "13fed2db6f6736d862459c0c82145ec9512ea1302d833955f87a6611c3fdf08e",
+  "applies": [
+    {
+      "owner": "src/paint.js",
+      "box": "src/paint.js",
+      "changed": true,
+      "sha256": "56f4d0d4fd77c10a4513358d953eae6e9e0ba125369f4ca293f1082022cf2b3a",
+      "bytes": 344
+    }
+  ],
+  "checks": [],
+  "commandChecks": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "declaredArgv": [
+        "checks/guard.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-npm-cli guard: base behavior intact",
+      "outputSha256": "b53bae4b7d3c86c1bf134ba4a01a33c24117fdef1b3567d7020123257b780651",
+      "seconds": 0.112
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "declaredArgv": [
+        "checks/outcome.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-npm-cli outcome: all cases pass",
+      "outputSha256": "1a6035a7b610467374de3f2e5738813e295cc6257dc05deeba5cbdf7000e896f",
+      "seconds": 0.095
+    }
+  ],
+  "merge": {
+    "branch": "box-verify/a4-npm-cli-paint-v1-13fed2db6f67",
+    "commit": "f1d5325ca5adfbb9b7ba41623bf480a3f1897907",
+    "message": "box-verify: a4-npm-cli-paint v1 attempt 13fed2db6f67\n\nApplied an editable-overlay submission on base 4f25db6188fd08c39325158ce01a6633fade740b.\nbox: a4-npm-cli-paint v1\nattempt: 13fed2db6f6736d862459c0c82145ec9512ea1302d833955f87a6611c3fdf08e\nbase: 4f25db6188fd08c39325158ce01a6633fade740b\nfiles: examples/a4-npm-cli/src/paint.js\nowner checks: cli-guard, cli-outcome — pass",
+    "scratch": null
+  }
+}
+verify exit=0
+npm-altright end 13:08:16Z

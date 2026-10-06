@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "format": "editable-overlay",
+  "box": {
+    "id": "a4-py-tools-slugify",
+    "name": "Implement real slugify in the a4-py-tools slug helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "agreementSha256": "c3d4ea02df7c79ca08e47a313b075e3b9663bc8f72878e50c0b9765d6889e938",
+  "boxJsonSha256": "282301cecc22c51b275f8743ca54efea16c05d4733fa43d705a301236c8f22f2",
+  "files": [
+    {
+      "box": "tools/slug.py",
+      "owner": "tools/slug.py",
+      "baselineSha256": "9a4dc63b675ca8a5578500408b7cffe9cb123a37e706338240f05ba8f1e3f6d8",
+      "sha256": "c408c2680cc00e76d786caa23315e2b85336270df42f19ac845174d6fba048ca",
+      "content": "def slugify(text):\n    \"\"\"Return a URL slug for the text.\n\n    Base implementation: returns the text unchanged. The Box outcome asks for\n    real slugging (lowercase ASCII, separators collapsed to single hyphens).\n    \"\"\"\n    if not isinstance(text, str):\n        return \"\"\n    import re\n    return re.sub(r\"[^a-z0-9]+\", \"-\", text.lower()).strip(\"-\")\n"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "outcome": "In src/paint.js make paint(text, color) wrap the text in the ANSI color code for 'red' (31), 'green' (32) or 'blue' (34) and reset the foreground with code 39. Unknown color names and empty or non-string text keep passing through unchanged. Edit only the declared editable file.",
+  "sourceRoot": "examples/a4-npm-cli",
+  "files": [
+    { "owner": "package.json", "box": "package.json" },
+    { "owner": "README.md", "box": "README.md" },
+    { "owner": "checks/guard.mjs", "box": "checks/guard.mjs" },
+    { "owner": "checks/outcome.mjs", "box": "checks/outcome.mjs" }
+  ],
+  "entrypoints": ["src/paint.js"],
+  "editable": [
+    { "kind": "copy", "owner": "src/paint.js", "box": "src/paint.js" }
+  ],
+  "readContext": [],
+  "declaredDependencies": {},
+  "excludedPrefixes": ["box-agreements/", "node_modules/", ".git/"],
+  "inventoryExcludePrefixes": ["box-agreements/", "node_modules/", ".git/"],
+  "requires": [
+    { "program": "node", "version": ">=24.11.0 <25" }
+  ],
+  "checks": ["declared outcome: node checks/outcome.mjs rejects uncolored paint; declared guard: node checks/guard.mjs keeps pass-through behavior green"],
+  "evaluator": [],
+  "setup": [],
+  "commands": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "args": ["checks/guard.mjs"],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "args": ["checks/outcome.mjs"],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-cli-guard",
+      "program": "node",
+      "args": ["checks/guard.mjs"],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-cli-outcome",
+      "program": "node",
+      "args": ["checks/outcome.mjs"],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 120000
+    }
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "instructions": "Edit only the file listed in box.json editable paths (src/paint.js). It maps back to src/paint.js in the owner repository. Make paint(text, color) wrap text in ANSI color 31/32/34 for red/green/blue and reset with code 39; unknown colors and empty text pass through unchanged. Seal the work with node box/submit.mjs and return submission.json."
+  }
+}
