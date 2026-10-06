@@ -138,7 +138,7 @@ export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: strin
     for (const spelling of new Set([canonicalRoot, toPosix(canonicalRoot)])) if (spelling !== '') out = out.split(spelling).join('<root>');
     return out;
   };
-  const digest = (stdout: string, stderr: string): string => createHash('sha256').update(normalize(stdout)).update('\0').update(normalize(stderr)).digest('hex');
+  const digest = (stdout: string, stderr: string): string => createHash('sha256').update(JSON.stringify([normalize(stdout), normalize(stderr)])).digest('hex');
   const cwd = containedCwd(canonicalRoot, check.cwd);
   let resolved: ResolvedProgram;
   let run: ReturnType<typeof launch>;

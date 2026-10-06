@@ -30,6 +30,13 @@ function neutralRepo(): { repo: string; baseCommit: string } {
     "process.exit(7);"
   ].join('\n') + '\n');
   write('config/stream-flag.txt', 'on\n');
+  write('src/nul-split.mjs', [
+    "import { existsSync } from 'node:fs';",
+    "if (existsSync('config/nul-flag.txt')) process.stdout.write('A\\0B');",
+    "else { process.stdout.write('A'); process.stderr.write('B\\0'); }",
+    "process.exit(7);"
+  ].join('\n') + '\n');
+  write('config/nul-flag.txt', 'x\n');
   write('src/check.mjs', [
     "import { existsSync } from 'node:fs';",
     "const missing = ['data/input.txt', 'config/flag.txt'].filter(path => !existsSync(path));",
@@ -182,6 +189,41 @@ describe('a2 explicit selection', () => {
     }
     expect(existsSync(outDir)).toBe(false);
     expect(fixtureGit(repo, ['status', '--porcelain']).trim()).toBe('');
+  });
+
+  it('refuses export when the box splits identical bytes across streams differently', () => {
+    const { repo, baseCommit } = neutralRepo();
+    const outDir = join(runRoot('a2-nul'), 'out');
+    const agreement = neutralAgreement(baseCommit, {
+      files: [{ owner: 'src/nul-split.mjs' }],
+      commands: [
+        { name: 'nul-check', program: 'node', args: ['src/nul-split.mjs'], cwd: '.', context: 'recipient', role: 'outcome', timeoutMs: 30000 }
+      ]
+    });
+    try {
+      runExport(agreement, repo, outDir);
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ExportFailed);
+      expect((error as ExportFailed).message).toMatch(/nul-check/);
+      expect((error as ExportFailed).message).toMatch(/differently/);
+    }
+    expect(existsSync(outDir)).toBe(false);
+    expect(fixtureGit(repo, ['status', '--porcelain']).trim()).toBe('');
+  });
+
+  it('accepts true identical NUL-containing streams', () => {
+    const { repo, baseCommit } = neutralRepo();
+    const agreement = neutralAgreement(baseCommit, {
+      files: [{ owner: 'src/nul-split.mjs' }, { owner: 'config/nul-flag.txt' }],
+      commands: [
+        { name: 'nul-check', program: 'node', args: ['src/nul-split.mjs'], cwd: '.', context: 'recipient', role: 'outcome', timeoutMs: 30000 }
+      ]
+    });
+    const manifest = manifestOf(runExport(agreement, repo).outDir);
+    const pair = manifest.paired.find(entry => entry.name === 'nul-check');
+    expect(pair?.owner.outputSha256).toBe(pair?.box.outputSha256);
+    expect(pair?.box.exit).toBe(7);
   });
 
   it('accepts true matching long output and records the comparison digest', () => {

@@ -121,9 +121,10 @@ disposable clone of the owner base and once inside the staged Box in a clean
 directory outside the checkout, with the same program, argv and cwd semantics.
 The paired exit codes, results, bounded output tails and a SHA-256 digest over
 each side's complete root-normalized stdout and stderr are recorded in `box.json`
-`paired`; the digest is the comparison value, so a difference anywhere in the
-output — including early diagnostics beyond the displayed tail or bytes moved
-between streams — is detected. Export refuses with `ExportFailed` when the two
+`paired`; the digest covers the canonical `[stdout, stderr]` pair, so a
+difference anywhere in the output — including early diagnostics beyond the
+displayed tail, bytes moved between streams, or arbitrary embedded characters —
+is detected. Export refuses with `ExportFailed` when the two
 observations do not match in result, exit and complete normalized output — the
 same nonzero exit from a different cause (for example a missing file in the Box
 versus the real defect in the base) is a refusal, not evidence. Matching
