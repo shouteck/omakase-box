@@ -1,0 +1,33 @@
+[33mTesting types with tsc and vue-tsc is an experimental feature.
+Breaking changes might not follow SemVer, please pin Vitest's version when using it.[39m
+[33mTesting types with tsc and vue-tsc is an experimental feature.
+Breaking changes might not follow SemVer, please pin Vitest's version when using it.[39m
+[33mTesting types with tsc and vue-tsc is an experimental feature.
+Breaking changes might not follow SemVer, please pin Vitest's version when using it.[39m
+[33mTesting types with tsc and vue-tsc is an experimental feature.
+Breaking changes might not follow SemVer, please pin Vitest's version when using it.[39m
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90m/src/zod[39m
+
+ [32m✓[39m [30m[45m compile-mode [49m[39m packages/zod/src/v4/classic/tests/string.test.ts [2m([22m[2m56 tests[22m[2m)[22m[33m 609[2mms[22m[39m
+   [33m[2m✓[22m[39m big base64 and base64url [33m 468[2mms[22m[39m
+ [32m✓[39m [30m[45m compile-mode [49m[39m packages/zod/src/v4/classic/tests/codec.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+ [32m✓[39m [30m[45m compile-mode [49m[39m packages/zod/src/v4/mini/tests/object.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m [30m[45m compile-mode [49m[39m packages/zod/src/v4/classic/tests/issue-schema.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m [30m[43m zod [49m[39m src/v4/classic/tests/string.test.ts [2m([22m[2m56 tests[22m[2m)[22m[33m 530[2mms[22m[39m
+   [33m[2m✓[22m[39m big base64 and base64url [33m 411[2mms[22m[39m
+ [32m✓[39m [30m[43m zod [49m[39m src/v4/classic/tests/codec.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m [30m[43m zod [49m[39m src/v4/mini/tests/object.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m [30m[43m zod [49m[39m src/v4/classic/tests/issue-schema.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m [30m[43m zod [49m[39m [44m[1m TS [22m[49m src/v4/classic/tests/string.test.ts [2m([22m[2m56 tests[22m[2m)[22m
+ [32m✓[39m [30m[43m zod [49m[39m [44m[1m TS [22m[49m src/v4/classic/tests/codec.test.ts [2m([22m[2m22 tests[22m[2m)[22m
+ [32m✓[39m [30m[43m zod [49m[39m [44m[1m TS [22m[49m src/v4/mini/tests/object.test.ts [2m([22m[2m18 tests[22m[2m)[22m
+ [32m✓[39m [30m[43m zod [49m[39m [44m[1m TS [22m[49m src/v4/classic/tests/issue-schema.test.ts [2m([22m[2m9 tests[22m[2m)[22m
+
+[2m Test Files [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[32m315 passed[39m[22m[90m (315)[39m
+[2mType Errors [22m [2mno errors[22m
+[2m   Start at [22m 04:46:27
+[2m   Duration [22m 31.61s[2m (transform 2.57s, setup 1.72s, import 2.38s, tests 1.40s, environment 1ms, typecheck 24.70s)[22m
+
+VITEST_EXIT=0
