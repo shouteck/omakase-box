@@ -670,11 +670,25 @@
       "handoff": "waves/R3.md"
     },
     {
+      "id": "A0",
+      "milestone": "A",
+      "title": "Prototype the neutral core before building it",
+      "dependencies": [
+        "R2"
+      ],
+      "result": "Done 6 October 2026, PASS as a prototype. The neutral loop worked on npm, Python and multi-package fixtures with no outside dependencies. Findings are in waves/A0.md and research/box-delegation/a0/RESULT.md and are carried into A1, A2 and A4.",
+      "writePaths": [
+        "research/box-delegation/a0/**",
+        "waves/A0.md"
+      ],
+      "handoff": "waves/A0.md"
+    },
+    {
       "id": "A1",
       "milestone": "A",
       "title": "A neutral agreement format",
       "dependencies": [
-        "R2"
+        "A0"
       ],
       "ownerApproval": "6 October 2026: milestone A approved; the first wave still waits for \"go\" on its pre-cook card.",
       "writePaths": [
@@ -687,7 +701,10 @@
         "An agreement declares setup commands and check commands as a program plus arguments, for any program, each with its working directory, role (guard or outcome), who runs it (owner or recipient) and a timeout. No enumerated list of tools.",
         "An agreement describes the environment the solver needs in plain terms (programs and versions the owner states), as information for the solver. The core does not require or interpret tool versions.",
         "Every existing agreement, fixture and test moves to the new format in this wave, and the old format, its tool list and the pnpm-specific handling of declared commands are deleted. One format, not two.",
-        "Behaviour that must not change: checks are run on the untouched code at export and recorded; a do-nothing submission is rejected; edits outside the editable paths are rejected; the product makes no sandbox claim for declared commands."
+        "Behaviour that must not change: checks are run on the untouched code at export and recorded; a do-nothing submission is rejected; edits outside the editable paths are rejected; the product makes no sandbox claim for declared commands.",
+        "One rule for starting a declared program, with no shell: the program is a real executable found on the search path, or an interpreter plus a script path that travels with the Box. On Windows a command-file shim (such as npm) may be started through the system command interpreter only when every argument is free of that interpreter's special characters; otherwise it is refused with a message saying how to declare it. The rule is tested as a property.",
+        "Before running anything, export and verify check that every declared program can be found and name any that cannot, so a missing tool is a named gap and never a failed check.",
+        "Declared paths and working directories are contained on canonical paths, and nothing the product deletes is outside a folder it created in that run. The A0 prototype did neither and is not to be copied."
       ],
       "acceptance": [
         "No file under packages/box-package names pnpm, TypeScript or a test runner in the agreement schema or in how declared commands are run.",
@@ -719,7 +736,10 @@
         "The default way to choose a Box's files is an owner-declared list (paths and patterns), checked for exclusions and containment on canonical paths exactly as today.",
         "Export proves the list by execution: setup and guard checks run in a clean folder outside the repository that holds only the Box. A missing file shows up as a failing guard on the untouched code and is reported as a named gap.",
         "Following TypeScript imports moves out of the core into an optional helper that proposes a file list for the owner to accept. The core works with the helper absent.",
-        "The project's own dependency manifest and lockfile travel unchanged. The core does not rebuild a lockfile."
+        "The project's own dependency manifest and lockfile travel unchanged. The core does not rebuild a lockfile.",
+        "A clean setup is never evidence: A0 showed a locked install exits 0 with a needed sibling package missing. Only checks prove a Box.",
+        "An outcome check must fail for the right reason: export runs it in the owner's full repository as well as in the Box on the untouched code, and requires the same result in both. A check that fails in the Box but passes, or fails differently, in the full repository is reported as an incomplete Box.",
+        "The report to the owner says what the unchanged dependency files disclose, including the names of packages that were left out."
       ],
       "acceptance": [
         "With the TypeScript helper removed from the run, export still produces a working Box from a declared list.",
@@ -778,7 +798,8 @@
       "deliverables": [
         "Two small committed fixture projects written for this purpose: one JavaScript project managed by npm, and one Python project with no JavaScript in it. Each has a guard test and a request with a check that fails on the untouched code.",
         "The whole loop on each with no code written for either project: export, checks on the untouched code, a blind recipient working from the folder alone, owner-side verify, a do-nothing submission rejected.",
-        "A short report: what the owner had to declare for each, how long preparation took, and anything the core still assumed."
+        "A short report: what the owner had to declare for each, how long preparation took, and anything the core still assumed.",
+        "A third fixture: a multi-package project with real outside dependencies, to show how a cut-down slice installs when the dependency file lists outside packages for members that were left out. This needs a small download, done with install scripts disabled, of a well-known package with no install scripts of its own."
       ],
       "acceptance": [
         "Both loops complete with zero lines added under packages/ for either project.",

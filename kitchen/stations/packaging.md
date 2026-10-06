@@ -17,6 +17,10 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 - **The clean directory must be outside this checkout**, or module resolution will find the repository's `node_modules` on the way up.
 - **Exclusion runs on the canonical path, not the spelling.** Two D2.1 bypasses proved it: a case-aliased entrypoint and an in-root junction both shipped `src/private/*` bytes while the declared path looked clean. `realpathSync` before BOTH the containment and the exclusion check; fold case on both sides; emit under the canonical path only. Note Windows realpath keeps declared case, so alias spellings can still reach emission on non-excluded paths — normalize if patch mapping ever sees them.
 
+- **A clean install proves nothing.** With a needed sibling package missing, `npm ci` and `pnpm install --frozen-lockfile` both exit 0 and leave a dangling link (A0). Only a check that loads the code shows the gap.
+- **A red check can be red for the wrong reason.** A check that fails because a file is missing looks the same as one that fails because the work is not done. Compare with the same check in the full repository.
+- **On Windows, `npm` and other command-file shims cannot be started without a shell.** A script path that travels with the Box, started with `node`, is portable (A0).
+
 ## The pass checks
 
 - Run export and declared checks outside the repository. Shared test setup must be invocation-local and isolated for mutation; try poisoned/preseeded cache bytes before trusting a speedup (K6 failed this check).

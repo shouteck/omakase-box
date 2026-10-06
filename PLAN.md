@@ -33,6 +33,15 @@ Approved by the owner on 6 October 2026, after R3 could not prepare a Box for a 
 | A3 | Export and owner-side verify run the declared setup and checks, whatever they are. No hard-coded package manager anywhere in the core; generated TypeScript scaffolding leaves the core. |
 | A4 | Proof on two projects that are not like ours: one managed by npm, and one that is not JavaScript at all (Python is installed on this machine). The whole loop on each: export, base checks, a blind recipient, owner-side verify, a do-nothing submission rejected. |
 
+**What the A0 prototype showed (6 October 2026), and what it changes.** The neutral loop worked on an npm project, a Python project and a multi-package repository under both npm and pnpm, on small projects with no outside dependencies. Four things go into the waves above:
+
+- *Setup succeeding proves nothing.* A locked install exits 0 even when a needed sibling package is missing. Only the checks prove a Box, so A2 never treats a clean setup as evidence.
+- *A check must fail for the right reason.* "Fails on the untouched code" is not enough: a check that fails because a file is missing looks the same. A2 runs each outcome check in the owner's full repository as well as in the Box and requires the same result in both.
+- *Starting a program is an operating-system problem.* On Windows, `npm` is not a program that can be started directly. A1 fixes one rule for how a declared program is started, checks before running that every declared program can be found, and names any that cannot.
+- *Outside dependencies are untested.* A4 adds a multi-package project with real outside dependencies, which needs a small download with install scripts disabled.
+
+Also noted: a Box carries the project's dependency file unchanged, so it names packages that were left out even though their source is not included. That is stated to the owner as part of what a Box discloses.
+
 Known limits, stated up front: the product's own command-line tool still needs Node to run, though the repository it works on can be anything. Without a language helper a Box is less lean. "Any repository" means any whose setup and checks can run in a clean folder; projects that need running services are harder.
 
 The next attempt on an outside repository (R3b, a replay of recently fixed issues) follows milestone A.
