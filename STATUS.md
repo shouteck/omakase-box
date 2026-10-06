@@ -8,8 +8,8 @@ Replaced at every wave close. A0 closed by Claude on 6 October 2026; A1 kickoff 
 - **The "useful" milestone is not met.** R3 showed the product cannot prepare a Box for a project outside its own ecosystem: its core assumes pnpm, TypeScript and one test runner.
 - **A0's result: the neutral design holds, on small projects.** A throwaway loop that knows only files, commands, exit codes and patches prepared, set up, checked and solved a change on an npm project, a Python project and a multi-package repository under both npm and pnpm. 18 trials, 10 worked, reproduced by the reviewer. None of the projects had outside dependencies, and it ran on this one Windows machine.
 - **What A0 changed in the plan:** a clean setup is never evidence (a locked install exits 0 with a needed package missing); a check must fail for the right reason, so it is compared with the same check in the full repository; starting a program on Windows needs one fixed rule; outside dependencies get their own test in A4. Detail: `waves/A0.md`, `research/box-delegation/a0/RESULT.md`.
-- **In flight:** nothing.
-- **Held:** A1 brief prepared by Devin; awaiting the owner's go for removing the old live agreement format, as START.md requires for removals. No worker dispatched and no product code changed.
+- **In flight:** A1, neutral agreement format and declared-program launch/preflight. Owner replied "go" to the pre-cook card on 6 October 2026, including removal of the old live format. This run stops after A1.
+- **Held:** nothing.
 
 ## Approved by the CEO
 
