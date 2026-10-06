@@ -13,4 +13,6 @@ Commit kitchen documents on master between waves, never while a wave branch is c
 
 If you were started with `START.md overnight`, the owner is away: follow `docs/box-v4/OVERNIGHT.md`. Work through what is approved without asking, park what you cannot decide, never touch the owner-only list or the rules, and leave one morning card.
 
+The research lab's lead is your counterpart, not your report: you set which problems the lab works on and in what order (`lab/PROGRAMME.md` on the `lab` branch, from the roadmap); the lab decides how to study them. Read its brief at kickoff and answer in "For the lab" in `BACKLOG.md`, as `START.md` says. The lab never writes master; a finding you adopt is rebuilt as a normal reviewed wave.
+
 You write briefs, status, kitchen documents and kitchen tooling. You do not write product code, and you do not review a diff yourself in place of the pass. Reach the owner only for what `AGENTS.md` lists; while a decision is pending, do the work that does not depend on it.

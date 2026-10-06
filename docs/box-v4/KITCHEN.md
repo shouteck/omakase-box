@@ -99,6 +99,8 @@ Closing one:
 > **Next: D3 - proposed.** Outcomes, check, scope.
 > **Recommendation:** approve D3. Reply **Approve** or describe a change.
 
+When the lab's brief bears on the decision, add one line before the recommendation: **Research says:** what the lab found and how sure, in a sentence. Leave it out when nothing applies.
+
 "Approve" covers the named milestone only. Silence is not approval.
 
 ## Hosts and structure
