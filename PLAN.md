@@ -11,6 +11,17 @@
 
 Details are in [DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md) and [VALIDATION-PLAN.md](docs/box-v4/delegation/VALIDATION-PLAN.md). Tasks are in [the delegation graph](tasks/box-delegation-task-graph.json). Current state is in [STATUS.md](STATUS.md).
 
+## The milestone we steer by: useful
+
+Agreed with the owner on 6 October 2026. The product is useful when all of this is true at once:
+
+- a real issue from **someone else's** repository,
+- a Box prepared for it **in minutes, with no code written for that request**,
+- solved by an agent or person that **has never seen the repository**,
+- and accepted by the owner-side check, with the evidence stated honestly.
+
+Everything before that is a working mechanism, not a useful product. Two steps get there, in order: **R2**, a real request of our own prepared without request-specific code; then **R3**, the same on a public repository that is not ours. Until both are done, kitchen improvements pause (except fixing something that blocks them) and the lab stays on its first line of research. The owner's conversations with people who hand work to outsiders run alongside.
+
 ## Sequence
 
 | Step | Outcome | Form |
@@ -20,6 +31,9 @@ Details are in [DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md) and [VALIDATIO
 | D2 | A Box exports as a plain folder, proves itself in a clean directory, and a recipient submits a patch from it. | Command line and file format |
 | D3.1 | The owner verifies the patch in the original repository and merges it. | Command line |
 | D4 | Fresh recipients complete real Boxes; counterexamples fail honestly; effort and disclosure are compared with ordinary delegation. A recommendation follows. | Measured runs and a report |
+| R1 | A real request of our own goes through the whole loop. Done; it showed preparation cost is the main risk. | Command line |
+| R2 | A second real request prepared with no request-specific code; every check run on the untouched code at export. | Command line |
+| R3 | A real issue from a public repository that is not ours, prepared in minutes, solved from the Box alone, accepted by the owner-side check. | Command line; nothing sent to that project |
 | D3.2 | A minimal web journey for prepare, delegate, accept. | Web, only if D4 says continue |
 
 Why this order: D2 is where the idea can fail, so it comes before more screens. A Box that is a folder plus three commands (`export`, `submit`, `verify`) needs no server, database, accounts or containers, and can be tested this week. The web journey is worth building once D4 shows what users actually need from it.

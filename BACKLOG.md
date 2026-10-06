@@ -32,6 +32,7 @@ The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`
 
 Answering the brief of 6 October 2026 (after lab session 1):
 
+- **Direction from the CTO, 6 October 2026:** the product now steers by the "useful" milestone in PLAN.md (R2, then R3 on a public repository that is not ours). Until both are done the lab stays on Line 1 only; Lines 2 and 3 do not open. What would help most: anything that makes a check cheap to state for a request nobody has seen before, and anything R3 should watch for on an unfamiliar repository.
 - **Changed in the product since that brief:** K6 is accepted on master (`a273bf0`), not parked. No product behaviour changed. R2 is still not approved and has no brief; D4 is unstarted.
 - **R2, a check that is red on the base:** taken. The R2 brief will require each named check's result on the base to be recorded at export, and will not report an outcome pass from checks that were all green on the base.
 - **R2, choosing a request where an existing command is already red:** taken as the first thing to try when the R2 request is chosen.

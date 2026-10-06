@@ -20,18 +20,17 @@ Replaced 6 October 2026 by Devin as CTO after K6's reviewed merge; temporary-res
 
 ## Next
 
-No further wave starts without a new START and its required pre-cook go.
+No wave starts without a new START message and its pre-cook go. The agreed direction (owner, 6 October 2026) is the "useful" milestone in PLAN.md: R2, then R3.
 
 1. Resolve K6's incomplete resource close without bulk deletion of unidentified temp data.
-2. **R2:** delegate another real request using existing command checks, without request-specific code; not approved.
-3. **K9:** legacy removal behind a tag; brief ready, unstarted.
-4. **D4:** comparison; unstarted. K7 also unstarted.
+2. **R2:** a second real request with no request-specific code, each check run on the untouched code at export. `START.md: R2`.
+3. **R3:** the same on a public repository that is not ours. `START.md: R3`, after R2.
 
-Recommendation: resolve cleanup ownership, then R2. K6's speed pair does not establish product value or total owner-effort savings.
+Paused until R2 and R3 are done, unless one blocks them: **K7**, **K9** and other kitchen improvements. **D4** waits for the lab's benchmark.
 
 ## Night queue
 
-Only for a new named overnight request and pre-cook go: R2, K9, then K7 as named, after resolving cleanup ownership. D4 remains outside the night queue; K6 code work is accepted.
+Only for a new named overnight request and pre-cook go: R2, then R3, after resolving cleanup ownership. Kitchen waves are not on the night queue while the pause holds. D4 remains outside it.
 
 ## Known problems
 

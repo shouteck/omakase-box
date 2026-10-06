@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Next, when named: K6 (stop verification growing), then R2 (delegate without request-specific code), then D4. K9 (legacy removal) and K7 when named.",
+    "sequence": "Next, when named: R2 (delegate without request-specific code), then R3 (a public repository that is not ours). Kitchen improvements (K7, K9) pause until both are done unless one blocks them. D4 waits for the lab's benchmark.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -630,6 +630,43 @@
         "waves/R2.md"
       ],
       "handoff": "waves/R2.md"
+    },
+    {
+      "id": "R3",
+      "milestone": "R",
+      "title": "Run the delegation loop on a public repository that is not ours",
+      "dependencies": [
+        "R2"
+      ],
+      "proposal": "Agreed as the step after R2 (owner, 6 October 2026). Starts when the owner names it in a START message.",
+      "writePaths": [
+        "waves/R3.md",
+        "research/box-delegation/r3/**",
+        "packages/box-package/**",
+        "packages/box-cli/**",
+        "tests/box/package/**"
+      ],
+      "deliverables": [
+        "Choose a well-known public TypeScript project and one real open issue with a clear expected behaviour, preferably one with a failing test or a reproduction. Pin the exact commit. Record why this project and this issue, and which candidates were rejected and why.",
+        "Prepare the Box with the product as it is after R2, writing no code for this request. Time the preparation and record every manual step. Anything the product could not do is a named preparation gap, not something to patch around quietly.",
+        "A blind recipient solves it from the Box alone. Owner-side verify runs against a clean clone of that project at the pinned commit.",
+        "Record: preparation minutes and steps, files and bytes disclosed against the project total, what the recipient lacked, each check and its result on the untouched code, and whether the result was accepted.",
+        "Report against the \"useful\" milestone in PLAN.md, one line per condition: met, not met, or not tested."
+      ],
+      "acceptance": [
+        "No code specific to this request or this project is added under packages/. General fixes the run exposes are allowed and listed.",
+        "Nothing is sent to the other project: no issue, comment, pull request or message. Their code is only read and run locally.",
+        "Their code is third-party code: dependencies are installed with install scripts disabled, and its build and tests run inside a container, never directly on the host.",
+        "A failed run is a valid result. The report says which condition of the milestone failed and why."
+      ],
+      "verification": [
+        "Reviewer repeats the export from the pinned commit, reruns owner-side verify, checks nothing left the machine, and recounts the disclosure figures."
+      ],
+      "lenses": [
+        "security: third-party code handling and nothing sent outward",
+        "measurement fairness: preparation time and manual steps are complete"
+      ],
+      "handoff": "waves/R3.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"
