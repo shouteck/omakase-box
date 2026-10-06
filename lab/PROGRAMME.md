@@ -1,41 +1,71 @@
 # Research programme
 
-Owned by the lab lead. This is where the lab says what it is working on and why. Three active lines at most; a line that is not converging is closed, with the reason recorded.
+Set by the CTO from the product roadmap on 6 October 2026. The CTO decides which problems the lab works on, in what order, and which product decision each must inform. The lab lead decides how: the formulation, the method, the instruments, and when the evidence says a line should close. The owner is not asked to steer research.
 
-## What the product needs to know
+## What the product is trying to prove
 
-These are needs, stated by the CTO, who may add, reword or withdraw one through the "For the lab" section of `BACKLOG.md` on master. They are not research questions yet, and they carry no view on method. Turning each into a well-posed problem, after reading the field, is the lab's first work.
+From `PLAN.md` on master, in order of risk:
 
-The aim behind all of them, set by the owner on 6 October 2026: the person who posed the problem is the one who accepts the solution. The product does not replace that judgement; it gives them the most certainty it honestly can and guides them to the best solution available. Proof where proof is possible, a stated degree of certainty where it is not.
+1. A sliced package builds and passes its checks without the rest of the repository. **Shown** for TypeScript on a fixture.
+2. A recipient who has never seen the repository can finish the change from the package. **Shown** once on a fixture and once on a real internal request (R1).
+3. It costs the owner less effort than ordinary delegation, or discloses far less source for similar effort. **Not shown.** Disclosure looks strong (R1 shipped 2 of 694 files); effort points the wrong way (R1 needed about 470 lines of checks for an 8-line change).
+4. Someone chooses it again and would pay. **No evidence.** This is the owner's to pursue, not the lab's.
 
-1. **Sufficient context.** Given a change to make in an existing codebase, what is the least material another developer or agent needs in order to make it correctly and prove it, and how can that material be found automatically? The material need not be a literal subset of the code: it may be a reduced stand-in for the rest of the system, provided there is a stated, checkable sense in which working against the stand-in is the same as working against the original. What kinds of "the same" can be checked by machine, at what cost, and for which kinds of code? Today the kitchen follows TypeScript imports from the files to be edited and ships those files as they are.
-2. **Judging what tests cannot.** Some requested outcomes have no mechanical check: how something looks, reads or feels to use. How can a delivered result be judged against what was asked, reliably enough to accept or reject work?
-3. **Specifying acceptance cheaply.** Delegating one 8-line change needed about 470 lines of checks written for that request (R1, 6 October 2026). How can what "done" means be stated once, by a non-specialist, and enforced on both sides without writing code per request? The kitchen is trying a direct fix (R2); if that fails this becomes a line.
-4. **What "expected behaviour" covers.** Needs 2 and 3 assume we know what is being specified and judged. We do not. What a requester expects can be functional, visual, about speed, safety, data, wording or how something feels to use, often several at once, and it arrives as whatever the requester happened to say. What kinds are there in real requests, how often does each occur, how do people actually describe them, and which kinds can be checked by a test, by a proof, by a judge, or only by the requester? The product needs this map before it can say honestly what a Box can and cannot verify.
-5. **Certainty that can be trusted.** When a solution cannot be proven correct, how can the product say how likely it is to be correct, in a way that holds up: a solution given nine chances in ten should turn out right about nine times in ten. What evidence should that rest on (which checks ran, how much of the behaviour they cover, how the solution fared against alternatives)? How should it be shown to someone who is not a specialist so that it guides their decision instead of replacing it? And when there are several candidate solutions, how should they be compared and ranked?
-6. **Whether less context helps.** Does an agent given a small, verified package do better than the same agent given the whole repository, and when?
+The lab exists to close the gap in claim 3 and to tell the product how far claims 1 and 2 stretch. Anything that does not serve one of those waits.
 
-## Ideas on the table
+The aim behind all of it, from the owner: the person who posed the problem accepts the solution. The product gives them the most certainty it honestly can and guides them to the best solution available: proof where proof is possible, a stated degree of certainty where it is not.
 
-Offered by the owner and the CTO. They are hypotheses to weigh against the literature, with no special standing; record here what the survey says about each.
+## Active lines, in priority order
 
-- **A leaner equivalent, with a green tick (owner, 6 October 2026).** Instead of handing over a cut-down copy, hand over a much smaller version of the code that can be shown to behave the same as the original where it matters for the task, so that a person or an agent works on the small version and gets a machine verdict that the implementation is correct and behaves as expected. The owner's direction on how far to take it: go as far as can be reduced to an algorithm; where it cannot be, deliver the best available. Later the same day the owner sharpened this: the goal is certainty, not proof for its own sake. Whatever level is reached, the verdict must say what it rests on and how sure it is, and nothing more.
-- **A model as judge (owner, 6 October 2026).** For outcomes no test can check, such as a visual design, use an image-capable model to give the verdict.
-- **Type-only stubs (kitchen, D2.1 prototype C).** Replace everything outside the editable files with generated type declarations. Tried once on one fixture and not chosen; see `git show origin/master:waves/D2.1-proto.md`.
+### Line 1. From a request to a check
+
+**The problem for the product.** Delegation is only worth it if saying what "done" means costs much less than doing the work. R1 showed it currently costs far more. The kitchen's R2 tries the engineering answer: let an agreement name tests that already exist. That covers changes to behaviour that is already tested. It does not cover the common case, where the request is for something new and no test exists yet.
+
+**What the lab must find out.**
+
+- What do real requests ask for, and how could each kind be checked: by an existing test, a new test, an example, a property, a judge, or only by the requester? Build this map from real requests (public issue trackers and this repository's own wave files are free), with counts. It tells the product what share of real work each kind of check would unlock.
+- For requests with no existing test, what is the cheapest reliable way to get a check the owner trusts: the requester's own examples, tests generated from the request and confirmed by the requester, the recipient writing tests the owner reviews, or something the literature already recommends?
+- How much does each route cost the requester, and how often does the resulting check accept a wrong solution or reject a right one?
+
+**Decision it informs.** What the kitchen builds after R2, and what the MVP can honestly promise to verify.
+
+**Needed by.** A first brief before the kitchen writes the R2 brief if possible, with whatever the survey already shows; the map by 20 October 2026.
+
+### Line 2. Does a Box help?
+
+**The problem for the product.** The roadmap's D4 is meant to compare a Box with ordinary delegation, and the kitchen has no sound way to run it. The claim that a small verified package helps an agent is the product's second wedge and has never been tested.
+
+**What the lab must find out.** Same agent, same task, same checks: the Box against the whole repository. Success, steps, tokens where they can be counted, and what the agent got wrong. The repository's own history is a ready source of tasks: each merged wave has a starting commit, a brief, and a verify run that decides success. Build that into a reusable benchmark first.
+
+**Decision it informs.** Whether to lead with "less context" as an advantage, and what D4 should measure. The CTO will hold D4 until this line has a benchmark, and may run D4 on it.
+
+**Constraint.** Zero cost limits the number of runs. Report the count, treat small differences as noise, and say what a larger study would need.
+
+**Needed by.** A benchmark and a first comparison by 27 October 2026.
+
+### Line 3. Does the slice contain what the change needs?
+
+**The problem for the product.** The kitchen selects source by following TypeScript imports from the files to be edited. It worked on one fixture and one real request. Before the product widens to more kinds of change or more languages, it needs to know how often that selection is missing something, and what.
+
+**What the lab must find out.** Against real past changes (this repository's merged waves, then open-source projects), how often would the selection have contained everything the change touched and needed? What is missed: configuration, assets, generated code, things loaded at run time, tests? What does each fix cost in extra source disclosed?
+
+**Decision it informs.** How far the supported kinds of change can widen, and what a Box must declare by hand instead of discovering.
+
+**Needed by.** Not urgent. Opens when Line 1 has delivered its map, or sooner if the lab has a session with nothing else that can run.
+
+## Parked, with what would unpark them
+
+These are real problems. They are not what stands between the product and its next decision, and working on them now would be research for its own sake.
+
+- **A leaner stand-in that is checkably equivalent to the original.** A stronger form of Line 3: hand over a much smaller version of the code with a machine verdict that it behaves the same where it matters. Unpark when Line 3 shows that shipping real files discloses too much or misses too much. Until then the survey for Line 3 should note what the field says is achievable.
+- **Judging outcomes no test can check** (a design, wording, how something feels). Unpark when Line 1's map shows what share of real requests need it. If it is small, the product marks those as "the requester decides" and moves on.
+- **Calibrated certainty and ranking of candidate solutions.** Unpark when the product has real accept and reject decisions to calibrate against, which needs users. Until then Line 1 records, for each kind of check, how often it is wrong; that is the raw material.
 
 ## First session
 
-Before any line is opened: survey all six areas at overview depth, enough to learn what each problem is called in the literature, who has worked on it, and how far the field has got. Write `lab/survey.md`. Then decide, and record here with reasons:
+Survey Line 1 properly: what the problem is called in the literature, who has worked on it, what is known to work and not to work, with sources. Skim Lines 2 and 3 only far enough to learn their names in the field and whether either is already answered. Write `lab/survey.md`, open `lab/lines/request-to-check/`, and put anything that bears on R2 in the brief straight away.
 
-- which needs are already answered well enough by existing work to transfer directly;
-- which become lines, in what order, and how each is formulated;
-- which should not be pursued, and why.
-
-The order above is the product's, not a recommendation. Reorder freely.
-
-## Active lines
-
-None yet.
+If the survey shows a line is aimed at the wrong problem, or that the order is wrong, say so in the brief with the reason. The CTO will change this page; do not work around it.
 
 ## Closed lines
 
