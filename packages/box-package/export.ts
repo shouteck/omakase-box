@@ -9,6 +9,7 @@ import { materializeTooling, runDeclaredChecks } from './commands.js';
 import type { CheckRecord } from './commands.js';
 import { ExportFailed, PreparationGap } from './errors.js';
 import { git } from './git.js';
+import { productInstallArgs } from './install.js';
 import type { BoxManifest } from './manifest.js';
 import { generate, packageManifest, tsconfigJson } from './scaffolds.js';
 import { deriveSelection, toPosix } from './selection.js';
@@ -70,7 +71,7 @@ function resolveLockfile(manifestText: string, pnpm: PnpmInvocation): string {
   const staging = mkdtempSync(join(tmpdir(), 'box-export-stage-'));
   try {
     writeFileSync(join(staging, 'package.json'), manifestText);
-    const args = [...pnpm.args, 'install', '--lockfile-only'];
+    const args = productInstallArgs(pnpm, ['install', '--lockfile-only']);
     const result = spawnSync(pnpm.command, args, { cwd: staging, encoding: 'utf8' });
     if (result.status !== 0) throw new ExportFailed(`lockfile resolution failed (pnpm install --lockfile-only in ${staging}): ${(result.stderr || result.stdout || '').trim().slice(0, 2000)}`);
     const lockfile = join(staging, 'pnpm-lock.yaml');
@@ -117,7 +118,7 @@ export function exportBox(options: ExportOptions): ExportResult {
       git(clone, ['checkout', '--quiet', baseCommit]);
       materializeTooling(repo, clone);
       if (ownerChecks.some(check => check.tool !== 'node')) {
-        const install = spawnSync(options.pnpm.command, [...options.pnpm.args, 'install', '--frozen-lockfile'], { cwd: clone, encoding: 'utf8', timeout: 600_000, windowsHide: true });
+        const install = spawnSync(options.pnpm.command, productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']), { cwd: clone, encoding: 'utf8', timeout: 600_000, windowsHide: true });
         if (install.status !== 0) throw new ExportFailed(`base checkout install failed: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);
       }
       baseChecks.push(...runDeclaredChecks(agreement.commands, clone, options.pnpm, 'owner'));
@@ -174,7 +175,7 @@ export function exportBox(options: ExportOptions): ExportResult {
       const box = join(runRootDir, 'box');
       cpSync(staging, box, { recursive: true });
       if (recipientChecks.some(check => check.tool !== 'node')) {
-        const install = spawnSync(options.pnpm.command, [...options.pnpm.args, 'install', '--frozen-lockfile'], { cwd: box, encoding: 'utf8', timeout: 600_000, windowsHide: true });
+        const install = spawnSync(options.pnpm.command, productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']), { cwd: box, encoding: 'utf8', timeout: 600_000, windowsHide: true });
         if (install.status !== 0) throw new ExportFailed(`recipient check install failed in staged Box: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);
       }
       baseChecks.push(...runDeclaredChecks(agreement.commands, box, options.pnpm, 'recipient'));

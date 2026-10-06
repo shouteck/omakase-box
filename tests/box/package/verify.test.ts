@@ -94,10 +94,12 @@ describe('owner-side verify', () => {
     expect(report.verdict).toBe('fail');
     expect(report.failureClass).toBe('implementation-failure');
     expect(report.reason).toBe('outcome');
+    // argv is the exact effective invocation: the install step must prove
+    // --ignore-scripts reached the package manager (R3 blocker correction).
     expect(report.checks).toEqual([
-      { name: 'install', status: 'pass' },
-      { name: 'compile', status: 'pass' },
-      { name: 'outcome', status: 'fail', detail: expect.any(String) }
+      { name: 'install', status: 'pass', argv: expect.arrayContaining(['install', '--frozen-lockfile', '--ignore-scripts']) },
+      { name: 'compile', status: 'pass', argv: expect.arrayContaining(['exec', 'tsc', '--noEmit']) },
+      { name: 'outcome', status: 'fail', argv: expect.arrayContaining(['exec', 'vitest', 'run']), detail: expect.any(String) }
     ]);
     expect(report.merge).toBeUndefined();
   });

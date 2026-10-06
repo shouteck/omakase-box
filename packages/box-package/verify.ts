@@ -8,6 +8,7 @@ import { materializeTooling, runDeclaredChecks } from './commands.js';
 import type { CheckRecord } from './commands.js';
 import type { PnpmInvocation } from './export.js';
 import { git } from './git.js';
+import { productInstallArgs } from './install.js';
 import { ownerCheck } from './owner-checks.js';
 import type { OwnerCheck } from './owner-checks.js';
 import { toPosix } from './selection.js';
@@ -44,6 +45,7 @@ export type VerifyCheckName = 'install' | 'compile' | 'outcome';
 export interface VerifyCheck {
   readonly name: VerifyCheckName;
   readonly status: 'pass' | 'fail' | 'skipped';
+  readonly argv?: readonly string[]; // the exact effective argv executed
   readonly detail?: string;
 }
 export interface VerifyMerge {
@@ -102,8 +104,8 @@ class VerifyApplyOutsideRoot extends Error {
 }
 
 interface StepResult { readonly status: number | null; readonly output: string }
-function step(pnpm: PnpmInvocation, cwd: string, args: readonly string[]): StepResult {
-  const result = spawnSync(pnpm.command, [...pnpm.args, ...args], { cwd, encoding: 'utf8', timeout: CHECK_TIMEOUT_MS, windowsHide: true });
+function step(command: string, cwd: string, args: readonly string[]): StepResult {
+  const result = spawnSync(command, args, { cwd, encoding: 'utf8', timeout: CHECK_TIMEOUT_MS, windowsHide: true });
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   const detail = result.error !== undefined ? `${result.error.message}\n${output}` : output;
   return { status: result.error !== undefined ? null : result.status, output: detail.slice(-OUTPUT_TAIL) };
@@ -209,18 +211,21 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
     // (an infrastructure concern); compile and outcome judge the patch itself.
     // The outcome step exists only when evaluator generators named registered
     // owner checks — a bare `vitest run` would execute the clone's whole suite.
+    // The install step goes through the shared boundary: the recorded argv is
+    // the exact effective invocation, --ignore-scripts included. UnsafeInstall
+    // propagates out of the try as a hard failure (environment, not a pass).
     const steps: Array<{ name: VerifyCheckName; args: string[] }> = [
-      { name: 'install', args: ['install', '--frozen-lockfile'] },
-      { name: 'compile', args: ['exec', 'tsc', '--noEmit'] },
-      ...(checks.length > 0 ? [{ name: 'outcome' as const, args: ['exec', 'vitest', 'run', ...checks.map(check => check.file)] }] : [])
+      { name: 'install', args: productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']) },
+      { name: 'compile', args: [...options.pnpm.args, 'exec', 'tsc', '--noEmit'] },
+      ...(checks.length > 0 ? [{ name: 'outcome' as const, args: [...options.pnpm.args, 'exec', 'vitest', 'run', ...checks.map(check => check.file)] }] : [])
     ];
     for (const [index, current] of steps.entries()) {
-      const result = step(options.pnpm, clone, current.args);
+      const result = step(options.pnpm.command, clone, current.args);
       if (result.status === 0) {
-        runChecks.push({ name: current.name, status: 'pass' });
+        runChecks.push({ name: current.name, status: 'pass', argv: current.args });
         continue;
       }
-      runChecks.push({ name: current.name, status: 'fail', detail: result.output });
+      runChecks.push({ name: current.name, status: 'fail', argv: current.args, detail: result.output });
       for (const rest of steps.slice(index + 1)) runChecks.push({ name: rest.name, status: 'skipped' });
       const failureClass: VerifyFailureClass = current.name === 'install' ? 'environment-failure' : 'implementation-failure';
       return fail(failureClass, current.name, `owner check '${current.name}' failed in the scratch checkout`, { ...base, checks: runChecks });
