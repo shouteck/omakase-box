@@ -25,9 +25,16 @@ try {
   const owner = join(temp, 'owner');
   git(lab, 'clone', '--local', '--quiet', lab, owner);
   git(owner, 'checkout', '--quiet', '--detach', out.labHead);
-  const reverse = join(temp, 'reverse.patch');
-  writeFileSync(reverse, git(lab, 'diff', 'ddeb3ab', 'e412e08', '--', 'scripts/kitchen-stats.mjs'));
-  git(owner, 'apply', reverse);
+  // R1's change is put back by text (the lines it removed, from `git diff e412e08 ddeb3ab`);
+  // the recorded patch no longer applies because K6 edited the lines next to it.
+  const swap = (text, from, to) => { if (!text.includes(from)) throw new Error('could not restore: ' + from.slice(0, 50)); return text.replace(from, to); };
+  const scriptPath = join(owner, 'scripts', 'kitchen-stats.mjs');
+  let script = readFileSync(scriptPath, 'utf8');
+  script = swap(script, '    waves.push({ id: file.slice(0, -3), commits, merge, branches });',
+    "    const usage = (text.match(/Usage:[ \\t]*(\\S[^\\n]*)/) || [])[1] || null;\n    waves.push({ id: file.slice(0, -3), commits, merge, branches, usage });");
+  script = swap(script, "  if (!steps.size) out.push('  missing — no run data');\n  out.push('');\n",
+    "  if (!steps.size) out.push('  missing — no run data');\n  out.push('');\n\n  out.push('Usage per wave (agent usage as recorded in each wave file Result)');\n  const usage = readWaves(root);\n  if (usage.every(wave => !wave.usage)) out.push('  missing — no wave file records a Usage value; nothing to report, not zero');\n  else for (const wave of usage) out.push('  ' + wave.id + ': ' + (wave.usage || 'missing'));\n  out.push('');\n");
+  writeFileSync(scriptPath, script);
   git(owner, 'commit', '--quiet', '-am', 'lab exp02 base: Usage section restored');
   const base = git(owner, 'rev-parse', 'HEAD').trim();
   out.base = base;
@@ -93,6 +100,15 @@ try {
       measure('base');
       copyFileSync(join(lab, 'scripts', 'kitchen-stats.mjs'), join(boxDir, 'src', 'scripts', 'kitchen-stats.mjs'));
       measure('after the accepted change');
+      // Added after the first result was seen (see README): is the guard green in the folder
+      // because it works there, or because it no longer tests anything? Two wrong candidates
+      // from experiment 01 that the guard rejected in the repository.
+      const accepted = readFileSync(join(lab, 'scripts', 'kitchen-stats.mjs'), 'utf8');
+      const target = join(boxDir, 'src', 'scripts', 'kitchen-stats.mjs');
+      writeFileSync(target, '');
+      measure('post-hoc: empty file (wrong)');
+      writeFileSync(target, swap(accepted, 'export function checkLimits(', 'function checkLimits('));
+      measure('post-hoc: checkLimits no longer exported (wrong)');
     }
   }
 } finally {

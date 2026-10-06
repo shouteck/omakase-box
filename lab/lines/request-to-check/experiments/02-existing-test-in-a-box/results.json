@@ -1,0 +1,135 @@
+{
+  "node": "v24.11.0",
+  "labHead": "dfb4f31789d4341671400e2a6b6edab7f26f25cc",
+  "attempts": [
+    {
+      "name": "A no evaluator",
+      "exit": 1,
+      "stderr": "export failed: agreement invalid: evaluator: Too small: expected array to have >=1 items"
+    },
+    {
+      "name": "B registered generator only to satisfy the format",
+      "exit": 3,
+      "stderr": "export failed: 1 preparation gap(s)\n  - import of undeclared dependency 'vitest' (via tests/kitchen/kitchen-stats.test.ts -> vitest)"
+    },
+    {
+      "name": "C as B plus vitest declared",
+      "exit": 0,
+      "stderr": "",
+      "files": [
+        "box.json",
+        "box/submit.mjs",
+        "evaluator/kitchen-stats-no-usage.test.ts",
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/scripts/kitchen-stats.mjs",
+        "src/scripts/process.mjs",
+        "src/tests/kitchen/kitchen-stats.test.ts",
+        "tsconfig.json"
+      ],
+      "disclosure": {
+        "shippedOwnerFiles": 3,
+        "inventoryFiles": 745,
+        "share": 0.004026845637583893
+      }
+    }
+  ],
+  "box": {
+    "ownerFiles": [
+      "editable: scripts/kitchen-stats.mjs -> src/scripts/kitchen-stats.mjs",
+      "runnable: scripts/process.mjs -> src/scripts/process.mjs",
+      "runnable: tests/kitchen/kitchen-stats.test.ts -> src/tests/kitchen/kitchen-stats.test.ts"
+    ],
+    "checks": [
+      "pnpm exec tsc --noEmit",
+      "pnpm exec vitest run src/tests/kitchen/kitchen-stats.test.ts",
+      "node src/scripts/kitchen-stats.mjs  # fails if the output contains \"Usage per wave\""
+    ],
+    "evaluator": [
+      {
+        "box": "evaluator/kitchen-stats-no-usage.test.ts",
+        "generator": "kitchen-stats-no-usage"
+      }
+    ]
+  },
+  "states": [
+    {
+      "state": "base",
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guard": {
+        "exit": 0,
+        "tally": "Tests  10 passed (10)",
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C\n\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  10:47:21\n   Duration  1.58s (tests 94%, transform 4%, import 2%)"
+      },
+      "command": {
+        "pageExit": 0,
+        "pageChars": 1076,
+        "containsUsagePerWave": true,
+        "verdict": "red"
+      }
+    },
+    {
+      "state": "after the accepted change",
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guard": {
+        "exit": 0,
+        "tally": "Tests  10 passed (10)",
+        "tail": "RUN  v5.0.1 C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C\n\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  10:47:25\n   Duration  1.56s (tests 95%, transform 3%, import 1%)"
+      },
+      "command": {
+        "pageExit": 0,
+        "pageChars": 933,
+        "containsUsagePerWave": false,
+        "verdict": "green"
+      }
+    },
+    {
+      "state": "post-hoc: empty file (wrong)",
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guard": {
+        "exit": 1,
+        "tally": "no tally",
+        "tail": "(\"C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\kitchen-k4-vMJs0x\")));\nfile:///C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C/src/[eval1]:1\r\nimport * as k from './scripts/kitchen-stats.mjs'; console.log(JSON.stringify(k.checkLimits(\"C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\kitchen-k4-vMJs0x\")));\r\n                                                                               ^\r\n\r\nTypeError: k.checkLimits is not a function\r\n    at file:///C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C/src/[eval1]:1:80\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:278:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:275:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v24.11.0\r\n\n ❯ src/[eval1]:1:80\n ❯ probe src/tests/kitchen/kitchen-stats.test.ts:21:56\n\n ❯ limits src/tests/kitchen/kitchen-stats.test.ts:124:47\n ❯ src/tests/kitchen/kitchen-stats.test.ts:151:12\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯\n\n FAIL  src/tests/kitchen/kitchen-stats.test.ts > the page itself > exits 1 naming the broken limit on a fabricated root, 0 on the real repo\nAssertionError: expected +0 to be 1 // Object.is equality\n\n- Expected\n+ Received\n\n- 1\n+ 0\n\n ❯ src/tests/kitchen/kitchen-stats.test.ts:160:30\n    158|     writeFileSync(join(bad, 'STATUS.md'), Array(61).fill('x').join('\\n…\n    159|     const violation = spawnSync(process.execPath, [statsScript, '--roo…\n    160|     expect(violation.status).toBe(1);\n       |                              ^\n    161|     expect(violation.stderr + violation.stdout).toContain('STATUS.md');\n    162|     expect(violation.stderr + violation.stdout).toContain('LIMIT FAIL'…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯\n\n FAIL  src/tests/kitchen/kitchen-stats.test.ts > the page itself > prints fabricated runs as counted data, never silently dropped\nAssertionError: expected '' to contain '1 runs with summary.json · 1 without'\n\n- Expected\n+ Received\n\n- 1 runs with summary.json · 1 without\n\n ❯ src/tests/kitchen/kitchen-stats.test.ts:177:24\n    175|     const run = spawnSync(process.execPath, [statsScript, '--root=' + …\n    176|     expect(run.status).toBe(0);\n    177|     expect(run.stdout).toContain('1 runs with summary.json · 1 without…\n       |                        ^\n    178|     expect(run.stdout).toContain('check');\n    179|     expect(run.stdout).toContain('61s');\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯"
+      },
+      "command": {
+        "pageExit": 0,
+        "pageChars": 0,
+        "containsUsagePerWave": false,
+        "verdict": "green"
+      }
+    },
+    {
+      "state": "post-hoc: checkLimits no longer exported (wrong)",
+      "tsc": {
+        "exit": 0,
+        "tail": ""
+      },
+      "guard": {
+        "exit": 1,
+        "tally": "no tally",
+        "tail": "t\\\\AppData\\\\Local\\\\Temp\\\\kitchen-k4-bGbZZT\")));\nfile:///C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C/src/[eval1]:1\r\nimport * as k from './scripts/kitchen-stats.mjs'; console.log(JSON.stringify(k.checkLimits(\"C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\kitchen-k4-bGbZZT\")));\r\n                                                                               ^\r\n\r\nTypeError: k.checkLimits is not a function\r\n    at file:///C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C/src/[eval1]:1:80\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:278:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:275:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v24.11.0\r\n\n ❯ src/[eval1]:1:80\n ❯ probe src/tests/kitchen/kitchen-stats.test.ts:21:56\n\n ❯ limits src/tests/kitchen/kitchen-stats.test.ts:124:47\n ❯ src/tests/kitchen/kitchen-stats.test.ts:136:12\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  src/tests/kitchen/kitchen-stats.test.ts > checkLimits — the kitchen-size guards the page enforces > does not trip at the boundary: ten inbox entries and sixty status lines pass\nError: Command failed: C:\\Program Files\\nodejs\\node.exe --input-type=module -e import * as k from './scripts/kitchen-stats.mjs'; console.log(JSON.stringify(k.checkLimits(\"C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\kitchen-k4-b8M5Qg\")));\nfile:///C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C/src/[eval1]:1\r\nimport * as k from './scripts/kitchen-stats.mjs'; console.log(JSON.stringify(k.checkLimits(\"C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\kitchen-k4-b8M5Qg\")));\r\n                                                                               ^\r\n\r\nTypeError: k.checkLimits is not a function\r\n    at file:///C:/Users/shout/AppData/Local/Temp/lab-exp02-a9TpQv/box-C/src/[eval1]:1:80\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:278:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:275:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v24.11.0\r\n\n ❯ src/[eval1]:1:80\n ❯ probe src/tests/kitchen/kitchen-stats.test.ts:21:56\n\n ❯ limits src/tests/kitchen/kitchen-stats.test.ts:124:47\n ❯ src/tests/kitchen/kitchen-stats.test.ts:151:12\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯"
+      },
+      "command": {
+        "pageExit": 0,
+        "pageChars": 933,
+        "containsUsagePerWave": false,
+        "verdict": "green"
+      }
+    }
+  ],
+  "base": "466beaa5a586202ad9ccde400c71e25364969cdf",
+  "install": {
+    "exit": 0,
+    "tail": "Lockfile is up to date, resolution step is skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +40\n++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 40, reused 40, downloaded 0, added 40, done\n\ndependencies:\n+ vitest 5.0.1\n\ndevDependencies:\n+ @types/node 24.13.6\n+ typescript 6.0.3\n\nDone in 978ms using pnpm v10.34.5"
+  },
+  "tempRemoved": true
+}
