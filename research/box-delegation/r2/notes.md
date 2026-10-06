@@ -45,3 +45,25 @@ Ownership: `packages/box-package/commands.ts` owns execution (pinned tools — n
 - Guard source is visible inside the editable file itself (the wave anticipated this); the outcome check, not secrecy, is the delegated contract.
 - No CI wait; no push; no merge. Owner-side verify end-to-end on this request awaits the recipient's submission (phase 2).
 - Resource inventory: temp resource root `%TEMP%\kitchen-r2-cook` (logs + one box self-check copy) — deleted at phase close after copying logs to `research/box-delegation/r2/evidence/`. Kept: `r2-box-unused-param/` (named Box for the recipient) and this checkout's rebuilt `packages/box-cli/dist` (gitignored build output). No ambiguous old temps touched (K6 data untouched per STATUS).
+
+## CTO correction round (commits 0767aac, 41fdf38 — Git timestamps 11:42/11:44; base 69bc6aa 11:16, so active cook ~30 min, not the earlier guessed 70)
+
+- `checks` remain owner-readable descriptions only; executable truth is `commands` (tool/argv/cwd/context/role). A named gap is now recorded in `warnings` for every agreement: `N legacy 'checks' entr(ies) are owner-readable descriptions … no base results recorded` — legacy evaluator-only agreements still export (regression-covered), they are just not claimed as executed.
+- Owner-context checks now run in a disposable `git clone --local` at the pinned base (`mkdtemp box-base-*`, removed after) — approved commands never execute in the real owner repo. The pinned local toolchain (`scripts/tooling`) is materialized into the clone when present: it is installed, not committed, and the R1 guard's `requirePnpmTooling` failed without it (evidence/r2-export-tooling-gap.log — a real runtime-path gap surfaced by execution, then fixed generically). `verify` materializes the same tooling into its scratch clone before running declared commands.
+- Recipient-context checks run at export on the emitted folder copied to a temp run dir and installed from its own lockfile (install only when a pinned pnpm tool is declared). A red recipient guard — e.g. a command naming a file the Box never shipped — refuses export even with owner checks green.
+- Nonempty `--out` is refused before any command executes; the folder is emitted to a sibling staging dir and renamed into place only after all base checks are recorded, so a failed export leaves no partial Box and nothing is clobbered.
+- Recipient recipe stays generic: box.json carries the declared `commands` (pinned tool + argv + cwd); the recipient runs them with `pnpm exec`/`node` in the installed folder — no in-box runner was needed (the tools are already the recipe).
+- New/updated generic cases (13 total, evidence/command-checks.log, 26.9 s): recipient-context base pass/fail record, recipient guard refusal via missing runtime path, legacy evaluator-only export with named gap, plus the prior owner/base/verify cases. Scoped export+submission regression: 22/22 (evidence/export-regression.log). No full verify run — reviewer owns `--full`.
+
+## Re-export (pinned prep SHA 41fdf38)
+
+- Command: `node packages/box-cli/dist/cli.js export research/box-delegation/r2/agreement.json --repo . --out ../r2-box-unused-param` → exit 0 (evidence/r2-export.log). Named folder `C:\Users\shout\Desktop\Projects\r2-box-unused-param` re-created (prior one was ours, deleted; no K6 dirs touched).
+- Base results in box.json — all four declared checks on the untouched base:
+  - owner `unused-param-outcome` (outcome): **fail**, exit 2, ~3 s — TS6133 'repo' unused at tests/box/package/r1-kitchen-stats.test.ts(30,22).
+  - owner `r1-behavior-guard` (guard): **pass**, exit 0, ~15 s.
+  - recipient `package-typecheck-guard` (guard): **pass**, exit 0, ~3 s (installed staged Box, `tsc --noEmit` on the package tsconfig).
+  - recipient `package-unused-param-outcome` (outcome): **fail**, exit 2, ~3 s — TS6133 at src/tests/box/package/r1-kitchen-stats.test.ts(30,22).
+  - warnings: the named legacy-strings gap (2 entries). No all-green warning — both outcome checks are red.
+- Disclosure: 20 owner files / 1857 inventory → share 0.0108 (live filesystem denominator, sourceRoot '.').
+- Real repo left unchanged by export: `git status --porcelain` clean after the run; all command execution happened in the disposable clone and staged copy.
+- Remaining gaps: owner verify end-to-end on this request still awaits the recipient submission; install-in-clone cost (~minutes, cold workspace install) is recorded but not optimized; recipient-context commands at owner verify are not run (owner verify = owner context only, by design).
