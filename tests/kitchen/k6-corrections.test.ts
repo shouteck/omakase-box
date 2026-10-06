@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
+import { removeFixtureLink } from './fixture-link.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const suiteScript = join(root, 'scripts', 'suite.mjs');
@@ -14,7 +15,7 @@ const temps: string[] = [];
 const temp = () => { const dir = mkdtempSync(join(tmpdir(), 'kitchen-k6-fix-')); temps.push(dir); return dir; };
 const junction = join(root, 'tests', 'kitchen', 'kitchen-k6-fix-link');
 afterAll(() => {
-  rmSync(junction, { recursive: true, force: true });
+  removeFixtureLink(junction);
   for (const dir of temps) rmSync(dir, { recursive: true, force: true });
 });
 
@@ -97,7 +98,7 @@ describe('suite.mjs scoped containment is canonical', () => {
   it('a junction inside the suite cannot reach a test file outside it', () => {
     const outside = temp();
     writeFileSync(join(outside, 'escape.test.ts'), "import { it, expect } from 'vitest';\nit('escapes', () => expect(1).toBe(1));\n");
-    rmSync(junction, { recursive: true, force: true });
+    removeFixtureLink(junction);
     symlinkSync(outside, junction, 'junction');
     const run = spawnSync(process.execPath, [suiteScript, 'kitchen', join('tests', 'kitchen', 'kitchen-k6-fix-link', 'escape.test.ts')], { cwd: root, encoding: 'utf8', timeout: 120000 });
     expect(run.status, `${run.stdout}${run.stderr}`).toBe(2);

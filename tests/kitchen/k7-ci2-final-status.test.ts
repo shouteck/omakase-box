@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
+import { removeFixtureLink } from './fixture-link.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const temps: string[] = [];
@@ -74,15 +75,49 @@ describe('verify final Git-state diagnostics', () => {
 });
 
 describe('in-repo fixture link lifecycle', () => {
-  it('a directory junction created inside the suite tree is removed by rmSync', () => {
+  it('a directory junction created inside the suite tree is removed without touching its populated target', () => {
+    const dir = temp();
+    const target = join(dir, 'real');
+    mkdirSync(target);
+    writeFileSync(join(target, 'keep.txt'), 'x');
+    const link = join(dir, 'kitchen-k6-fix-link');
+    symlinkSync(target, link, 'junction');
+    removeFixtureLink(link);
+    expect(existsSync(link)).toBe(false);
+    expect(readFileSync(join(target, 'keep.txt'), 'utf8')).toBe('x');
+  });
+
+  it('refuses to remove a real populated directory at the fixture path', () => {
+    const dir = temp();
+    const occupied = join(dir, 'kitchen-k6-fix-link');
+    mkdirSync(occupied, { recursive: true });
+    writeFileSync(join(occupied, 'keep.txt'), 'x');
+    expect(() => removeFixtureLink(occupied)).toThrow();
+    expect(readFileSync(join(occupied, 'keep.txt'), 'utf8')).toBe('x');
+  });
+
+  it('refuses to remove a non-link file at the fixture path', () => {
+    const dir = temp();
+    const occupied = join(dir, 'kitchen-k6-fix-link');
+    writeFileSync(occupied, 'x');
+    expect(() => removeFixtureLink(occupied)).toThrow();
+    expect(readFileSync(occupied, 'utf8')).toBe('x');
+  });
+
+  it('removes a dangling fixture link', () => {
     const dir = temp();
     const target = join(dir, 'real');
     mkdirSync(target);
     const link = join(dir, 'kitchen-k6-fix-link');
     symlinkSync(target, link, 'junction');
-    rmSync(link, { recursive: true, force: true });
+    rmSync(target, { recursive: true, force: true });
+    removeFixtureLink(link);
     expect(existsSync(link)).toBe(false);
-    expect(existsSync(target)).toBe(true);
+  });
+
+  it('a missing fixture path is idempotent', () => {
+    const dir = temp();
+    expect(() => removeFixtureLink(join(dir, 'kitchen-k6-fix-link'))).not.toThrow();
   });
 
   it('kitchen tests never rely on rmdirSync for in-repo fixtures', () => {
