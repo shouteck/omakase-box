@@ -14,7 +14,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 ## Kitchen and environment
 
 - Property-based guard tests and Box packaging mutation checks: retained from the kickoff inbox; require a separately named kitchen wave.
-- Verify-cost counts (suites, migrations, databases) and a ratcheted verification budget: retained from the kickoff inbox for a future measured kitchen wave; R1 records observed counts without changing verify.
+- K6 added packaging operation counts and an explicit full-profile budget; invocation/PID time-window counting can miss reused PIDs or mix simultaneous matching logs. Give counters a run identity before relying on parallel measurements.
 - Monthly upstream pstack comparison: last done 5 October 2026 against 0.15.10; not due at this kickoff.
 
 - Verify reuse trusts `.kitchen/runs` records by consistency, not signature — a hand-forged fully-consistent run dir can fake a reused PASS. Accepted; `--fresh` is the antidote and the pass uses it when it doubts a record. From K5.

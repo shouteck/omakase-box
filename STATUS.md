@@ -1,41 +1,42 @@
 # Status
 
-Replaced 6 October 2026 by Devin as CTO after K6 was parked at its approved timebox.
+Replaced 6 October 2026 by Devin as CTO after K6's reviewed merge; temporary-resource cleanup remains incomplete.
 
 ## Now
 
-- **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1, D1.2, K2a, K2b, K3, D2.1, D2.2, D3.1, K4, K5, K8, R1 (`ddeb3ab`). No K6 code merged.
-- **In flight:** no active worker. Owner approved a K6 correction run; updated brief awaits pre-cook **go** for a renewed 60-minute timebox. Prior candidate `feb99b2` / FAIL review `4a3000f` remain preserved on local `wave/K6`.
-- **K6 blockers:** scoped tests can escape through junctions; global lockfile cache trusts preseeded bytes and persists across commits; invalid/failed/missing timing can be labeled budget PASS. The reported 42% saving is a unit model, not a measured paired baseline.
-- **Verification:** targeted reviewer attacks reproduced the defects; a full acceptance run was deliberately not spent on a known-invalid candidate. Latest master Actions result remains SUCCESS, run `37393662780`; K6's local failure is not a red master CI run.
-- **Cleanup:** K6 worker/reviewer scratch removed; main checkout is clean on master after the park commit. Candidate branch retained for recovery; preexisting resources and the unrelated lab worktree untouched.
-- **R1 remains delivered:** package-only agent changed kitchen-stats; sealed artifact accepted owner-side, no-op rejected, independent review and CI passed. Raw records are in `research/box-delegation/r1/evidence/`.
-- **R1 limits:** request-specific preparation remains expensive; 2 owner files / 694 tracked non-excluded files (~0.29%), 19402 B. Isolation instructional; no comparator, customer evidence, or measured speed advantage.
+- **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1, D1.2, K2a, K2b, K3, D2.1, D2.2, D3.1, K4, K5, K8, R1 (`ddeb3ab`), **K6** (`a273bf0`).
+- **K6 delivered:** invocation-owned lockfile reuse, canonical file-scoped test containment, and a fail-closed 330-second executed-time budget for `verify --full test:box-package test:kitchen`. Existing test obligations and product behavior preserved.
+- **Checks:** independent reviewer PASS on exact `2011fbb`: all four steps executed, 294s elapsed / 280s executed. A deliberately broken exporter failed both clean-directory tests. Prior cache/junction/budget attacks re-run and closed.
+- **Measurement:** reviewer pair 227.5s uncached → 135.4s cached; both 70 tests / 68 exports, real resolutions 38 → 12 (+26 hits), same 6 installs/typechecks/box suites and 1 owner install. One matched pair on one host, not a general speed guarantee. Earlier mismatched/no-gain pairs and FAILs remain recorded.
+- **In flight:** no active cook. K6 code accepted; **resource close incomplete**. Main checkout on master; do not start another wave from this run.
+- **Cleanup limit:** reviewer removed 31 owned operation logs and named scratch, but reported 725 `box-d21-*` directories with indistinguishable worker/reviewer ownership, plus `box-k6-stats-249468.jsonl` and an empty `box-k6-lockfile-cache` directory in host temp. Ambiguous resources left untouched; identify ownership or obtain exact cleanup approval before deletion. Historical `.kitchen/runs` records preserved; unrelated lab worktree untouched.
+- **CI:** master push run `37403420014` completed SUCCESS on merge `a273bf0`, confirmed by a non-waiting result query during close. Existing host-bound exclusions remain.
+- **R1:** real internal delegation accepted, no-op rejected. Request-specific preparation cost remains the main product risk; isolation instructional, no customer/comparator evidence.
 
 ## Approved by the CEO
 
 - Prior approvals: lean kitchen, D1.2, K1–K3, D2/D3.1, K8 free-tier Actions, K9 behind a tag, owner walkthrough, R1.
-- This run: `START.md: K6` plus **Go** cleared K6 only, for 60 minutes active cook work. It is now parked; no silent extension.
+- K6 initial START/Go, then Approve/Go for a renewed 60-minute correction timebox. Correction cook stopped within the limit; independent review passed. No other wave authorized by this run.
 
 ## Next
 
-Nothing starts without a new START message and the required pre-cook go.
+No further wave starts without a new START and its required pre-cook go.
 
-1. **Resume K6:** invocation-local trusted setup, canonical scoped containment, fail-closed budget observations, actual paired measurement, independent full acceptance.
-2. **R2:** second real request using existing command checks, no request-specific code; not approved.
+1. Resolve K6's incomplete resource close without bulk deletion of unidentified temp data.
+2. **R2:** delegate another real request using existing command checks, without request-specific code; not approved.
 3. **K9:** legacy removal behind a tag; brief ready, unstarted.
 4. **D4:** comparison; unstarted. K7 also unstarted.
 
-Recommendation: resume and narrow K6 before R2; do not ship its current cache/budget shortcuts.
+Recommendation: resolve cleanup ownership, then R2. K6's speed pair does not establish product value or total owner-effort savings.
 
 ## Night queue
 
-Only under a new named overnight request and pre-cook go: K6 correction, R2, K9, or K7 as named. D4 remains outside the night queue.
+Only for a new named overnight request and pre-cook go: R2, K9, then K7 as named, after resolving cleanup ownership. D4 remains outside the night queue; K6 code work is accepted.
 
 ## Known problems
 
-K6 acceptance blockers are above and in [waves/K6.md](waves/K6.md); non-blocking product gaps remain in [BACKLOG.md](BACKLOG.md).
+Cleanup limit above; remaining product and instrumentation gaps are in [BACKLOG.md](BACKLOG.md). Exact review and all failed attempts: [waves/K6.md](waves/K6.md).
 
 ## Decision waiting for the CEO
 
-K6 correction is approved in principle; reply **go** to the pre-cook card to start the renewed bounded run. No implementation has restarted.
+Cleanup ownership/permission for the ambiguous temp resources; next wave remains the owner's choice. No additional implementation has started.
