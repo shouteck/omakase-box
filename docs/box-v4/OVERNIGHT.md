@@ -11,6 +11,8 @@ The owner says `START.md overnight` and goes to sleep. The head chef runs waves 
 - the limits the owner gave (a stop time, a number of waves). If none, stop when the exit condition is met or nothing in scope is left;
 - the queue: the "Night queue" in STATUS.md, cut down to what is in scope. Keep that queue stocked in the day so a night never runs dry: when a wave closes, the head chef adds the next product waves and any kitchen cleanup that is ready.
 
+Show the owner the night plan as the pre-cook card (START.md) and wait for "go" before the first wave. After that, never wait.
+
 **During the night:**
 
 - Every wave runs exactly as in the day: brief, cook, the pass, merge on PASS. Nothing reaches master without the pass. A night run never skips review, weakens a test or lowers a verdict level to keep moving.

@@ -12,6 +12,8 @@ Answer three questions:
 
 If the brief ticks any review lenses, answer each one: say what you tried and what you found. A ticked lens you could not answer means the verdict is not PASS. Use the station card's "the pass checks" list as well.
 
+If the diff deletes, overwrites or recursively removes anything at a path it is given, run it against a directory that is not the wave's own and that already has files in it. It must refuse.
+
 You may add tests on the branch. You may not edit product code or weaken an existing test. If a check could not run, the verdict is not PASS. Do not start other agents.
 
 Write the verdict into the wave file's Result section: commit SHA, the verify summary line, PASS or FAIL with its level (ui-verified, test-verified or typecheck-only), one line per ticked lens, findings and limits, and your host and model. Then report the same in a few sentences.

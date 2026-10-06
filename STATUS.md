@@ -1,6 +1,6 @@
 # Status
 
-Replaced at wave close. Last written 6 October 2026 by Devin as CTO, after R1's reviewed merge.
+Replaced at wave close. Last written 6 October 2026 by Claude as CTO, after reviewing the R1 run.
 
 ## Now
 
@@ -8,6 +8,7 @@ Replaced at wave close. Last written 6 October 2026 by Devin as CTO, after R1's 
 - **R1 delivered a real internal request:** a fresh package-only agent removed obsolete Usage reporting from `kitchen-stats`; owner `box verify` accepted the sealed artifact and rejected a no-op. Its verified scratch result was integrated and independently reviewed. Raw artifacts and reports are in `research/box-delegation/r1/evidence/`.
 - **Disclosure:** 2 owner files, 19402 B; 2/694 tracked files outside declared exclusions (~0.29%). The live filesystem inventory gave 2/1834 (~0.11%), including untracked/non-source files. Both denominators are recorded; neither proves customer value.
 - **Checks:** reviewer `node scripts/verify.mjs --full test:box-package test:kitchen` PASS on `cbd2302`, all steps executed, 269s. Preparation-driver deletion/collision defect fixed with red-first tests and independently re-attacked. Master CI run `37393662780` completed SUCCESS (job 4m14s); the documented K8 host-bound exclusions remain.
+- **What R1 showed:** the 8-line change needed about 470 lines written for that one request (a hand-written evaluator and owner check in `packages/box-package`, a driver, three test files), and 46 minutes of which 22.5 were verification. Preparation cost is now the main product risk.
 - **In flight:** nothing. R1 is closed; this START stops here. K9 remains unstarted.
 - **Held:** nothing. Ordinary verification uses disposable embedded Postgres; hostile/container suites remain separate. `--fresh` forces execution; `--full` is the scoping backstop.
 
@@ -19,19 +20,22 @@ Replaced at wave close. Last written 6 October 2026 by Devin as CTO, after R1's 
 
 ## Next
 
-No further wave starts without a new START message.
+No wave starts without a new START message. Every run opens with a pre-cook card (START.md).
 
-1. **K9:** legacy removal behind `legacy-2026-10-06`; brief ready, nothing started. `START.md: K9`.
-2. **D4:** Box-versus-contractor comparison; not started. `START.md: D4`.
+1. **R2:** delegate a second real request with no request-specific code, by letting an agreement name existing commands as its checks. Not approved; `START.md: R2`.
+2. **K9:** legacy removal behind `legacy-2026-10-06`; brief ready, nothing started. `START.md: K9`.
+3. **K6:** cut the largest verify cost (`test:box-package`, about 2 minutes a run). `START.md: K6`.
+4. **D4:** Box-versus-contractor comparison. `START.md: D4`.
 
-Recommendation: K9 before D4; R1 proves internal use, not reduced total effort or external demand.
+Recommendation: R2 first. D4 would measure a preparation cost R1 already showed is too high.
 
 ## Night queue
 
-Only for a new `START.md overnight` message:
+Only for `START.md overnight`; each entry needs naming in that message.
 
-1. K9 (needs naming).
-2. K6/K7 only if measured verification exceeds 15% of a run; R1's incomplete effort measurements do not establish that condition.
+1. R2.
+2. K9.
+3. K6, then K7.
 
 D4 stays outside the night queue so the owner can read its results.
 
@@ -41,4 +45,4 @@ No blocking product defect. Non-blocking gaps are in [BACKLOG.md](BACKLOG.md); R
 
 ## Decisions waiting for the CEO
 
-Which wave to name next: recommendation K9. Nothing starts automatically.
+- Which to run next: R2, K9, K6 or D4. Recommendation: R2.

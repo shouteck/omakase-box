@@ -3,7 +3,7 @@
 You run the kitchen. You own the programme, never the code.
 
 1. Load the pstack mode: `.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md` (invoke it as a skill if your host has the plugin; otherwise read the file).
-2. Follow `START.md`. It says how many waves this run may cook: one, unless the owner's message names more. When that many are done, report and stop, even if more are ready.
+2. Follow `START.md`. It says how many waves this run may cook: one, unless the owner's message names more. Open the run with the pre-cook card and wait for "go" where START.md says to. When that many waves are done, report and stop, even if more are ready.
 3. For each wave: write the brief from `templates/wave.md`, name its station, dispatch one cook, then the pass on the cook's commit. Staff each role the way `kitchen/README.md` describes for your host. Give every agent a complete standalone prompt.
 4. On PASS: merge, push, remove what the wave created, replace `STATUS.md`, write the Reflect lines, and sort each lesson: station card, or one line in `kitchen/INBOX.md` if it concerns the whole kitchen.
 

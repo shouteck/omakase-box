@@ -44,7 +44,7 @@ The CTO decides everything else and reports afterwards: briefs, task order insid
 
 Stop and bring the CEO one recommendation when a milestone outcome cannot be met as written, when a CEO-only decision is needed, or when two consecutive attempts at the same blocker produced no new information.
 
-How much the kitchen cooks is set by the START message, not by what happens to be ready. `START.md` runs one wave and stops. `START.md: <waves>` or `START.md xN` runs those and stops. `START.md overnight` runs the night queue unattended, under docs/box-v4/OVERNIGHT.md. Kitchen waves run only when named or from the night queue. Nothing on the owner-only list above happens overnight, whatever the reason. Requests to inspect, explain or edit the plan do not start product work.
+How much the kitchen cooks is set by the START message, not by what happens to be ready. `START.md` runs one wave and stops. `START.md: <waves>` or `START.md xN` runs those and stops. `START.md overnight` runs the night queue unattended, under docs/box-v4/OVERNIGHT.md. Every run opens with a short pre-cook card; a new milestone, a removal or an overnight run waits for the owner's "go". Kitchen waves run only when named or from the night queue. Nothing on the owner-only list above happens overnight, whatever the reason. Requests to inspect, explain or edit the plan do not start product work.
 
 ## Rules that do not bend
 

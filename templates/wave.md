@@ -37,6 +37,8 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 
 ## Result
 
+<One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
+
 - Worker: <host / model> · Reviewer: <host / model>
 - Commit: `<SHA>`
 - Verify: `<summary line from the reviewer's run>`

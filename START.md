@@ -16,4 +16,21 @@ Before the first wave:
 2. Check that STATUS.md matches Git: current branch, last commit on master, any `wave/*` branch, uncommitted changes. If they disagree, Git is right; fix STATUS.md. Then empty `kitchen/INBOX.md` ("Getting better" in KITCHEN.md).
 3. Check the off-machine run: `gh run list -R shouteck/omakase-box --limit 3`. A red run on master comes first: the one wave this run may cook is the fix, and STATUS.md says so while it is red.
 
+4. Show the owner the pre-cook card, then start or wait as the table says.
+
+> **About to cook: <wave ids>**
+> **You will get:** up to three outcomes.
+> **Checked by:** one sentence.
+> **Touches:** what it changes, and plainly if it removes or deletes anything.
+> **Timebox:** minutes. **Stops after:** the last wave named.
+
+| What is starting | After the card |
+|---|---|
+| The first wave of a milestone, including one named in this message | Wait for "go" |
+| A wave that removes or deletes anything beyond its own scratch files | Wait for "go" |
+| An overnight run (the card is the night plan) | Wait for "go" |
+| The next wave of a milestone the owner has already been briefed on | Start; the owner can interrupt |
+
+Under 100 words. The card is a summary of briefs already written, not a new document. "Go" covers what the card says and nothing else.
+
 A request to inspect, explain or edit the plan is not a kickoff.

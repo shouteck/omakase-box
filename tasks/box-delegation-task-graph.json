@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Product next: R1 (a real request through the loop) or D4, whichever the owner names. Kitchen: K9 when named; K6 and K7 only if verification is still above 15% of a run once a product wave has been measured under K5.",
+    "sequence": "Product next: R2 (delegate without request-specific code), then D4; whichever the owner names. Kitchen, when named: K9 (legacy removal), K6 (largest verify cost), K7.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -458,32 +458,32 @@
     {
       "id": "K6",
       "milestone": "K",
-      "title": "Verify speed 2: clone a migrated template database",
+      "title": "Verify speed 2: hillclimb the largest cost the numbers show",
       "dependencies": [
         "K5"
       ],
       "writePaths": [
-        "tests/box/auth/support.ts",
-        "tests/box/delegation/support.ts",
-        "scripts/host-test-runtime.mjs",
+        "tests/box/package/**",
         "scripts/verify.mjs",
+        "scripts/workspace.mjs",
+        "scripts/suite.mjs",
         "tests/kitchen/**"
       ],
       "deliverables": [
-        "verify migrates one template database per run for each migration set, and test helpers create their database with CREATE DATABASE ... TEMPLATE instead of replaying every migration per test file.",
-        "The template is rebuilt whenever the migration files change (key it on their content), has no open connections when it is cloned, and is dropped with the run.",
-        "One test still migrates from empty, so a broken migration cannot hide behind a stale template."
+        "Take the largest executed cost from node scripts/kitchen-stats.mjs and drive it down with the hillclimb playbook. On R1 that was test:box-package (about 2 minutes a run, 642 s executed across five runs), then check (about 100 s a run).",
+        "Find out where test:box-package spends its time before changing anything (clean-directory installs, repeated exports, typechecks). Likely candidates: share one exported Box and one install across tests that only read it; keep the package cache between runs.",
+        "A database template (the earlier plan for this wave) is only worth doing if the numbers show migrations are a real cost; R1 does not show that."
       ],
       "acceptance": [
-        "Before and after come from scripts/kitchen-stats.mjs (K4), at least five runs each on the same commit, with spread. Keep a change only if the numbers support it.",
-        "A migration edited after the template was built is reflected in the next run.",
-        "Nothing is left behind after verify."
+        "Counts as well as seconds, before and after, on the same commit: installs performed, exports performed, suites executed.",
+        "Every test still exercises a clean directory outside the checkout where its claim depends on one; no assertion is removed or weakened.",
+        "A test written first proves a real break in the shared setup is still caught."
       ],
       "verification": [
-        "Reviewer adds a throwaway migration, confirms the next run sees it, removes it, and re-measures."
+        "Reviewer re-measures, and breaks the exporter on a scratch branch to confirm the suite still fails."
       ],
       "handoff": "waves/K6.md",
-      "condition": "Run only if the numbers after K5 still show verification above 15% of a run."
+      "condition": "Met on R1: verification was 22.5 of 46 minutes. Runs when the owner names it."
     },
     {
       "id": "K7",
@@ -607,6 +607,23 @@
         "research/box-delegation/**"
       ],
       "handoff": "waves/R1.md"
+    },
+    {
+      "id": "R2",
+      "milestone": "R",
+      "title": "Delegate a request without writing request-specific code",
+      "dependencies": [
+        "R1"
+      ],
+      "proposal": "Not approved. R1 delivered an 8-line change but needed about 470 lines written for that one request: a hand-written evaluator generator and owner check in packages/box-package, a driver and three test files. Preparation cost is the product's main risk, and D4 would only measure it. R2 removes it for the common case: the agreement names commands that already exist in the owner repository (a test file, a script) as the recipient check and the owner check, and export and verify run them, with no registered generator per request. Prove it by delegating a second real kitchen request with zero lines added to packages/box-package, and record preparation time against R1.",
+      "writePaths": [
+        "packages/box-package/**",
+        "packages/box-cli/**",
+        "tests/box/package/**",
+        "research/box-delegation/r2/**",
+        "waves/R2.md"
+      ],
+      "handoff": "waves/R2.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"
