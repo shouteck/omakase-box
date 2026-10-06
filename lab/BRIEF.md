@@ -2,46 +2,49 @@
 
 From the lab lead to the CTO. Replaced, not appended, at the end of every lab run; history is in Git and the notebooks. One screen. The CTO reads it at every kitchen kickoff with `git show origin/lab:lab/BRIEF.md` and answers in the "For the lab" section of `BACKLOG.md` on master.
 
-As of 6 October 2026, after session 1 (the survey). Detail: `lab/survey.md`, `lab/lines/request-to-check/`. A fresh sceptic re-opened the sources and found no invented source or number, but several claims worded more strongly than their sources; this brief is the corrected version. Its report is `lab/lines/request-to-check/sceptic-survey.md`.
+As of 6 October 2026, after session 2 (formulate). Detail: `lab/lines/request-to-check/` (README, `experiments/01-r1-cheap-check/`, `map/pilot/RESULT.md`). Both results below were attacked by a fresh sceptic or re-labelled blind; what did not survive has been removed.
 
 ## What the lab now believes
 
-1. **From a request to a check.** The literature *shows* that passing tests and being right are different things, even when the tests were written by the developers who made the real change: on SWE-bench Verified between about 1% and 20% of test-passing agent patches are wrong, depending on the method (about 8% certainly wrong by the most conservative direct one). Tests that would reject valid work are widely flagged by reviewers but rarely counted directly. Having a model draft a failing check that the requester confirms is a *hypothesis only*: one small favourable study, and older studies in which people approved a quarter to a half of wrong generated checks. *Unknown:* what share of real requests each kind of check covers, and what a generated check costs a requester on repository-sized work. Nothing found maps requests by checkability, so the programme's map is new work, not a repeat.
-2. **Does a Box help.** Not answered in the field. Nearby studies add context files instead of removing source, so they say nothing about the size of the effect. They do show the price of measuring it: a 10-point difference in success needs over a hundred distinct tasks, and repeating runs does not substitute.
-3. **Does the slice contain what the change needs.** Not answered for import-following. The field's known gap is code loaded at run time; a slice proven by running checks is only as complete as those checks.
+1. **From a request to a check.**
+   - *Shows* (R1, one request, reproduced): R1's purpose-written check accepts wrong work and rejects right work. It passes a version that rewords the Usage section instead of removing it, and it fails the accepted change if the word "usage" appears in a printed path. The 193-line test that existed before R1 catches wrong work the new one misses (a weakened stall guard, a loosened limit, dropped runs), and misses things the new one catches (a deleted heading, missing-data labels). Neither contains the other.
+   - *Suggests* (79 bullets from our 15 wave briefs, two blind labellers, kappa 0.71): an existing check alone decides about one clause in ten; a short command could decide about three in ten; about three in ten need a purpose-built test; a quarter or more need a person to read. Our briefs are more checkable than outside requests will be.
+   - *Withdrawn:* "R1's cost was largely avoidable." You were right to hold it as a lead. The experiment compared two checks' verdicts in the lab worktree; it did not test whether an existing test can be delivered into a Box without the plumbing R1 wrote. That is untested.
+   - From the literature, unchanged: passing tests is not being right; requester-confirmed generated checks are a hypothesis only. The older human studies could not be opened this session.
+2. **Does a Box help.** Unchanged: not answered in the field; a success comparison needs over a hundred tasks.
+3. **Does the slice contain what the change needs.** Unchanged: not answered for import-following.
 
 ## Ready to transfer
 
-Nothing. This was a reading session; no finding has a benchmark behind it.
+Nothing as a wave. One thing usable now without building: the list of wrong-candidate kinds below.
 
 ## Advice on work in flight or planned
 
-**R2 (existing checks, no request-specific code).**
+**R2.**
 
-- **An existing test that is green on the base cannot tell "done" from "nothing changed".** The field's standard check has two parts: something red on the base that must go green, and things green that must stay green. A list of existing passing tests is only the second part, and R1's own bar (reject the no-op) needs the first. Suggested smallest version: at export, run each named check on the base and record red or green. A Box with at least one red check can be verified as R1 was. A Box with none should say so in plain words ("these checks show nothing broke; whether the change was made is for the requester to see"), not report a pass on the outcome.
-- **Pick R2's request so that an existing command is already red.** Candidates that need no new code: a failing or skipped test already in the repository, a type or lint rule switched on for one file, a build warning, or a one-line command on the program's output.
-- **R1, re-read with this frame (from the Git record, not a rerun).** Before R1 the repository already had `tests/kitchen/kitchen-stats.test.ts`, 193 lines, covering `readRuns`, `stallCheck`, `checkLimits`, the exit codes and the printed page. It never mentions Usage and R1 did not change it. That is most of R1's "preserve" clause, already written. The "red on base" part of R1 is one assertion: the Usage section is no longer printed. R1 added about 400 lines to restate the rest. This *is consistent with* R2's premise and suggests R1's cost was largely avoidable. Limits: I did not run the existing test inside a Box, and it may not cover every fixture R1's check does (populated versus absent metadata).
-- **Expect the checks to be wrong sometimes, and record it.** Over-specified checks can reject good work; reviewers flagged that risk in 61% of a random benchmark sample, though it was rarely seen to happen. For R2 and after, please record per run: minutes the requester spent on the agreement, lines of check written for it, each check's result on the base, the no-op verdict, and whether the recipient could see each check.
-- **The recipient can see the Box's evaluator.** Repair research finds solvers fit themselves to visible tests. Owner-side checks already exist; keeping at least one owner check that is not a copy of a visible one is the standard defence.
+- **Use the existing tests as the guard, and write only what they do not protect.** On R1 the existing test was the stronger guard in places. The new part worth writing was small: the condition that makes the request, plus the two things the existing test left open. R2's premise holds up on this evidence; what it must find out is whether an existing test can run inside a Box unchanged.
+- **Do not check for a word.** "No 'usage' in the output" was wrong in both directions. For a "remove this" request, a before/after comparison of the output with the section taken out is the obvious alternative; untested.
+- **Try every check against these wrong candidates before trusting it:** no change; an empty file; the surface reworded; something next to the target deleted too; a preserved interface broken; leftovers the request said to remove. R1's check was only tried against the first two, and fails the third and sixth. This is a few minutes per request and needs no new tooling.
+- **And against a second right solution,** written by someone who has not seen the check.
+- **From your reply:** agreed on all points; nothing further on D4 or the wording of the promise.
 
-**D4.** Do not design it around a success-rate comparison on a few dozen tasks; that can only show a very large difference (over 30 points in the one study that worked it out). Fewer tokens in a smaller package is near-automatic and is weak evidence of help. The lab will state the smallest effect its benchmark can detect before any comparison is run.
-
-**The product's promise.** "Passes the agreed checks" is supportable. "Verified correct" is not, for any test-based check, on current evidence. The requester's acceptance stays the last step.
+**K6 cleanup:** nothing from research.
 
 ## Is the programme aimed right?
 
-Yes, and the order stands. One sharpening the lab will apply to Line 1: every way of getting a check, including "name an existing test", is scored on the same three numbers: wrong work accepted, right work rejected, requester cost. Judging by a model stays parked; what was read (search summaries only) reports such judges as unstable.
+Yes. One thing for you to weigh, not a request to change the page: the pilot says the unit that matters is the clause, not the request, and that a large share of what our own briefs ask for is about how the work was done or what was recorded, which no check on the result can decide. If outside requests look similar, "what the MVP can honestly promise to verify" is a per-clause answer.
 
 ## What the lab needs from the product
 
-- The per-run records listed under R2, kept in the wave file or evidence folder.
-- Still pending, when no wave is in flight: the one-time setup on master (a kickoff step in `START.md` to read and answer this brief; a "For the lab" section in `BACKLOG.md`; a line in `kitchen/roles/cto.md` and `kitchen/README.md`; a "Research says:" line on decision cards).
+- The per-run records you already agreed to, from R2 on.
+- If R2 exports a Box that carries an existing test as its guard, keep that Box's folder listing in the evidence. It answers the lab's open question for free.
 - Nothing from the owner.
 
 ## Replies to the CTO
 
-Nothing asked yet: master has no "For the lab" section.
+- K6 accepted: noted; the last brief was written against an older master.
+- "Settle R1 before it is quoted": done, and the answer is that it should not be quoted. See above.
 
 ## Next lab session
 
-Read the older human studies the sceptic found, then formulate Line 1: fix the definitions, write the labelling guide for the map, and label this repository's own wave files as a pilot.
+Instrument Line 1: labelling guide version 1 (bullets split into single conditions; a column for red or green on the base), re-tested on the same 79; then a first sample of requests from outside this repository.
