@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone A is delivered (A1 to A4). Next, when named: K7 in the daytime (verification is still half of each wave), and R3b, a replay of fixed issues on a public repository. D4 waits for the lab's benchmark.",
+    "sequence": "Milestone A is delivered. Next, when named: K7a (packaging tests on three workers, a small wave) and R3b (a replay of fixed issues on a public repository). D4 waits for the lab's benchmark.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -494,7 +494,7 @@
     {
       "id": "K7",
       "milestone": "K",
-      "title": "Verify speed 3: run the packaging tests in parallel and make the time budget see every run",
+      "title": "Verify speed 3 (superseded by K7a): parallel tests, leak fixes, budgets and attribution in one wave",
       "dependencies": [
         "K6"
       ],
@@ -533,7 +533,8 @@
         "measurement fairness: before and after on the same commit, five runs each, with spread"
       ],
       "daytimeOnly": "Edits scripts/verify.mjs, which is read-only overnight. Parked at kickoff on the night of 6 October 2026 for that reason and because the night's one-run limit ruled out its measurement.",
-      "measurementAllowance": "Up to ten executed full verify runs in this wave: five on the base commit and five on the final commit, back to back, no waiting between them. This is the one exception to \"one executed full run per candidate\"."
+      "measurementAllowance": "Up to ten executed full verify runs in this wave: five on the base commit and five on the final commit, back to back, no waiting between them. This is the one exception to \"one executed full run per candidate\".",
+      "result": "Parked 7 October 2026 with an independent FAIL. It bundled six separate jobs and a ten-run measurement into one wave: 500 changed lines in 14 files, 12 full runs against 10 allowed, no clean final run. The CTO wrote it too large. Its branch wave/K7 is kept as a source to salvage from. Replaced by K7a; the rest returns to the backlog as separate small items."
     },
     {
       "id": "K8",
@@ -839,6 +840,40 @@
         "research/box-delegation/r3b/**"
       ],
       "handoff": "waves/R3b.md"
+    },
+    {
+      "id": "K7a",
+      "milestone": "K",
+      "title": "Run the packaging tests on three workers, and nothing else",
+      "dependencies": [
+        "K6"
+      ],
+      "daytimeOnly": "Only if scripts/verify.mjs has to change; the aim is that it does not.",
+      "why": "A full verify run is about six and a half minutes (median 393 s over five clean runs on 7 October 2026) and each wave needs several. The packaging suite is most of that and runs its test files one at a time on a six-core machine.",
+      "writePaths": [
+        "scripts/suite.mjs",
+        "scripts/vitest.config.mjs",
+        "tests/box/package/support.ts",
+        "tests/box/package/**"
+      ],
+      "deliverables": [
+        "The packaging suite runs its test files on three workers. Every other suite stays as it is.",
+        "Only the collisions that parallel running actually exposes are fixed, each with a test that shows it. Take what is already proven from the parked wave/K7 branch (its three-worker scoped run passed 146 tests) and leave the rest there.",
+        "Nothing else: no leak fixes, no stale-database recovery, no budget or statistics changes, no slow-file tuning, no memory sampling. Those are separate backlog items."
+      ],
+      "acceptance": [
+        "Two executed full runs on the final commit both pass: node scripts/verify.mjs --full --fresh test:box-package test:kitchen. That is the whole measurement; the before figure is the 393 s already on record.",
+        "The same number of tests run as before, with no assertion removed or weakened, and a deliberately broken packaging test still fails the run.",
+        "If the full run is not at least a minute faster, say so and do not merge: the change is not worth its risk.",
+        "The existing time budget is left where it is. Lowering it is a later, separate step."
+      ],
+      "verification": [
+        "Reviewer checks the test count, breaks one packaging test on a scratch branch to see the run fail, and relies on the two recorded runs."
+      ],
+      "lenses": [
+        "measurement fairness: two runs is thin; report both figures and call it an indication"
+      ],
+      "handoff": "waves/K7a.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"

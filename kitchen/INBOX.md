@@ -4,3 +4,4 @@ Kitchen-wide lessons and ideas, one line each, ten at most. Only the head chef w
 
 - Version the measurement driver and gate every child launch on experiment run cap, clean exact SHA and cheap smoke/type checks; stop on the first failed child. K7 ran12full attempts against10allowed because its ignored batch driver enforced neither cap nor fail-fast.
 - k6-scoped-tmp ownership/refusal remains on parked unmerged K7, not delivered on master; keep the mandatory populated-foreign-path refusal requirement when resuming.
+- Kitchen waves obey the same size rule as product waves: one job, one page. K7 bundled six jobs and failed. And a measurement must cost less than the saving it proves: ten full runs to justify a speed-up took over an hour.

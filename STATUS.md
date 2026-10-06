@@ -12,6 +12,8 @@ Replaced at K7 parked close, 7 October 2026 local time.
 - **Lab:** one accepted wave behind, K7-ci2; parked K7 adds no accepted merge, so no sync threshold or research session. BACKLOG.md carries failure/limits.
 - Milestone A capability remains accepted; useful outside-issue delegation unmet. No R3b, D4 or K9 started. Optional Node-helper extraction stays separate backlog work.
 
-## One recommendation
+## One recommendation (replaced by the CTO, 7 October 2026)
 
-Authorize a bounded K7 rescue: fresh cook fixes scoped collector/driver/profile-status/second-file/recovery gaps first; independent readiness review checks cap/fail-fast guards before any full launch; then exactly five additional final-commit full runs. Reuse the five valid base records, do not rerun them or merely repeat the broken batch.
+Do not rescue K7 as it was written. It was six jobs and a ten-run measurement in one wave, which is the CTO's design error; adding readiness reviews and launch gates on top would make it heavier still. Replace it with **K7a**: run the packaging tests on three workers and nothing else, accepted on two clean full runs. Everything else K7 carried goes back to the backlog as separate small items. The parked `wave/K7` branch is kept to salvage from.
+
+`START.md: K7a` for the speed-up, or `START.md: R3b` to go straight to the next product step. Either can go first; they do not depend on each other.
