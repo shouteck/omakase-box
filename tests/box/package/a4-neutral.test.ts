@@ -45,12 +45,27 @@ function exportFixture(fixture: FixtureHandle, label: string): ExportResult {
 interface Manifest { baseChecks: Array<{ name: string; role: string; context: string; result: string; exit: number | null }>; paired: Array<{ name: string }>; files: Array<{ box: string }> }
 const manifest = (dir: string): Manifest => JSON.parse(readFileSync(join(dir, 'box.json'), 'utf8')) as Manifest;
 
-function sealed(fixture: FixtureHandle, label: string, edit?: (dir: string) => void) {
-  const exported = exportFixture(fixture, label);
-  const dir = copyBox(exported.outDir, `a4-${label}-box`);
+const SHARED = new Map<string, { fixture: FixtureHandle; exported: ExportResult }>();
+function shared(name: 'a4-npm-cli' | 'a4-py-tools' | 'a4-multi-pkg') {
+  let entry = SHARED.get(name);
+  if (entry === undefined) {
+    const fixture = a4Repo(name);
+    entry = { fixture, exported: exportFixture(fixture, `${name}-shared`) };
+    SHARED.set(name, entry);
+  }
+  return entry;
+}
+
+function sealed(name: 'a4-npm-cli' | 'a4-py-tools' | 'a4-multi-pkg', label: string, edit?: (dir: string) => void) {
+  const dir = copyBox(shared(name).exported.outDir, `a4-${label}-box`);
   edit?.(dir);
   const run = runSubmitTool(dir);
-  return { exported, dir, run };
+  return { dir, run };
+}
+
+function verifier(name: 'a4-npm-cli' | 'a4-py-tools' | 'a4-multi-pkg', workLabel: string) {
+  const { fixture } = shared(name);
+  return (dir: string) => verifySubmission({ submissionPath: join(dir, 'submission.json'), agreementPath: fixture.agreementPath, repoPath: fixture.repo, workRoot: runRoot(workLabel) });
 }
 
 // Harness-owned alternative-right candidates: deliberately different
@@ -82,8 +97,7 @@ function expectRedBasePaired(dir: string, outcomeName: string, guardName: string
 
 describe('A4 npm-JavaScript fixture (a4-npm-cli)', () => {
   it('exports only declared files and records a red paired outcome on the base', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-npm-cli');
-    const exported = exportFixture(fixture, 'npm');
+    const { exported } = shared('a4-npm-cli');
     expect([...exported.files].sort()).toEqual([
       'README.md', 'box.json', 'box/submit.mjs', 'checks/guard.mjs', 'checks/outcome.mjs', 'package.json', 'src/paint.js'
     ]);
@@ -95,8 +109,7 @@ describe('A4 npm-JavaScript fixture (a4-npm-cli)', () => {
   });
 
   it('runs the declared checks in a clean directory and refuses read-only tamper', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-npm-cli');
-    const dir = copyBox(exportFixture(fixture, 'npm-clean').outDir, 'a4-npm-clean');
+    const dir = copyBox(shared('a4-npm-cli').exported.outDir, 'a4-npm-clean');
     const outcome = spawnSync('node', ['checks/outcome.mjs'], { cwd: dir, encoding: 'utf8' });
     expect(outcome.status).toBe(1); // red at base — the intended behavior is missing
     const guard = spawnSync('node', ['checks/guard.mjs'], { cwd: dir, encoding: 'utf8' });
@@ -108,33 +121,32 @@ describe('A4 npm-JavaScript fixture (a4-npm-cli)', () => {
   });
 
   it('verifies an alternative-right seal and rejects no-op, empty, wrong and deleted edits', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-npm-cli');
-    const verify = (dir: string) => verifySubmission({ submissionPath: join(dir, 'submission.json'), agreementPath: fixture.agreementPath, repoPath: fixture.repo, workRoot: runRoot('a4-npm-verify') });
+    const verify = verifier('a4-npm-cli', 'a4-npm-verify');
 
-    const right = sealed(fixture, 'npm-right', box => writeFileSync(join(box, 'src', 'paint.js'), ALT_RIGHT['a4-npm-cli']!.content));
+    const right = sealed('a4-npm-cli', 'npm-right', box => writeFileSync(join(box, 'src', 'paint.js'), ALT_RIGHT['a4-npm-cli']!.content));
     expect(right.run.status, right.run.stderr).toBe(0);
     const rightReport = verify(right.dir);
     expect(rightReport.verdict, JSON.stringify(rightReport.commandChecks ?? rightReport.checks)).toBe('pass');
 
-    const noop = sealed(fixture, 'npm-noop');
+    const noop = sealed('a4-npm-cli', 'npm-noop');
     expect(noop.run.status).toBe(0);
     const noopReport = verify(noop.dir);
     expect(noopReport.verdict).toBe('fail');
     expect(noopReport.failureClass).toBe('implementation-failure');
     expect(noopReport.reason).toBe('command-check');
 
-    const wrong = sealed(fixture, 'npm-wrong', box => writeFileSync(join(box, 'src', 'paint.js'), 'export function paint(text) { return "XX" + text; }\n'));
+    const wrong = sealed('a4-npm-cli', 'npm-wrong', box => writeFileSync(join(box, 'src', 'paint.js'), 'export function paint(text) { return "XX" + text; }\n'));
     const wrongReport = verify(wrong.dir);
     expect(wrongReport.verdict).toBe('fail');
     expect(wrongReport.failureClass).toBe('implementation-failure');
 
-    const empty = sealed(fixture, 'npm-empty', box => writeFileSync(join(box, 'src', 'paint.js'), ''));
+    const empty = sealed('a4-npm-cli', 'npm-empty', box => writeFileSync(join(box, 'src', 'paint.js'), ''));
     expect(empty.run.status).toBe(0);
     const emptyReport = verify(empty.dir);
     expect(emptyReport.verdict).toBe('fail');
     expect(emptyReport.failureClass).toBe('implementation-failure');
 
-    const deleted = sealed(fixture, 'npm-deleted', box => rmSync(join(box, 'src', 'paint.js')));
+    const deleted = sealed('a4-npm-cli', 'npm-deleted', box => rmSync(join(box, 'src', 'paint.js')));
     expect(deleted.run.status).toBe(1);
     expect(deleted.run.stderr).toContain('recorded file src/paint.js is missing');
   });
@@ -142,8 +154,7 @@ describe('A4 npm-JavaScript fixture (a4-npm-cli)', () => {
 
 describe('A4 Python fixture (a4-py-tools)', () => {
   it('exports only declared files and records a red paired outcome on the base', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-py-tools');
-    const exported = exportFixture(fixture, 'py');
+    const { exported } = shared('a4-py-tools');
     expect([...exported.files].sort()).toEqual([
       'README.md', 'box.json', 'box/submit.mjs', 'checks/guard.py', 'checks/outcome.py', 'pyproject.toml', 'tools/slug.py'
     ]);
@@ -155,8 +166,7 @@ describe('A4 Python fixture (a4-py-tools)', () => {
   });
 
   it('runs the declared checks in a clean directory and refuses read-only tamper', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-py-tools');
-    const dir = copyBox(exportFixture(fixture, 'py-clean').outDir, 'a4-py-clean');
+    const dir = copyBox(shared('a4-py-tools').exported.outDir, 'a4-py-clean');
     const outcome = spawnSync('python', ['checks/outcome.py'], { cwd: dir, encoding: 'utf8' });
     expect(outcome.status).toBe(1);
     const guard = spawnSync('python', ['checks/guard.py'], { cwd: dir, encoding: 'utf8' });
@@ -170,31 +180,30 @@ describe('A4 Python fixture (a4-py-tools)', () => {
 
 describe('A4 Python verify (a4-py-tools)', () => {
   it('verifies an alternative-right seal and rejects no-op, empty, wrong and deleted edits', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-py-tools');
-    const verify = (dir: string) => verifySubmission({ submissionPath: join(dir, 'submission.json'), agreementPath: fixture.agreementPath, repoPath: fixture.repo, workRoot: runRoot('a4-py-verify') });
+    const verify = verifier('a4-py-tools', 'a4-py-verify');
 
-    const right = sealed(fixture, 'py-right', box => writeFileSync(join(box, 'tools', 'slug.py'), ALT_RIGHT['a4-py-tools']!.content));
+    const right = sealed('a4-py-tools', 'py-right', box => writeFileSync(join(box, 'tools', 'slug.py'), ALT_RIGHT['a4-py-tools']!.content));
     expect(right.run.status, right.run.stderr).toBe(0);
     const rightReport = verify(right.dir);
     expect(rightReport.verdict, JSON.stringify(rightReport.commandChecks ?? rightReport.checks)).toBe('pass');
 
-    const noop = sealed(fixture, 'py-noop');
+    const noop = sealed('a4-py-tools', 'py-noop');
     const noopReport = verify(noop.dir);
     expect(noopReport.verdict).toBe('fail');
     expect(noopReport.failureClass).toBe('implementation-failure');
 
-    const wrong = sealed(fixture, 'py-wrong', box => writeFileSync(join(box, 'tools', 'slug.py'), 'def slugify(text):\n    return "WRONG"\n'));
+    const wrong = sealed('a4-py-tools', 'py-wrong', box => writeFileSync(join(box, 'tools', 'slug.py'), 'def slugify(text):\n    return "WRONG"\n'));
     const wrongReport = verify(wrong.dir);
     expect(wrongReport.verdict).toBe('fail');
     expect(wrongReport.failureClass).toBe('implementation-failure');
 
-    const empty = sealed(fixture, 'py-empty', box => writeFileSync(join(box, 'tools', 'slug.py'), ''));
+    const empty = sealed('a4-py-tools', 'py-empty', box => writeFileSync(join(box, 'tools', 'slug.py'), ''));
     expect(empty.run.status).toBe(0);
     const emptyReport = verify(empty.dir);
     expect(emptyReport.verdict).toBe('fail');
     expect(emptyReport.failureClass).toBe('implementation-failure');
 
-    const deleted = sealed(fixture, 'py-deleted', box => rmSync(join(box, 'tools', 'slug.py')));
+    const deleted = sealed('a4-py-tools', 'py-deleted', box => rmSync(join(box, 'tools', 'slug.py')));
     expect(deleted.run.status).toBe(1);
     expect(deleted.run.stderr).toContain('recorded file tools/slug.py is missing');
   });
@@ -202,8 +211,7 @@ describe('A4 Python verify (a4-py-tools)', () => {
 
 describe('A4 multi-package fixture (a4-multi-pkg)', () => {
   it('preserves dependency files byte-for-byte, excludes the unselected member and installs the locked package', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-multi-pkg');
-    const exported = exportFixture(fixture, 'pkg');
+    const { exported } = shared('a4-multi-pkg');
     const dir = exported.outDir;
     // Owner dependency files ship with their exact bytes, not regenerated ones.
     for (const dep of ['package.json', 'package-lock.json', 'packages/cli/package.json', 'packages/core/package.json']) {
@@ -227,15 +235,14 @@ describe('A4 multi-package fixture (a4-multi-pkg)', () => {
 
 describe('A4 multi-package verify (a4-multi-pkg)', () => {
   it('verifies an alternative-right seal in the owner scratch clone and rejects a no-op', { timeout: HEAVY }, () => {
-    const fixture = a4Repo('a4-multi-pkg');
-    const verify = (dir: string) => verifySubmission({ submissionPath: join(dir, 'submission.json'), agreementPath: fixture.agreementPath, repoPath: fixture.repo, workRoot: runRoot('a4-pkg-verify') });
+    const verify = verifier('a4-multi-pkg', 'a4-pkg-verify');
 
-    const right = sealed(fixture, 'pkg-right', box => writeFileSync(join(box, 'packages', 'cli', 'bin.js'), ALT_RIGHT['a4-multi-pkg']!.content));
+    const right = sealed('a4-multi-pkg', 'pkg-right', box => writeFileSync(join(box, 'packages', 'cli', 'bin.js'), ALT_RIGHT['a4-multi-pkg']!.content));
     expect(right.run.status, right.run.stderr).toBe(0);
     const rightReport = verify(right.dir);
     expect(rightReport.verdict, JSON.stringify(rightReport.commandChecks ?? rightReport.checks)).toBe('pass');
 
-    const noop = sealed(fixture, 'pkg-noop');
+    const noop = sealed('a4-multi-pkg', 'pkg-noop');
     const noopReport = verify(noop.dir);
     expect(noopReport.verdict).toBe('fail');
     expect(noopReport.failureClass).toBe('implementation-failure');
