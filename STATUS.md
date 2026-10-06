@@ -9,7 +9,7 @@ Replaced at wave close, 6 October 2026, by Devin as CTO.
 - **Not yet delivered:** arbitrary-repository export. File selection and product-owned install/compile orchestration still need A2/A3; real npm/Python delegation proof is A4. The useful milestone remains unmet.
 - **Limits:** Windows shim launches refuse unsafe tokens including trailing backslashes rather than corrupt argv; non-Windows behavior is unproven. Prerequisites are checked on the export host. Owner verify checks only the owner-context programs it executes. See current submission contract.
 - **In flight:** nothing. This run stops after A1.
-- **Held:** deletion of the merged local `wave/A1` branch awaits specific owner confirmation under the host's destructive-operation rule. Worker/reviewer report their disposable scratch assets removed; verification logs retained. Unattributed preexisting temp assets were not removed.
+- **Held:** nothing. The merged `wave/A1` branch was deleted on the owner's confirmation; deleting a merged wave branch now has standing approval (KITCHEN.md, close step).
 
 ## Approved by the CEO
 
@@ -36,4 +36,4 @@ No blocking product defect known. Non-blocking limits and leftovers are in `BACK
 
 ## Decisions waiting for the CEO
 
-Confirm deletion of the merged local branch only: `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp branch -d wave/A1`.
+None.
