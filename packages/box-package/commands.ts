@@ -3,6 +3,7 @@ import { cpSync, existsSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import type { CommandCheck } from './agreement.js';
 import type { PnpmInvocation } from './export.js';
+import { declaredPnpmArgs, UnsafeInstall } from './install.js';
 import { toPosix } from './selection.js';
 
 // Runs the agreement's declared command checks. Commands are data parsed at the
@@ -51,7 +52,7 @@ export function materializeTooling(repo: string, clone: string): void {
 function toolCommand(check: CommandCheck, pnpm: PnpmInvocation): { command: string; args: string[] } {
   switch (check.tool) {
     case 'node': return { command: process.execPath, args: [...check.args] };
-    case 'pnpm': return { command: pnpm.command, args: [...pnpm.args, ...check.args] };
+    case 'pnpm': return { command: pnpm.command, args: declaredPnpmArgs(pnpm, check.args) };
     case 'tsc':
     case 'vitest': return { command: pnpm.command, args: [...pnpm.args, 'exec', check.tool, ...check.args] };
   }
@@ -73,7 +74,19 @@ function containedCwd(root: string, cwd: string): string {
 }
 
 export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmInvocation): CheckRecord {
-  const resolved = toolCommand(check, pnpm);
+  const rel = (target: string): string => { const offset = relative(realpathSync(root), target); return offset === '' ? '.' : toPosix(offset); };
+  let resolved: { command: string; args: string[] };
+  try {
+    resolved = toolCommand(check, pnpm);
+  } catch (error) {
+    // A declared install that tries to re-enable lifecycle scripts is refused
+    // before spawn: an 'error' record is the evidence, never a silent pass.
+    if (error instanceof UnsafeInstall) {
+      const cwd = containedCwd(root, check.cwd);
+      return { name: check.name, tool: check.tool, declaredArgv: check.args, command: pnpm.command, argv: [], cwd: rel(cwd), context: check.context, role: check.role, exit: null, result: 'error', log: error.message, seconds: 0 };
+    }
+    throw error;
+  }
   const cwd = containedCwd(root, check.cwd);
   const began = Date.now();
   const run = spawnSync(resolved.command, resolved.args, {
@@ -88,14 +101,13 @@ export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmIn
   if (run.error !== undefined) result = (run.error as NodeJS.ErrnoException).code === 'ETIMEDOUT' || run.signal === 'SIGTERM' ? 'timeout' : 'error';
   else result = run.status === 0 ? 'pass' : 'fail';
   const detail = run.error !== undefined && result === 'error' ? `${run.error.message}\n${log}` : log;
-  const rel = relative(realpathSync(root), cwd);
   return {
     name: check.name,
     tool: check.tool,
     declaredArgv: check.args,
     command: resolved.command,
     argv: resolved.args,
-    cwd: rel === '' ? '.' : toPosix(rel),
+    cwd: rel(cwd),
     context: check.context,
     role: check.role,
     exit: run.status,

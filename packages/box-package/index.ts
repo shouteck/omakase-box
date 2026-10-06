@@ -5,6 +5,7 @@ export type { CheckContext, CheckRecord, CheckResult } from './commands.js';
 export { AgreementInvalid } from './agreement.js';
 export { describeGap, ExportFailed, GitFailed, PreparationGap, SubmissionFailed } from './errors.js';
 export { exportBox } from './export.js';
+export { IGNORE_SCRIPTS, UnsafeInstall } from './install.js';
 export type { ExportOptions, ExportResult, PnpmInvocation } from './export.js';
 export { BoxFileSchema, BoxManifestSchema } from './manifest.js';
 export type { BoxFile, BoxManifest } from './manifest.js';
