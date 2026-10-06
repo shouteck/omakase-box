@@ -1,0 +1,6 @@
+id,label,observable,notes
+Z6637,EXAMPLE,y,input expression and expected result both given; needs a one-line use-site file and a compiler version the repository does not pin; guide is unclear whether that set-up makes it NEW-TEST
+Z6639,EXAMPLE,y,reproduction expression given; expected result implied not stated; one expression decides it
+Z6641,NEW-TEST,y,needs a constructed object with an own __proto__ key and a key schema that rejects it; would be EXAMPLE if the issue text carries a reproduction which the record does not say
+Z6621,NEW-TEST,y,compound; universal over locales so rule 1 gives the dearest part; expected wording per locale not recorded
+Z6648,UNLABELLED,y,record too thin; NEW-TEST if the issue names the values and their replacements; READ if someone must decide what standard means here
