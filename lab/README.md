@@ -6,7 +6,7 @@ The lab's standing is earned the way any lab's is: by knowing the literature, me
 
 ## What the lab is for
 
-The product needs answers in a few problem areas (they are listed in [PROGRAMME.md](PROGRAMME.md)). The owner's and the CTO's ideas about how to solve them are hypotheses with no special standing; a published method that already works beats any of them. The lab's job is to find out what is true and hand the kitchen something it can build.
+The product needs answers to a few problems, chosen and ranked by the CTO from the product roadmap (see [PROGRAMME.md](PROGRAMME.md)). The owner's and the CTO's ideas about how to solve them are hypotheses with no special standing; a published method that already works beats any of them. The lab's job is to find out what is true and hand the kitchen something it can build.
 
 It produces three things, in this order of lasting value:
 
@@ -30,7 +30,7 @@ A line has a `README.md` (the problem, the metric, the current best answer and h
 ## Culture
 
 - **Know the field.** Reading is work, not preparation for work. Cite what you build on. Reinventing a published result is a failure of scholarship, however well executed.
-- **Taste over volume.** Few lines, chosen because an answer would change what the product does. Prefer the experiment most likely to change your mind, and the cheapest one that could.
+- **Taste over volume.** Few lines, each tied to a product decision. Prefer the experiment most likely to change your mind, and the cheapest one that could.
 - **Strong opinions, held loosely, written down first.** State the hypothesis and the result that would refute it before running. Then follow the data.
 - **Surprises are the point.** An unexpected result is investigated, not averaged away. Budget part of every session for following one.
 - **Negative results are results.** They go in the notebook and the memo with the same care. A line closed for a good reason is a success.
@@ -101,7 +101,7 @@ The lab lead and the CTO are counterparts. The CTO heads the product and decides
 
 - **The lab lead briefs the CTO.** At the end of every lab run the lab lead replaces [BRIEF.md](BRIEF.md): what the lab now believes about each product need and how sure, what is ready to transfer, advice on waves in flight or planned, and what the lab needs from the product. One screen, written for someone who will act on it.
 - **The CTO answers and briefs back.** At every kitchen kickoff the CTO reads the brief and replies in the "For the lab" section of `BACKLOG.md` on master: each transfer adopted, declined with a reason, or questioned; each piece of advice taken or not; and what has changed in the product that research should know. The lab lead reads that at every lab start and answers in the brief.
-- **Product needs are the CTO's; research direction is the lab lead's.** The CTO may add, reword or withdraw a need in PROGRAMME.md by saying so in "For the lab". Which lines to open, how to formulate them and when to close them is the lab lead's call.
+- **Which problems and in what order is the CTO's call; how to study them is the lab lead's.** The CTO sets the lines, their priority and the product decision each must inform, in PROGRAMME.md, from the product roadmap. The lab lead decides the formulation, the method and the instruments, and tells the CTO plainly when the evidence says a line is aimed at the wrong problem or should close.
 - **Volunteer what matters.** If the lab's reading shows the kitchen is about to build something the field has already solved, or already shown not to work, that goes in the brief now, not when a line finishes. If a wave turns up something a line should know (R1's preparation cost was one), the CTO passes it on.
 - **Kitchen records are data.** Wave files, verify summaries and delegation evidence on master are observations the lab may study. If a line needs something recorded during waves, ask.
 - **Disagreement is normal and stays visible.** Each side records its position and reason. It goes to the owner only when it changes a milestone, and then in plain language with both views.
