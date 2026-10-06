@@ -9,7 +9,7 @@ Replaced at wave close. Last written 6 October 2026 by Claude as CTO, after revi
 - **Disclosure:** 2 owner files, 19402 B; 2/694 tracked files outside declared exclusions (~0.29%). The live filesystem inventory gave 2/1834 (~0.11%), including untracked/non-source files. Both denominators are recorded; neither proves customer value.
 - **Checks:** reviewer `node scripts/verify.mjs --full test:box-package test:kitchen` PASS on `cbd2302`, all steps executed, 269s. Preparation-driver deletion/collision defect fixed with red-first tests and independently re-attacked. Master CI run `37393662780` completed SUCCESS (job 4m14s); the documented K8 host-bound exclusions remain.
 - **What R1 showed:** the 8-line change needed about 470 lines written for that one request (a hand-written evaluator and owner check in `packages/box-package`, a driver, three test files), and 46 minutes of which 22.5 were verification. Preparation cost is now the main product risk.
-- **In flight:** nothing. R1 is closed; this START stops here. K9 remains unstarted.
+- **In flight:** no implementation. `START.md: K6` names K6; brief ready at `waves/K6.md`, awaiting the pre-cook **go** required by START.md. This run stops after K6. R2 and K9 remain unstarted.
 - **Held:** nothing. Ordinary verification uses disposable embedded Postgres; hostile/container suites remain separate. `--fresh` forces execution; `--full` is the scoping backstop.
 
 ## Approved by the CEO
