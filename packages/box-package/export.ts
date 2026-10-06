@@ -25,7 +25,7 @@ export interface ExportOptions {
   readonly agreementPath: string;
   readonly repoPath: string;
   readonly outDir: string;
-  readonly pnpm: PnpmInvocation;
+  readonly pnpm?: PnpmInvocation; // needed only when the agreement opts into the nodejs helper (lockfile resolution)
 }
 export interface ExportResult {
   readonly outDir: string;
@@ -137,7 +137,10 @@ export function exportBox(options: ExportOptions): ExportResult {
       : packageManifest(agreement);
     if (!written.has('package.json')) ship('package.json', null, 'generated', manifestText, false);
     if (!written.has('tsconfig.json')) ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
-    if (!written.has('pnpm-lock.yaml')) ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
+    if (!written.has('pnpm-lock.yaml')) {
+      if (options.pnpm === undefined) throw new ExportFailed('the agreement declares the nodejs helper but no pnpm invocation was supplied (--pnpm) to resolve pnpm-lock.yaml');
+      ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
+    }
   }
   for (const check of agreement.evaluator) ship(check.box, null, 'generated', generate(check.generator), false);
   // The submission tool travels inside the folder: the recipient seals its work with
