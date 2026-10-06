@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,8 +9,13 @@ import type { ExportResult } from '../../../packages/box-package/index.js';
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const FIXTURE = join(ROOT, 'examples', 'private-shop');
 export const PNPM_CJS = join(ROOT, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin', 'pnpm.cjs');
+export const PNPM_SHIM = join(ROOT, 'tests', 'box', 'package', 'pnpm-shim.mjs');
 export const AGREEMENTS = join(FIXTURE, 'box-agreements');
 export const CANARY_TOKENS = ['SYNTHETIC_PRIVATE', 'PRIVATE_ELIGIBILITY_CANARY', 'PRIVATE_SCORING_CANARY'];
+export const STATS_FILE = join(tmpdir(), 'box-k6-stats.jsonl');
+export function recordOp(op: string, seconds?: number): void {
+  try { appendFileSync(STATS_FILE, JSON.stringify({ op, seconds }) + '\n'); } catch { }
+}
 
 const runDirectories: string[] = [];
 export function runRoot(label: string): string {
@@ -127,7 +132,9 @@ export function materializeOwnerRepo(): FixtureRepo {
     }
   };
   copy(FIXTURE, target);
+  const installBegan = Date.now();
   const install = spawnSync(process.execPath, [PNPM_CJS, 'install'], { cwd: repo, encoding: 'utf8', timeout: 300000 });
+  recordOp('owner-install', (Date.now() - installBegan) / 1000);
   if (install.status !== 0) throw new Error(`owner fixture install failed: ${install.stderr ?? install.stdout}`);
   fixtureGit(repo, ['init', '-b', 'main']);
   return { repo, baseCommit: fixtureCommit(repo, 'private-shop-before-v1') };
@@ -150,15 +157,20 @@ export function agreementFile(name: 'request-a' | 'request-b', overrides: Agreem
 }
 
 export function runExport(agreementPath: string, repo?: string, outDir?: string): ExportResult {
-  return exportBox({
-    agreementPath,
-    repoPath: repo ?? fixtureRepo().repo,
-    outDir: outDir ?? join(runRoot('out'), 'box'),
-    pnpm: { command: process.execPath, args: [PNPM_CJS] }
-  });
+  const began = Date.now();
+  try {
+    return exportBox({
+      agreementPath,
+      repoPath: repo ?? fixtureRepo().repo,
+      outDir: outDir ?? join(runRoot('out'), 'box'),
+      pnpm: { command: process.execPath, args: [PNPM_SHIM, PNPM_CJS] }
+    });
+  } finally {
+    recordOp('export', (Date.now() - began) / 1000);
+  }
 }
 
-export interface CleanRun { ok: boolean; steps: Array<{ command: string; code: number | null; output: string }> }
+export interface CleanRun { ok: boolean; steps: Array<{ command: string; code: number | null; output: string; seconds: number }> }
 
 // The packaging proof: copy the produced folder into a clean directory outside the repo,
 // install only from its own lockfile, and run its declared checks. The temp directory is
@@ -172,8 +184,9 @@ export function cleanCheck(boxDir: string, evaluatorCheck: string): CleanRun {
   }
   const steps: CleanRun['steps'] = [];
   const step = (command: string, args: string[]): number | null => {
+    const began = Date.now();
     const result = spawnSync(command, args, { cwd: dest, encoding: 'utf8', timeout: 300000 });
-    steps.push({ command: `${command} ${args.join(' ')}`, code: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}`.slice(0, 4000) });
+    steps.push({ command: `${command} ${args.join(' ')}`, code: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}`.slice(0, 4000), seconds: (Date.now() - began) / 1000 });
     return result.status;
   };
   const pnpm = (args: string[]): number | null => step(process.execPath, [PNPM_CJS, ...args]);

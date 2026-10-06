@@ -40,6 +40,7 @@ export function readRuns(runsDir) {
         run.verdict = typeof parsed.verdict === 'string' ? parsed.verdict : null;
         run.dirty = typeof parsed.dirty === 'boolean' ? parsed.dirty : null;
         run.steps = Array.isArray(parsed.steps) ? parsed.steps.map(step => ({ name: String(step && step.name), exit: step && typeof step.exit === 'number' ? step.exit : null, seconds: step && typeof step.seconds === 'number' ? step.seconds : null })) : [];
+        run.profile = typeof parsed.profile === 'string' ? parsed.profile : null;
       } catch { run.summary = 'malformed'; }
     }
     runs.push(run);
@@ -101,6 +102,18 @@ export function checkLimits(root) {
   const status = fileText(root, 'STATUS.md');
   checks.push({ label: 'STATUS.md lines', actual: status === null ? 'missing' : String(lineCount(status)), limit: '60', ok: status === null ? 'missing' : lineCount(status) <= 60 });
   return checks;
+}
+
+export const ACCEPTANCE_PROFILE = 'verify --full test:box-package test:kitchen';
+export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-package', 'test:kitchen'];
+export const ACCEPTANCE_BUDGET_SECONDS = 330;
+export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPTANCE_STEPS, budgetSeconds = ACCEPTANCE_BUDGET_SECONDS } = {}) {
+  const label = `acceptance profile "${profile}" executed seconds`;
+  const complete = runs.filter(run => run.summary === 'ok' && run.profile === profile && steps.every(name => run.steps.some(step => step.name === name)));
+  const executed = complete.map(run => run.steps.reduce((sum, step) => sum + (step.seconds || 0), 0)).filter(seconds => seconds > 0);
+  if (!executed.length) return { label, actual: 'missing', limit: `${budgetSeconds}s`, ok: 'missing' };
+  const latest = executed[executed.length - 1];
+  return { label, actual: `${latest}s`, limit: `${budgetSeconds}s`, ok: latest <= budgetSeconds };
 }
 
 // --- git helpers (read-only) --------------------------------------------------
@@ -262,6 +275,7 @@ function page(root) {
   out.push('');
 
   const checks = checkLimits(root);
+  checks.push(budgetCheck(runs));
   const failures = [];
   out.push('Kitchen limits');
   for (const check of checks) {
