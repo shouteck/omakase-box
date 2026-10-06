@@ -9,7 +9,7 @@ Replaced 6 October 2026 by Devin as CTO after R3's reviewed negative report; the
 - **Independent evidence:** one owner-context test: 54 tests over 3 Vitest project instances, exit 0 offline/non-root. Export probe: pnpm refuses the repository's nub package manager, exit 1; product command omitted --ignore-scripts, reviewer wrapper added it before the guard blocked execution. Tests travelling into Boxes remain not tested.
 - **Evidence quality:** first report FAIL; corrected report PASS only for auditable negative archival (`01b95af`, review `f0c3cf3`). Original worker exit markers were pipeline artifacts and are retracted; predeclaration chronology not proven. Worker image defaulted root and tool setup ran an installer without full checksum/ignore-script evidence. No observed upstream writes, secrets mounts or host upstream execution; complete security-policy compliance is not claimed.
 - **Useful conditions:** external repo/open-issue survey met; qualifying issue selected not met; required predeclared sample not met; Box prepared in measured minutes, fresh solve and owner agreed-check acceptance not tested.
-- **In flight:** nothing. This START stops at R3's partial result. Docker image and all three named worker volumes removed, reviewer resources removed; no kitchen-r3 containers/volumes/image remain. Existing resources, lab and owner files untouched.
+- **In flight:** briefing only for the owner-approved R3 blocker correction: safe product installs and reliable run recording. Proposed renewed 60-minute cook ceiling; awaiting pre-cook Go. No implementation restarted and no repository/issue retry yet. Prior R3 Docker resources removed; unrelated resources untouched.
 - **CI:** latest code-triggered master result remains R2 SUCCESS (`37413634118`). R3 changes reports only; no unrelated full product verification run claimed or CI waiting.
 - **R2 retained:** generic command mode, actual base/no-op evidence and accepted internal edit. Editable-guard false pass and unmeasured preparation estimates remain known limits; passing agreed checks is not verified correct.
 
@@ -35,4 +35,4 @@ Only a new named overnight request and pre-cook Go for a bounded R3 correction/r
 
 ## Decision waiting for the CEO
 
-Name the next bounded correction/retry, or stop the experiment. The useful milestone is not yet demonstrated.
+The blocker correction is approved in principle; reply Go to its pre-cook card. Stop after that correction, merged or parked. A public readiness retry remains separate; useful milestone unmet.
