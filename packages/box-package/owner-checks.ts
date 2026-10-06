@@ -109,9 +109,94 @@ describe('owner check: applied public ranking', () => {
   };
 }
 
+function kitchenStatsNoUsage(sourceRoot: string): OwnerCheck {
+  const base = root(sourceRoot);
+  return {
+    file: 'tests/box-owner-checks/kitchen-stats-no-usage.test.ts',
+    source: `// Generated owner-side check for box r1-kitchen-stats. It drives the APPLIED
+// scripts/kitchen-stats.mjs in this checkout as a real process: a no-op patch
+// still prints the obsolete "Usage per wave" section, a blank or no-output
+// script produces none of the required sections, and a patch that broke the
+// exported helpers verify.mjs reuses fails the import probe.
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { afterAll, describe, expect, it } from 'vitest';
+
+const script = fileURLToPath(new URL('${base}/scripts/kitchen-stats.mjs', import.meta.url));
+const temps: string[] = [];
+const temp = () => { const dir = mkdtempSync(join(tmpdir(), 'r1-owner-')); temps.push(dir); return dir; };
+afterAll(() => { for (const dir of temps) rmSync(dir, { recursive: true, force: true }); });
+
+const NOW = Date.parse('2026-02-01T12:00:00.000Z');
+const dirName = (ms: number, sha: string) => new Date(ms).toISOString().replace(/[:.]/g, '-') + '-' + sha.slice(0, 7);
+const iso = (ms: number) => new Date(ms).toISOString();
+
+function kitchenRoot(usageLine: boolean): string {
+  const dir = temp();
+  mkdirSync(join(dir, 'docs', 'box-v4'), { recursive: true });
+  mkdirSync(join(dir, 'kitchen'), { recursive: true });
+  mkdirSync(join(dir, 'waves'), { recursive: true });
+  writeFileSync(join(dir, 'AGENTS.md'), 'agents\\n');
+  writeFileSync(join(dir, 'docs', 'box-v4', 'KITCHEN.md'), 'kitchen\\n');
+  writeFileSync(join(dir, 'kitchen', 'INBOX.md'), '- one\\n');
+  writeFileSync(join(dir, 'STATUS.md'), 'status\\n');
+  const sha = 'a'.repeat(40);
+  const run = join(dir, '.kitchen', 'runs', dirName(NOW, sha));
+  mkdirSync(run, { recursive: true });
+  writeFileSync(join(run, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: false, verdict: 'PASS', startedAt: iso(NOW), seconds: 61, steps: [{ name: 'check', exit: 0, seconds: 61 }], notRun: [], failure: null }));
+  mkdirSync(join(dir, '.kitchen', 'runs', dirName(NOW + 60000, 'b'.repeat(40))), { recursive: true });
+  writeFileSync(join(dir, 'waves', 'w1.md'), ['# w1', '', '- Commit: \`' + 'a'.repeat(40) + '\`', '- Branch: \`wave/w1\`', ...(usageLine ? ['- Usage: 12k tokens'] : []), ''].join('\\n'));
+  return dir;
+}
+
+const runStats = (rootDir: string) => spawnSync(process.execPath, [script, '--root=' + rootDir], { encoding: 'utf8', timeout: 60000 });
+
+describe('owner check: applied kitchen-stats has no Usage output', () => {
+  it('prints every verification section and no usage output, populated or absent', () => {
+    for (const usageLine of [true, false]) {
+      const run = runStats(kitchenRoot(usageLine));
+      expect(run.status, run.stderr).toBe(0);
+      for (const section of ['Verify runs', 'Verify minutes per step', 'Runs per wave branch', 'Largest costs', 'Kitchen limits'])
+        expect(run.stdout).toContain(section);
+      expect(run.stdout).not.toMatch(/usage/i);
+      expect(run.stdout).toContain('1 runs with summary.json');
+    }
+  });
+
+  it('labels missing data instead of printing zeros or crashing', () => {
+    const run = runStats(temp());
+    expect(run.status, run.stderr).toBe(0);
+    expect(run.stdout).toContain('missing');
+    expect(run.stdout).not.toMatch(/usage/i);
+  });
+
+  it('still exits nonzero and names the broken limit', () => {
+    const dir = kitchenRoot(true);
+    writeFileSync(join(dir, 'STATUS.md'), Array(61).fill('x').join('\\n') + '\\n');
+    const run = runStats(dir);
+    expect(run.status).toBe(1);
+    expect(run.stderr + run.stdout).toContain('LIMIT FAIL');
+    expect(run.stderr + run.stdout).toContain('STATUS.md');
+  });
+
+  it('keeps the exported helpers verify.mjs reuses', () => {
+    const href = pathToFileURL(script).href;
+    const probe = spawnSync(process.execPath, ['--input-type=module', '-e', 'import * as k from ' + JSON.stringify(href) + '; console.log(JSON.stringify([typeof k.readRuns, typeof k.stallCheck, typeof k.checkLimits]));'], { encoding: 'utf8', timeout: 30000 });
+    expect(probe.status, probe.stderr).toBe(0);
+    expect(JSON.parse(probe.stdout.trim())).toEqual(['function', 'function', 'function']);
+  });
+});
+`
+  };
+}
+
 const REGISTRY: Readonly<Record<string, (sourceRoot: string) => OwnerCheck>> = {
   'private-shop-request-a': requestA,
-  'private-shop-request-b': requestB
+  'private-shop-request-b': requestB,
+  'kitchen-stats-no-usage': kitchenStatsNoUsage
 };
 
 export function ownerCheck(generator: string, sourceRoot: string): OwnerCheck | undefined {

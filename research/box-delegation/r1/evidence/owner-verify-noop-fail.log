@@ -1,0 +1,39 @@
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "outcome",
+  "detail": "owner check 'outcome' failed in the scratch checkout",
+  "checks": [
+    {
+      "name": "install",
+      "status": "pass"
+    },
+    {
+      "name": "compile",
+      "status": "pass"
+    },
+    {
+      "name": "outcome",
+      "status": "fail",
+      "detail": ": applied kitchen-stats has no Usage output\u001b[2m > \u001b[22mprints every verification section and no usage output, populated or absent\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected 'kitchen stats — 2026-10-05T23:39:40.6…' not to match /usage/i\u001b[39m\n\n\u001b[32m- Expected:\u001b[39m\n/usage/i\n\n\u001b[31m+ Received:\u001b[39m\n\"kitchen stats — 2026-10-05T23:39:40.623Z\nsource: C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\r1-owner-8JAcIi\\\\.kitchen\\\\runs (2 run dirs) + git log; read-only, nothing written\n\nVerify runs\n  1 runs with summary.json · 1 without — 2026-02-01T12-01-00-000Z-bbbbbbb\n  verdicts: 1 PASS · 0 FAIL · 0 UNCOMMITTED · 0 other\n  total verify time: 1.0 min across 1 runs (runs without summary carry no timing)\n\nVerify minutes per step (sum of step seconds; runs without a summary add nothing)\n  check                    1 runs · 0 failed ·    1.0 min · largest 61s in 2026-02-01T12-00-00-000Z-aaaaaaa\n\nRuns per wave branch (a run belongs to the wave whose merged branch holds its commit)\n  w1         0 runs (0 PASS · 0 FAIL · 0 UNCOMMITTED · 0 no summary) · verify 0.0 min · duration missing — no merged branch or recorded merge found\n  not on a wave branch: 2 runs\n    aaaaaaa x1 — commit not in this repository (2026-02-01T12-00-00)\n    bbbbbbb x1 — commit not in this repository (2026-02-01T12-01-00)\n\nLargest costs\n  1. check — 1.0 min across 1 runs\n  single run 1: 2026-02-01T12-00-00-000Z-aaaaaaa — 61s (PASS)\n\nUsage per wave (agent usage as recorded in each wave file Result)\n  w1: 12k tokens\n\nKitchen limits\n  ok      AGENTS.md + docs/box-v4/KITCHEN.md combined size: 15 B (limit 20480 B)\n  ok      kitchen/INBOX.md entry lines: 1 (1 lines in file) (limit 10)\n  ok      STATUS.md lines: 1 (limit 60)\n\"\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/box-owner-checks/kitchen-stats-no-usage.test.ts:\u001b[2m49:30\u001b[22m\u001b[39m\n    \u001b[90m 47|\u001b[39m       for (const section of ['Verify runs', 'Verify minutes per step',…\n    \u001b[90m 48|\u001b[39m         expect(run.stdout).toContain(section);\n    \u001b[90m 49|\u001b[39m       expect(run.stdout).not.toMatch(/usage/i);\n    \u001b[90m   |\u001b[39m                              \u001b[31m^\u001b[39m\n    \u001b[90m 50|\u001b[39m       expect(run.stdout).toContain('1 runs with summary.json');\n    \u001b[90m 51|\u001b[39m     }\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\u001b[22m\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/box-owner-checks/kitchen-stats-no-usage.test.ts\u001b[2m > \u001b[22mowner check: applied kitchen-stats has no Usage output\u001b[2m > \u001b[22mlabels missing data instead of printing zeros or crashing\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected 'kitchen stats — 2026-10-05T23:39:41.0…' not to match /usage/i\u001b[39m\n\n\u001b[32m- Expected:\u001b[39m\n/usage/i\n\n\u001b[31m+ Received:\u001b[39m\n\"kitchen stats — 2026-10-05T23:39:41.062Z\nsource: C:\\\\Users\\\\shout\\\\AppData\\\\Local\\\\Temp\\\\r1-owner-JpKVyR\\\\.kitchen\\\\runs (0 run dirs) + git log; read-only, nothing written\n\nVerify runs\n  0 runs with summary.json · 0 without — none\n  verdicts: 0 PASS · 0 FAIL · 0 UNCOMMITTED · 0 other\n  total verify time: 0.0 min across 0 runs (runs without summary carry no timing)\n\nVerify minutes per step (sum of step seconds; runs without a summary add nothing)\n  missing — no run summaries found\n\nRuns per wave branch (a run belongs to the wave whose merged branch holds its commit)\n\nLargest costs\n  missing — no run data\n\nUsage per wave (agent usage as recorded in each wave file Result)\n  missing — no wave file records a Usage value; nothing to report, not zero\n\nKitchen limits\n  MISSING AGENTS.md + docs/box-v4/KITCHEN.md combined size: missing (limit 20480 B)\n  MISSING kitchen/INBOX.md entry lines: missing (limit 10)\n  MISSING STATUS.md lines: missing (limit 60)\n\"\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/box-owner-checks/kitchen-stats-no-usage.test.ts:\u001b[2m58:28\u001b[22m\u001b[39m\n    \u001b[90m 56|\u001b[39m     expect(run.status, run.stderr).toBe(0);\n    \u001b[90m 57|\u001b[39m     expect(run.stdout).toContain('missing');\n    \u001b[90m 58|\u001b[39m     expect(run.stdout).not.toMatch(/usage/i);\n    \u001b[90m   |\u001b[39m                            \u001b[31m^\u001b[39m\n    \u001b[90m 59|\u001b[39m   });\n    \u001b[90m 60|\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\u001b[22m\u001b[39m"
+    }
+  ],
+  "box": {
+    "id": "r1-kitchen-stats",
+    "name": "Remove the obsolete Usage per wave output from kitchen-stats",
+    "version": 1
+  },
+  "baseCommit": "016c0d3747e661d71e2ee84aa4124bc93f0f837b",
+  "expectedBaseCommit": "016c0d3747e661d71e2ee84aa4124bc93f0f837b",
+  "attemptSha256": "4a2a7a61370ddee605c18a46333f20728e716c59a99d48e227701c1690341e53",
+  "applies": [
+    {
+      "owner": "scripts/kitchen-stats.mjs",
+      "box": "src/scripts/kitchen-stats.mjs",
+      "changed": false,
+      "sha256": "319bee60abdb07ebaf7d6548658e8a51d10a63b8b39435fa2ae13cc4137252ed",
+      "bytes": 17940
+    }
+  ]
+}
+EXIT=3
