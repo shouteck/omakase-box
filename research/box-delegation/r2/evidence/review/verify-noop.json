@@ -1,0 +1,113 @@
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "command-check",
+  "detail": "declared outcome check 'unused-param-outcome' did not pass (result: fail, exit 2): tests/box/package/r1-kitchen-stats.test.ts(30,22): error TS6133: 'repo' is declared but its value is never read.",
+  "checks": [
+    {
+      "name": "install",
+      "status": "pass"
+    },
+    {
+      "name": "compile",
+      "status": "pass"
+    }
+  ],
+  "box": {
+    "id": "r2-unused-repo-param",
+    "name": "Remove the unused repo parameter in the R1 kitchen-stats test",
+    "version": 1
+  },
+  "baseCommit": "41fdf38df149adc12bcb4922ebee07eacabb89d3",
+  "expectedBaseCommit": "41fdf38df149adc12bcb4922ebee07eacabb89d3",
+  "attemptSha256": "e1356d0c6f1028ce5c331ef031bea067314099ad9f9fa2217b87c25a11b6acc9",
+  "applies": [
+    {
+      "owner": "tests/box/package/r1-kitchen-stats.test.ts",
+      "box": "src/tests/box/package/r1-kitchen-stats.test.ts",
+      "changed": false,
+      "sha256": "91c8946ef9e0319893ff06fb50207f8c360d190ae38817698419e7f6056a6d30",
+      "bytes": 5007
+    }
+  ],
+  "commandChecks": [
+    {
+      "name": "unused-param-outcome",
+      "tool": "tsc",
+      "declaredArgv": [
+        "--ignoreConfig",
+        "--noEmit",
+        "--noUnusedParameters",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--exactOptionalPropertyTypes",
+        "--verbatimModuleSyntax",
+        "--esModuleInterop",
+        "--skipLibCheck",
+        "--types",
+        "node",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\scripts\\tooling\\node_modules\\pnpm\\bin\\pnpm.cjs",
+        "exec",
+        "tsc",
+        "--ignoreConfig",
+        "--noEmit",
+        "--noUnusedParameters",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--exactOptionalPropertyTypes",
+        "--verbatimModuleSyntax",
+        "--esModuleInterop",
+        "--skipLibCheck",
+        "--types",
+        "node",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 2,
+      "result": "fail",
+      "log": "tests/box/package/r1-kitchen-stats.test.ts(30,22): error TS6133: 'repo' is declared but its value is never read.",
+      "seconds": 2.821
+    },
+    {
+      "name": "r1-behavior-guard",
+      "tool": "vitest",
+      "declaredArgv": [
+        "run",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\scripts\\tooling\\node_modules\\pnpm\\bin\\pnpm.cjs",
+        "exec",
+        "vitest",
+        "run",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
+      "cwd": ".",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/AppData/Local/Temp/box-verify-nSIccY/owner\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/box/package/r1-kitchen-stats.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 13823\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m R1 kitchen-stats-no-usage box \u001b[2m(3)\u001b[22m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m exports the real Box; its evaluator passes the integrated script and fails Usage-printing and blank variants\u001b[33m 13580\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m3 passed\u001b[39m\u001b[22m\u001b[90m (3)\u001b[39m\n\u001b[2m   Start at \u001b[22m 12:09:24\n\u001b[2m   Duration \u001b[22m 14.99s\u001b[2m (tests 93%, import 4%, transform 2%)\u001b[22m",
+      "seconds": 16.024
+    }
+  ]
+}
