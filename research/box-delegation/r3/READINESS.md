@@ -30,7 +30,10 @@ control only. No checkout hooks run (git hooks never enabled; clone only).
   `"workspaces"` field, no `pnpm-workspace.yaml` exists; lockfile also missing
   `zod@4.6.5` workspace entry (evidence/install2.log, install3.log). pnpm cannot
   install this repo at this pin without adding files — named gap.
-- `nub install --frozen-lockfile --ignore-scripts` → exit 0 (evidence/nub-install.log).
+- `nub install --frozen-lockfile --ignore-scripts` → succeeded: the full dependency
+  tree printed and installs were usable downstream (evidence/nub-install.log).
+  Its `INSTALL_EXIT=0` marker is a pipeline artifact, not the command's exit —
+  see the audit amendment; success rests on the visible resolved-tree output.
   Faithful to the repo's declared toolchain.
 
 ## Owner-context test runs (existing commands, unchanged, network none)
@@ -38,22 +41,37 @@ control only. No checkout hooks run (git hooks never enabled; clone only).
 Command form: `cd /src/zod && nub exec --node vitest run <paths>` from repo ROOT
 (repo's own `test` script shape). Results:
 
-- Intended predeclared sample (evidence/predeclared-sample.md), 4/202 files:
-  string.test.ts, codec.test.ts, mini object.test.ts, issue-schema.test.ts →
-  **all green**, 315 tests, ~32 s incl. typecheck
-  (evidence/sample-tests-root.log). Reviewer correction: the evidence file says
-  it was recorded at ~04:55Z, while the sample result starts at 04:46:27Z;
-  the records therefore do not prove the sample was declared before results.
-- Whole `packages/zod` vitest project: **588 files / 8299 tests, all green**,
-  typecheck no errors, 198 s (evidence/zod-package-suite.log).
+- Intended predeclared sample (evidence/predeclared-sample.md), 4/202 filesystem
+  test files: string.test.ts, codec.test.ts, mini object.test.ts,
+  issue-schema.test.ts → runner reported **all green**, 315 tests, ~32 s incl.
+  typecheck (evidence/sample-tests-root.log). Reviewer correction, accepted: the
+  declaration file claims ~04:55Z while the result's own start is 04:46:27Z, so
+  declaration-before-results is **not proven** and the wave's predeclaration
+  requirement is recorded **NOT MET**. The run's green outcome is corroborated
+  only for `object.test.ts` by the reviewer's independent exit-0 run below; the
+  log's appended `VITEST_EXIT=0` is a pipeline artifact, not the runner's exit.
+- Whole `packages/zod` vitest project: runner reported **all green — 8299 tests
+  over 588 Vitest project file instances**, typecheck no errors, 198 s
+  (evidence/zod-package-suite.log). Denominator correction: 588 is project
+  instances (each file can appear under compile-mode, zod and TS projects), not
+  filesystem files — 202 `*.test.ts` exist under `packages/` at the pin, 196
+  under `packages/zod`, 742 tracked files total (reviewer recount). The suite's
+  `EXIT=0` marker is also a pipeline artifact; the pass count is
+  runner-reported, not independently re-run.
 - Other workspace projects (resolution, integration, tsc, treeshake, mini, docs):
   5 files pass; **3 treeshake files red — "zod is not built, run nub run build
   first"** — missing-built-artifact infrastructure, not defects
-  (evidence/other-projects-suite.log). `nub run build` result recorded separately.
-- Lint: `nub exec --node biome check .` → exit 0, 457 files clean (evidence/biome.log).
+  (evidence/other-projects-suite.log). `nub run build` also failed in-container
+  (zshy `TypeError: Cannot read properties of undefined`), so those files stayed
+  unreachable; the suite's `EXIT=0` marker is a pipeline artifact.
+- Lint: `nub exec --node biome check .` → runner printed "Checked 457 files…
+  No fixes applied" (evidence/biome.log). Its `BIOME_EXIT=0` marker is a
+  pipeline artifact; clean status rests on the printed summary.
 - TS-7.1-nightly probe for issue #6637: `tsc --noEmit -p packages/zod/tsconfig.test.json`
-  under typescript@7.1.0-dev.20260929.1 → exit 0, no TS5115 on existing files
-  (evidence/ts-dev-typecheck.log).
+  under typescript@7.1.0-dev.20260929.1 → **no error output observed**; no
+  existing file triggers TS5115 (evidence/ts-dev-typecheck.log). The
+  `TSC_EXIT=0` marker is a pipeline artifact; the claim is empty diagnostics,
+  not a captured exit.
 
 ### Runtime-path notes (real findings)
 
@@ -78,22 +96,34 @@ Command form: `cd /src/zod && nub exec --node vitest run <paths>` from repo ROOT
   1. cli.js is ESM — needs .mjs when copied bare (recorded; packaging doc gap).
   2. `excludedPrefixes` entries must end in "/" (agreement corrected).
   3. `toolchain.typesNode` required (agreement corrected).
-  4. `git clone --local` fails when TMPDIR is on a different filesystem than the
-     repo (Invalid cross-device link) — worked around with TMPDIR on the repo
-     volume; general product gap: no `--no-hardlinks` fallback.
-  5. Export's base-clone install is hardcoded `pnpm install --frozen-lockfile`
-     → "configured to use nub" ERROR. **Demonstrated blocker: the product assumes
-     pnpm install; the repo's declared manager is nub.** Also: product's spawned
-     installs do NOT pass `--ignore-scripts` — a wave-policy violation inside
-     containers; general fix identified (add flag at export.ts install sites),
-     not made because no qualifying issue existed to justify the change.
-  (evidence/probe-export*.log)
+  4. `git clone --local` failed with the raw error `Invalid cross-device link`
+     on a pack index when TMPDIR (`/tmp`) was on a different filesystem than the
+     repo volume; with TMPDIR set inside the repo volume the clone step
+     succeeded. Only the error string and the two observed outcomes are claimed;
+     a `--no-hardlinks` fallback is an untested suggestion.
+  5. Export's base-clone install spawned `pnpm install --frozen-lockfile` with
+     **no `--ignore-scripts`** → pnpm's package-manager guard refused:
+     "configured to use nub". **Demonstrated blocker: the product assumes pnpm
+     install; the repo's declared manager is nub.** Reviewer's wrapper re-run
+     (below) captured exit 1 and proved the missing flag; the guard refused
+     before any upstream lifecycle script could run — no scripts were *observed*
+     to execute, which is not a guarantee none would under a working install.
+  Every `EXPORT_EXIT=0` marker in probe-export*.log is a pipeline artifact and
+  unreliable; the authoritative export exit is the reviewer's captured 1.
 
-## Issue candidates (all read ~05:05Z, `gh` read-only; full list in evidence/issue-candidates.md)
+## Issue candidates (`gh` read-only)
+
+Corrected read window: the `gh` issue reads happened after the `packages/zod`
+suite finished (~04:54Z by the runner's 04:51:05 start + 198 s) and before the
+candidate commit at 05:04:13Z. The earlier "~05:05Z" figure post-dates that
+commit and was a projection, not an observation. Per-issue read times inside
+the window are not individually recorded. Full list in
+evidence/issue-candidates.md (its file header repeats the same projected
+~05:05Z; treat it as the window above).
 
 | Issue | State | Why rejected |
 |---|---|---|
-| #6637 TS5115 on TS 7.1 nightlies, `.catchall(z.json())` | OPEN | No existing file triggers TS5115 (tsc under pinned nightly = green); would need a NEW repro test — banned |
+| #6637 TS5115 on TS 7.1 nightlies, `.catchall(z.json())` | OPEN | No existing file emits TS5115 under the pinned nightly (tsc produced no error output; exit marker unreliable); would need a NEW repro test — banned |
 | #6639 NaN intersection throws Unmergable | OPEN | Latent bug; no existing check red at base |
 | #6641 z.record skips own `__proto__` key | OPEN | Latent; no existing check red |
 | #6621 non-English locales lose Infinity/-Infinity | OPEN | No locale test asserts those tokens (grep) — latent |
@@ -109,6 +139,40 @@ Command form: `cd /src/zod && nub exec --node vitest run <paths>` from repo ROOT
   issue. Per the wave rule this is a preparation gap → park; no fabricated red.
 - Issue-prep clock: no issue selected, so no prep stage. Stage clocks in
   waves/R3.md.
+
+## Audit amendment (post-review FAIL on 089c89f; prose-only corrections, raw bytes preserved)
+
+- **Exit-capture defect (worker error):** every worker log that ends
+  `… | tail -N; echo *_EXIT=$?` records the *pipeline's* status (tail/grep/head),
+  not the command's. All `INSTALL_EXIT`, `VITEST_EXIT`, `BIOME_EXIT`,
+  `TSC_EXIT`, `BUILD_EXIT`, `EXPORT_EXIT`, `EXIT=` markers in worker logs are
+  therefore **unreliable** and stand only as "ran to completion". Where the
+  claim rests on them it has been relabeled; semantic claims now cite printed
+  runner summaries or absence of error output. Authoritative captured exits are
+  the reviewer's: sample `object.test.ts` exit 0, export exit 1.
+- **Predeclaration not proven → NOT MET:** `predeclared-sample.md` claims
+  ~04:55Z but the sample result starts 04:46:27Z. Committed evidence cannot
+  establish declaration-before-results; the wave's required predeclared-sample
+  condition is recorded NOT MET. No new predeclaration was backfilled; the
+  sample run stands as an *undeclared-then-run* green observation only.
+- **Timeline corrections (observed anchors only):** session start 04:34Z
+  (`date -u`); tool image created 04:43:46Z (reviewer, image inspect); sample
+  run start 04:46:27Z (runner); `packages/zod` suite 04:51:05Z + 198 s;
+  worker `date -u` check 05:00:14Z; candidate commit 05:04:13Z. All earlier
+  "~05:05Z / ~05:20–35Z" stage figures in this file and the wave Result were
+  projections written before the commit, not observations — now corrected or
+  labeled windows. Total observed active elapsed ≈ 30 min (04:34→05:04Z),
+  inside the 90-min cap.
+- **UID:** worker containers ran the image's default user (root); the actual
+  UID of worker runs was not recorded and is unknown. The reviewer's runs used
+  UID 65534 and succeeded.
+- **Denominators:** 202 filesystem `*.test.ts` under `packages/` (196 under
+  `packages/zod`), 742 tracked files at pin; the 588 figure is Vitest project
+  file instances, a different measure — not a file-count denominator.
+- **Useful conditions restated:** real external repo + open-issue survey —
+  met; a qualifying real open issue selected — **not met**; predeclared
+  sample — **not met**; Box/recipient/no-op/owner-verify — **not tested** (no
+  Box ever emitted).
 
 ## Independent reviewer re-run (2026-10-06, review root `kitchen-r3-review-a9f0b1c`)
 

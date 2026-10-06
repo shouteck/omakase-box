@@ -1,4 +1,9 @@
-# R3 open-issue candidates — colinhacks/zod (read 2026-10-06 ~05:10Z via `gh`, read-only)
+# R3 open-issue candidates — colinhacks/zod (read via `gh`, read-only)
+
+AMENDMENT (post-review): the "~05:05Z / ~05:10Z" read stamps in this file were
+projections and post-date the 05:04:13Z commit; the true window is between the
+`packages/zod` suite finish (~04:54Z) and that commit. Per-issue times are not
+individually recorded; states/URLs/dates were re-confirmed OPEN at review time.
 
 Selection rule (from waves/R3.md): an unchanged EXISTING check must be red on the pinned base
 0b216ef for the issue; guards green; no request-specific test/evaluator/driver written.
