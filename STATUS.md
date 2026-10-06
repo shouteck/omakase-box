@@ -8,7 +8,7 @@ Replaced 6 October 2026 by Devin as CTO after K6's reviewed merge; temporary-res
 - **K6 delivered:** invocation-owned lockfile reuse, canonical file-scoped test containment, and a fail-closed 330-second executed-time budget for `verify --full test:box-package test:kitchen`. Existing test obligations and product behavior preserved.
 - **Checks:** independent reviewer PASS on exact `2011fbb`: all four steps executed, 294s elapsed / 280s executed. A deliberately broken exporter failed both clean-directory tests. Prior cache/junction/budget attacks re-run and closed.
 - **Measurement:** reviewer pair 227.5s uncached → 135.4s cached; both 70 tests / 68 exports, real resolutions 38 → 12 (+26 hits), same 6 installs/typechecks/box suites and 1 owner install. One matched pair on one host, not a general speed guarantee. Earlier mismatched/no-gain pairs and FAILs remain recorded.
-- **In flight:** no active cook. K6 code accepted; **resource close incomplete**. Main checkout on master; do not start another wave from this run.
+- **In flight:** R2 briefing only, approved by `START.md: R2`; `waves/R2.md` ready, awaiting pre-cook Go. No cook dispatched. K6 resource close remains incomplete; its ambiguous temp data is not part of R2's deletion authority.
 - **Cleanup limit:** reviewer removed 31 owned operation logs and named scratch, but reported 725 `box-d21-*` directories with indistinguishable worker/reviewer ownership, plus `box-k6-stats-249468.jsonl` and an empty `box-k6-lockfile-cache` directory in host temp. Ambiguous resources left untouched; identify ownership or obtain exact cleanup approval before deletion. Historical `.kitchen/runs` records preserved; unrelated lab worktree untouched.
 - **CI:** master push run `37403420014` completed SUCCESS on merge `a273bf0`, confirmed by a non-waiting result query during close. Existing host-bound exclusions remain.
 - **R1:** real internal delegation accepted, no-op rejected. Request-specific preparation cost remains the main product risk; isolation instructional, no customer/comparator evidence.
@@ -38,4 +38,4 @@ Cleanup limit above; remaining product and instrumentation gaps are in [BACKLOG.
 
 ## Decision waiting for the CEO
 
-Cleanup ownership/permission for the ambiguous temp resources; next wave remains the owner's choice. No additional implementation has started.
+R2 is named; reply Go to its pre-cook card to begin. K6 cleanup ownership/permission remains unresolved and carried forward. This run stops after R2; R3 requires its own START message.

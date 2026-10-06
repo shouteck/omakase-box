@@ -13,6 +13,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
+- K6 temporary cleanup remains incomplete (725 ambiguous runRoot directories plus reported leftovers); R2 adopts unique resource roots/inventories and explicit cleanup but does not authorize deleting old resources or repairing kitchen tooling while paused.
+
 - Property-based guard tests and Box packaging mutation checks: retained from the kickoff inbox; require a separately named kitchen wave.
 - K6 added packaging operation counts and an explicit full-profile budget; invocation/PID time-window counting can miss reused PIDs or mix simultaneous matching logs. Give counters a run identity before relying on parallel measurements.
 - Monthly upstream pstack comparison: last done 5 October 2026 against 0.15.10; not due at this kickoff.
@@ -30,15 +32,17 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the brief of 6 October 2026 (after lab session 1):
+Answering the fetched brief of 6 October 2026 (after lab session 3), at R2 kickoff:
 
-- **Direction from the CTO, 6 October 2026:** the product now steers by the "useful" milestone in PLAN.md (R2, then R3 on a public repository that is not ours). Until both are done the lab stays on Line 1 only; Lines 2 and 3 do not open. What would help most: anything that makes a check cheap to state for a request nobody has seen before, and anything R3 should watch for on an unfamiliar repository.
-- **Changed in the product since that brief:** K6 is accepted on master (`a273bf0`), not parked. No product behaviour changed. R2 is still not approved and has no brief; D4 is unstarted.
-- **R2, a check that is red on the base:** taken. The R2 brief will require each named check's result on the base to be recorded at export, and will not report an outcome pass from checks that were all green on the base.
-- **R2, choosing a request where an existing command is already red:** taken as the first thing to try when the R2 request is chosen.
-- **R1 re-read (an existing 193-line test already covered most of the "preserve" clause):** accepted as a lead, not yet as a fact. The lab said it did not rerun it; settle it from R1's evidence before it is quoted.
-- **Per-run records (requester minutes, lines of check, base result of each check, no-op verdict, which checks the recipient could see):** taken; they go in the wave file from R2 on.
-- **An owner check that is not a copy of a visible one:** noted; decided when the R2 brief is written.
-- **D4 not built around a small success comparison:** taken. D4 stays held until Line 2 has a benchmark and states the smallest effect it can detect.
-- **"Passes the agreed checks", not "verified correct":** taken for product wording.
-- **Programme:** unchanged. Line 1's three numbers (wrong work accepted, right work rejected, requester cost) are the right scoring.
+- **Direction unchanged:** PLAN's useful milestone is R2 then R3; lab stays on Line 1, kitchen improvements remain paused unless blocking, D4 awaits a benchmark. Study cheap request-to-check evidence and unfamiliar-repository gaps, not a presumed success rate.
+- **Product change:** K6 accepted (`a273bf0`), CI green; cleanup ownership still unresolved. `START.md: R2` now approves R2; brief at `waves/R2.md`, implementation awaiting pre-cook Go. The latest plan commits clarify handover, not solver, and R3 readiness reporting; public-issue ecosystem remains later and owner-gated. No R3 or public-project work yet.
+- **Base-check transfer — adopted:** export will run every declared command and record exit code, context, guard/outcome role and exact base. Red guard is a preparation defect; all-green base warns there is no evidence of change. Unknown/timeout is not red-by-prose or PASS.
+- **Existing import-based guard advice — adopted with qualification:** avoid runtime-path-dependent recipient tests first; use the existing TypeScript command for a candidate unused parameter in R1's packaging test and run that existing behavior test in the full owner context. Prove the candidate's base failure before selecting it; no invented red test.
+- **Format gap — adopted:** a reusable command-check mode must not require or substitute another request's evaluator; legacy generator mode remains compatible. Owner verify must execute its approved command data, not recipient claims or an unrelated registry entry.
+- **R1 guard re-read — updated:** session 3 reports a clean-folder reproduction plus independent attacks; taken as evidence from the lab, not a rerun by this kickoff. It supports a guard half only, not cheap evidence of change or complete preservation coverage.
+- **Per-run records — adopted:** separate generic product-development effort from actual requester/preparation minutes, lines of new check code, base status of each check, actual no-op verdict and visibility. Hand-picked cases and R1's estimate give no controlled performance/error-rate comparison.
+- **Distinct owner check — adopted:** use the existing full-context behavior test as owner guard, unlike the recipient compiler check. Its source may still be visible in the editable test; record that, don't claim a hidden oracle.
+- **Wrong/right candidates — adopted:** no-op, empty edit, wrong edit, guard regression and check tampering, plus another right solution when feasible; record uncovered cases. No request-specific evaluator is written to force the result.
+- **MJS and wording — adopted:** tsc is not evidence for unchecked mjs; R2's first candidate is TS. Say passes the agreed checks, never verified correct.
+- **Research numbers — noted, not extrapolated:** three of seven hand-picked guards failed to travel and literature reports human confirmation errors; neither supplies this product's error rate. No generated-check confirmation shortcut is presumed safe.
+- **Programme/need:** wrong work accepted, right work rejected and requester cost remain the scoring. Product will return concrete base/no-op/preparation records; no lab output is a blocking gate.
