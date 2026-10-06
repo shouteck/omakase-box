@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
-import { materializeTooling, runDeclaredChecks } from './commands.js';
+import { materializeTooling, preflightPrograms, runDeclaredChecks, runSetup } from './commands.js';
 import type { CheckRecord } from './commands.js';
 import type { PnpmInvocation } from './export.js';
 import { git } from './git.js';
@@ -57,7 +57,7 @@ export interface VerifyMerge {
 export interface VerifyReport {
   readonly verdict: 'pass' | 'fail';
   readonly failureClass?: VerifyFailureClass;
-  readonly reason?: SubmissionRejection | 'no-owner-check' | 'outside-owner-root' | VerifyCheckName | 'command-check' | 'operational';
+  readonly reason?: SubmissionRejection | 'no-owner-check' | 'outside-owner-root' | VerifyCheckName | 'command-check' | 'program-unavailable' | 'setup' | 'operational';
   readonly detail?: string;
   readonly box?: { readonly id: string; readonly name: string; readonly version: number };
   readonly baseCommit?: string;
@@ -167,6 +167,15 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
     return fail('preparation-defect', 'no-owner-check', `no owner-side check is registered for generator(s): ${unchecked.join(', ')}`, base);
   }
 
+  // Availability preflight: every program the agreement declares (setup, checks
+  // and solver prerequisites) must resolve before the scratch checkout runs a
+  // single declared command.
+  try {
+    preflightPrograms(agreement);
+  } catch (error) {
+    return fail('environment-failure', 'program-unavailable', error instanceof Error ? error.message : String(error), base);
+  }
+
   // Phase 3: scratch owner history. clone --local keeps it cheap and fully
   // disposable; the branch is created at the submission's base commit.
   const scratch = mkdtempSync(join(resolve(options.workRoot ?? tmpdir()), 'box-verify-'));
@@ -237,10 +246,16 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
     // a red guard means broken behavior, a red outcome means the request is not
     // met (a no-op patch keeps the untouched-base result).
     let commandChecks: CheckRecord[] | undefined;
-    if (agreement.commands.length > 0) {
+    const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
+    if (ownerSetup.length > 0 || agreement.commands.length > 0) {
       materializeTooling(repo, clone);
-      commandChecks = runDeclaredChecks(agreement.commands, clone, options.pnpm, 'owner');
-      const failed = commandChecks.find(record => record.result !== 'pass');
+      const setupRecords = runSetup(agreement.setup, clone, 'owner');
+      const badSetup = setupRecords.find(record => record.result !== 'pass');
+      if (badSetup !== undefined) {
+        return fail('environment-failure', 'setup', `declared setup command '${badSetup.name}' did not exit 0 (result: ${badSetup.result}, exit ${badSetup.exit}): ${badSetup.log}`, { ...base, checks: runChecks, commandChecks: setupRecords });
+      }
+      commandChecks = [...setupRecords, ...runDeclaredChecks(agreement.commands, clone, 'owner')];
+      const failed = commandChecks.find(record => record.role !== 'setup' && record.result !== 'pass');
       if (failed !== undefined) {
         return fail('implementation-failure', 'command-check', `declared ${failed.role} check '${failed.name}' did not pass (result: ${failed.result}, exit ${failed.exit}): ${failed.log}`, { ...base, checks: runChecks, commandChecks });
       }

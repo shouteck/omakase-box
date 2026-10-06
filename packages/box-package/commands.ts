@@ -1,32 +1,32 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, realpathSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
-import type { CommandCheck } from './agreement.js';
-import type { PnpmInvocation } from './export.js';
-import { declaredPnpmArgs, UnsafeInstall } from './install.js';
+import { cpSync, existsSync, realpathSync, statSync } from 'node:fs';
+import { delimiter, isAbsolute, join, relative, resolve } from 'node:path';
+import type { CommandCheck, SetupCommand } from './agreement.js';
+import { ExportFailed } from './errors.js';
 import { toPosix } from './selection.js';
 
-// Runs the agreement's declared command checks. Commands are data parsed at the
-// agreement boundary — a pinned tool (node, pnpm, tsc, vitest via the declared
-// pnpm toolchain), verbatim argv with no shell expansion, and a cwd that must
-// resolve inside the context root on its canonical path. Every run records the
-// exact command, context and role, exit status, a bounded output tail and the
-// elapsed seconds; a timeout or spawn failure is a named result, never a pass.
-// Child environments are inherited (the tools need PATH/HOME) but nothing the
-// runner emits includes environment data.
+// Runs the agreement's declared setup commands and command checks. Commands are
+// data parsed at the agreement boundary — an arbitrary program name or path,
+// verbatim argv with no shell expansion, and a cwd that must resolve inside the
+// context root on its canonical path. Every run records the exact resolved
+// program, context and role, exit status, a bounded output tail and the elapsed
+// seconds; a timeout or spawn failure is a named result, never a pass. Child
+// environments are inherited (the tools need PATH/HOME) but nothing the runner
+// emits includes environment data.
 
 export type CheckContext = 'owner' | 'recipient';
 export type CheckResult = 'pass' | 'fail' | 'timeout' | 'error';
+export type CommandRole = 'setup' | 'guard' | 'outcome';
 
 export interface CheckRecord {
   readonly name: string;
-  readonly tool: CommandCheck['tool'];
+  readonly program: string;
   readonly declaredArgv: readonly string[];
   readonly command: string;
   readonly argv: readonly string[];
   readonly cwd: string;
   readonly context: CheckContext;
-  readonly role: 'guard' | 'outcome';
+  readonly role: CommandRole;
   readonly exit: number | null;
   readonly result: CheckResult;
   readonly log: string;
@@ -46,16 +46,72 @@ export function materializeTooling(repo: string, clone: string): void {
   if (existsSync(source)) cpSync(source, join(clone, 'scripts', 'tooling'), { recursive: true });
 }
 
-// Pinned tool resolution: 'node' is the running runtime (the declared toolchain's
-// own interpreter on this host), 'pnpm' is the caller's pinned invocation, and
-// 'tsc'/'vitest' run through it so the repo's lockfile picks the binary.
-function toolCommand(check: CommandCheck, pnpm: PnpmInvocation): { command: string; args: string[] } {
-  switch (check.tool) {
-    case 'node': return { command: process.execPath, args: [...check.args] };
-    case 'pnpm': return { command: pnpm.command, args: declaredPnpmArgs(pnpm, check.args) };
-    case 'tsc':
-    case 'vitest': return { command: pnpm.command, args: [...pnpm.args, 'exec', check.tool, ...check.args] };
+export class ProgramUnavailable extends ExportFailed {
+  constructor(readonly program: string) {
+    super(`declared program '${program}' is not available: it is not on PATH and not an existing path`);
+    this.name = 'ProgramUnavailable';
   }
+}
+
+export class ProgramLaunchUnsupported extends ExportFailed {
+  constructor(detail: string) {
+    super(`declared program cannot be launched safely: ${detail}`);
+    this.name = 'ProgramLaunchUnsupported';
+  }
+}
+
+interface ResolvedProgram { readonly path: string; readonly kind: 'executable' | 'command-file' }
+const COMMAND_FILE = /\.(cmd|bat)$/i;
+const pathExtensions = (): string[] => (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').map(ext => ext.toLowerCase()).filter(ext => ext !== '');
+
+// The single documented launch rule, an operating-system fact rather than tool
+// dispatch. A declared program is a spelled-out path that must exist, or a bare
+// name searched on PATH (on Windows with each PATHEXT extension in turn).
+// Whatever the name resolves to decides how it starts — never the name itself:
+// on Windows a resolved .cmd/.bat command file is launched through
+// `cmd.exe /d /s /c` with the resolved path and every argument in double
+// quotes. An argument containing `"`, `%`, `!` or a line break cannot be
+// carried on that command line and is refused as an unsafe launch case.
+export function resolveProgram(program: string): ResolvedProgram {
+  const candidates: string[] = [];
+  const push = (base: string): void => {
+    candidates.push(base);
+    if (process.platform === 'win32' && !/\.[^\\/]+$/.test(base)) {
+      for (const ext of pathExtensions()) candidates.push(base + ext);
+    }
+  };
+  if (isAbsolute(program) || program.includes('/') || program.includes('\\')) push(resolve(program));
+  else for (const dir of (process.env.PATH ?? '').split(delimiter)) { if (dir !== '') push(join(dir, program)); }
+  for (const candidate of candidates) {
+    if (existsSync(candidate) && statSync(candidate).isFile()) {
+      return { path: candidate, kind: COMMAND_FILE.test(candidate) ? 'command-file' : 'executable' };
+    }
+  }
+  throw new ProgramUnavailable(program);
+}
+
+// Every declared program — setup, checks and solver prerequisites — must
+// resolve before the first command executes anywhere, so a missing program is
+// named with no earlier setup side effect having run.
+export function preflightPrograms(agreement: { readonly setup: readonly SetupCommand[]; readonly commands: readonly CommandCheck[]; readonly requires: readonly { readonly program: string }[] }): void {
+  const declared = [...agreement.setup.map(command => command.program), ...agreement.commands.map(command => command.program), ...agreement.requires.map(tool => tool.program)];
+  const missing = [...new Set(declared)].filter(program => {
+    try { resolveProgram(program); return false; }
+    catch (error) { if (error instanceof ProgramUnavailable) return true; throw error; }
+  });
+  if (missing.length > 0) throw new ProgramUnavailable(missing.join(', '));
+}
+
+function launch(resolved: ResolvedProgram, args: readonly string[], cwd: string, timeoutMs: number) {
+  if (resolved.kind === 'command-file') {
+    if (process.platform !== 'win32') throw new ProgramLaunchUnsupported(`command file ${resolved.path} can only be launched on Windows`);
+    for (const token of [resolved.path, ...args]) {
+      if (/["%!\r\n]/.test(token)) throw new ProgramLaunchUnsupported(`argument ${JSON.stringify(token)} cannot be carried to a Windows command file: '"', '%', '!' and line breaks are refused`);
+    }
+    const line = `"${[resolved.path, ...args].map(token => `"${token}"`).join(' ')}"`;
+    return spawnSync('cmd.exe', ['/d', '/s', '/c', line], { cwd, encoding: 'utf8', timeout: timeoutMs, windowsHide: true, windowsVerbatimArguments: true });
+  }
+  return spawnSync(resolved.path, [...args], { cwd, encoding: 'utf8', timeout: timeoutMs, windowsHide: true });
 }
 
 export class CheckOutsideRoot extends Error {
@@ -73,28 +129,24 @@ function containedCwd(root: string, cwd: string): string {
   return target;
 }
 
-export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmInvocation): CheckRecord {
+export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: string): CheckRecord {
+  const role: CommandRole = 'role' in check ? check.role : 'setup';
   const rel = (target: string): string => { const offset = relative(realpathSync(root), target); return offset === '' ? '.' : toPosix(offset); };
-  let resolved: { command: string; args: string[] };
+  const cwd = containedCwd(root, check.cwd);
+  let resolved: ResolvedProgram;
+  let run: ReturnType<typeof launch>;
+  const began = Date.now();
   try {
-    resolved = toolCommand(check, pnpm);
+    resolved = resolveProgram(check.program);
+    run = launch(resolved, check.args, cwd, check.timeoutMs);
   } catch (error) {
-    // A declared install that tries to re-enable lifecycle scripts is refused
-    // before spawn: an 'error' record is the evidence, never a silent pass.
-    if (error instanceof UnsafeInstall) {
-      const cwd = containedCwd(root, check.cwd);
-      return { name: check.name, tool: check.tool, declaredArgv: check.args, command: pnpm.command, argv: [], cwd: rel(cwd), context: check.context, role: check.role, exit: null, result: 'error', log: error.message, seconds: 0 };
+    // A program that cannot be found or launched safely is a named 'error'
+    // record — the evidence, never a silent pass and never a red outcome.
+    if (error instanceof ProgramUnavailable || error instanceof ProgramLaunchUnsupported) {
+      return { name: check.name, program: check.program, declaredArgv: check.args, command: check.program, argv: [], cwd: rel(cwd), context: check.context, role, exit: null, result: 'error', log: error instanceof Error ? error.message : String(error), seconds: (Date.now() - began) / 1000 };
     }
     throw error;
   }
-  const cwd = containedCwd(root, check.cwd);
-  const began = Date.now();
-  const run = spawnSync(resolved.command, resolved.args, {
-    cwd,
-    encoding: 'utf8',
-    timeout: check.timeoutMs,
-    windowsHide: true
-  });
   const seconds = (Date.now() - began) / 1000;
   const log = `${run.stdout ?? ''}${run.stderr ?? ''}`.trim().slice(-LOG_TAIL);
   let result: CheckResult;
@@ -103,13 +155,13 @@ export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmIn
   const detail = run.error !== undefined && result === 'error' ? `${run.error.message}\n${log}` : log;
   return {
     name: check.name,
-    tool: check.tool,
+    program: check.program,
     declaredArgv: check.args,
-    command: resolved.command,
-    argv: resolved.args,
+    command: resolved.path,
+    argv: [...check.args],
     cwd: rel(cwd),
     context: check.context,
-    role: check.role,
+    role,
     exit: run.status,
     result,
     log: detail,
@@ -117,6 +169,10 @@ export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmIn
   };
 }
 
-export function runDeclaredChecks(checks: readonly CommandCheck[], root: string, pnpm: PnpmInvocation, context: CheckContext): CheckRecord[] {
-  return checks.filter(check => check.context === context).map(check => runDeclaredCheck(check, root, pnpm));
+export function runSetup(setup: readonly SetupCommand[], root: string, context: CheckContext): CheckRecord[] {
+  return setup.filter(command => command.context === context).map(command => runDeclaredCheck(command, root));
+}
+
+export function runDeclaredChecks(checks: readonly CommandCheck[], root: string, context: CheckContext): CheckRecord[] {
+  return checks.filter(check => check.context === context).map(check => runDeclaredCheck(check, root));
 }

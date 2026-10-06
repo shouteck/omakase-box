@@ -49,3 +49,33 @@ and prints what it would apply (`applies[]` maps box paths to owner paths with
 `changed` flags). Exit 0 accepted, 3 rejected with a named reason, 1 operational
 error. Expected base resolves `--base` > `agreement.baseCommit` > repo HEAD and the
 report names which source decided (`baseSource`). Verify + merge is D3.1.
+
+## Declared commands, setup and prerequisites (A1)
+
+An agreement declares programs, not tools. `setup[]` and `commands[]` are the same
+shape — `{name, program, args, cwd, context, timeoutMs}` — with `commands[]` adding
+`role: "guard" | "outcome"`. `program` is an executable name resolved on PATH (on
+Windows with each `PATHEXT` extension in turn) or a spelled-out path; `args` reaches
+the program verbatim with no shell anywhere; `cwd` must resolve inside the context
+root on its canonical path. `setup[]` prepares a context before its checks and may
+be empty. `requires[]` is `{program, version?}` — what a solver needs installed,
+with an optional human-readable version, never a pinned toolchain the product
+enforces.
+
+Every declared program (setup, checks and `requires[]`) is resolved before the
+first command executes; a missing one is named and nothing has run. A timeout or
+spawn failure is a named result, never a pass and never a red outcome check.
+
+One operating-system launch rule covers Windows command files: a program that
+resolves to a `.cmd`/`.bat` (npm and pnpm are `npm.cmd`/`pnpm.cmd` shims) is
+started through `cmd.exe /d /s /c` with the resolved path and each argument in
+double quotes. The rule keys on the resolved file kind, never the program's
+name. Arguments containing `"`, `%`, `!` or a line break cannot be carried on a
+command line and are refused as an unsafe launch case.
+
+`package.json`/`tsconfig.json`/`pnpm-lock.yaml` are emitted only when the
+agreement opts into the `nodejs` helper configuration; a Box for a
+non-JavaScript project carries none of it. Installs the product itself spawns
+(lockfile resolution, verify's scratch install) still carry `--ignore-scripts`
+through the install boundary; declared commands are owner-approved execution
+authority, not a sandbox.

@@ -1,5 +1,5 @@
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { AgreementInvalid, BoxManifestSchema, CheckOutsideRoot, ExportFailed, parseAgreement, runDeclaredCheck, verifySubmission } from '../../../packages/box-package/index.js';
 import type { CommandCheck } from '../../../packages/box-package/index.js';
@@ -13,7 +13,7 @@ const HARDENED = '{"schemaVersion":1,"frameAncestors":"none","noSniff":true,"ref
 const PNPM = { command: process.execPath, args: [PNPM_CJS] };
 
 const check = (over: Partial<CommandCheck>): CommandCheck => ({
-  name: 'probe', tool: 'node', args: ['-e', 'process.exit(0)'], cwd: '.',
+  name: 'probe', program: 'node', args: ['-e', 'process.exit(0)'], cwd: '.',
   context: 'owner', role: 'guard', timeoutMs: 30_000, ...over
 });
 
@@ -29,7 +29,9 @@ function agreementWith(over: Record<string, unknown>): unknown {
     editable: [{ kind: 'copy', owner: 'config/response-security.json', box: EDITABLE }],
     declaredDependencies: {},
     excludedPrefixes: ['src/private/', 'node_modules/'],
-    toolchain: { node: '>=24', pnpm: '10.34.5', typescript: '6.0.3', vitest: '5.0.1', typesNode: '24.13.6' },
+    nodejs: { node: '>=24', pnpm: '10.34.5', typescript: '6.0.3', vitest: '5.0.1', typesNode: '24.13.6' },
+    requires: [{ program: 'node' }],
+    setup: [],
     checks: ['probe'],
     evaluator: [],
     submission: { format: 'editable-overlay', instructions: 'probe' },
@@ -49,9 +51,10 @@ describe('declared command checks: agreement boundary', () => {
     expect(() => parseAgreement(agreementWith({ commands: [] }))).toThrowError(AgreementInvalid);
   });
 
-  it('rejects an unpinned tool, a non-portable cwd, an empty name and an out-of-range timeout', () => {
+  it('rejects a non-portable cwd, an empty or blank program, an empty name and an out-of-range timeout', () => {
     const bad: Array<Record<string, unknown>> = [
-      { ...check({}), tool: 'sh' },
+      { ...check({}), program: '' },
+      { ...check({}), program: '   ' },
       { ...check({}), cwd: '../outside' },
       { ...check({}), name: '' },
       { ...check({}), timeoutMs: 0 },
@@ -61,34 +64,145 @@ describe('declared command checks: agreement boundary', () => {
       expect(() => parseAgreement(agreementWith({ commands: [command] }))).toThrowError(AgreementInvalid);
     }
   });
+
+  it('accepts arbitrary program names and a distinct setup list that may be empty', () => {
+    const agreement = parseAgreement(agreementWith({
+      requires: [{ program: 'python', version: '>=3.12' }, { program: 'make' }],
+      setup: [{ name: 'prepare', program: 'python', args: ['-m', 'venv', '.venv'], cwd: '.', context: 'owner', timeoutMs: 60_000 }],
+      commands: [check({ name: 'a', program: 'python', args: ['-m', 'unittest'], role: 'outcome' })]
+    }));
+    expect(agreement.requires[0]).toEqual({ program: 'python', version: '>=3.12' });
+    expect(agreement.setup[0]).toMatchObject({ name: 'prepare', program: 'python', context: 'owner' });
+    expect(agreement.commands[0]?.program).toBe('python');
+    const bare = parseAgreement(agreementWith({ requires: [], setup: [], commands: [check({})] }));
+    expect(bare.setup).toEqual([]);
+    expect(bare.requires).toEqual([]);
+  });
+
+  it('rejects the removed old-format fields instead of parsing them', () => {
+    expect(() => parseAgreement(agreementWith({
+      commands: [{ ...check({}), tool: 'node' }]
+    }))).toThrowError(AgreementInvalid);
+    expect(() => parseAgreement(agreementWith({
+      toolchain: { node: '>=24', pnpm: '10.34.5', typescript: '6.0.3', vitest: '5.0.1', typesNode: '24.13.6' },
+      commands: [check({})]
+    }))).toThrowError(AgreementInvalid);
+  });
 });
 
 describe('declared command checks: runner', () => {
   it('records exit, role, context, log tail and seconds verbatim (no shell)', () => {
-    const record = runDeclaredCheck(check({ name: 'echo-probe', args: ['-e', 'console.log("left $SHELL `id`"); process.exit(3)'] }), process.cwd(), PNPM);
+    const record = runDeclaredCheck(check({ name: 'echo-probe', args: ['-e', 'console.log("left $SHELL `id`"); process.exit(3)'] }), process.cwd());
     expect(record.result).toBe('fail');
     expect(record.exit).toBe(3);
     expect(record.role).toBe('guard');
     expect(record.log).toContain('left $SHELL `id`');
     expect(record.seconds).toBeGreaterThanOrEqual(0);
+    expect(record.command).toMatch(/node(\.exe)?$/i);
+  });
+
+  it('runs an arbitrary native program with literal arguments, metacharacters intact', () => {
+    const root = runRoot('argv');
+    const argvDump = join(root, 'argv.json');
+    const hostile = ['plain', 'a & echo pwned > pwned.txt', 'pipe | tee x', 'semi;colon', 'star*glob?', '$HOME', '`id`', '%PATH%', 'it is "quoted"'];
+    const record = runDeclaredCheck(check({
+      name: 'argv-probe',
+      args: ['-e', `require('fs').writeFileSync(${JSON.stringify(argvDump)}, JSON.stringify(process.argv.slice(1)))`, ...hostile]
+    }), root);
+    expect(record.result, record.log).toBe('pass');
+    expect(JSON.parse(readFileSync(argvDump, 'utf8'))).toEqual(hostile);
+    expect(existsSync(join(root, 'pwned.txt'))).toBe(false);
+  });
+
+  it('runs a non-JavaScript program declared by bare name', () => {
+    const record = runDeclaredCheck(check({ name: 'native', program: 'git', args: ['--version'] }), process.cwd());
+    expect(record.result, record.log).toBe('pass');
+    expect(record.log).toContain('git version');
   });
 
   it('runs in a declared subdirectory and refuses a link that escapes the root', () => {
     const root = runRoot('ctx');
     mkdirSync(join(root, 'sub'), { recursive: true });
-    const record = runDeclaredCheck(check({ cwd: 'sub' }), root, PNPM);
+    const record = runDeclaredCheck(check({ cwd: 'sub' }), root);
     expect(record.result).toBe('pass');
     expect(record.cwd).toBe('sub');
 
     const outside = runRoot('outside');
     symlinkSync(outside, join(root, 'link'), 'junction');
-    expect(() => runDeclaredCheck(check({ cwd: 'link' }), root, PNPM)).toThrowError(CheckOutsideRoot);
+    expect(() => runDeclaredCheck(check({ cwd: 'link' }), root)).toThrowError(CheckOutsideRoot);
   });
 
   it('names a timeout, never a pass', () => {
-    const record = runDeclaredCheck(check({ args: ['-e', 'setTimeout(() => {}, 5000)'], timeoutMs: 500 }), process.cwd(), PNPM);
+    const record = runDeclaredCheck(check({ args: ['-e', 'setTimeout(() => {}, 5000)'], timeoutMs: 500 }), process.cwd());
     expect(record.result).not.toBe('pass');
     expect(['timeout', 'error']).toContain(record.result);
+  });
+
+  it('names a missing program as an error record, never a pass', () => {
+    const record = runDeclaredCheck(check({ name: 'ghost', program: 'box-a1-no-such-program-xyz' }), process.cwd());
+    expect(record.result).toBe('error');
+    expect(record.exit).toBeNull();
+    expect(record.log).toContain('box-a1-no-such-program-xyz');
+  });
+});
+
+describe('declared command checks: the Windows command-file launch rule', () => {
+  // An npm-style shim: a .cmd wrapper that delegates to a script under its own
+  // directory with %* forwarding. The rule starts it through cmd.exe — keyed on
+  // the resolved file kind, with no package-manager knowledge anywhere.
+  function npmStyleShim(dir: string, name: string): { shim: string; target: string } {
+    const target = join(dir, `${name}-tool.mjs`);
+    const shim = join(dir, `${name}.cmd`);
+    writeFileSync(target, `import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+const argv = process.argv.slice(2);
+writeFileSync(join(${JSON.stringify(dir)}, '${name}-argv.json'), JSON.stringify(argv));
+if (argv[0] === '--exit') process.exit(Number(argv[1]));
+`);
+    writeFileSync(shim, `@echo off\r\n"${process.execPath}" "%~dp0${name}-tool.mjs" %*\r\n`);
+    return { shim, target };
+  }
+
+  it('starts a .cmd shim from a PATH name — execution, not just resolution', () => {
+    const dir = runRoot('shim');
+    const { shim } = npmStyleShim(dir, 'fakepm');
+    const previousPath = process.env.PATH;
+    process.env.PATH = `${dir};${previousPath}`;
+    try {
+      const record = runDeclaredCheck(check({ name: 'shim', program: 'fakepm', args: ['arg1', 'two words'] }), dir);
+      expect(record.result, record.log).toBe('pass');
+      expect(record.command).toBe(shim);
+      expect(JSON.parse(readFileSync(join(dir, 'fakepm-argv.json'), 'utf8'))).toEqual(['arg1', 'two words']);
+    } finally {
+      process.env.PATH = previousPath;
+    }
+  });
+
+  it('carries metacharacter arguments through a command file verbatim', () => {
+    const dir = runRoot('shim-meta');
+    npmStyleShim(dir, 'probe');
+    const hostile = ['a & echo pwned > pwned.txt', 'b | tee x', 'c; d', 'star*', 'care^t', '(paren)', '<tag>'];
+    const record = runDeclaredCheck(check({ name: 'meta', program: join(dir, 'probe.cmd'), args: hostile }), dir);
+    expect(record.result, record.log).toBe('pass');
+    expect(JSON.parse(readFileSync(join(dir, 'probe-argv.json'), 'utf8'))).toEqual(hostile);
+    expect(existsSync(join(dir, 'pwned.txt'))).toBe(false);
+    expect(existsSync(join(process.cwd(), 'pwned.txt'))).toBe(false);
+  });
+
+  it('keeps the shim exit code and refuses arguments a command line cannot carry', () => {
+    const dir = runRoot('shim-exit');
+    npmStyleShim(dir, 'exiter');
+    const red = runDeclaredCheck(check({ name: 'red', program: join(dir, 'exiter.cmd'), args: ['--exit', '7'] }), dir);
+    expect(red.result).toBe('fail');
+    expect(red.exit).toBe(7);
+    for (const arg of ['a "quoted" b', 'has %PERCENT%', 'bang!char']) {
+      const record = runDeclaredCheck(check({ name: 'unsafe', program: join(dir, 'exiter.cmd'), args: [arg] }), dir);
+      expect(record.result, arg).toBe('error');
+      expect(record.exit, arg).toBeNull();
+      expect(record.log, arg).toMatch(/cannot be carried/i);
+    }
+    // Only the --exit run executed: the refused arguments never reached the shim.
+    expect(JSON.parse(readFileSync(join(dir, 'exiter-argv.json'), 'utf8'))).toEqual(['--exit', '7']);
   });
 });
 
@@ -106,7 +220,7 @@ describe('declared command checks: export on the untouched base', () => {
     expect(manifest.baseChecks.map(record => `${record.name}:${record.result}:${record.exit}`)).toEqual(['base-guard:pass:0', 'base-outcome:fail:1']);
     // The legacy 'checks' strings are descriptions: named unsupported gap, never a claim.
     expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/)]);
-    expect(manifest.commands[0]?.tool).toBe('node');
+    expect(manifest.commands[0]?.program).toBe('node');
 
     const green = agreementFile('request-a', { mutate: value => { value.commands = [check({ name: 'only-green', role: 'outcome' })]; } });
     const warned = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(green).outDir, 'box.json'), 'utf8')));
@@ -152,6 +266,65 @@ describe('declared command checks: export on the untouched base', () => {
       mutate: value => { value.commands = [check({ name: 'red-guard', args: ['-e', 'process.exit(7)'] })]; }
     });
     expect(() => runExport(agreement)).toThrowError(ExportFailed);
+  });
+
+  it('runs declared setup before checks and records it on the base', () => {
+    const marker = join('scratch-a1-setup', 'prepared.txt').split('\\').join('/');
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.setup = [{
+          name: 'prepare', program: 'node',
+          args: ['-e', `require('fs').mkdirSync('scratch-a1-setup',{recursive:true});require('fs').writeFileSync('scratch-a1-setup/prepared.txt','yes')`],
+          cwd: '.', context: 'owner', timeoutMs: 30_000
+        }];
+        value.commands = [
+          check({ name: 'sees-setup', args: ['-e', `process.exit(require('fs').existsSync('${marker}')?0:1)`] }),
+          check({ name: 'base-outcome', role: 'outcome', args: ['-e', 'process.exit(1)'] })
+        ];
+      }
+    });
+    const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(agreement).outDir, 'box.json'), 'utf8')));
+    expect(manifest.baseChecks.map(record => `${record.role}:${record.name}:${record.result}`)).toEqual([
+      'setup:prepare:pass', 'guard:sees-setup:pass', 'outcome:base-outcome:fail'
+    ]);
+  });
+
+  it('fails the export, naming the setup command, when a declared setup command does not exit 0', () => {
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.setup = [{ name: 'broken-install', program: 'node', args: ['-e', 'process.exit(9)'], cwd: '.', context: 'owner', timeoutMs: 30_000 }];
+        value.commands = [check({ name: 'never-runs' })];
+      }
+    });
+    expect(() => runExport(agreement)).toThrowError(/setup command 'broken-install'/);
+  });
+
+  it('names a missing declared program before any setup side effect runs', () => {
+    const outDir = join(runRoot('preflight'), 'box');
+    const sideEffect = join(runRoot('preflight-side-effect'), 'wrote.txt');
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.setup = [{
+          name: 'would-write', program: 'node',
+          args: ['-e', `require('fs').writeFileSync(${JSON.stringify(sideEffect)},'x')`],
+          cwd: '.', context: 'owner', timeoutMs: 30_000
+        }];
+        value.commands = [check({ name: 'ghost-check', program: 'box-a1-no-such-program-xyz' })];
+      }
+    });
+    expect(() => runExport(agreement, undefined, outDir)).toThrowError(/box-a1-no-such-program-xyz/);
+    expect(existsSync(outDir)).toBe(false);
+    expect(existsSync(sideEffect)).toBe(false);
+  });
+
+  it('names a missing solver prerequisite from requires', () => {
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.requires = [{ program: 'node' }, { program: 'box-a1-no-such-tool-xyz', version: '>=1' }];
+        value.commands = [check({ name: 'guard' })];
+      }
+    });
+    expect(() => runExport(agreement)).toThrowError(/box-a1-no-such-tool-xyz/);
   });
 });
 

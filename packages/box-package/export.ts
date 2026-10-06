@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
 import type { BoxAgreement } from './agreement.js';
-import { materializeTooling, runDeclaredChecks } from './commands.js';
+import { materializeTooling, preflightPrograms, runDeclaredChecks, runSetup } from './commands.js';
 import type { CheckRecord } from './commands.js';
 import { ExportFailed, PreparationGap } from './errors.js';
 import { git } from './git.js';
@@ -88,6 +88,13 @@ export function exportBox(options: ExportOptions): ExportResult {
   const repo = resolve(options.repoPath);
   const sourceRoot = resolve(repo, agreement.sourceRoot === '.' ? '' : agreement.sourceRoot);
   if (!statSync(sourceRoot, { throwIfNoEntry: false })?.isDirectory()) throw new ExportFailed(`source root ${sourceRoot} does not exist`);
+  // Availability preflight: every declared setup/check program and solver
+  // prerequisite must resolve before the first command executes anywhere — a
+  // missing program is named here, before the disposable clone exists.
+  preflightPrograms(agreement);
+  if (agreement.evaluator.length > 0 && agreement.nodejs === undefined) {
+    throw new ExportFailed('evaluator entries are emitted as vitest test files: declare the nodejs helper configuration or drop evaluator');
+  }
   const baseCommit = resolveBaseCommit(agreement, repo, agreement.sourceRoot);
 
   // A nonempty output is refused before any declared command executes or any
@@ -109,19 +116,21 @@ export function exportBox(options: ExportOptions): ExportResult {
   // disposable clone — never in the real owner repository, which approved
   // commands must leave unchanged. A red guard is a preparation/environment
   // gap: the base the agreement claims to start from does not hold.
+  const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
   const ownerChecks = agreement.commands.filter(check => check.context === 'owner');
-  if (ownerChecks.length > 0) {
+  if (ownerSetup.length > 0 || ownerChecks.length > 0) {
     const baseWork = mkdtempSync(join(tmpdir(), 'box-base-'));
     try {
       const clone = join(baseWork, 'owner');
       git(repo, ['clone', '--local', '--quiet', repo, clone]);
       git(clone, ['checkout', '--quiet', baseCommit]);
       materializeTooling(repo, clone);
-      if (ownerChecks.some(check => check.tool !== 'node')) {
-        const install = spawnSync(options.pnpm.command, productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']), { cwd: clone, encoding: 'utf8', timeout: 600_000, windowsHide: true });
-        if (install.status !== 0) throw new ExportFailed(`base checkout install failed: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);
+      baseChecks.push(...runSetup(agreement.setup, clone, 'owner'));
+      const setup = baseChecks.find(record => record.role === 'setup' && record.result !== 'pass');
+      if (setup !== undefined) {
+        throw new ExportFailed(`setup command '${setup.name}' did not exit 0 on the untouched base (context ${setup.context}, result: ${setup.result}, exit ${setup.exit}): ${setup.log}`);
       }
-      baseChecks.push(...runDeclaredChecks(agreement.commands, clone, options.pnpm, 'owner'));
+      baseChecks.push(...runDeclaredChecks(agreement.commands, clone, 'owner'));
     } finally {
       rmSync(baseWork, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
     }
@@ -153,32 +162,37 @@ export function exportBox(options: ExportOptions): ExportResult {
     ship(file.box, file.owner, file.origin, readFileSync(join(sourceRoot, file.owner)), true);
   }
 
-  const manifestText = packageManifest(agreement);
-  ship('package.json', null, 'generated', manifestText, false);
-  ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
+  // package.json/tsconfig/pnpm-lock are emitted only under the optional nodejs
+  // helper configuration — a Box for a non-JavaScript project carries none of it.
+  if (agreement.nodejs !== undefined) {
+    const manifestText = packageManifest(agreement);
+    ship('package.json', null, 'generated', manifestText, false);
+    ship('tsconfig.json', null, 'generated', tsconfigJson(), false);
+    ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
+  }
   for (const check of agreement.evaluator) ship(check.box, null, 'generated', generate(check.generator), false);
   // The submission tool travels inside the folder: the recipient seals its work with
   // `node box/submit.mjs`, no box-cli or repository needed.
   ship(SUBMIT_TOOL_PATH, null, 'generated', SUBMIT_TOOL, false);
-  ship('pnpm-lock.yaml', null, 'generated', resolveLockfile(manifestText, options.pnpm), false);
 
-  // Every declared recipient-context check runs on the emitted folder at the
-  // base state: the staging tree is copied to a run directory outside the
-  // checkout, installed from its own lockfile when a pinned tool needs it, and
-  // the declared commands execute there. A red guard (a runtime-path gap in the
-  // package is exactly that) refuses the export even when owner checks are
-  // green; the result is recorded either way.
+  // Every declared recipient-context setup command and check runs on the
+  // emitted folder at the base state: the staging tree is copied to a run
+  // directory outside the checkout and the declared commands execute there. A
+  // red guard (a runtime-path gap in the package is exactly that) refuses the
+  // export even when owner checks are green; the result is recorded either way.
+  const recipientSetup = agreement.setup.filter(command => command.context === 'recipient');
   const recipientChecks = agreement.commands.filter(check => check.context === 'recipient');
-  if (recipientChecks.length > 0) {
+  if (recipientSetup.length > 0 || recipientChecks.length > 0) {
     const runRootDir = mkdtempSync(join(tmpdir(), 'box-recipient-'));
     try {
       const box = join(runRootDir, 'box');
       cpSync(staging, box, { recursive: true });
-      if (recipientChecks.some(check => check.tool !== 'node')) {
-        const install = spawnSync(options.pnpm.command, productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']), { cwd: box, encoding: 'utf8', timeout: 600_000, windowsHide: true });
-        if (install.status !== 0) throw new ExportFailed(`recipient check install failed in staged Box: ${`${install.stderr ?? ''}${install.stdout ?? ''}`.trim().slice(0, 2000)}`);
+      baseChecks.push(...runSetup(agreement.setup, box, 'recipient'));
+      const setup = baseChecks.find(record => record.role === 'setup' && record.result !== 'pass');
+      if (setup !== undefined) {
+        throw new ExportFailed(`setup command '${setup.name}' did not exit 0 in the staged Box (context ${setup.context}, result: ${setup.result}, exit ${setup.exit}): ${setup.log}`);
       }
-      baseChecks.push(...runDeclaredChecks(agreement.commands, box, options.pnpm, 'recipient'));
+      baseChecks.push(...runDeclaredChecks(agreement.commands, box, 'recipient'));
     } finally {
       rmSync(runRootDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
     }
@@ -201,16 +215,18 @@ export function exportBox(options: ExportOptions): ExportResult {
     baseCommit,
     agreementSha256: sha256(readFileSync(agreementPath)),
     sourceRoot: agreement.sourceRoot,
-    toolchain: agreement.toolchain,
+    ...(agreement.nodejs !== undefined ? { nodejs: agreement.nodejs } : {}),
+    requires: agreement.requires,
     declaredDependencies: agreement.declaredDependencies,
     files,
     editable,
     readContext: agreement.readContext,
     checks: agreement.checks,
     evaluator: agreement.evaluator.map(entry => ({ box: entry.box, generator: entry.generator })),
+    setup: agreement.setup,
     commands: agreement.commands,
     baseChecks: baseChecks.map(record => ({
-      name: record.name, tool: record.tool, argv: [...record.declaredArgv], cwd: record.cwd,
+      name: record.name, program: record.program, argv: [...record.declaredArgv], cwd: record.cwd,
       context: record.context, role: record.role, exit: record.exit, result: record.result,
       log: record.log, seconds: record.seconds
     })),

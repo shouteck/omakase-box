@@ -15,7 +15,11 @@
   "declaredDependencies": {},
   "excludedPrefixes": ["src/private/", "reference-solutions/", "node_modules/", "dist/"],
   "inventoryExcludePrefixes": ["node_modules/", "dist/", ".git/", "reference-solutions/", "box-agreements/"],
-  "toolchain": { "node": ">=24.11.0 <25", "pnpm": "10.34.5", "typescript": "6.0.3", "vitest": "5.0.1", "typesNode": "24.13.6" },
+  "nodejs": { "node": ">=24.11.0 <25", "pnpm": "10.34.5", "typescript": "6.0.3", "vitest": "5.0.1", "typesNode": "24.13.6" },
+  "requires": [
+    { "program": "node", "version": ">=24.11.0 <25" }
+  ],
+  "setup": [],
   "checks": ["pnpm exec tsc --noEmit", "pnpm exec vitest run evaluator/request-b.test.ts"],
   "evaluator": [
     { "box": "evaluator/request-b.test.ts", "generator": "private-shop-request-b" }
