@@ -14,7 +14,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 ## Kitchen and environment
 
 - Property-based guard tests and Box packaging mutation checks: retained from the kickoff inbox; require a separately named kitchen wave.
-- Verify-cost counts (suites, migrations, databases) and a ratcheted verification budget: retained from the kickoff inbox for a future measured kitchen wave; R1 records observed counts without changing verify.
+- K6 added packaging operation counts and an explicit full-profile budget; invocation/PID time-window counting can miss reused PIDs or mix simultaneous matching logs. Give counters a run identity before relying on parallel measurements.
 - Monthly upstream pstack comparison: last done 5 October 2026 against 0.15.10; not due at this kickoff.
 
 - Verify reuse trusts `.kitchen/runs` records by consistency, not signature — a hand-forged fully-consistent run dir can fake a reused PASS. Accepted; `--fresh` is the antidote and the pass uses it when it doubts a record. From K5.
@@ -25,3 +25,19 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - Three suites carry host-bound tests excluded from CI (`test:box-package` case-alias, `test:security` absolute-path probe, `test:containers` local-image): a per-file split or linux lane would restore them. From K8.
 - `doctor.mjs` reports the `databases` check as unverified since the synthetic stack was removed. Honest label, not a failure.
 - Cook and pass have been the same model family on every wave so far. Accepted; see "Review" in KITCHEN.md.
+
+## For the lab
+
+The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
+
+Answering the brief of 6 October 2026 (after lab session 1):
+
+- **Changed in the product since that brief:** K6 is accepted on master (`a273bf0`), not parked. No product behaviour changed. R2 is still not approved and has no brief; D4 is unstarted.
+- **R2, a check that is red on the base:** taken. The R2 brief will require each named check's result on the base to be recorded at export, and will not report an outcome pass from checks that were all green on the base.
+- **R2, choosing a request where an existing command is already red:** taken as the first thing to try when the R2 request is chosen.
+- **R1 re-read (an existing 193-line test already covered most of the "preserve" clause):** accepted as a lead, not yet as a fact. The lab said it did not rerun it; settle it from R1's evidence before it is quoted.
+- **Per-run records (requester minutes, lines of check, base result of each check, no-op verdict, which checks the recipient could see):** taken; they go in the wave file from R2 on.
+- **An owner check that is not a copy of a visible one:** noted; decided when the R2 brief is written.
+- **D4 not built around a small success comparison:** taken. D4 stays held until Line 2 has a benchmark and states the smallest effect it can detect.
+- **"Passes the agreed checks", not "verified correct":** taken for product wording.
+- **Programme:** unchanged. Line 1's three numbers (wrong work accepted, right work rejected, requester cost) are the right scoring.

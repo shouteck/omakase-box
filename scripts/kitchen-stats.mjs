@@ -39,7 +39,8 @@ export function readRuns(runsDir) {
         run.seconds = typeof parsed.seconds === 'number' ? parsed.seconds : null;
         run.verdict = typeof parsed.verdict === 'string' ? parsed.verdict : null;
         run.dirty = typeof parsed.dirty === 'boolean' ? parsed.dirty : null;
-        run.steps = Array.isArray(parsed.steps) ? parsed.steps.map(step => ({ name: String(step && step.name), exit: step && typeof step.exit === 'number' ? step.exit : null, seconds: step && typeof step.seconds === 'number' ? step.seconds : null })) : [];
+        run.steps = Array.isArray(parsed.steps) ? parsed.steps.map(step => ({ name: String(step && step.name), exit: step && typeof step.exit === 'number' ? step.exit : null, seconds: step && typeof step.seconds === 'number' ? step.seconds : null, reused: step && typeof step.reused === 'string' ? step.reused : null })) : [];
+        run.profile = typeof parsed.profile === 'string' ? parsed.profile : null;
       } catch { run.summary = 'malformed'; }
     }
     runs.push(run);
@@ -101,6 +102,30 @@ export function checkLimits(root) {
   const status = fileText(root, 'STATUS.md');
   checks.push({ label: 'STATUS.md lines', actual: status === null ? 'missing' : String(lineCount(status)), limit: '60', ok: status === null ? 'missing' : lineCount(status) <= 60 });
   return checks;
+}
+
+export const ACCEPTANCE_PROFILE = 'verify --full test:box-package test:kitchen';
+export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-package', 'test:kitchen'];
+export const ACCEPTANCE_BUDGET_SECONDS = 330;
+export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPTANCE_STEPS, budgetSeconds = ACCEPTANCE_BUDGET_SECONDS } = {}) {
+  const label = `acceptance profile "${profile}" executed seconds`;
+  // The latest run dir that could be a profile observation is the only thing
+  // judged: a valid run of this profile, or one whose summary is missing or
+  // unparseable and so cannot be scoped to any profile. Uncertainty is judged
+  // invalid — never skipped toward an older pass.
+  const candidates = runs.filter(run => run.summary !== 'ok' || run.profile === profile);
+  if (!candidates.length) return { label, actual: 'missing', limit: `${budgetSeconds}s`, ok: 'missing' };
+  const latest = candidates[candidates.length - 1];
+  const invalid = reason => ({ label, actual: `invalid latest run ${latest.name}: ${reason}`, limit: `${budgetSeconds}s`, ok: 'missing' });
+  if (latest.summary !== 'ok') return invalid(`summary ${latest.summary}`);
+  if (latest.verdict !== 'PASS' || latest.dirty !== false) return invalid(`verdict ${latest.verdict ?? 'missing'}${latest.dirty !== false ? ', dirty tree' : ''}`);
+  const bad = latest.steps.find(step => step.reused || step.exit !== 0 || typeof step.seconds !== 'number' || !Number.isFinite(step.seconds) || step.seconds < 0);
+  if (bad) return invalid(`step ${bad.name} ${bad.reused ? 'was reused' : bad.exit !== 0 ? `exited ${bad.exit}` : 'seconds missing or invalid'}`);
+  const missingStep = steps.find(name => !latest.steps.some(step => step.name === name));
+  if (missingStep) return invalid(`profile step ${missingStep} missing`);
+  const executed = latest.steps.reduce((sum, step) => sum + step.seconds, 0);
+  if (!(executed > 0)) return invalid('zero executed seconds');
+  return { label, actual: `${executed}s`, limit: `${budgetSeconds}s`, ok: executed <= budgetSeconds };
 }
 
 // --- git helpers (read-only) --------------------------------------------------
@@ -262,6 +287,7 @@ function page(root) {
   out.push('');
 
   const checks = checkLimits(root);
+  checks.push(budgetCheck(runs));
   const failures = [];
   out.push('Kitchen limits');
   for (const check of checks) {
