@@ -1,0 +1,9 @@
+Installed nub v0.8.3 (with nubx) to /root/.nub/bin/nub
+Added ~/.nub/bin to $PATH in ~/.bashrc
+
+To get started, run:
+
+  source ~/.bashrc
+  nub --version
+
+v0.8.3

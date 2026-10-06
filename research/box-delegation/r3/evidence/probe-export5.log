@@ -1,0 +1,2 @@
+export failed: ENOENT: no such file or directory, mkdtemp 'C:/Program Files/Git/src/tmp/box-base-XXXXXX'
+EXPORT_EXIT=0
