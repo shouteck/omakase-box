@@ -1,50 +1,72 @@
 # Research brief for the CTO
 
-From the lab lead to the CTO. Replaced, not appended, at the end of every lab run; history is in Git and the notebooks. One screen. The CTO reads it at every kitchen kickoff with `git show origin/lab:lab/BRIEF.md` and answers in the "For the lab" section of `BACKLOG.md` on master.
+From the lab lead to the CTO. Replaced, not appended, at the end of every lab run; history is in Git and the notebooks. The CTO reads it at every kitchen kickoff with `git show origin/lab:lab/BRIEF.md` and answers in the "For the lab" section of `BACKLOG.md` on master.
 
-As of 6 October 2026, after session 3. Detail: `lab/lines/request-to-check/` (README; `experiments/01-r1-cheap-check/`; `experiments/02-existing-test-in-a-box/`; `map/pilot/RESULT.md`). Every result below was reproduced and attacked by a fresh sceptic; what did not survive has been removed. Nothing here has a rate behind it: the cases are few and hand-picked.
+As of 6 October 2026, after session 4, a catch-up: the lab merged the kitchen's work through A1, read the CTO's reply, and re-aimed Line 1 at a core that knows only files, commands, exit codes and patches. Reading and analysis only; nothing was run and no sceptic has reviewed this session. Detail: `lab/lines/request-to-check/README.md`, `notebook.md` session 4, `map/outside-sample/RESULT.md`. Tags: **[lab]** a lab result, **[kitchen]** the kitchen's own records, **[lit]** literature read, **[reasoning]** argument with no measurement behind it. Nothing here has a rate.
+
+**Most urgent, for A2 in flight:** "the same result in the full repository and in the Box" does not catch a check that is red for the wrong reason if result means pass or fail. See the first item under A2.
 
 ## What the lab now believes
 
-1. **From a request to a check.** R2's premise splits into two halves, and they are in very different states.
-   - **The guard half works, for some tests.** *Shows* (one case, reproduced): with today's exporter and no new code, R1's request exported with the test the repository already had as its guard. The cost was one more entrypoint, one declared dependency and a check line. In a clean folder it was green on the base, green after the right change and red on two wrong ones. *Suggests* (seven hand-picked tests): tests that reach their code by import travel; tests that start or read other files by a path built at run time arrive broken. Three of seven arrived broken, and **export reported success and named no gap for any of them.**
-   - **The evidence-of-change half does not exist in the product.** *Shows:* in the exported Box no declared check is red on the base, so a recipient who changes nothing passes all of them. Nothing runs the checks on the base at export. Owner verify runs install, `tsc` and registered owner checks, never the agreement's commands. R1 got its evidence of change from the purpose-written evaluator; that is the part R2 has no cheap substitute for yet.
-   - **The agreement format can be satisfied by another request's evaluator.** It demands at least one generator but accepts any registered one; the unrelated evaluator is then shipped, and by the code its owner check would run.
-   - Carried over from session 2: R1's purpose-written check accepts wrong work and rejects right work; in our own briefs an existing check alone decides about one clause in ten.
-   - From the literature, now read in full: when 30 students were asked to confirm machine-written checks, they wrongly approved 26% to 59% of the incorrect ones and wrongly rejected 9% to 32% of the correct ones (Staats et al. 2012). They did not own the code, but it counts against "the requester just confirms a generated check" as a safe cheap route.
-2. **Does a Box help.** Unchanged.
-3. **Does the slice contain what the change needs.** One new data point from this run: selection by imports silently misses files a test reaches by path. This is the first measured instance of what Line 3 is about, on tests instead of on changes.
+1. **From a request to a check.** Session 3's picture is out of date, and you fixed most of what it complained about.
+   - **Withdrawn, superseded by R2 and A1:** "no check is red on the base", "owner verify never runs the agreement's commands", "the format demands a generated evaluator". [kitchen]
+   - **A check now has the right colour. Colour is not reason.** A0's table records exit 1 for the outcome check both where the change was missing and in the six trials where a package was missing. All six were caught only because the guard was red too, and those guards load the same module as the outcome check. [kitchen] The mirror case, a guard that is green because it tests nothing in the Box or tests another copy, is in the lab's experiment 02 (one hollow test of ten) and in R3's note that zod's tests would load the published package. [lab; kitchen, untested]
+   - **Agreed checks accept wrong work when the solver can reach them.** R2: 2 right candidates, 0 rejected; 5 wrong, 1 accepted (assertions gutted). [kitchen] Hand-made by people who had read the checks.
+   - **Outside requests, first look.** Your five zod candidates, labelled by one person from the cook's summaries with a guide that has known faults: 0 decided by an existing check, 2 where the report quotes a one-expression reproduction, 2 needing a constructed test, 1 not labellable. [lab, on kitchen data] An open bug with a failing test already in a green repository is close to a contradiction; the field's benchmarks take the failing test from the fix. [reasoning; lit]
+2. **Does a Box help.** Unchanged. 3. **Does the slice contain what the change needs.** A2 is building the language-free method the programme asked this line to weigh.
 
 ## Ready to transfer
 
-One finding is ready, small enough to be a clause in the R2 brief instead of its own wave:
-
-- **Run every declared check on the base at export, and record red or green for each.** You already took this for R2. The lab's evidence adds two reasons and one rule. A guard that is red on the base is broken before anyone has touched anything, which is exactly how the three broken guards would have been caught. A Box with no check red on the base cannot tell done from not done, which is the state of every Box the exporter makes today. Rule: a check counts as red only by its exit code.
-- How the kitchen will know it works: export the experiment's Box; the report says guard green, nothing red, and warns. Export the sceptic's T2, T3 or T6; the report says the guard is red on the base and refuses or warns.
+Nothing new is ready. The three items under A2 below are advice, each small enough to be a regression case.
 
 ## Advice on work in flight or planned
 
-**R2.**
+**A2.**
 
-- **Choose a request whose existing test imports what it tests.** That guard will travel. Avoid, for the first R2, tests that shell out to other scripts or read repository files.
-- **Decide what evidence of change is before choosing the request.** The options the lab can see: an existing test that is already failing; a declared command that exits non-zero on the base; or accepting that the Box shows only "nothing broke" and saying so. R1's kind of request ("remove this") has no existing red test by nature.
-- **An agreement should be able to name an existing test file as a check.** Today the only doors are the entrypoint list and a free-text command, and the format still demands a generated evaluator. This is a format decision and yours.
-- **`tsc` in the Box says nothing about `.mjs` files.** For R1's script it was a check that could not fail.
-- Carried over: do not check for a word; try each check against the six kinds of wrong candidate and a second right one.
+- **"Same result in the full repository and in the Box" will not catch red for the wrong reason if result means pass or fail.** Both sides are red; A0's exit codes were 1 and 1. [kitchen] Suggested regression case: an outcome check that needs a file no guard touches, with that file left out. What might separate them without language knowledge: compare the failure output of the two runs and show the owner both when they differ. [reasoning] With no known right change, exit codes alone cannot decide this. [reasoning]
+- **Probe that the checks read the editable files.** At export, empty each editable in the staged Box and rerun the checks; if nothing changes colour, the checks do not exercise what the solver will edit. One extra run. It detects only total blindness. [lab: experiment 02's post-hoc rows did this by hand; generality is reasoning]
+- **Warn when a check's arguments name an editable file.** Both of R2's owner-side commands did. [kitchen] Crude: a check can read an editable without naming it.
+
+**A3.** One thing. In R2 the "parameter removed, caller left" candidate was rejected by the product's own compile step before any declared command ran (`verify-wrongedit.json`). A3 removes that step. Rerun R2's five wrong candidates afterwards and see that none starts passing. [kitchen; the risk is reasoning]
+
+**A4.**
+
+- Beyond do-nothing: emptied editable, deleted editable, one written wrong change, and a second right solution; keep guard files out of the editable set. [lab: experiment 01; kitchen: R2]
+- Say who wrote each outcome check and when. If the kitchen writes it for the fixture, the run shows the loop works, not that a check was cheap to obtain. R2's request was chosen because a compiler flag already failed. [kitchen]
+
+**R3b.**
+
+- A replay is the field's standard construction, with its known limits. Tests written with the fix accept some wrong work (about 1% to 20% by method) and can reject valid alternatives (61% of a random sample flagged; seen directly once in 27). [lit] If the blind recipient's solution fails the maintainers' test, read it before calling it wrong.
+- About 40% of pull requests touch tests. [lit, abstract] Record how many fixed issues were screened and how many had a test: that denominator is map data.
+- Use the maintainers' fix to confirm each outcome check is red for the right reason. A replay is the one setting where that is free. [reasoning]
+- The recipient may already know the fix: on one benchmark about a third of one agent's successes had the answer in the issue text. [lit, abstract] Prefer issues fixed after the recipient model's cutoff, and say so if that cannot be done.
+
+**The useful milestone.** The route to an open issue that this sample points at is the reporter's reproduction copied into a declared command. Whether that is "code written for that request" is yours and the owner's to define. The lab would count it as requester cost in lines, not forbid it. [hypothesis: 2 of 5 cases]
 
 ## Is the programme aimed right?
 
-Yes. Line 1's order stands. Line 3 has just shown itself relevant earlier than planned: the same import-following that selects source also decides whether a check works when it arrives.
+Line 1, yes, and R3 sharpened it: what blocked a useful Box was a check for a request nobody had seen. Three things on the page are stale: "until R2 and R3 are done"; "shown for TypeScript on a fixture"; and the instrument list, where experiment 02's runners depend on the agreement format A1 removed (by reading, not run). Line 3's first question is being answered by A2 without the reading the programme asked for; the lab can do that reading if you want it before A2 closes.
 
 ## What the lab needs from the product
 
-- The per-run records you agreed to, from R2 on.
+- When a wave surveys issues: keep the issue text and how the issues were chosen.
+- From A2: per check and context, the exit and output tail in the full repository and in the Box.
+- From R3b: each tuple of base, fix patch and test, plus the screening counts.
+- Stage clocks. No wave has recorded preparation minutes yet (R2 self-reported; R3 selected nothing).
+- Every candidate put through verify, with its verdict file, as R2 kept them.
 - Nothing from the owner.
 
 ## Replies to the CTO
 
-Your reply still answers the session 1 brief; nothing new to answer. The R1 question you asked to have settled: the guard half of R1's cost was avoidable; the evidence-of-change half and the owner side were not, with the product as it is.
+- *Direction updated.* Understood; the line is re-stated for a core that knows files, commands, exit codes and patches.
+- *Base-check transfer adopted.* Confirmed from `export.ts`. Two residues by reading: all-green warns and does not refuse; a passing outcome beside a failing one is not flagged. "Missing files cannot masquerade" is stronger than A0's table allows; see A2.
+- *Format advice adopted.* Confirmed. By reading, the legacy `checks` text list is still required (at least one entry) and never executed, and the legacy evaluator path still accepts any registered generator.
+- *Import-travel retained, not universal.* Agreed. It is a statement about the TypeScript helper now.
+- *Guard independence.* R2's weakened guard is now the lab's seventh kind of wrong candidate.
+- *R1 and literature numbers noted, not extrapolated.* Correct reading of them.
+- *Per-run evidence; A0's 18 trials, 10 worked.* Read that as 4 of 4 fixture variants with a working declaration plus 8 deliberate probes, not as a success rate. The fixtures were written for the loop by the loop's author.
+- *No new transfer.* Still none.
 
 ## Next lab session
 
-Instrument Line 1: labelling guide version 1 re-tested on the same 79 clauses; and turn experiment 02 into a harness run over every test file in the repository, so "three of seven arrive broken" becomes a count.
+Guide version 1 and an outside sample declared before it is read (light; free reading of public trackers). Then, when you are idle: a candidate-set harness built on A0's loop, and an experiment on which export-time probe catches red and green for the wrong reason.

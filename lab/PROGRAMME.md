@@ -6,7 +6,7 @@ Set by the CTO from the product roadmap on 6 October 2026. There are no deadline
 
 From `PLAN.md` on master, in order of risk:
 
-1. A sliced package builds and passes its checks without the rest of the repository. **Shown** for TypeScript on a fixture.
+1. A sliced package builds and passes its checks without the rest of the repository. **Shown** for TypeScript on a fixture; **shown in a prototype** (A0) for npm, Python and multi-package projects with no outside dependencies.
 2. A recipient who has never seen the repository can finish the change from the package. **Shown** once on a fixture and once on a real internal request (R1).
 3. It costs the owner less effort than ordinary delegation, or discloses far less source for similar effort. **Not shown.** Disclosure looks strong (R1 shipped 2 of 694 files); effort points the wrong way (R1 needed about 470 lines of checks for an 8-line change).
 4. Someone chooses it again and would pay. **No evidence.** This is the owner's to pursue, not the lab's.
@@ -17,7 +17,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 ## Standing direction
 
-From the CTO, 6 October 2026: the product steers by the "useful" milestone in `PLAN.md` on master. A real issue from someone else's repository, a Box prepared in minutes with no code written for it, solved by someone who has never seen the repository, accepted by the owner-side check. The kitchen gets there through R2 and then R3. **Until both are done the lab works on Line 1 only.** Lines 2 and 3 stay written below but do not open. Within Line 1, favour whatever makes a check cheap to state for a request nobody has seen before.
+From the CTO, 6 October 2026: the product steers by the "useful" milestone in `PLAN.md` on master. A real issue from someone else's repository, a Box prepared in minutes with no code written for it, solved by someone who has never seen the repository, accepted by the owner-side check. The kitchen gets there through R2 and then R3. **Updated 6 October 2026, after R3:** the kitchen now gets there through milestone A (a repository-agnostic core, A0 to A4) and then R3b, a replay of fixed issues. Until those are done the lab works on Line 1, with one exception: Line 3 may open at its survey stage now, because A2 and A3 are building language-free file selection and should have the reading the programme asked for. Line 2 stays closed. Within Line 1, favour whatever makes a check cheap to state for a request nobody has seen before.
 
 ## Active lines, in priority order
 
@@ -86,7 +86,11 @@ None yet.
 
 ## Instruments the lab owns
 
-List each benchmark, labelled set and harness here with its location, size and what it measures.
+- **Labelling guide, version 0** (`lab/lines/request-to-check/map/GUIDE.md`): sorts a requirement by the kind of check that could decide it. Known faults listed in `map/pilot/RESULT.md`; version 1 not written.
+- **Pilot set** (`map/pilot/`): 79 "done when" clauses from this repository's own wave briefs, two labellers, agreement 78.5%. Tests the guide; it is not the map.
+- **Outside sample** (`map/outside-sample/`): 5 open issues from one public project, as recorded by the kitchen in R3, one labeller. A first look only.
+- **Candidate sets** (`experiments/01-r1-cheap-check/`, `experiments/02-existing-test-in-a-box/`): hand-made right and wrong solutions for one request, used to score a check. The runners in experiment 02 depend on the agreement format A1 removed and will not run as they are.
+- **Not built:** a candidate-set harness for the neutral format. The kitchen's A0 loop (`research/box-delegation/a0/neutral-box.mjs`) is the starting point.
 
 - **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
 - **Existing tests as Box guards.** `lab/lines/request-to-check/experiments/02-existing-test-in-a-box/`. Two runners that export a Box with a named existing test as its guard and run it in a clean folder on the base. Seven tests tried so far, hand-picked.
