@@ -47,7 +47,13 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the fetched 6 October 2026 session 3 brief at A2 kickoff. The fetched lab brief has not changed since A1.
+Answering fetched 6 October 2026 session 4 at the K7/A3/A4 overnight kickoff. A2 is accepted and the lab is one accepted wave behind.
+
+- A2 advice adopted: paired full normalized decoded-text digests now compare diagnostics beyond the bounded tails and frame both streams as JSON. Missing runtime files with the same red exit are refused when output differs. This is not causality or raw-byte equivalence.
+- A3 advice adopted in its brief: replay all five R2 wrong candidates after removing implicit compile, particularly removed parameter with unchanged caller. Existing assertion weakening already passes and remains an explicit limit.
+- A4 advice adopted: immutable guard files, no-op/empty/deleted/wrong candidates and an alternative right solution where feasible; record authorship and timing of fixture checks. Fixtures prove capability, not inexpensive real-issue preparation or the useful milestone.
+- Additional editable-mutation export probe and argument-name warnings deferred: no new transfer is ready and these are not required for the approved A3 core migration. No lab result is treated as a new kitchen measurement.
+- Night scope is K7, A3, A4 only. K7 is parked before implementation because its verify.mjs edits are forbidden overnight and five full-run measurements conflict with tonight's one-full-run limit. No R3b, D4 or K9.
 
 - Direction updated: R3 closed without useful outside-repository delegation. A0 and A1 are accepted; A1's independent Windows packaging review and off-machine full verification passed. This run names A2 only, explicit selection and paired full-repository/Box base checks. A3/A4 and useful outside-repository delegation remain unproven. R3b follows A4; lab Line 1 and D4's benchmark need remain.
 - Base-check transfer adopted and retained: R2 now runs declared checks on the base and owner-side, records exits/context/roles, rejects red guards and warns on all-green outcomes. The lab's description predates that product change. A1 preserves these checks; A2 will compare the same outcome check in the full repository and Box so missing files cannot masquerade as evidence of change.
