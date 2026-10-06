@@ -12,7 +12,7 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 
 ## Traps
 
-- **Workspace links hide missing dependencies.** In this pnpm workspace a package can appear to work because a sibling installed its dependency. `packages/box-contracts` shipped without a lockfile entry for exactly this reason. A package is only proven when it installs and runs in a directory that contains nothing else.
+- **Workspace links and frozen installs:** missing dependency declarations can work via siblings, so prove a package outside the checkout. Pinned pnpm also backfills absent empty workspace importers during --frozen-lockfile, dirtying Git; K7-ci's importer-parity regression guards new manifests. Adding workspace package.json files requires root lock parity even with no dependencies.
 - **Windows paths.** This machine uses backslashes and the recipient's may not. Store paths in the Box with forward slashes, build them with path functions, and test both forms.
 - **The silent fallback.** If export cannot find something, it reports a named preparation gap. It never reaches back into the owner repository to fill the hole, and exporting the full source can never count as a pass.
 - **The clean directory must be outside this checkout**, or module resolution will find the repository's `node_modules` on the way up.
@@ -20,6 +20,7 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 
 - **A clean install proves nothing.** With a needed sibling package missing, `npm ci` and `pnpm install --frozen-lockfile` both exit 0 and leave a dangling link (A0). Only a check that loads the code shows the gap.
 - **Equal red exits are not equal failures.** A2 pairs declared recipient checks in full-base/isolated-Box contexts and compares result, exit and full normalized decoded-text digest. Never compare display tails. JSON tuple framing separates stdout/stderr even with embedded NULs; beyond-tail and NUL-partition regressions caught two wrong implementations. Matching diagnostics remain observations, not causal proof.
+- **A4 Windows npm declaration:** bare `npm` resolved an unspawnable extensionless shim on this host; fixture setup declares `npm.cmd` with `--ignore-scripts`. This is a host-specific recipe, not a portable executable claim. A4 proves npm/Python capability with unchanged core, immutable checks and retained pristine manifests; fixture checks are purpose-written and npm non-string inputs remain uncovered.
 - **Windows shim quoting can silently change argv.** A1 dispatches `.cmd`/`.bat` by file kind through the system shell, not by tool name. Unsafe tokens, including trailing backslashes, are refused before spawn; embedded backslashes and supported metacharacters have real subprocess tests. Do not broaden quoting without negative tests.
 - **Preflight all contexts before any declared setup.** Stage recipient files first, resolve owner and recipient programs plus prerequisites, then run commands. A1's sentinel regression catches the per-context ordering bug; missing recipient tools must not follow owner setup side effects.
 

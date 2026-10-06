@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "a4-py-tools-slugify",
+    "name": "Implement real slugify in the a4-py-tools slug helper",
+    "version": 1
+  },
+  "outcome": "In tools/slug.py make slugify(text) produce URL slugs: lowercase ASCII, every run of characters outside [a-z0-9] becomes a single hyphen, leading and trailing hyphens stripped, empty or non-string input maps to ''. Edit only the declared editable file.",
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "agreementSha256": "c3d4ea02df7c79ca08e47a313b075e3b9663bc8f72878e50c0b9765d6889e938",
+  "sourceRoot": "examples/a4-py-tools",
+  "requires": [
+    {
+      "program": "python"
+    },
+    {
+      "program": "node",
+      "version": ">=24.11.0 <25"
+    }
+  ],
+  "declaredDependencies": {},
+  "files": [
+    {
+      "box": "pyproject.toml",
+      "owner": "pyproject.toml",
+      "origin": "runnable",
+      "sha256": "e7a07697c81f1a3854751c04067665c63118935f0e694222e389865fab5ecd4d",
+      "bytes": 76
+    },
+    {
+      "box": "README.md",
+      "owner": "README.md",
+      "origin": "runnable",
+      "sha256": "69b08098f74d2e1431c4bb24b0da1c758ca3d0a8846b5cc73e5b2e4f9d989aef",
+      "bytes": 217
+    },
+    {
+      "box": "checks/guard.py",
+      "owner": "checks/guard.py",
+      "origin": "runnable",
+      "sha256": "0639d93238de61dbdabddf8e8f6600350c70b1472e44a8e7958103027157cdd0",
+      "bytes": 953
+    },
+    {
+      "box": "checks/outcome.py",
+      "owner": "checks/outcome.py",
+      "origin": "runnable",
+      "sha256": "64c0a674d93e756665d959bb04f2bb14da5f016d722127036ccd7cf4758162c8",
+      "bytes": 1184
+    },
+    {
+      "box": "tools/slug.py",
+      "owner": "tools/slug.py",
+      "origin": "editable",
+      "sha256": "9a4dc63b675ca8a5578500408b7cffe9cb123a37e706338240f05ba8f1e3f6d8",
+      "bytes": 290
+    }
+  ],
+  "editable": [
+    {
+      "box": "tools/slug.py",
+      "owner": "tools/slug.py"
+    }
+  ],
+  "readContext": [],
+  "checks": [
+    "declared outcome: python checks/outcome.py rejects unslugged text; declared guard: python checks/guard.py keeps str/empty-input behavior green"
+  ],
+  "evaluator": [],
+  "setup": [],
+  "commands": [
+    {
+      "name": "slug-guard",
+      "program": "python",
+      "args": [
+        "checks/guard.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "slug-outcome",
+      "program": "python",
+      "args": [
+        "checks/outcome.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "outcome",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-slug-guard",
+      "program": "python",
+      "args": [
+        "checks/guard.py"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-slug-outcome",
+      "program": "python",
+      "args": [
+        "checks/outcome.py"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 120000
+    }
+  ],
+  "baseChecks": [
+    {
+      "name": "slug-guard",
+      "program": "python",
+      "argv": [
+        "checks/guard.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-py-tools guard: base behavior intact",
+      "seconds": 0.11
+    },
+    {
+      "name": "slug-outcome",
+      "program": "python",
+      "argv": [
+        "checks/outcome.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'Hello World'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got '  Trim  Me  '\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'Cafe! au_lait'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got '--lead--trail--'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'A1 b2'\na4-py-tools outcome: 5 failing case(s)",
+      "seconds": 0.104
+    },
+    {
+      "name": "box-slug-guard",
+      "program": "python",
+      "argv": [
+        "checks/guard.py"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-py-tools guard: base behavior intact",
+      "seconds": 0.093
+    },
+    {
+      "name": "box-slug-outcome",
+      "program": "python",
+      "argv": [
+        "checks/outcome.py"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'Hello World'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got '  Trim  Me  '\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'Cafe! au_lait'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got '--lead--trail--'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'A1 b2'\na4-py-tools outcome: 5 failing case(s)",
+      "seconds": 0.078
+    }
+  ],
+  "paired": [
+    {
+      "name": "box-slug-guard",
+      "program": "python",
+      "argv": [
+        "checks/guard.py"
+      ],
+      "cwd": ".",
+      "owner": {
+        "exit": 0,
+        "result": "pass",
+        "log": "a4-py-tools guard: base behavior intact",
+        "outputSha256": "e8dba818e886af50587bb4d3ae3efaac2fa830a46ea444e29c16a20ae345d6da",
+        "seconds": 0.101
+      },
+      "box": {
+        "exit": 0,
+        "result": "pass",
+        "log": "a4-py-tools guard: base behavior intact",
+        "outputSha256": "e8dba818e886af50587bb4d3ae3efaac2fa830a46ea444e29c16a20ae345d6da",
+        "seconds": 0.093
+      }
+    },
+    {
+      "name": "box-slug-outcome",
+      "program": "python",
+      "argv": [
+        "checks/outcome.py"
+      ],
+      "cwd": ".",
+      "owner": {
+        "exit": 1,
+        "result": "fail",
+        "log": "OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'Hello World'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got '  Trim  Me  '\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'Cafe! au_lait'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got '--lead--trail--'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'A1 b2'\na4-py-tools outcome: 5 failing case(s)",
+        "outputSha256": "9656f948f4e316ef1758e67533f6eb8f78d93fce3c8231719a6fbbba551d11d4",
+        "seconds": 0.099
+      },
+      "box": {
+        "exit": 1,
+        "result": "fail",
+        "log": "OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'Hello World'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got '  Trim  Me  '\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'Cafe! au_lait'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got '--lead--trail--'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'A1 b2'\na4-py-tools outcome: 5 failing case(s)",
+        "outputSha256": "9656f948f4e316ef1758e67533f6eb8f78d93fce3c8231719a6fbbba551d11d4",
+        "seconds": 0.078
+      }
+    }
+  ],
+  "warnings": [
+    "1 legacy 'checks' entr(ies) are owner-readable descriptions, not runnable descriptors — no base results recorded for them"
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "tool": "box/submit.mjs",
+    "editable": [
+      {
+        "box": "tools/slug.py",
+        "owner": "tools/slug.py"
+      }
+    ],
+    "instructions": "Edit only the file listed in box.json editable paths (tools/slug.py). It maps back to tools/slug.py in the owner repository. Make slugify(text) return lowercase ASCII slugs: runs of non-[a-z0-9] characters collapse to single hyphens, edge hyphens are stripped, empty or non-string input returns ''. Seal the work with node box/submit.mjs and return submission.json."
+  },
+  "disclosure": {
+    "shippedOwnerFiles": 5,
+    "inventoryFiles": 5,
+    "share": 1
+  }
+}

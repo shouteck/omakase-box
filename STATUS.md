@@ -1,21 +1,18 @@
 # Status
 
-Replaced 6 October 2026 by Devin CTO at A3 close.
+Replaced 6 October 2026 by Devin CTO at K7-ci close.
 
 ## Now
 
-- Accepted on master: R2, K6, K8, R3 close-out, A0, A1, A2, A3. A3 independent PASS, test-verified, candidate 2dbea18; one executed full verify PASS, 321 seconds. Merged and pushed. Details waves/A3.md.
-- A3 delivered: neutral export/verify uses declared files and commands without required pnpm, generated manifest/TypeScript files or implicit compile. Existing ecosystem helper retained explicitly opt-in. Independent removed-parameter/unchanged-caller attack fails by declaration. Editable guard weakening remains a known acceptance limit.
-- Approved night queue: K7 parked, A3 accepted, A4 next. Park at three failed reviews or 120 minutes. One executed full verify per candidate. A4 permits one small pinned package download with scripts disabled. No R3b, D4 or K9.
-- K7 parked before implementation for conflicting overnight verify.mjs read-only and five-run acceptance requirements. No code/branch created. Morning recommendation in waves/K7.md.
-- Cleanup complete: A3 branch deleted, 62 approved kitchen temp items cleared while idle. No master verify rerun.
-- Lab: two accepted waves behind fetched session 4, A2/A3, counted from first-parent merges since brief. Read/write-only sync required now before next dispatch. BACKLOG.md answers its advice.
-- Useful milestone still unmet. A4 fixtures establish capability, not real outside-issue delegation.
+- Accepted on master: through A3/A4 and K7-ci. K7-ci fresh PASS, test-verified, candidate3300fed, one executed clean `node scripts/verify.mjs --full test:kitchen` PASS123s; merged/pushed as692ab73. Main checkout master, no wave branch remains.
+- Delivered correction: missing empty A4 workspace importers added to root lock with versions unchanged. Cook/pass each reproduced frozen pnpm setup mutation before fix and clean status afterwards. Importer-parity test guards it. Verify rejects dirty starts before DB/build/test and rejects dirt/unreadable status at end.
+- Hosted verification: A4 run failed UNCOMMITTED despite all named tests green. New repair run37519849444 last observed in progress, not waited for and not yet green. Windows regression/acceptance is established, Linux success not claimed yet.
+- START.md K7 allowed one wave; red-master rule consumed it as K7-ci. Main K7 performance/cleanup/profile work remains pending, not completed or silently dropped.
+- Applicable inbox preflight adopted mechanically; broader same-SHA execution/cooldown accounting stays with K7. No rule/security-policy changes or product-core changes.
+- Cleanup complete: merged correction branch and owned scratch removed, approved temp sweep zero remaining items; no master acceptance rerun.
+- Lab two accepted waves behind current brief, A4/K7-ci, Git-counted. Fresh read/write-only sync required before this close stops. BACKLOG.md answers its advice and supplies correction results.
+- Useful outside-issue milestone still unmet. No R3b, D4 or K9 started.
 
-## Next
+## Next decision
 
-Finish lab sync, then A4 under the already supplied go. Leave one morning card at top of waves/night-2026-10-06.md. Stop after A4 closes or parks.
-
-## Decisions parked for morning
-
-K7 daytime restart with measurement allowance or a future bounded exception for verify.mjs. Nothing holds a close.
+Main K7 needs its five baseline and five parallel same-commit full measurement runs explicitly allowed as a bounded exception to the one-full-run rule. Recommend that exception for a new START.md K7 run, after checking hosted repair status.

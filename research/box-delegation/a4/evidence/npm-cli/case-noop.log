@@ -1,0 +1,76 @@
+npm-noop start 13:07:36Z
+{
+  "submission": "C:\\Users\\shout\\Desktop\\a4-boxes\\neg\\npm-noop\\submission.json",
+  "box": "a4-npm-cli-paint",
+  "version": 1,
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "files": 1,
+  "changed": 0
+}
+submit exit=0
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "command-check",
+  "detail": "declared outcome check 'cli-outcome' did not pass (result: fail, exit 1): OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"hi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"ok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"sky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"a b\"\na4-npm-cli outcome: 4 failing case(s)",
+  "checks": [],
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "expectedBaseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "attemptSha256": "c317b0601c5f0fec41f57bf1d9e4b8e172779a49b55351e35177c9e05b08e33a",
+  "applies": [
+    {
+      "owner": "src/paint.js",
+      "box": "src/paint.js",
+      "changed": false,
+      "sha256": "3aa9bb1ebf8442c3ba7d84bd7935a23ac4cc1bec30f95ad5849ed7fb1f256c1f",
+      "bytes": 309
+    }
+  ],
+  "commandChecks": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "declaredArgv": [
+        "checks/guard.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-npm-cli guard: base behavior intact",
+      "outputSha256": "b53bae4b7d3c86c1bf134ba4a01a33c24117fdef1b3567d7020123257b780651",
+      "seconds": 0.086
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "declaredArgv": [
+        "checks/outcome.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"hi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"ok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"sky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"a b\"\na4-npm-cli outcome: 4 failing case(s)",
+      "outputSha256": "5d35fa984ca776daa86d6f52257457f1c444c9f179792c1d1a56a5d47db55b01",
+      "seconds": 0.097
+    }
+  ]
+}
+verify exit=3
+npm-noop end 13:07:45Z

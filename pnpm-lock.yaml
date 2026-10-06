@@ -57,6 +57,10 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
 
+  examples/a4-multi-pkg: {}
+
+  examples/a4-npm-cli: {}
+
   examples/private-shop:
     dependencies:
       fastify:
