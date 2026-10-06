@@ -1,39 +1,39 @@
 # Status
 
-Replaced at every wave close. A0 closed by Claude on 6 October 2026; A1 kickoff hold recorded by Devin later that day.
+Replaced at wave close, 6 October 2026, by Devin as CTO.
 
 ## Now
 
-- **Accepted on master:** everything through R2, K6, K8 and the R3 close-out, plus **A0**, the prototype for milestone A (research files only, reviewed at `a6021cc`).
-- **The "useful" milestone is not met.** R3 showed the product cannot prepare a Box for a project outside its own ecosystem: its core assumes pnpm, TypeScript and one test runner.
-- **A0's result: the neutral design holds, on small projects.** A throwaway loop that knows only files, commands, exit codes and patches prepared, set up, checked and solved a change on an npm project, a Python project and a multi-package repository under both npm and pnpm. 18 trials, 10 worked, reproduced by the reviewer. None of the projects had outside dependencies, and it ran on this one Windows machine.
-- **What A0 changed in the plan:** a clean setup is never evidence (a locked install exits 0 with a needed package missing); a check must fail for the right reason, so it is compared with the same check in the full repository; starting a program on Windows needs one fixed rule; outside dependencies get their own test in A4. Detail: `waves/A0.md`, `research/box-delegation/a0/RESULT.md`.
-- **In flight:** A1, neutral agreement format and declared-program launch/preflight. Owner replied "go" to the pre-cook card on 6 October 2026, including removal of the old live format. This run stops after A1.
-- **Held:** nothing.
+- **Accepted on master:** everything through R2, K6, K8, R3 close-out, A0 and **A1**, the neutral agreement and declared-program launch/preflight. Independent reviewer PASS on `5713399`; completed reviewer verification passed all 115 packaging tests. Detail: `waves/A1.md`.
+- **Delivered by A1:** arbitrary setup/check programs, empty setup, arbitrary prerequisites with optional version descriptions, optional Node helper configuration, one Windows shim launch rule, and all-context export preflight before any declared setup command. Old live toolchain format/fixed tool enum removed; active callers migrated, historical evidence untouched.
+- **Not yet delivered:** arbitrary-repository export. File selection and product-owned install/compile orchestration still need A2/A3; real npm/Python delegation proof is A4. The useful milestone remains unmet.
+- **Limits:** Windows shim launches refuse unsafe tokens including trailing backslashes rather than corrupt argv; non-Windows behavior is unproven. Prerequisites are checked on the export host. Owner verify checks only the owner-context programs it executes. See current submission contract.
+- **In flight:** nothing. This run stops after A1.
+- **Held:** deletion of the merged local `wave/A1` branch awaits specific owner confirmation under the host's destructive-operation rule. Worker/reviewer report their disposable scratch assets removed; verification logs retained. Unattributed preexisting temp assets were not removed.
 
 ## Approved by the CEO
 
-- 6 Oct 2026: close R3 with the declared-command verb gap accepted.
-- 6 Oct 2026: milestone A, a repository-agnostic core, before any further attempt on an outside repository; and A0, its prototype, first ("Yes go").
+- 6 Oct 2026: R3 closed with the declared-command verb gap accepted; milestone A and its A0 prototype approved.
+- 6 Oct 2026: `START.md: A1`, then "go" for the pre-cook card, including removal of the old live agreement format and fixed tool enum.
 
 ## Next
 
 No wave starts without a START message and its pre-cook card.
 
-1. **A1: a neutral agreement format**, including one rule for starting declared programs and a check that every declared program can be found. Requested with `START.md: A1`; brief in `waves/A1.md`. Milestone A is already approved, but removing the old live format needs the pre-cook "go" under START.md.
-2. **A2, A3, A4** follow in order; see `PLAN.md`.
-3. **R3b**, a replay of recently fixed issues on a public repository, after milestone A.
+1. **A2: neutral file selection**, declared files, unchanged dependency files, and full-repository/Box outcome comparison. `START.md: A2`.
+2. **A3, A4** follow in order; see `PLAN.md`.
+3. **R3b**, an outside-repository issue replay, after milestone A.
 
-Paused until then: K7, K9 and other kitchen improvements unless one blocks milestone A. D4 waits for the lab's benchmark.
+K7/K9 and other kitchen improvements stay paused unless blocking milestone A. D4 awaits the lab's benchmark.
 
 ## Night queue
 
-Only for `START.md overnight`, each entry needing naming in that message: A1, A2, A3, A4 in order. A4 needs one small download (a well-known package, install scripts disabled); naming A4 approves that. R3b is not on the night queue until milestone A has closed.
+Only for `START.md overnight`, with entries named in that message: A2, A3, A4 in order. Naming A4 approves its small well-known package download with install scripts disabled. R3b is not queued before milestone A closes.
 
 ## Known problems
 
-None blocking. Leftovers are in [BACKLOG.md](BACKLOG.md).
+No blocking product defect known. Non-blocking limits and leftovers are in `BACKLOG.md`.
 
 ## Decisions waiting for the CEO
 
-None.
+Confirm deletion of the merged local branch only: `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp branch -d wave/A1`.

@@ -21,7 +21,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 ## Kitchen and environment
 
 - A verify run that is killed leaves its embedded database processes and data folder behind (six processes after the stopped R3 run). Have verify clear its own stale database when it starts.
-- Declared pnpm commands: the code that locates the verb can disagree with pnpm's own parser for unusual option spellings, so an install-like command can pass as a run command. Accepted by the owner on 6 October 2026; removed by A1. From R3.
+- A1 removed the old declared-pnpm verb gate and fixed-tool dispatch. Declared arbitrary commands are now owner-approved execution authority, not a sandbox; remaining product-owned installs retain script disabling. Windows shims refuse unsafe tokens including trailing backslashes; non-Windows launches are unproven. Export checks solver prerequisites on its own host. See `waves/A1.md`.
+- A1 preserves inherited code comments under the host no-comment-edit rule; some still describe the old pinned-tool design. Current behavior is documented in `docs/box-v4/delegation/SUBMISSION-CONTRACT.md`; updating those comments requires an explicit request.
 
 - The packaging tests and the K6 budget recorder leave their temp folders and log files behind (`box-d21-*`, `box-k6-*` in the system temp folder). 1,590 had built up by midday on 6 October 2026 and were removed by hand once the kitchen was idle. Make the tests remove what they create; until then, clear them at wave close.
 
