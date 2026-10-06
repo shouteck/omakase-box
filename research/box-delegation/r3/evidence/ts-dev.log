@@ -1,0 +1,8 @@
+npm warn Unknown project config "link-workspace-packages". This will stop working in the next major version of npm.
+7.1.0-dev.20260929.1
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm.
+npm warn Unknown project config "enable-global-virtual-store". This will stop working in the next major version of npm.
+npm warn Unknown project config "hoist-workspace-packages". This will stop working in the next major version of npm.
+npm warn Unknown project config "save-workspace-protocol". This will stop working in the next major version of npm.
+npm warn Unknown project config "link-workspace-packages". This will stop working in the next major version of npm.
+Version 7.1.0-dev.20260929.1

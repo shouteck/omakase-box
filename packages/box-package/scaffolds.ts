@@ -5,15 +5,17 @@ import type { BoxAgreement } from './agreement.js';
 // Generator output is recorded in box.json provenance as origin "generated", never as owner bytes.
 
 export function packageManifest(agreement: BoxAgreement): string {
+  const nodejs = agreement.nodejs;
+  if (nodejs === undefined) throw new Error('packageManifest requires the optional nodejs helper configuration');
   return JSON.stringify({
     name: `box-${agreement.box.id}`,
     version: '0.0.0',
     private: true,
     type: 'module',
     dependencies: agreement.declaredDependencies,
-    devDependencies: { typescript: agreement.toolchain.typescript, vitest: agreement.toolchain.vitest, '@types/node': agreement.toolchain.typesNode },
-    engines: { node: agreement.toolchain.node },
-    packageManager: `pnpm@${agreement.toolchain.pnpm}`
+    devDependencies: { typescript: nodejs.typescript, vitest: nodejs.vitest, '@types/node': nodejs.typesNode },
+    engines: { node: nodejs.node },
+    packageManager: `pnpm@${nodejs.pnpm}`
   }, null, 2) + '\n';
 }
 

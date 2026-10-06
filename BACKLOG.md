@@ -4,14 +4,29 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- R3 independently reproduced owner-base install refusal on packageManager nub; current product hardcodes pnpm and does not supply --ignore-scripts. Container execution must enforce script disabling before any retry; no package-manager-specific adapter masquerading as generic support.
+- R3 has no demonstrated test travel/readiness or useful issue delegation: five issue candidates lacked a selected existing defect-red check, Box export blocked, recipient/owner acceptance not tested. A green upstream suite is not Box readiness.
+
+- R2 proved wrong work can pass when the editable file is also its guard: weakened assertions accepted owner-side. Commands pass, but preservation is not established; prefer immutable independent guards or explicitly report this limitation.
+- `boxJsonSha256` is self-declared unless owner verification supplies a pristine `--box`; owner execution authority is agreement-bound. R2 archives the actual hash chain, not a stronger authenticity claim.
+- R2 preparation/generic effort estimates lack measured stage clocks; R3 must record actual timestamps/manual steps and not infer a controlled R1/R2 saving.
+
 - `readContext` is declared in `box.json` but its files do not ship: the blind taster saw the names, not the content. Decide whether read context ships (it discloses more) or the contract stays as it is. From D2.2.
 - The in-folder seal (`box/submit.mjs`) does not hash generated members (evaluator, scaffolds, the tool itself), so a recipient could weaken its own evaluator and still seal. The owner-side verify catches it today. From D2.2 and D3.1.
 - On Windows a case-aliased input that is not excluded can be emitted under the alias spelling and ship twice. It cannot leak excluded files. From D2.1.
-- Owner checks are a registry in `packages/box-package/owner-checks.ts` keyed on the evaluator generator. A new kind of request needs a registered check, or verify refuses it as a preparation defect. From D3.1.
+- Legacy generator checks still use the registry; R2 command mode removes per-request registration. Legacy free-text `checks` do not execute at base and now carry an explicit warning; use structured commands for base-result evidence.
 - Patch-apply containment is by path text. A committed symlinked directory under an editable path could redirect a scratch write. No symlinks in this repository today. From D3.1.
 - Requesters see Amend controls on Boxes they did not author. The server refuses correctly; the control should be hidden. From D1.2.
 
 ## Kitchen and environment
+
+- A verify run that is killed leaves its embedded database processes and data folder behind (six processes after the stopped R3 run). Have verify clear its own stale database when it starts.
+- A1 removed the old declared-pnpm verb gate and fixed-tool dispatch. Declared arbitrary commands are now owner-approved execution authority, not a sandbox; remaining product-owned installs retain script disabling. Windows shims refuse unsafe tokens including trailing backslashes; non-Windows launches are unproven. Export checks solver prerequisites on its own host. See `waves/A1.md`.
+- A1 preserves inherited code comments under the host no-comment-edit rule; some still describe the old pinned-tool design. Current behavior is documented in `docs/box-v4/delegation/SUBMISSION-CONTRACT.md`; updating those comments requires an explicit request.
+
+- The packaging tests and the K6 budget recorder leave their temp folders and log files behind (`box-d21-*`, `box-k6-*` in the system temp folder). 1,590 had built up by midday on 6 October 2026 and were removed by hand once the kitchen was idle. Make the tests remove what they create; until then, clear them at wave close.
+
+- Prior K6 temp buildup was cleared manually while idle, per owner commit `326ee7d`; that historical ownership blocker is resolved. The exit-cleanup leak remains; each new wave must inventory and remove its own resources, not bulk-delete unknown data.
 
 - Property-based guard tests and Box packaging mutation checks: retained from the kickoff inbox; require a separately named kitchen wave.
 - K6 added packaging operation counts and an explicit full-profile budget; invocation/PID time-window counting can miss reused PIDs or mix simultaneous matching logs. Give counters a run identity before relying on parallel measurements.
@@ -30,14 +45,13 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the brief of 6 October 2026 (after lab session 1):
+Answering the fetched 6 October 2026 session 3 brief at A1 kickoff:
 
-- **Changed in the product since that brief:** K6 is accepted on master (`a273bf0`), not parked. No product behaviour changed. R2 is still not approved and has no brief; D4 is unstarted.
-- **R2, a check that is red on the base:** taken. The R2 brief will require each named check's result on the base to be recorded at export, and will not report an outcome pass from checks that were all green on the base.
-- **R2, choosing a request where an existing command is already red:** taken as the first thing to try when the R2 request is chosen.
-- **R1 re-read (an existing 193-line test already covered most of the "preserve" clause):** accepted as a lead, not yet as a fact. The lab said it did not rerun it; settle it from R1's evidence before it is quoted.
-- **Per-run records (requester minutes, lines of check, base result of each check, no-op verdict, which checks the recipient could see):** taken; they go in the wave file from R2 on.
-- **An owner check that is not a copy of a visible one:** noted; decided when the R2 brief is written.
-- **D4 not built around a small success comparison:** taken. D4 stays held until Line 2 has a benchmark and states the smallest effect it can detect.
-- **"Passes the agreed checks", not "verified correct":** taken for product wording.
-- **Programme:** unchanged. Line 1's three numbers (wrong work accepted, right work rejected, requester cost) are the right scoring.
+- Direction updated: R3 closed without useful outside-repository delegation. Approved milestone A makes the core repository-agnostic; A0's prototype is accepted, and this run prepares A1 only. R3b follows A4. Lab Line 1 and D4's benchmark need remain; kitchen improvements stay paused unless blocking.
+- Base-check transfer adopted and retained: R2 now runs declared checks on the base and owner-side, records exits/context/roles, rejects red guards and warns on all-green outcomes. The lab's description predates that product change. A1 preserves these checks; A2 will compare the same outcome check in the full repository and Box so missing files cannot masquerade as evidence of change.
+- Format advice adopted: A1 removes fixed tool requirements and accepts arbitrary setup/check programs, empty setup and solver prerequisites. It must not require an unrelated generated evaluator. Historical evidence stays unchanged; arbitrary-repository export is not claimed before A2/A3/A4.
+- Import-travel advice retained, not made a universal rule: imports help select TypeScript files but miss runtime paths. A2 makes selection explicit and import following optional; execution, not a clean install, proves the selected files.
+- Guard independence and wrong/right attacks retained: R2 showed editable checks can accept weakened assertions. Prefer immutable independent guards, test no-op and wrong candidates, and report uncovered cases. Existing tests alone do not establish full preservation.
+- R1 guard result and literature numbers noted, not rerun or extrapolated: a reproduced lab result is evidence from the lab, not this kickoff. Seven hand-picked travel tests and the student study are not product error rates.
+- Per-run evidence still needed: direct exits and exact commits remain authoritative. A0 reproduced 18 offline prototype trials, 10 worked, on one Windows host with no outside dependencies or blind recipient. It found installers can exit 0 with missing workspace code, and Windows command shims require an explicit launch rule.
+- No new transfer in the fetched brief. A1 supplies rerunnable launch/preflight checks; A4 supplies actual npm/Python delegation and outside-dependency evidence. No research finding is a blocking gate.

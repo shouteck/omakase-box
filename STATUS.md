@@ -1,42 +1,39 @@
 # Status
 
-Replaced 6 October 2026 by Devin as CTO after K6's reviewed merge; temporary-resource cleanup remains incomplete.
+Replaced at wave close, 6 October 2026, by Devin as CTO.
 
 ## Now
 
-- **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1, D1.2, K2a, K2b, K3, D2.1, D2.2, D3.1, K4, K5, K8, R1 (`ddeb3ab`), **K6** (`a273bf0`).
-- **K6 delivered:** invocation-owned lockfile reuse, canonical file-scoped test containment, and a fail-closed 330-second executed-time budget for `verify --full test:box-package test:kitchen`. Existing test obligations and product behavior preserved.
-- **Checks:** independent reviewer PASS on exact `2011fbb`: all four steps executed, 294s elapsed / 280s executed. A deliberately broken exporter failed both clean-directory tests. Prior cache/junction/budget attacks re-run and closed.
-- **Measurement:** reviewer pair 227.5s uncached → 135.4s cached; both 70 tests / 68 exports, real resolutions 38 → 12 (+26 hits), same 6 installs/typechecks/box suites and 1 owner install. One matched pair on one host, not a general speed guarantee. Earlier mismatched/no-gain pairs and FAILs remain recorded.
-- **In flight:** no active cook. K6 code accepted; **resource close incomplete**. Main checkout on master; do not start another wave from this run.
-- **Cleanup limit:** reviewer removed 31 owned operation logs and named scratch, but reported 725 `box-d21-*` directories with indistinguishable worker/reviewer ownership, plus `box-k6-stats-249468.jsonl` and an empty `box-k6-lockfile-cache` directory in host temp. Ambiguous resources left untouched; identify ownership or obtain exact cleanup approval before deletion. Historical `.kitchen/runs` records preserved; unrelated lab worktree untouched.
-- **CI:** master push run `37403420014` completed SUCCESS on merge `a273bf0`, confirmed by a non-waiting result query during close. Existing host-bound exclusions remain.
-- **R1:** real internal delegation accepted, no-op rejected. Request-specific preparation cost remains the main product risk; isolation instructional, no customer/comparator evidence.
+- **Accepted on master:** everything through R2, K6, K8, R3 close-out, A0 and **A1**, the neutral agreement and declared-program launch/preflight. Independent reviewer PASS on `5713399`; completed reviewer verification passed all 115 packaging tests. Detail: `waves/A1.md`.
+- **Delivered by A1:** arbitrary setup/check programs, empty setup, arbitrary prerequisites with optional version descriptions, optional Node helper configuration, one Windows shim launch rule, and all-context export preflight before any declared setup command. Old live toolchain format/fixed tool enum removed; active callers migrated, historical evidence untouched.
+- **Not yet delivered:** arbitrary-repository export. File selection and product-owned install/compile orchestration still need A2/A3; real npm/Python delegation proof is A4. The useful milestone remains unmet.
+- **Limits:** Windows shim launches refuse unsafe tokens including trailing backslashes rather than corrupt argv; non-Windows behavior is unproven. Prerequisites are checked on the export host. Owner verify checks only the owner-context programs it executes. See current submission contract.
+- **In flight:** nothing. This run stops after A1.
+- **Held:** nothing. The merged `wave/A1` branch was deleted on the owner's confirmation; deleting a merged wave branch now has standing approval (KITCHEN.md, close step).
 
 ## Approved by the CEO
 
-- Prior approvals: lean kitchen, D1.2, K1–K3, D2/D3.1, K8 free-tier Actions, K9 behind a tag, owner walkthrough, R1.
-- K6 initial START/Go, then Approve/Go for a renewed 60-minute correction timebox. Correction cook stopped within the limit; independent review passed. No other wave authorized by this run.
+- 6 Oct 2026: R3 closed with the declared-command verb gap accepted; milestone A and its A0 prototype approved.
+- 6 Oct 2026: `START.md: A1`, then "go" for the pre-cook card, including removal of the old live agreement format and fixed tool enum.
 
 ## Next
 
-No further wave starts without a new START and its required pre-cook go.
+No wave starts without a START message and its pre-cook card.
 
-1. Resolve K6's incomplete resource close without bulk deletion of unidentified temp data.
-2. **R2:** delegate another real request using existing command checks, without request-specific code; not approved.
-3. **K9:** legacy removal behind a tag; brief ready, unstarted.
-4. **D4:** comparison; unstarted. K7 also unstarted.
+1. **A2: neutral file selection**, declared files, unchanged dependency files, and full-repository/Box outcome comparison. `START.md: A2`.
+2. **A3, A4** follow in order; see `PLAN.md`.
+3. **R3b**, an outside-repository issue replay, after milestone A.
 
-Recommendation: resolve cleanup ownership, then R2. K6's speed pair does not establish product value or total owner-effort savings.
+K7/K9 and other kitchen improvements stay paused unless blocking milestone A. D4 awaits the lab's benchmark.
 
 ## Night queue
 
-Only for a new named overnight request and pre-cook go: R2, K9, then K7 as named, after resolving cleanup ownership. D4 remains outside the night queue; K6 code work is accepted.
+Only for `START.md overnight`, with entries named in that message: A2, A3, A4 in order. Naming A4 approves its small well-known package download with install scripts disabled. R3b is not queued before milestone A closes.
 
 ## Known problems
 
-Cleanup limit above; remaining product and instrumentation gaps are in [BACKLOG.md](BACKLOG.md). Exact review and all failed attempts: [waves/K6.md](waves/K6.md).
+No blocking product defect known. Non-blocking limits and leftovers are in `BACKLOG.md`.
 
-## Decision waiting for the CEO
+## Decisions waiting for the CEO
 
-Cleanup ownership/permission for the ambiguous temp resources; next wave remains the owner's choice. No additional implementation has started.
+None.

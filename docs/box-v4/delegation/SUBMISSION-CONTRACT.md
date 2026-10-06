@@ -49,3 +49,49 @@ and prints what it would apply (`applies[]` maps box paths to owner paths with
 `changed` flags). Exit 0 accepted, 3 rejected with a named reason, 1 operational
 error. Expected base resolves `--base` > `agreement.baseCommit` > repo HEAD and the
 report names which source decided (`baseSource`). Verify + merge is D3.1.
+
+## Declared commands, setup and prerequisites (A1)
+
+An agreement declares programs, not tools. `setup[]` and `commands[]` are the same
+shape — `{name, program, args, cwd, context, timeoutMs}` — with `commands[]` adding
+`role: "guard" | "outcome"`. `program` is a bare executable name resolved on PATH (on
+Windows with each `PATHEXT` extension in turn), an absolute path, or a relative
+spelled-out path resolved against the command's context root on its canonical
+path — a relative spelling that lands outside the context root is refused, so
+`tools/x.cmd` always means the file inside the checkout or staged Box, never a
+host-cwd accident. `args` reaches
+the program verbatim with no shell anywhere; `cwd` must resolve inside the context
+root on its canonical path. `setup[]` prepares a context before its checks and may
+be empty. `requires[]` is `{program, version?}` — what a solver needs installed,
+with an optional human-readable version, never a pinned toolchain the product
+enforces.
+
+Every declared program (setup, checks and `requires[]`) is resolved before the
+first declared command executes anywhere — the Box folder is emitted first
+(a product-owned step that runs no declared commands; the `nodejs` lockfile
+resolution it performs is a product-owned tool action whose solver boundary is
+A3), then owner-context programs and `requires[]` resolve against the owner
+repository and recipient-context programs against the emitted staging tree.
+A missing program is named and no declared command — setup or check, of either
+context — has run. A timeout or
+spawn failure is a named result, never a pass and never a red outcome check.
+`verify` reruns only owner-context commands in its scratch clone and therefore
+preflights owner programs and `requires[]` before those commands; recipient
+programs are not executed there and their paths are Box-relative, so the export
+check above is where the full set is established.
+
+One operating-system launch rule covers Windows command files: a program that
+resolves to a `.cmd`/`.bat` (npm and pnpm are `npm.cmd`/`pnpm.cmd` shims) is
+started through `cmd.exe /d /s /c` with the resolved path and each argument in
+double quotes. The rule keys on the resolved file kind, never the program's
+name. Arguments containing `"`, `%`, `!` or a line break cannot be carried on a
+command line and are refused as an unsafe launch case; so is an argument ending
+in a backslash, whose `\` would escape the closing quote under
+CommandLineToArgvW and silently merge the next argument.
+
+`package.json`/`tsconfig.json`/`pnpm-lock.yaml` are emitted only when the
+agreement opts into the `nodejs` helper configuration; a Box for a
+non-JavaScript project carries none of it. Installs the product itself spawns
+(lockfile resolution, verify's scratch install) still carry `--ignore-scripts`
+through the install boundary; declared commands are owner-approved execution
+authority, not a sandbox.

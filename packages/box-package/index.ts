@@ -1,8 +1,11 @@
-export { BoxAgreementSchema, DEFAULT_INVENTORY_EXCLUDE, parseAgreement } from './agreement.js';
-export type { BoxAgreement, EditableEntry } from './agreement.js';
+export { BoxAgreementSchema, CommandCheckSchema, DEFAULT_INVENTORY_EXCLUDE, NodejsHelperSchema, parseAgreement, RequiredToolSchema, SetupCommandSchema } from './agreement.js';
+export type { BoxAgreement, CommandCheck, EditableEntry, NodejsHelper, RequiredTool, SetupCommand } from './agreement.js';
+export { CheckOutsideRoot, preflightPrograms, ProgramLaunchUnsupported, ProgramUnavailable, resolveProgram, runDeclaredCheck, runDeclaredChecks, runSetup } from './commands.js';
+export type { CheckContext, CheckRecord, CheckResult, CommandRole } from './commands.js';
 export { AgreementInvalid } from './agreement.js';
 export { describeGap, ExportFailed, GitFailed, PreparationGap, SubmissionFailed } from './errors.js';
 export { exportBox } from './export.js';
+export { IGNORE_SCRIPTS, UnsafeInstall } from './install.js';
 export type { ExportOptions, ExportResult, PnpmInvocation } from './export.js';
 export { BoxFileSchema, BoxManifestSchema } from './manifest.js';
 export type { BoxFile, BoxManifest } from './manifest.js';

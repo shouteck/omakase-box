@@ -1,0 +1,24 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+ [32m✓[39m tests/box/package/r1-kitchen-stats.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 16773[2mms[22m[39m
+   [32m✓[39m R1 kitchen-stats-no-usage box [2m(3)[22m
+     [33m[2m✓[22m[39m exports the real Box; its evaluator passes the integrated script and fails Usage-printing and blank variants[33m 16532[2mms[22m[39m
+ [32m✓[39m tests/box/package/command-checks.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 28054[2mms[22m[39m
+   [32m✓[39m declared command checks: runner [2m(3)[22m
+     [33m[2m✓[22m[39m names a timeout, never a pass[33m 519[2mms[22m[39m
+   [32m✓[39m declared command checks: export on the untouched base [2m(5)[22m
+     [33m[2m✓[22m[39m records each base result and warns when no outcome check is red[33m 3541[2mms[22m[39m
+     [33m[2m✓[22m[39m records recipient-context base results on the installed staged Box[33m 389[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses when a recipient-context guard fails on the staged Box, owner checks green or not[33m 1065[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps a legacy evaluator-only agreement exporting, with the named gap recorded[33m 430[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses to export when a declared guard is red on the untouched base[33m 620[2mms[22m[39m
+   [32m✓[39m declared command checks: owner verify in the scratch clone [2m(2)[22m
+     [33m[2m✓[22m[39m fails a no-op submission: the untouched-base red outcome stays red[33m 13267[2mms[22m[39m
+     [33m[2m✓[22m[39m passes when the applied edit turns the declared outcome green[33m 8041[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 12:00:19
+[2m   Duration [22m 29.31s[2m (tests 96%, import 3%, transform 1%)[22m
+

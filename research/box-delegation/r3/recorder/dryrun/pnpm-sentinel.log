@@ -1,0 +1,22 @@
+2026-10-06T06:12:20Z
+CONTROL_EXIT=1
+CONTROL_SENTINEL=absent
+FIXED_EXIT=1
+FIXED_SENTINEL=absent
+tail: option used in invalid context -- 3
+DOCKER_EXIT=1
+2026-10-06T06:12:31Z
+2026-10-06T06:13:09Z
+CONTROL_EXIT=0
+CONTROL_SENTINEL=WRITTEN
+FIXED_EXIT=0
+FIXED_SENTINEL=absent
+> node -e "require('fs').writeFileSync('/out/postinstall-ran','lifecycle ran')"
+
+
+Done in 1.7s using pnpm v10.34.5
+Already up to date
+
+Done in 912ms using pnpm v10.34.5
+DOCKER_EXIT=0
+2026-10-06T06:13:12Z

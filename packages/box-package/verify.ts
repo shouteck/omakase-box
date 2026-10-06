@@ -4,8 +4,11 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
+import { materializeTooling, preflightPrograms, runDeclaredChecks, runSetup } from './commands.js';
+import type { CheckRecord } from './commands.js';
 import type { PnpmInvocation } from './export.js';
 import { git } from './git.js';
+import { productInstallArgs } from './install.js';
 import { ownerCheck } from './owner-checks.js';
 import type { OwnerCheck } from './owner-checks.js';
 import { toPosix } from './selection.js';
@@ -42,6 +45,7 @@ export type VerifyCheckName = 'install' | 'compile' | 'outcome';
 export interface VerifyCheck {
   readonly name: VerifyCheckName;
   readonly status: 'pass' | 'fail' | 'skipped';
+  readonly argv?: readonly string[]; // the exact effective argv executed
   readonly detail?: string;
 }
 export interface VerifyMerge {
@@ -53,7 +57,7 @@ export interface VerifyMerge {
 export interface VerifyReport {
   readonly verdict: 'pass' | 'fail';
   readonly failureClass?: VerifyFailureClass;
-  readonly reason?: SubmissionRejection | 'no-owner-check' | 'outside-owner-root' | VerifyCheckName | 'operational';
+  readonly reason?: SubmissionRejection | 'no-owner-check' | 'outside-owner-root' | VerifyCheckName | 'command-check' | 'program-unavailable' | 'setup' | 'operational';
   readonly detail?: string;
   readonly box?: { readonly id: string; readonly name: string; readonly version: number };
   readonly baseCommit?: string;
@@ -61,6 +65,7 @@ export interface VerifyReport {
   readonly attemptSha256?: string;
   readonly applies?: readonly SubmissionApply[];
   readonly checks: readonly VerifyCheck[];
+  readonly commandChecks?: readonly CheckRecord[];
   readonly merge?: VerifyMerge;
 }
 export interface VerifyOptions {
@@ -99,8 +104,8 @@ class VerifyApplyOutsideRoot extends Error {
 }
 
 interface StepResult { readonly status: number | null; readonly output: string }
-function step(pnpm: PnpmInvocation, cwd: string, args: readonly string[]): StepResult {
-  const result = spawnSync(pnpm.command, [...pnpm.args, ...args], { cwd, encoding: 'utf8', timeout: CHECK_TIMEOUT_MS, windowsHide: true });
+function step(command: string, cwd: string, args: readonly string[]): StepResult {
+  const result = spawnSync(command, args, { cwd, encoding: 'utf8', timeout: CHECK_TIMEOUT_MS, windowsHide: true });
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   const detail = result.error !== undefined ? `${result.error.message}\n${output}` : output;
   return { status: result.error !== undefined ? null : result.status, output: detail.slice(-OUTPUT_TAIL) };
@@ -162,6 +167,16 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
     return fail('preparation-defect', 'no-owner-check', `no owner-side check is registered for generator(s): ${unchecked.join(', ')}`, base);
   }
 
+  try {
+    preflightPrograms({
+      setup: agreement.setup.filter(command => command.context === 'owner'),
+      commands: agreement.commands.filter(command => command.context === 'owner'),
+      requires: agreement.requires
+    }, resolve(options.repoPath));
+  } catch (error) {
+    return fail('environment-failure', 'program-unavailable', error instanceof Error ? error.message : String(error), base);
+  }
+
   // Phase 3: scratch owner history. clone --local keeps it cheap and fully
   // disposable; the branch is created at the submission's base commit.
   const scratch = mkdtempSync(join(resolve(options.workRoot ?? tmpdir()), 'box-verify-'));
@@ -204,21 +219,47 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
 
     // Phase 5: owner checks, in order, fail-fast. install prepares the checkout
     // (an infrastructure concern); compile and outcome judge the patch itself.
+    // The outcome step exists only when evaluator generators named registered
+    // owner checks — a bare `vitest run` would execute the clone's whole suite.
+    // The install step goes through the shared boundary: the recorded argv is
+    // the exact effective invocation, --ignore-scripts included. UnsafeInstall
+    // propagates out of the try as a hard failure (environment, not a pass).
     const steps: Array<{ name: VerifyCheckName; args: string[] }> = [
-      { name: 'install', args: ['install', '--frozen-lockfile'] },
-      { name: 'compile', args: ['exec', 'tsc', '--noEmit'] },
-      { name: 'outcome', args: ['exec', 'vitest', 'run', ...checks.map(check => check.file)] }
+      { name: 'install', args: productInstallArgs(options.pnpm, ['install', '--frozen-lockfile']) },
+      { name: 'compile', args: [...options.pnpm.args, 'exec', 'tsc', '--noEmit'] },
+      ...(checks.length > 0 ? [{ name: 'outcome' as const, args: [...options.pnpm.args, 'exec', 'vitest', 'run', ...checks.map(check => check.file)] }] : [])
     ];
     for (const [index, current] of steps.entries()) {
-      const result = step(options.pnpm, clone, current.args);
+      const result = step(options.pnpm.command, clone, current.args);
       if (result.status === 0) {
-        runChecks.push({ name: current.name, status: 'pass' });
+        runChecks.push({ name: current.name, status: 'pass', argv: current.args });
         continue;
       }
-      runChecks.push({ name: current.name, status: 'fail', detail: result.output });
+      runChecks.push({ name: current.name, status: 'fail', argv: current.args, detail: result.output });
       for (const rest of steps.slice(index + 1)) runChecks.push({ name: rest.name, status: 'skipped' });
       const failureClass: VerifyFailureClass = current.name === 'install' ? 'environment-failure' : 'implementation-failure';
       return fail(failureClass, current.name, `owner check '${current.name}' failed in the scratch checkout`, { ...base, checks: runChecks });
+    }
+
+    // Phase 5b: the agreement's declared owner-context commands run in the
+    // scratch clone, on the applied bytes — immutable agreement data, not the
+    // submission's or manifest's claims. Any non-pass is implementation-failure:
+    // a red guard means broken behavior, a red outcome means the request is not
+    // met (a no-op patch keeps the untouched-base result).
+    let commandChecks: CheckRecord[] | undefined;
+    const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
+    if (ownerSetup.length > 0 || agreement.commands.length > 0) {
+      materializeTooling(repo, clone);
+      const setupRecords = runSetup(agreement.setup, clone, 'owner');
+      const badSetup = setupRecords.find(record => record.result !== 'pass');
+      if (badSetup !== undefined) {
+        return fail('environment-failure', 'setup', `declared setup command '${badSetup.name}' did not exit 0 (result: ${badSetup.result}, exit ${badSetup.exit}): ${badSetup.log}`, { ...base, checks: runChecks, commandChecks: setupRecords });
+      }
+      commandChecks = [...setupRecords, ...runDeclaredChecks(agreement.commands, clone, 'owner')];
+      const failed = commandChecks.find(record => record.role !== 'setup' && record.result !== 'pass');
+      if (failed !== undefined) {
+        return fail('implementation-failure', 'command-check', `declared ${failed.role} check '${failed.name}' did not pass (result: ${failed.result}, exit ${failed.exit}): ${failed.log}`, { ...base, checks: runChecks, commandChecks });
+      }
     }
 
     // Phase 6: land the change in the scratch history — ordinary git, box and
@@ -249,6 +290,7 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
       attemptSha256,
       applies,
       checks: runChecks,
+      ...(commandChecks !== undefined ? { commandChecks } : {}),
       merge: { branch, commit, message, scratch: options.keepScratch === true ? clone : null }
     };
   } finally {

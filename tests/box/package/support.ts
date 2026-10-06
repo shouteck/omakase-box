@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exportBox } from '../../../packages/box-package/index.js';
-import type { ExportResult } from '../../../packages/box-package/index.js';
+import type { ExportResult, PnpmInvocation } from '../../../packages/box-package/index.js';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const FIXTURE = join(ROOT, 'examples', 'private-shop');
@@ -176,14 +176,14 @@ export function agreementFile(name: 'request-a' | 'request-b', overrides: Agreem
   return path;
 }
 
-export function runExport(agreementPath: string, repo?: string, outDir?: string): ExportResult {
+export function runExport(agreementPath: string, repo?: string, outDir?: string, pnpm?: PnpmInvocation): ExportResult {
   const began = Date.now();
   try {
     return exportBox({
       agreementPath,
       repoPath: repo ?? fixtureRepo().repo,
       outDir: outDir ?? join(runRoot('out'), 'box'),
-      pnpm: { command: process.execPath, args: [lockfileShim(), PNPM_CJS] }
+      pnpm: pnpm ?? { command: process.execPath, args: [lockfileShim(), PNPM_CJS] }
     });
   } finally {
     recordOp('export', (Date.now() - began) / 1000);
