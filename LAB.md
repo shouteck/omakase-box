@@ -13,7 +13,7 @@ How much you run is set by the message that started you, and you stop when that 
 Before the first session of a run:
 
 1. Read [lab/README.md](lab/README.md), the lab's charter, and [lab/PROGRAMME.md](lab/PROGRAMME.md). Read `AGENTS.md` for the rules that do not bend; its roles and START routes are the kitchen's, not yours.
-2. Bring this branch up to date with the kitchen's accepted work: `git fetch origin`, then merge `origin/master` into `lab`. Read the kitchen's requests: `git show origin/master:BACKLOG.md`, the "For the lab" section if it exists.
+2. Bring this branch up to date with the kitchen's accepted work: `git fetch origin`, then merge `origin/master` into `lab`. Read what the CTO has told the lab: `git show origin/master:BACKLOG.md`, the "For the lab" section if it exists, and `git show origin/master:STATUS.md` for where the product is.
 3. Tell the owner in two or three plain sentences what this run will work on and why it matters to the product. Do not wait for an answer; the direction of research is the lab's to set. Wait only if the session needs something of the owner's: their judgement on examples, or a decision on the owner-only list.
 
-At the end of every session: append to the line's `notebook.md`, update the line's `README.md` if the current best answer changed, update PROGRAMME.md and HANDOFF.md if anything moved, commit and push the `lab` branch.
+At the end of every session: append to the line's `notebook.md`, update the line's `README.md` if the current best answer changed, update PROGRAMME.md if a line opened, closed or changed stage. At the end of the run, replace [lab/BRIEF.md](lab/BRIEF.md), the research brief for the CTO, then commit and push the `lab` branch.

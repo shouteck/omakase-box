@@ -4,7 +4,7 @@ Owned by the lab lead. This is where the lab says what it is working on and why.
 
 ## What the product needs to know
 
-These are needs, stated by the product. They are not research questions yet, and they carry no view on method. Turning each into a well-posed problem, after reading the field, is the lab's first work.
+These are needs, stated by the CTO, who may add, reword or withdraw one through the "For the lab" section of `BACKLOG.md` on master. They are not research questions yet, and they carry no view on method. Turning each into a well-posed problem, after reading the field, is the lab's first work.
 
 1. **Sufficient context.** Given a change to make in an existing codebase, what is the least material another developer or agent needs in order to make it correctly and prove it, and how can that material be found automatically? Today the kitchen follows TypeScript imports from the files to be edited.
 2. **Judging what tests cannot.** Some requested outcomes have no mechanical check: how something looks, reads or feels to use. How can a delivered result be judged against what was asked, reliably enough to accept or reject work?

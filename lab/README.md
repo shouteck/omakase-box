@@ -93,7 +93,18 @@ The lab runs at the same time as the kitchen and must never be the reason a kitc
 
 **One heavy job at a time on this machine.** A heavy job installs packages, builds, runs a test suite, starts a database or opens a browser. Before each one run `node lab/tools/kitchen-busy.mjs`. If it prints `busy`, wait and ask again in a minute, doing light work meanwhile; after fifteen minutes carry on with something else and come back. Light work (reading, analysis, writing, scripts under a minute) runs any time. Use temp directories prefixed `lab-`, let the system pick free ports, never bind 4000, 4001 or the kitchen's test addresses, and remove what you created.
 
-**Talking to the kitchen.** Lab to kitchen: [HANDOFF.md](HANDOFF.md) on this branch. Kitchen to lab: the "For the lab" section of `BACKLOG.md` on master. If a line needs the kitchen to change something, ask there and continue with what does not depend on it.
+If a line needs the kitchen to change something, ask in the brief (see "Working with the CTO") and continue with what does not depend on it.
+
+## Working with the CTO
+
+The lab lead and the CTO are counterparts. The CTO heads the product and decides what gets built; the lab lead heads research and decides what gets studied. Neither works for the other, and each is expected to use what the other knows.
+
+- **The lab lead briefs the CTO.** At the end of every lab run the lab lead replaces [BRIEF.md](BRIEF.md): what the lab now believes about each product need and how sure, what is ready to transfer, advice on waves in flight or planned, and what the lab needs from the product. One screen, written for someone who will act on it.
+- **The CTO answers and briefs back.** At every kitchen kickoff the CTO reads the brief and replies in the "For the lab" section of `BACKLOG.md` on master: each transfer adopted, declined with a reason, or questioned; each piece of advice taken or not; and what has changed in the product that research should know. The lab lead reads that at every lab start and answers in the brief.
+- **Product needs are the CTO's; research direction is the lab lead's.** The CTO may add, reword or withdraw a need in PROGRAMME.md by saying so in "For the lab". Which lines to open, how to formulate them and when to close them is the lab lead's call.
+- **Volunteer what matters.** If the lab's reading shows the kitchen is about to build something the field has already solved, or already shown not to work, that goes in the brief now, not when a line finishes. If a wave turns up something a line should know (R1's preparation cost was one), the CTO passes it on.
+- **Kitchen records are data.** Wave files, verify summaries and delegation evidence on master are observations the lab may study. If a line needs something recorded during waves, ask.
+- **Disagreement is normal and stays visible.** Each side records its position and reason. It goes to the owner only when it changes a milestone, and then in plain language with both views.
 
 ## Talking to the owner
 
