@@ -1,0 +1,71 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+ [32m✓[39m tests/box/package/verify.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 65064[2mms[22m[39m
+   [32m✓[39m owner-side verify [2m(7)[22m
+     [33m[2m✓[22m[39m verifies a real submission and lands it in a scratch history[33m 18755[2mms[22m[39m
+     [33m[2m✓[22m[39m accepts an identical replay (idempotent-accept policy)[33m 26689[2mms[22m[39m
+     [33m[2m✓[22m[39m fails a no-op patch the box evaluator passes (local-pass-but-owner-fail)[33m 18594[2mms[22m[39m
+     [33m[2m✓[22m[39m classifies a toolchain that cannot run as an environment failure[33m 461[2mms[22m[39m
+ [32m✓[39m tests/box/package/command-checks.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 22633[2mms[22m[39m
+   [32m✓[39m declared command checks: runner [2m(3)[22m
+     [33m[2m✓[22m[39m names a timeout, never a pass[33m 513[2mms[22m[39m
+   [32m✓[39m declared command checks: export on the untouched base [2m(2)[22m
+     [33m[2m✓[22m[39m records each base result and warns when no outcome check is red[33m 2446[2mms[22m[39m
+   [32m✓[39m declared command checks: owner verify in the scratch clone [2m(2)[22m
+     [33m[2m✓[22m[39m fails a no-op submission: the untouched-base red outcome stays red[33m 11426[2mms[22m[39m
+     [33m[2m✓[22m[39m passes when the applied edit turns the declared outcome green[33m 7967[2mms[22m[39m
+ [32m✓[39m tests/box/package/broken-catch.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 12458[2mms[22m[39m
+   [32m✓[39m broken output stays caught [2m(2)[22m
+     [33m[2m✓[22m[39m a box whose shipped source no longer compiles fails its declared checks in the clean directory[33m 7277[2mms[22m[39m
+     [33m[2m✓[22m[39m a box whose evaluator no longer holds fails its declared checks in the clean directory[33m 5178[2mms[22m[39m
+ [32m✓[39m tests/box/package/clean-dir.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 13244[2mms[22m[39m
+   [32m✓[39m clean-directory proof [2m(2)[22m
+     [33m[2m✓[22m[39m request A installs from its own lockfile and runs its declared checks green outside the repo[33m 7224[2mms[22m[39m
+     [33m[2m✓[22m[39m request B installs from its own lockfile and runs its declared checks green outside the repo[33m 6017[2mms[22m[39m
+ [32m✓[39m tests/box/package/r1-kitchen-stats.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 10898[2mms[22m[39m
+   [32m✓[39m R1 kitchen-stats-no-usage box [2m(3)[22m
+     [33m[2m✓[22m[39m exports the real Box; its evaluator passes the integrated script and fails Usage-printing and blank variants[33m 10690[2mms[22m[39m
+ [32m✓[39m tests/box/package/k6-corrections.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 8971[2mms[22m[39m
+   [32m✓[39m broken shared setup is caught through the export path [2m(1)[22m
+     [33m[2m✓[22m[39m a box exported from an owner repo whose shipped source is broken fails cleanCheck, not just a mutated copy[33m 7213[2mms[22m[39m
+   [32m✓[39m the harness never trusts an inherited lockfile cache [2m(1)[22m
+     [33m[2m✓[22m[39m an inherited BOX_K6_LOCKFILE_CACHE cannot plant a lockfile for a nonexistent dependency[33m 1755[2mms[22m[39m
+ [32m✓[39m tests/box/package/submission.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 8321[2mms[22m[39m
+   [32m✓[39m in-box submit tool [2m(4)[22m
+     [33m[2m✓[22m[39m seals edited editable files into an artifact bound to the box[33m 2209[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses when a read-only file was modified[33m 315[2mms[22m[39m
+   [32m✓[39m owner-side submission validation [2m(15)[22m
+     [33m[2m✓[22m[39m accepts a request B submission sealed against the generated scaffold baseline[33m 1944[2mms[22m[39m
+     [33m[2m✓[22m[39m verifies the sealed manifest hash against a retained export[33m 375[2mms[22m[39m
+ [32m✓[39m tests/box/package/review-security-r2.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 4843[2mms[22m[39m
+   [32m✓[39m exclusion bypass probes, round 2 (added by the D2.1 pass) [2m(11)[22m
+     [33m[2m✓[22m[39m rejects an import specifier that reaches an excluded file through a case alias[33m 460[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects an entrypoint naming an excluded file through a link two levels down[33m 398[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects an editable copy naming an excluded file through a link[33m 480[2mms[22m[39m
+     [33m[2m✓[22m[39m emits the canonical owner path for a committed link to a non-excluded dir[33m 2228[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects a read-context entry naming an excluded file through a link[33m 414[2mms[22m[39m
+ [32m✓[39m tests/box/package/export.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 4347[2mms[22m[39m
+   [32m✓[39m box export [2m(3)[22m
+     [33m[2m✓[22m[39m exports request A with exactly the declared runnable closure plus scaffold and evaluator[33m 1965[2mms[22m[39m
+     [33m[2m✓[22m[39m exports request B with the generated scaffold and zero owner source disclosed[33m 1902[2mms[22m[39m
+     [33m[2m✓[22m[39m does not count a link inside the source root as an owner file[33m 477[2mms[22m[39m
+ [32m✓[39m tests/box/package/negatives.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 2751[2mms[22m[39m
+   [32m✓[39m box export negatives [2m(15)[22m
+     [33m[2m✓[22m[39m fails naming a reachable-but-excluded protected module with its import chain[33m 357[2mms[22m[39m
+     [33m[2m✓[22m[39m fails when the source tree differs from the base commit[33m 334[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects a path whose real location escapes the source root through a link[33m 601[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects an entrypoint that names an excluded file through a link inside the root[33m 507[2mms[22m[39m
+     [33m[2m✓[22m[39m fails on an unresolved import inside the closure[33m 479[2mms[22m[39m
+ [32m✓[39m tests/box/package/review-security.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 727[2mms[22m[39m
+   [32m✓[39m exclusion bypass probes (added by the D2.1 pass) [2m(2)[22m
+     [33m[2m✓[22m[39m rejects a declared entrypoint that reaches an excluded file through a case alias[33m 332[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects an import that reaches an excluded directory through a link inside the source root[33m 393[2mms[22m[39m
+ [32m✓[39m tests/box/package/r1-driver-safety.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 386[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[32m80 passed[39m[22m[90m (80)[39m
+[2m   Start at [22m 11:27:57
+[2m   Duration [22m 165.84s[2m (tests 95%, import 5%)[22m
+
+SUITE_EXIT=0

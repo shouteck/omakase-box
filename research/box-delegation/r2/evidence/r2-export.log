@@ -1,0 +1,37 @@
+{
+  "exported": "C:\\Users\\shout\\Desktop\\Projects\\r2-box-unused-param",
+  "baseCommit": "6c0ee459339dcbcdc8b6c52430ecb74a9997aa33",
+  "files": [
+    "box.json",
+    "box/submit.mjs",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/packages/box-contracts/index.ts",
+    "src/packages/box-package/agreement.ts",
+    "src/packages/box-package/commands.ts",
+    "src/packages/box-package/errors.ts",
+    "src/packages/box-package/export.ts",
+    "src/packages/box-package/git.ts",
+    "src/packages/box-package/index.ts",
+    "src/packages/box-package/manifest.ts",
+    "src/packages/box-package/owner-checks.ts",
+    "src/packages/box-package/scaffolds.ts",
+    "src/packages/box-package/selection.ts",
+    "src/packages/box-package/submission.ts",
+    "src/packages/box-package/submit-tool.ts",
+    "src/packages/box-package/verify.ts",
+    "src/packages/contracts/common.ts",
+    "src/packages/contracts/paths.ts",
+    "src/packages/contracts/public/composition.ts",
+    "src/packages/contracts/workflow/index.ts",
+    "src/tests/box/package/r1-kitchen-stats.test.ts",
+    "src/tests/box/package/support.ts",
+    "tsconfig.json"
+  ],
+  "disclosure": {
+    "shippedOwnerFiles": 20,
+    "inventoryFiles": 1852,
+    "share": 0.01079913606911447
+  }
+}
+EXPORT_EXIT=0
