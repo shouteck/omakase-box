@@ -7,22 +7,83 @@
   },
   "outcome": "In tests/box/package/r1-kitchen-stats.test.ts, the helper r1Agreement(repo, baseCommit) declares a parameter 'repo' that is never read; the TypeScript compiler under --noUnusedParameters reports error TS6133 at line 30 column 22. Fix the unused-parameter diagnostic while preserving every assertion, comment and behavior of the test. Edit only the declared editable file.",
   "sourceRoot": ".",
-  "entrypoints": ["tests/box/package/r1-kitchen-stats.test.ts"],
+  "entrypoints": [
+    "tests/box/package/r1-kitchen-stats.test.ts"
+  ],
   "editable": [
-    { "kind": "copy", "owner": "tests/box/package/r1-kitchen-stats.test.ts", "box": "src/tests/box/package/r1-kitchen-stats.test.ts" }
+    {
+      "kind": "copy",
+      "owner": "tests/box/package/r1-kitchen-stats.test.ts",
+      "box": "src/tests/box/package/r1-kitchen-stats.test.ts"
+    }
   ],
   "readContext": [],
-  "declaredDependencies": { "typescript": "6.0.3", "vitest": "5.0.1", "zod": "4.6.5" },
-  "excludedPrefixes": ["node_modules/", "dist/", ".git/", ".kitchen/", ".runtime/", "secrets/", ".execution/", "docs/legacy/"],
-  "inventoryExcludePrefixes": ["node_modules/", "dist/", ".git/", ".kitchen/", ".runtime/", "secrets/", ".execution/", "docs/legacy/", "coverage/", "data/", "test-results/", "playwright-report/", "__pycache__/"],
-  "toolchain": { "node": ">=24.11.0 <25", "pnpm": "10.34.5", "typescript": "6.0.3", "vitest": "5.0.1", "typesNode": "24.13.6" },
-  "checks": ["pnpm exec tsc --ignoreConfig --noEmit --noUnusedParameters --target ES2023 --module NodeNext --moduleResolution NodeNext --strict --noUncheckedIndexedAccess --exactOptionalPropertyTypes --verbatimModuleSyntax --esModuleInterop --skipLibCheck --types node tests/box/package/r1-kitchen-stats.test.ts", "pnpm exec vitest run tests/box/package/r1-kitchen-stats.test.ts"],
+  "declaredDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "5.0.1",
+    "zod": "4.6.5"
+  },
+  "excludedPrefixes": [
+    "node_modules/",
+    "dist/",
+    ".git/",
+    ".kitchen/",
+    ".runtime/",
+    "secrets/",
+    ".execution/",
+    "docs/legacy/"
+  ],
+  "inventoryExcludePrefixes": [
+    "node_modules/",
+    "dist/",
+    ".git/",
+    ".kitchen/",
+    ".runtime/",
+    "secrets/",
+    ".execution/",
+    "docs/legacy/",
+    "coverage/",
+    "data/",
+    "test-results/",
+    "playwright-report/",
+    "__pycache__/"
+  ],
+  "toolchain": {
+    "node": ">=24.11.0 <25",
+    "pnpm": "10.34.5",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1",
+    "typesNode": "24.13.6"
+  },
+  "checks": [
+    "owner outcome: tsc --noUnusedParameters on tests/box/package/r1-kitchen-stats.test.ts (descriptor unused-param-outcome)",
+    "owner guard: vitest run tests/box/package/r1-kitchen-stats.test.ts (descriptor r1-behavior-guard)"
+  ],
   "evaluator": [],
   "commands": [
     {
       "name": "unused-param-outcome",
       "tool": "tsc",
-      "args": ["--ignoreConfig", "--noEmit", "--noUnusedParameters", "--target", "ES2023", "--module", "NodeNext", "--moduleResolution", "NodeNext", "--strict", "--noUncheckedIndexedAccess", "--exactOptionalPropertyTypes", "--verbatimModuleSyntax", "--esModuleInterop", "--skipLibCheck", "--types", "node", "tests/box/package/r1-kitchen-stats.test.ts"],
+      "args": [
+        "--ignoreConfig",
+        "--noEmit",
+        "--noUnusedParameters",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--exactOptionalPropertyTypes",
+        "--verbatimModuleSyntax",
+        "--esModuleInterop",
+        "--skipLibCheck",
+        "--types",
+        "node",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
       "cwd": ".",
       "context": "owner",
       "role": "outcome",
@@ -31,7 +92,10 @@
     {
       "name": "r1-behavior-guard",
       "tool": "vitest",
-      "args": ["run", "tests/box/package/r1-kitchen-stats.test.ts"],
+      "args": [
+        "run",
+        "tests/box/package/r1-kitchen-stats.test.ts"
+      ],
       "cwd": ".",
       "context": "owner",
       "role": "guard",
