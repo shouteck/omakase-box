@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Product next: R2 (delegate without request-specific code), then D4; whichever the owner names. Kitchen, when named: K9 (legacy removal), K6 (largest verify cost), K7.",
+    "sequence": "Next, when named: K6 (stop verification growing), then R2 (delegate without request-specific code), then D4. K9 (legacy removal) and K7 when named.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -458,7 +458,7 @@
     {
       "id": "K6",
       "milestone": "K",
-      "title": "Verify speed 2: hillclimb the largest cost the numbers show",
+      "title": "Verify speed 2: stop verification growing with every wave",
       "dependencies": [
         "K5"
       ],
@@ -467,23 +467,31 @@
         "scripts/verify.mjs",
         "scripts/workspace.mjs",
         "scripts/suite.mjs",
-        "tests/kitchen/**"
+        "scripts/kitchen-stats.mjs",
+        "tests/kitchen/**",
+        ".github/workflows/verify.yml",
+        "templates/wave.md",
+        "kitchen/roles/**",
+        "docs/box-v4/KITCHEN.md"
       ],
       "deliverables": [
-        "Take the largest executed cost from node scripts/kitchen-stats.mjs and drive it down with the hillclimb playbook. On R1 that was test:box-package (about 2 minutes a run, 642 s executed across five runs), then check (about 100 s a run).",
-        "Find out where test:box-package spends its time before changing anything (clean-directory installs, repeated exports, typechecks). Likely candidates: share one exported Box and one install across tests that only read it; keep the package cache between runs.",
-        "A database template (the earlier plan for this wave) is only worth doing if the numbers show migrations are a real cost; R1 does not show that."
+        "Inner loop: while fixing, the cook runs only the suites and test files the change touches (seconds, not minutes). The full named suites run once on the final commit.",
+        "Second stove: the wave branch final commit is pushed and the off-machine workflow runs the full verify there while the pass reviews locally. The pass reads that result instead of running --full itself; a red or missing off-machine result means no PASS. Only final candidates are pushed, to stay inside the free minutes.",
+        "Hillclimb test:box-package: find where its two minutes go (clean-directory installs, repeated exports, typechecks) and remove repeats, for example one exported Box and one install shared by tests that only read it.",
+        "Ratchet: kitchen-stats holds a budget for the executed seconds of one full verify and fails loudly when a wave pushes it over. The head chef lowers it after each gain. A wave that needs to raise it says so in its brief."
       ],
       "acceptance": [
-        "Counts as well as seconds, before and after, on the same commit: installs performed, exports performed, suites executed.",
-        "Every test still exercises a clean directory outside the checkout where its claim depends on one; no assertion is removed or weakened.",
-        "A test written first proves a real break in the shared setup is still caught."
+        "Counts as well as seconds, before and after, on the same commit: installs performed, exports performed, suites executed, full local runs per wave.",
+        "A test written first proves a real break in the shared packaging setup is still caught; no assertion is removed or weakened.",
+        "With the off-machine run deliberately red on a scratch branch, the pass refuses to give PASS.",
+        "The budget check fails on a fabricated run that exceeds it."
       ],
       "verification": [
-        "Reviewer re-measures, and breaks the exporter on a scratch branch to confirm the suite still fails."
+        "Reviewer re-measures, breaks the exporter on a scratch branch to confirm the suite still fails, and checks the workflow still ignores document-only pushes."
       ],
       "handoff": "waves/K6.md",
-      "condition": "Met on R1: verification was 22.5 of 46 minutes. Runs when the owner names it."
+      "condition": "Met on R1: verification was 22.5 of 46 minutes. Runs when the owner names it.",
+      "baseline": "Executed, passing runs: test:box-package went from 21-51 s to 117-131 s between 5 Oct 18:00 and 6 Oct 00:15 as waves added tests; check went from about 65 s to about 100 s in a day. R1 spent 22.5 of 46 minutes in verification across five executed runs of about 4.5 minutes."
     },
     {
       "id": "K7",

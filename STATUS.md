@@ -27,7 +27,7 @@ No wave starts without a new START message. Every run opens with a pre-cook card
 3. **K6:** cut the largest verify cost (`test:box-package`, about 2 minutes a run). `START.md: K6`.
 4. **D4:** Box-versus-contractor comparison. `START.md: D4`.
 
-Recommendation: R2 first. D4 would measure a preparation cost R1 already showed is too high.
+Recommendation: K6, then R2 (`START.md: K6, R2`). Verification is growing with every wave (the packaging suite went from under a minute to two in six hours of waves), and R2 works in that suite. D4 would measure a preparation cost R1 already showed is too high.
 
 ## Night queue
 
@@ -45,4 +45,4 @@ No blocking product defect. Non-blocking gaps are in [BACKLOG.md](BACKLOG.md); R
 
 ## Decisions waiting for the CEO
 
-- Which to run next: R2, K9, K6 or D4. Recommendation: R2.
+- Which to run next: K6, R2, K9 or D4. Recommendation: K6, then R2.
