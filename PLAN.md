@@ -37,6 +37,19 @@ Why this order: D2 is where the idea can fail, so it comes before more screens. 
 
 Five to ten conversations with engineering leads who use contractors for bounded work. They need nothing from D1-D4. Ask what they hand over today, how long onboarding takes, what they refuse to share, and how they decide the work is acceptable. This is not a kitchen task and no agent sends messages.
 
+## Slicing: where it is going
+
+How a Box selects its source is on the roadmap as a ladder. Each step makes the Box leaner and its guarantee stronger; each is taken when the evidence calls for it, in this order.
+
+| Step | What goes in the Box | Guarantee | Status |
+|---|---|---|---|
+| 1 | Whole files the edited files import | It builds and its checks pass in a clean directory | Built (D2.1). Next: fail loudly at export when something is missing |
+| 2 | Only the functions and types actually used from those files | Same | Not started. Uses existing build tooling |
+| 3 | Type-only stand-ins for everything the recipient does not edit | Same shape as the original, checked by the compiler | Prototyped once (D2.1 prototype C), not chosen then |
+| 4 | A reduced program shown to behave the same as the original where it matters | Behaviour preserved, by proof where possible and by stated evidence otherwise | Research. The lab holds it; see `lab/PROGRAMME.md` on the `lab` branch |
+
+The lab's third line of research (does the slice contain what a change needs) decides when to move: it replays real past changes and counts what step 1 misses and how much it discloses. Steps 2 and 3 are kitchen work once that count says they are worth it. Step 4 goes as far as can be reduced to an algorithm, and no further than can be stated honestly.
+
 ## Later, each needing its own decision
 
 Restricted proprietary packaging with a disclosure policy; hostile-code execution in disposable VMs; bounty distribution and payments; tracker and backlog integrations; automatic selection; a customer pilot with real participants.
