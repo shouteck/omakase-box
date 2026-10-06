@@ -78,6 +78,37 @@ describe('install boundary: declared pnpm checks', () => {
     }
   });
 
+  it('forces --ignore-scripts onto every install-like verb, including aliases and dedupe', () => {
+    for (const verb of ['dedupe', 'it', 'install-test', 'ln', 'link', 'prune', 'deploy', 'rb', 'rebuild', 'add', 'dlx']) {
+      const dir = runRoot(`decl-verb-${verb}`);
+      const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['--dir', '.', verb] }), dir, fakePnpm(dir));
+      expect(record.result, verb).toBe('pass');
+      expect(record.argv, verb).toContain('--ignore-scripts');
+      expect(calls(dir).at(-1)?.argv, verb).toContain('--ignore-scripts');
+      expect(sentinel(dir), verb).toBe(false);
+    }
+  });
+
+  it('refuses an install-like verb hidden behind a valued leading option', () => {
+    const dir = runRoot('decl-hidden-dedupe');
+    const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['--dir', '/tmp/pkg', 'dedupe'] }), dir, fakePnpm(dir));
+    expect(record.result).toBe('pass');
+    expect(record.argv).toContain('--ignore-scripts');
+    expect(sentinel(dir)).toBe(false);
+  });
+
+  it('refuses unknown pnpm verbs before spawn instead of passing them through', () => {
+    for (const args of [['totally-new-verb'], ['shiny-installer'], ['--future-opt', 'x', 'install'], ['--reporter', 'json', 'mystery']]) {
+      const dir = runRoot('decl-unknown');
+      const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, fakePnpm(dir));
+      expect(record.result, args.join(' ')).toBe('error');
+      expect(record.exit, args.join(' ')).toBeNull();
+      expect(record.log, args.join(' ')).toContain('refused');
+      expect(calls(dir), args.join(' ')).toEqual([]);
+      expect(sentinel(dir), args.join(' ')).toBe(false);
+    }
+  });
+
   it('does not touch non-install pnpm commands', () => {
     const dir = runRoot('decl-other');
     const record = runDeclaredCheck(check({ tool: 'pnpm', args: ['exec', 'tsc', '--noEmit'] }), dir, fakePnpm(dir));
