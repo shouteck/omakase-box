@@ -17,6 +17,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Kitchen and environment
 
+- The packaging tests and the K6 budget recorder leave their temp folders and log files behind (`box-d21-*`, `box-k6-*` in the system temp folder). 1,590 had built up by midday on 6 October 2026 and were removed by hand once the kitchen was idle. Make the tests remove what they create; until then, clear them at wave close.
+
 - K6 temporary cleanup remains incomplete (725 ambiguous runRoot directories plus reported leftovers); R2 adopts unique resource roots/inventories and explicit cleanup but does not authorize deleting old resources or repairing kitchen tooling while paused.
 
 - Property-based guard tests and Box packaging mutation checks: retained from the kickoff inbox; require a separately named kitchen wave.
