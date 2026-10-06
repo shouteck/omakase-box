@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "format": "editable-overlay",
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "agreementSha256": "70f8b32e3b995b834bd0fdc35f142811c4bd0be11447fbefeb836e67ae86f9e7",
+  "boxJsonSha256": "17e2594fe3985e5ea0c90cf5f7c4fd7c75cee90eff0a6741e87d46518fa01b58",
+  "files": [
+    {
+      "box": "src/paint.js",
+      "owner": "src/paint.js",
+      "baselineSha256": "3aa9bb1ebf8442c3ba7d84bd7935a23ac4cc1bec30f95ad5849ed7fb1f256c1f",
+      "sha256": "8fc1b5685448105e174c217a22136a7a979c1b967bdb84c944945d11b7e8e0dd",
+      "content": "// Paints a short label for the CLI banner.\n// Base implementation: the color argument is accepted but ignored and the\n// text is returned unchanged. The Box outcome asks for ANSI colouring.\nconst CODES = { red: 31, green: 32, blue: 34 };\n\nexport function paint(text, color) {\n  if (typeof text !== 'string' || text.length === 0) return text;\n  const code = CODES[color];\n  if (code === undefined) return text;\n  return `\\x1b[${code}m${text}\\x1b[39m`;\n}\n"
+    }
+  ]
+}

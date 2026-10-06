@@ -107,7 +107,7 @@ describe('A4 npm-JavaScript fixture (a4-npm-cli)', () => {
     expect(refused.stderr).toContain('read-only file checks/outcome.mjs was modified');
   });
 
-  it('verifies an alternative-right seal and rejects no-op, wrong and deleted edits', { timeout: HEAVY }, () => {
+  it('verifies an alternative-right seal and rejects no-op, empty, wrong and deleted edits', { timeout: HEAVY }, () => {
     const fixture = a4Repo('a4-npm-cli');
     const verify = (dir: string) => verifySubmission({ submissionPath: join(dir, 'submission.json'), agreementPath: fixture.agreementPath, repoPath: fixture.repo, workRoot: runRoot('a4-npm-verify') });
 
@@ -127,6 +127,12 @@ describe('A4 npm-JavaScript fixture (a4-npm-cli)', () => {
     const wrongReport = verify(wrong.dir);
     expect(wrongReport.verdict).toBe('fail');
     expect(wrongReport.failureClass).toBe('implementation-failure');
+
+    const empty = sealed(fixture, 'npm-empty', box => writeFileSync(join(box, 'src', 'paint.js'), ''));
+    expect(empty.run.status).toBe(0);
+    const emptyReport = verify(empty.dir);
+    expect(emptyReport.verdict).toBe('fail');
+    expect(emptyReport.failureClass).toBe('implementation-failure');
 
     const deleted = sealed(fixture, 'npm-deleted', box => rmSync(join(box, 'src', 'paint.js')));
     expect(deleted.run.status).toBe(1);
@@ -163,7 +169,7 @@ describe('A4 Python fixture (a4-py-tools)', () => {
 });
 
 describe('A4 Python verify (a4-py-tools)', () => {
-  it('verifies an alternative-right seal and rejects no-op, wrong and deleted edits', { timeout: HEAVY }, () => {
+  it('verifies an alternative-right seal and rejects no-op, empty, wrong and deleted edits', { timeout: HEAVY }, () => {
     const fixture = a4Repo('a4-py-tools');
     const verify = (dir: string) => verifySubmission({ submissionPath: join(dir, 'submission.json'), agreementPath: fixture.agreementPath, repoPath: fixture.repo, workRoot: runRoot('a4-py-verify') });
 
@@ -181,6 +187,12 @@ describe('A4 Python verify (a4-py-tools)', () => {
     const wrongReport = verify(wrong.dir);
     expect(wrongReport.verdict).toBe('fail');
     expect(wrongReport.failureClass).toBe('implementation-failure');
+
+    const empty = sealed(fixture, 'py-empty', box => writeFileSync(join(box, 'tools', 'slug.py'), ''));
+    expect(empty.run.status).toBe(0);
+    const emptyReport = verify(empty.dir);
+    expect(emptyReport.verdict).toBe('fail');
+    expect(emptyReport.failureClass).toBe('implementation-failure');
 
     const deleted = sealed(fixture, 'py-deleted', box => rmSync(join(box, 'tools', 'slug.py')));
     expect(deleted.run.status).toBe(1);

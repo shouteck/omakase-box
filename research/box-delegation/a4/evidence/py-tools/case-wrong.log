@@ -1,0 +1,76 @@
+py-wrong start 13:08:35Z
+{
+  "submission": "C:\\Users\\shout\\Desktop\\a4-boxes\\neg\\py-wrong\\submission.json",
+  "box": "a4-py-tools-slugify",
+  "version": 1,
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "files": 1,
+  "changed": 1
+}
+submit exit=0
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "command-check",
+  "detail": "declared guard check 'slug-guard' did not pass (result: fail, exit 1): GUARD FAIL empty text must stay empty; non-string input must map to empty",
+  "checks": [],
+  "box": {
+    "id": "a4-py-tools-slugify",
+    "name": "Implement real slugify in the a4-py-tools slug helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "expectedBaseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "attemptSha256": "5b8840bec0475bcc156d57470d985bb1e3283e74ec3fd304211d93ec86fa40f1",
+  "applies": [
+    {
+      "owner": "tools/slug.py",
+      "box": "tools/slug.py",
+      "changed": true,
+      "sha256": "3d816d84743b1d41e22f94d93568648654803ae8295653bd8a9644e918a37c5e",
+      "bytes": 38
+    }
+  ],
+  "commandChecks": [
+    {
+      "name": "slug-guard",
+      "program": "python",
+      "declaredArgv": [
+        "checks/guard.py"
+      ],
+      "command": "C:\\Users\\shout\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "argv": [
+        "checks/guard.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "guard",
+      "exit": 1,
+      "result": "fail",
+      "log": "GUARD FAIL empty text must stay empty; non-string input must map to empty",
+      "outputSha256": "2887ac776daadcd51d25718fc127a2bfe1e690160f09ea869be618216572bd11",
+      "seconds": 0.112
+    },
+    {
+      "name": "slug-outcome",
+      "program": "python",
+      "declaredArgv": [
+        "checks/outcome.py"
+      ],
+      "command": "C:\\Users\\shout\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "argv": [
+        "checks/outcome.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'WRONG'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got 'WRONG'\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'WRONG'\nOUTCOME FAIL slugify('') expected '' got 'WRONG'\nOUTCOME FAIL slugify('already-good') expected 'already-good' got 'WRONG'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got 'WRONG'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'WRONG'\na4-py-tools outcome: 7 failing case(s)",
+      "outputSha256": "7f9463e9b459296699a1d30dfc4951674707454584ca88523e7ca72159647600",
+      "seconds": 0.11
+    }
+  ]
+}
+verify exit=3
+py-wrong end 13:08:44Z
