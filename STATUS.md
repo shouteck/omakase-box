@@ -1,39 +1,16 @@
 # Status
 
-Replaced at every wave close. Last written 7 October 2026 by Claude as CTO, after reviewing the overnight run.
+Replaced at actual daytime K7 kickoff, 7 October 2026 local time.
 
 ## Now
 
-- **Milestone A is delivered: the core is repository-agnostic.** Accepted on master: A1 (neutral agreement format), A2 (owner-listed files, proved by paired checks), A3 (export and verify run only declared commands), A4 (the whole loop on an npm project, a Python project and a multi-package project with one outside dependency, each solved by a recipient given only the folder). All reviewed and test-verified.
-- **The "useful" milestone is still not met.** A4's projects were written by the kitchen for the purpose. Nothing has yet been tried on someone else's repository since R3.
-- **Off-machine run: green** on the latest master. A4's merge turned it red (a test left the checkout dirty on Linux); two small repair waves, K7-ci and K7-ci2, fixed it overnight with the owner's go.
-- **K7 did not run.** It was parked before starting because two instructions conflicted with it, both written by the CTO: overnight rules make the verify script read-only, and the night's one-run limit ruled out K7's five-run measurement. Verification is still about five and a half minutes a run and still about half of each wave.
-- **Lab:** one wave behind, below the sync threshold. It has synced twice and done no research since the morning of 6 October.
-- **In flight:** nothing. **Held:** nothing.
+- Accepted through milestone A and K7-ci/K7-ci2. Useful outside-issue delegation still unmet. Latest hosted K7-ci2 run37525397238 completed SUCCESS; no red-master diversion needed. Main checkout clean on mastercdacd5a at kickoff, no wave branches.
+- Owner START.md: K7 starts the actual daytime wave. Current task graph explicitly permits up to ten executed full measurements, five base/five final, with no idle gap. This is K7's bounded exception to the ordinary one-full-run rule, not another owner decision.
+- Brief waves/K7.md: stop packaging/recorder/database leaks, three workers only for packaging, measured setup reduction, per-profile budgets/killed-run evidence, and owner's backlog Git-attribution fix. Original tests/expectations and security protections unchanged.
+- Inbox ownership-refusal lesson adopted into K7. Optional Node-helper extraction is out of scope, preserved in backlog.
+- Hardware snapshot:15.93GiB physical,1.95GiB available at kickoff. Measure actual owned process-tree memory/headroom; do not stop owner apps or silently reduce workers.
+- Lab fetched current sync f34544b, one accepted wave behind, K7-ci2. Its hosted-pending/repetition caution is answered in BACKLOG.md by green CI and the explicit current measurement allowance. Sync at two accepted waves after close.
 
-## Approved by the CEO
+## Stops after
 
-- 6 Oct 2026: milestone A; the overnight run of K7, A3 and A4; A4's one small package download.
-- 7 Oct 2026, about 03:45: go for the single K7-ci2 correction.
-
-## Next
-
-No wave starts without a START message and its pre-cook card.
-
-1. **K7, in the daytime:** stop the test leaks, run the packaging tests in parallel, make the time budget see every run. Its brief allows up to ten executed full runs for the before-and-after measurement. `START.md: K7`. It edits the verify script, so it cannot run overnight.
-2. **R3b:** replay recently fixed issues on a public repository, now that the core can handle any project. This is the next step toward "useful". Not yet approved; `START.md: R3b`.
-3. **One real lab session,** since a milestone has closed: `LAB.md` in the lab folder.
-
-Paused: K9 and other kitchen improvements. D4 waits for the lab's benchmark.
-
-## Night queue
-
-Only for `START.md overnight`, entries named in that message. R3b may run overnight once named. K7 may not.
-
-## Known problems
-
-None blocking. Leftovers are in [BACKLOG.md](BACKLOG.md).
-
-## Decisions waiting for the CEO
-
-- Whether to start R3b.
+K7 merged or parked, independent verdict and all measurements recorded, owned resources cleared, status/lab updated, master pushed and checkout on master. No R3b, D4, K9 or lab research session in this run.
