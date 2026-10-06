@@ -1,0 +1,230 @@
+# argv: ["node","--test","tests/command.parse.test.js"]
+# cwd: /src/wt/pr-2609-A
+# HEAD: fc2135eeeb406a344f1f431a8e4faffbbb7d14da
+# overlay: git checkout b5cbf2b4da411a7725d696d7473ebdea9de876e9 -- tests/command.parse.test.js
+# started: 2026-10-06T23:18:23.449Z ended: 2026-10-06T23:18:23.781Z
+# exit: 1 signal: null
+# ---- stdout ----
+▶ Command.parse()
+  ▶ .parse() explicit (from:) and autodetection of args format parsing
+    ✔ when no args then use process.argv and app/script/args (3.092031ms)
+    ✔ when no args and electron main process and not default app then use process.argv and app/args (0.837623ms)
+    ✔ when no args and electron main process and default app then use process.argv and app/script/args (0.609534ms)
+    ✖ when no args and electron child process and ELECTRON_RUN_AS_NODE then use process.argv and app/script/args (2.497383ms)
+    ✖ when no args and electron utility process then use process.argv and app/script/args (0.683966ms)
+    ✖ when no args and electron worker thread then use process.argv and app/script/args (0.515522ms)
+    ✔ when no args and electron renderer process then use process.argv and app/args (1.856977ms)
+    ✔ when args then app/script/args (1.717507ms)
+    ✔ when args from "node" then app/script/args (0.4308ms)
+    ✔ when args from "electron" and main process and not default app then app/args (0.394035ms)
+    ✔ when args from "electron" and main process and default app then app/script/args (0.173739ms)
+    ✖ when args from "electron" and child process and ELECTRON_RUN_AS_NODE then app/script/args (0.405824ms)
+    ✖ when args from "electron" and utility process then app/script/args (0.370357ms)
+    ✖ when args from "electron" and worker thread then app/script/args (0.351973ms)
+    ✔ when args from "electron" and renderer process then app/args (0.324799ms)
+    ✔ when args from "user" then args (0.19362ms)
+    ✔ when args from "silly" then throw (0.501635ms)
+    ▶ when node execArgv includes node flags
+      ✔ when node execArgv includes -e then app/args (0.416913ms)
+      ✔ when node execArgv includes --eval then app/args (0.478456ms)
+      ✔ when node execArgv includes -p then app/args (0.245971ms)
+      ✔ when node execArgv includes --print then app/args (0.152759ms)
+    ✔ when node execArgv includes node flags (2.194165ms)
+  ✖ .parse() explicit (from:) and autodetection of args format parsing (19.636881ms)
+  ▶ return type
+    ✔ when call .parse then returns program (0.622623ms)
+    ✔ when await .parseAsync then returns program (0.267951ms)
+  ✔ return type (1.155728ms)
+  ✔ when parse strings instead of array then throw (0.164947ms)
+  ▶ parse parameter is treated as readonly, per TypeScript declaration
+    ✔ when parse called then parameter does not change (0.759895ms)
+    ✔ when parse called and parsed args later changed then parameter does not change (0.306416ms)
+    ✔ when parse called and param later changed then parsed args do not change (0.199015ms)
+  ✔ parse parameter is treated as readonly, per TypeScript declaration (1.429374ms)
+  ▶ parseAsync parameter is treated as readonly, per TypeScript declaration
+    ✔ when parse called then parameter does not change (0.226889ms)
+    ✔ when parseAsync called and parsed args later changed then parameter does not change (0.230286ms)
+    ✔ when parseAsync called and param later changed then parsed args do not change (0.187826ms)
+  ✔ parseAsync parameter is treated as readonly, per TypeScript declaration (0.956413ms)
+  ▶ .parse() called multiple times
+    ✔ when use boolean options then option values reset (4.610522ms)
+    ✔ when use options with option-argument then option values and sources reset (0.426305ms)
+    ✔ when use options with option-argument and default then option values and sources reset (0.23658ms)
+    ✔ when use negated options then option values reset (0.47436ms)
+    ✔ when use variadic option then option values reset (0.278641ms)
+    ✔ when use collect example then option value resets (0.40982ms)
+    ✔ when use increaseVerbosity example then option value resets (0.332192ms)
+    ✔ when use parse and parseAsync then option values reset (2.452325ms)
+    ✔ when call subcommand then option values reset (program and subcommand) (1.21827ms)
+    ✔ when call different subcommand then no reset because lazy (0.363663ms)
+    ✔ when parse with different implied program name then name changes (0.129879ms)
+    ✔ when parse with different arguments then args change (0.177735ms)
+    ✔ when parse with different arguments then rawArgs change (0.17234ms)
+    ✔ when parse with different arguments then processedArgs change (0.207408ms)
+    ✔ when parse subcommand then reset state before preSubcommand hook called (0.296225ms)
+    ✔ when using storeOptionsAsProperties then throw on second parse (0.347377ms)
+  ✔ .parse() called multiple times (12.881548ms)
+✖ Command.parse() (37.5078ms)
+ℹ tests 47
+ℹ suites 6
+ℹ pass 41
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 243.4778
+
+✖ failing tests:
+
+test at tests/command.parse.test.js:59:5
+✖ when no args and electron child process and ELECTRON_RUN_AS_NODE then use process.argv and app/script/args (2.497383ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'script.js',
+      'user'
+    ]
+  
+      at TestContext.<anonymous> (file:///src/wt/pr-2609-A/tests/command.parse.test.js:75:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'script.js', 'user' ],
+    expected: [ 'user' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/command.parse.test.js:79:5
+✖ when no args and electron utility process then use process.argv and app/script/args (0.683966ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'script.js',
+      'user'
+    ]
+  
+      at TestContext.<anonymous> (file:///src/wt/pr-2609-A/tests/command.parse.test.js:92:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'script.js', 'user' ],
+    expected: [ 'user' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/command.parse.test.js:96:5
+✖ when no args and electron worker thread then use process.argv and app/script/args (0.515522ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'script.js',
+      'user'
+    ]
+  
+      at TestContext.<anonymous> (file:///src/wt/pr-2609-A/tests/command.parse.test.js:109:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'script.js', 'user' ],
+    expected: [ 'user' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/command.parse.test.js:174:5
+✖ when args from "electron" and child process and ELECTRON_RUN_AS_NODE then app/script/args (0.405824ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'script.js',
+      'user'
+    ]
+  
+      at TestContext.<anonymous> (file:///src/wt/pr-2609-A/tests/command.parse.test.js:185:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'script.js', 'user' ],
+    expected: [ 'user' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/command.parse.test.js:189:5
+✖ when args from "electron" and utility process then app/script/args (0.370357ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'script.js',
+      'user'
+    ]
+  
+      at TestContext.<anonymous> (file:///src/wt/pr-2609-A/tests/command.parse.test.js:197:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'script.js', 'user' ],
+    expected: [ 'user' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/command.parse.test.js:201:5
+✖ when args from "electron" and worker thread then app/script/args (0.351973ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'script.js',
+      'user'
+    ]
+  
+      at TestContext.<anonymous> (file:///src/wt/pr-2609-A/tests/command.parse.test.js:209:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'script.js', 'user' ],
+    expected: [ 'user' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+# ---- stderr ----
+

@@ -1,0 +1,31 @@
+{
+  "mode": "prepare",
+  "base": "672e3806c68421f91b3a1f628f6207b8b26d1a2c",
+  "fix": "68199e64b31851839c03dff1567a81d7714baa08",
+  "steps": [
+    {
+      "argv": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/src/nm/f5b6ab1dad946504954b9f04a18838913d6331c055a63e5b0e7bf975a393658c",
+      "startedAt": "2026-10-06T23:18:48.476Z",
+      "endedAt": "2026-10-06T23:19:00.234Z",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "\nadded 427 packages in 12s\n",
+      "stderr": "npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.\nnpm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported\nnpm notice\nnpm notice New minor version of npm available! 11.6.1 -> 11.21.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0\nnpm notice To update run: npm install -g npm@11.21.0\nnpm notice\n",
+      "lockSha256": "f5b6ab1dad946504954b9f04a18838913d6331c055a63e5b0e7bf975a393658c",
+      "forCommit": "672e3806c68421f91b3a1f628f6207b8b26d1a2c"
+    },
+    {
+      "note": "node_modules reused for 68199e64b31851839c03dff1567a81d7714baa08",
+      "lockSha256": "f5b6ab1dad946504954b9f04a18838913d6331c055a63e5b0e7bf975a393658c",
+      "dir": "/src/nm/f5b6ab1dad946504954b9f04a18838913d6331c055a63e5b0e7bf975a393658c"
+    }
+  ]
+}

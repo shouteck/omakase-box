@@ -1,0 +1,138 @@
+# argv: ["node","--test","tests/incrementNodeInspectorPort.test.cjs"]
+# cwd: /src/wt/pr-2630-A
+# HEAD: fca3bb7da891a88fc7ca8239253930be512a664f
+# overlay: git checkout 130cf3a9d0dab501f295674166994b41982546a7 -- tests/incrementNodeInspectorPort.test.cjs
+# started: 2026-10-06T23:18:05.817Z ended: 2026-10-06T23:18:05.975Z
+# exit: 1 signal: null
+# ---- stdout ----
+▶ increment node inspector port in executable subcommands
+  ✔ when --inspect then bump port (4.565847ms)
+  ✔ when --inspect=100 then bump port (0.67861ms)
+  ✔ when --inspect=1.2.3.4:100 then bump port (0.451407ms)
+  ✔ when --inspect=1.2.3.4 then bump port (0.390333ms)
+  ✔ when --inspect-brk then bump port (0.53837ms)
+  ✔ when --inspect-brk=100 then bump port (0.386134ms)
+  ✔ when --inspect-brk=1.2.3.4 then bump port (0.351249ms)
+  ✔ when --inspect-brk=1.2.3.4:100 then bump port (0.44531ms)
+  ✖ when --inspect-wait then bump port (2.274328ms)
+  ✖ when --inspect-wait=100 then bump port (0.98408ms)
+  ✖ when --inspect-wait=1.2.3.4 then bump port (0.993076ms)
+  ✖ when --inspect-wait=1.2.3.4:100 then bump port (0.628931ms)
+  ✔ when --inspect-port=100 then bump port (0.4664ms)
+  ✔ when --inspect-port=1.2.3.4:100 then bump port (0.671313ms)
+  ✔ when --inspect-unexpected then unchanged (2.684052ms)
+  ✔ when --frozen-intrinsics  then unchanged (0.589947ms)
+✖ increment node inspector port in executable subcommands (19.428191ms)
+ℹ tests 16
+ℹ suites 1
+ℹ pass 12
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 118.157664
+
+✖ failing tests:
+
+test at tests/incrementNodeInspectorPort.test.cjs:111:3
+✖ when --inspect-wait then bump port (2.274328ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   '--inspect-wait'
+  -   '--inspect-wait=127.0.0.1:9230'
+    ]
+  
+      at TestContext.<anonymous> (/src/wt/pr-2630-A/tests/incrementNodeInspectorPort.test.cjs:117:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '--inspect-wait' ],
+    expected: [ '--inspect-wait=127.0.0.1:9230' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/incrementNodeInspectorPort.test.cjs:120:3
+✖ when --inspect-wait=100 then bump port (0.98408ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   '--inspect-wait=100'
+  -   '--inspect-wait=127.0.0.1:101'
+    ]
+  
+      at TestContext.<anonymous> (/src/wt/pr-2630-A/tests/incrementNodeInspectorPort.test.cjs:126:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '--inspect-wait=100' ],
+    expected: [ '--inspect-wait=127.0.0.1:101' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/incrementNodeInspectorPort.test.cjs:129:3
+✖ when --inspect-wait=1.2.3.4 then bump port (0.993076ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   '--inspect-wait=1.2.3.4'
+  -   '--inspect-wait=1.2.3.4:9230'
+    ]
+  
+      at TestContext.<anonymous> (/src/wt/pr-2630-A/tests/incrementNodeInspectorPort.test.cjs:135:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '--inspect-wait=1.2.3.4' ],
+    expected: [ '--inspect-wait=1.2.3.4:9230' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/incrementNodeInspectorPort.test.cjs:138:3
+✖ when --inspect-wait=1.2.3.4:100 then bump port (0.628931ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   '--inspect-wait=1.2.3.4:100'
+  -   '--inspect-wait=1.2.3.4:101'
+    ]
+  
+      at TestContext.<anonymous> (/src/wt/pr-2630-A/tests/incrementNodeInspectorPort.test.cjs:144:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '--inspect-wait=1.2.3.4:100' ],
+    expected: [ '--inspect-wait=1.2.3.4:101' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+# ---- stderr ----
+
