@@ -1,0 +1,34 @@
+# Notebook: from a request to a check
+
+Append-only. Newest entry last.
+
+## 6 October 2026, session 1: survey
+
+**Set out to do.** The programme's first session: survey Line 1 properly, skim Lines 2 and 3 for their names in the field and whether either is already answered, and send the CTO anything that bears on R2.
+
+**Before starting.** Merged `origin/master` into `lab` (STATUS.md, K6 brief, packaging card; no conflicts). Master has no "For the lab" section in BACKLOG.md yet, so there was nothing from the CTO to answer. Kitchen state: K6 parked, R2 not approved and not briefed, D4 unstarted.
+
+**Did.** About 30 web searches and 35 page reads, all free. Read R1's wave file, notes and agreement as the product's one real data point. Wrote `lab/survey.md`, this line's `README.md` and `related-work.md`. Every source is tagged by how it was read: abstract read, or search summary only. No paper was read in full.
+
+**What happened.**
+
+- The problem has no single name. The useful frame came from the benchmark-critique literature, not the test-generation literature: a check is a classifier with a false-accept rate, a false-reject rate and a cost.
+- Expected to find that existing tests are a sound check and the hard part is only the missing-test case. Found instead that developer-written tests are wrong in both directions at rates that matter. This changed the line's formulation: every route, including "name an existing test", has to be scored for error, not assumed safe.
+- Expected a published breakdown of requests by how checkable they are. Did not find one. Benchmarks filter to requests that already have tests, which hides the case the product most needs.
+- Requester-cost evidence is thin: one 15-person study at function scale.
+- Line 2 is not answered in the field. The nearest studies suggest context changes move cost more than success, and that small studies cannot resolve success differences under 10 to 15 points.
+- Line 3 is not answered for import-following selection. The field's known gap is run-time loading.
+
+**Dead ends and failures.**
+
+- OpenAI's two SWE-bench Verified pages returned 403 to the reader. Their figures are from search summaries only and are tagged so.
+- The Aarhus call-graph paper downloaded as a PDF the host could not render (no PDF tool installed). Its recall figures are from a search summary only.
+- A search summary attributed "7.87% of bug-fix pull requests improve tests" to no identifiable paper. Left out.
+- Searches for a taxonomy of requests by verifiability returned taxonomies of review comments and task types instead.
+- arXiv:2507.18130 is now titled Doc2Feat-Bench; search results still call it NoCode-bench and quote an older best score (28.07%) than the current abstract (37.72% on the verified subset). Used the abstract.
+
+**Surprise followed.** R1's check. Its agreement lists two commands: `tsc --noEmit` and one generated evaluator test. The outcome is "a section stops appearing in the output; everything else is preserved". In the field's terms that is one small fail-to-pass condition plus a pass-to-pass guard. The existing kitchen suite (22 tests then) already is a guard. So the roughly 470 lines may have bought a custom guard the repository partly had. Not tested: the existing tests may not cover what R1's fixtures covered, and they did not ship in the Box. Recorded as the first open thread and passed to the CTO as a question, not a finding.
+
+**Sceptic.** A fresh agent was dispatched on the survey's scholarship and framing. Its report is `sceptic-survey.md`; corrections made after it are listed in the next entry.
+
+**Next.** Formulate: fix the definitions in the README, write the labelling guide for the map (kinds of check, plus whether the outcome is observable at a command line), and label this repository's own wave files as a pilot before sampling public trackers. Settle the R1 open thread from recorded evidence first; it is cheap.

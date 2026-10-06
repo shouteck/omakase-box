@@ -19,6 +19,8 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 ### Line 1. From a request to a check
 
+**Stage (kept by the lab lead):** survey done 6 October 2026; formulate next. Files in `lab/lines/request-to-check/`; cross-line survey in `lab/survey.md`.
+
 **The problem for the product.** Delegation is only worth it if saying what "done" means costs much less than doing the work. R1 showed it currently costs far more. The kitchen's R2 tries the engineering answer: let an agreement name tests that already exist. That covers changes to behaviour that is already tested. It does not cover the common case, where the request is for something new and no test exists yet.
 
 **What the lab must find out.**
@@ -62,6 +64,8 @@ These are real problems. They are not what stands between the product and its ne
 - **Calibrated certainty and ranking of candidate solutions.** Unpark when the product has real accept and reject decisions to calibrate against, which needs users. Until then Line 1 records, for each kind of check, how often it is wrong; that is the raw material.
 
 ## First session
+
+Done 6 October 2026; see `lab/survey.md`. The instruction as given:
 
 Survey Line 1 properly: what the problem is called in the literature, who has worked on it, what is known to work and not to work, with sources. Skim Lines 2 and 3 only far enough to learn their names in the field and whether either is already answered. Write `lab/survey.md`, open `lab/lines/request-to-check/`, and put anything that bears on R2 in the brief straight away.
 
