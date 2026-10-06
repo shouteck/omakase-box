@@ -1,6 +1,6 @@
 # R2 preparation notes
 
-- Base for development: `69bc6aa` (master tip = R2 brief); branch `wave/R2`. Prep SHA the Box pins: `6c0ee45`.
+- Base for development: `69bc6aa` (master tip = R2 brief); branch `wave/R2`. Final prep SHA the shipped Box pins: `41fdf38`. (`6c0ee45` below is phase-1 history — the first agreement commit — superseded when the correction round re-exported on 41fdf38.)
 - Request: remove the unused `repo` parameter of `r1Agreement` in `tests/box/package/r1-kitchen-stats.test.ts`, preserving every assertion, comment and behavior. Preparation adds agreement data + submission instructions only — no request-specific code, generator, evaluator, driver or test.
 
 ## Phase 1 triage (untouched base `69bc6aa`)
@@ -28,7 +28,7 @@ Ownership: `packages/box-package/commands.ts` owns execution (pinned tools — n
 ## Request preparation (agreement data + instructions, separate from generic development)
 
 - `research/box-delegation/r2/agreement.json` (3074 B): entrypoint + editable mapping of the real test file, declaredDependencies for the closure (typescript/vitest/zod), exclusions matching R1's, two command descriptors — `unused-param-outcome` (tsc --noUnusedParameters, role outcome, owner context) and `r1-behavior-guard` (vitest run of the same file, role guard, owner context) — and submission instructions. Zero request-specific package code.
-- Preparation minutes: ~10 (agreement drafting + the two boundary corrections above, including the failed export attempts). Generic development: the implementation record above (~70 min inside the 90-min ceiling, shared with reading/triage).
+- Preparation minutes: SELF-REPORTED estimate ~10 (agreement drafting + the two boundary corrections above, including the failed export attempts). Generic development: SELF-REPORTED estimate (an earlier "~70 min" guess was superseded by genuine Git timestamps — base 69bc6aa committed 11:16, implementation commits 11:42/11:44 → ~26–30 min active). No timed stage boundaries were recorded; all durations in this file are self-reported estimates, not measured.
 
 ## Export (real CLI, `node packages/box-cli/dist/cli.js export` after rebuilding dist with vite ssr)
 
@@ -81,24 +81,27 @@ Ownership: `packages/box-package/commands.ts` owns execution (pinned tools — n
 - **Second legit solution** (param removed + caller `r1Agreement(baseCommit)`) → **pass**, merge `e0005074` (verify-altsol.json) — agreement permits any fix that satisfies the declared checks.
 - Artifact tamper: baseCommit → `base-commit-mismatch`; baselineSha256 → `baseline-mismatch`; files:[] → `malformed-submission` (all fast, pre-clone).
 - **Blind spot recorded**: tampered `boxJsonSha256` passes owner verify — the field is only re-checked when the owner retains a pristine export and passes `--box`; execution authority is the agreement's commands, so impact is metadata-only, but reviewers should know the manifest hash is self-declared otherwise.
+- **Blind spot — editable guard can be weakened**: the guard lives inside the editable file itself, so a submission that *weakens* an assertion (e.g. relaxes an expected value) can still pass outcome + guard; the guardfail attack only proved a *strengthening* regression fails. Kept as a known blind spot even with the PASS: the actual submission's diff was verified to be the single identifier rename with every assertion preserved.
 
 ### Integration
 - Fetched scratch commit c9343bb (not hand-copied), cherry-pick --no-commit onto wave/R2 → byte-identical single-line diff; committed as **5245600** `R2: integrate verified submission 78a30a61`.
 - Scoped re-run on integrated surface: r1-kitchen-stats + command-checks = **16/16 pass** (integrated-scoped.log). Full `verify.mjs --full` owned by reviewer.
 
 ### Disclosure recount (tracked, at base 41fdf38)
-- 3513 tracked files / 24,017,589 bytes; shipped owner files 20 / 135,643 bytes → tracked share 0.569% files, 0.565% bytes. (Manifest's 1857 denominator is the live filesystem inventory incl. untracked dirs — distinct measure, both recorded.)
+- Tracked-ELIGIBLE denominator (tracked files minus exclusions, sourceRoot `.`): **717 files / 4,678,854 bytes**; shipped owner files **20 / 135,643 bytes → 2.789% of files, 2.899% of bytes**.
+- All-history tracked counter (no exclusions): 3513 files / 24,017,589 bytes → 0.569%/0.565% — a different measure, kept distinct, not the eligible denominator.
+- Manifest's 1857 denominator is the live filesystem inventory incl. untracked dirs — a third, distinct measure. All three recorded; reviewer should independently recount, these are cook-side counts.
 
 ### Recipient self-report (unverified, rough)
 - fresh folder-only recipient `8a2ad60e`; claimed setup ~30% / context ~40% / change ~30%, session ~11:45 start; corepack pnpm 10.34.5 install, local tsc; owner checks correctly not runnable in-box. No wall-clock/token totals verifiable.
 
-### Effort split
-- Generic infrastructure (commands.ts, runner, export/verify wiring, tests): wave commits 0767aac/41fdf38 — ~26 min cook.
-- Request agreement prep: agreement.json + notes only — 0 package lines, 0 new tests/drivers; measured <5 min of the session.
-- Cook total active ≈ 35–40 min at 11:45 + phase-3 verify/attack/integrate ≈ 25 min → ≈ 60–65 min of the 90 cap; stopped before 12:46 hard stop.
+### Effort split (SELF-REPORTED estimates — no timed stage bounds were recorded)
+- Generic infrastructure (commands.ts, runner, export/verify wiring, tests): wave commits 0767aac/41fdf38 — estimate ~26–30 min (bounded by genuine Git timestamps 11:16→11:44).
+- Request agreement prep: agreement.json + notes only — 0 package lines, 0 new tests/drivers; self-reported estimate <10 min, earlier "<5 min" claim corrected — not measured.
+- Cook total active: estimate ≈ 60–65 min of the 90-min cap, stopped before the 12:46 hard stop. Phase-1 "~70 min" guess superseded by genuine Git dates.
 
-### Resources owned / lifecycle
-- `C:\Users\shout\Desktop\Projects\r2-box-unused-param` — retained for independent review (do not delete).
-- `%TEMP%\box-verify-iTTFWh` — kept scratch containing verified merge commit (named in verify-legit.json); may be removed after review.
-- `%TEMP%\kitchen-r2-owner`, `kitchen-r2-verify` — attack copies/logs; node_modules removed, artifacts archived under evidence/phase3; dirs may be removed after review.
-- Dead scratch dirs box-verify-NNy7bp/wjEgHI/ETAoBu removed. box-d21-* and unknown K6 temps untouched.
+### Resources owned / lifecycle (closed after review PASS on 6841963)
+- All reports, artifacts, attack outputs and the scratch merge commit SHA are archived under `research/box-delegation/r2/evidence/phase3/` — sufficient to reproduce; raw archive confirmed before removal.
+- Removed at wave close: `C:\Users\shout\Desktop\Projects\r2-box-unused-param` (incl. its node_modules), `%TEMP%\box-verify-iTTFWh`, `%TEMP%\kitchen-r2-owner`, `%TEMP%\kitchen-r2-verify`, and `/tmp/r2-*` cook logs + `/tmp/base-tree.txt`.
+- Retained: `packages/box-cli/dist` — normal gitignored build artifact, not claimed as temp cleanup.
+- Untouched by policy (not this wave's): `box-d21-*` temps, K6 stats/data, lab worktree, and anything the kitchen cannot attribute (`/tmp/verify-poll.txt` reported, not deleted).
