@@ -1,9 +1,14 @@
 # R3 readiness report — colinhacks/zod @ 0b216ef674e297ebe41d8bf902262e56f8755822
 
-Recorded by cook, wave/R3, 2026-10-06. All upstream code execution inside disposable
-containers; no install scripts (`--ignore-scripts` / nub's equivalent); tests run
-with `--network none`; install only with network up. Host ran `gh` read-only + docker
-control only. No checkout hooks run (git hooks never enabled; clone only).
+Recorded by cook, wave/R3, 2026-10-06. Upstream code execution reported here ran
+inside disposable containers; tests ran with `--network none`; dependency install
+attempts were network-on setup. Host ran `gh` read-only + docker control only. No
+checkout hooks ran (git hooks never enabled; clone only). Security caveat: the
+blanket "install scripts disabled" claim is not fully proven — Dockerfile setup
+ran apt/npm and the pinned nub installer script, and the npm invocation bytes for
+the TS-nightly tool probe were not retained. No upstream dependency lifecycle
+script was observed; the product's spawned owner install omitted
+`--ignore-scripts` and was refused by pnpm's package-manager guard.
 
 ## Repository pin
 
@@ -17,6 +22,9 @@ control only. No checkout hooks run (git hooks never enabled; clone only).
   (project-pinned trustedNode). Derived tool image `kitchen-r3-421d276a-tools`:
   + git 2.39.5, curl; pnpm 10.34.5 via `npm i -g`; nub 0.8.3 via
   install.sh at nubjs/nub@0ae8783f1f93763c56dfc827892cfb679e8a0a77.
+  Provenance limit: the base image and nub installer source are immutable pins;
+  the pnpm global package and the installer-fetched nub binary are version/commit
+  pinned but not checksum-verified in the Dockerfile.
 - Resources: volumes `kitchen-r3-421d276a-src` (clone), `-product` (cli.mjs + zod/ts
   deps), `-out` (probe box dir), `-nub` (unused after image bake), image
   `kitchen-r3-421d276a-tools`. UUID root `kitchen-r3-421d276a`.
@@ -113,13 +121,12 @@ Command form: `cd /src/zod && nub exec --node vitest run <paths>` from repo ROOT
 
 ## Issue candidates (`gh` read-only)
 
-Corrected read window: the `gh` issue reads happened after the `packages/zod`
-suite finished (~04:54Z by the runner's 04:51:05 start + 198 s) and before the
-candidate commit at 05:04:13Z. The earlier "~05:05Z" figure post-dates that
-commit and was a projection, not an observation. Per-issue read times inside
-the window are not individually recorded. Full list in
-evidence/issue-candidates.md (its file header repeats the same projected
-~05:05Z; treat it as the window above).
+Corrected read chronology: no raw `gh` transcript was retained. The committed
+bound proves only that this list existed by the candidate commit at 05:04:13Z;
+the earlier "~05:05Z" figure post-dates that commit and was a projection, not an
+observation. Per-issue read times are not proven. Reviewer independently
+re-confirmed state/title/date at ~05:10Z. Full list in
+evidence/issue-candidates.md (its original per-candidate stamps are retracted).
 
 | Issue | State | Why rejected |
 |---|---|---|
@@ -131,10 +138,13 @@ evidence/issue-candidates.md (its file header repeats the same projected
 
 ## Verdict
 
-- Existing zod tests ARE runnable in owner context inside a container (nub install +
-  root-cwd vitest), but current Box product CANNOT export this repo: pnpm-only
-  install assumption (blocker) + package-specifier test imports (unequal-sides risk).
-- **No open issue qualifies**: every existing check run is green or infra-red
+- A bounded set of existing zod tests ran in owner context inside a container
+  (reviewer independently reproduced `object.test.ts`; worker logs report the
+  larger suites). Box travel remains **not tested**: export stopped at the
+  pnpm-only install blocker before a Box was emitted. Package-specifier test
+  imports are an additional unequal-sides risk, not a demonstrated export wall.
+- **No open issue qualified in this survey**: every observed existing check is
+  runner-green or infra-red
   (missing build artifact), never defect-red on the pinned base for a real open
   issue. Per the wave rule this is a preparation gap → park; no fabricated red.
 - Issue-prep clock: no issue selected, so no prep stage. Stage clocks in
@@ -155,19 +165,23 @@ evidence/issue-candidates.md (its file header repeats the same projected
   establish declaration-before-results; the wave's required predeclared-sample
   condition is recorded NOT MET. No new predeclaration was backfilled; the
   sample run stands as an *undeclared-then-run* green observation only.
-- **Timeline corrections (observed anchors only):** session start 04:34Z
-  (`date -u`); tool image created 04:43:46Z (reviewer, image inspect); sample
-  run start 04:46:27Z (runner); `packages/zod` suite 04:51:05Z + 198 s;
-  worker `date -u` check 05:00:14Z; candidate commit 05:04:13Z. All earlier
+- **Timeline corrections (bounded by retained records):** worker-reported session
+  start was 04:34Z, but no raw `date -u` output was retained; first retained
+  object timestamp is the tool image at 04:43:46Z (reviewer image inspect).
+  Runner/report anchors: sample start 04:46:27Z; `packages/zod` suite
+  04:51:05Z + 198 s; candidate commit 05:04:13Z. All earlier
   "~05:05Z / ~05:20–35Z" stage figures in this file and the wave Result were
   projections written before the commit, not observations — now corrected or
-  labeled windows. Total observed active elapsed ≈ 30 min (04:34→05:04Z),
-  inside the 90-min cap.
-- **UID:** worker containers ran the image's default user (root); the actual
-  UID of worker runs was not recorded and is unknown. The reviewer's runs used
-  UID 65534 and succeeded.
+  labeled windows. Objective recorded span is ≈20.5 min (04:43:46→05:04:13Z);
+  total active elapsed is unknown, though bounded by the reported ~30 min if the
+  unreceipted 04:34 start is accepted.
+- **UID / install policy:** the image has no `Config.User`, so its default is
+  root; worker container `--user` flags were not recorded, so actual worker UID
+  is unknown. Reviewer runs used UID 65534. Dependency installs used recorded
+  `--ignore-scripts` or nub's ignored-build warning, but Dockerfile tool setup
+  itself ran an unpinned-checksum installer and `npm i -g` without that flag.
 - **Denominators:** 202 filesystem `*.test.ts` under `packages/` (196 under
-  `packages/zod`), 742 tracked files at pin; the 588 figure is Vitest project
+  `packages/zod`), 742 tracked index entries at pin; the 588 figure is Vitest project
   file instances, a different measure — not a file-count denominator.
 - **Useful conditions restated:** real external repo + open-issue survey —
   met; a qualifying real open issue selected — **not met**; predeclared
@@ -231,7 +245,8 @@ Recount: `find packages -path '*/node_modules' -prune -o -name '*.test.ts'`
 = **202** test files; `packages/zod` alone = **196**. The 588 in
 `zod-package-suite.log` is Vitest project instances/files (each source test can
 appear under normal, compile-mode and TS projects), not a filesystem file-count
-denominator. `git ls-files` at the pin inside the clone = **742** tracked files.
+denominator. `git ls-files` at the pin inside the clone = **742** tracked index
+entries.
 
 Chronology findings: image created 2026-10-06T04:43:46Z; sample result starts
 04:46:27Z; `predeclared-sample.md` says ~04:55Z; the candidate commit is
@@ -240,3 +255,19 @@ Chronology findings: image created 2026-10-06T04:43:46Z; sample result starts
 commands (`probe-export*.log`, `sample-tests.log`, `other-projects-suite.log`,
 `build.log`), so those markers are not exact exit records. The independent
 export above records the actual exit as 1.
+
+## Final re-review verdict on `01b95af`
+
+The corrected report is accepted as **auditable negative evidence for archival**:
+the recipe names the repo URL/pin, image digest, reviewer commands, retained raw
+logs and explicit limits needed to replay the same failure. It is **not** a
+readiness pass and does not satisfy the original experiment's predeclared-sample
+gate, issue selection, Box export, recipient or owner verification. The
+independent export run is enough to replay the principal blocker; full-suite and
+lint/nightly results remain worker-reported output with unreliable shell exit
+markers.
+
+Remaining retained resources are deliberately left for CTO-directed cleanup:
+image `kitchen-r3-421d276a-tools` (`sha256:cf1565a4891942ee65819e1e278e8df5cf28a5299a60ba0677a9e004f73c38af`)
+and volumes `kitchen-r3-421d276a-src`, `-product`, `-out` (all local driver,
+labels null). No `kitchen-r3*` containers were listed during re-review.

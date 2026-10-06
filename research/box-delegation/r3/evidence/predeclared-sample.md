@@ -1,7 +1,7 @@
-# R3 predeclared test sample — recorded BEFORE any test result
+# R3 intended predeclared test sample — original "before results" claim retracted below
 
 Repo: colinhacks/zod, pinned commit 0b216ef674e297ebe41d8bf902262e56f8755822 (2026-10-02T18:08:53Z), MIT.
-Recorded: 2026-10-06T~04:55Z (UTC), before any test execution.
+Recorded: 2026-10-06T~04:55Z (UTC), claimed before any test execution — **that claim is retracted in the amendment below**.
 
 Denominator: 202 `*.test.ts` files under packages/ (excl. node_modules) at pinned commit.
 Sample (4 files, contrasting):
