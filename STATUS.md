@@ -1,14 +1,19 @@
 # Status
 
-Replaced at K7a close, 7 October 2026 local time.
+Replaced at R3b-1 close, 7 October 2026 local time.
 
 ## Now
 
-- **K7a accepted, merged.** Packaging test suite runs at `--maxWorkers=3` via `suiteWorkers()` in `scripts/suite.mjs`. Per-worker stats isolation: each file gets its own `STATS_ID` (pid+random hex), own `STATS_FILE` under `K6_STATS_DIR`, children propagate via `K6_STATS_FILE`, `afterAll`+exit-hook `cleanupOwned` removes run dirs and stats. Acceptance: two clean full runs on `39de96d`, both PASS.
-- **K7 is parked, unmerged.** Five commits on local `wave/K7` branch preserved for salvage. Everything else K7 carried (measurement budgets, killed-live-DB recovery, merge-parentage attribution, k6-scoped-tmp ownership/refusal, Node-helper extraction) returned to BACKLOG.md as separate small items.
-- **Milestone A capability remains accepted.** Useful outside-issue delegation still unmet.
-- **Nothing removed or deleted.** No product code, dependency, lockfile, security-policy or global-setting changes.
+- **R3b-1 accepted, merged.** Screening of `tj/commander.js`: 200 merged pull requests listed, 8 bug-fix candidates run three ways in containers, **3 replayable cases** (#2615, #2609, #2350). The pass reran #2615 and matched. Detail in `waves/R3b-1.md` and `research/box-delegation/r3b/SCREEN.md`.
+- **R3b-2 in flight** on `wave/R3b-2`: #2615 goes through the product end to end (agreement, Box, blind solver, owner-side verify), with #2350 as a control if time allows. This is a replay of a fixed issue, not an open one.
+- The pass's note that shapes wave 2: a maintainers' test can encode a decision the issue body never states. Wave 2 gives the solver the issue comments and the test, and reports a held-back probe separately.
+- Milestone A capability remains accepted. Useful outside-issue delegation still unmet until R3b-2 reports.
+- Nothing sent to the outside project. No product code changed. `K7` is still parked on local `wave/K7`.
+
+## Lab
+
+Two waves closed since the lab replaced its brief (K7a, R3b-1). One lab sync is due before this run stops.
 
 ## Next
 
-One wave done. Owner called `START.md: K7a`. The recommendation noted R3b as the next product step; they do not depend on each other. Awaiting the owner's next instruction.
+R3b-2, already named by the owner as part of R3b. The kitchen stops when it closes.
