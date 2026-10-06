@@ -648,6 +648,7 @@
       ],
       "deliverables": [
         "Choose a well-known public TypeScript project and one real open issue with a clear expected behaviour, preferably one with a failing test or a reproduction. Pin the exact commit. Record why this project and this issue, and which candidates were rejected and why.",
+        "A readiness report for that repository, before any issue is chosen: how much of it is ready to hand work out as it stands. Which of its tests travel into a Box and still run, which do not and why, which of a sample of its open issues could be prepared as a Box today and what blocks the others. This is what an owner would need to see first, and it is produced by reading and running their code locally only.",
         "Prepare the Box with the product as it is after R2, writing no code for this request. Time the preparation and record every manual step. Anything the product could not do is a named preparation gap, not something to patch around quietly.",
         "A blind recipient solves it from the Box alone. Owner-side verify runs against a clean clone of that project at the pinned commit.",
         "Record: preparation minutes and steps, files and bytes disclosed against the project total, what the recipient lacked, each check and its result on the untouched code, and whether the result was accepted.",

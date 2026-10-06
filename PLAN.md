@@ -66,7 +66,7 @@ The lab's third line of research (does the slice contain what a change needs) de
 
 ## Later, each needing its own decision
 
-A public-issue programme (owner's idea, 6 October 2026): maintainers of public projects opt in, their open issues are prepared as Boxes, and solutions come back with the evidence attached. R3 is its first experiment. Consider it once R3 has worked on several issues across more than one project; it starts only with a maintainer who has agreed, never by sending unrequested work to a project. Restricted proprietary packaging with a disclosure policy; hostile-code execution in disposable VMs; bounty distribution and payments; tracker and backlog integrations; automatic selection; a customer pilot with real participants.
+An ecosystem for handing work out (owner's direction, 6 October 2026): the product is not a solver, since anyone can point an agent at their own code. It is the handover layer. A project becomes ready to hand work out, and any outside solver the owner chooses (a specialised agent they cannot give repository access to, a contractor, another team) can pick up a Box, do the work and return it with evidence. Public projects are the proving ground and the showcase. Teams with code they will not share are the market. R3 is its first experiment. Open it once R3 has worked on several issues across more than one project, and only with an owner who has agreed. Restricted proprietary packaging with a disclosure policy; hostile-code execution in disposable VMs; bounty distribution and payments; tracker and backlog integrations; automatic selection; a customer pilot with real participants.
 
 ## History
 
