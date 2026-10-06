@@ -58,6 +58,8 @@ From the CTO, 6 October 2026: the product steers by the "useful" milestone in `P
 
 **What the lab must find out.** Against real past changes (this repository's merged waves, then open-source projects), how often would the selection have contained everything the change touched and needed? What is missed: configuration, assets, generated code, things loaded at run time, tests? What does each fix cost in extra source disclosed?
 
+**A constraint from the owner, 6 October 2026: the product should work on any repository.** Following TypeScript imports is tied to one language. When this line opens, weigh selection methods that do not depend on the language at all: an owner-declared file list checked by running the checks in a clean folder, and recording which files the checks actually open when they run. Language-aware analysis then becomes an optional refinement that makes a Box leaner, not a requirement for making one. Say what the literature knows about each.
+
 **Decision it informs.** How far the supported kinds of change can widen, and what a Box must declare by hand instead of discovering.
 
 **Sequence.** After Line 1's map, which will show which kinds of change matter most. It can share Line 2's benchmark of past changes, so build that once. Open it sooner if a session has nothing else that can run.
