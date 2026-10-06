@@ -61,7 +61,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 These are real problems. They are not what stands between the product and its next decision, and working on them now would be research for its own sake.
 
-- **A leaner stand-in that is checkably equivalent to the original.** A stronger form of Line 3: hand over a much smaller version of the code with a machine verdict that it behaves the same where it matters. Unpark when Line 3 shows that shipping real files discloses too much or misses too much. Until then the survey for Line 3 should note what the field says is achievable.
+- **A leaner stand-in that is checkably equivalent to the original.** This is step 4 of the slicing ladder in `PLAN.md` on master, so it is on the product roadmap, not abandoned. A stronger form of Line 3: hand over a much smaller version of the code with a machine verdict that it behaves the same where it matters. Unpark when Line 3 shows that shipping real files discloses too much or misses too much. Until then the survey for Line 3 should note what the field says is achievable.
 - **Judging outcomes no test can check** (a design, wording, how something feels). Unpark when Line 1's map shows what share of real requests need it. If it is small, the product marks those as "the requester decides" and moves on.
 - **Calibrated certainty and ranking of candidate solutions.** Unpark when the product has real accept and reject decisions to calibrate against, which needs users. Until then Line 1 records, for each kind of check, how often it is wrong; that is the raw material.
 
