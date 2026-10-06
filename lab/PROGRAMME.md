@@ -9,7 +9,8 @@ These are needs, stated by the CTO, who may add, reword or withdraw one through 
 1. **Sufficient context.** Given a change to make in an existing codebase, what is the least material another developer or agent needs in order to make it correctly and prove it, and how can that material be found automatically? The material need not be a literal subset of the code: it may be a reduced stand-in for the rest of the system, provided there is a stated, checkable sense in which working against the stand-in is the same as working against the original. What kinds of "the same" can be checked by machine, at what cost, and for which kinds of code? Today the kitchen follows TypeScript imports from the files to be edited and ships those files as they are.
 2. **Judging what tests cannot.** Some requested outcomes have no mechanical check: how something looks, reads or feels to use. How can a delivered result be judged against what was asked, reliably enough to accept or reject work?
 3. **Specifying acceptance cheaply.** Delegating one 8-line change needed about 470 lines of checks written for that request (R1, 6 October 2026). How can what "done" means be stated once, by a non-specialist, and enforced on both sides without writing code per request? The kitchen is trying a direct fix (R2); if that fails this becomes a line.
-4. **Whether less context helps.** Does an agent given a small, verified package do better than the same agent given the whole repository, and when?
+4. **What "expected behaviour" covers.** Needs 2 and 3 assume we know what is being specified and judged. We do not. What a requester expects can be functional, visual, about speed, safety, data, wording or how something feels to use, often several at once, and it arrives as whatever the requester happened to say. What kinds are there in real requests, how often does each occur, how do people actually describe them, and which kinds can be checked by a test, by a proof, by a judge, or only by the requester? The product needs this map before it can say honestly what a Box can and cannot verify.
+5. **Whether less context helps.** Does an agent given a small, verified package do better than the same agent given the whole repository, and when?
 
 ## Ideas on the table
 
@@ -21,7 +22,7 @@ Offered by the owner and the CTO. They are hypotheses to weigh against the liter
 
 ## First session
 
-Before any line is opened: survey all four areas at overview depth, enough to learn what each problem is called in the literature, who has worked on it, and how far the field has got. Write `lab/survey.md`. Then decide, and record here with reasons:
+Before any line is opened: survey all five areas at overview depth, enough to learn what each problem is called in the literature, who has worked on it, and how far the field has got. Write `lab/survey.md`. Then decide, and record here with reasons:
 
 - which needs are already answered well enough by existing work to transfer directly;
 - which become lines, in what order, and how each is formulated;
