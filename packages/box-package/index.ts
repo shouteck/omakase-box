@@ -1,5 +1,7 @@
-export { BoxAgreementSchema, DEFAULT_INVENTORY_EXCLUDE, parseAgreement } from './agreement.js';
-export type { BoxAgreement, EditableEntry } from './agreement.js';
+export { BoxAgreementSchema, CommandCheckSchema, DEFAULT_INVENTORY_EXCLUDE, parseAgreement } from './agreement.js';
+export type { BoxAgreement, CheckTool, CommandCheck, EditableEntry } from './agreement.js';
+export { CheckOutsideRoot, runDeclaredCheck, runDeclaredChecks } from './commands.js';
+export type { CheckContext, CheckRecord, CheckResult } from './commands.js';
 export { AgreementInvalid } from './agreement.js';
 export { describeGap, ExportFailed, GitFailed, PreparationGap, SubmissionFailed } from './errors.js';
 export { exportBox } from './export.js';

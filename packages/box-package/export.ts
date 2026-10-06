@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
 import type { BoxAgreement } from './agreement.js';
+import { runDeclaredChecks } from './commands.js';
+import type { CheckRecord } from './commands.js';
 import { ExportFailed, PreparationGap } from './errors.js';
 import { git } from './git.js';
 import type { BoxManifest } from './manifest.js';
@@ -90,6 +92,23 @@ export function exportBox(options: ExportOptions): ExportResult {
   const selection = deriveSelection(agreement, sourceRoot);
   if (selection.gaps.length > 0) throw new PreparationGap(selection.gaps);
 
+  // Every declared owner-context check runs on the untouched base before a byte
+  // is shipped: the record is what gives a post-patch green its meaning. A red
+  // guard is a preparation or environment gap — the base the agreement claims
+  // to start from does not hold. All-green outcome checks are recorded with a
+  // warning that the declared checks cannot evidence change. Recipient-context
+  // commands are carried in the manifest for the recipient recipe; they are not
+  // executed here.
+  const baseChecks: CheckRecord[] = runDeclaredChecks(agreement.commands, repo, options.pnpm, 'owner');
+  const warnings: string[] = [];
+  const failedGuard = baseChecks.find(record => record.role === 'guard' && record.result !== 'pass');
+  if (failedGuard !== undefined) {
+    throw new ExportFailed(`guard check '${failedGuard.name}' does not pass on the untouched base (result: ${failedGuard.result}, exit ${failedGuard.exit}): ${failedGuard.log}`);
+  }
+  if (baseChecks.length > 0 && !baseChecks.some(record => record.role === 'outcome' && record.result === 'fail')) {
+    warnings.push('no declared outcome check fails on the untouched base: the declared checks cannot evidence change');
+  }
+
   const outDir = resolve(options.outDir);
   if (existsSync(outDir) && readdirSync(outDir).length > 0) throw new ExportFailed(`out directory ${outDir} is not empty`);
   mkdirSync(outDir, { recursive: true });
@@ -136,6 +155,13 @@ export function exportBox(options: ExportOptions): ExportResult {
     readContext: agreement.readContext,
     checks: agreement.checks,
     evaluator: agreement.evaluator.map(entry => ({ box: entry.box, generator: entry.generator })),
+    commands: agreement.commands,
+    baseChecks: baseChecks.map(record => ({
+      name: record.name, tool: record.tool, argv: [...record.declaredArgv], cwd: record.cwd,
+      context: record.context, role: record.role, exit: record.exit, result: record.result,
+      log: record.log, seconds: record.seconds
+    })),
+    warnings,
     submission: { format: 'editable-overlay', tool: SUBMIT_TOOL_PATH, editable, instructions: agreement.submission.instructions },
     disclosure: { shippedOwnerFiles: shippedOwner, inventoryFiles: inventory, share: inventory === 0 ? 0 : shippedOwner / inventory }
   };

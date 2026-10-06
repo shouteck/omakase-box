@@ -4,6 +4,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { parseAgreement } from './agreement.js';
+import { runDeclaredChecks } from './commands.js';
+import type { CheckRecord } from './commands.js';
 import type { PnpmInvocation } from './export.js';
 import { git } from './git.js';
 import { ownerCheck } from './owner-checks.js';
@@ -53,7 +55,7 @@ export interface VerifyMerge {
 export interface VerifyReport {
   readonly verdict: 'pass' | 'fail';
   readonly failureClass?: VerifyFailureClass;
-  readonly reason?: SubmissionRejection | 'no-owner-check' | 'outside-owner-root' | VerifyCheckName | 'operational';
+  readonly reason?: SubmissionRejection | 'no-owner-check' | 'outside-owner-root' | VerifyCheckName | 'command-check' | 'operational';
   readonly detail?: string;
   readonly box?: { readonly id: string; readonly name: string; readonly version: number };
   readonly baseCommit?: string;
@@ -61,6 +63,7 @@ export interface VerifyReport {
   readonly attemptSha256?: string;
   readonly applies?: readonly SubmissionApply[];
   readonly checks: readonly VerifyCheck[];
+  readonly commandChecks?: readonly CheckRecord[];
   readonly merge?: VerifyMerge;
 }
 export interface VerifyOptions {
@@ -204,10 +207,12 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
 
     // Phase 5: owner checks, in order, fail-fast. install prepares the checkout
     // (an infrastructure concern); compile and outcome judge the patch itself.
+    // The outcome step exists only when evaluator generators named registered
+    // owner checks — a bare `vitest run` would execute the clone's whole suite.
     const steps: Array<{ name: VerifyCheckName; args: string[] }> = [
       { name: 'install', args: ['install', '--frozen-lockfile'] },
       { name: 'compile', args: ['exec', 'tsc', '--noEmit'] },
-      { name: 'outcome', args: ['exec', 'vitest', 'run', ...checks.map(check => check.file)] }
+      ...(checks.length > 0 ? [{ name: 'outcome' as const, args: ['exec', 'vitest', 'run', ...checks.map(check => check.file)] }] : [])
     ];
     for (const [index, current] of steps.entries()) {
       const result = step(options.pnpm, clone, current.args);
@@ -219,6 +224,20 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
       for (const rest of steps.slice(index + 1)) runChecks.push({ name: rest.name, status: 'skipped' });
       const failureClass: VerifyFailureClass = current.name === 'install' ? 'environment-failure' : 'implementation-failure';
       return fail(failureClass, current.name, `owner check '${current.name}' failed in the scratch checkout`, { ...base, checks: runChecks });
+    }
+
+    // Phase 5b: the agreement's declared owner-context commands run in the
+    // scratch clone, on the applied bytes — immutable agreement data, not the
+    // submission's or manifest's claims. Any non-pass is implementation-failure:
+    // a red guard means broken behavior, a red outcome means the request is not
+    // met (a no-op patch keeps the untouched-base result).
+    let commandChecks: CheckRecord[] | undefined;
+    if (agreement.commands.length > 0) {
+      commandChecks = runDeclaredChecks(agreement.commands, clone, options.pnpm, 'owner');
+      const failed = commandChecks.find(record => record.result !== 'pass');
+      if (failed !== undefined) {
+        return fail('implementation-failure', 'command-check', `declared ${failed.role} check '${failed.name}' did not pass (result: ${failed.result}, exit ${failed.exit}): ${failed.log}`, { ...base, checks: runChecks, commandChecks });
+      }
     }
 
     // Phase 6: land the change in the scratch history — ordinary git, box and
@@ -249,6 +268,7 @@ export function verifySubmission(options: VerifyOptions): VerifyReport {
       attemptSha256,
       applies,
       checks: runChecks,
+      ...(commandChecks !== undefined ? { commandChecks } : {}),
       merge: { branch, commit, message, scratch: options.keepScratch === true ? clone : null }
     };
   } finally {
