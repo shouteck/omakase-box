@@ -183,14 +183,23 @@ try {
 finally { await db.stop(); }
 
 const statusAfter = await git(['status', '--porcelain']);
-const dirtyEnd = statusAfter === null || statusAfter.trim().length > 0;
+const statusReadFailed = statusAfter === null;
+const dirtyEnd = statusReadFailed || statusAfter.trim().length > 0;
+const dirtyPaths = statusReadFailed ? null : statusAfter.trim().split('\n').filter(Boolean);
+const finalStatus = statusReadFailed ? 'unreadable' : dirtyEnd ? 'dirty' : 'clean';
 const passed = !failure && results.length === steps.length && results.every(result => result.exit === 0);
 const verdict = !passed ? 'FAIL' : dirtyEnd ? 'UNCOMMITTED' : 'PASS';
 const notRun = steps.slice(results.length);
 const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
 const line = `verify ${sha.slice(0, 7)}${dirtyEnd ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.reused ? `reused@${result.reused}` : result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
-writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyEnd, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, line }, null, 2) + '\n');
+writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyEnd, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, finalStatus, dirtyPaths, line }, null, 2) + '\n');
 console.log(`\n${line}\nLogs: ${runDirectory}`);
+if (statusReadFailed) console.error('verify: final Git status could not be read (git status --porcelain failed) — the run is dirty/unreadable and not reusable.');
+else if (dirtyEnd) {
+  console.error('verify: final Git status reports uncommitted paths (filenames only):');
+  for (const path of dirtyPaths.slice(0, 50)) console.error(`  ${path}`);
+  if (dirtyPaths.length > 50) console.error(`  … and ${dirtyPaths.length - 50} more`);
+}
 
 // Stall guard (advisory only): when this branch keeps producing non-PASS runs,
 // print a STALL line telling the agent to park the wave. It never changes the
