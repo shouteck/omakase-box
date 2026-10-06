@@ -116,6 +116,15 @@ async function database() {
 const startedAt = new Date();
 const runDirectory = join(root, '.kitchen', 'runs', `${startedAt.toISOString().replace(/[:.]/g, '-')}-${sha.slice(0, 7)}`);
 mkdirSync(runDirectory, { recursive: true });
+if (dirty) {
+  const dirtyPaths = status.trim().split('\n');
+  const line = `verify ${sha.slice(0, 7)}+dirty UNCOMMITTED not-run=${steps.join(',')} db=none 0s (refused before database, build and tests: uncommitted changes)`;
+  writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: true, verdict: 'UNCOMMITTED', startedAt: startedAt.toISOString(), seconds: 0, database: 'none', profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: null, steps: [], notRun: steps, dirtyPaths, failure: 'uncommitted changes in the working tree', line }, null, 2) + '\n');
+  console.error('verify: refusing before database, build or test work — the working tree has uncommitted changes:');
+  for (const path of dirtyPaths) console.error(`  ${path}`);
+  console.log(`\n${line}\nLogs: ${runDirectory}`);
+  process.exit(3);
+}
 const pnpm = fileURLToPath(new URL('./pnpm.mjs', import.meta.url));
 function runStep(name, env) {
   return new Promise(resolve => {
@@ -173,12 +182,14 @@ try {
 } catch (error) { failure = error instanceof Error ? error.message : String(error); }
 finally { await db.stop(); }
 
+const statusAfter = await git(['status', '--porcelain']);
+const dirtyEnd = statusAfter === null || statusAfter.trim().length > 0;
 const passed = !failure && results.length === steps.length && results.every(result => result.exit === 0);
-const verdict = !passed ? 'FAIL' : dirty ? 'UNCOMMITTED' : 'PASS';
+const verdict = !passed ? 'FAIL' : dirtyEnd ? 'UNCOMMITTED' : 'PASS';
 const notRun = steps.slice(results.length);
 const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
-const line = `verify ${sha.slice(0, 7)}${dirty ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.reused ? `reused@${result.reused}` : result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
-writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, line }, null, 2) + '\n');
+const line = `verify ${sha.slice(0, 7)}${dirtyEnd ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.reused ? `reused@${result.reused}` : result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
+writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyEnd, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, line }, null, 2) + '\n');
 console.log(`\n${line}\nLogs: ${runDirectory}`);
 
 // Stall guard (advisory only): when this branch keeps producing non-PASS runs,
