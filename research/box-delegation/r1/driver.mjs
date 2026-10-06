@@ -5,21 +5,32 @@
 // prints the exact commands the recipient and the owner verify step use.
 //   node research/box-delegation/r1/driver.mjs [--out <dir>]
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..', '..');
 const safe = ['-c', 'safe.directory=' + repo.replaceAll('\\', '/')];
 
+const canonical = dir => {
+  try { return realpathSync(dir); } catch {
+    const parent = dirname(dir);
+    return parent === dir ? resolve(dir) : join(canonical(parent), dir.slice(parent.length + 1));
+  }
+};
+
 const outFlag = process.argv.indexOf('--out');
 const outDir = resolve(outFlag === -1 ? join(repo, '..', 'r1-box-kitchen-stats') : process.argv[outFlag + 1]);
-if (outDir.startsWith(repo)) { console.error('--out must be outside the checkout'); process.exit(2); }
+const realRepo = canonical(repo).toLowerCase();
+const realOut = canonical(outDir).toLowerCase();
+if (realOut === realRepo || realOut.startsWith(realRepo + sep)) { console.error('--out must be outside the checkout'); process.exit(2); }
 if (existsSync(outDir) && readdirSync(outDir).length > 0) {
-  console.log('removing previous export at ' + outDir);
-  rmSync(outDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+  console.error('--out directory is not empty; refusing to touch it: ' + outDir);
+  process.exit(2);
 }
+const pinnedPath = join(dirname(outDir), 'r1-agreement.pinned.json');
+if (existsSync(pinnedPath)) { console.error('pinned agreement already exists; refusing to overwrite: ' + pinnedPath); process.exit(2); }
 
 const baseCommit = execFileSync('git', [...safe, 'rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim();
 const dirty = execFileSync('git', [...safe, 'status', '--porcelain'], { cwd: repo, encoding: 'utf8' });
@@ -31,8 +42,7 @@ if (!existsSync(tsx)) { console.error('repository-local tsx not found under node
 
 const agreement = JSON.parse(readFileSync(join(here, 'agreement.json'), 'utf8'));
 agreement.baseCommit = baseCommit;
-const pinnedPath = join(dirname(outDir), 'r1-agreement.pinned.json');
-writeFileSync(pinnedPath, JSON.stringify(agreement, null, 2) + '\n');
+writeFileSync(pinnedPath, JSON.stringify(agreement, null, 2) + '\n', { flag: 'wx' });
 
 console.log('base commit: ' + baseCommit);
 console.log('pinned agreement: ' + pinnedPath);
