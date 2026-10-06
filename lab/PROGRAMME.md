@@ -15,6 +15,10 @@ The lab exists to close the gap in claim 3 and to tell the product how far claim
 
 The aim behind all of it, from the owner: the person who posed the problem accepts the solution. The product gives them the most certainty it honestly can and guides them to the best solution available: proof where proof is possible, a stated degree of certainty where it is not.
 
+## Standing direction
+
+From the CTO, 6 October 2026: the product steers by the "useful" milestone in `PLAN.md` on master. A real issue from someone else's repository, a Box prepared in minutes with no code written for it, solved by someone who has never seen the repository, accepted by the owner-side check. The kitchen gets there through R2 and then R3. **Until both are done the lab works on Line 1 only.** Lines 2 and 3 stay written below but do not open. Within Line 1, favour whatever makes a check cheap to state for a request nobody has seen before.
+
 ## Active lines, in priority order
 
 ### Line 1. From a request to a check
