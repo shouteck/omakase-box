@@ -67,3 +67,38 @@ Ownership: `packages/box-package/commands.ts` owns execution (pinned tools — n
 - Disclosure: 20 owner files / 1857 inventory → share 0.0108 (live filesystem denominator, sourceRoot '.').
 - Real repo left unchanged by export: `git status --porcelain` clean after the run; all command execution happened in the disposable clone and staged copy.
 - Remaining gaps: owner verify end-to-end on this request still awaits the recipient submission; install-in-clone cost (~minutes, cold workspace install) is recorded but not optimized; recipient-context commands at owner verify are not run (owner verify = owner context only, by design).
+
+## Phase 3 — owner verification + integration (commits up to 5245600)
+
+### Authentication (before any verify)
+- artifact `submission.json`: agreementSha256 == sha256(agreement.json) == box.json.agreementSha256; boxJsonSha256 == sha256(box.json); single declared file `src/tests/box/package/r1-kitchen-stats.test.ts`; baselineSha256 `91c8…` == base blob sha of `tests/box/package/r1-kitchen-stats.test.ts` at 41fdf38; content diff vs base = identifier rename `repo`→`_repo` at line 30 only.
+
+### Real owner verify (CLI, scratch clone at 41fdf38 + materialized tooling)
+- legit `_repo` submission → **pass**: outcome tsc exit 0, guard vitest 3/3; merge commit `c9343bb357434369c677552b10ecb134cbb26f8a`, kept scratch `C:\Users\shout\AppData\Local\Temp\box-verify-iTTFWh\owner` (evidence/phase3/verify-legit.json).
+- **NO-OP attack** (sealed unchanged copy) → fail `implementation-failure/command-check`: outcome fail exit 2 (TS6133 at 30:22), guard pass (verify-noop.json).
+- **Guard regression** (`_repo` + assertion 2→3) → fail `implementation-failure/command-check`: outcome pass, guard fail (verify-guardfail.json).
+- **Wrong edit** (param removed, call site untouched) → fail `implementation-failure/compile` on the legacy compile check (verify-wrongedit.json).
+- **Second legit solution** (param removed + caller `r1Agreement(baseCommit)`) → **pass**, merge `e0005074` (verify-altsol.json) — agreement permits any fix that satisfies the declared checks.
+- Artifact tamper: baseCommit → `base-commit-mismatch`; baselineSha256 → `baseline-mismatch`; files:[] → `malformed-submission` (all fast, pre-clone).
+- **Blind spot recorded**: tampered `boxJsonSha256` passes owner verify — the field is only re-checked when the owner retains a pristine export and passes `--box`; execution authority is the agreement's commands, so impact is metadata-only, but reviewers should know the manifest hash is self-declared otherwise.
+
+### Integration
+- Fetched scratch commit c9343bb (not hand-copied), cherry-pick --no-commit onto wave/R2 → byte-identical single-line diff; committed as **5245600** `R2: integrate verified submission 78a30a61`.
+- Scoped re-run on integrated surface: r1-kitchen-stats + command-checks = **16/16 pass** (integrated-scoped.log). Full `verify.mjs --full` owned by reviewer.
+
+### Disclosure recount (tracked, at base 41fdf38)
+- 3513 tracked files / 24,017,589 bytes; shipped owner files 20 / 135,643 bytes → tracked share 0.569% files, 0.565% bytes. (Manifest's 1857 denominator is the live filesystem inventory incl. untracked dirs — distinct measure, both recorded.)
+
+### Recipient self-report (unverified, rough)
+- fresh folder-only recipient `8a2ad60e`; claimed setup ~30% / context ~40% / change ~30%, session ~11:45 start; corepack pnpm 10.34.5 install, local tsc; owner checks correctly not runnable in-box. No wall-clock/token totals verifiable.
+
+### Effort split
+- Generic infrastructure (commands.ts, runner, export/verify wiring, tests): wave commits 0767aac/41fdf38 — ~26 min cook.
+- Request agreement prep: agreement.json + notes only — 0 package lines, 0 new tests/drivers; measured <5 min of the session.
+- Cook total active ≈ 35–40 min at 11:45 + phase-3 verify/attack/integrate ≈ 25 min → ≈ 60–65 min of the 90 cap; stopped before 12:46 hard stop.
+
+### Resources owned / lifecycle
+- `C:\Users\shout\Desktop\Projects\r2-box-unused-param` — retained for independent review (do not delete).
+- `%TEMP%\box-verify-iTTFWh` — kept scratch containing verified merge commit (named in verify-legit.json); may be removed after review.
+- `%TEMP%\kitchen-r2-owner`, `kitchen-r2-verify` — attack copies/logs; node_modules removed, artifacts archived under evidence/phase3; dirs may be removed after review.
+- Dead scratch dirs box-verify-NNy7bp/wjEgHI/ETAoBu removed. box-d21-* and unknown K6 temps untouched.

@@ -1,0 +1,34 @@
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "compile",
+  "detail": "owner check 'compile' failed in the scratch checkout",
+  "checks": [
+    {
+      "name": "install",
+      "status": "pass"
+    },
+    {
+      "name": "compile",
+      "status": "fail",
+      "detail": "tests/box/package/r1-kitchen-stats.test.ts(59,50): error TS2554: Expected 1 arguments, but got 2."
+    }
+  ],
+  "box": {
+    "id": "r2-unused-repo-param",
+    "name": "Remove the unused repo parameter in the R1 kitchen-stats test",
+    "version": 1
+  },
+  "baseCommit": "41fdf38df149adc12bcb4922ebee07eacabb89d3",
+  "expectedBaseCommit": "41fdf38df149adc12bcb4922ebee07eacabb89d3",
+  "attemptSha256": "1f9f70dc5204c9af9b459c8a52a3400897e78657544697d25080f2e3d82489c6",
+  "applies": [
+    {
+      "owner": "tests/box/package/r1-kitchen-stats.test.ts",
+      "box": "src/tests/box/package/r1-kitchen-stats.test.ts",
+      "changed": true,
+      "sha256": "68dce50f7c69b6f813efcfe23f766e403680297eabdc6ede0a7112759d6e1b70",
+      "bytes": 4993
+    }
+  ]
+}
