@@ -34,7 +34,7 @@ The package proof uses two distinct sets of files. The **runnable closure** cont
 | `src/policy/loader.ts` | copied from `examples/private-shop/src/policy/loader.ts`; editable only if the approved agreement explicitly permits it, otherwise read-only package source. |
 | `src/policy/strict-json.ts` | copied from `examples/private-shop/src/policy/strict-json.ts`; shared helper, read-only package source. |
 | `src/config/response-security.json` | copied from `examples/private-shop/config/response-security.json`; the only editable contribution file for Request A. The owner patch maps it back to `config/response-security.json`. |
-| `package.json`, `tsconfig.json` | generated package scaffold. Runtime dependency `zod: 4.6.5`; declared toolchain `node >=24.11.0 <25`, `pnpm 10.34.5`, `typescript 6.0.3`, `vitest 5.0.1`. No React dependency is included because no UI file is runnable in this package. |
+| `package.json`, `tsconfig.json` | generated package scaffold, emitted because the agreement opts into the `nodejs` helper configuration. Runtime dependency `zod: 4.6.5`; helper config `node >=24.11.0 <25`, `pnpm 10.34.5`, `typescript 6.0.3`, `vitest 5.0.1`. No React dependency is included because no UI file is runnable in this package. |
 | `evaluator/request-a.test.ts` plus evaluator config | evaluator-owned checks that call `loadResponsePolicy` and `applyResponsePolicy` directly. Not contribution source and not an owner patch candidate. |
 
 Check entrypoints for the exported package are `pnpm exec tsc --noEmit` and `pnpm exec vitest run evaluator/request-a.test.ts`. The package source mapping is `src/policy/* -> src/policy/*` and `src/config/response-security.json -> config/response-security.json`.
@@ -46,7 +46,7 @@ Safe explanatory context for Request A is limited to the non-protected owner fil
 | Package member | Source and role |
 | --- | --- |
 | `src/ranking/rankItems.ts` | a new owner-approved scaffold file that exports `PublicItem`, `InvalidInput`, and `rankItems`; the only editable contribution file. The owner patch maps it to the new owner path `src/ranking/rankItems.ts`. |
-| `package.json`, `tsconfig.json` | generated scaffold with the same declared toolchain (`node >=24.11.0 <25`, `pnpm 10.34.5`, `typescript 6.0.3`, `vitest 5.0.1`) and no production dependency unless the approved agreement names one. |
+| `package.json`, `tsconfig.json` | generated scaffold with the same `nodejs` helper configuration (`node >=24.11.0 <25`, `pnpm 10.34.5`, `typescript 6.0.3`, `vitest 5.0.1`) and no production dependency unless the approved agreement names one. |
 | `evaluator/request-b.test.ts` plus evaluator config | evaluator-owned checks for non-mutation, deterministic tie order, valid output shape, rejected malformed input, and absence of forbidden imports/fields. Not contribution source. |
 
 Check entrypoints are `pnpm exec tsc --noEmit` and `pnpm exec vitest run evaluator/request-b.test.ts`. Public inputs/outputs are the explicit `PublicItem` array contract; the public helper is `rankItems`; the declared evaluator covers non-ASCII IDs, duplicate IDs, non-finite scores, more than 1000 items, input mutation, and absence of the tokens/imports `privateScore`, `../private/scoring`, and `src/private/scoring` from the exported runnable/contribution source.

@@ -26,18 +26,47 @@ export const DEFAULT_INVENTORY_EXCLUDE = ['node_modules/', 'dist/', '.git/', 're
 // and what a nonzero exit means (guard: preexisting behavior that must stay green;
 // outcome: the requested change that the untouched base must fail). There is no
 // shell — argv reaches the tool verbatim.
-export const CheckToolSchema = z.enum(['node', 'pnpm', 'tsc', 'vitest']);
-export type CheckTool = z.infer<typeof CheckToolSchema>;
+const CommandName = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
+const Program = z.string().min(1).max(260).refine(value => value.trim().length > 0, 'program must not be blank');
+const CommandArgs = z.array(z.string().min(1).max(512)).max(64);
+const CommandCwd = z.string().refine(value => value === '.' || isPortablePath(value), 'cwd must be "." or a portable path.');
+const CommandContext = z.enum(['owner', 'recipient']);
+const CommandTimeout = z.number().int().positive().max(600_000).default(120_000);
+
+export const SetupCommandSchema = z.strictObject({
+  name: CommandName,
+  program: Program,
+  args: CommandArgs,
+  cwd: CommandCwd,
+  context: CommandContext,
+  timeoutMs: CommandTimeout
+});
+export type SetupCommand = z.infer<typeof SetupCommandSchema>;
 export const CommandCheckSchema = z.strictObject({
-  name: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
-  tool: CheckToolSchema,
-  args: z.array(z.string().min(1).max(512)).max(32),
-  cwd: z.string().refine(value => value === '.' || isPortablePath(value), 'cwd must be "." or a portable path.'),
-  context: z.enum(['owner', 'recipient']),
+  name: CommandName,
+  program: Program,
+  args: CommandArgs,
+  cwd: CommandCwd,
+  context: CommandContext,
   role: z.enum(['guard', 'outcome']),
-  timeoutMs: z.number().int().positive().max(600_000).default(120_000)
+  timeoutMs: CommandTimeout
 });
 export type CommandCheck = z.infer<typeof CommandCheckSchema>;
+
+export const RequiredToolSchema = z.strictObject({
+  program: Program,
+  version: z.string().min(1).max(120).optional()
+});
+export type RequiredTool = z.infer<typeof RequiredToolSchema>;
+
+export const NodejsHelperSchema = z.strictObject({
+  node: z.string().min(1).max(64),
+  pnpm: z.string().min(1).max(64),
+  typescript: z.string().min(1).max(64),
+  vitest: z.string().min(1).max(64),
+  typesNode: z.string().min(1).max(64)
+});
+export type NodejsHelper = z.infer<typeof NodejsHelperSchema>;
 
 export const BoxAgreementSchema = z.strictObject({
   schemaVersion: z.literal(1),
@@ -55,15 +84,11 @@ export const BoxAgreementSchema = z.strictObject({
   declaredDependencies: z.record(z.string().min(1).max(128), z.string().min(1).max(64)),
   excludedPrefixes: z.array(Prefix).min(1).max(64),
   inventoryExcludePrefixes: z.array(Prefix).max(64).default([...DEFAULT_INVENTORY_EXCLUDE]),
-  toolchain: z.strictObject({
-    node: z.string().min(1).max(64),
-    pnpm: z.string().min(1).max(64),
-    typescript: z.string().min(1).max(64),
-    vitest: z.string().min(1).max(64),
-    typesNode: z.string().min(1).max(64)
-  }),
+  nodejs: NodejsHelperSchema.optional(),
+  requires: z.array(RequiredToolSchema).max(32).default([]),
   checks: z.array(z.string().min(1).max(256)).min(1).max(16),
   evaluator: z.array(z.strictObject({ box: PortablePath, generator: GeneratorId })).max(16).default([]),
+  setup: z.array(SetupCommandSchema).max(16).default([]),
   commands: z.array(CommandCheckSchema).max(16).default([]),
   submission: z.strictObject({
     format: z.literal('editable-overlay'),

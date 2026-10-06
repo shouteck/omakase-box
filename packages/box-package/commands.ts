@@ -1,9 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, realpathSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
-import type { CommandCheck } from './agreement.js';
-import type { PnpmInvocation } from './export.js';
-import { declaredPnpmArgs, UnsafeInstall } from './install.js';
+import { cpSync, existsSync, realpathSync, statSync } from 'node:fs';
+import { delimiter, isAbsolute, join, relative, resolve } from 'node:path';
+import type { CommandCheck, SetupCommand } from './agreement.js';
+import { ExportFailed } from './errors.js';
 import { toPosix } from './selection.js';
 
 // Runs the agreement's declared command checks. Commands are data parsed at the
@@ -17,16 +16,17 @@ import { toPosix } from './selection.js';
 
 export type CheckContext = 'owner' | 'recipient';
 export type CheckResult = 'pass' | 'fail' | 'timeout' | 'error';
+export type CommandRole = 'setup' | 'guard' | 'outcome';
 
 export interface CheckRecord {
   readonly name: string;
-  readonly tool: CommandCheck['tool'];
+  readonly program: string;
   readonly declaredArgv: readonly string[];
   readonly command: string;
   readonly argv: readonly string[];
   readonly cwd: string;
   readonly context: CheckContext;
-  readonly role: 'guard' | 'outcome';
+  readonly role: CommandRole;
   readonly exit: number | null;
   readonly result: CheckResult;
   readonly log: string;
@@ -46,16 +46,70 @@ export function materializeTooling(repo: string, clone: string): void {
   if (existsSync(source)) cpSync(source, join(clone, 'scripts', 'tooling'), { recursive: true });
 }
 
-// Pinned tool resolution: 'node' is the running runtime (the declared toolchain's
-// own interpreter on this host), 'pnpm' is the caller's pinned invocation, and
-// 'tsc'/'vitest' run through it so the repo's lockfile picks the binary.
-function toolCommand(check: CommandCheck, pnpm: PnpmInvocation): { command: string; args: string[] } {
-  switch (check.tool) {
-    case 'node': return { command: process.execPath, args: [...check.args] };
-    case 'pnpm': return { command: pnpm.command, args: declaredPnpmArgs(pnpm, check.args) };
-    case 'tsc':
-    case 'vitest': return { command: pnpm.command, args: [...pnpm.args, 'exec', check.tool, ...check.args] };
+export class ProgramUnavailable extends ExportFailed {
+  constructor(readonly program: string) {
+    super(`declared program '${program}' is not available: it is not on PATH and not an existing path`);
+    this.name = 'ProgramUnavailable';
   }
+}
+
+export class ProgramLaunchUnsupported extends ExportFailed {
+  constructor(detail: string) {
+    super(`declared program cannot be launched safely: ${detail}`);
+    this.name = 'ProgramLaunchUnsupported';
+  }
+}
+
+interface ResolvedProgram { readonly path: string; readonly kind: 'executable' | 'command-file' }
+const COMMAND_FILE = /\.(cmd|bat)$/i;
+const pathExtensions = (): string[] => (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').map(ext => ext.toLowerCase()).filter(ext => ext !== '');
+
+export function resolveProgram(program: string, root?: string): ResolvedProgram {
+  const candidates: string[] = [];
+  const push = (base: string): void => {
+    candidates.push(base);
+    if (process.platform === 'win32' && !/\.[^\\/]+$/.test(base)) {
+      for (const ext of pathExtensions()) candidates.push(base + ext);
+    }
+  };
+  if (isAbsolute(program)) push(resolve(program));
+  else if (program.includes('/') || program.includes('\\')) push(resolve(root ?? process.cwd(), program));
+  else for (const dir of (process.env.PATH ?? '').split(delimiter)) { if (dir !== '') push(join(dir, program)); }
+  for (const candidate of candidates) {
+    if (existsSync(candidate) && statSync(candidate).isFile()) {
+      if (root !== undefined && !isAbsolute(program) && (program.includes('/') || program.includes('\\'))) {
+        const canonicalRoot = realpathSync(root);
+        const offset = relative(canonicalRoot, realpathSync(candidate));
+        if (offset === '' || offset.startsWith('..') || isAbsolute(offset)) {
+          throw new ProgramLaunchUnsupported(`declared program path '${program}' resolves outside the context root`);
+        }
+      }
+      return { path: candidate, kind: COMMAND_FILE.test(candidate) ? 'command-file' : 'executable' };
+    }
+  }
+  throw new ProgramUnavailable(program);
+}
+
+export function preflightPrograms(agreement: { readonly setup: readonly SetupCommand[]; readonly commands: readonly CommandCheck[]; readonly requires: readonly { readonly program: string }[] }, root?: string): void {
+  const declared = [...agreement.setup.map(command => command.program), ...agreement.commands.map(command => command.program), ...agreement.requires.map(tool => tool.program)];
+  const missing = [...new Set(declared)].filter(program => {
+    try { resolveProgram(program, root); return false; }
+    catch (error) { if (error instanceof ProgramUnavailable) return true; throw error; }
+  });
+  if (missing.length > 0) throw new ProgramUnavailable(missing.join(', '));
+}
+
+function launch(resolved: ResolvedProgram, args: readonly string[], cwd: string, timeoutMs: number) {
+  if (resolved.kind === 'command-file') {
+    if (process.platform !== 'win32') throw new ProgramLaunchUnsupported(`command file ${resolved.path} can only be launched on Windows`);
+    for (const token of [resolved.path, ...args]) {
+      if (/["%!\r\n]/.test(token)) throw new ProgramLaunchUnsupported(`argument ${JSON.stringify(token)} cannot be carried to a Windows command file: '"', '%', '!' and line breaks are refused`);
+      if (/\\$/.test(token)) throw new ProgramLaunchUnsupported(`argument ${JSON.stringify(token)} cannot be carried to a Windows command file: a trailing backslash would escape the closing quote and merge the next argument`);
+    }
+    const line = `"${[resolved.path, ...args].map(token => `"${token}"`).join(' ')}"`;
+    return spawnSync('cmd.exe', ['/d', '/s', '/c', line], { cwd, encoding: 'utf8', timeout: timeoutMs, windowsHide: true, windowsVerbatimArguments: true });
+  }
+  return spawnSync(resolved.path, [...args], { cwd, encoding: 'utf8', timeout: timeoutMs, windowsHide: true });
 }
 
 export class CheckOutsideRoot extends Error {
@@ -73,28 +127,22 @@ function containedCwd(root: string, cwd: string): string {
   return target;
 }
 
-export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmInvocation): CheckRecord {
+export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: string): CheckRecord {
+  const role: CommandRole = 'role' in check ? check.role : 'setup';
   const rel = (target: string): string => { const offset = relative(realpathSync(root), target); return offset === '' ? '.' : toPosix(offset); };
-  let resolved: { command: string; args: string[] };
+  const cwd = containedCwd(root, check.cwd);
+  let resolved: ResolvedProgram;
+  let run: ReturnType<typeof launch>;
+  const began = Date.now();
   try {
-    resolved = toolCommand(check, pnpm);
+    resolved = resolveProgram(check.program, realpathSync(root));
+    run = launch(resolved, check.args, cwd, check.timeoutMs);
   } catch (error) {
-    // A declared install that tries to re-enable lifecycle scripts is refused
-    // before spawn: an 'error' record is the evidence, never a silent pass.
-    if (error instanceof UnsafeInstall) {
-      const cwd = containedCwd(root, check.cwd);
-      return { name: check.name, tool: check.tool, declaredArgv: check.args, command: pnpm.command, argv: [], cwd: rel(cwd), context: check.context, role: check.role, exit: null, result: 'error', log: error.message, seconds: 0 };
+    if (error instanceof ProgramUnavailable || error instanceof ProgramLaunchUnsupported) {
+      return { name: check.name, program: check.program, declaredArgv: check.args, command: check.program, argv: [], cwd: rel(cwd), context: check.context, role, exit: null, result: 'error', log: error instanceof Error ? error.message : String(error), seconds: (Date.now() - began) / 1000 };
     }
     throw error;
   }
-  const cwd = containedCwd(root, check.cwd);
-  const began = Date.now();
-  const run = spawnSync(resolved.command, resolved.args, {
-    cwd,
-    encoding: 'utf8',
-    timeout: check.timeoutMs,
-    windowsHide: true
-  });
   const seconds = (Date.now() - began) / 1000;
   const log = `${run.stdout ?? ''}${run.stderr ?? ''}`.trim().slice(-LOG_TAIL);
   let result: CheckResult;
@@ -103,13 +151,13 @@ export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmIn
   const detail = run.error !== undefined && result === 'error' ? `${run.error.message}\n${log}` : log;
   return {
     name: check.name,
-    tool: check.tool,
+    program: check.program,
     declaredArgv: check.args,
-    command: resolved.command,
-    argv: resolved.args,
+    command: resolved.path,
+    argv: [...check.args],
     cwd: rel(cwd),
     context: check.context,
-    role: check.role,
+    role,
     exit: run.status,
     result,
     log: detail,
@@ -117,6 +165,10 @@ export function runDeclaredCheck(check: CommandCheck, root: string, pnpm: PnpmIn
   };
 }
 
-export function runDeclaredChecks(checks: readonly CommandCheck[], root: string, pnpm: PnpmInvocation, context: CheckContext): CheckRecord[] {
-  return checks.filter(check => check.context === context).map(check => runDeclaredCheck(check, root, pnpm));
+export function runSetup(setup: readonly SetupCommand[], root: string, context: CheckContext): CheckRecord[] {
+  return setup.filter(command => command.context === context).map(command => runDeclaredCheck(command, root));
+}
+
+export function runDeclaredChecks(checks: readonly CommandCheck[], root: string, context: CheckContext): CheckRecord[] {
+  return checks.filter(check => check.context === context).map(check => runDeclaredCheck(check, root));
 }

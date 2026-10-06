@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { GitCommitSchema } from '../box-contracts/index.js';
 import { isPortablePath } from '../contracts/paths.js';
+import { CommandCheckSchema, NodejsHelperSchema, RequiredToolSchema, SetupCommandSchema } from './agreement.js';
 
 // box.json is the self-describing manifest inside every exported Box folder: it carries the
 // outcome, the pinned base commit, per-file provenance (owner path -> package path, or
@@ -25,33 +26,27 @@ export const BoxManifestSchema = z.strictObject({
   baseCommit: GitCommitSchema,
   agreementSha256: Sha256Schema,
   sourceRoot: z.string().min(1).max(240),
-  toolchain: z.strictObject({ node: z.string(), pnpm: z.string(), typescript: z.string(), vitest: z.string(), typesNode: z.string() }),
+  nodejs: NodejsHelperSchema.optional(),
+  requires: z.array(RequiredToolSchema).max(32).default([]),
   declaredDependencies: z.record(z.string(), z.string()),
   files: z.array(BoxFileSchema).min(1),
   editable: z.array(z.strictObject({ box: PortablePath, owner: PortablePath })).min(1),
   readContext: z.array(PortablePath),
   checks: z.array(z.string().min(1)).min(1),
   evaluator: z.array(z.strictObject({ box: PortablePath, generator: z.string() })).max(16).default([]),
-  commands: z.array(z.strictObject({
-    name: z.string().min(1),
-    tool: z.enum(['node', 'pnpm', 'tsc', 'vitest']),
-    args: z.array(z.string()),
-    cwd: z.string().min(1),
-    context: z.enum(['owner', 'recipient']),
-    role: z.enum(['guard', 'outcome']),
-    timeoutMs: z.number().int().positive()
-  })).default([]),
+  setup: z.array(SetupCommandSchema).max(16).default([]),
+  commands: z.array(CommandCheckSchema).max(16).default([]),
   // The untouched-base record for each declared owner-context check, captured at
   // export: the declared tool/argv/cwd, context and role, exit, bounded log,
   // seconds. The declared command is recorded, not the resolved host path — the
   // folder must carry no owner-machine absolute paths.
   baseChecks: z.array(z.strictObject({
     name: z.string().min(1),
-    tool: z.enum(['node', 'pnpm', 'tsc', 'vitest']),
+    program: z.string().min(1),
     argv: z.array(z.string()),
     cwd: z.string().min(1),
     context: z.enum(['owner', 'recipient']),
-    role: z.enum(['guard', 'outcome']),
+    role: z.enum(['setup', 'guard', 'outcome']),
     exit: z.number().int().nullable(),
     result: z.enum(['pass', 'fail', 'timeout', 'error']),
     log: z.string(),

@@ -29,6 +29,8 @@ function miniOwnerRepo(): { repo: string; baseCommit: string } {
 
 function r1Agreement(_repo: string, baseCommit: string): string {
   const agreement = JSON.parse(readFileSync(AGREEMENT, 'utf8')) as Record<string, unknown>;
+  agreement.nodejs = agreement.toolchain;
+  delete agreement.toolchain;
   agreement.baseCommit = baseCommit;
   const path = join(runRoot('r1-agreement'), 'agreement.json');
   writeFileSync(path, JSON.stringify(agreement, null, 2));
@@ -38,7 +40,10 @@ function r1Agreement(_repo: string, baseCommit: string): string {
 describe('R1 kitchen-stats-no-usage box', () => {
   it('selects the .mjs closure with the existing engine — no gaps, both scripts', () => {
     const { repo } = miniOwnerRepo();
-    const agreement = parseAgreement(JSON.parse(readFileSync(AGREEMENT, 'utf8')));
+    const raw = JSON.parse(readFileSync(AGREEMENT, 'utf8')) as Record<string, unknown>;
+    raw.nodejs = raw.toolchain;
+    delete raw.toolchain;
+    const agreement = parseAgreement(raw);
     const selection = deriveSelection(agreement, repo);
     expect(selection.gaps).toEqual([]);
     expect(selection.files.map(file => `${file.owner}->${file.box}:${file.origin}`)).toEqual([

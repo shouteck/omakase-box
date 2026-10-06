@@ -25,96 +25,48 @@ function calls(dir: string): Call[] {
 const sentinel = (dir: string): boolean => existsSync(join(dir, 'lifecycle-ran.sentinel'));
 
 const check = (over: Partial<CommandCheck>): CommandCheck => ({
-  name: 'probe', tool: 'node', args: ['-e', 'process.exit(0)'], cwd: '.',
+  name: 'probe', program: 'node', args: ['-e', 'process.exit(0)'], cwd: '.',
   context: 'owner', role: 'guard', timeoutMs: 30_000, ...over
 });
 
-// Declared pnpm checks may only RUN things: the six run-verb spellings pass
-// verbatim, every other verb is refused before anything is spawned.
-const RUN_VERBS = ['exec', 'e', 'run', 'run-script', 'test', 't'];
-const REFUSED_VERBS = [
-  'install', 'i', 'add', 'dedupe', 'it', 'install-test', 'ln', 'link', 'prune', 'deploy', 'rb', 'rebuild',
-  'publish', 'setup', 'self-update', 'config', 'store', 'dlx', 'create', 'update', 'up', 'remove', 'rm',
-  'import', 'fetch', 'patch-commit', 'totally-new-verb', 'shiny-installer'
-];
-
-function expectRefused(args: string[]): void {
-  const label = args.join(' ');
-  const dir = runRoot('decl-refused');
-  const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, fakePnpm(dir));
-  expect(record.result, label).toBe('error');
-  expect(record.exit, label).toBeNull();
-  expect(record.argv, label).toEqual([]);
-  expect(record.log, label).toContain('refused');
-  expect(calls(dir), label).toEqual([]);
-  expect(sentinel(dir), label).toBe(false);
-}
-
-describe('install boundary: declared pnpm checks', () => {
-  it('refuses every verb outside the six run spellings before spawn, bare or behind --dir', () => {
-    for (const verb of REFUSED_VERBS) {
-      expect(RUN_VERBS, verb).not.toContain(verb);
-      expectRefused([verb]);
-      expectRefused(['--dir', '/tmp/pkg', verb]);
+describe('install boundary: declared commands are owner authority', () => {
+  it('runs a declared install-like command verbatim, flags and all', () => {
+    for (const args of [
+      [FAKE_PNPM, '--version'],
+      [FAKE_PNPM, 'exec', 'tsc', '--noEmit'],
+      [FAKE_PNPM, 'install', '--frozen-lockfile'],
+      [FAKE_PNPM, 'install', '--frozen-lockfile', '--ignore-scripts']
+    ]) {
+      const dir = runRoot('decl-verbatim');
+      process.env.FAKE_PNPM_DIR = dir;
+      const record = runDeclaredCheck(check({ name: 'declared', args: [...args] }), dir);
+      expect(record.result, args.join(' ')).toBe('pass');
+      expect(record.argv, args.join(' ')).toEqual(args);
+      expect(calls(dir).map(call => call.argv), args.join(' ')).toEqual([args.slice(1)]);
     }
   });
 
-  it('refuses a declared install even when it already carries --ignore-scripts', () => {
-    expectRefused(['install', '--frozen-lockfile']);
-    expectRefused(['install', '--frozen-lockfile', '--ignore-scripts']);
-    expectRefused(['--dir', '.', 'install']);
-  });
-
-  it('passes each of the six run spellings through verbatim', () => {
-    for (const verb of RUN_VERBS) {
-      for (const args of [[verb, 'tsc', '--noEmit'], ['--dir', '.', verb, 'tsc', '--noEmit']]) {
-        const dir = runRoot(`decl-run-${verb}`);
-        const pnpm = fakePnpm(dir);
-        const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, pnpm);
-        expect(record.result, args.join(' ')).toBe('pass');
-        expect(record.argv, args.join(' ')).toEqual([...pnpm.args, ...args]);
-        expect(calls(dir).map(call => call.argv), args.join(' ')).toEqual([args]);
-      }
-    }
-  });
-
-  it('refuses, without spawning, a declared install that re-enables lifecycle scripts', () => {
-    const unsafe: string[][] = [
-      ['install', '--no-ignore-scripts'],
-      ['install', '--ignore-scripts=false'],
-      ['install', '--ignore-scripts', 'false'],
-      ['install', '--config.ignore-scripts=false'],
-      ['install', '--config=ignore-scripts=false'],
-      ['install', '--config', 'ignore-scripts=false'],
-      ['install', '--config.dangerously-allow-all-builds=true'],
-      // A lifecycle override hides in a non-install command too.
-      ['exec', 'tsc', '--config.ignore-scripts=false'],
-      ['--config=ignore-scripts=false', 'exec', 'vitest']
-    ];
-    for (const args of unsafe) {
-      const dir = runRoot('decl-unsafe');
-      const record = runDeclaredCheck(check({ tool: 'pnpm', args }), dir, fakePnpm(dir));
-      expect(record.result, args.join(' ')).toBe('error');
-      expect(record.exit, args.join(' ')).toBeNull();
-      expect(record.log, args.join(' ')).toContain('refused');
-      expect(calls(dir), args.join(' ')).toEqual([]);
-      expect(sentinel(dir), args.join(' ')).toBe(false);
-    }
-  });
-
-  it('refuses an unknown or ambiguous leading option that could hide the verb', () => {
-    for (const args of [['--future-opt', 'x', 'install'], ['--future-opt', 'exec', 'tsc'], ['--reporter', 'json', 'mystery']]) expectRefused(args);
+  it('does not inject lifecycle flags into a declared install — owner authority, by design', () => {
+    const dir = runRoot('decl-authority');
+    process.env.FAKE_PNPM_DIR = dir;
+    const record = runDeclaredCheck(check({ name: 'owner-install', args: [FAKE_PNPM, 'install'] }), dir);
+    expect(record.result).toBe('pass');
+    expect(calls(dir).map(call => call.argv)).toEqual([['install']]);
+    expect(sentinel(dir)).toBe(true);
   });
 });
 
 describe('install boundary: export installs', () => {
-  it('runs lockfile resolution and base/recipient installs with --ignore-scripts, sentinel never written', () => {
+  it('runs the product-owned lockfile resolution with --ignore-scripts while declared commands pass verbatim', () => {
     const dir = runRoot('export-installs');
     const agreement = agreementFile('request-a', {
       mutate: value => {
+        value.setup = [
+          { name: 'owner-install', program: 'node', args: [FAKE_PNPM, 'install', '--frozen-lockfile', '--ignore-scripts'], cwd: '.', context: 'owner', timeoutMs: 30_000 }
+        ];
         value.commands = [
-          check({ name: 'owner-guard', tool: 'pnpm', args: ['--version'] }),
-          check({ name: 'box-guard', tool: 'pnpm', args: ['--version'], context: 'recipient' }),
+          check({ name: 'owner-guard', args: [FAKE_PNPM, '--version'] }),
+          check({ name: 'box-guard', args: [FAKE_PNPM, '--version'], context: 'recipient' }),
           check({ name: 'box-outcome', args: ['-e', 'process.exit(1)'], context: 'recipient', role: 'outcome' })
         ];
       }
@@ -122,17 +74,19 @@ describe('install boundary: export installs', () => {
     const exported = runExport(agreement, fixtureRepo().repo, undefined, fakePnpm(dir));
     const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(exported.outDir, 'box.json'), 'utf8')));
     const installCalls = calls(dir).filter(call => call.argv.includes('install'));
-    expect(installCalls.length).toBeGreaterThanOrEqual(3); // lockfile-only + owner base + staged box
+    expect(installCalls.length).toBe(2);
     for (const call of installCalls) expect(call.argv, call.argv.join(' ')).toContain('--ignore-scripts');
     expect(calls(dir).some(call => call.argv.includes('--lockfile-only'))).toBe(true);
     expect(sentinel(dir)).toBe(false);
-    expect(manifest.baseChecks.map(record => `${record.name}:${record.result}`)).toEqual(['owner-guard:pass', 'box-guard:pass', 'box-outcome:fail']);
+    expect(manifest.baseChecks.map(record => `${record.role}:${record.name}:${record.result}`)).toEqual([
+      'setup:owner-install:pass', 'guard:owner-guard:pass', 'guard:box-guard:pass', 'outcome:box-outcome:fail'
+    ]);
   });
 
   it('refuses the whole export when the caller invocation carries a lifecycle-enabling flag', () => {
     const dir = runRoot('export-hostile');
     const agreement = agreementFile('request-a', {
-      mutate: value => { value.commands = [check({ name: 'owner-guard', tool: 'pnpm', args: ['--version'] })]; }
+      mutate: value => { value.commands = [check({ name: 'owner-guard', args: [FAKE_PNPM, '--version'] })]; }
     });
     expect(() => runExport(agreement, fixtureRepo().repo, undefined, fakePnpm(dir, ['--config.ignore-scripts=false']))).toThrowError(ExportFailed);
     expect(calls(dir).some(call => call.argv.includes('install'))).toBe(false);
