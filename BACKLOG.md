@@ -51,7 +51,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the 6 October 2026 sync brief replaced after A3, fetched again before A4's pass. One accepted wave, A4, has closed since its last brief commit. No second sync threshold reached.
+Answering the 6 October 2026 sync brief replaced after A3, fetched at daytime K7 kickoff. One accepted wave, A4, has closed since its last brief commit. K7 is redirected to a single red-master repair, K7-ci: hosted A4 verification passed tests but finished UNCOMMITTED. Cause not yet established. No second sync threshold reached yet.
 
 - Most urgent A4 advice adopted: every no-op/empty/deleted/wrong/tamper/alternative verdict has its own mutation/log; actual sealed folder-only agent submissions owner-verify against pristine exported manifests. Check authorship and fixture construction are separated from approximate declaration/export clocks and manual steps. Timing is not a controlled owner-effort comparison.
 - Dependency retention advice adopted: pinned picocolors@1.1.1, recorded integrity, no dependency/install scripts, declared npm.cmd ci --ignore-scripts. Reviewer repeated from offline cache. Original manifests/lockfiles unchanged, excluded member source absent and checks execute selected source plus real package. An install exit alone was never acceptance.
