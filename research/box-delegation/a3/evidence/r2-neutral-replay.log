@@ -1,0 +1,19 @@
+scoped run: 1 file(s) under tests\box\package — this is an inner loop, never suite acceptance
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+ [32m✓[39m tests/box/package/a3-r2-replay.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 216544[2mms[22m[39m
+   [32m✓[39m A3 R2 neutral replay — the five-candidate matrix by declarations [2m(6)[22m
+     [33m[2m✓[22m[39m positive: the upstream fix (repo -> _repo) verifies and lands in scratch history[33m 71182[2mms[22m[39m
+     [33m[2m✓[22m[39m no-op: an untouched editable file fails the declared outcome check[33m 31870[2mms[22m[39m
+     [33m[2m✓[22m[39m wrong edit: the param stays unused while behavior is untouched — outcome red[33m 18687[2mms[22m[39m
+     [33m[2m✓[22m[39m guard failure: the diagnostic is fixed but an assertion is broken — guard red[33m 31684[2mms[22m[39m
+     [33m[2m✓[22m[39m alternative solution: consuming the parameter also clears the diagnostic[33m 31641[2mms[22m[39m
+     [33m[2m✓[22m[39m known limit: a weakened editable guard still verifies — honest blind spot, reported[33m 31476[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 20:10:21
+[2m   Duration [22m 217.60s[2m (tests 100%)[22m
+
+replay exit=0

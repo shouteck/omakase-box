@@ -1,13 +1,14 @@
 # Station: Packaging
 
-Selecting source for a Box, exporting it as a folder, proving it in a clean directory, submitting a patch from it, verifying that patch in the owner repository. D2/D3.1 and declared-command checks are built. A1 makes agreements neutral; A2/A3 still own neutral selection and product orchestration.
+Selecting source for a Box, exporting it as a folder, proving it in a clean directory, submitting a patch from it, verifying that patch in the owner repository. D2/D3.1 and declared-command checks are built. A1 makes agreements neutral; A2 makes selection explicit and compares full-base/Box observations. A3 makes declared commands sufficient for neutral orchestration; ecosystem generation/install/compile remains explicit opt-in only.
 
 ## What this station knows
 
-- A Box is a plain folder with `box.json`, selected source and declared setup/check commands. A1 prerequisites are arbitrary programs with optional version descriptions, not a fixed toolchain. Current private-shop fixtures opt into Node scaffolding; removing ecosystem-specific orchestration is A3.
+- A Box is a plain folder with `box.json`, selected source and declared setup/check commands. Prerequisites are arbitrary programs. Neutral A3 export/verify needs no pnpm or generated files; private-shop fixtures explicitly opt into the retained nodejs helper. Paired recipient checks require the same sourceRoot-relative paths in full base and Box.
+- Name negative candidates by the actual source mutation. A cosmetic unused parameter is not the removed-parameter/unchanged-caller probe; a green alternative solution is not a wrong candidate.
 - The design for the first fixture is in `docs/box-v4/delegation/SUPPORTED-CASE.md`: the `examples/private-shop` fixture, two supported requests (A: response security policy; B: deterministic ranking), the modules that must be absent from the export, and one unsupported coupling case.
 - Reuse before writing: `packages/box-contracts` (Box schemas and hashing), `packages/analyzer` (import scanning), `packages/evaluation/patch-validation`.
-- How a Box selects its source has no precedent here. D2.1 opens with a prototype wave: two or three throwaway attempts compared on the same checks.
+- A2's `files` is the sole owner-source shipping authority. TypeScript `proposeSelection` supplies suggestions from entrypoints, never implicit export inputs. Owner-selected dependency files retain their bytes and provenance; optional generated helpers cannot overwrite them.
 
 ## Traps
 
@@ -18,7 +19,7 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 - **Exclusion runs on the canonical path, not the spelling.** Two D2.1 bypasses proved it: a case-aliased entrypoint and an in-root junction both shipped `src/private/*` bytes while the declared path looked clean. `realpathSync` before BOTH the containment and the exclusion check; fold case on both sides; emit under the canonical path only. Note Windows realpath keeps declared case, so alias spellings can still reach emission on non-excluded paths — normalize if patch mapping ever sees them.
 
 - **A clean install proves nothing.** With a needed sibling package missing, `npm ci` and `pnpm install --frozen-lockfile` both exit 0 and leave a dangling link (A0). Only a check that loads the code shows the gap.
-- **A red check can be red for the wrong reason.** A check that fails because a file is missing looks the same as one that fails because the work is not done. Compare with the same check in the full repository.
+- **Equal red exits are not equal failures.** A2 pairs declared recipient checks in full-base/isolated-Box contexts and compares result, exit and full normalized decoded-text digest. Never compare display tails. JSON tuple framing separates stdout/stderr even with embedded NULs; beyond-tail and NUL-partition regressions caught two wrong implementations. Matching diagnostics remain observations, not causal proof.
 - **Windows shim quoting can silently change argv.** A1 dispatches `.cmd`/`.bat` by file kind through the system shell, not by tool name. Unsafe tokens, including trailing backslashes, are refused before spawn; embedded backslashes and supported metacharacters have real subprocess tests. Do not broaden quoting without negative tests.
 - **Preflight all contexts before any declared setup.** Stage recipient files first, resolve owner and recipient programs plus prerequisites, then run commands. A1's sentinel regression catches the per-context ordering bug; missing recipient tools must not follow owner setup side effects.
 

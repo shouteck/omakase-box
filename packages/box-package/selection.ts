@@ -10,7 +10,7 @@ import type { BoxAgreement } from './agreement.js';
 // closure verifier: the selected set is closed exactly when no gap remains.
 
 export interface SelectionGap {
-  readonly kind: 'reachable-excluded' | 'undeclared-dependency' | 'unresolved-import' | 'escapes-root' | 'missing-editable' | 'excluded-input' | 'dynamic-import';
+  readonly kind: 'reachable-excluded' | 'undeclared-dependency' | 'unresolved-import' | 'escapes-root' | 'missing-editable' | 'missing-input' | 'excluded-input' | 'dynamic-import' | 'duplicate-destination';
   readonly detail: string;
   readonly chain: readonly string[];
 }
@@ -64,7 +64,7 @@ export function toPosix(path: string): string {
   return path.split(sep).join('/');
 }
 
-export function deriveSelection(agreement: BoxAgreement, sourceRootAbs: string): Selection {
+export function proposeSelection(agreement: BoxAgreement, sourceRootAbs: string): Selection {
   const root = resolve(sourceRootAbs);
   // Containment and exclusion are decided on the canonical real path, never on the declared
   // spelling alone: on a case-insensitive filesystem, or behind a link inside the source
@@ -167,5 +167,61 @@ export function deriveSelection(agreement: BoxAgreement, sourceRootAbs: string):
     if (editableOwners.has(owner)) continue; // already recorded with its editable origin
     files.push({ owner, box: `src/${owner.startsWith('src/') ? owner.slice(4) : owner}`, origin: 'runnable' });
   }
+  return { files, gaps };
+}
+
+export function deriveSelection(agreement: BoxAgreement, sourceRootAbs: string): Selection {
+  const root = resolve(sourceRootAbs);
+  const realRoot = realpathSync(root);
+  const canonicalOwner = (absolute: string): string | null => {
+    try { return toPosix(relative(realRoot, realpathSync(absolute))); }
+    catch { return null; }
+  };
+  const insideRoot = (owner: string): boolean => owner !== '' && owner !== '..' && !owner.startsWith('../') && !isAbsolute(owner);
+  const excluded = agreement.excludedPrefixes.map(prefix => prefix.toLowerCase());
+  const isExcluded = (ownerPath: string): boolean => excluded.some(prefix => ownerPath.toLowerCase().startsWith(prefix));
+
+  const gaps: SelectionGap[] = [];
+  const files: SelectedFile[] = [];
+  const destinations = new Set<string>();
+  const push = (owner: string, box: string, origin: SelectedFile['origin'], generated?: string): void => {
+    const key = box.toLowerCase();
+    if (destinations.has(key)) { gaps.push({ kind: 'duplicate-destination', detail: box, chain: [owner, box] }); return; }
+    destinations.add(key);
+    files.push(generated === undefined ? { owner, box, origin } : { owner, box, origin, generated });
+  };
+
+  for (const entry of agreement.files) {
+    if (isExcluded(entry.owner) || (entry.box !== undefined && isExcluded(entry.box))) { gaps.push({ kind: 'excluded-input', detail: entry.owner, chain: [entry.owner] }); continue; }
+    const absolute = join(root, entry.owner);
+    const stat = statSync(absolute, { throwIfNoEntry: false });
+    if (stat === undefined || !stat.isFile()) { gaps.push({ kind: 'missing-input', detail: entry.owner, chain: [entry.owner] }); continue; }
+    const owner = canonicalOwner(absolute);
+    if (owner === null || !insideRoot(owner)) { gaps.push({ kind: 'escapes-root', detail: entry.owner, chain: [entry.owner] }); continue; }
+    if (isExcluded(owner)) { gaps.push({ kind: 'excluded-input', detail: entry.owner, chain: [entry.owner, owner] }); continue; }
+    push(owner, entry.box ?? owner, 'runnable');
+  }
+
+  for (const entry of agreement.editable) {
+    if (isExcluded(entry.owner) || isExcluded(entry.box)) {
+      gaps.push({ kind: 'excluded-input', detail: entry.owner, chain: [entry.owner] });
+      continue;
+    }
+    if (entry.kind === 'generated-scaffold') { push(entry.owner, entry.box, 'generated', entry.generator); continue; }
+    const absolute = join(root, entry.owner);
+    const stat = statSync(absolute, { throwIfNoEntry: false });
+    if (stat === undefined || !stat.isFile()) { gaps.push({ kind: 'missing-editable', detail: entry.owner, chain: [entry.owner] }); continue; }
+    const owner = canonicalOwner(absolute);
+    if (owner === null || !insideRoot(owner)) { gaps.push({ kind: 'escapes-root', detail: entry.owner, chain: [entry.owner] }); continue; }
+    if (isExcluded(owner)) { gaps.push({ kind: 'excluded-input', detail: entry.owner, chain: [entry.owner, owner] }); continue; }
+    push(owner, entry.box, 'editable');
+  }
+
+  for (const context of agreement.readContext) {
+    const owner = canonicalOwner(join(root, context));
+    if (owner !== null && !insideRoot(owner)) { gaps.push({ kind: 'escapes-root', detail: `read-context ${context}`, chain: [context] }); continue; }
+    if (isExcluded(context) || (owner !== null && isExcluded(owner))) gaps.push({ kind: 'excluded-input', detail: `read-context ${context}`, chain: [context] });
+  }
+
   return { files, gaps };
 }

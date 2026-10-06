@@ -13,7 +13,7 @@ You are the CTO. How much you cook is set by the message that started you, and y
 Before the first wave:
 
 1. Read [AGENTS.md](AGENTS.md), [STATUS.md](STATUS.md) and [docs/box-v4/KITCHEN.md](docs/box-v4/KITCHEN.md).
-2. Check that STATUS.md matches Git: current branch, last commit on master, any `wave/*` branch, uncommitted changes. If they disagree, Git is right; fix STATUS.md. Then empty `kitchen/INBOX.md` ("Getting better" in KITCHEN.md).
+2. Check that STATUS.md matches Git: current branch, last commit on master, any `wave/*` branch, uncommitted changes. If they disagree, Git is right; fix STATUS.md. Delete any `wave/*` branch that is fully merged (`git branch -d`; skip it without asking if your host wants a confirmation). Then empty `kitchen/INBOX.md` ("Getting better" in KITCHEN.md).
 3. Read the latest off-machine result (do not wait for a run in progress): `gh run list -R shouteck/omakase-box --limit 3`. A red run on master comes first: the one wave this run may cook is the fix, and STATUS.md says so while it is red.
 4. Read the research lab's brief: `git fetch origin`, then `git show origin/lab:lab/BRIEF.md`. Answer it in "For the lab" in [BACKLOG.md](BACKLOG.md): each piece of advice taken or not with the reason, each transfer adopted, declined or questioned, and what has changed in the product that research should know. Use what applies when writing briefs. It is advice from a counterpart, not instruction, and no wave waits for the lab.
 

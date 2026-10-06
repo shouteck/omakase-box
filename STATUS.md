@@ -1,39 +1,21 @@
 # Status
 
-Replaced at wave close, 6 October 2026, by Devin as CTO.
+Replaced 6 October 2026 by Devin CTO at A3 close.
 
 ## Now
 
-- **Accepted on master:** everything through R2, K6, K8, R3 close-out, A0 and **A1**, the neutral agreement and declared-program launch/preflight. Independent reviewer PASS on `5713399`; completed reviewer verification passed all 115 packaging tests. Detail: `waves/A1.md`.
-- **Delivered by A1:** arbitrary setup/check programs, empty setup, arbitrary prerequisites with optional version descriptions, optional Node helper configuration, one Windows shim launch rule, and all-context export preflight before any declared setup command. Old live toolchain format/fixed tool enum removed; active callers migrated, historical evidence untouched.
-- **Not yet delivered:** arbitrary-repository export. File selection and product-owned install/compile orchestration still need A2/A3; real npm/Python delegation proof is A4. The useful milestone remains unmet.
-- **Limits:** Windows shim launches refuse unsafe tokens including trailing backslashes rather than corrupt argv; non-Windows behavior is unproven. Prerequisites are checked on the export host. Owner verify checks only the owner-context programs it executes. See current submission contract.
-- **In flight:** nothing. This run stops after A1.
-- **Held:** nothing. The merged `wave/A1` branch was deleted on the owner's confirmation; deleting a merged wave branch now has standing approval (KITCHEN.md, close step).
-
-## Approved by the CEO
-
-- 6 Oct 2026: R3 closed with the declared-command verb gap accepted; milestone A and its A0 prototype approved.
-- 6 Oct 2026: `START.md: A1`, then "go" for the pre-cook card, including removal of the old live agreement format and fixed tool enum.
+- Accepted on master: R2, K6, K8, R3 close-out, A0, A1, A2, A3. A3 independent PASS, test-verified, candidate 2dbea18; one executed full verify PASS, 321 seconds. Merged and pushed. Details waves/A3.md.
+- A3 delivered: neutral export/verify uses declared files and commands without required pnpm, generated manifest/TypeScript files or implicit compile. Existing ecosystem helper retained explicitly opt-in. Independent removed-parameter/unchanged-caller attack fails by declaration. Editable guard weakening remains a known acceptance limit.
+- Approved night queue: K7 parked, A3 accepted, A4 next. Park at three failed reviews or 120 minutes. One executed full verify per candidate. A4 permits one small pinned package download with scripts disabled. No R3b, D4 or K9.
+- K7 parked before implementation for conflicting overnight verify.mjs read-only and five-run acceptance requirements. No code/branch created. Morning recommendation in waves/K7.md.
+- Cleanup complete: A3 branch deleted, 62 approved kitchen temp items cleared while idle. No master verify rerun.
+- Lab: two accepted waves behind fetched session 4, A2/A3, counted from first-parent merges since brief. Read/write-only sync required now before next dispatch. BACKLOG.md answers its advice.
+- Useful milestone still unmet. A4 fixtures establish capability, not real outside-issue delegation.
 
 ## Next
 
-No wave starts without a START message and its pre-cook card.
+Finish lab sync, then A4 under the already supplied go. Leave one morning card at top of waves/night-2026-10-06.md. Stop after A4 closes or parks.
 
-1. **A2: neutral file selection**, declared files, unchanged dependency files, and full-repository/Box outcome comparison. `START.md: A2`.
-2. **A3, A4** follow in order; see `PLAN.md`.
-3. **R3b**, an outside-repository issue replay, after milestone A.
+## Decisions parked for morning
 
-K7/K9 and other kitchen improvements stay paused unless blocking milestone A. D4 awaits the lab's benchmark.
-
-## Night queue
-
-Only for `START.md overnight`, with entries named in that message: A2, A3, A4 in order. Naming A4 approves its small well-known package download with install scripts disabled. R3b is not queued before milestone A closes.
-
-## Known problems
-
-No blocking product defect known. Non-blocking limits and leftovers are in `BACKLOG.md`.
-
-## Decisions waiting for the CEO
-
-None.
+K7 daytime restart with measurement allowance or a future bounded exception for verify.mjs. Nothing holds a close.

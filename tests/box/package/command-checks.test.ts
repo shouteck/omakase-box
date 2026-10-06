@@ -26,6 +26,7 @@ function agreementWith(over: Record<string, unknown>): unknown {
     outcome: 'probe',
     sourceRoot: '.',
     entrypoints: ['src/policy/loader.ts'],
+    files: [{ owner: 'src/policy/loader.ts' }, { owner: 'src/policy/strict-json.ts' }],
     editable: [{ kind: 'copy', owner: 'config/response-security.json', box: EDITABLE }],
     declaredDependencies: {},
     excludedPrefixes: ['src/private/', 'node_modules/'],
@@ -248,7 +249,7 @@ describe('declared command checks: export on the untouched base', () => {
     const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(agreement).outDir, 'box.json'), 'utf8')));
     expect(manifest.baseChecks.map(record => `${record.name}:${record.result}:${record.exit}`)).toEqual(['base-guard:pass:0', 'base-outcome:fail:1']);
     // The legacy 'checks' strings are descriptions: named unsupported gap, never a claim.
-    expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/)]);
+    expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/), expect.stringMatching(/recipient-context checks/)]);
     expect(manifest.commands[0]?.program).toBe('node');
 
     const green = agreementFile('request-a', { mutate: value => { value.commands = [check({ name: 'only-green', role: 'outcome' })]; } });
@@ -286,7 +287,7 @@ describe('declared command checks: export on the untouched base', () => {
   it('keeps a legacy evaluator-only agreement exporting, with the named gap recorded', () => {
     const manifest = BoxManifestSchema.parse(JSON.parse(readFileSync(join(runExport(agreementFile('request-a')).outDir, 'box.json'), 'utf8')));
     expect(manifest.baseChecks).toEqual([]);
-    expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/)]);
+    expect(manifest.warnings).toEqual([expect.stringMatching(/legacy 'checks'/), expect.stringMatching(/recipient-context checks/)]);
     expect(manifest.evaluator).toHaveLength(1);
   });
 
