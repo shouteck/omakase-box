@@ -67,11 +67,18 @@ with an optional human-readable version, never a pinned toolchain the product
 enforces.
 
 Every declared program (setup, checks and `requires[]`) is resolved before the
-first command executes in its context — owner-context programs and `requires[]`
-against the owner repository before the disposable clone exists, recipient-context
-programs against the staged Box folder before its setup runs; a missing one is
-named and nothing has run in that context. A timeout or
+first declared command executes anywhere — the Box folder is emitted first
+(a product-owned step that runs no declared commands; the `nodejs` lockfile
+resolution it performs is a product-owned tool action whose solver boundary is
+A3), then owner-context programs and `requires[]` resolve against the owner
+repository and recipient-context programs against the emitted staging tree.
+A missing program is named and no declared command — setup or check, of either
+context — has run. A timeout or
 spawn failure is a named result, never a pass and never a red outcome check.
+`verify` reruns only owner-context commands in its scratch clone and therefore
+preflights owner programs and `requires[]` before those commands; recipient
+programs are not executed there and their paths are Box-relative, so the export
+check above is where the full set is established.
 
 One operating-system launch rule covers Windows command files: a program that
 resolves to a `.cmd`/`.bat` (npm and pnpm are `npm.cmd`/`pnpm.cmd` shims) is

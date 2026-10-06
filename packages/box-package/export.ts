@@ -88,11 +88,6 @@ export function exportBox(options: ExportOptions): ExportResult {
   const repo = resolve(options.repoPath);
   const sourceRoot = resolve(repo, agreement.sourceRoot === '.' ? '' : agreement.sourceRoot);
   if (!statSync(sourceRoot, { throwIfNoEntry: false })?.isDirectory()) throw new ExportFailed(`source root ${sourceRoot} does not exist`);
-  preflightPrograms({
-    setup: agreement.setup.filter(command => command.context === 'owner'),
-    commands: agreement.commands.filter(command => command.context === 'owner'),
-    requires: agreement.requires
-  }, repo);
   if (agreement.evaluator.length > 0 && agreement.nodejs === undefined) {
     throw new ExportFailed('evaluator entries are emitted as vitest test files: declare the nodejs helper configuration or drop evaluator');
   }
@@ -112,34 +107,6 @@ export function exportBox(options: ExportOptions): ExportResult {
   }
   const baseChecks: CheckRecord[] = [];
   const failedGuard = (): CheckRecord | undefined => baseChecks.find(record => record.role === 'guard' && record.result !== 'pass');
-
-  // Every declared owner-context check runs on the untouched base in a
-  // disposable clone — never in the real owner repository, which approved
-  // commands must leave unchanged. A red guard is a preparation/environment
-  // gap: the base the agreement claims to start from does not hold.
-  const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
-  const ownerChecks = agreement.commands.filter(check => check.context === 'owner');
-  if (ownerSetup.length > 0 || ownerChecks.length > 0) {
-    const baseWork = mkdtempSync(join(tmpdir(), 'box-base-'));
-    try {
-      const clone = join(baseWork, 'owner');
-      git(repo, ['clone', '--local', '--quiet', repo, clone]);
-      git(clone, ['checkout', '--quiet', baseCommit]);
-      materializeTooling(repo, clone);
-      baseChecks.push(...runSetup(agreement.setup, clone, 'owner'));
-      const setup = baseChecks.find(record => record.role === 'setup' && record.result !== 'pass');
-      if (setup !== undefined) {
-        throw new ExportFailed(`setup command '${setup.name}' did not exit 0 on the untouched base (context ${setup.context}, result: ${setup.result}, exit ${setup.exit}): ${setup.log}`);
-      }
-      baseChecks.push(...runDeclaredChecks(agreement.commands, clone, 'owner'));
-    } finally {
-      rmSync(baseWork, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
-    }
-    const guard = failedGuard();
-    if (guard !== undefined) {
-      throw new ExportFailed(`guard check '${guard.name}' does not pass on the untouched base (context ${guard.context}, result: ${guard.result}, exit ${guard.exit}): ${guard.log}`);
-    }
-  }
 
   // The folder is emitted into a sibling staging directory and renamed into
   // place only after every declared check has a recorded base result, so a
@@ -174,6 +141,50 @@ export function exportBox(options: ExportOptions): ExportResult {
   // `node box/submit.mjs`, no box-cli or repository needed.
   ship(SUBMIT_TOOL_PATH, null, 'generated', SUBMIT_TOOL, false);
 
+  // Every declared program (owner setup/checks, recipient setup/checks) and
+  // every executable prerequisite resolves before the first declared command
+  // runs, so a missing program is named before any setup side effect — of any
+  // context — can occur. Recipient-relative paths resolve against the emitted
+  // staging tree (the recipient run directory is a byte-identical copy).
+  preflightPrograms({
+    setup: agreement.setup.filter(command => command.context === 'owner'),
+    commands: agreement.commands.filter(command => command.context === 'owner'),
+    requires: agreement.requires
+  }, repo);
+  preflightPrograms({
+    setup: agreement.setup.filter(command => command.context === 'recipient'),
+    commands: agreement.commands.filter(command => command.context === 'recipient'),
+    requires: []
+  }, staging);
+
+  // Every declared owner-context check runs on the untouched base in a
+  // disposable clone — never in the real owner repository, which approved
+  // commands must leave unchanged. A red guard is a preparation/environment
+  // gap: the base the agreement claims to start from does not hold.
+  const ownerSetup = agreement.setup.filter(command => command.context === 'owner');
+  const ownerChecks = agreement.commands.filter(check => check.context === 'owner');
+  if (ownerSetup.length > 0 || ownerChecks.length > 0) {
+    const baseWork = mkdtempSync(join(tmpdir(), 'box-base-'));
+    try {
+      const clone = join(baseWork, 'owner');
+      git(repo, ['clone', '--local', '--quiet', repo, clone]);
+      git(clone, ['checkout', '--quiet', baseCommit]);
+      materializeTooling(repo, clone);
+      baseChecks.push(...runSetup(agreement.setup, clone, 'owner'));
+      const setup = baseChecks.find(record => record.role === 'setup' && record.result !== 'pass');
+      if (setup !== undefined) {
+        throw new ExportFailed(`setup command '${setup.name}' did not exit 0 on the untouched base (context ${setup.context}, result: ${setup.result}, exit ${setup.exit}): ${setup.log}`);
+      }
+      baseChecks.push(...runDeclaredChecks(agreement.commands, clone, 'owner'));
+    } finally {
+      rmSync(baseWork, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+    }
+    const guard = failedGuard();
+    if (guard !== undefined) {
+      throw new ExportFailed(`guard check '${guard.name}' does not pass on the untouched base (context ${guard.context}, result: ${guard.result}, exit ${guard.exit}): ${guard.log}`);
+    }
+  }
+
   // Every declared recipient-context check runs on the emitted folder at the
   // base state: the staging tree is copied to a run directory outside the
   // checkout, installed from its own lockfile when a pinned tool needs it, and
@@ -187,11 +198,6 @@ export function exportBox(options: ExportOptions): ExportResult {
     try {
       const box = join(runRootDir, 'box');
       cpSync(staging, box, { recursive: true });
-      preflightPrograms({
-        setup: agreement.setup.filter(command => command.context === 'recipient'),
-        commands: agreement.commands.filter(command => command.context === 'recipient'),
-        requires: []
-      }, box);
       baseChecks.push(...runSetup(agreement.setup, box, 'recipient'));
       const setup = baseChecks.find(record => record.role === 'setup' && record.result !== 'pass');
       if (setup !== undefined) {

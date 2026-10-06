@@ -346,6 +346,32 @@ describe('declared command checks: export on the untouched base', () => {
     expect(existsSync(sideEffect)).toBe(false);
   });
 
+  it.each([
+    { label: 'recipient check program', missing: 'box-a1-no-such-recipient-xyz', place: (value: any, command: unknown) => { value.commands = [command]; } },
+    { label: 'recipient relative check program', missing: 'tools/no-such-probe.cmd', place: (value: any, command: unknown) => { value.commands = [command]; } },
+    { label: 'recipient setup program', missing: 'box-a1-no-such-recipient-setup-xyz', place: (value: any) => {
+      value.setup = [{ name: 'ghost', program: 'box-a1-no-such-recipient-setup-xyz', args: ['-e', 'process.exit(0)'], cwd: '.', context: 'recipient', timeoutMs: 30_000 }];
+      value.commands = [check({ name: 'guard' })];
+    } },
+    { label: 'solver prerequisite', missing: 'box-a1-no-such-requires-xyz', place: (value: any) => { value.requires = [{ program: 'box-a1-no-such-requires-xyz' }]; value.commands = [check({ name: 'guard' })]; } }
+  ])('names a missing $label before any owner setup side effect runs', ({ missing, place }) => {
+    const outDir = join(runRoot('preflight-order'), 'box');
+    const sideEffect = join(runRoot('preflight-order-side-effect'), 'wrote.txt');
+    const agreement = agreementFile('request-a', {
+      mutate: value => {
+        value.setup = [{
+          name: 'would-write', program: 'node',
+          args: ['-e', `require('fs').writeFileSync(${JSON.stringify(sideEffect)},'x')`],
+          cwd: '.', context: 'owner', timeoutMs: 30_000
+        }];
+        place(value, check({ name: 'ghost', program: missing, context: 'recipient' }));
+      }
+    });
+    expect(() => runExport(agreement, undefined, outDir)).toThrowError(/no-such/);
+    expect(existsSync(outDir)).toBe(false);
+    expect(existsSync(sideEffect)).toBe(false);
+  });
+
   it('names a missing solver prerequisite from requires', () => {
     const agreement = agreementFile('request-a', {
       mutate: value => {
