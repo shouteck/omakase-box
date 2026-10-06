@@ -15,7 +15,7 @@ These are needs, stated by the CTO, who may add, reword or withdraw one through 
 
 Offered by the owner and the CTO. They are hypotheses to weigh against the literature, with no special standing; record here what the survey says about each.
 
-- **A leaner equivalent, with a green tick (owner, 6 October 2026).** Instead of handing over a cut-down copy, hand over a much smaller version of the code that can be shown to behave the same as the original where it matters for the task, so that a person or an agent works on the small version and gets a machine verdict that the implementation is correct and behaves as expected.
+- **A leaner equivalent, with a green tick (owner, 6 October 2026).** Instead of handing over a cut-down copy, hand over a much smaller version of the code that can be shown to behave the same as the original where it matters for the task, so that a person or an agent works on the small version and gets a machine verdict that the implementation is correct and behaves as expected. The owner's direction on how far to take it: go as far as can be reduced to an algorithm; where it cannot be, deliver the best available. Whatever level is reached, the tick must say exactly what it guarantees and nothing more.
 - **A model as judge (owner, 6 October 2026).** For outcomes no test can check, such as a visual design, use an image-capable model to give the verdict.
 - **Type-only stubs (kitchen, D2.1 prototype C).** Replace everything outside the editable files with generated type declarations. Tried once on one fixture and not chosen; see `git show origin/master:waves/D2.1-proto.md`.
 
