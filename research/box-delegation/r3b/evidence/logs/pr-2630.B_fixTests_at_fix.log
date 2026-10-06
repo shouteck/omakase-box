@@ -1,0 +1,36 @@
+# argv: ["node","--test","tests/incrementNodeInspectorPort.test.cjs"]
+# cwd: /src/wt/pr-2630-B
+# HEAD: 130cf3a9d0dab501f295674166994b41982546a7
+# overlay: null
+# started: 2026-10-06T23:18:06.363Z ended: 2026-10-06T23:18:06.513Z
+# exit: 0 signal: null
+# ---- stdout ----
+▶ increment node inspector port in executable subcommands
+  ✔ when --inspect then bump port (5.866591ms)
+  ✔ when --inspect=100 then bump port (0.879124ms)
+  ✔ when --inspect=1.2.3.4:100 then bump port (0.475497ms)
+  ✔ when --inspect=1.2.3.4 then bump port (0.39733ms)
+  ✔ when --inspect-brk then bump port (0.764573ms)
+  ✔ when --inspect-brk=100 then bump port (0.640926ms)
+  ✔ when --inspect-brk=1.2.3.4 then bump port (0.642525ms)
+  ✔ when --inspect-brk=1.2.3.4:100 then bump port (1.036357ms)
+  ✔ when --inspect-wait then bump port (1.05045ms)
+  ✔ when --inspect-wait=100 then bump port (0.870928ms)
+  ✔ when --inspect-wait=1.2.3.4 then bump port (0.556362ms)
+  ✔ when --inspect-wait=1.2.3.4:100 then bump port (0.462503ms)
+  ✔ when --inspect-port=100 then bump port (0.51478ms)
+  ✔ when --inspect-port=1.2.3.4:100 then bump port (0.359447ms)
+  ✔ when --inspect-unexpected then unchanged (0.313266ms)
+  ✔ when --frozen-intrinsics  then unchanged (0.518878ms)
+✔ increment node inspector port in executable subcommands (17.907541ms)
+ℹ tests 16
+ℹ suites 1
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 109.91449
+
+# ---- stderr ----
+
