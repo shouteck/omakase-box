@@ -8,7 +8,7 @@ Replaced at wave close, 6 October 2026, by Devin as CTO.
 - **Delivered by A1:** arbitrary setup/check programs, empty setup, arbitrary prerequisites with optional version descriptions, optional Node helper configuration, one Windows shim launch rule, and all-context export preflight before any declared setup command. Old live toolchain format/fixed tool enum removed; active callers migrated, historical evidence untouched.
 - **Not yet delivered:** arbitrary-repository export. File selection and product-owned install/compile orchestration still need A2/A3; real npm/Python delegation proof is A4. The useful milestone remains unmet.
 - **Limits:** Windows shim launches refuse unsafe tokens including trailing backslashes rather than corrupt argv; non-Windows behavior is unproven. Prerequisites are checked on the export host. Owner verify checks only the owner-context programs it executes. See current submission contract.
-- **In flight:** nothing. This run stops after A1.
+- **In flight:** A2, explicit file selection and paired full-repository/Box base checks, requested with `START.MD A2`. Pre-cook card presented; no existing files scheduled for deletion. This run stops after A2.
 - **Held:** nothing. The merged `wave/A1` branch was deleted on the owner's confirmation; deleting a merged wave branch now has standing approval (KITCHEN.md, close step).
 
 ## Approved by the CEO

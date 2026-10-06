@@ -29,6 +29,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - Prior K6 temp buildup was cleared manually while idle, per owner commit `326ee7d`; that historical ownership blocker is resolved. The exit-cleanup leak remains; each new wave must inventory and remove its own resources, not bulk-delete unknown data.
 
 - Property-based guard tests and Box packaging mutation checks: retained from the kickoff inbox; require a separately named kitchen wave.
+- Mechanically bind review verdicts to completed reviewer invocation/commit evidence, distinguishing reused steps. A1's unfinished-run mistake is now addressed in the reviewer role; verification-tool enforcement needs a separately named kitchen wave.
 - K6 added packaging operation counts and an explicit full-profile budget; invocation/PID time-window counting can miss reused PIDs or mix simultaneous matching logs. Give counters a run identity before relying on parallel measurements.
 - Monthly upstream pstack comparison: last done 5 October 2026 against 0.15.10; not due at this kickoff.
 
@@ -45,13 +46,13 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the fetched 6 October 2026 session 3 brief at A1 kickoff:
+Answering the fetched 6 October 2026 session 3 brief at A2 kickoff. The fetched lab brief has not changed since A1.
 
-- Direction updated: R3 closed without useful outside-repository delegation. Approved milestone A makes the core repository-agnostic; A0's prototype is accepted, and this run prepares A1 only. R3b follows A4. Lab Line 1 and D4's benchmark need remain; kitchen improvements stay paused unless blocking.
+- Direction updated: R3 closed without useful outside-repository delegation. A0 and A1 are accepted; A1's independent Windows packaging review and off-machine full verification passed. This run names A2 only, explicit selection and paired full-repository/Box base checks. A3/A4 and useful outside-repository delegation remain unproven. R3b follows A4; lab Line 1 and D4's benchmark need remain.
 - Base-check transfer adopted and retained: R2 now runs declared checks on the base and owner-side, records exits/context/roles, rejects red guards and warns on all-green outcomes. The lab's description predates that product change. A1 preserves these checks; A2 will compare the same outcome check in the full repository and Box so missing files cannot masquerade as evidence of change.
-- Format advice adopted: A1 removes fixed tool requirements and accepts arbitrary setup/check programs, empty setup and solver prerequisites. It must not require an unrelated generated evaluator. Historical evidence stays unchanged; arbitrary-repository export is not claimed before A2/A3/A4.
+- Format advice adopted: A1 now accepts arbitrary setup/check programs, empty setup and arbitrary executable prerequisites without a required fixed toolchain or unrelated generator. Historical evidence stays unchanged. A2 builds on that runner; optional legacy Node/generated fixtures are not neutral readiness evidence by themselves.
 - Import-travel advice retained, not made a universal rule: imports help select TypeScript files but miss runtime paths. A2 makes selection explicit and import following optional; execution, not a clean install, proves the selected files.
 - Guard independence and wrong/right attacks retained: R2 showed editable checks can accept weakened assertions. Prefer immutable independent guards, test no-op and wrong candidates, and report uncovered cases. Existing tests alone do not establish full preservation.
 - R1 guard result and literature numbers noted, not rerun or extrapolated: a reproduced lab result is evidence from the lab, not this kickoff. Seven hand-picked travel tests and the student study are not product error rates.
 - Per-run evidence still needed: direct exits and exact commits remain authoritative. A0 reproduced 18 offline prototype trials, 10 worked, on one Windows host with no outside dependencies or blind recipient. It found installers can exit 0 with missing workspace code, and Windows command shims require an explicit launch rule.
-- No new transfer in the fetched brief. A1 supplies rerunnable launch/preflight checks; A4 supplies actual npm/Python delegation and outside-dependency evidence. No research finding is a blocking gate.
+- No new transfer in the fetched brief. A2 adopts its runtime-path warning as a same-exit/different-failure negative and requires paired observations, not just nonzero exit equality. Matching diagnostics still do not prove causality or preservation. A4 supplies actual npm/Python delegation and outside-dependency evidence; no research finding is a blocking gate.
