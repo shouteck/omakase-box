@@ -27,7 +27,7 @@ function miniOwnerRepo(): { repo: string; baseCommit: string } {
   return { repo, baseCommit: fixtureCommit(repo, 'r1-mini-owner') };
 }
 
-function r1Agreement(repo: string, baseCommit: string): string {
+function r1Agreement(_repo: string, baseCommit: string): string {
   const agreement = JSON.parse(readFileSync(AGREEMENT, 'utf8')) as Record<string, unknown>;
   agreement.baseCommit = baseCommit;
   const path = join(runRoot('r1-agreement'), 'agreement.json');
