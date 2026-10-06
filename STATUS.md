@@ -5,7 +5,7 @@ Replaced 6 October 2026 by Devin as CTO after K6 was parked at its approved time
 ## Now
 
 - **Accepted on master:** B0, B1.1, D1.1, lean kitchen, K1, D1.2, K2a, K2b, K3, D2.1, D2.2, D3.1, K4, K5, K8, R1 (`ddeb3ab`). No K6 code merged.
-- **In flight:** no active worker. **K6 parked / reviewer FAIL** at the 60-minute cook timebox; candidate `feb99b2`, review `4a3000f`, preserved on local `wave/K6`.
+- **In flight:** no active worker. Owner approved a K6 correction run; updated brief awaits pre-cook **go** for a renewed 60-minute timebox. Prior candidate `feb99b2` / FAIL review `4a3000f` remain preserved on local `wave/K6`.
 - **K6 blockers:** scoped tests can escape through junctions; global lockfile cache trusts preseeded bytes and persists across commits; invalid/failed/missing timing can be labeled budget PASS. The reported 42% saving is a unit model, not a measured paired baseline.
 - **Verification:** targeted reviewer attacks reproduced the defects; a full acceptance run was deliberately not spent on a known-invalid candidate. Latest master Actions result remains SUCCESS, run `37393662780`; K6's local failure is not a red master CI run.
 - **Cleanup:** K6 worker/reviewer scratch removed; main checkout is clean on master after the park commit. Candidate branch retained for recovery; preexisting resources and the unrelated lab worktree untouched.
@@ -38,4 +38,4 @@ K6 acceptance blockers are above and in [waves/K6.md](waves/K6.md); non-blocking
 
 ## Decision waiting for the CEO
 
-Authorize a new bounded K6 correction run, or choose another named wave. This run has stopped.
+K6 correction is approved in principle; reply **go** to the pre-cook card to start the renewed bounded run. No implementation has restarted.
