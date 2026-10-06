@@ -4,10 +4,14 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- R2 proved wrong work can pass when the editable file is also its guard: weakened assertions accepted owner-side. Commands pass, but preservation is not established; prefer immutable independent guards or explicitly report this limitation.
+- `boxJsonSha256` is self-declared unless owner verification supplies a pristine `--box`; owner execution authority is agreement-bound. R2 archives the actual hash chain, not a stronger authenticity claim.
+- R2 preparation/generic effort estimates lack measured stage clocks; R3 must record actual timestamps/manual steps and not infer a controlled R1/R2 saving.
+
 - `readContext` is declared in `box.json` but its files do not ship: the blind taster saw the names, not the content. Decide whether read context ships (it discloses more) or the contract stays as it is. From D2.2.
 - The in-folder seal (`box/submit.mjs`) does not hash generated members (evaluator, scaffolds, the tool itself), so a recipient could weaken its own evaluator and still seal. The owner-side verify catches it today. From D2.2 and D3.1.
 - On Windows a case-aliased input that is not excluded can be emitted under the alias spelling and ship twice. It cannot leak excluded files. From D2.1.
-- Owner checks are a registry in `packages/box-package/owner-checks.ts` keyed on the evaluator generator. A new kind of request needs a registered check, or verify refuses it as a preparation defect. From D3.1.
+- Legacy generator checks still use the registry; R2 command mode removes per-request registration. Legacy free-text `checks` do not execute at base and now carry an explicit warning; use structured commands for base-result evidence.
 - Patch-apply containment is by path text. A committed symlinked directory under an editable path could redirect a scratch write. No symlinks in this repository today. From D3.1.
 - Requesters see Amend controls on Boxes they did not author. The server refuses correctly; the control should be hidden. From D1.2.
 
@@ -35,7 +39,7 @@ The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`
 Answering the fetched brief of 6 October 2026 (after lab session 3), at R2 kickoff:
 
 - **Direction unchanged:** PLAN's useful milestone is R2 then R3; lab stays on Line 1, kitchen improvements remain paused unless blocking, D4 awaits a benchmark. Study cheap request-to-check evidence and unfamiliar-repository gaps, not a presumed success rate.
-- **Product change:** K6 accepted (`a273bf0`), CI green; cleanup ownership still unresolved. `START.md: R2` now approves R2; brief at `waves/R2.md`, implementation awaiting pre-cook Go. The latest plan commits clarify handover, not solver, and R3 readiness reporting; public-issue ecosystem remains later and owner-gated. No R3 or public-project work yet.
+- **Product change / R2 result:** R2 merged `53dc074`: generic command mode, all four actual base exits, accepted real submission, no-op rejected, original pinned-base export independently reproduced. No request-specific evaluator/test/driver for preparation, but minutes remain estimates. Reviewer proved weakened editable-guard assertions can pass. Eligible disclosure is 20/717 files, not 20/3513 including frozen history. K6 cleanup unresolved; R3/public work not started; handover/readiness direction unchanged.
 - **Base-check transfer — adopted:** export will run every declared command and record exit code, context, guard/outcome role and exact base. Red guard is a preparation defect; all-green base warns there is no evidence of change. Unknown/timeout is not red-by-prose or PASS.
 - **Existing import-based guard advice — adopted with qualification:** avoid runtime-path-dependent recipient tests first; use the existing TypeScript command for a candidate unused parameter in R1's packaging test and run that existing behavior test in the full owner context. Prove the candidate's base failure before selecting it; no invented red test.
 - **Format gap — adopted:** a reusable command-check mode must not require or substitute another request's evaluator; legacy generator mode remains compatible. Owner verify must execute its approved command data, not recipient claims or an unrelated registry entry.
