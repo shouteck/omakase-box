@@ -26,8 +26,18 @@ outside real issue or customer evidence.
   the Box `baseChecks`/`paired` seconds fields and in this file's stage log.
 - Dispatch (120-minute budget): ~2026-10-06T12:45Z (20:45 local, +0800).
   Deadline ≈ 2026-10-06T14:45Z.
-- Fixture/check construction: ~12:50Z–13:05Z. Declaration/export clocks:
-  recorded below when exports ran.
+- Fixture/check construction: ~12:50–13:02Z (cook, manual file writes and
+  lockfile generation, ~12 min). Scoped vitest run of
+  tests/box/package/a4-neutral.test.ts: 8/8 pass at 13:01Z (~35 s).
+- Stage-1 commit: 4f25db6188fd08c39325158ce01a6633fade740b (~13:02Z).
+- Recipient exports from the real checkout at that commit (box-cli `export`,
+  no pnpm, no nodejs helper):
+  - npm-cli box: 13:02:53Z start, ~13:03Z end (<10 s).
+  - py-tools box: 13:03:19Z–13:03:28Z (~9 s).
+  Manual steps: two `box export` invocations plus two `cp -r` pristine copies.
+- Live recipient Boxes (do not touch): C:\Users\shout\Desktop\a4-boxes\npm-cli-box
+  and ...\a4-boxes\py-tools-box. Pristine owner-binding copies under
+  ...\a4-boxes\pristine\.
 
 ## Outside dependency review
 
