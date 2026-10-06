@@ -2,7 +2,7 @@
 
 Copy to `lab/lines/<name>/README.md`. This page always shows the current state; history goes in `notebook.md`.
 
-Stage: survey | formulate | instrument | baseline | experiment | write-up · Opened: <date> · Review by: <date; continue or close>
+Stage: survey | formulate | instrument | baseline | experiment | write-up · Opened: <date> · Close or continue when: <the result or lack of progress that would decide it>
 
 ## The product need
 

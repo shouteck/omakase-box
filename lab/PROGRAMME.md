@@ -1,6 +1,6 @@
 # Research programme
 
-Set by the CTO from the product roadmap on 6 October 2026. The CTO decides which problems the lab works on, in what order, and which product decision each must inform. The lab lead decides how: the formulation, the method, the instruments, and when the evidence says a line should close. The owner is not asked to steer research.
+Set by the CTO from the product roadmap on 6 October 2026. There are no deadlines here: the order below is a logical sequence, and a line takes as long as honest work on it takes. The CTO decides which problems the lab works on, in what order, and which product decision each must inform. The lab lead decides how: the formulation, the method, the instruments, and when the evidence says a line should close. The owner is not asked to steer research.
 
 ## What the product is trying to prove
 
@@ -29,7 +29,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 **Decision it informs.** What the kitchen builds after R2, and what the MVP can honestly promise to verify.
 
-**Needed by.** A first brief before the kitchen writes the R2 brief if possible, with whatever the survey already shows; the map by 20 October 2026.
+**Sequence.** First. Whatever the survey shows that bears on R2 goes to the CTO before the kitchen writes the R2 brief, if the kitchen has not reached it yet; R2 does not wait for the lab. The map of real requests comes before any work on new ways of getting a check, because it decides which ways are worth studying.
 
 ### Line 2. Does a Box help?
 
@@ -41,7 +41,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 **Constraint.** Zero cost limits the number of runs. Report the count, treat small differences as noise, and say what a larger study would need.
 
-**Needed by.** A benchmark and a first comparison by 27 October 2026.
+**Sequence.** After Line 1 has its survey and its map under way. The benchmark comes before any comparison. The kitchen's D4 follows this line's benchmark, not the other way round.
 
 ### Line 3. Does the slice contain what the change needs?
 
@@ -51,7 +51,7 @@ The aim behind all of it, from the owner: the person who posed the problem accep
 
 **Decision it informs.** How far the supported kinds of change can widen, and what a Box must declare by hand instead of discovering.
 
-**Needed by.** Not urgent. Opens when Line 1 has delivered its map, or sooner if the lab has a session with nothing else that can run.
+**Sequence.** After Line 1's map, which will show which kinds of change matter most. It can share Line 2's benchmark of past changes, so build that once. Open it sooner if a session has nothing else that can run.
 
 ## Parked, with what would unpark them
 
