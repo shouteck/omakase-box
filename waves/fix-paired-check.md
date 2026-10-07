@@ -71,3 +71,8 @@ Acceptance: two clean, fully-executed full runs on the same commit (`acc9322`) e
 **Findings:** none blocking. **Limits:** no end-to-end export pair exercises the normalisation (unit-level coverage only); the `\d+ms\b` masking hole stands as documented above.
 
 Host/model: Devin Desktop, SWE-2.
+
+## Reflect
+
+- What went wrong: the cook's `verify --full` PASS on `70c5e0b` never ran `test:box-package` — `check`'s diff-reach map has no entry for `packages/box-package/`, so the broken `/differently/` assertion surfaced only when the pass named the suite. It becomes: a packaging station-card line — briefs touching `packages/box-package` or `tests/box/` must name the box suites explicitly. (Station.)
+- What was repeated: the cook needed the file-scoped `suite.mjs` inner loop *before* committing because verify refuses a dirty tree; the worker role implied the order but never said why. It becomes: one clarifying line in `kitchen/roles/worker.md`. (Kitchen, adopted in place rather than via the inbox.)

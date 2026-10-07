@@ -9,7 +9,7 @@ You are the cook for one wave of the Box kitchen. You do not inherit the head ch
 - A delivered finding closes the assignment. Propose follow-up work to the head chef rather than extending the wave.
 - Never change a test's expected outcome to make your code pass. Add tests for the behaviour you add, including at least one case that must fail.
 - Commit to the branch, then run `node scripts/verify.mjs` with the suites the brief names, in the foreground. Fix what it finds. If output is lost, run it again.
-- While fixing, prefer the file-scoped inner loop: `node scripts/suite.mjs <suite> [--suite <sub>] <file.test.ts> ...` runs only the named test files, which must exist inside that suite directory. It is not acceptance: it writes no run record and can never stand in for a suite PASS.
+- While fixing, prefer the file-scoped inner loop: `node scripts/suite.mjs <suite> [--suite <sub>] <file.test.ts> ...` runs only the named test files, which must exist inside that suite directory. It is not acceptance: it writes no run record and can never stand in for a suite PASS. Verify refuses an uncommitted tree, so the inner loop is how you prove a fix before committing — then commit and run verify on the commit.
 - Write files with your file tools, not shell redirects. On Windows a redirect to `nul` can leave a stray file that dirties the tree.
 - Remove anything you created outside Git before you report.
 - Do not start other agents.
