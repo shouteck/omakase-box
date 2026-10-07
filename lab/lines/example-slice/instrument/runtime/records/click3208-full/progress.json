@@ -1,0 +1,33 @@
+[
+  {
+    "label": "click3208-example-base-1",
+    "role": "example",
+    "state": "base",
+    "repeat": 1,
+    "runOkay": true,
+    "parity": false,
+    "phases": [
+      {
+        "phase": "plain",
+        "schema": "pytest-terminal-duration-v1",
+        "exit": 1,
+        "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "phase": "traced",
+        "schema": "pytest-terminal-duration-v1",
+        "exit": 1,
+        "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "phase": "coverage",
+        "schema": "pytest-terminal-duration-v1",
+        "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "imageId": "sha256:4ceb0a59a8757be875dc78d5b755a37b0b57011a91072ddd9f629b6c6cc3aa15"
+  }
+]

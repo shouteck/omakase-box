@@ -1,0 +1,7 @@
+# Runtime adapter preregistration
+
+Written before this worker executes any new checks. Only lab-authored fixtures are used.
+
+Predictions: Python AST resolves package initializers, relative imports and local from-import submodules; dynamic imports remain unknown. Actual coverage excludes imported comment-only files and dead functions, while import graph retains cold helpers. TypeScript compilation preserves verifiable maps, and mapped executed JavaScript statements exclude erased types, comment-only loaded files and uncalled function bodies. A module-wide V8 wrapper range alone is never counted as an executable statement. Traced and plain fixture results have identical exit/stdout/stderr. Local reads, missing existence probes and directory listing state are retained; source reads outside the core are production expansion. Packages contain only selected files, frozen common files and immutable tests; omitted production causes a separately recorded raw-core failure rather than fallback access. The network-disabled unprivileged fixture cannot reach the network or host checkout.
+
+Refutation: any known-answer assertion fails, tracing changes observable result, missing paths appear as copied files, type-only modules seed execution, or exported packages see omitted source. Checks and raw records must remain available even on failure. Development-only calibration does not establish third-party replay readiness.

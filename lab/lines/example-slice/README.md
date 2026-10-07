@@ -1,6 +1,6 @@
 # Line A: a slice anchored on an example
 
-**Stage:** instrument foundation session 3 built and attacked by a fresh sceptic, 7 October 2026. Formulation/candidate pool remain frozen; blind development ingestion, TypeScript virtual graph and scoring mechanics checked. Runtime adapters and final task manifest are not ready; confirmation content stays closed. No real-change replay has run.
+**Stage:** instrument, session 4, 7 October 2026. Runtime instrument built and run on two development cases (Click 3208, Ky 823), reviewed by two fresh sceptics. Zod has no adapter; images and allowlists are not frozen; confirmation content stays closed. The replay itself has not run.
 
 **Problem:** choose a small portable work package before a solver has solved the task, with no second request for missing context.
 
@@ -26,4 +26,6 @@
 
 **Instrument progress:** deterministic checks distinguish E/EI/R/G and reject thirteen false primary-row passes. Five development ingestions have accepted-commit validation receipts; three have no changed test-family paths and none is admitted or executed. Sceptic attacks corrected provenance, malformed-root disclosure and dynamic-code detection defects. This validates mechanics, not actual trace collection or containment rates.
 
-**Next:** finish Python/Node trace and source-map adapters, file/directory input tracing and isolated replay using development only. Freeze runtime/images, project setup allowlists and failure-identity normalization before opening confirmation content. Then freeze admitted task manifests before any selector score or production-fix reveal. The three available projects can supply descriptive replay evidence; a broader study needs a fresh reviewed protocol. Line D can use execution/import once its full adapter is verified; the fixture graph alone is not ready for transfer.
+**Session 4 result, development cases only:** no rule gives a small package on either case. Executed files are 14 of 17 source files on Click and 14 of 24 on Ky; adding imports, or reaching from the test, or taking the whole root, all give the whole root on both. Ky's executed-files package does not load. Where a package loads, the failure reproduces and the fixed source passes. The full historical change never fits because it also edits a changelog or readme. Two cases; not a rate. [Record and standing](instrument-session-4.md), [both sceptic reviews](sceptic-runtime.md), [records](instrument/runtime/records/README.md).
+
+**Next:** freeze and keep images by digest; decide whether configuration files are editable; calibrate or refuse zod; then the confirmation freeze. The CTO should first weigh the brief: Click and Ky look unable to show a small package at file granularity, so the frozen cohort may only be able to return "no demonstrated promise". Line D can take the execution-plus-imports package for these two projects now, knowing it equals the source root.

@@ -1,0 +1,2216 @@
+{
+ "click3208": {
+  "fullRepositoryCells": [
+   {
+    "label": "click3208-example-base-1",
+    "exit": 1,
+    "parity": true,
+    "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-example-base-2",
+    "exit": 1,
+    "parity": true,
+    "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-example-base-3",
+    "exit": 1,
+    "parity": true,
+    "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-example-fixed-1",
+    "exit": 0,
+    "parity": true,
+    "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-example-fixed-2",
+    "exit": 0,
+    "parity": true,
+    "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-example-fixed-3",
+    "exit": 0,
+    "parity": true,
+    "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-guard-base-1",
+    "exit": 0,
+    "parity": true,
+    "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-guard-base-2",
+    "exit": 0,
+    "parity": true,
+    "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-guard-base-3",
+    "exit": 0,
+    "parity": true,
+    "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-guard-fixed-1",
+    "exit": 0,
+    "parity": true,
+    "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-guard-fixed-2",
+    "exit": 0,
+    "parity": true,
+    "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   },
+   {
+    "label": "click3208-guard-fixed-3",
+    "exit": 0,
+    "parity": true,
+    "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+    "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+   }
+  ],
+  "rules": {
+   "E": {
+    "files": [
+     "src/click/__init__.py",
+     "src/click/_compat.py",
+     "src/click/_textwrap.py",
+     "src/click/_utils.py",
+     "src/click/core.py",
+     "src/click/decorators.py",
+     "src/click/exceptions.py",
+     "src/click/formatting.py",
+     "src/click/globals.py",
+     "src/click/parser.py",
+     "src/click/termui.py",
+     "src/click/testing.py",
+     "src/click/types.py",
+     "src/click/utils.py"
+    ],
+    "unresolved": 0,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 14,
+       "fileTotal": 32,
+       "bytes": 336180,
+       "byteTotal": 425308,
+       "fileFraction": 0.4375,
+       "byteFraction": 0.790438928964421
+      },
+      "rootSource": {
+       "files": 14,
+       "fileTotal": 17,
+       "bytes": 336180,
+       "byteTotal": 393705,
+       "fileFraction": 0.8235294117647058,
+       "byteFraction": 0.8538880633977216
+      },
+      "totalRepository": {
+       "files": 17,
+       "fileTotal": 149,
+       "bytes": 351133,
+       "byteTotal": 1397830,
+       "fileFraction": 0.11409395973154363,
+       "byteFraction": 0.25119864361188415
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 14,
+       "fileTotal": 32,
+       "bytes": 336180,
+       "byteTotal": 425308,
+       "fileFraction": 0.4375,
+       "byteFraction": 0.790438928964421
+      },
+      "rootSource": {
+       "files": 14,
+       "fileTotal": 17,
+       "bytes": 336180,
+       "byteTotal": 393705,
+       "fileFraction": 0.8235294117647058,
+       "byteFraction": 0.8538880633977216
+      },
+      "totalRepository": {
+       "files": 17,
+       "fileTotal": 149,
+       "bytes": 351133,
+       "byteTotal": 1397830,
+       "fileFraction": 0.11409395973154363,
+       "byteFraction": 0.25119864361188415
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   },
+   "EI": {
+    "files": [
+     "src/click/__init__.py",
+     "src/click/_compat.py",
+     "src/click/_termui_impl.py",
+     "src/click/_textwrap.py",
+     "src/click/_utils.py",
+     "src/click/_winconsole.py",
+     "src/click/core.py",
+     "src/click/decorators.py",
+     "src/click/exceptions.py",
+     "src/click/formatting.py",
+     "src/click/globals.py",
+     "src/click/parser.py",
+     "src/click/shell_completion.py",
+     "src/click/termui.py",
+     "src/click/testing.py",
+     "src/click/types.py",
+     "src/click/utils.py"
+    ],
+    "unresolved": 153,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 17,
+       "fileTotal": 32,
+       "bytes": 393705,
+       "byteTotal": 425308,
+       "fileFraction": 0.53125,
+       "byteFraction": 0.9256938501039247
+      },
+      "rootSource": {
+       "files": 17,
+       "fileTotal": 17,
+       "bytes": 393705,
+       "byteTotal": 393705,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 20,
+       "fileTotal": 149,
+       "bytes": 408658,
+       "byteTotal": 1397830,
+       "fileFraction": 0.1342281879194631,
+       "byteFraction": 0.2923517165892848
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 17,
+       "fileTotal": 32,
+       "bytes": 393705,
+       "byteTotal": 425308,
+       "fileFraction": 0.53125,
+       "byteFraction": 0.9256938501039247
+      },
+      "rootSource": {
+       "files": 17,
+       "fileTotal": 17,
+       "bytes": 393705,
+       "byteTotal": 393705,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 20,
+       "fileTotal": 149,
+       "bytes": 408658,
+       "byteTotal": 1397830,
+       "fileFraction": 0.1342281879194631,
+       "byteFraction": 0.2923517165892848
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   },
+   "R": {
+    "files": [
+     "src/click/__init__.py",
+     "src/click/_compat.py",
+     "src/click/_termui_impl.py",
+     "src/click/_textwrap.py",
+     "src/click/_utils.py",
+     "src/click/_winconsole.py",
+     "src/click/core.py",
+     "src/click/decorators.py",
+     "src/click/exceptions.py",
+     "src/click/formatting.py",
+     "src/click/globals.py",
+     "src/click/parser.py",
+     "src/click/shell_completion.py",
+     "src/click/termui.py",
+     "src/click/testing.py",
+     "src/click/types.py",
+     "src/click/utils.py"
+    ],
+    "unresolved": 155,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 17,
+       "fileTotal": 32,
+       "bytes": 393705,
+       "byteTotal": 425308,
+       "fileFraction": 0.53125,
+       "byteFraction": 0.9256938501039247
+      },
+      "rootSource": {
+       "files": 17,
+       "fileTotal": 17,
+       "bytes": 393705,
+       "byteTotal": 393705,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 20,
+       "fileTotal": 149,
+       "bytes": 408658,
+       "byteTotal": 1397830,
+       "fileFraction": 0.1342281879194631,
+       "byteFraction": 0.2923517165892848
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 17,
+       "fileTotal": 32,
+       "bytes": 393705,
+       "byteTotal": 425308,
+       "fileFraction": 0.53125,
+       "byteFraction": 0.9256938501039247
+      },
+      "rootSource": {
+       "files": 17,
+       "fileTotal": 17,
+       "bytes": 393705,
+       "byteTotal": 393705,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 20,
+       "fileTotal": 149,
+       "bytes": 408658,
+       "byteTotal": 1397830,
+       "fileFraction": 0.1342281879194631,
+       "byteFraction": 0.2923517165892848
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   },
+   "G": {
+    "files": [
+     "src/click/__init__.py",
+     "src/click/_compat.py",
+     "src/click/_termui_impl.py",
+     "src/click/_textwrap.py",
+     "src/click/_utils.py",
+     "src/click/_winconsole.py",
+     "src/click/core.py",
+     "src/click/decorators.py",
+     "src/click/exceptions.py",
+     "src/click/formatting.py",
+     "src/click/globals.py",
+     "src/click/parser.py",
+     "src/click/py.typed",
+     "src/click/shell_completion.py",
+     "src/click/termui.py",
+     "src/click/testing.py",
+     "src/click/types.py",
+     "src/click/utils.py"
+    ],
+    "unresolved": 0,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 17,
+       "fileTotal": 32,
+       "bytes": 393705,
+       "byteTotal": 425308,
+       "fileFraction": 0.53125,
+       "byteFraction": 0.9256938501039247
+      },
+      "rootSource": {
+       "files": 17,
+       "fileTotal": 17,
+       "bytes": 393705,
+       "byteTotal": 393705,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 21,
+       "fileTotal": 149,
+       "bytes": 408658,
+       "byteTotal": 1397830,
+       "fileFraction": 0.14093959731543623,
+       "byteFraction": 0.2923517165892848
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 17,
+       "fileTotal": 32,
+       "bytes": 393705,
+       "byteTotal": 425308,
+       "fileFraction": 0.53125,
+       "byteFraction": 0.9256938501039247
+      },
+      "rootSource": {
+       "files": 17,
+       "fileTotal": 17,
+       "bytes": 393705,
+       "byteTotal": 393705,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 21,
+       "fileTotal": 149,
+       "bytes": 408658,
+       "byteTotal": 1397830,
+       "fileFraction": 0.14093959731543623,
+       "byteFraction": 0.2923517165892848
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   }
+  },
+  "sealedObservations": [
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused"
+   }
+  ]
+ },
+ "ky823": {
+  "fullRepositoryCells": [
+   {
+    "label": "ky823-example-base-1",
+    "exit": 1,
+    "parity": true,
+    "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-example-base-2",
+    "exit": 1,
+    "parity": true,
+    "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-example-base-3",
+    "exit": 1,
+    "parity": true,
+    "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-example-fixed-1",
+    "exit": 0,
+    "parity": true,
+    "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-example-fixed-2",
+    "exit": 0,
+    "parity": true,
+    "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-example-fixed-3",
+    "exit": 0,
+    "parity": true,
+    "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-guard-base-1",
+    "exit": 0,
+    "parity": true,
+    "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-guard-base-2",
+    "exit": 0,
+    "parity": true,
+    "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-guard-base-3",
+    "exit": 0,
+    "parity": true,
+    "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-guard-fixed-1",
+    "exit": 0,
+    "parity": true,
+    "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-guard-fixed-2",
+    "exit": 0,
+    "parity": true,
+    "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   },
+   {
+    "label": "ky823-guard-fixed-3",
+    "exit": 0,
+    "parity": true,
+    "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+    "imageId": "sha256:6665c4ae169aae58fdcaa20b95cb8db3a0728f9271a1a7510be3ff75736d38e9"
+   }
+  ],
+  "rules": {
+   "E": {
+    "files": [
+     "source/core/Ky.ts",
+     "source/core/constants.ts",
+     "source/errors/ForceRetryError.ts",
+     "source/errors/HTTPError.ts",
+     "source/errors/NonError.ts",
+     "source/errors/TimeoutError.ts",
+     "source/index.ts",
+     "source/utils/body.ts",
+     "source/utils/is.ts",
+     "source/utils/merge.ts",
+     "source/utils/normalize.ts",
+     "source/utils/options.ts",
+     "source/utils/timeout.ts",
+     "source/utils/type-guards.ts"
+    ],
+    "unresolved": 0,
+    "requiredProductionExpansion": [
+     "source/utils/delay.ts"
+    ],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 14,
+       "fileTotal": 24,
+       "bytes": 47887,
+       "byteTotal": 83278,
+       "fileFraction": 0.5833333333333334,
+       "byteFraction": 0.5750258171425827
+      },
+      "rootSource": {
+       "files": 14,
+       "fileTotal": 24,
+       "bytes": 47887,
+       "byteTotal": 83278,
+       "fileFraction": 0.5833333333333334,
+       "byteFraction": 0.5750258171425827
+      },
+      "totalRepository": {
+       "files": 18,
+       "fileTotal": 59,
+       "bytes": 54141,
+       "byteTotal": 521784,
+       "fileFraction": 0.3050847457627119,
+       "byteFraction": 0.10376132652591877
+      },
+      "small": false,
+      "nearlyEverything": false
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 15,
+       "fileTotal": 24,
+       "bytes": 48577,
+       "byteTotal": 83278,
+       "fileFraction": 0.625,
+       "byteFraction": 0.5833113187156271
+      },
+      "rootSource": {
+       "files": 15,
+       "fileTotal": 24,
+       "bytes": 48577,
+       "byteTotal": 83278,
+       "fileFraction": 0.625,
+       "byteFraction": 0.5833113187156271
+      },
+      "totalRepository": {
+       "files": 19,
+       "fileTotal": 59,
+       "bytes": 54831,
+       "byteTotal": 521784,
+       "fileFraction": 0.3220338983050847,
+       "byteFraction": 0.10508371280069914
+      },
+      "small": false,
+      "nearlyEverything": false
+     }
+    }
+   },
+   "EI": {
+    "files": [
+     "source/core/Ky.ts",
+     "source/core/constants.ts",
+     "source/errors/ForceRetryError.ts",
+     "source/errors/HTTPError.ts",
+     "source/errors/NonError.ts",
+     "source/errors/TimeoutError.ts",
+     "source/index.ts",
+     "source/types/ResponsePromise.ts",
+     "source/types/common.ts",
+     "source/types/hooks.ts",
+     "source/types/ky.ts",
+     "source/types/options.ts",
+     "source/types/request.ts",
+     "source/types/response.ts",
+     "source/types/retry.ts",
+     "source/utils/body.ts",
+     "source/utils/delay.ts",
+     "source/utils/is.ts",
+     "source/utils/merge.ts",
+     "source/utils/normalize.ts",
+     "source/utils/options.ts",
+     "source/utils/timeout.ts",
+     "source/utils/type-guards.ts",
+     "source/utils/types.ts"
+    ],
+    "unresolved": 1,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "rootSource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 28,
+       "fileTotal": 59,
+       "bytes": 89532,
+       "byteTotal": 521784,
+       "fileFraction": 0.4745762711864407,
+       "byteFraction": 0.17158824341106665
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "rootSource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 28,
+       "fileTotal": 59,
+       "bytes": 89532,
+       "byteTotal": 521784,
+       "fileFraction": 0.4745762711864407,
+       "byteFraction": 0.17158824341106665
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   },
+   "R": {
+    "files": [
+     "source/core/Ky.ts",
+     "source/core/constants.ts",
+     "source/errors/ForceRetryError.ts",
+     "source/errors/HTTPError.ts",
+     "source/errors/NonError.ts",
+     "source/errors/TimeoutError.ts",
+     "source/index.ts",
+     "source/types/ResponsePromise.ts",
+     "source/types/common.ts",
+     "source/types/hooks.ts",
+     "source/types/ky.ts",
+     "source/types/options.ts",
+     "source/types/request.ts",
+     "source/types/response.ts",
+     "source/types/retry.ts",
+     "source/utils/body.ts",
+     "source/utils/delay.ts",
+     "source/utils/is.ts",
+     "source/utils/merge.ts",
+     "source/utils/normalize.ts",
+     "source/utils/options.ts",
+     "source/utils/timeout.ts",
+     "source/utils/type-guards.ts",
+     "source/utils/types.ts"
+    ],
+    "unresolved": 8,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "rootSource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 28,
+       "fileTotal": 59,
+       "bytes": 89532,
+       "byteTotal": 521784,
+       "fileFraction": 0.4745762711864407,
+       "byteFraction": 0.17158824341106665
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "rootSource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 28,
+       "fileTotal": 59,
+       "bytes": 89532,
+       "byteTotal": 521784,
+       "fileFraction": 0.4745762711864407,
+       "byteFraction": 0.17158824341106665
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   },
+   "G": {
+    "files": [
+     "source/core/Ky.ts",
+     "source/core/constants.ts",
+     "source/errors/ForceRetryError.ts",
+     "source/errors/HTTPError.ts",
+     "source/errors/NonError.ts",
+     "source/errors/TimeoutError.ts",
+     "source/index.ts",
+     "source/types/ResponsePromise.ts",
+     "source/types/common.ts",
+     "source/types/hooks.ts",
+     "source/types/ky.ts",
+     "source/types/options.ts",
+     "source/types/request.ts",
+     "source/types/response.ts",
+     "source/types/retry.ts",
+     "source/utils/body.ts",
+     "source/utils/delay.ts",
+     "source/utils/is.ts",
+     "source/utils/merge.ts",
+     "source/utils/normalize.ts",
+     "source/utils/options.ts",
+     "source/utils/timeout.ts",
+     "source/utils/type-guards.ts",
+     "source/utils/types.ts"
+    ],
+    "unresolved": 0,
+    "requiredProductionExpansion": [],
+    "export": "exported",
+    "disclosure": {
+     "primary": {
+      "repositorySource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "rootSource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 28,
+       "fileTotal": 59,
+       "bytes": 89532,
+       "byteTotal": 521784,
+       "fileFraction": 0.4745762711864407,
+       "byteFraction": 0.17158824341106665
+      },
+      "small": false,
+      "nearlyEverything": true
+     },
+     "expanded": {
+      "repositorySource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "rootSource": {
+       "files": 24,
+       "fileTotal": 24,
+       "bytes": 83278,
+       "byteTotal": 83278,
+       "fileFraction": 1,
+       "byteFraction": 1
+      },
+      "totalRepository": {
+       "files": 28,
+       "fileTotal": 59,
+       "bytes": 89532,
+       "byteTotal": 521784,
+       "fileFraction": 0.4745762711864407,
+       "byteFraction": 0.17158824341106665
+      },
+      "small": false,
+      "nearlyEverything": true
+     }
+    }
+   }
+  },
+  "sealedObservations": [
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": false,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": false,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": false,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 1,
+    "same": false,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 1,
+    "same": false,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 1,
+    "same": false,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "expanded",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "expanded",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "expanded",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "expanded",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "expanded",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "E",
+    "variant": "expanded",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md",
+     "source/types/hooks.ts"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "EI",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "R",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "exit": 1,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   },
+   {
+    "rule": "G",
+    "variant": "primary",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "exit": 0,
+    "same": true,
+    "safe": true,
+    "historicalMisses": [
+     "readme.md"
+    ],
+    "fullHistoricalPatch": "refused"
+   }
+  ]
+ }
+}

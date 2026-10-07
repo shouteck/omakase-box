@@ -1,0 +1,10 @@
+*
+!.gitignore
+!README.md
+!results.json
+!raw-manifest.json
+!archive-validation/
+!archive-validation/*
+!*/
+!*/progress.json
+!*/summary.json

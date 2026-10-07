@@ -1,0 +1,914 @@
+[
+  {
+    "rule": "E",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "E",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "EI",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "R",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "base",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "base",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "base",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 1,
+      "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "base",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "base",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "base",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "fixedDiagnostic",
+    "role": "example",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 1,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 2,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  },
+  {
+    "rule": "G",
+    "state": "fixedDiagnostic",
+    "role": "guard",
+    "repeat": 3,
+    "safe": true,
+    "same": true,
+    "identity": {
+      "schema": "pytest-terminal-duration-v1",
+      "exit": 0,
+      "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+      "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "historicalMisses": [
+      "CHANGES.rst"
+    ],
+    "fullHistoricalPatch": "refused",
+    "runtimeSourcePatch": "diagnostic"
+  }
+]

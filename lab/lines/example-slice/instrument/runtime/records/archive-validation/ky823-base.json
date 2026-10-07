@@ -1,0 +1,364 @@
+{
+  "name": "ky823",
+  "repository": "sindresorhus/ky",
+  "state": "base",
+  "commit": "eb5c3eba37451b7a6d598efa23d33c97919ae9e6",
+  "truncated": false,
+  "status": "all tracked regular blobs matched",
+  "rows": [
+    {
+      "path": ".editorconfig",
+      "mode": "100644",
+      "gitBlob": "1c6314a31833395fd5ff016a6506bdd51860657c",
+      "bytes": 175
+    },
+    {
+      "path": ".gitattributes",
+      "mode": "100644",
+      "gitBlob": "7fc4baeed48263c7fe9024fc9cbee9cf29d5269b",
+      "bytes": 31
+    },
+    {
+      "path": ".github/funding.yml",
+      "mode": "100644",
+      "gitBlob": "e7507f8784e424fd5957e377ece7cad7d3af402d",
+      "bytes": 45
+    },
+    {
+      "path": ".github/security.md",
+      "mode": "100644",
+      "gitBlob": "5358dc50b2883157fca0fa4a12d2bb18acb093ee",
+      "bytes": 179
+    },
+    {
+      "path": ".github/workflows/main.yml",
+      "mode": "100644",
+      "gitBlob": "27191f9efe7b803e37c19e55eaa2d3caf3cb256b",
+      "bytes": 765
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "gitBlob": "686ad4733a98e21ff500c37587797310fdc3c4e4",
+      "bytes": 56
+    },
+    {
+      "path": ".npmrc",
+      "mode": "100644",
+      "gitBlob": "43c97e719a5a824700932f72e6e7e6748ce45d01",
+      "bytes": 19
+    },
+    {
+      "path": "license",
+      "mode": "100644",
+      "gitBlob": "fa7ceba3eb4a9657a9db7f3ffca4e4e97a9019de",
+      "bytes": 1117
+    },
+    {
+      "path": "media/logo.ai",
+      "mode": "100644",
+      "gitBlob": "5b42afd1d4dfdcf0282bc69fb38f7648947d68e1",
+      "bytes": 155267
+    },
+    {
+      "path": "media/logo.png",
+      "mode": "100644",
+      "gitBlob": "ea3650475d8b379bf4b2b22a513cae61d357c441",
+      "bytes": 18148
+    },
+    {
+      "path": "media/logo.svg",
+      "mode": "100644",
+      "gitBlob": "7e72a64f44b70b1f84c4e34ecdde10cb3fc866ae",
+      "bytes": 39648
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "gitBlob": "69680887665474de83b383d6abb7de5c37a1f2c3",
+      "bytes": 2402
+    },
+    {
+      "path": "readme.md",
+      "mode": "100644",
+      "gitBlob": "dbcef669f7e56d6f9ba610002116c58f8948b489",
+      "bytes": 45769
+    },
+    {
+      "path": "source/core/Ky.ts",
+      "mode": "100644",
+      "gitBlob": "13a1d381ec65f8ae57cb2316e3f79b53fe8b917e",
+      "bytes": 18469
+    },
+    {
+      "path": "source/core/constants.ts",
+      "mode": "100644",
+      "gitBlob": "0a7c438e4ec4b08180a8b6d178ae89fcd6307a74",
+      "bytes": 8443
+    },
+    {
+      "path": "source/errors/ForceRetryError.ts",
+      "mode": "100644",
+      "gitBlob": "829b95b4f1cd8273e26ea3055d7111780fe8191e",
+      "bytes": 981
+    },
+    {
+      "path": "source/errors/HTTPError.ts",
+      "mode": "100644",
+      "gitBlob": "9c32cc13080c9ca294e2e76310e0c50e43dae807",
+      "bytes": 829
+    },
+    {
+      "path": "source/errors/NonError.ts",
+      "mode": "100644",
+      "gitBlob": "f68bd3e2323c397a99f2729f5781e7e19e92e98b",
+      "bytes": 753
+    },
+    {
+      "path": "source/errors/TimeoutError.ts",
+      "mode": "100644",
+      "gitBlob": "c99c9f9d8d538e44d5a0faea274de64fa29fedd6",
+      "bytes": 282
+    },
+    {
+      "path": "source/index.ts",
+      "mode": "100644",
+      "gitBlob": "920fa81ef7e009dc93a0041c002d0fe54487e3f3",
+      "bytes": 2367
+    },
+    {
+      "path": "source/types/ResponsePromise.ts",
+      "mode": "100644",
+      "gitBlob": "c77d1ea3037a6e0e72cd737825d8e5ee6182f047",
+      "bytes": 1538
+    },
+    {
+      "path": "source/types/common.ts",
+      "mode": "100644",
+      "gitBlob": "1acfea1a8db88e1124cf12993affc0a83cb74e72",
+      "bytes": 355
+    },
+    {
+      "path": "source/types/hooks.ts",
+      "mode": "100644",
+      "gitBlob": "e0bbcc2131b5b88a19368c0ac983888b4bd9f6de",
+      "bytes": 9486
+    },
+    {
+      "path": "source/types/ky.ts",
+      "mode": "100644",
+      "gitBlob": "c733fe1f122e08fa08a912a51bd5a33f38e3eba8",
+      "bytes": 5763
+    },
+    {
+      "path": "source/types/options.ts",
+      "mode": "100644",
+      "gitBlob": "d64675b87cb7931c9c71d530f26d7461f8fb6b20",
+      "bytes": 13143
+    },
+    {
+      "path": "source/types/request.ts",
+      "mode": "100644",
+      "gitBlob": "c3ec8293725a13f7ce6ee53eec5ed1658d26cc55",
+      "bytes": 84
+    },
+    {
+      "path": "source/types/response.ts",
+      "mode": "100644",
+      "gitBlob": "da3119f2bb5a36c9d3e26ebc9c2d4c59310c26b1",
+      "bytes": 87
+    },
+    {
+      "path": "source/types/retry.ts",
+      "mode": "100644",
+      "gitBlob": "a181f0bb981d5dfe1432e86975f1ca95e1922d57",
+      "bytes": 4053
+    },
+    {
+      "path": "source/utils/body.ts",
+      "mode": "100644",
+      "gitBlob": "3e4163c39846a77aa7e1fe96b269cfe1060dbc83",
+      "bytes": 3737
+    },
+    {
+      "path": "source/utils/delay.ts",
+      "mode": "100644",
+      "gitBlob": "41279267dce68159a831d28ed00760874750b2ca",
+      "bytes": 690
+    },
+    {
+      "path": "source/utils/is.ts",
+      "mode": "100644",
+      "gitBlob": "b8dead96b23f8fd041101bb2c6a7c4134487922c",
+      "bytes": 163
+    },
+    {
+      "path": "source/utils/merge.ts",
+      "mode": "100644",
+      "gitBlob": "99b1312e06771606bf8456a1ff11a35895271c73",
+      "bytes": 5445
+    },
+    {
+      "path": "source/utils/normalize.ts",
+      "mode": "100644",
+      "gitBlob": "5f1e469318d45ff9d6d5738bf034b24e49e03831",
+      "bytes": 1700
+    },
+    {
+      "path": "source/utils/options.ts",
+      "mode": "100644",
+      "gitBlob": "f31113296337270f36ed5fb6c9b2b9b3791d7537",
+      "bytes": 1529
+    },
+    {
+      "path": "source/utils/timeout.ts",
+      "mode": "100644",
+      "gitBlob": "7b8cd130030f77203c8f0f60fbfec2984dfce338",
+      "bytes": 684
+    },
+    {
+      "path": "source/utils/type-guards.ts",
+      "mode": "100644",
+      "gitBlob": "435e1438377902cf9e2c9b65066c08051e059386",
+      "bytes": 2505
+    },
+    {
+      "path": "source/utils/types.ts",
+      "mode": "100644",
+      "gitBlob": "df0b25b231fc3c3ca9091c1a1bb0ab737bb62413",
+      "bytes": 192
+    },
+    {
+      "path": "test/browser.ts",
+      "mode": "100644",
+      "gitBlob": "43064aa999848e4124e6278dce657c4ca4137c63",
+      "bytes": 14372
+    },
+    {
+      "path": "test/bytes.ts",
+      "mode": "100644",
+      "gitBlob": "49de8f6b430f9f7451b7b1b6e0457b1074dfed0b",
+      "bytes": 1248
+    },
+    {
+      "path": "test/context.ts",
+      "mode": "100644",
+      "gitBlob": "8cd4548412543b7d52356a2d952c0918ad0553c5",
+      "bytes": 3841
+    },
+    {
+      "path": "test/fetch.ts",
+      "mode": "100644",
+      "gitBlob": "886aee812e2fb7d8522f32ca461bb5042d5c6299",
+      "bytes": 4315
+    },
+    {
+      "path": "test/formdata-searchparams.ts",
+      "mode": "100644",
+      "gitBlob": "fb8361fe2eda718f2ffd6348d77222d7d46c9f77",
+      "bytes": 3433
+    },
+    {
+      "path": "test/headers.ts",
+      "mode": "100644",
+      "gitBlob": "996ed4ed74a79fefc1f5e6d8a2bedfa16b86b1d7",
+      "bytes": 12485
+    },
+    {
+      "path": "test/helpers/create-http-test-server.ts",
+      "mode": "100644",
+      "gitBlob": "f05d89a6eb0573964d373b5dcde93218ed78bcb4",
+      "bytes": 1502
+    },
+    {
+      "path": "test/helpers/create-large-file.ts",
+      "mode": "100644",
+      "gitBlob": "e639a84230f664ebeb135f1e0225c25b7cdba8e0",
+      "bytes": 318
+    },
+    {
+      "path": "test/helpers/index.ts",
+      "mode": "100644",
+      "gitBlob": "982b893686b4a786fc44db5a83d3efb64d0d7f2a",
+      "bytes": 151
+    },
+    {
+      "path": "test/helpers/parse-body.ts",
+      "mode": "100644",
+      "gitBlob": "1e6455f85dba4d1f6bcfcdbac3299e2020b9121a",
+      "bytes": 375
+    },
+    {
+      "path": "test/helpers/with-page.ts",
+      "mode": "100644",
+      "gitBlob": "1d809a1a92293fa0c6ed4b934aca0e7cc4e4f5bd",
+      "bytes": 851
+    },
+    {
+      "path": "test/helpers/with-performance.ts",
+      "mode": "100644",
+      "gitBlob": "9e9a824c0bde8318d0e572b61544108e4bdd4ebf",
+      "bytes": 905
+    },
+    {
+      "path": "test/hooks.ts",
+      "mode": "100644",
+      "gitBlob": "05741aaeb03e714696eabfc95278b3e26fb03165",
+      "bytes": 52869
+    },
+    {
+      "path": "test/http-error.ts",
+      "mode": "100644",
+      "gitBlob": "ffe14960838a1179e1bd21d0b13ba99df87ba81b",
+      "bytes": 2217
+    },
+    {
+      "path": "test/main.ts",
+      "mode": "100644",
+      "gitBlob": "cd0c4b4a65b79943953601b0d6477230e91dc1b1",
+      "bytes": 27942
+    },
+    {
+      "path": "test/memory-leak.ts",
+      "mode": "100644",
+      "gitBlob": "ce74dcbd679613dbc5dfbdea2deb1a3d43bf2e50",
+      "bytes": 1441
+    },
+    {
+      "path": "test/methods.ts",
+      "mode": "100644",
+      "gitBlob": "c1b6a2894bf6150a09e23137f5caad731729d9ac",
+      "bytes": 1656
+    },
+    {
+      "path": "test/prefix-url.ts",
+      "mode": "100644",
+      "gitBlob": "e09650b4716109878f6c4e4bca2fa78ca4a9cd7e",
+      "bytes": 1524
+    },
+    {
+      "path": "test/retry.ts",
+      "mode": "100644",
+      "gitBlob": "5a28db2603d6f50e4ff3771c03eb54ec4e88d8da",
+      "bytes": 30790
+    },
+    {
+      "path": "test/stream.ts",
+      "mode": "100644",
+      "gitBlob": "aa930f69efdbc060f1d2a9d230d30b177b5d5c32",
+      "bytes": 12333
+    },
+    {
+      "path": "tsconfig.dist.json",
+      "mode": "100644",
+      "gitBlob": "57309e5c76a68c82fc717fe10de45b1e7b90760d",
+      "bytes": 184
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "100644",
+      "gitBlob": "bbbb227869c104a77edf0dd16c789ebf6a53051c",
+      "bytes": 133
+    }
+  ]
+}

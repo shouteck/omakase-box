@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {parseTrace} from './trace.mjs';
+import {exportCase} from './package.mjs';
+import {pytestIdentity} from './identity.mjs';
+const ident=(text)=>pytestIdentity(1,Buffer.from(text),Buffer.alloc(0));
+assert.deepEqual(ident('assert 300ms\n3 failed, 3 passed in 0.30s\n'),ident('assert 300ms\n3 failed, 3 passed in 0.52s\n'));
+assert.notDeepEqual(ident('assert 300ms\n3 failed in 0.30s\n'),ident('assert 301ms\n3 failed in 0.30s\n'));
+const moved=parseTrace('1 chdir("other") = 0\n1 openat(AT_FDCWD, "src/hot.py", O_RDONLY) = 3',[],[]);
+assert.equal(moved.unknown.length,2);assert.equal(moved.events.length,0);
+assert.equal(parseTrace('1 execve("/opt/python", ["python"], ["PWD=/case/tree"]) = 0\n1 chdir("/case/tree") = 0',[],[]).unknown.length,0);
+assert.equal(parseTrace('1 execve("/case/tree/tool", ["tool"], []) = 0',[],[]).unknown.length,1);
+const joined=parseTrace('12 openat(AT_FDCWD, "data/value.txt", O_RDONLY <unfinished ...>\n13 access("data/absent.txt", F_OK) = -1 ENOENT\n12 <... openat resumed>) = 3</case/tree/data/value.txt>',[{path:'data/value.txt'}],[]);
+assert.deepEqual(joined.nonProduction,['data/value.txt']);assert.equal(joined.unknown.length,0);
+assert.equal(parseTrace('12 openat(AT_FDCWD, "data/value.txt", O_RDONLY <unfinished ...>\n12 <... stat resumed>) = 0',[],[]).unknown.length,2);
+const contents={'src/hot.py':Buffer.from('x=1\n'),'src/cold.py':Buffer.from('x=2\n'),'data/value.txt':Buffer.from('seven'),'pyproject.toml':Buffer.from('[tool]\n')};
+const manifest=Object.entries(contents).map(([path,bytes])=>({path,bytes:bytes.length,kind:'file'}));
+const trace=parseTrace('1 openat(AT_FDCWD, "src/cold.py", O_RDONLY|O_CLOEXEC) = 3</case/tree/src/cold.py>\n1 openat(AT_FDCWD, "data/value.txt", O_RDONLY) = 4</case/tree/data/value.txt>\n1 newfstatat(AT_FDCWD, "data/absent.txt", 0x1, 0) = -1 ENOENT (No such file or directory)\n1 getdents64(4</case/tree/data>, [{d_name="value.txt"}], 32768) = 32',manifest,['src/hot.py']);
+assert.deepEqual(trace.requiredProductionExpansion,['src/cold.py']);
+assert.deepEqual(trace.nonProduction,['data/value.txt']);assert.equal(trace.absent[0].path,'data/absent.txt');assert.equal(trace.directories[0].path,'data');
+const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'lab-a-replay-1-package-'));
+try {
+ const destination=path.join(temporary,'package');
+ const result=exportCase({destination,contents,manifest,core:['src/hot.py'],common:['pyproject.toml'],overlay:{'tests/example.py':Buffer.from('assert True\n')},trace,repo:'fixture',testPath:(_,p)=>p.startsWith('tests/')});
+ assert(!fs.existsSync(path.join(destination,'primary/tree/src/cold.py')));
+ assert(fs.existsSync(path.join(destination,'expanded/tree/src/cold.py')));
+ assert(!fs.existsSync(path.join(destination,'primary/tree/data/absent.txt')));
+ assert(result.variants.primary.find(r=>r.path==='tests/example.py').immutable);
+ assert.throws(()=>exportCase({destination:path.join(temporary,'bad'),contents,manifest,core:[],common:['src/cold.py'],overlay:{},trace,repo:'fixture',testPath:()=>false}),/silently/);
+ console.log(JSON.stringify({status:'passed',checks:['strace read/existence/directory','absent state','core versus production expansion','no fallback export','immutable tests','common source refusal']}));
+} finally {fs.rmSync(temporary,{recursive:true});}

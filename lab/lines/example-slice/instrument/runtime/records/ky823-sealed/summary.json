@@ -1,0 +1,931 @@
+{
+  "developmentId": 823,
+  "fullHistoricalPatch": "readme.md omitted in every package; E also omits source/types/hooks.ts",
+  "expandedNote": "EI/R/G have identical primary and expanded bytes; replayed primary only",
+  "results": [
+    {
+      "rule": "E",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": false,
+      "identity": {
+        "exit": 1,
+        "stdout": "f47dc2d35ec11923ec27f65dc69a6a222eea43d77cb121f6c671f1eda65b0ede",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": false,
+      "identity": {
+        "exit": 1,
+        "stdout": "30cb568ac88305624498587e5ce77efa4b5d8b797da3f83d2e476d403d49b49e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": false,
+      "identity": {
+        "exit": 1,
+        "stdout": "6428e72f33c16d4e77dc810639a6af39828f831c1d4b27a9601fe28e19e29940",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": false,
+      "identity": {
+        "exit": 1,
+        "stdout": "cf11ef6e9977ef60c4d6766c6b9e7761bb816f4327b5ed7e53907e31d688aefc",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": false,
+      "identity": {
+        "exit": 1,
+        "stdout": "6dca9f31243b323f198ba9e958bd63089f9f8c113094f07a06667ef417f36f42",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": false,
+      "identity": {
+        "exit": 1,
+        "stdout": "bccf89a467584c85a3ab7b018a63a73172aade596cbc6ec02b33948e108c18ec",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "expanded",
+      "state": "base",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "expanded",
+      "state": "base",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "expanded",
+      "state": "base",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "expanded",
+      "state": "base",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "expanded",
+      "state": "base",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "E",
+      "variant": "expanded",
+      "state": "base",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md",
+        "source/types/hooks.ts"
+      ],
+      "runtimePatch": "refused"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "EI",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "R",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "base",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 1,
+        "stdout": "c3939ca94af415850593c8ff5f7d8fc9114d3ce8eeeb97340b76a4ebf0173324",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "base",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "example",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "710ebe7c27cf2bf38eefab088bf66958deeb88de2abfec774ada8583e0078184",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 1,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 2,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    },
+    {
+      "rule": "G",
+      "variant": "primary",
+      "state": "fixedDiagnostic",
+      "role": "guard",
+      "repeat": 3,
+      "safe": true,
+      "same": true,
+      "identity": {
+        "exit": 0,
+        "stdout": "1d76eaec24df836882aa5786fde8b770e146141f29d82ca3ed0d201405334c5c",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fullHistoricalPatch": "refused",
+      "historicalMisses": [
+        "readme.md"
+      ],
+      "runtimePatch": "diagnostic"
+    }
+  ]
+}

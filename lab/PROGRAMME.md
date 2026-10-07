@@ -68,7 +68,7 @@ From the CTO, 7 October 2026, after talking the product through with the owner. 
 
 ### Line A. A slice anchored on an example
 
-**Stage (kept by the lab lead):** instrument in progress after attacked survey/formulation, 7 October 2026. Session3 foundation checks blind development ingestion, a virtual TypeScript import graph and deterministic selection/disclosure/row scores; fresh sceptic reproduced and attacked it. Actual runtime/Python/source-map/isolated packaging adapters remain unfinished; confirmation content stays closed. No real-change replay or containment rate. Protocol and60 candidate IDs remain frozen, with itsdangerous empty; the four-project positive screen cannot pass. Files in `lab/lines/example-slice/`. The unrestricted existing-code-only guarantee remains unsupported; state/directory-inclusive and restricted-repair guarantees remain open.
+**Stage (kept by the lab lead):** instrument, session 4, 7 October 2026. The runtime instrument exists and ran two development cases (Click 3208, Ky 823) in bounded containers, reviewed by two fresh sceptics. On both, executed files are more than half the source root and every wider rule is the whole root; no small package. Zod has no adapter, images and allowlists are not frozen, confirmation content stays closed and the replay has not run. Protocol and 60 candidate IDs remain frozen, with itsdangerous empty; the four-project positive screen cannot pass. Files in `lab/lines/example-slice/`; start at `instrument-session-4.md`.
 
 **The problem for the product.** If the Box misses something the solver needs, the solver fails, and asking for more is friction the owner will not accept. The owner wants a strong guarantee, or an honest statement of how strong it is.
 

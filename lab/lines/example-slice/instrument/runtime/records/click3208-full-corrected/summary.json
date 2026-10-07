@@ -1,0 +1,403 @@
+{
+  "schema": 1,
+  "project": "pallets/click",
+  "developmentId": 3208,
+  "revision": {
+    "base": "8d3449517a97b6fd457a025bd9c3d2acfd301fa4",
+    "fixed": "0cd28d6548f92e46396e0ffdd19ec5ea75b4b5e4"
+  },
+  "targets": {
+    "example": "tests/test_formatting.py::test_formatting_usage_error_help_hint",
+    "guard": "tests/test_formatting.py::test_basic_functionality"
+  },
+  "overlay": [
+    "tests/test_formatting.py"
+  ],
+  "identitySchema": "pytest-terminal-duration-v1",
+  "results": [
+    {
+      "label": "click3208-example-base-1",
+      "role": "example",
+      "state": "base",
+      "repeat": 1,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-example-base-2",
+      "role": "example",
+      "state": "base",
+      "repeat": 2,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-example-base-3",
+      "role": "example",
+      "state": "base",
+      "repeat": 3,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 1,
+          "stdout": "e36bf50ed5f49e378cbcea57ddcb3f957039ff27fbd8103c87cecd87edc39238",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-example-fixed-1",
+      "role": "example",
+      "state": "fixed",
+      "repeat": 1,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-example-fixed-2",
+      "role": "example",
+      "state": "fixed",
+      "repeat": 2,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-example-fixed-3",
+      "role": "example",
+      "state": "fixed",
+      "repeat": 3,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "9576e1a39b71ad9ded2c402772901b5c007147da7ba2243ab5907b7b4bf43783",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-guard-base-1",
+      "role": "guard",
+      "state": "base",
+      "repeat": 1,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-guard-base-2",
+      "role": "guard",
+      "state": "base",
+      "repeat": 2,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-guard-base-3",
+      "role": "guard",
+      "state": "base",
+      "repeat": 3,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-guard-fixed-1",
+      "role": "guard",
+      "state": "fixed",
+      "repeat": 1,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-guard-fixed-2",
+      "role": "guard",
+      "state": "fixed",
+      "repeat": 2,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    },
+    {
+      "label": "click3208-guard-fixed-3",
+      "role": "guard",
+      "state": "fixed",
+      "repeat": 3,
+      "runOkay": true,
+      "parity": true,
+      "phases": [
+        {
+          "phase": "plain",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "traced",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "phase": "coverage",
+          "schema": "pytest-terminal-duration-v1",
+          "exit": 0,
+          "stdout": "08012d48ba103cade1ef63c9d3d05e311eba69801f290983def895e33bd66e89",
+          "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "imageId": "sha256:6e06bad04a133abade1c396a7410a537aeaa23ec60116c10c0d191bceda1489a"
+    }
+  ]
+}
