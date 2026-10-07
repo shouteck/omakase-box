@@ -82,6 +82,19 @@ If this says go on, gate 2 and gate 3 follow as written, with "search the Box fi
 
 **Gate 1c. What a Box could be made with. Reading only, after gate 1b, and aimed at what gate 1b found lacking.** The owner's point, 8 October 2026: how good a Box is depends on the state of the art in making one. The technique can be anything: any algorithm, from any part of the field, that helps decide what is relevant to a task. Gate 1b tests only the simplest one, and the idea should not be judged by that alone. The owner also holds that a Box which only helps and never confines gets more useful as models get smarter, because a smarter agent makes better use of a good starting point and is less likely to be misled by one. The CTO agrees in this form: a Box that carries *facts an agent cannot get by reading* (what actually ran, in what order, with what values) is evidence, and better models use evidence better.
 
+**The target the catalogue is ranked against: the ideal Box, as the owner and CTO picture it on 8 October 2026.** A hypothesis to test, not a specification.
+
+- *Open.* It never confines. The whole repository stays reachable; the Box is where to start.
+- *Light to hold.* A page or two the agent reads first: a short ordered list of the places most likely to matter, each with one line saying why it is there. The code itself is fetched on demand, most relevant first, not handed over in bulk.
+- *Light to make.* Seconds, from maps prepared in advance where possible; one fresh run of the failing test at most.
+- *Evidence, not opinion.* Each entry rests on something observed or computed: it ran in the failing test and not in passing ones; the wrong value depended on it; it changed last week; it sits two calls from the failure. The agent sees which, so it can weigh it.
+- *Layered, each layer earning its place.* The cheapest signals always; heavier ones (true slicing, reduction) only where the cheap ones leave the list long, and only if measured to help.
+- *Honest about itself.* It says how confident it is and what it could not see (code that ran in another process, a fix that needs a new function), and steps aside when it has little to offer.
+- *One call,* the same in any language, usable by a person or by an agent with nobody present.
+- *Carries its check.* The failing test that anchors it travels with it, so "done" is stated.
+
+Rank techniques by how much they move a Box towards this, per unit of effort.
+
 Make a catalogue, one row per technique, from the literature and from tools that exist today. Cast wide on kinds: what ran (coverage, call traces); what differs between failing and passing runs; what the wrong value depended on (slicing along data and control); what changed recently (version history, the commits that last touched what ran); what is structurally near (call graph and import distance from the test and from the error trace); what is textually near (the issue's words against names and comments); reduction and debloating; learned rankers; and combinations. For each: what it needs as input; what it gives the agent that reading the error trace does not; how long it takes on a large project and whether it can be prepared in advance; whether a working tool exists for Python and for TypeScript today or it would have to be built, and how big a job that is; what published evidence there is that it helps a model or an agent fix more or spend less, with the setting and the caveat; and whether it needs a model or is pure computation.
 
 Then rank the top five for adding to the Box next, by expected gain against effort, given the specific weakness gate 1b showed (too much start-up noise, the fix ranked too low, the fix missing, or too slow). Say which can be combined cheaply.
