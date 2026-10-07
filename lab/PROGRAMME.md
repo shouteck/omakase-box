@@ -177,6 +177,40 @@ The boundary must be real: the agent runs where only that condition's files exis
 
 **Decision it informs.** Whether there is a product at all, and if so whether its claim is "as good for less", "better", or only "less disclosed".
 
+### Line E. A product out of research that nobody has built yet (open, 7 October 2026)
+
+Opened by the CTO at the owner's request. It does not depend on the Box and may outlive it.
+
+**The owner's reasoning.** After a day of testing the Box idea from several sides, the owner's view is that a product in the agent space that earns revenue without many competitors probably has to come out of research results that have not been turned into products yet. The owner is not a research scientist and wants to bring something to market, so the research has to be already done by someone else: the lab's job is to find it, not to do it.
+
+**What the lab must find.** Published results from roughly the last eighteen months, in or next to the agent space, where a paper reports something that works, building it is engineering, and no product does it yet. Three candidates, each with the strongest argument against it.
+
+**The owner's filter. A candidate must pass all of these; say which it fails if it fails:**
+
+1. No machine has to decide whether software is correct. (Every Box-shaped idea failed here or leaned on it.)
+2. Nothing rests on an unsolved research problem. The paper's result must already be good enough to use.
+3. It is real software, not a prompt or a skill file.
+4. It is not already standard practice, and not something an agent vendor adds in an afternoon.
+5. It is not a marketplace or a bounty board.
+6. The owner can tell whether it is good without being a researcher: a number, or something visible.
+7. The market has not found it: no funded product, no popular open-source tool doing the same.
+8. Someone would plausibly pay, and the lab can say who, from public evidence.
+
+**What the CTO's first look found (7 October 2026, about ten searches, abstracts only; leads, not findings).**
+
+- *Token waste is real and measured, and the market has already found it.* Reading is reported at about three quarters of a coding agent's tokens in one study and about half in another; one paper cuts total cost by a fifth to a third by pruning the running history, another reports up to 60% fewer tokens with a trained exploration helper (that paper was withdrawn for "product IP issues", which suggests a vendor is shipping it). Several open-source proxies and at least one launched product already compress agent context. Fails filter 7.
+- *Finding which agent and which step caused a failed run* is an active research topic with accuracy reported between 15% and 46%. Fails filter 2.
+- *Scanning agent skills and tool servers for malicious content*: large audits exist and a security vendor already does it. Fails filter 7.
+- *Building evaluation tasks automatically from a repository*: published in 2025 by a group connected to a startup; newer benchmarks exist. Probably fails filter 7; not checked.
+- *Security enforced outside the model by fixed rules* (the CaMeL line of work: a deterministic layer that controls what an agent may do with untrusted content): the research has converged on a design with real guarantees and a reference implementation is public. Passes filters 1 to 3 on its face. Whether products already exist was not established, and the buyer is an enterprise security team. Worth a proper look.
+- *A pattern to test:* in this area the gap between a paper and a product looks like months, and many of the papers come from the vendors themselves. If that holds, the candidates worth having are results a vendor has less reason to build: ones that work across vendors, ones that constrain the agent instead of selling more of it, and ones outside coding.
+
+**Method is the lab's.** Search widely before narrowing; the owner has not said it must be about coding. For each candidate open the paper itself and at least the three nearest products, dated. A sceptic tries to find the existing product the lead missed, which is the most likely way a candidate dies.
+
+**The bar.** Three candidates on one page, each with: what the paper showed, what would have to be built, who would pay and the evidence, what already exists, and which of the eight filters is weakest. If fewer than three survive, say how many did and stop; "none" is an acceptable answer.
+
+**Decision it informs.** What the owner builds next.
+
 ## Parked, with what would unpark them
 
 These are real problems. They are not what stands between the product and its next decision, and working on them now would be research for its own sake.
