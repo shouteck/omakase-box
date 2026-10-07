@@ -1,0 +1,78 @@
+# argv: ["node","--test","tests/command.parse.test.js"]
+# cwd: /src/wt/pr-2609-B
+# HEAD: b5cbf2b4da411a7725d696d7473ebdea9de876e9
+# overlay: null
+# started: 2026-10-06T23:18:24.285Z ended: 2026-10-06T23:18:24.536Z
+# exit: 0 signal: null
+# ---- stdout ----
+▶ Command.parse()
+  ▶ .parse() explicit (from:) and autodetection of args format parsing
+    ✔ when no args then use process.argv and app/script/args (4.172928ms)
+    ✔ when no args and electron main process and not default app then use process.argv and app/args (0.77618ms)
+    ✔ when no args and electron main process and default app then use process.argv and app/script/args (0.543296ms)
+    ✔ when no args and electron child process and ELECTRON_RUN_AS_NODE then use process.argv and app/script/args (0.798659ms)
+    ✔ when no args and electron utility process then use process.argv and app/script/args (3.894287ms)
+    ✔ when no args and electron worker thread then use process.argv and app/script/args (0.224691ms)
+    ✔ when no args and electron renderer process then use process.argv and app/args (0.914051ms)
+    ✔ when args then app/script/args (2.936676ms)
+    ✔ when args from "node" then app/script/args (0.537901ms)
+    ✔ when args from "electron" and main process and not default app then app/args (0.749105ms)
+    ✔ when args from "electron" and main process and default app then app/script/args (0.519419ms)
+    ✔ when args from "electron" and child process and ELECTRON_RUN_AS_NODE then app/script/args (0.394834ms)
+    ✔ when args from "electron" and utility process then app/script/args (0.229887ms)
+    ✔ when args from "electron" and worker thread then app/script/args (0.173239ms)
+    ✔ when args from "electron" and renderer process then app/args (0.219497ms)
+    ✔ when args from "user" then args (0.475159ms)
+    ✔ when args from "silly" then throw (0.993679ms)
+    ▶ when node execArgv includes node flags
+      ✔ when node execArgv includes -e then app/args (0.518919ms)
+      ✔ when node execArgv includes --eval then app/args (0.354271ms)
+      ✔ when node execArgv includes -p then app/args (0.232585ms)
+      ✔ when node execArgv includes --print then app/args (0.145764ms)
+    ✔ when node execArgv includes node flags (3.188142ms)
+  ✔ .parse() explicit (from:) and autodetection of args format parsing (23.752462ms)
+  ▶ return type
+    ✔ when call .parse then returns program (0.707444ms)
+    ✔ when await .parseAsync then returns program (0.365161ms)
+  ✔ return type (1.301392ms)
+  ✔ when parse strings instead of array then throw (0.265753ms)
+  ▶ parse parameter is treated as readonly, per TypeScript declaration
+    ✔ when parse called then parameter does not change (1.53128ms)
+    ✔ when parse called and parsed args later changed then parameter does not change (0.727525ms)
+    ✔ when parse called and param later changed then parsed args do not change (0.434997ms)
+  ✔ parse parameter is treated as readonly, per TypeScript declaration (3.138788ms)
+  ▶ parseAsync parameter is treated as readonly, per TypeScript declaration
+    ✔ when parse called then parameter does not change (0.761394ms)
+    ✔ when parseAsync called and parsed args later changed then parameter does not change (0.735817ms)
+    ✔ when parseAsync called and param later changed then parsed args do not change (0.357069ms)
+  ✔ parseAsync parameter is treated as readonly, per TypeScript declaration (2.331437ms)
+  ▶ .parse() called multiple times
+    ✔ when use boolean options then option values reset (0.857104ms)
+    ✔ when use options with option-argument then option values and sources reset (0.408721ms)
+    ✔ when use options with option-argument and default then option values and sources reset (3.488564ms)
+    ✔ when use negated options then option values reset (0.655691ms)
+    ✔ when use variadic option then option values reset (0.419911ms)
+    ✔ when use collect example then option value resets (0.462471ms)
+    ✔ when use increaseVerbosity example then option value resets (0.653294ms)
+    ✔ when use parse and parseAsync then option values reset (0.328096ms)
+    ✔ when call subcommand then option values reset (program and subcommand) (2.296669ms)
+    ✔ when call different subcommand then no reset because lazy (0.9705ms)
+    ✔ when parse with different implied program name then name changes (0.310112ms)
+    ✔ when parse with different arguments then args change (0.311611ms)
+    ✔ when parse with different arguments then rawArgs change (0.501035ms)
+    ✔ when parse with different arguments then processedArgs change (0.586655ms)
+    ✔ when parse subcommand then reset state before preSubcommand hook called (0.370756ms)
+    ✔ when using storeOptionsAsProperties then throw on second parse (0.195118ms)
+  ✔ .parse() called multiple times (13.684104ms)
+✔ Command.parse() (45.517269ms)
+ℹ tests 47
+ℹ suites 6
+ℹ pass 47
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 201.854618
+
+# ---- stderr ----
+

@@ -4,6 +4,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **Next product wave, from R3b-2:** export's paired check compares the whole output of each recipient check, so any test runner that prints run times is refused, and the message blames a missing file. A real requester stops there; the only way through (a silent reporter) removes the evidence the check exists to give. Fix the comparison and the message. See `waves/R3b-2.md`.
+- R3b-2, first use of the product on Linux by hand: `cli.js` needs `typescript` beside it to start, `--out` needs an existing parent folder, and the scratch `git clone --local` fails when the temp folder is on another filesystem. Request text must be committed in the owner repository before it can ship. `box.json` tells the solver to run `node box/submit.mjs` and lists owner-context commands the solver cannot run.
+- R3b is a replay with one case, one solver and one run: the solver saw the acceptance test, blindness was by instruction and weaker than intended, and the control case was not run. It is not evidence about open issues or about a requester preparing a Box unaided.
 - R3 independently reproduced an owner-base install refusal on packageManager nub. A3 removes required pnpm orchestration from the neutral path; future R3b must still declare script-disabled dependency setup and prove checks run on actual selected source. The historical R3 failure is not a successful outside-issue replay.
 - R3 has no demonstrated test travel/readiness or useful issue delegation: five issue candidates lacked a selected existing defect-red check, Box export blocked, recipient/owner acceptance not tested. A green upstream suite is not Box readiness.
 - A2 pairing compares full UTF-8-decoded normalized text streams, not raw-byte identity or failure causality. Invalid UTF-8 bytes can decode equally; absent runnable recipient checks means export warns that selection is unproven. Optional generated/legacy helper checks are not neutral readiness evidence. See `waves/A2.md`.
@@ -20,8 +23,14 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - Requesters see Amend controls on Boxes they did not author. The server refuses correctly; the control should be hidden. From D1.2.
 
 - A4 closes milestone A with npm/Python folder-only agent capability and cached outside-dependency workspace execution, not useful real-issue delegation. Local blindness is instruction-only; tiny npm/Python fixtures disclose 100% of selected fixture source. Non-string npm paint behavior lacks check coverage. See waves/A4.md.
+- k6-scoped-tmp ownership/refusal remains on parked unmerged K7, not delivered on master. Keep the mandatory populated-foreign-path refusal requirement when resuming K7 items from BACKLOG.md.
 
 ## Kitchen and environment
+
+- The optional Node helper (generated package manifest, compiler configuration, lockfile resolution, generated evaluators) still lives inside `export.ts` and `verify.ts`, behind an opt-in. A3 made it unnecessary for a neutral agreement but did not move it out of the core files as its brief asked. Move it to its own module when those files are next touched. From the CTO's review of A3.
+- Master kitchen-stats still cannot attribute A3/A4/K7-ci/K7-ci2 from varied prose/deleted branches. Parked wave/K7 contains an independently checked merge-parentage fix, not integrated; retain this deliverable on resume.
+
+- K7-ci2 replaces POSIX-incompatible rmdir fixture cleanup with a guarded link-only unlink; real populated directories/files refuse and survive. Final verify summary/console now distinguishes dirty paths from unreadable Git. Hosted confirmation pending at close, not Linux green by inference. Remaining pre-existing k6-scoped-tmp fixed-directory cleanup hazard is in kitchen/INBOX.md.
 
 - A4 accepted executed profile is 325s against 330s, only 5s headroom; future run noise may exceed it. First candidate failed budget at 364s, corrected by isolated copies of invocation-local pristine fixtures. Extra dirty same-SHA full verify remains a recorded violation. K7-ci now refuses dirty state before expensive work; same-SHA repeat-run and cooldown accounting still belong to K7.
 
@@ -29,7 +38,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - A1 removed the old declared-pnpm verb gate and fixed-tool dispatch. Declared arbitrary commands are now owner-approved execution authority, not a sandbox; remaining product-owned installs retain script disabling. Windows shims refuse unsafe tokens including trailing backslashes; non-Windows launches are unproven. Export checks solver prerequisites on its own host. See `waves/A1.md`.
 - A1 preserves inherited code comments under the host no-comment-edit rule; some still describe the old pinned-tool design. Current behavior is documented in `docs/box-v4/delegation/SUBMISSION-CONTRACT.md`; updating those comments requires an explicit request.
 
-- The packaging tests and the K6 budget recorder leave their temp folders and log files behind (`box-d21-*`, `box-k6-*` in the system temp folder). 1,590 had built up by midday on 6 October 2026 and were removed by hand once the kitchen was idle. Make the tests remove what they create; until then, clear them at wave close.
+- K7a now parallelises the packaging test suite at three workers with per-worker stats isolation, accepted on two clean full runs. No measurement budgets, killed-live-DB recovery, merge-parentage attribution, or k6-scoped-tmp ownership/refusal was included — those remain separate items.
+- Version the measurement driver and gate every child launch on experiment run cap, clean exact SHA and cheap smoke/type checks; stop on the first failed child. K7 ran 12 full attempts against 10 allowed because its ignored batch driver enforced neither cap nor fail-fast. From cleared inbox.
 
 - Prior K6 temp buildup was cleared manually while idle, per owner commit `326ee7d`; that historical ownership blocker is resolved. The exit-cleanup leak remains; each new wave must inventory and remove its own resources, not bulk-delete unknown data.
 
@@ -39,7 +49,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - Monthly upstream pstack comparison: last done 5 October 2026 against 0.15.10; not due at this kickoff.
 
 - Verify reuse trusts `.kitchen/runs` records by consistency, not signature — a hand-forged fully-consistent run dir can fake a reused PASS. Accepted; `--fresh` is the antidote and the pass uses it when it doubts a record. From K5.
-- The `check` path→suite table covers direct imports only; a transitive edge can slip scoped `check`. `--full` is the documented backstop. From K5.
+- The `check` path to suite table covers direct imports only; a transitive edge can slip scoped `check`. `--full` is the documented backstop. From K5.
 
 - Ports 4000 and 4001 are held by Docker Desktop when it runs; host tests bind 127.0.0.2 with loopback mirrors (`scripts/host-test-runtime.mjs`).
 - `tests/box/delegation/support.ts` caches its run directory per module, so one `delegationPool()` per test file. Fix when a test needs two.
@@ -51,14 +61,9 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
 
-Answering the 6 October 2026 sync brief replaced after A3, fetched again before the K7-ci pass. Two accepted waves since it, A4 and K7-ci, counted from first-parent merges; run a fresh read/write-only lab sync before closing this run.
+Answering the lab's brief at R3b close, 7 October 2026. Three waves closed since the lab replaced its brief (K7a, R3b-1, R3b-2). Your R3b advice was used: issue text kept verbatim, screening denominators stated, base, fix and test recorded per case, check provenance named, clocks separated.
 
-- K7-ci accepted: hosted A4 UNCOMMITTED was reproduced by cook and pass as pinned frozen pnpm adding two missing empty A4 root-lock importers. Root lock normalized with no version changes, importer-parity regression added. Verify refuses dirty starts before expensive work, rechecks end state and cannot call mid-run dirt or unreadable Git status PASS. Single clean Windows acceptance and independent attacks passed. Hosted repair run remains in progress at last query, not yet new Linux evidence.
-- Main K7 speed/cleanup/profile work was not run. START.md red-master rule redirected the sole allowed wave to this repair. Five baseline and five parallel full measurements still require a bounded exception to the one-full-run rule; no measurement gain or full K7 completion claimed.
-
-- Most urgent A4 advice adopted: every no-op/empty/deleted/wrong/tamper/alternative verdict has its own mutation/log; actual sealed folder-only agent submissions owner-verify against pristine exported manifests. Check authorship and fixture construction are separated from approximate declaration/export clocks and manual steps. Timing is not a controlled owner-effort comparison.
-- Dependency retention advice adopted: pinned picocolors@1.1.1, recorded integrity, no dependency/install scripts, declared npm.cmd ci --ignore-scripts. Reviewer repeated from offline cache. Original manifests/lockfiles unchanged, excluded member source absent and checks execute selected source plus real package. An install exit alone was never acceptance.
-- Product now closes milestone A as mechanism/capability: A2 paired diagnostic records, A3 declaration-only neutral path and A4 npm/Python recipient loops. Purpose-written fixtures do not close the useful milestone. No R3b, D4 or K9 ran; K7 parked before implementation for overnight scope conflicts.
-- Existing limits retained: matching decoded diagnostics are not raw-byte/causal proof, all-green warnings are not change evidence, editable assertions can be weakened, pristine --box is required for manifest binding, local recipient blindness is not enforced isolation and non-Windows launches remain unproven. A4 additionally exposes untested non-string paint behavior.
-- No new research transfer or measured lab finding. Additional export mutation probe and argument warnings remain deferred advice. Lab benchmark/programme priorities are unchanged. Future outside-replay selection denominators and check provenance remain necessary.
-- Kitchen process issue: corrected A4 candidate got an extra dirty-tree executed full run before clean PASS, contrary to tonight's limit. Both records count. First review failed budget; corrected candidate 325s has only 5s headroom. These are operational limits, not product rates.
+- **R3b-1 (screening, `research/box-delegation/r3b/SCREEN.md`).** `tj/commander.js`: 200 merged pull requests, 8 bug-fix candidates with tests, all 8 run three ways in containers. 7 have a maintainers' test that is red at base for the right reason and green at the fix; 3 also have a linked issue. The pass then found that in both recent cases the fix the issue body itself suggests fails the maintainers' test: the test encodes a decision the issue never states. This is Line 1 material: how often does a request and its check disagree, and can that be detected before hand-off?
+- **R3b-2 (one replayed issue through the product, `research/box-delegation/r3b/RESULT.md`).** Agreement hand-written in under three minutes of agent time, 39 files (18% of files, 36% of bytes), all of `lib/` editable by a no-hindsight rule. Owner-side verify accepted the solver's one-line change and rejected a no-op and four other negatives. The solver's rule differs from the maintainers' on 4 of 14 probes that no test covers; both pass the full suite of 1,421 tests. Two answers, one check, different behaviour: a measured instance for the parked "equivalence stand-in" problem.
+- **What blocks a real requester, and what the kitchen will fix next:** the paired check (your A2-era advice on full-output digests) refuses any runner that prints run times. The kitchen's fix will be an engineering one. A question for the lab, on Line 3: what is the right notion of "the same failure" between the full repository and the slice, when output carries timings, paths and ordering noise?
+- Limits to carry: replay, one case, one solver, one run, one model family; solver saw the acceptance test; blindness by instruction only, and weaker than intended. Do not cite this as evidence about open issues. Lab programme unchanged.

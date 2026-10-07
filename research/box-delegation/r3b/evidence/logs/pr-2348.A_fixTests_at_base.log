@@ -1,0 +1,59 @@
+# argv: ["node","node_modules/jest/bin/jest.js","--runTestsByPath","tests/help.optionDescription.test.js"]
+# cwd: /src/wt/pr-2348-A
+# HEAD: 9d941f8134062b703d6737d762fde5e419df01ad
+# overlay: git checkout 672e3806c68421f91b3a1f628f6207b8b26d1a2c -- tests/help.optionDescription.test.js
+# started: 2026-10-06T23:19:29.806Z ended: 2026-10-06T23:19:32.313Z
+# exit: 1 signal: null
+# ---- stdout ----
+--------------------|---------|----------|---------|---------|----------------------------------------------------------------
+File                | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                              
+--------------------|---------|----------|---------|---------|----------------------------------------------------------------
+All files           |    10.9 |     5.16 |    3.95 |   11.32 |                                                                
+ pr-2348-A          |   84.21 |      100 |       0 |     100 |                                                                
+  index.js          |   84.21 |      100 |       0 |     100 |                                                                
+ pr-2348-A/lib      |    9.83 |     5.16 |       4 |   10.17 |                                                                
+  argument.js       |    6.66 |        0 |       0 |    6.66 | 14-145                                                         
+  command.js        |    5.75 |     0.33 |    0.58 |    6.04 | 62-73,94-2658                                                  
+  error.js          |   18.18 |      100 |       0 |   18.18 | 12-34                                                          
+  help.js           |   11.67 |    15.87 |    4.76 |   12.23 | 30-315,369-705                                                 
+  option.js         |   44.33 |    35.59 |   30.43 |   43.68 | 82-106,132-169,182-190,202-231,260-305,329,333-334,339-355,359 
+  suggestSimilar.js |    3.57 |        0 |       0 |    4.25 | 9-98                                                           
+--------------------|---------|----------|---------|---------|----------------------------------------------------------------
+
+# ---- stderr ----
+FAIL tests/help.optionDescription.test.js
+  optionDescription
+    ✓ when option has no description then empty string (4 ms)
+    ✓ when option has description then return description
+    ✓ when boolean option has default value true then return description and default value (1 ms)
+    ✓ when boolean option has default value string then return description without default
+    ✓ when optional option has preset value then return description and default value (1 ms)
+    ✓ when boolean option has preset value then return description without default
+    ✓ when option has env then return description and env name
+    ✓ when option has default value description then return description and custom default description
+    ✕ when option has default value but not description then return custom default (3 ms)
+    ✓ when option has choices then return description and choices
+
+  ● optionDescription › when option has default value but not description then return custom default
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: "(default: custom)"
+    Received: " (default: custom)"
+
+      78 |     );
+      79 |     const helper = new commander.Help();
+    > 80 |     expect(helper.optionDescription(option)).toEqual(
+         |                                              ^
+      81 |       `(default: ${defaultValueDescription})`,
+      82 |     );
+      83 |   });
+
+      at Object.<anonymous> (tests/help.optionDescription.test.js:80:46)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 9 passed, 10 total
+Snapshots:   0 total
+Time:        1.817 s
+Ran all test suites within paths "tests/help.optionDescription.test.js".
+

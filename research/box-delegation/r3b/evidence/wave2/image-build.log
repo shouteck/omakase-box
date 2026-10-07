@@ -1,0 +1,41 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 580B 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/node:24.11.0-bookworm-slim@sha256:76d0ed0ed93bed4f4376211e9d8fddac4d8b3fbdb54cc45955696001a3c91152
+#2 DONE 1.8s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/node:24.11.0-bookworm-slim@sha256:76d0ed0ed93bed4f4376211e9d8fddac4d8b3fbdb54cc45955696001a3c91152
+#4 resolve docker.io/library/node:24.11.0-bookworm-slim@sha256:76d0ed0ed93bed4f4376211e9d8fddac4d8b3fbdb54cc45955696001a3c91152 0.0s done
+#4 DONE 0.0s
+
+#5 [2/5] RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+#5 CACHED
+
+#6 [3/5] RUN mkdir -p /src /out && chown node:node /src /out
+#6 CACHED
+
+#7 [4/5] RUN mkdir -p /work/node_modules && chown -R node:node /work
+#7 DONE 0.3s
+
+#8 [5/5] WORKDIR /src
+#8 DONE 0.1s
+
+#9 exporting to image
+#9 exporting layers
+#9 exporting layers 0.3s done
+#9 exporting manifest sha256:2011c7ea08cb8154c1e107cf2f66be1803dadf1db1f523e012eac78054403298 0.0s done
+#9 exporting config sha256:dce93968103f8d8794dd3c3d8c93c90d9c41699f8f90932027f2fcd7a1cde266 0.0s done
+#9 exporting attestation manifest sha256:15e03c603324626d933829ce2d97df0c377c6de576f05bff63edaa6117837b6a 0.0s done
+#9 exporting manifest list sha256:fd9136394f59e0f51ee52c21600e8933fb244b8d18b675ef8b59f7dc434a136f
+#9 exporting manifest list sha256:fd9136394f59e0f51ee52c21600e8933fb244b8d18b675ef8b59f7dc434a136f 0.0s done
+#9 naming to docker.io/library/kitchen-r3b-tools:latest done
+#9 unpacking to docker.io/library/kitchen-r3b-tools:latest
+#9 unpacking to docker.io/library/kitchen-r3b-tools:latest 1.8s done
+#9 DONE 2.3s

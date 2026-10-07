@@ -1,0 +1,14 @@
+diff --git a/lib/option.js b/lib/option.js
+index 4b4daaf..9c61671 100644
+--- a/lib/option.js
++++ b/lib/option.js
+@@ -15,7 +15,8 @@ export class Option {
+     this.required = flags.includes('<'); // A value must be supplied when the option is specified.
+     this.optional = flags.includes('['); // A value is optional when the option is specified.
+     // variadic test ignores <value,...> et al which might be used to describe custom splitting of single argument
+-    this.variadic = /\w\.\.\.[>\]]$/.test(flags); // The option can take multiple values.
++    // Unicode-aware equivalent of \w (letter, number, or underscore), allowing trailing combining marks as in decomposed 'café'.
++    this.variadic = /[\p{L}\p{N}_]\p{M}*\.\.\.[>\]]$/u.test(flags); // The option can take multiple values.
+     this.mandatory = false; // The option must have a value after parsing, which usually means it must be specified on command line.
+     const optionFlags = splitOptionFlags(flags);
+     this.short = optionFlags.shortFlag; // May be a short flag, undefined, or even a long flag (if option has two long flags).

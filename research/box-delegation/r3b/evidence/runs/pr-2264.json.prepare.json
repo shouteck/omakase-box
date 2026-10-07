@@ -1,0 +1,31 @@
+{
+  "mode": "prepare",
+  "base": "0193201fbc0949ecd012b9793d41165032115272",
+  "fix": "3a79d846822388e831a5e0b03965bec20a73d52a",
+  "steps": [
+    {
+      "argv": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/src/nm/3ed97fec871c9b0bc16b8564a9250e17c5a6493542c2538e5d17edaf9d5640fb",
+      "startedAt": "2026-10-06T23:19:50.180Z",
+      "endedAt": "2026-10-06T23:20:02.625Z",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "\nadded 458 packages in 12s\n",
+      "stderr": "npm notice\nnpm notice New minor version of npm available! 11.6.1 -> 11.21.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0\nnpm notice To update run: npm install -g npm@11.21.0\nnpm notice\n",
+      "lockSha256": "3ed97fec871c9b0bc16b8564a9250e17c5a6493542c2538e5d17edaf9d5640fb",
+      "forCommit": "0193201fbc0949ecd012b9793d41165032115272"
+    },
+    {
+      "note": "node_modules reused for 3a79d846822388e831a5e0b03965bec20a73d52a",
+      "lockSha256": "3ed97fec871c9b0bc16b8564a9250e17c5a6493542c2538e5d17edaf9d5640fb",
+      "dir": "/src/nm/3ed97fec871c9b0bc16b8564a9250e17c5a6493542c2538e5d17edaf9d5640fb"
+    }
+  ]
+}

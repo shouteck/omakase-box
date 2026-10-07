@@ -1,0 +1,130 @@
+# argv: ["node","node_modules/jest/bin/jest.js","--runTestsByPath","tests/args.literal.test.js","tests/args.variadic.test.js","tests/argument.chain.test.js","tests/argument.choices.test.js","tests/argument.custom-processing.test.js","tests/argument.required.test.js","tests/argument.variadic.test.js","tests/command.action.test.js","tests/command.addCommand.test.js","tests/command.addHelpOption.test.js","tests/command.addHelpText.test.js","tests/command.alias.test.js","tests/command.allowExcessArguments.test.js","tests/command.allowUnknownOption.test.js","tests/command.argumentVariations.test.js","tests/command.asterisk.test.js","tests/command.chain.test.js","tests/command.commandHelp.test.js","tests/command.configureHelp.test.js","tests/command.configureOutput.test.js","tests/command.copySettings.test.js","tests/command.createArgument.test.js","tests/command.createHelp.test.js","tests/command.createOption.test.js","tests/command.default.test.js","tests/command.description.test.js","tests/command.error.test.js","tests/command.executableSubcommand.inspect.test.js","tests/command.executableSubcommand.lookup.test.js","tests/command.executableSubcommand.mock.test.js","tests/command.executableSubcommand.search.test.js","tests/command.executableSubcommand.signals.test.js","tests/command.executableSubcommand.test.js","tests/command.exitOverride.test.js","tests/command.help.test.js","tests/command.helpCommand.test.js","tests/command.helpOption.test.js","tests/command.hook.test.js","tests/command.name.test.js","tests/command.nested.test.js","tests/command.onCommand.test.js","tests/command.option-misuse.test.js","tests/command.parse.test.js","tests/command.registerClash.test.js","tests/command.showHelpAfterError.test.js","tests/command.showSuggestionAfterError.test.js","tests/command.summary.test.js","tests/command.unknownCommand.test.js","tests/command.unknownOption.test.js","tests/command.usage.test.js","tests/commander.configureCommand.test.js","tests/createCommand.test.js","tests/deprecated.test.js","tests/help.argumentDescription.test.js","tests/help.commandTerm.test.js","tests/help.commandUsage.test.js","tests/help.longestArgumentTermLength.test.js","tests/help.longestCommandTermLength.test.js","tests/help.longestOptionTermLength.test.js","tests/help.optionDescription.test.js","tests/help.optionTerm.test.js","tests/help.padWidth.test.js","tests/help.showGlobalOptions.test.js","tests/help.sortCommands.test.js","tests/help.sortOptions.test.js","tests/help.subcommandDescription.test.js","tests/help.suggestion.test.js","tests/help.visibleArguments.test.js","tests/help.visibleCommands.test.js","tests/help.visibleGlobalOptions.test.js","tests/help.visibleOptions.test.js","tests/help.wrap.test.js","tests/incrementNodeInspectorPort.test.js","tests/option.chain.test.js","tests/options.bool.combo.test.js","tests/options.bool.small.combined.test.js","tests/options.bool.test.js","tests/options.camelcase.test.js","tests/options.choices.test.js","tests/options.conflicts.test.js","tests/options.custom-processing.test.js","tests/options.default.test.js","tests/options.dual-options.test.js","tests/options.env.test.js","tests/options.flags.test.js","tests/options.getset.test.js","tests/options.implies.test.js","tests/options.mandatory.test.js","tests/options.optional.test.js","tests/options.opts.test.js","tests/options.optsWithGlobals.test.js","tests/options.preset.test.js","tests/options.registerClash.test.js","tests/options.required.test.js","tests/options.twice.test.js","tests/options.values.test.js","tests/options.variadic.test.js","tests/options.version.test.js","tests/program.test.js","tests/ts-imports.test.ts"]
+# cwd: /src/wt/pr-2264-C
+# HEAD: 0193201fbc0949ecd012b9793d41165032115272
+# overlay: null
+# started: 2026-10-06T23:20:12.634Z ended: 2026-10-06T23:20:25.199Z
+# exit: 0 signal: null
+# ---- stdout ----
+--------------------|---------|----------|---------|---------|-----------------------------------------------------------------
+File                | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                               
+--------------------|---------|----------|---------|---------|-----------------------------------------------------------------
+All files           |   98.11 |    95.15 |   99.59 |   98.53 |                                                                 
+ pr-2264-C          |     100 |      100 |     100 |     100 |                                                                 
+  index.js          |     100 |      100 |     100 |     100 |                                                                 
+ pr-2264-C/lib      |   98.08 |    95.15 |   99.59 |   98.51 |                                                                 
+  argument.js       |     100 |      100 |     100 |     100 |                                                                 
+  command.js        |   97.28 |    93.47 |   99.38 |   97.89 | 863,1180-1183,1191-1193,1204,1747-1749,1751-1753,1759-1761,2343 
+  error.js          |     100 |      100 |     100 |     100 |                                                                 
+  help.js           |     100 |      100 |     100 |     100 |                                                                 
+  option.js         |     100 |      100 |     100 |     100 |                                                                 
+  suggestSimilar.js |     100 |      100 |     100 |     100 |                                                                 
+--------------------|---------|----------|---------|---------|-----------------------------------------------------------------
+
+# ---- stderr ----
+PASS tests/command.executableSubcommand.search.test.js
+PASS tests/options.env.test.js
+PASS tests/command.hook.test.js
+PASS tests/command.exitOverride.test.js
+PASS tests/options.conflicts.test.js
+PASS tests/command.help.test.js
+PASS tests/command.chain.test.js
+PASS tests/options.mandatory.test.js
+PASS tests/options.default.test.js
+PASS tests/help.suggestion.test.js
+PASS tests/command.configureOutput.test.js
+PASS tests/options.implies.test.js
+PASS tests/help.wrap.test.js
+PASS tests/command.addHelpText.test.js
+PASS tests/command.parse.test.js
+PASS tests/argument.custom-processing.test.js
+PASS tests/options.version.test.js
+PASS tests/options.variadic.test.js
+PASS tests/command.asterisk.test.js
+PASS tests/command.copySettings.test.js
+PASS tests/options.bool.combo.test.js
+PASS tests/command.helpCommand.test.js
+PASS tests/options.custom-processing.test.js
+PASS tests/options.bool.test.js
+PASS tests/incrementNodeInspectorPort.test.js
+PASS tests/command.argumentVariations.test.js
+PASS tests/command.helpOption.test.js
+PASS tests/command.action.test.js
+PASS tests/options.optsWithGlobals.test.js
+PASS tests/command.showHelpAfterError.test.js
+PASS tests/command.alias.test.js
+PASS tests/options.dual-options.test.js
+PASS tests/command.allowExcessArguments.test.js
+PASS tests/help.optionDescription.test.js
+PASS tests/command.executableSubcommand.mock.test.js
+PASS tests/argument.variadic.test.js
+PASS tests/options.values.test.js
+PASS tests/help.sortOptions.test.js
+PASS tests/commander.configureCommand.test.js
+PASS tests/command.unknownOption.test.js
+PASS tests/help.visibleOptions.test.js
+PASS tests/options.optional.test.js
+PASS tests/options.opts.test.js
+PASS tests/options.required.test.js
+PASS tests/help.visibleArguments.test.js
+PASS tests/command.default.test.js
+PASS tests/options.getset.test.js
+PASS tests/options.flags.test.js
+PASS tests/command.usage.test.js
+PASS tests/command.allowUnknownOption.test.js
+PASS tests/args.variadic.test.js
+PASS tests/options.preset.test.js
+PASS tests/command.unknownCommand.test.js
+PASS tests/options.choices.test.js
+PASS tests/argument.choices.test.js
+PASS tests/help.longestCommandTermLength.test.js
+PASS tests/command.name.test.js
+PASS tests/command.addCommand.test.js
+PASS tests/help.padWidth.test.js
+PASS tests/options.camelcase.test.js
+PASS tests/help.showGlobalOptions.test.js
+PASS tests/options.twice.test.js
+PASS tests/command.executableSubcommand.lookup.test.js
+PASS tests/help.argumentDescription.test.js
+PASS tests/help.visibleGlobalOptions.test.js
+PASS tests/help.commandTerm.test.js
+PASS tests/help.commandUsage.test.js
+PASS tests/command.executableSubcommand.inspect.test.js
+PASS tests/command.error.test.js
+PASS tests/options.registerClash.test.js
+PASS tests/program.test.js
+PASS tests/option.chain.test.js
+PASS tests/command.addHelpOption.test.js
+PASS tests/command.showSuggestionAfterError.test.js
+PASS tests/help.subcommandDescription.test.js
+PASS tests/command.executableSubcommand.signals.test.js
+PASS tests/command.createOption.test.js
+PASS tests/command.registerClash.test.js
+PASS tests/deprecated.test.js
+PASS tests/command.onCommand.test.js
+PASS tests/command.createArgument.test.js
+PASS tests/help.visibleCommands.test.js
+PASS tests/args.literal.test.js
+PASS tests/help.longestOptionTermLength.test.js
+PASS tests/command.configureHelp.test.js
+PASS tests/help.longestArgumentTermLength.test.js
+PASS tests/help.optionTerm.test.js
+PASS tests/argument.required.test.js
+PASS tests/argument.chain.test.js
+PASS tests/help.sortCommands.test.js
+PASS tests/createCommand.test.js
+PASS tests/command.commandHelp.test.js
+PASS tests/command.executableSubcommand.test.js
+PASS tests/command.createHelp.test.js
+PASS tests/command.option-misuse.test.js
+PASS tests/command.nested.test.js
+PASS tests/options.bool.small.combined.test.js
+PASS tests/command.description.test.js
+PASS tests/command.summary.test.js
+PASS tests/ts-imports.test.ts
+
+Test Suites: 100 passed, 100 total
+Tests:       1026 passed, 1026 total
+Snapshots:   0 total
+Time:        11.988 s
+Ran all test suites within paths "tests/args.literal.test.js", "tests/args.variadic.test.js", "tests/argument.chain.test.js", "tests/argument.choices.test.js", "tests/argument.custom-processing.test.js", "tests/argument.required.test.js", "tests/argument.variadic.test.js", "tests/command.action.test.js", "tests/command.addCommand.test.js", "tests/command.addHelpOption.test.js", "tests/command.addHelpText.test.js", "tests/command.alias.test.js", "tests/command.allowExcessArguments.test.js", "tests/command.allowUnknownOption.test.js", "tests/command.argumentVariations.test.js", "tests/command.asterisk.test.js", "tests/command.chain.test.js", "tests/command.commandHelp.test.js", "tests/command.configureHelp.test.js", "tests/command.configureOutput.test.js", "tests/command.copySettings.test.js", "tests/command.createArgument.test.js", "tests/command.createHelp.test.js", "tests/command.createOption.test.js", "tests/command.default.test.js", "tests/command.description.test.js", "tests/command.error.test.js", "tests/command.executableSubcommand.inspect.test.js", "tests/command.executableSubcommand.lookup.test.js", "tests/command.executableSubcommand.mock.test.js", "tests/command.executableSubcommand.search.test.js", "tests/command.executableSubcommand.signals.test.js", "tests/command.executableSubcommand.test.js", "tests/command.exitOverride.test.js", "tests/command.help.test.js", "tests/command.helpCommand.test.js", "tests/command.helpOption.test.js", "tests/command.hook.test.js", "tests/command.name.test.js", "tests/command.nested.test.js", "tests/command.onCommand.test.js", "tests/command.option-misuse.test.js", "tests/command.parse.test.js", "tests/command.registerClash.test.js", "tests/command.showHelpAfterError.test.js", "tests/command.showSuggestionAfterError.test.js", "tests/command.summary.test.js", "tests/command.unknownCommand.test.js", "tests/command.unknownOption.test.js", "tests/command.usage.test.js", "tests/commander.configureCommand.test.js", "tests/createCommand.test.js", "tests/deprecated.test.js", "tests/help.argumentDescription.test.js", "tests/help.commandTerm.test.js", "tests/help.commandUsage.test.js", "tests/help.longestArgumentTermLength.test.js", "tests/help.longestCommandTermLength.test.js", "tests/help.longestOptionTermLength.test.js", "tests/help.optionDescription.test.js", "tests/help.optionTerm.test.js", "tests/help.padWidth.test.js", "tests/help.showGlobalOptions.test.js", "tests/help.sortCommands.test.js", "tests/help.sortOptions.test.js", "tests/help.subcommandDescription.test.js", "tests/help.suggestion.test.js", "tests/help.visibleArguments.test.js", "tests/help.visibleCommands.test.js", "tests/help.visibleGlobalOptions.test.js", "tests/help.visibleOptions.test.js", "tests/help.wrap.test.js", "tests/incrementNodeInspectorPort.test.js", "tests/option.chain.test.js", "tests/options.bool.combo.test.js", "tests/options.bool.small.combined.test.js", "tests/options.bool.test.js", "tests/options.camelcase.test.js", "tests/options.choices.test.js", "tests/options.conflicts.test.js", "tests/options.custom-processing.test.js", "tests/options.default.test.js", "tests/options.dual-options.test.js", "tests/options.env.test.js", "tests/options.flags.test.js", "tests/options.getset.test.js", "tests/options.implies.test.js", "tests/options.mandatory.test.js", "tests/options.optional.test.js", "tests/options.opts.test.js", "tests/options.optsWithGlobals.test.js", "tests/options.preset.test.js", "tests/options.registerClash.test.js", "tests/options.required.test.js", "tests/options.twice.test.js", "tests/options.values.test.js", "tests/options.variadic.test.js", "tests/options.version.test.js", "tests/program.test.js", "tests/ts-imports.test.ts".
+

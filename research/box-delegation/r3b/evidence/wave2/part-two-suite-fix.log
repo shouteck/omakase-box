@@ -1,0 +1,19 @@
+HEAD a9f06ddfe1a97c932579370a1b4e727f7fa511a7
+STATUS []
+
+added 206 packages in 3s
+STEP npm-ci exit=0
+TEST FILES 109
+    ✔ when FORCE_COLOR=2 then returns true (0.211718ms)
+    ✔ when FORCE_COLOR=3 then returns true (0.096235ms)
+  ✔ FORCE_COLOR environment variable tests (6.473934ms)
+✔ internal useColor environment variable support (11.080603ms)
+ℹ tests 1421
+ℹ suites 191
+ℹ pass 1421
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5250.446651
+STEP node-test exit=0
