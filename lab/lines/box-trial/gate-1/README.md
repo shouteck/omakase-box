@@ -1,0 +1,26 @@
+# Gate 1 instrument
+
+The [committed plan](../gate-1-plan.md) is the authority. Commit `f5e4506` precedes dataset acquisition and benchmark execution; the 30 selected IDs and immutable dataset receipt are in `sample.json`. `tasks.json` holds the public benchmark records. The runtime gets a separate `task.json` containing no production gold patch, issue statement or solution.
+
+From the lab checkout, use the bundled Python (or an equivalent Python 3.11+):
+
+```
+python lab/lines/box-trial/gate-1/check.py
+python lab/lines/box-trial/gate-1/run.py
+node lab/tools/kitchen-busy.mjs
+python lab/lines/box-trial/gate-1/measure.py
+```
+
+Run and measurement sequentially. `run.py` checks kitchen idle before each pull and each container run, uses public prepared Epoch images and skips previously recorded attempts. The image ID/digest, command, frozen bridge copy, test overlay, raw artifact hashes and actual container state are retained per task. Containers have no network or writable host mount. No packages, build backends or installation scripts are run. Only images absent before that task's run are removed by the runner. It never prunes global Docker caches or touches kitchen resources. Source/text analysis on the host uses only lab-authored code and Python AST, never target imports.
+
+`container.py` requires the image's actual HEAD to equal the dataset base commit. It snapshots tracked Python text, applies only the benchmark test patch, then traces the native test entry point. It records repository call/line events and thread calls; subprocesses and compiled extensions are unobserved. Module-entry execution counts a file as executed; function definitions alone do not count their bodies as called. Symlinks and hidden path components are omitted from snapshots (a security boundary, and a small denominator limitation). UTF-8 source sizes use decoded text with normalized line endings. Static import closure deliberately includes never-executed local imports and package initializers; unresolved/dynamic edges remain explicit. This can pull in much of a package.
+
+`measure.py` constructs three text presentations and writes their hashes before using the historical production patch for scoring. Function and file ranks are the frozen reading order in the packaging manifest (runtime-first, then source order/lexical closure); full-file text retains original source order. Paths, comments, docstrings, tests, module/class setup, indexes and header overhead count in size. All selected existing function signatures remain named in the lean presentation. This tests the owner's naming criterion; it is weaker than retaining every changed function body, reported separately. Newly introduced functions cannot be named at base and count as misses. Added-line anchors and changed lines map to base AST; qualifiers, constructors and module-level edits are explicit.
+
+Admission reads normal named failed-test results, not mere trace presence or nonzero exit. ANSI colors and old/new pytest output formats are normalized only for parsing; raw logs remain unchanged. Setup/collection errors and timeouts stay unknown. Historical patches never select files or change their ordering.
+
+Raw source snapshots, traces, test overlays, presentations and verbose logs remain in this host's ignored `records/` files, with SHA256 receipts committed. They are reproducible from the pinned public image digest and test overlay. Cached independent reproduction: `python .../measure.py <three IDs>`; it writes `sample-rerun.json` and deterministic per-task measurement/presentation hashes. For a new execution, use a separate disposable copy of this instrument/records so the original attempts are never overwritten. The explicit `--retry <ID>` path archives the complete first attempt; it is for diagnosed instrument faults, not task replacement.
+
+Operational corrections, without changes to sample/selection/detail/threshold: the initial Astropy attempt timed out because the first bridge repeatedly resolved paths and traced external package lines. Its full record remains under `records/history/`. Caching frame paths and declining external line tracing reduced that same test run to about eight seconds. A prepared environment path containing `/envs/testbed/` was initially mistaken for repository source in the ancillary dependency counter; corrected to a path-prefix check. The first corrected trace retains its original zero dependency count; a separately receipted counter rerun corrects that denominator without changing the trace or test outcome. Old pytest and ANSI output need format-aware admission parsing. Authored calibration covers constructors, signature versus body preservation, docstrings, patch replacement anchors and denominator exclusions.
+
+No repair model, repair agent, paid service or Gate 2 trajectory work is part of this gate. The fresh sceptic checks and reruns a deterministic sample after the result.

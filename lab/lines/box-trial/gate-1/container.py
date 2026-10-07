@@ -3,6 +3,17 @@ import os, sys, json, subprocess, pathlib, gzip, time, threading, runpy
 
 OUT = pathlib.Path('/tmp/lab-gate-1-output')
 
+def dependency_envelope():
+    import sysconfig
+    dependency_bytes, dependency_files = 0, 0
+    for directory in sorted(set(sysconfig.get_paths()[k] for k in ('purelib', 'platlib'))):
+        for p in pathlib.Path(directory).rglob('*.py'):
+            if p.is_symlink() or str(p.resolve()).startswith('/testbed/'):
+                continue
+            dependency_bytes += p.stat().st_size
+            dependency_files += 1
+    return {'dependency_bytes': dependency_bytes, 'dependency_files': dependency_files}
+
 def child(argv):
     events = {'files': {}, 'calls': {}, 'lines': {}}
     counter = [0]
@@ -67,14 +78,7 @@ def main():
             tests[name] = pathlib.Path(name).read_text()
     (OUT / 'tests.json').write_text(json.dumps(tests))
     # Complete installed dependency envelope; no target import or installation.
-    import sysconfig
-    dependency_bytes, dependency_files = 0, 0
-    for directory in sorted(set(sysconfig.get_paths()[k] for k in ('purelib', 'platlib'))):
-        for p in pathlib.Path(directory).rglob('*.py'):
-            if p.is_symlink() or '/testbed/' in str(p.resolve()):
-                continue
-            dependency_bytes += p.stat().st_size
-            dependency_files += 1
+    dependencies = dependency_envelope()
     started = time.monotonic()
     argv = [sys.executable, '/lab/container.py', '--child'] + task['argv']
     process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
@@ -89,13 +93,15 @@ def main():
     (OUT / 'test.log').write_bytes(stdout)
     record = {'base_commit': head, 'python': sys.version, 'argv': task['argv'],
               'exit': process.returncode, 'timed_out': timed_out,
-              'seconds': time.monotonic() - started, 'dependency_bytes': dependency_bytes,
-              'dependency_files': dependency_files, 'source_files': len(source)}
+              'seconds': time.monotonic() - started, 'source_files': len(source)}
+    record.update(dependencies)
     (OUT / 'execution.json').write_text(json.dumps(record, indent=2))
     print(json.dumps(record))
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--child':
+    if len(sys.argv) > 1 and sys.argv[1] == '--dependencies':
+        print(json.dumps(dependency_envelope()))
+    elif len(sys.argv) > 1 and sys.argv[1] == '--child':
         child(sys.argv[2:])
     else:
         main()

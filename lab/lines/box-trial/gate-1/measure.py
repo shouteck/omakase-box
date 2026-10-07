@@ -100,16 +100,22 @@ def construct(directory, task):
                     'scikit-learn/scikit-learn': 'sklearn/', 'sphinx-doc/sphinx': 'sphinx/', 'sympy/sympy': 'sympy/'}[task['repo']]
     package_bytes = sum(len(t.encode()) for p, t in source.items() if p.startswith(package_root))
     dependency_bytes = execution['dependency_bytes']
+    if (directory / 'dependency-correction.json').exists():
+        dependency_bytes = json.loads((directory / 'dependency-correction.json').read_text())['result']['dependency_bytes']
     # Normal failures only. Mere mention in collection output does not admit a task.
     log = (directory / 'test.log').read_text(errors='replace')
+    log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', log)
     expected = json.loads(task['FAIL_TO_PASS']) if isinstance(task['FAIL_TO_PASS'], str) else task['FAIL_TO_PASS']
     pytest_failed = re.findall(r'^FAILED\s+(\S+)', log, re.M)
+    pytest_failed += re.findall(r'^(\S+::\S+)\s+(?:FAILED|ERROR)\b', log, re.M)
     django_failed = re.findall(r'^(test\S+)\s+\(([^)]+)\).*?\b(?:FAIL|ERROR)\s*$', log, re.M)
     django_failed += re.findall(r'^(?:FAIL|ERROR): (test\S+)\s+\(([^)]+)\)', log, re.M)
     normal_names = pytest_failed + [a + ' (' + b + ')' for a, b in django_failed]
     def name_match(a, b):
         return a == b or a.replace('::', '.') == b.replace('::', '.')
     matched = [name for name in expected if any(name_match(name, observed) for observed in normal_names)]
+    if task['repo'] == 'django/django':
+        matched += [name for name in expected if re.search(r'^' + re.escape(name) + r'\s+\.\.\.\s+(?:FAIL|ERROR)\s*$', log, re.M)]
     if task['repo'] == 'sympy/sympy' and re.search(r'\b\d+ failed\b', log):
         matched += [name for name in expected if re.search(r'^' + re.escape(name.rsplit(':', 1)[-1]) + r'\s+F\b', log, re.M)]
     admitted = bool(matched) and execution['exit'] != 0 and not execution['timed_out'] and not re.search(r'ERROR collecting|errors during collection|ImportError while loading conftest', log)
