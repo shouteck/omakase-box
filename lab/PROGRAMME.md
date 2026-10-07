@@ -15,13 +15,58 @@ The lab exists to close the gap in claim 3 and to tell the product how far claim
 
 The aim behind all of it, from the owner: the person who posed the problem accepts the solution. The product gives them the most certainty it honestly can and guides them to the best solution available: proof where proof is possible, a stated degree of certainty where it is not.
 
-## Standing direction
+## Standing direction: the lab leads
 
-From the CTO, 6 October 2026: the product steers by the "useful" milestone in `PLAN.md` on master. A real issue from someone else's repository, a Box prepared in minutes with no code written for it, solved by someone who has never seen the repository, accepted by the owner-side check. The kitchen gets there through R2 and then R3. **Updated 6 October 2026, after R3:** the kitchen now gets there through milestone A (a repository-agnostic core, A0 to A4) and then R3b, a replay of fixed issues. Until those are done the lab works on Line 1, with one exception: Line 3 may open at its survey stage now. **Sync after A3:** A2/A3 have delivered language-free selection and neutral orchestration; Line 3's permitted survey has not happened and is no longer pre-A2 advice. It should study residual completeness/disclosure limits, without claiming the literature was reviewed for the accepted implementation. Line 2 stays closed. Within Line 1, favour whatever makes a check cheap to state for a request nobody has seen before. **Updated 7 October 2026, after R3b and the paired-check fix:** milestone A and R3b are done; the kitchen's order from here is A6, R3c, P1, R4 (see "Where we are and what comes next" in `PLAN.md` on master). The lab's recommendations from its 7 October sync are adopted. In order: (1) labelling guide version 1 with the added column "does the request text determine what the check asserts", counted on the predeclared outside sample; R3c will hide the acceptance test in some cases, so anything on detecting a request and check that disagree goes in the brief as soon as it exists. (2) Line 3's survey, which also carries the reading on what "the same failure" means between the repository and the slice; P1 will choose a file rule, so say what the field knows about a rule being sufficient. (3) "The same failure" as an experiment stays on Line 1 as U4, experiment 03. No line opens, closes or changes stage. The lab does not wait for the kitchen and the kitchen does not wait for the lab.
+From the CTO, 7 October 2026, after talking the product through with the owner. This replaces every earlier standing direction on this page.
+
+**What changed.** The owner and the CTO are not yet satisfied that the product idea is technically sound or clearly placed. Two worries: a Box is only worth having if it reliably contains what the solver needs, and nobody knows the answer in advance; and a product that just hands out issues is something the industry already has and does not use much. So the order is reversed. The lab goes first and the kitchen's product roadmap waits for it. Engineering is not the constraint; a correct idea and a clear direction are.
+
+**The idea under test.** Do not try to predict the solution. Anchor the Box on one concrete example of the wanted behaviour that fails today: a reproduction for a bug, an example of intended use for a feature. Work back from where that example goes wrong to the code that can influence it. Any change that makes the example pass must touch code inside that region, so the region is knowable before anyone solves anything. The same example is the "done" check. If this holds, the product's two hard problems (what to ship, and what "done" means) are one problem with one input.
+
+**What the product would be if it holds.** One task handed to an outside agent or other owner-chosen solver, without handing over the repository. The owner points at a task and confirms a draft; a Box goes out; a change comes back and is checked in the real repository. Not a marketplace, not a bounty board, not a way to find solvers. No round trips between owner and solver: a Box that needs a second message has failed. The owner has rejected one alternative design outright: starting from the whole repository and removing what the owner chooses to withhold. Do not build on it.
+
+**The decision the lab is working towards.** Whether to build that MVP, reshape it, or stop. The CTO takes it to the owner when Lines A and B each have a first result a sceptic has attacked. No dates. Say early if a line is aimed wrong.
+
+**Resources.** The owner is putting more into the lab. Lines A and B can run in separate sessions and do not wait for each other. Line C continues behind them. Cost stays at zero. The lab may prototype whatever it needs in its own folder; it does not need the kitchen to build anything first.
 
 ## Active lines, in priority order
 
-### Line 1. From a request to a check
+### Line A. A slice anchored on an example
+
+**The problem for the product.** If the Box misses something the solver needs, the solver fails, and asking for more is friction the owner will not accept. The owner wants a strong guarantee, or an honest statement of how strong it is.
+
+**What the lab must find out.**
+
+- **What the field already knows.** Program slicing from a criterion, static and dynamic; locating a fault from failing and passing runs; reducing a program while keeping a behaviour; what is known about soundness in typed languages and in loosely typed ones (dynamic dispatch, reflection, configuration and data files); and what is known about changes that add code as opposed to changing it. With sources. Say plainly where the CTO's statement of the idea above is wrong or already has a name.
+- **How often it holds on real changes.** Replay merged changes that came with a test, across several projects and at least one typed and one loosely typed language. For each: take the test as the example, compute the region by each of several rules, and record two things: did the real change fall entirely inside, and what share of the repository is the region. Rules to compare at least: the files the failing example executes; those widened to what they import; everything reachable from where the example starts; the whole source folder as the generous baseline. Fix the rules and the sample before looking. The R3b cases and outside sample 1 are a start, not the sample.
+- **Bugs and features apart.** A bug has a failing run to trace. A feature that extends something existing fails early, where the support is missing, so the executed path is too short and reach from the starting point is the candidate rule. A wholly new thing has no existing code that must change; the candidate rule is what its nearest existing sibling needs. Count each kind separately and do not pool them.
+- **What is missed, and why.** For every change that falls outside a region: what was it (configuration, generated code, a helper elsewhere, a caller, a new file), and would the solver have been stuck or merely less elegant? Reading needs and editing needs are different; count them apart.
+- **What the solver cannot see.** New code tends to reuse helpers outside the region. How often, and what is the cheapest thing to ship that prevents duplicates?
+
+**The bar.** A statement the product could print on a Box: for this kind of task and this rule, the real change fell inside in N of M replayed cases, at this size. Where the tools give a real guarantee, say what it guarantees and what it assumes. A rule that only holds by shipping nearly everything has failed.
+
+**Decision it informs.** Whether the MVP's `prepare` step is viable, which rule it uses, and what it may promise.
+
+**Carried in from the old Line 3:** its survey was never done; this line's survey replaces it. The reading on what "the same failure" means between the repository and the slice belongs here.
+
+### Line B. Where the product stands
+
+**The problem for the product.** The owner does not want another issue board, bounty site or open-source task delegator, and does not want conversations with possible customers until the MVP is clear. So direction has to be worked out from what is public.
+
+**What the lab must find out.**
+
+- **Who already does something adjacent,** and exactly what: coding agents that work on a whole repository, in the cloud or on the owner's machine; tools that choose context for an agent; bounty and task marketplaces, and what is publicly known about why they stay small; contractor and outsourcing platforms; ways companies let outsiders work on code they will not share (clean rooms, restricted environments, on-premises agents, no-retention agreements). For each: what it does, what it does not do, and whether it would make a Box pointless.
+- **The strongest argument against us.** If an owner can run a capable agent inside their own boundary, or trusts a vendor's promise not to keep their code, who still needs a Box? Find the cases that survive that argument, if any, and say how large they look from public evidence.
+- **Where a small Box with a stated guarantee would matter** and where it would not: restricted code, specialised outside agents, cost and accuracy of agents on less context, auditability of what an outsider saw.
+- **Two or three candidate directions** stated as one sentence each, with what each needs to be true and what public evidence there is. One recommendation.
+
+**The bar.** Sources for every claim about another product, dated, with what was actually read. No claim about what customers want without evidence; say "unknown" where it is. A sceptic argues the opposite direction before the result goes in the brief.
+
+**Decision it informs.** What the MVP is for, and whether the direction above is the right one.
+
+### Line C. From a request to an example
+
+Formerly Line 1. It continues, behind A and B, with one change of emphasis: under the idea above, the thing the product needs from a request is one concrete example that fails today. Favour work that shows how often a real request already carries one, how cheaply one can be drafted and confirmed when it does not, and how often the drafted example is right. The planned step "turn the sample's reproductions into declared commands and run them" is exactly this and should go first on this line.
 
 **Stage (kept by the lab lead):** survey and formulation done 6 October 2026; instrument in progress: labelling guide version 1 and outside sample 1 done 7 October 2026 (session 5); candidate-set harness not built. Files in `lab/lines/request-to-check/`; cross-line survey in `lab/survey.md`.
 
@@ -40,37 +85,17 @@ From the CTO, 6 October 2026: the product steers by the "useful" milestone in `P
 
 **Sequence.** First. Whatever the survey shows that bears on R2 goes to the CTO before the kitchen writes the R2 brief, if the kitchen has not reached it yet; R2 does not wait for the lab. The map of real requests comes before any work on new ways of getting a check, because it decides which ways are worth studying.
 
-### Line 2. Does a Box help?
+### Does a Box help? (not open)
 
-**The problem for the product.** The roadmap's D4 is meant to compare a Box with ordinary delegation, and the kitchen has no sound way to run it. The claim that a small verified package helps an agent is the product's second wedge and has never been tested.
-
-**What the lab must find out.** Same agent, same task, same checks: the Box against the whole repository. Success, steps, tokens where they can be counted, and what the agent got wrong. The repository's own history is a ready source of tasks: each merged wave has a starting commit, a brief, and a verify run that decides success. Build that into a reusable benchmark first.
-
-**Decision it informs.** Whether to lead with "less context" as an advantage, and what D4 should measure. The CTO will hold D4 until this line has a benchmark, and may run D4 on it.
-
-**Constraint.** Zero cost limits the number of runs. Report the count, treat small differences as noise, and say what a larger study would need.
-
-**Sequence.** After Line 1 has its survey and its map under way. The benchmark comes before any comparison. The kitchen's D4 follows this line's benchmark, not the other way round.
-
-### Line 3. Does the slice contain what the change needs?
-
-**The problem for the product.** A2 now ships only the owner's explicit `files` selection; TypeScript import traversal is an optional proposal helper, not export authority. A2 compares recipient checks on the full base and isolated Box; A3 makes declared setup/checks sufficient without implicit install/compile. The remaining question is how often an owner-declared slice misses unexercised runtime/configuration/assets or reaches another copy, and what extra disclosure would address that. Matching decoded-text observations are not causal or completeness proof; no broad frequency has been measured.
-
-**What the lab must find out.** Against real past changes (this repository's merged waves, then open-source projects), how often would the selection have contained everything the change touched and needed? What is missed: configuration, assets, generated code, things loaded at run time, tests? What does each fix cost in extra source disclosed?
-
-**A constraint from the owner, 6 October 2026: the product should work on any repository.** Following TypeScript imports is tied to one language. When this line opens, weigh selection methods that do not depend on the language at all: an owner-declared file list checked by running the checks in a clean folder, and recording which files the checks actually open when they run. Language-aware analysis then becomes an optional refinement that makes a Box leaner, not a requirement for making one. Say what the literature knows about each.
-
-**Decision it informs.** How far the supported kinds of change can widen, and what a Box must declare by hand instead of discovering.
-
-**Sequence.** After Line 1's map, which will show which kinds of change matter most. It can share Line 2's benchmark of past changes, so build that once. Open it sooner if a session has nothing else that can run.
+Formerly Line 2. Same agent, same task, same checks: the Box against the whole repository. It matters more under the new direction, because if an agent does clearly worse with a Box the product does not work. It opens when Line A has a rule worth testing; until then there is nothing to compare. Line B should report what is publicly known about agents working on reduced context.
 
 ## Parked, with what would unpark them
 
 These are real problems. They are not what stands between the product and its next decision, and working on them now would be research for its own sake.
 
-- **A leaner stand-in that is checkably equivalent to the original.** This is step 4 of the slicing ladder in `PLAN.md` on master, so it is on the product roadmap, not abandoned. A stronger form of Line 3: hand over a much smaller version of the code with a machine verdict that it behaves the same where it matters. Unpark when Line 3 shows that shipping real files discloses too much or misses too much. Until then the survey for Line 3 should note what the field says is achievable.
-- **Judging outcomes no test can check** (a design, wording, how something feels). Unpark when Line 1's map shows what share of real requests need it. If it is small, the product marks those as "the requester decides" and moves on.
-- **Calibrated certainty and ranking of candidate solutions.** Unpark when the product has real accept and reject decisions to calibrate against, which needs users. Until then Line 1 records, for each kind of check, how often it is wrong; that is the raw material.
+- **A leaner stand-in that is checkably equivalent to the original.** This is step 4 of the slicing ladder in `PLAN.md` on master, so it is on the product roadmap, not abandoned. A stronger form of Line A: hand over a much smaller version of the code with a machine verdict that it behaves the same where it matters. It is next to Line A now: Line A's survey covers what the field says is achievable, and the experimental work unparks if Line A shows a region that is sound but too large to ship.
+- **Judging outcomes no test can check** (a design, wording, how something feels). Unpark when Line C's map shows what share of real requests need it. If it is small, the product marks those as "the requester decides" and moves on.
+- **Calibrated certainty and ranking of candidate solutions.** Unpark when the product has real accept and reject decisions to calibrate against, which needs users. Until then Line C records, for each kind of check, how often it is wrong; that is the raw material.
 
 ## First session
 
@@ -93,7 +118,7 @@ None yet.
 - **Not built:** a candidate-set harness for the neutral format. After accepted A3, drive the product's `export`/`verify` with declarations and consume A2 paired records; A0's loop is historical design input, not a lab execution fork.
 - **Labelling guide, version 1** (`lab/lines/request-to-check/map/GUIDE.md`): five columns, including whether a request's text determined what its fix's tests assert. Followed almost identically by two same-family labellers; nine known faults, listed in `map/sample-1/RESULT.md`.
 - **Outside sample 1** (`map/sample-1/`): 40 issues from four public repositories (5 open, 5 fixed each, by a rule committed before reading), 78 conditions, two labellers, a sceptic's re-derivation, and three known commander.js cases kept apart. Issue text, comments and test diffs are kept. Small and from hand-picked repositories; counts, not rates.
-- **Sync state, 7 October 2026:** research session 5 run on master through `f47414f` (fix-paired-check). Brief replaced at the end of that session.
+- **Sync state, 7 October 2026:** research session 5 run on master through `f47414f` (fix-paired-check). Brief replaced at the end of that session. Programme rewritten by the CTO afterwards: the lab leads; Lines A, B, C.
 
 - **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
 - **Existing tests as Box guards (historical).** `lab/lines/request-to-check/experiments/02-existing-test-in-a-box/`. Two old-format runners used to export a named test and run it in a clean folder. Seven hand-picked tests were tried; these runners have not been migrated to the accepted neutral format or rerun in this sync.
