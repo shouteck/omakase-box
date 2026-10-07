@@ -1,0 +1,36 @@
+{
+  "removed_tags": [
+    {
+      "tag": "lab-gate-1-cache-matplotlib__matplotlib-24570:temporary",
+      "exit_code": 0,
+      "stdout": "Untagged: lab-gate-1-cache-matplotlib__matplotlib-24570:temporary\nDeleted: sha256:9531aad7eb689d7fe1d98873fd03fb98d42f8aec6b8067d5e6c639d1af84bde5\n",
+      "stderr": ""
+    },
+    {
+      "tag": "lab-gate-1-cache-scikit-learn__scikit-learn-11578:temporary",
+      "exit_code": 0,
+      "stdout": "Untagged: lab-gate-1-cache-scikit-learn__scikit-learn-11578:temporary\nDeleted: sha256:f3a5fe85ed709ba614aa97a3ddebc8362fb08056e2fcf5c6e4971f4ad80ba267\n",
+      "stderr": ""
+    },
+    {
+      "tag": "lab-gate-1-cache-sphinx-doc__sphinx-7454:temporary",
+      "exit_code": 0,
+      "stdout": "Untagged: lab-gate-1-cache-sphinx-doc__sphinx-7454:temporary\nDeleted: sha256:e98fa9aa61bdadb16989eca993fa93da2ec4a6415f8a58fb5013bce59fb2d396\n",
+      "stderr": ""
+    },
+    {
+      "tag": "lab-gate-1-cache-sympy__sympy-12481:temporary",
+      "exit_code": 0,
+      "stdout": "Untagged: lab-gate-1-cache-sympy__sympy-12481:temporary\nDeleted: sha256:46963c9c7a9cd5119565b9c77a853b1c0ca38775491a9281ebc3e92021f6e963\n",
+      "stderr": ""
+    },
+    {
+      "tag": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-14539:latest",
+      "exit_code": 0,
+      "stdout": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-14539:latest\nUntagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-14539@sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71\nDeleted: sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71\n",
+      "stderr": ""
+    }
+  ],
+  "remaining_gate_containers": [],
+  "container_check_exit": 0
+}

@@ -10,7 +10,7 @@
 | Lean packaging / all tracked Python | 11.1%–35.4%; median 20.2%; none below 10% |
 | Every real-fix function/edit named; bodies retained | 19/23 admitted for both; four misses introduce new functions |
 | Unknowns | Two Matplotlib timeouts; five SymPy subprocess traces incomplete |
-| Independent check | Three selected packaging reruns match exactly; fresh native test run under review |
+| Independent check | Three packaging reruns and a fresh native test match exactly except elapsed time; narrow failure stands |
 
 **Gate 1 FAILED:** even all seven unknowns succeeding cannot reach fifteen, so this runtime plus import-closure packaging stops before Gate 2.
 

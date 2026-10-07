@@ -65,4 +65,6 @@ Per-task records include changed function names, constructor identities, body/si
 
 ## Sceptic
 
-Pending one independent sample reproduction before closing the gate.
+[Independent sceptic review](gate-1-sceptic.md): the narrow failure stands. All three prescribed cached rows matched every measurement and presentation hash. A fresh native Astropy 14539 run on the pinned image matched source/test contents, trace membership, sizes, presentation hashes, ranks and fix inclusion; only elapsed time changed. Independent raw-receipt and patch-context checks found no mismatches across all 30 tasks.
+
+Expanded alias sensitivity, including definition-line lambdas/comprehensions, still leaves admitted minima of 27.7985% production and 11.1095% all tracked Python. A separate name-multiplicity check found no same-name new definitions in this sample, although the scorer could miss an added same-name setter in another sample. Manifest ranking, partial preregistration and incomplete subprocess/compiled tracing remain explicit limitations. This research instrument is not ready for product transfer. Gate 2 was not started.

@@ -29,7 +29,7 @@ facts = {
 }
 (here / 'aggregate.json').write_bytes(json.dumps(facts, indent=2).encode())
 text = '# Gate 1: open packaging size\n\n8 October 2026. Fixed sample: 30 SWE-bench Verified tasks, five per repository; six large Python repositories. No repair agents or Gate 2 runs.\n\n'
-text += f'**{summary["verdict"].upper()}: {counts["pass"]}/30 tasks meet both requirements; {counts["fail"]} confirmed misses and {counts["unknown"]} unknown. Fifteen successes were required.**\n\n'
+text += f'**{summary["verdict"].upper()}: {counts["pass"]} confirmed successes among 30 fixed tasks; {counts["fail"]} confirmed misses and {counts["unknown"]} unknown. Fifteen successes were required.**\n\n'
 text += '| Measurement | Observed |\n|---|---|\n'
 text += f'| Named failing test reproduced and scoreable | {len(admitted)}/30 |\n'
 text += f'| Lean packaging below 10% of production Python source | {facts["lean_under_tenth"]}/{len(admitted)} admitted |\n'
@@ -40,7 +40,7 @@ text += f'| Lean / all tracked Python, including tests/docs/examples | {facts["a
 text += f'| Original full-docstring lean / production Python source | {facts["original_lean_range"]}; {facts["original_docstring_detail_successes"]} combined successes |\n'
 text += f'| Lean / whole primary package, including internal tests | {facts["package_range"]} |\n'
 text += f'| Lean / primary package + installed dependency envelope | {facts["envelope_range"]} |\n'
-text += '\n## Every fixed task\n\n| Task | Result | Files / repo | Marked / repo | Lean / repo | All fix names | Worst function rank |\n|---|---|---:|---:|---:|---|---:|\n'
+text += '\n## Every fixed task\n\n| Task | Result | Files / repo | Marked / repo | Lean / repo | All fix names | Worst function manifest rank |\n|---|---|---:|---:|---:|---|---:|\n'
 for r in rows:
     ratios = r.get('repository_ratios', [None] * 3)
     text += f'| {r["instance_id"]} | {r["verdict"]} | {percent(ratios[0])} | {percent(ratios[1])} | {percent(ratios[2])} | {r.get("named_all_changed", "—")} | {r.get("worst_function_rank") or "—"} |\n'
