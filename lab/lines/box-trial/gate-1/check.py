@@ -17,4 +17,8 @@ assert changed['a.py']['old_lines'] == {3}
 assert changed['a.py']['new_text'] == text.replace('self.x = 1', 'self.x = 2')
 assert m.production('pkg/api.py') and not m.production('pkg/tests/test_api.py')
 assert not m.production('docs/example.py')
+property_text = 'class C:\n    @property\n    def value(self):\n        return "getter"\n    @value.setter\n    def value(self, value):\n        return "setter"\n'
+property_rows = m.functions(property_text)
+property_lean = m.lean(property_text, property_rows, {property_rows[1]['start']})
+assert 'return "getter"' not in property_lean and 'return "setter"' in property_lean
 print('PASS: constructors, body/signature distinction, docstrings, replacement anchors and denominator exclusions')

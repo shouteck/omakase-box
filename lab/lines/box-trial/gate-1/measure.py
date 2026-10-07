@@ -34,7 +34,8 @@ def lean(text, rows, called, keep_docstrings=False):
     for row in sorted(rows, key=lambda r: (r['start'], -r['end'])):
         if any(start <= row['start'] <= end for start, end, _ in replacements):
             continue
-        if row['name'] in called or any(other['name'] in called and row['start'] <= other['start'] <= row['end'] for other in rows):
+        was_called = lambda r: r['start'] in called or r['name'] in called
+        if was_called(row) or any(was_called(other) and row['start'] <= other['start'] <= row['end'] for other in rows):
             continue
         node = row['node']
         # Header includes decorators/multiline arguments. One-line defs need a colon cut.
@@ -81,7 +82,7 @@ def construct(directory, task):
     ordered = sorted(selected, key=lambda p: (trace['files'].get(p, float('inf')), p))
     rows, called = {}, {}
     for path in ordered:
-        called[path] = {r['name'] for r in trees.get(path, []) if path + ':' + str(r['start']) in trace['calls'] or path + ':' + str(r['def_line']) in trace['calls']}
+        called[path] = {r['start'] for r in trees.get(path, []) if path + ':' + str(r['start']) in trace['calls'] or path + ':' + str(r['def_line']) in trace['calls']}
         rows[path] = sorted(trees.get(path, []), key=lambda r: (trace['calls'].get(path + ':' + str(r['start']), trace['calls'].get(path + ':' + str(r['def_line']), float('inf'))), r['start']))
     is_test = lambda p: not production(p) or pathlib.PurePosixPath(p).name == 'conftest.py'
     header = 'Open repository context. Entry: ' + json.dumps(execution['argv']) + '\nUnresolved import observations: ' + str(len(unresolved)) + '; subprocess coverage unavailable.\n'
@@ -90,7 +91,7 @@ def construct(directory, task):
     for path in ordered:
         banner = '\n### ' + path + '\n'
         full = contents[path]
-        index = 'Executed functions: ' + ', '.join(r['name'] for r in rows[path] if r['name'] in called[path]) + '\n'
+        index = 'Executed functions: ' + ', '.join(r['name'] for r in rows[path] if r['start'] in called[path]) + '\n'
         reduced = full if is_test(path) or path in parse_errors else lean(full, rows[path], called[path])
         original_reduced = full if is_test(path) or path in parse_errors else lean(full, rows[path], called[path], keep_docstrings=True)
         presentations[0] += banner + full
@@ -123,8 +124,8 @@ def construct(directory, task):
         matched += [name for name in expected if re.search(r'^' + re.escape(name.rsplit(':', 1)[-1]) + r'\s+F\b', log, re.M)]
     admitted = bool(matched) and execution['exit'] != 0 and not execution['timed_out'] and not re.search(r'ERROR collecting|errors during collection|ImportError while loading conftest', log)
     package = {'instance_id': task['instance_id'], 'files': ordered,
-               'functions': {p: [{'name': r['name'], 'start': r['start'], 'end': r['end'], 'executed': r['name'] in called[p],
-                                  'body_present': is_test(p) or any(a['name'] in called[p] and a['start'] <= r['start'] and a['end'] >= r['end'] for a in rows[p])}
+               'functions': {p: [{'name': r['name'], 'start': r['start'], 'end': r['end'], 'executed': r['start'] in called[p],
+                                  'body_present': is_test(p) or any(a['start'] in called[p] and a['start'] <= r['start'] and a['end'] >= r['end'] for a in rows[p])}
                                  for r in rows[p]] for p in ordered},
                'bytes': [len(t.encode()) for t in presentations], 'sha256': [hashlib.sha256(t.encode()).hexdigest() for t in presentations],
                'preregistered_docstring_lean_bytes': len(preregistered_lean.encode()),
@@ -187,9 +188,10 @@ def score(package, source, trees, task):
     for p in package['files']:
         for row in package['functions'][p]:
             counter += 1
-            ranks[(p, row['name'])] = counter
+            ranks[(p, row['name'], row['start'])] = counter
     changed, module_edits, new_functions = [], [], []
     changes = patch_changes(task['patch'], source)
+    unsupported_edits = [p for p in changes if p.endswith(('.pyx', '.pxd', '.c', '.cc', '.cpp', '.h', '.f', '.f90')) and production(p)]
     for path, change in changes.items():
         if not path.endswith(('.py', '.pyi')) or not production(path):
             continue
@@ -201,24 +203,25 @@ def score(package, source, trees, task):
         for line in change['old_lines']:
             containing = [r for r in funcs if r['start'] <= line <= r['end']]
             if containing:
-                affected.add(min(containing, key=lambda r: r['end'] - r['start'])['name'])
+                affected.add(min(containing, key=lambda r: r['end'] - r['start'])['start'])
             else:
                 module_edits.append({'path': path, 'line': line, 'included': path in selected})
         existing_names = {r['name'] for r in funcs}
         for added in functions(change['new_text']):
             if added['name'] not in existing_names:
                 new_functions.append({'path': path, 'name': added['name'], 'included': False})
-        for name in sorted(affected):
-            manifest = next((r for r in package['functions'].get(path, []) if r['name'] == name), None)
-            changed.append({'path': path, 'name': name, 'named': manifest is not None,
+        for start in sorted(affected):
+            name = next(r['name'] for r in funcs if r['start'] == start)
+            manifest = next((r for r in package['functions'].get(path, []) if r['name'] == name and r['start'] == start), None)
+            changed.append({'path': path, 'name': name, 'start': start, 'named': manifest is not None,
                             'executed': manifest['executed'] if manifest else False,
                             'lean_body': bool(manifest and manifest['body_present']),
-                            'file_rank': file_rank.get(path), 'function_rank': ranks.get((path, name))})
+                            'file_rank': file_rank.get(path), 'function_rank': ranks.get((path, name, start))})
     changed_files = [p for p in changes if p.endswith(('.py', '.pyi')) and production(p)]
     names_all = bool(changed_files) and all(p in selected for p in changed_files) and all(r['named'] for r in changed) and not new_functions and all(r['included'] for r in module_edits)
     ratios = [n / package['production_bytes'] for n in package['bytes']]
     eligible = [i + 1 for i, ratio in enumerate(ratios) if ratio < .1 and names_all]
-    verdict = 'pass' if package['admitted'] and eligible else 'fail' if package['admitted'] else 'unknown'
+    verdict = 'unknown' if unsupported_edits else 'pass' if package['admitted'] and eligible else 'fail' if package['admitted'] else 'unknown'
     return {'instance_id': task['instance_id'], 'repo': task['repo'], 'verdict': verdict, 'admitted': package['admitted'],
             'level_bytes': package['bytes'], 'production_bytes': package['production_bytes'], 'all_python_bytes': package['all_python_bytes'],
             'preregistered_docstring_lean_ratio': package['preregistered_docstring_lean_bytes'] / package['production_bytes'],
@@ -228,6 +231,7 @@ def score(package, source, trees, task):
             'free_baseline_ratios': [n / (package['package_bytes'] + package['dependency_bytes']) for n in package['bytes']],
             'named_all_changed': names_all, 'eligible_levels': eligible,
             'changed_functions': changed, 'new_functions': new_functions, 'module_edits': module_edits,
+            'unsupported_fix_source_files': unsupported_edits,
             'changed_files': [{'path': p, 'included': p in selected, 'rank': file_rank.get(p)} for p in changed_files],
             'worst_function_rank': max((r['function_rank'] or 0 for r in changed), default=0) if names_all else None,
             'lean_bodies_all_changed': names_all and all(r['lean_body'] for r in changed),
