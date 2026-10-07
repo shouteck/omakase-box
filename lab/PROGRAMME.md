@@ -100,4 +100,4 @@ Each has its last result in `lab/lines/` and its full brief in the archive. None
 
 Listed in the archive page. The one this trial uses: the runtime instrument in `lab/lines/example-slice/instrument/` (sealed runs, execution tracing for Python and TypeScript, package export, paired observations). The lab lead adds new instruments here in one line each.
 
-- **Sync state, 8 October 2026:** programme rewritten by the CTO; the Box trial is the only active work; next session is gate 0, the reading.
+- **Sync state, 8 October 2026:** Gate 0 reading passed; [comparison and limits](lines/box-trial/gate-0.md). Next session is Gate 1 under the owner's open-Box override: measure packaging size, real-fix function inclusion and ordering, reusing the tracer; no runnable stub engineering or paired sealed checks. Gate 1 has not started. The original gate wording above is retained as history and is superseded where it conflicts with the owner's decision.

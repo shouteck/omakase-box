@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-08",
+  "full_texts_read": true,
+  "papers": [
+    {
+      "file": "causalrepair.pdf",
+      "pages": 24,
+      "sha256": "9976f0a10698f452387cc3eb5ecf800a05d09c6b153adc8350a8f38e5cd95c6f"
+    },
+    {
+      "file": "ese06.pdf",
+      "pages": 25,
+      "sha256": "4acb87722337ffd7394794f1518fb3e319ffb32a4422f441b9c7310c11ecc3c7"
+    },
+    {
+      "file": "granularity.pdf",
+      "pages": 7,
+      "sha256": "f5938df43bd410b8b18f9437dfc31a662d75fbe8d484920f88bc65f7e10a5744"
+    },
+    {
+      "file": "icse03.pdf",
+      "pages": 11,
+      "sha256": "76b8e3fc32caceb733fc5535341319acf4d8a7a7dc83f5ab50069f31f32c1a5b"
+    },
+    {
+      "file": "pldi04.pdf",
+      "pages": 13,
+      "sha256": "28fe2bf204ad11eff473557c7e2431c36b88a7d51a90996c81b0b5caa39db90e"
+    },
+    {
+      "file": "reduction.pdf",
+      "pages": 13,
+      "sha256": "0ae6b08891b11b823793d7a217028d8b4334adeb231ea392777eb6a106797493"
+    },
+    {
+      "file": "stubbifier.pdf",
+      "pages": 28,
+      "sha256": "337b584b83dd0cec636d6a2ee79b80154c28970eb75d5e8bbc2625e5b7423e50"
+    },
+    {
+      "file": "union.pdf",
+      "pages": 10,
+      "sha256": "b6fbc76b883f8fd01335eefd164bbaefd8af7d2a4ded844982f57ba4a78394c7"
+    }
+  ]
+}

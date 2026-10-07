@@ -1,48 +1,19 @@
 # Research brief for the CTO
 
-**No wave is in flight and nothing here bears on A6. New this run: Line E's first session found no candidate. It searched the layer next to the model, which the owner's redirection has since told the lab to leave; the result agrees with the redirection and covers none of the new ground.**
+8 October 2026 — Box trial, Gate 0. The owner's open Box decision governs. Full reading and source checks: [Gate 0](lines/box-trial/gate-0.md).
 
-Replaced 7 October 2026, after Line E session 1; master through `f47414f`, lab level with it. Line A's section below is unchanged from the last brief and your decisions on it are in the programme.
+| Reading | What shrank; denominator | Repair/time/cost result and limiting condition |
+|---|---|---|
+| Stubbifier; 15 Node packages, 75 clients | Files/functions; initial production bytes including dependencies: 56% mean static reduction, **31% dynamic** | Runnable through original-code retrieval; no repair/token trial; expansion can erase savings |
+| Program Reduction; 47 selected Java bugs | Production lines retained 2.2–18.3%, mean 6.6%; tests 2249→56 | 80→<18 min headline mainly test reduction; sliced source loses 11/12 baseline fixes; slicing itself takes hours |
+| CausalRepair; 483 single-function Java cases | Test/source statement skeletons for prompts; no aggregate repository/context size ratio | 313 correct/365 plausible; 25-candidate budget, perfect localization; 232 correct with automated localization; reported 23.28 min and $0.029/bug, no total-token comparison |
+| Context Granularity; 109 known single-line Java bugs | Slice 47,766 vs file 331,383 context tokens (14.4%); **method smaller still** | Slice 22 correct/28 plausible; file 28/47: 79% precision does not mean more bugs fixed |
+| Zhang ICSE03 / PLDI04; C SPEC | Instruction/statement sets; PLDI mean slices ~1.8–40.7% of unique executed statements | No agent repair; small queries exclude preprocessing; graph compression is not source reduction |
+| Zhang ESE06/07; 19 real C faults | Fault-containing sets 0.45–63.18% of executed lines, 0.04–8.52% of program LOC | Data slices capture 12, full slices needed for 7; absent output needs forward slicing; no automated repair |
+| Beszédes union slices; three C programs | Mean union 15%, static 72% of executable lines | Not necessarily runnable; finite tests give no safety guarantee; no repair/token trial |
 
-## Line E: what the lab now believes
+**Gate 0 PASSED:** the reading leaves the open Python packaging versus pstack scope question worth measuring, and narrows Gate 1 to size, fix-function inclusion and ordering with the existing tracer; it does not predict Gate 1's outcome.
 
-1. **None survive; one near miss.** Twenty-six areas between the lead and a sceptic. On the layer directly on top of the model, a result that works is already a product or a vendor's feature, usually within months and twice before the paper. Where there is no product, the research has no fix that works. Filters 7 and 2 do nearly all the killing.
-2. **The near miss** is a transaction and undo layer under agent actions (hold back, undo, recognise repeats, gate what cannot be taken back). It fails filter 4 (each part is shipped practice) and filter 7 in substance (three backup vendors, Cloudflare, frameworks and gateways are on it). Its paper's headline gain is against doing nothing; against ordinary checkpoint-and-retry it is a tie. The lead's draft had it surviving; the sceptic found seven neighbours on a first pass.
-3. **Your lead, security enforced outside the model, is dead:** in Microsoft's agent framework since May 2026, with funded products beside it.
-4. **Your pattern** (paper to product in months, many papers from vendors) is consistent with the four dated cases found. Four hand-picked cases; an illustration.
-5. **The lead erred on process:** the redirection landed during the session and was not re-read before the write-up. The sceptic caught it. Test 9 is now applied to the near miss, and to nothing else in depth.
+Reuse tracing and source skeletons; defer runnable stubs. The named work establishes neither native TypeScript Stubbifier support nor a verified Python counterpart. Fix sample, denominator and ordering first; count overhead, missed functions and module-level edits; keep the test-package+dependencies denominator beside repository size. The owner-set pass is at least half below one tenth of repository source and naming every real-fix function. Preserve test setup and intent comments. Historical patches score only.
 
-**Next on Line E:** session 2 in the redirected area, test 9 first, every query recorded. It does not wait for the owner's answer about trades and access, but that answer would narrow it more than anything the lab can search. Detail: `lab/lines/unbuilt-research/candidates.md`.
-
-## Line A: what the lab now believes
-
-The runtime instrument exists: third-party code runs in bounded containers with no network; what a failing test executes is captured for Python and for TypeScript under the project's own loader; packages are exported with no path back to the repository. It has run two **development** cases, `pallets/click` 3208 and `sindresorhus/ky` 823. Two cases, chosen for building the tool. Not a rate.
-
-| Case | Source files in root | Executed (E) | Executed plus imports (EI) | Reach from the test (R) | Whole root (G) |
-|---|---|---|---|---|---|
-| click 3208 | 17 | 14 | 17 | 17 | 17 |
-| ky 823 | 24 | 14 | 24 | 24 | 24 |
-
-1. **No rule gives a small package on either case.** The only rule that ships less than the whole source root is "executed files", and it ships more than half.
-2. **Executed files alone do not load on Ky.** A module that is imported but in which nothing ran is left out. One file added and it works.
-3. **Where a package loads, it reproduces the failure, and the fixed source passes in it.** 90 of 96 sealed observations match the full repository; the six that do not are that Ky package.
-4. **The real change never fits as the protocol defines fitting**, because both changes also edit a changelog or readme, which no rule makes editable. For runtime source alone: Click fits under every rule; Ky under every rule except executed files, which omits a type-only file the change edits. The list of changed paths was entered by hand and has not been checked by a second reader.
-5. **Why imports reach everything, from the sceptic:** on Ky, nine of the ten added files come through type-only imports; without them it would be 15 of 24. On Click, lazy imports in modules that ran. "Executed" is also not the same measure in the two languages. At file granularity nothing comes near a quarter of the source; on Click 38% of statements ran, so a finer grain is the only place a small number could come from, and the protocol excludes it.
-
-## Is the programme aimed right?
-
-1. **The cohort.** Click and Ky are single-package libraries with 17 and 24 source files, so "small" means at most 4 and 6 files. This *suggests* their confirmation cases will not show a small package either. Zod is unrun and differently laid out. The cohort already could not pass its four-project screen. So finishing A-replay-1 as frozen will most likely return "no demonstrated promise" for a reason that is about the panel, not about the idea. The lab has not changed the protocol and will not without you. **Recommendation: let A-replay-1 stop at development, record it as uninformative on size, and have the lab write a version 2 cohort of larger and multi-package repositories before any more adapter work.** The product question is whether a slice is small where repositories are big; this panel cannot answer it.
-2. **Line D can start on what exists.** The execution-plus-imports package can be made today for Click and Ky. Know that on both it equals the source root, so a token comparison there measures "source root against whole repository", not slicing.
-3. **For the owner's picture of a Box.** On a small cohesive library, a Box cut by files is most of the library. That is a result, on two cases.
-
-## Other lines
-
-**B:** unchanged. Whole-repository agents are the incumbent; demand for limited disclosure is unknown; pieces of a Box exist and the choosing rule is the new part. Build, reshape or stop is open.
-
-**C:** unchanged; small chosen sample. R3c still needs: which hidden assertions the request determines, right or wrong labels for failing answers, reporter against fix author, test commit dates, the solver's report and start time, and one structurally clean wrong answer.
-
-**D:** no eval run. Keep whole, hinted, rule, generous, neighbour and oracle conditions distinct.
-
-## Needed from the kitchen and replies
-
-Nothing from the kitchen or the owner. Master's "For the lab" has nothing new for this session. Housekeeping the lab owes: two lab images in Docker and about 140 scratch folders in the system temp folder are kept for reruns and will be removed when Line A's development stage closes; 187 MB of raw records are on disk, with hashes in Git.
+Gate 3 must count all brief-writing/helper tokens and record necessary searches outside the Box; both arms already have the failing test and error trace. A fresh reader confirmed two papers independently. No experiment or repair-agent run occurred. Gate 1 has not begun; this session stops here. Other lines remain paused. Nothing needed from the kitchen.
