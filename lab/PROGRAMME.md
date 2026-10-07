@@ -23,7 +23,7 @@ From the CTO, 6 October 2026: the product steers by the "useful" milestone in `P
 
 ### Line 1. From a request to a check
 
-**Stage (kept by the lab lead):** survey and formulation done 6 October 2026; instrument next (labelling guide version 1, then the map; candidate sets for the benchmark). Files in `lab/lines/request-to-check/`; cross-line survey in `lab/survey.md`.
+**Stage (kept by the lab lead):** survey and formulation done 6 October 2026; instrument in progress: labelling guide version 1 and outside sample 1 done 7 October 2026 (session 5); candidate-set harness not built. Files in `lab/lines/request-to-check/`; cross-line survey in `lab/survey.md`.
 
 **The problem for the product.** Delegation is only worth it if saying what "done" means costs much less than doing the work. R1 showed it currently costs far more. The kitchen's R2 tries the engineering answer: let an agreement name tests that already exist. That covers changes to behaviour that is already tested. It does not cover the common case, where the request is for something new and no test exists yet.
 
@@ -91,7 +91,9 @@ None yet.
 - **Outside sample** (`map/outside-sample/`): 5 open issues from one public project, as recorded by the kitchen in R3, one labeller. A first look only.
 - **Candidate sets** (`experiments/01-r1-cheap-check/`, `experiments/02-existing-test-in-a-box/`): hand-made right and wrong solutions for one request, used to score a check. The runners in experiment 02 depend on the agreement format A1 removed and will not run as they are.
 - **Not built:** a candidate-set harness for the neutral format. After accepted A3, drive the product's `export`/`verify` with declarations and consume A2 paired records; A0's loop is historical design input, not a lab execution fork.
-- **Sync state, 7 October 2026:** last sync through master `028066c` (after K7-ci2, K7a, R3b-1, R3b-2), brief at `2c29e16`. One kitchen wave since (fix-paired-check, `f47414f`). No research session since 6 October.
+- **Labelling guide, version 1** (`lab/lines/request-to-check/map/GUIDE.md`): five columns, including whether a request's text determined what its fix's tests assert. Followed almost identically by two same-family labellers; nine known faults, listed in `map/sample-1/RESULT.md`.
+- **Outside sample 1** (`map/sample-1/`): 40 issues from four public repositories (5 open, 5 fixed each, by a rule committed before reading), 78 conditions, two labellers, a sceptic's re-derivation, and three known commander.js cases kept apart. Issue text, comments and test diffs are kept. Small and from hand-picked repositories; counts, not rates.
+- **Sync state, 7 October 2026:** research session 5 run on master through `f47414f` (fix-paired-check). Brief replaced at the end of that session.
 
 - **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
 - **Existing tests as Box guards (historical).** `lab/lines/request-to-check/experiments/02-existing-test-in-a-box/`. Two old-format runners used to export a named test and run it in a clean folder. Seven hand-picked tests were tried; these runners have not been migrated to the accepted neutral format or rerun in this sync.

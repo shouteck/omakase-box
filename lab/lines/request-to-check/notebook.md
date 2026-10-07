@@ -220,3 +220,38 @@ A0's table against PLAN's sentence "A2 runs each outcome check in the owner's fu
 **What this sync does not say.** No count here is a rate. The solver's answer is not labelled right or wrong. The request-against-test disagreement is three cases read by one reviewer; the line's survey already records that maintainer tests can reject valid solutions, and this sync does not count R3b as confirming or measuring that. Nothing was run, fetched from the web or reviewed by a sceptic.
 
 **Next.** Guide version 1 with a request-against-check column, then the predeclared outside sample; Line 3's survey, including comparison of test output across runs, if the CTO agrees where that question lives; experiment 03's plan rewritten around the R3b-2 refusals before anything runs.
+
+## 7 October 2026, session 5: guide version 1 and outside sample 1
+
+**Set out to do.** The standing direction's first item: labelling guide version 1 with the column "does the request text determine what the check asserts", counted on a sample declared before it is read. R3c will hide the acceptance test in some cases, so anything on request and check disagreeing goes to the CTO now.
+
+**Before starting.** Merged `origin/master` (ten commits, through fix-paired-check `f47414f`). Read the programme's updated standing direction, the last brief, "For the lab" (paired-check advice taken; programme recommendations adopted), STATUS and PLAN's "Where we are". Light work only: no installs, builds or test runs.
+
+**Did.**
+
+- Wrote `map/GUIDE.md` version 1 (version 0 kept as `GUIDE-v0.md`): one condition as the unit; columns for what it is about, where a check could come from, outcome or guard, seen from outside, and for fixed issues whether the earlier text determined the fix's tests.
+- Wrote `map/sample-1/PLAN.md` with five predictions and committed it (`4c7ae9a`) before fetching. Four repositories named in advance by the lead for spread; issues inside each by GitHub search, newest first, 5 open and 5 closed-as-completed with a merged closing pull request.
+- Fetched with `fetch.mjs` through the host's `gh`, read-only: 40 issues, no shortfall. Kept bodies, all comments and test diffs. Fetched the three R3b-1 commander.js cases the same way and kept them apart.
+- One fresh agent split the issues into conditions; two more labelled them blind to each other; the lead labelled nothing. A fourth, as sceptic, re-derived the consequential labels against the real pull requests.
+
+**What happened.**
+
+- Agreement was near perfect: kappa 0.95 on source, 1.00 on determined. I predicted 0.4 to 0.6 on the last. Two instances of one model reading one guide agree; that is all it shows.
+- Three of five predictions failed. I expected a quarter or more of issues to ask for nothing (1 of 40; the sampling frame excludes not-planned and duplicate closures, and half the sample is fixed issues). I expected 20 to 40% of fixes to have no test (12 of 20). I expected some tests to contradict their issue outright (none labelled so).
+- First write-up claimed: over a third of outcomes carry their own check; more than half of fixes change no test; tests usually assert more than the issue says and never contradict it.
+
+**The sceptic's corrections** (`map/sample-1/SCEPTIC.md`). All three claims moved.
+
+- "More than half of fixes change no test" does not stand: seven of the twelve change no behaviour at all, and the other five are one repository. Among behaviour-changing fixes, 8 of 13 have tests.
+- "Over a third carry their own check" drops to about a quarter of conditions and a third of issues once literal edit requests and a retracted proposal are taken out.
+- "Never contradict" was true of the labels only: reading the diffs, in 3 of 11 cases a fix the issue suggests would fail the tests.
+- Two faults in my instrument: comments were marked against the time the pull request opened, when tests are often added later; and in half the fixed cases the reporter wrote the fix, so "issue against test" is one person describing their own patch.
+- Kappa 1.00 on determined rested on eight judged rows; twelve were given by the file.
+
+**Fourth session in which the lead's first write-up claimed more than the evidence.** This time the lead did not label, so the bias moved from the labels to the reading of the counts: I took a count over "recently closed issues" as a count over "fixes". The structural defence that worked was the sceptic checking against the real pull requests. Keep it as a fixed step for any count that goes to the CTO.
+
+**Surprise followed.** The no-test fixes. I expected them to be bug fixes merged without tests. Seven were not fixes of behaviour at all. The category "issue closed by a merged pull request" is much wider than "bug fixed", which matters for any screen the kitchen runs for replay cases: R3b-1's rule (a maintainers' test red at base, green at fix) already filters these out, and the lab's count says that filter keeps roughly 8 of 20 recently closed issues in projects like these.
+
+**Dead ends.** None fetched or run failed. Not done: the re-test of version 1 on the pilot's 79 bullets (the outside sample took its place); a labeller of a different kind.
+
+**Next.** In the README's open thread 1: turn the sample's reproductions into declared commands and run them on the base; test whether an answer that follows only the issue passes the maintainers' tests (coordinate with R3c); guide version 2. Then Line 3's survey, as the programme orders.

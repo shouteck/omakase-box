@@ -92,4 +92,43 @@ From `labeller-a-notes.md` and `labeller-b-notes.md`; both made the first three 
 
 ## Sceptic
 
-Pending.
+Full report in [SCEPTIC.md](SCEPTIC.md).
+
+- Who: a fresh agent, the same model as both labellers. Its re-readings are a third reading of the same kind, and not blind: the scoring output shows the labels. Its checks against Git and the real pull requests are independent.
+- Reproduced: every figure from `score.mjs` and the label files. The plan's predictions were not edited after the fetch.
+- Re-derived: all 11 `determined` answers that were judged, all 12 "no test" fixes against the real pull requests, 16 `source` labels by a fixed rule, and the split of 8 issues.
+- Standing: bullet 1 stands; bullets 2 and 4 are weakened; bullet 3 does not stand as worded.
+
+## Corrections to the write-up above, after the sceptic
+
+The sections above are left as first written. These are their errors.
+
+1. **"More than half of merged fixes change no test" does not stand.** 12 of 20 is the right count, but of those 12, seven change no behaviour at all (three dependency removals by one author in 16 minutes, a release task, a documentation page, a CI change, a one-word edit) and the other five are all from serde-json. Of the 13 fixes that change behaviour, 8 have tests, and all 8 outside serde-json do. The sample is of recently closed issues, not of fixes. The sentence about what an owner should expect is withdrawn.
+2. **"A little over a third of outcomes, about half of issues, carry their own check" is too high.** Of labeller A's 21, six are literal edit requests ("remove X from file Y") and one was retracted by its own author in a later comment. Real reproductions with a wanted result: 14 of 54 outcome conditions and 12 of 37 issues (13 and 11 for labeller B). About a quarter of conditions and a third of issues.
+3. **Kappa 1.00 on `determined` was never a test of judgement on 20 cases.** Ten rows are decided by a sentence the issue file prints ("the fix changed no test file") and two more are lock files. Eight were judged.
+4. **"Not one was labelled as contradicting the issue" is true of the labels only.** The sceptic would move one sample case from partly to no (`cobra-2222`: the tests call functions no earlier text names). And reading the diffs, in 2 of the 8 sample cases and 1 of the 3 known ones a fix the issue text itself suggests would fail the tests. Read, not run.
+5. **The clock was wrong.** The files mark comments as before or after the pull request was *opened*. Tests are often added later in the same pull request, after further comments. That pushes answers toward "partly". Three cases are affected (`click-3740`, `commander-2603`, `axios-11192`). "No request text predates the fix" for `click-3740` was wrong about its tests.
+6. **In half the cases the reporter wrote the fix.** In 4 of the 8 sample fixes with tests and 2 of the 3 known cases, the issue's author also opened the pull request, three within half an hour. For those, "does the issue determine the test" is one person describing their own patch.
+7. **Smaller errors.** Guards: 8 agreed in the sample (9 by one labeller), not ten. The cut test diffs were `axios-11192` and `click-3802`; `click-3802` was labelled from an incomplete diff. Two issues had conditions dropped at the cap of five (12 and 2 not listed), so 78 is a truncated count. Prediction 5 should read: held for source, failed for determined. Prediction 4 held in two parts of three. "The third look that finds none" cited a look that found about one in ten.
+8. **Why prediction 1 failed.** Not because the split invented requests (the sceptic found none invented in 8 issues). Half the sample is issues closed as completed with a merged fix, and the queries exclude issues closed as not planned or duplicate. Among the 20 open issues, 1 to 4 ask for no change.
+
+## What the sample supports, corrected
+
+- **Suggests** (54 outcome conditions, four hand-picked repositories, one day): no real issue pointed at an existing check that decides what it asks for. This is close to true by definition: such a check would have to be failing already.
+- **Suggests:** about a quarter of outcome conditions, in about a third of issues, come with a real reproduction and the wanted result in the reporter's own words. A further handful are literal edit requests a one-line search could decide. Nobody has yet turned one into a declared command and run it.
+- **Suggests** (8 sample fixes with tests, 3 known cases): the fix's tests were fully determined by the earlier text in 2 of 8 (1 of 3 known). In the rest they assert specifics the text does not give, and in 3 of the 11 a fix the text itself suggests would fail them, by reading. Limits: half these fixes were written by the reporter; the before-and-after clock was too early for three; a third reader of the same kind changed one label.
+- **Suggests** (13 behaviour-changing fixes): where a fix changes behaviour it usually comes with tests in three of these projects and not in the fourth. Thirteen cases cannot carry more.
+- **Shows about the instrument:** two readers of one model family follow guide version 1 almost identically. That is repeatability, not correctness. The only test of correctness this session, the sceptic's 16-condition draw, changed none of labeller A's source labels and found two more to change outside the draw.
+- **Does not show:** any rate for issues in general, or how often a solver who follows the issue would fail a hidden test.
+
+## Changes for guide version 2 and the next sample
+
+1. Decide "is there a test" by reading for assertions, not by path.
+2. Mark comments against the time each test was committed, not the time the pull request was opened.
+3. Record whether the reporter also wrote the fix, and report those cases apart.
+4. Answer `determined` per test case, not per request.
+5. Add a source value for a literal edit a search can decide; split `PERSON` into "the text leaves a choice open" and "no mechanical check possible".
+6. Give "do not break anything" its own value; give housekeeping its own kind.
+7. Sample open issues and fixes separately and say which a count is about; include issues closed as not planned.
+8. No cap on conditions per issue, or count the cap's losses.
+9. One labeller of a different kind (a person, or failing that the lead under a blind protocol) on a subset, since two same-family labellers cannot test validity.
