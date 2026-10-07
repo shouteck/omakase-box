@@ -124,6 +124,8 @@ Keep it bounded: one session, a fixed list of search queries recorded in the not
 - *Keep some tasks and whole projects aside,* never used while improving the Box, and score on them only at milestones. Thirty tasks from six Python projects is small enough to overfit without noticing. Add a second language to the held-aside set as soon as the tracer allows.
 - Gate 1b's script and its thirty tasks are the seed of this. Write it so tasks and techniques can be added without rewriting it.
 
+*A second idea for later, also the owner's, 8 October 2026: the Box-maker could itself be a trained model.* Two forms, very different in cost. (a) A language model trained to explore a repository and return where to look: this is what at least one vendor has already published and withdrawn for product reasons; it needs training data, compute and money, and it puts the product back on the model as the moat. Not for us now. (b) A small ranker, not a language model, trained on past fixes to combine the evidence a program has already computed (ran only when failing, distance from the failure, recently changed, and so on) into one ordering: cheap to train on an ordinary machine, fast to run, and the natural automatic form of climbing the scoreboard. Worth costing in gate 1c's catalogue as one row; not to be built there.
+
 Climbing the scoreboard is engineering and belongs to the kitchen, under pstack's hillclimb playbook, once the lab has shown the first Box is worth climbing from. The lab keeps the scoreboard honest and supplies the catalogue of what to try.
 
 **What happens after.** All three pass: the kitchen turns the instrument into the product's `prepare` step. Any fails: the owner and CTO decide from the numbers; this is the last trial of the Box in this form.
