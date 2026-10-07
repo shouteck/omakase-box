@@ -1,0 +1,74 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12585",
+  "repo": "scikit-learn/scikit-learn",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3625393,
+    3633517,
+    1366736
+  ],
+  "production_bytes": 4618706,
+  "all_python_bytes": 8534784,
+  "preregistered_docstring_lean_ratio": 0.4972273619494291,
+  "repository_ratios": [
+    0.7849369498729731,
+    0.7866958840852828,
+    0.29591318434210795
+  ],
+  "all_python_ratios": [
+    0.42477852983742764,
+    0.42573039926962414,
+    0.1601371516842137
+  ],
+  "package_bytes": 7219505,
+  "dependency_bytes": 54846595,
+  "primary_package_ratios": [
+    0.5021664227672119,
+    0.5032917076724789,
+    0.18931159407743328
+  ],
+  "free_baseline_ratios": [
+    0.05841180612282711,
+    0.058542698832373875,
+    0.022020652175664332
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sklearn/base.py",
+      "name": "clone",
+      "start": 30,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 5,
+      "function_rank": 8
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sklearn/base.py",
+      "included": true,
+      "rank": 5
+    }
+  ],
+  "worst_function_rank": 8,
+  "lean_bodies_all_changed": true,
+  "selected_files": 205,
+  "trace_files": 299,
+  "unresolved_count": 999,
+  "parse_errors": [],
+  "seconds": 2.577564903000166,
+  "presentation_sha256": [
+    "9e449961de0d7060d11f3deff6995e34d67326ec2891deea40d71caa4667acf3",
+    "3275057ab189d25deb9b41dedbca1c50c83f70b804be2e8a3fad971335a335ec",
+    "e747eb36c4545d2dc55322ed638634a5989c8af0a484e8ba1f84a628abe102e0"
+  ]
+}

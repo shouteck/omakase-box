@@ -1,0 +1,17 @@
+{
+  "base_commit": "5ca694b38d861c0e24cd8743753427dda839b90b",
+  "python": "3.11.10 | packaged by conda-forge | (main, Oct 16 2024, 01:27:36) [GCC 13.3.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "lib/matplotlib/tests/test_axes.py"
+  ],
+  "exit": -9,
+  "timed_out": true,
+  "seconds": 300.01678306799977,
+  "source_files": 970,
+  "dependency_bytes": 92029138,
+  "dependency_files": 6802
+}

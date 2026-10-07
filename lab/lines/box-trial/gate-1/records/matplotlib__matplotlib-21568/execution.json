@@ -1,0 +1,17 @@
+{
+  "base_commit": "f0632c0fc7339f68e992ed63ae4cfac76cd41aad",
+  "python": "3.8.20 (default, Oct  3 2024, 15:24:27) \n[GCC 11.2.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "lib/matplotlib/tests/test_dates.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 53.93600790100004,
+  "source_files": 900,
+  "dependency_bytes": 90426616,
+  "dependency_files": 6782
+}

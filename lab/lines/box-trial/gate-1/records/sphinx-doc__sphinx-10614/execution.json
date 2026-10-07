@@ -1,0 +1,20 @@
+{
+  "base_commit": "ac2b7599d212af7d04649959ce6926c63c3133fa",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "tests/roots/test-ext-inheritance_diagram/conf.py",
+    "tests/roots/test-ext-inheritance_diagram/subdir/other.py",
+    "tests/roots/test-ext-inheritance_diagram/test.py",
+    "tests/test_ext_inheritance_diagram.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 7.099273104000531,
+  "source_files": 577,
+  "dependency_bytes": 25393652,
+  "dependency_files": 2035
+}

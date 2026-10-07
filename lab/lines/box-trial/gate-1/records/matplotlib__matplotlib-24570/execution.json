@@ -1,0 +1,17 @@
+{
+  "base_commit": "8f0003ae902952372824c9917975fb372c026a42",
+  "python": "3.11.10 | packaged by conda-forge | (main, Oct 16 2024, 01:27:36) [GCC 13.3.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "lib/matplotlib/tests/test_offsetbox.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 37.147878785999865,
+  "source_files": 905,
+  "dependency_bytes": 90919613,
+  "dependency_files": 6726
+}

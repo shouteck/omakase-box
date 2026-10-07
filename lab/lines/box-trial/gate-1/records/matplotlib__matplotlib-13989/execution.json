@@ -1,0 +1,17 @@
+{
+  "base_commit": "a3e2897bfaf9eaac1d6649da535c4e721c89fa69",
+  "python": "3.7.16 (default, Jan 17 2023, 22:20:44) \n[GCC 11.2.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "lib/matplotlib/tests/test_axes.py"
+  ],
+  "exit": -9,
+  "timed_out": true,
+  "seconds": 300.0145202409999,
+  "source_files": 856,
+  "dependency_bytes": 26309559,
+  "dependency_files": 1985
+}

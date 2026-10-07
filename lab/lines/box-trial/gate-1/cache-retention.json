@@ -1,0 +1,18 @@
+{
+  "matplotlib__matplotlib-24570": {
+    "image_id": "sha256:9531aad7eb689d7fe1d98873fd03fb98d42f8aec6b8067d5e6c639d1af84bde5",
+    "tag": "lab-gate-1-cache-matplotlib__matplotlib-24570:temporary"
+  },
+  "scikit-learn__scikit-learn-11578": {
+    "image_id": "sha256:f3a5fe85ed709ba614aa97a3ddebc8362fb08056e2fcf5c6e4971f4ad80ba267",
+    "tag": "lab-gate-1-cache-scikit-learn__scikit-learn-11578:temporary"
+  },
+  "sphinx-doc__sphinx-7454": {
+    "image_id": "sha256:e98fa9aa61bdadb16989eca993fa93da2ec4a6415f8a58fb5013bce59fb2d396",
+    "tag": "lab-gate-1-cache-sphinx-doc__sphinx-7454:temporary"
+  },
+  "sympy__sympy-12481": {
+    "image_id": "sha256:46963c9c7a9cd5119565b9c77a853b1c0ca38775491a9281ebc3e92021f6e963",
+    "tag": "lab-gate-1-cache-sympy__sympy-12481:temporary"
+  }
+}

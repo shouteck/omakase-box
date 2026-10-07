@@ -1,9 +1,9 @@
 # Box trial
 
-The one active trial in [PROGRAMME](../../PROGRAMME.md): replace an agent-written pstack scope with context computed from a failing test; same helper, whole repository available, at least as many fixes and no more than half the total tokens.
+The one trial in [PROGRAMME](../../PROGRAMME.md): replace an agent-written pstack scope with context computed from a failing test; same helper, whole repository available, at least as many fixes and no more than half the total tokens.
 
-**Gate 0 completed 8 October 2026: reading supports proceeding to the size gate; it does not establish the product claim.** [Evidence and qualifications](gate-0.md). Gate 1 has not started. One fresh-reader verification is recorded with the evidence.
+**Gate 1 failed on 8 October 2026:** zero confirmed successes, 23 confirmed failures and seven unknown among 30 fixed tasks. Even seven unknown successes cannot reach the required fifteen. Lean packaging was 27.8%–55.6% of production Python source on admitted tasks, against a 10% limit. [Result and limits](gate-1-result.md), [fixed plan](gate-1-plan.md), [instrument](gate-1/README.md). Independent review is finishing; three prescribed packaging reruns match exactly.
 
-The owner's open Box decision governs. Gate 1 measures packaging at file/function detail, historical fix coverage and ordering on a sample chosen first, Python first. It passes if at least half the tasks have packaging under one tenth of repository source and every changed function named. Record the package+dependencies denominator too. No runnable stubs or paired sealed checks are required for this trial.
+[Gate 0](gate-0.md) passed the reading gate. Gate 1 measured one conservative runtime-plus-import-closure method using whole modified test files. It does not establish repair success or token savings, and does not rule out a different reduction method.
 
-Continue only when the owner requests the next LAB.md session after CTO review. Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development.
+Stopped before Gate 2 under PROGRAMME's first-failure rule. Owner and CTO decide the next step. Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.

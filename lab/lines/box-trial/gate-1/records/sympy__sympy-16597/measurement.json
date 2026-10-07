@@ -1,0 +1,175 @@
+{
+  "instance_id": "sympy__sympy-16597",
+  "repo": "sympy/sympy",
+  "verdict": "unknown",
+  "admitted": false,
+  "unknown_reason": "test bodies absent from trace",
+  "test_body_trace_present": false,
+  "level_bytes": [
+    9080673,
+    9096737,
+    2531006
+  ],
+  "production_bytes": 16482634,
+  "all_python_bytes": 26770419,
+  "preregistered_docstring_lean_ratio": 0.2975373960254168,
+  "repository_ratios": [
+    0.5509236569834651,
+    0.5518982584943645,
+    0.1535559183077171
+  ],
+  "all_python_ratios": [
+    0.3392054864737082,
+    0.33980555179207317,
+    0.09454487806111664
+  ],
+  "package_bytes": 26511889,
+  "dependency_bytes": 11006940,
+  "primary_package_ratios": [
+    0.3425132400033811,
+    0.3431191568431808,
+    0.09546682999464881
+  ],
+  "free_baseline_ratios": [
+    0.2420297552463591,
+    0.24245791359852942,
+    0.06745962140769372
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sympy/assumptions/ask.py",
+      "name": "get_known_facts",
+      "start": 1475,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 49,
+      "function_rank": 1547
+    },
+    {
+      "path": "sympy/assumptions/ask_generated.py",
+      "name": "get_known_facts_cnf",
+      "start": 14,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 50,
+      "function_rank": 1548
+    },
+    {
+      "path": "sympy/assumptions/ask_generated.py",
+      "name": "get_known_facts_dict",
+      "start": 89,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 50,
+      "function_rank": 1549
+    },
+    {
+      "path": "sympy/core/power.py",
+      "name": "Pow._eval_is_rational",
+      "start": 1182,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 34,
+      "function_rank": 1070
+    },
+    {
+      "path": "sympy/printing/tree.py",
+      "name": "print_tree",
+      "start": 75,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 104,
+      "function_rank": 3751
+    },
+    {
+      "path": "sympy/tensor/indexed.py",
+      "name": "Idx.__new__",
+      "start": 585,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 225,
+      "function_rank": 7385
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [
+    {
+      "path": "sympy/core/assumptions.py",
+      "line": 168,
+      "included": true
+    },
+    {
+      "path": "sympy/core/assumptions.py",
+      "line": 194,
+      "included": true
+    },
+    {
+      "path": "sympy/core/assumptions.py",
+      "line": 179,
+      "included": true
+    },
+    {
+      "path": "sympy/core/assumptions.py",
+      "line": 166,
+      "included": true
+    },
+    {
+      "path": "sympy/core/power.py",
+      "line": 12,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sympy/assumptions/ask.py",
+      "included": true,
+      "rank": 49
+    },
+    {
+      "path": "sympy/assumptions/ask_generated.py",
+      "included": true,
+      "rank": 50
+    },
+    {
+      "path": "sympy/core/assumptions.py",
+      "included": true,
+      "rank": 13
+    },
+    {
+      "path": "sympy/core/power.py",
+      "included": true,
+      "rank": 34
+    },
+    {
+      "path": "sympy/printing/tree.py",
+      "included": true,
+      "rank": 104
+    },
+    {
+      "path": "sympy/tensor/indexed.py",
+      "included": true,
+      "rank": 225
+    }
+  ],
+  "worst_function_rank": 7385,
+  "lean_bodies_all_changed": false,
+  "selected_files": 445,
+  "trace_files": 352,
+  "unresolved_count": 799,
+  "parse_errors": [],
+  "seconds": 19.591075226000612,
+  "presentation_sha256": [
+    "2691ee60ed7222c108def98cdb1775e30dd2f17615a749a9da279cdac227144e",
+    "31cd4500ede24bc01cdef6be7f4e5f2048c292d0bc4ab92cf830bae20b0fa829",
+    "ddc6bbc20931763d2886dd479a3a023b272bcae71e6389c450d1cb414a792f26"
+  ]
+}

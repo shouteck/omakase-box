@@ -1,0 +1,19 @@
+{
+  "base_commit": "b64db05b9cedd96905d637a2d824cbbf428e40e7",
+  "python": "3.8.20 (default, Oct  3 2024, 15:24:27) \n[GCC 11.2.0]",
+  "argv": [
+    "tests/runtests.py",
+    "--verbosity",
+    "2",
+    "--settings=test_sqlite",
+    "--parallel",
+    "1",
+    "admin_views.test_autocomplete_view"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 14.21755758800009,
+  "source_files": 2697,
+  "dependency_bytes": 32773418,
+  "dependency_files": 2499
+}

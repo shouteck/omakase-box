@@ -1,0 +1,74 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-14087",
+  "repo": "scikit-learn/scikit-learn",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3065655,
+    3075248,
+    1389382
+  ],
+  "production_bytes": 4312565,
+  "all_python_bytes": 8554611,
+  "preregistered_docstring_lean_ratio": 0.4972609108500394,
+  "repository_ratios": [
+    0.7108658072400068,
+    0.7130902374804785,
+    0.3221706803259777
+  ],
+  "all_python_ratios": [
+    0.3583628758806216,
+    0.35948425942453727,
+    0.16241322954369286
+  ],
+  "package_bytes": 7177517,
+  "dependency_bytes": 55694754,
+  "primary_package_ratios": [
+    0.42711915555198265,
+    0.4284556901780936,
+    0.19357418449862257
+  ],
+  "free_baseline_ratios": [
+    0.04876004876617229,
+    0.04891262795326735,
+    0.02209848599233834
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sklearn/linear_model/logistic.py",
+      "name": "LogisticRegressionCV.fit",
+      "start": 1936,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 52,
+      "function_rank": 729
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sklearn/linear_model/logistic.py",
+      "included": true,
+      "rank": 52
+    }
+  ],
+  "worst_function_rank": 729,
+  "lean_bodies_all_changed": true,
+  "selected_files": 142,
+  "trace_files": 234,
+  "unresolved_count": 569,
+  "parse_errors": [],
+  "seconds": 35.63569893199974,
+  "presentation_sha256": [
+    "0749bb0ebc1f5bd101274f84bce00c6824903e8a4ea8b81077894dec9e994904",
+    "cdb3d46e4b1f25a4a66aaefdf5d751b9a2fbb931a7e6ba6f4c20df1d49b29f9d",
+    "bcb8ca4f41844ecb31efa6517d69dc26f200c72ec9627023f609628a47619f87"
+  ]
+}

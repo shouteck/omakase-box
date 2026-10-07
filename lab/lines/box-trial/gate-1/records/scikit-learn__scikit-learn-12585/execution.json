@@ -1,0 +1,17 @@
+{
+  "base_commit": "bfc4a566423e036fbdc9fb02765fd893e4860c85",
+  "python": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "sklearn/tests/test_base.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 2.577564903000166,
+  "source_files": 736,
+  "dependency_bytes": 54846595,
+  "dependency_files": 3377
+}

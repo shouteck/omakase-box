@@ -13,6 +13,8 @@ facts = {
     'all_functions_named': sum(r['named_all_changed'] for r in admitted),
     'all_changed_bodies_present': sum(r['lean_bodies_all_changed'] for r in admitted),
     'lean_under_tenth': sum(r['repository_ratios'][2] < .1 for r in admitted),
+    'all_tracked_python_combined_successes': sum(min(r['all_python_ratios']) < .1 and r['named_all_changed'] for r in admitted),
+    'all_tracked_python_lean_range': spread([r['all_python_ratios'][2] for r in admitted]),
     'original_docstring_detail_successes': sum(r['preregistered_docstring_lean_ratio'] < .1 and r['named_all_changed'] for r in admitted),
     'lean_range': spread([r['repository_ratios'][2] for r in admitted]),
     'original_lean_range': spread([r['preregistered_docstring_lean_ratio'] for r in admitted]),
@@ -34,6 +36,7 @@ text += f'| Lean packaging below 10% of production Python source | {facts["lean_
 text += f'| Every changed function and non-function edit included by name/path | {facts["all_functions_named"]}/{len(admitted)} admitted |\n'
 text += f'| Every changed function body retained in lean detail | {facts["all_changed_bodies_present"]}/{len(admitted)} admitted |\n'
 text += f'| Lean / production Python source | {facts["lean_range"]} |\n'
+text += f'| Lean / all tracked Python, including tests/docs/examples | {facts["all_tracked_python_lean_range"]}; {facts["all_tracked_python_combined_successes"]} combined successes |\n'
 text += f'| Original full-docstring lean / production Python source | {facts["original_lean_range"]}; {facts["original_docstring_detail_successes"]} combined successes |\n'
 text += f'| Lean / whole primary package, including internal tests | {facts["package_range"]} |\n'
 text += f'| Lean / primary package + installed dependency envelope | {facts["envelope_range"]} |\n'

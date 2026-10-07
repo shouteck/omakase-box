@@ -1,0 +1,74 @@
+{
+  "instance_id": "django__django-12193",
+  "repo": "django/django",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3575603,
+    3616645,
+    2020671
+  ],
+  "production_bytes": 4547498,
+  "all_python_bytes": 13650273,
+  "preregistered_docstring_lean_ratio": 0.5051707554351865,
+  "repository_ratios": [
+    0.7862791803316901,
+    0.7953043629705829,
+    0.4443478589765185
+  ],
+  "all_python_ratios": [
+    0.2619436988549606,
+    0.26495037864810467,
+    0.14803154486360823
+  ],
+  "package_bytes": 4704780,
+  "dependency_bytes": 21620604,
+  "primary_package_ratios": [
+    0.7599936660162643,
+    0.768717134488754,
+    0.4294931962812289
+  ],
+  "free_baseline_ratios": [
+    0.13582339387717954,
+    0.13738242146819207,
+    0.07675751282488415
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "django/forms/widgets.py",
+      "name": "CheckboxInput.get_context",
+      "start": 523,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 67,
+      "function_rank": 1297
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "django/forms/widgets.py",
+      "included": true,
+      "rank": 67
+    }
+  ],
+  "worst_function_rank": 1297,
+  "lean_bodies_all_changed": true,
+  "selected_files": 403,
+  "trace_files": 374,
+  "unresolved_count": 708,
+  "parse_errors": [],
+  "seconds": 3.6240354310000384,
+  "presentation_sha256": [
+    "d56cc1450b2512d035179eb7e63f8217be607c7cc197873ce4d7a95aedb430e8",
+    "4f17640587a4f9dc2cfcb8a5a13b59cca40d2dc33d48089a88dd706f579fe945",
+    "494d3cef884a95ba38c21f2292d46f4d45eb4dd10800860c92ad15ad6ee948d5"
+  ]
+}

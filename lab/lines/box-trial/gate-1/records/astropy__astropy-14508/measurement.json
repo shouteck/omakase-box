@@ -1,0 +1,74 @@
+{
+  "instance_id": "astropy__astropy-14508",
+  "repo": "astropy/astropy",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    6926034,
+    6961828,
+    3073023
+  ],
+  "production_bytes": 7342677,
+  "all_python_bytes": 13012589,
+  "preregistered_docstring_lean_ratio": 0.6042945917408596,
+  "repository_ratios": [
+    0.9432573433367694,
+    0.9481321321910251,
+    0.4185153452889185
+  ],
+  "all_python_ratios": [
+    0.5322564172279629,
+    0.5350071380875858,
+    0.23615769313854454
+  ],
+  "package_bytes": 12937196,
+  "dependency_bytes": 21888212,
+  "primary_package_ratios": [
+    0.5353582028130361,
+    0.5381249538153399,
+    0.23753392929967204
+  ],
+  "free_baseline_ratios": [
+    0.19887876116196543,
+    0.1999065739588751,
+    0.08824083267021596
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "astropy/io/fits/card.py",
+      "name": "_format_float",
+      "start": 1300,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 31,
+      "function_rank": 359
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "astropy/io/fits/card.py",
+      "included": true,
+      "rank": 31
+    }
+  ],
+  "worst_function_rank": 359,
+  "lean_bodies_all_changed": true,
+  "selected_files": 393,
+  "trace_files": 301,
+  "unresolved_count": 1134,
+  "parse_errors": [],
+  "seconds": 11.54806346199996,
+  "presentation_sha256": [
+    "9ef1afc44ed3b478fdc7adf9551cc4ccf56c8ebab140bcaad8d343774fbafc2f",
+    "fbb20f4a1a8256837a49b3f25706460e08c352e2e216646ac12f723102f5d515",
+    "e249f5be63ef90601f7e132d3054b501cbe3ea758d03be9f8fcdb26de770cb7b"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "instance_id": "sphinx-doc__sphinx-7454",
+  "repo": "sphinx-doc/sphinx",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    2060334,
+    2085999,
+    1286631
+  ],
+  "production_bytes": 2665328,
+  "all_python_bytes": 3633848,
+  "preregistered_docstring_lean_ratio": 0.503340677019864,
+  "repository_ratios": [
+    0.7730133026779443,
+    0.7826425115407935,
+    0.48272895493537754
+  ],
+  "all_python_ratios": [
+    0.5669840895931806,
+    0.5740468506112528,
+    0.35406846956724664
+  ],
+  "package_bytes": 2642021,
+  "dependency_bytes": 25989703,
+  "primary_package_ratios": [
+    0.7798325599985768,
+    0.7895467144280837,
+    0.4869874236427341
+  ],
+  "free_baseline_ratios": [
+    0.07195983029174212,
+    0.07285621361815307,
+    0.04493725211936243
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sphinx/domains/python.py",
+      "name": "_parse_annotation.make_xref",
+      "start": 73,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 75,
+      "function_rank": 1339
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sphinx/domains/python.py",
+      "included": true,
+      "rank": 75
+    }
+  ],
+  "worst_function_rank": 1339,
+  "lean_bodies_all_changed": true,
+  "selected_files": 138,
+  "trace_files": 147,
+  "unresolved_count": 772,
+  "parse_errors": [],
+  "seconds": 6.9423692479995225,
+  "presentation_sha256": [
+    "8889624d7d348fefec62d3a666a20cbb885adf88569c76f294b445c25939a8ba",
+    "c14a8b3a6cb531108dacea7dca0ac9fc1768bfe10e2d985f73a4495baca6aba1",
+    "8c18f773fc3a1944099e7809054c3364887a8af04e08d856246ad7424f697a4c"
+  ]
+}

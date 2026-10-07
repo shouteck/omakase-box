@@ -1,0 +1,90 @@
+{
+  "instance_id": "sphinx-doc__sphinx-9320",
+  "repo": "sphinx-doc/sphinx",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    2149960,
+    2169858,
+    1197641
+  ],
+  "production_bytes": 2527982,
+  "all_python_bytes": 3721314,
+  "preregistered_docstring_lean_ratio": 0.5024695587231238,
+  "repository_ratios": [
+    0.8504649162850052,
+    0.8583360166330298,
+    0.47375376881639186
+  ],
+  "all_python_ratios": [
+    0.5777421631176515,
+    0.583089199137724,
+    0.3218328257169376
+  ],
+  "package_bytes": 2504370,
+  "dependency_bytes": 25866925,
+  "primary_package_ratios": [
+    0.8584833710673743,
+    0.8664286826627056,
+    0.47822047061736084
+  ],
+  "free_baseline_ratios": [
+    0.07577941013972045,
+    0.07648075281724011,
+    0.042213124215866774
+  ],
+  "named_all_changed": false,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "name": "allow_empty",
+      "start": 98,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 59,
+      "function_rank": 955
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "name": "ask_user",
+      "start": 185,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 59,
+      "function_rank": 952
+    }
+  ],
+  "new_functions": [
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "name": "is_path_or_empty",
+      "included": false
+    }
+  ],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "included": true,
+      "rank": 59
+    }
+  ],
+  "worst_function_rank": null,
+  "lean_bodies_all_changed": false,
+  "selected_files": 135,
+  "trace_files": 142,
+  "unresolved_count": 751,
+  "parse_errors": [],
+  "seconds": 5.050543328999993,
+  "presentation_sha256": [
+    "c87b482ac7899466e43490dd2d8b66546e2861491ef82378746945b6b6a5baf2",
+    "c6248bc3298a0e8b09e7b6f099351899c6bd53f319cf2f2c3817080bf3de1929",
+    "147269c1f29282c277322b8bb54aacd7ef8704d5a4a21796dc0c59f056085fe1"
+  ]
+}

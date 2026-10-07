@@ -1,0 +1,16 @@
+{
+  "instance_id": "sphinx-doc__sphinx-7454",
+  "repo": "sphinx-doc/sphinx",
+  "base_commit": "aca3f825f2e4a8817190f3c885a242a285aa0dba",
+  "test_patch": "diff --git a/tests/test_domain_py.py b/tests/test_domain_py.py\n--- a/tests/test_domain_py.py\n+++ b/tests/test_domain_py.py\n@@ -239,6 +239,7 @@ def test_get_full_qualified_name():\n def test_parse_annotation():\n     doctree = _parse_annotation(\"int\")\n     assert_node(doctree, ([pending_xref, \"int\"],))\n+    assert_node(doctree[0], pending_xref, refdomain=\"py\", reftype=\"class\", reftarget=\"int\")\n \n     doctree = _parse_annotation(\"List[int]\")\n     assert_node(doctree, ([pending_xref, \"List\"],\n@@ -266,6 +267,12 @@ def test_parse_annotation():\n                           [pending_xref, \"int\"],\n                           [desc_sig_punctuation, \"]\"]))\n \n+    # None type makes an object-reference (not a class reference)\n+    doctree = _parse_annotation(\"None\")\n+    assert_node(doctree, ([pending_xref, \"None\"],))\n+    assert_node(doctree[0], pending_xref, refdomain=\"py\", reftype=\"obj\", reftarget=\"None\")\n+\n+\n \n def test_pyfunction_signature(app):\n     text = \".. py:function:: hello(name: str) -> str\"\n",
+  "test_files": [
+    "tests/test_domain_py.py"
+  ],
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "tests/test_domain_py.py"
+  ]
+}

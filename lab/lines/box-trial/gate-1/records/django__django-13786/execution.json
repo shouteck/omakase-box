@@ -1,0 +1,19 @@
+{
+  "base_commit": "bb64b99b78a579cb2f6178011a4cf9366e634438",
+  "python": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+  "argv": [
+    "tests/runtests.py",
+    "--verbosity",
+    "2",
+    "--settings=test_sqlite",
+    "--parallel",
+    "1",
+    "migrations.test_optimizer"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 1.5563367390000167,
+  "dependency_bytes": 21972716,
+  "dependency_files": 1620,
+  "source_files": 2691
+}

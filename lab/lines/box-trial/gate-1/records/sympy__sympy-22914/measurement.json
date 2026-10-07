@@ -1,0 +1,69 @@
+{
+  "instance_id": "sympy__sympy-22914",
+  "repo": "sympy/sympy",
+  "verdict": "unknown",
+  "admitted": false,
+  "unknown_reason": "test bodies absent from trace",
+  "test_body_trace_present": false,
+  "level_bytes": [
+    10872598,
+    10888271,
+    3146923
+  ],
+  "production_bytes": 18869084,
+  "all_python_bytes": 31201847,
+  "preregistered_docstring_lean_ratio": 0.3159284255663921,
+  "repository_ratios": [
+    0.5762122846026866,
+    0.5770429025595519,
+    0.1667766702400604
+  ],
+  "all_python_ratios": [
+    0.3484600767384059,
+    0.3489623867458872,
+    0.1008569460647634
+  ],
+  "package_bytes": 30878136,
+  "dependency_bytes": 11006940,
+  "primary_package_ratios": [
+    0.35211315864403214,
+    0.35262073461947313,
+    0.10191428005887403
+  ],
+  "free_baseline_ratios": [
+    0.25958167056925,
+    0.2599558611281976,
+    0.07513232159349549
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [],
+  "new_functions": [],
+  "module_edits": [
+    {
+      "path": "sympy/printing/pycode.py",
+      "line": 21,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sympy/printing/pycode.py",
+      "included": true,
+      "rank": 187
+    }
+  ],
+  "worst_function_rank": 0,
+  "lean_bodies_all_changed": true,
+  "selected_files": 549,
+  "trace_files": 405,
+  "unresolved_count": 623,
+  "parse_errors": [],
+  "seconds": 4.013642156999595,
+  "presentation_sha256": [
+    "1be73f1fbfaedbb3ef60f0ec7d9c44a0c32bd918d948f1d60783cfc45deac596",
+    "bfa6ca2fc4bd409dd73c8bb56b314c134cfe5b1082bbec04b3d8d0fc1e42ab86",
+    "8b43d15a175f41c816d561168631829b0455e6475cb8b868fea4cfc0b2365f1a"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "verdict": "undecidable",
+  "counts": {
+    "pass": 0,
+    "fail": 1,
+    "unknown": 0
+  },
+  "tasks": [
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "verdict": "fail",
+      "admitted": true,
+      "level_bytes": [
+        3169478,
+        3178400,
+        1359848
+      ],
+      "production_bytes": 4202238,
+      "all_python_bytes": 8012729,
+      "preregistered_docstring_lean_ratio": 0.5060034676760335,
+      "repository_ratios": [
+        0.7542357191572681,
+        0.756358873533579,
+        0.32360090028218297
+      ],
+      "all_python_ratios": [
+        0.3955553719587921,
+        0.3966688502756052,
+        0.16971096863503057
+      ],
+      "package_bytes": 6717652,
+      "dependency_bytes": 54846595,
+      "primary_package_ratios": [
+        0.4718133657414823,
+        0.47314150837227054,
+        0.20242906301189761
+      ],
+      "free_baseline_ratios": [
+        0.051482445647390115,
+        0.051627367423173386,
+        0.022088274709183075
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sklearn/linear_model/logistic.py",
+          "name": "_log_reg_scoring_path",
+          "start": 774,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 73,
+          "function_rank": 959
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sklearn/linear_model/logistic.py",
+          "included": true,
+          "rank": 73
+        }
+      ],
+      "worst_function_rank": 959,
+      "lean_bodies_all_changed": true,
+      "selected_files": 165,
+      "trace_files": 273,
+      "unresolved_count": 749,
+      "parse_errors": [],
+      "seconds": 17.371003363,
+      "presentation_sha256": [
+        "032a21c0a1c0d2d21368eb01f7706e5bf21ad10f71c16fc977499f0b338507e3",
+        "74eb8fd41f56899629010cd43fc2c7d04c1f1b8a4f0f8a54477f538902d4c0c8",
+        "7b8b237767c18d275dcfc9b70b773457ba73dbf79ca93cac346e2f7b9ff32264"
+      ]
+    }
+  ]
+}

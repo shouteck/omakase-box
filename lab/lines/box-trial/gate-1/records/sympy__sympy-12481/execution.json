@@ -1,0 +1,16 @@
+{
+  "base_commit": "c807dfe7569692cad24f02a08477b70c1679a4dd",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "bin/test",
+    "-C",
+    "--verbose",
+    "sympy/combinatorics/tests/test_permutations.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 3.125788049000221,
+  "source_files": 1115,
+  "dependency_bytes": 11006940,
+  "dependency_files": 963
+}

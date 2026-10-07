@@ -1,0 +1,17 @@
+{
+  "base_commit": "aca3f825f2e4a8817190f3c885a242a285aa0dba",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "tests/test_domain_py.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 6.9423692479995225,
+  "source_files": 487,
+  "dependency_bytes": 25989703,
+  "dependency_files": 2080
+}

@@ -1,0 +1,17 @@
+{
+  "base_commit": "a5743ed36fbd3fbc8e351bdab16561fbfca7dfa1",
+  "python": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "sklearn/linear_model/tests/test_logistic.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 35.63569893199974,
+  "source_files": 724,
+  "dependency_bytes": 55694754,
+  "dependency_files": 3463
+}

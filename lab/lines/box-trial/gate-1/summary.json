@@ -1,0 +1,2375 @@
+{
+  "verdict": "fail",
+  "counts": {
+    "pass": 0,
+    "fail": 23,
+    "unknown": 7
+  },
+  "tasks": [
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        6825016,
+        6853977,
+        3030839
+      ],
+      "production_bytes": 7343054,
+      "all_python_bytes": 13016027,
+      "preregistered_docstring_lean_ratio": 0.5967552465227683,
+      "repository_ratios": [
+        0.9294519691670523,
+        0.9333959684894051,
+        0.4127491095666735
+      ],
+      "all_python_ratios": [
+        0.5243547819929999,
+        0.5265798081088799,
+        0.23285438790193044
+      ],
+      "package_bytes": 12940637,
+      "dependency_bytes": 21888212,
+      "primary_package_ratios": [
+        0.5274095857877784,
+        0.5296475745359367,
+        0.234210958857744
+      ],
+      "free_baseline_ratios": [
+        0.19595870078853309,
+        0.19679022410416147,
+        0.08702093485776691
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "astropy/io/fits/diff.py",
+          "name": "TableDataDiff._diff",
+          "start": 1344,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 37,
+          "function_rank": 607
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "astropy/io/fits/diff.py",
+          "included": true,
+          "rank": 37
+        }
+      ],
+      "worst_function_rank": 607,
+      "lean_bodies_all_changed": true,
+      "selected_files": 391,
+      "trace_files": 299,
+      "unresolved_count": 1127,
+      "parse_errors": [],
+      "seconds": 8.243681177999974,
+      "presentation_sha256": [
+        "e4b5da1cef9e375d58885814dc20792b963648c6b3affb5d439dd027a42addb8",
+        "e5b2dc9925cbb4a4177a91c4f3c689aa7a525399fa0bceb0b2cb8a5dc2fddcee",
+        "9b8f5feb040e27922a5f3aa2d7dbcff80e53d4e7e7c35002ae8f16b67ae1d936"
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        4272455,
+        4284849,
+        1523312
+      ],
+      "production_bytes": 5479836,
+      "all_python_bytes": 8662352,
+      "preregistered_docstring_lean_ratio": 0.4467734070873654,
+      "repository_ratios": [
+        0.7796684061347822,
+        0.7819301526542035,
+        0.27798496159374114
+      ],
+      "all_python_ratios": [
+        0.49322112516323513,
+        0.4946519143992301,
+        0.1758543176264368
+      ],
+      "package_bytes": 8548474,
+      "dependency_bytes": 21962847,
+      "primary_package_ratios": [
+        0.49979154174183604,
+        0.5012413911535556,
+        0.17819695070722563
+      ],
+      "free_baseline_ratios": [
+        0.1400285159728089,
+        0.1404347258514307,
+        0.04992612414257645
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "astropy/utils/misc.py",
+          "name": "InheritDocstrings.__init__",
+          "start": 523,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 7,
+          "function_rank": 52
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [
+        {
+          "path": "astropy/utils/misc.py",
+          "line": 7,
+          "included": true
+        },
+        {
+          "path": "astropy/utils/misc.py",
+          "line": 8,
+          "included": true
+        },
+        {
+          "path": "astropy/utils/misc.py",
+          "line": 9,
+          "included": true
+        },
+        {
+          "path": "astropy/utils/misc.py",
+          "line": 30,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "astropy/utils/misc.py",
+          "included": true,
+          "rank": 7
+        }
+      ],
+      "worst_function_rank": 52,
+      "lean_bodies_all_changed": true,
+      "selected_files": 261,
+      "trace_files": 92,
+      "unresolved_count": 810,
+      "parse_errors": [],
+      "seconds": 4.011100449999958,
+      "presentation_sha256": [
+        "50c0076921d57694030e23d791e7f1b18c5596f4916cb72b66b6ac7fc4274a66",
+        "5dd75e00849792b3de7482fa995a0c045cc57abd5bcf3e79761cb7f3f85fff64",
+        "a782de586f576803d7831495e282ef09c7a1a68f096dbf72dc46cacb011e9576"
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-14182",
+      "repo": "astropy/astropy",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        6705976,
+        6726653,
+        2596493
+      ],
+      "production_bytes": 7258141,
+      "all_python_bytes": 12859632,
+      "preregistered_docstring_lean_ratio": 0.5536179305417186,
+      "repository_ratios": [
+        0.9239247349975703,
+        0.9267735360886485,
+        0.35773526582082105
+      ],
+      "all_python_ratios": [
+        0.5214749535601019,
+        0.5230828533818075,
+        0.20191036570875434
+      ],
+      "package_bytes": 12781689,
+      "dependency_bytes": 21888212,
+      "primary_package_ratios": [
+        0.5246549184540478,
+        0.5262726232816336,
+        0.20314161923357704
+      ],
+      "free_baseline_ratios": [
+        0.1934235693375646,
+        0.19401996561801546,
+        0.07489184927294716
+      ],
+      "named_all_changed": false,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "name": "RST.__init__",
+          "start": 60,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 132,
+          "function_rank": 2369
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "name": "RST.write",
+          "start": 63,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 132,
+          "function_rank": 2371
+        }
+      ],
+      "new_functions": [
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "name": "RST.read",
+          "included": false
+        }
+      ],
+      "module_edits": [
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 42,
+          "included": true
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 43,
+          "included": true
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 44,
+          "included": true
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 45,
+          "included": true
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 46,
+          "included": true
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 47,
+          "included": true
+        },
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "line": 30,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "astropy/io/ascii/rst.py",
+          "included": true,
+          "rank": 132
+        }
+      ],
+      "worst_function_rank": null,
+      "lean_bodies_all_changed": false,
+      "selected_files": 386,
+      "trace_files": 294,
+      "unresolved_count": 1115,
+      "parse_errors": [],
+      "seconds": 4.497658468000054,
+      "presentation_sha256": [
+        "f12867bda3fc4557de92031f2de907b94e2a9f7e433b405793e85fd424f02b8d",
+        "0290b157b0244b710b64ddabb37a1d6c66e3600b6eba90b498fbad24c689ae15",
+        "0461f9c51ca3b08ac32f4bd90fead0e5b0e2d7ee83e9bffd51ee09c5df7626a3"
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        6581675,
+        6605422,
+        2685674
+      ],
+      "production_bytes": 7114118,
+      "all_python_bytes": 12524089,
+      "preregistered_docstring_lean_ratio": 0.566658579461291,
+      "repository_ratios": [
+        0.9251568500831726,
+        0.9284948605013299,
+        0.3775132771202277
+      ],
+      "all_python_ratios": [
+        0.5255212574742961,
+        0.5274173634505471,
+        0.21444066710161513
+      ],
+      "package_bytes": 12446634,
+      "dependency_bytes": 21888212,
+      "primary_package_ratios": [
+        0.5287915592279808,
+        0.5306994646102713,
+        0.21577512442319746
+      ],
+      "free_baseline_ratios": [
+        0.1916908262818479,
+        0.19238245600402576,
+        0.07822006832359173
+      ],
+      "named_all_changed": false,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "astropy/timeseries/core.py",
+          "name": "BaseTimeSeries._check_required_columns",
+          "start": 57,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 187,
+          "function_rank": 3757
+        }
+      ],
+      "new_functions": [
+        {
+          "path": "astropy/timeseries/core.py",
+          "name": "BaseTimeSeries._check_required_columns.as_scalar_or_list_str",
+          "included": false
+        }
+      ],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "astropy/timeseries/core.py",
+          "included": true,
+          "rank": 187
+        }
+      ],
+      "worst_function_rank": null,
+      "lean_bodies_all_changed": false,
+      "selected_files": 379,
+      "trace_files": 317,
+      "unresolved_count": 1101,
+      "parse_errors": [],
+      "seconds": 5.809740246000047,
+      "presentation_sha256": [
+        "69861f2c652f16f59e1e5eea7eb9b039b1ac2899466b3da276fd246a06027bb5",
+        "d7e553d6bec7d7f9ecb8c2c32d6b802eb2a18023ca5bc8f4c4b94467109a7c9e",
+        "2e1e5dda1a2b793ae6ae2d35eb60e800afcb8eae24ee0a4ce4732be75911f0e5"
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-14508",
+      "repo": "astropy/astropy",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        6926034,
+        6961828,
+        3073023
+      ],
+      "production_bytes": 7342677,
+      "all_python_bytes": 13012589,
+      "preregistered_docstring_lean_ratio": 0.6042945917408596,
+      "repository_ratios": [
+        0.9432573433367694,
+        0.9481321321910251,
+        0.4185153452889185
+      ],
+      "all_python_ratios": [
+        0.5322564172279629,
+        0.5350071380875858,
+        0.23615769313854454
+      ],
+      "package_bytes": 12937196,
+      "dependency_bytes": 21888212,
+      "primary_package_ratios": [
+        0.5353582028130361,
+        0.5381249538153399,
+        0.23753392929967204
+      ],
+      "free_baseline_ratios": [
+        0.19887876116196543,
+        0.1999065739588751,
+        0.08824083267021596
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "astropy/io/fits/card.py",
+          "name": "_format_float",
+          "start": 1300,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 31,
+          "function_rank": 359
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "astropy/io/fits/card.py",
+          "included": true,
+          "rank": 31
+        }
+      ],
+      "worst_function_rank": 359,
+      "lean_bodies_all_changed": true,
+      "selected_files": 393,
+      "trace_files": 301,
+      "unresolved_count": 1134,
+      "parse_errors": [],
+      "seconds": 11.54806346199996,
+      "presentation_sha256": [
+        "9ef1afc44ed3b478fdc7adf9551cc4ccf56c8ebab140bcaad8d343774fbafc2f",
+        "fbb20f4a1a8256837a49b3f25706460e08c352e2e216646ac12f723102f5d515",
+        "e249f5be63ef90601f7e132d3054b501cbe3ea758d03be9f8fcdb26de770cb7b"
+      ]
+    },
+    {
+      "instance_id": "django__django-13786",
+      "repo": "django/django",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3404586,
+        3430642,
+        1612787
+      ],
+      "production_bytes": 4734918,
+      "all_python_bytes": 14506591,
+      "preregistered_docstring_lean_ratio": 0.40870042522383704,
+      "repository_ratios": [
+        0.7190380065716028,
+        0.7245409529795447,
+        0.3406156136178071
+      ],
+      "all_python_ratios": [
+        0.23469235466830216,
+        0.23648850374288488,
+        0.11117615434253299
+      ],
+      "package_bytes": 4909054,
+      "dependency_bytes": 21972716,
+      "primary_package_ratios": [
+        0.6935319921109037,
+        0.698839735720976,
+        0.32853315526779703
+      ],
+      "free_baseline_ratios": [
+        0.12665036565672572,
+        0.12761964706937082,
+        0.059995565768176724
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "django/db/migrations/operations/models.py",
+          "name": "CreateModel.reduce",
+          "start": 124,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 216,
+          "function_rank": 4177
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "django/db/migrations/operations/models.py",
+          "included": true,
+          "rank": 216
+        }
+      ],
+      "worst_function_rank": 4177,
+      "lean_bodies_all_changed": true,
+      "selected_files": 353,
+      "trace_files": 333,
+      "unresolved_count": 713,
+      "parse_errors": [],
+      "seconds": 1.5563367390000167,
+      "presentation_sha256": [
+        "51a62dd522121ec016dbe9ffdc461d9c89c63657a1fb830ce209e9779733c765",
+        "ec952ae49a38ef4810ddd27c3a6722337e1a7f2f6c764b2afec40935b7aef3d5",
+        "30287be10fbc98ccf4cad21bbc1927b2a698308dfdf1c81761edcb430d6d1256"
+      ]
+    },
+    {
+      "instance_id": "django__django-15467",
+      "repo": "django/django",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3881900,
+        3958839,
+        2777803
+      ],
+      "production_bytes": 5023396,
+      "all_python_bytes": 15993758,
+      "preregistered_docstring_lean_ratio": 0.5923984491766128,
+      "repository_ratios": [
+        0.7727640823060734,
+        0.788080215057702,
+        0.5529731281388128
+      ],
+      "all_python_ratios": [
+        0.24271343858022612,
+        0.24752400280159298,
+        0.17368044458344312
+      ],
+      "package_bytes": 5213787,
+      "dependency_bytes": 34569279,
+      "primary_package_ratios": [
+        0.7445451837599043,
+        0.7593020198178406,
+        0.5327802996171497
+      ],
+      "free_baseline_ratios": [
+        0.09757669255557126,
+        0.09951065611685132,
+        0.0698237536543815
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "django/contrib/admin/options.py",
+          "name": "BaseModelAdmin.formfield_for_foreignkey",
+          "start": 251,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 247,
+          "function_rank": 4664
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "django/contrib/admin/options.py",
+          "included": true,
+          "rank": 247
+        }
+      ],
+      "worst_function_rank": 4664,
+      "lean_bodies_all_changed": true,
+      "selected_files": 395,
+      "trace_files": 383,
+      "unresolved_count": 750,
+      "parse_errors": [
+        "tests/test_runner_apps/tagged/tests_syntax_error.py"
+      ],
+      "seconds": 6.681792034000068,
+      "presentation_sha256": [
+        "303ffe156022467dd376b8f7e083682921c2b75119dbe443182d31e62fdf1cdc",
+        "d17afd7a73fb58fa83280aea525591eec191e1222ce0c39307f3b5d232fa490c",
+        "c27708b674088e5620044d31ef02fd5699481082fb88076d76e0b127b870e13d"
+      ]
+    },
+    {
+      "instance_id": "django__django-12193",
+      "repo": "django/django",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3575603,
+        3616645,
+        2020671
+      ],
+      "production_bytes": 4547498,
+      "all_python_bytes": 13650273,
+      "preregistered_docstring_lean_ratio": 0.5051707554351865,
+      "repository_ratios": [
+        0.7862791803316901,
+        0.7953043629705829,
+        0.4443478589765185
+      ],
+      "all_python_ratios": [
+        0.2619436988549606,
+        0.26495037864810467,
+        0.14803154486360823
+      ],
+      "package_bytes": 4704780,
+      "dependency_bytes": 21620604,
+      "primary_package_ratios": [
+        0.7599936660162643,
+        0.768717134488754,
+        0.4294931962812289
+      ],
+      "free_baseline_ratios": [
+        0.13582339387717954,
+        0.13738242146819207,
+        0.07675751282488415
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "django/forms/widgets.py",
+          "name": "CheckboxInput.get_context",
+          "start": 523,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 67,
+          "function_rank": 1297
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "django/forms/widgets.py",
+          "included": true,
+          "rank": 67
+        }
+      ],
+      "worst_function_rank": 1297,
+      "lean_bodies_all_changed": true,
+      "selected_files": 403,
+      "trace_files": 374,
+      "unresolved_count": 708,
+      "parse_errors": [],
+      "seconds": 3.6240354310000384,
+      "presentation_sha256": [
+        "d56cc1450b2512d035179eb7e63f8217be607c7cc197873ce4d7a95aedb430e8",
+        "4f17640587a4f9dc2cfcb8a5a13b59cca40d2dc33d48089a88dd706f579fe945",
+        "494d3cef884a95ba38c21f2292d46f4d45eb4dd10800860c92ad15ad6ee948d5"
+      ]
+    },
+    {
+      "instance_id": "django__django-16116",
+      "repo": "django/django",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        4109480,
+        4171838,
+        2526866
+      ],
+      "production_bytes": 5119799,
+      "all_python_bytes": 16387137,
+      "preregistered_docstring_lean_ratio": 0.5476691565430596,
+      "repository_ratios": [
+        0.8026643233455063,
+        0.8148440983718306,
+        0.4935478912355739
+      ],
+      "all_python_ratios": [
+        0.2507747387478362,
+        0.2545800404304913,
+        0.15419813723410014
+      ],
+      "package_bytes": 5316081,
+      "dependency_bytes": 34569279,
+      "primary_package_ratios": [
+        0.7730281009638491,
+        0.7847581705395384,
+        0.4753249621290571
+      ],
+      "free_baseline_ratios": [
+        0.10303229054470112,
+        0.10459572133735286,
+        0.06335322032946425
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "django/core/management/commands/makemigrations.py",
+          "name": "Command.add_arguments",
+          "start": 29,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 352,
+          "function_rank": 6368
+        },
+        {
+          "path": "django/core/management/commands/makemigrations.py",
+          "name": "Command.handle",
+          "start": 101,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 352,
+          "function_rank": 6369
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "django/core/management/commands/makemigrations.py",
+          "included": true,
+          "rank": 352
+        }
+      ],
+      "worst_function_rank": 6369,
+      "lean_bodies_all_changed": true,
+      "selected_files": 486,
+      "trace_files": 469,
+      "unresolved_count": 784,
+      "parse_errors": [
+        "tests/test_runner_apps/tagged/tests_syntax_error.py"
+      ],
+      "seconds": 16.90594038500012,
+      "presentation_sha256": [
+        "5033b3d4cda8178fdfa2a6ecd94de385a7e2d31ba4d0aa4164c3c7834de5dee7",
+        "616fbba88d791633f75f6d527adc9f47af6b73fd0cd7492c3bb3cf611b47e1db",
+        "94b5be6c57ce3059306e2daeeb8724f8644ab4d0d27918d28d4ea05b9a038bc4"
+      ]
+    },
+    {
+      "instance_id": "django__django-14752",
+      "repo": "django/django",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        4067109,
+        4124792,
+        2663070
+      ],
+      "production_bytes": 4791919,
+      "all_python_bytes": 14931517,
+      "preregistered_docstring_lean_ratio": 0.6087867929320174,
+      "repository_ratios": [
+        0.8487432696587734,
+        0.8607808270548813,
+        0.5557418645849398
+      ],
+      "all_python_ratios": [
+        0.2723841790489205,
+        0.2762473498171686,
+        0.17835227324859224
+      ],
+      "package_bytes": 4978991,
+      "dependency_bytes": 32773418,
+      "primary_package_ratios": [
+        0.8168540573782921,
+        0.828439336403701,
+        0.53486138054879
+      ],
+      "free_baseline_ratios": [
+        0.10773111194043272,
+        0.10925904092636843,
+        0.07054039915704452
+      ],
+      "named_all_changed": false,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "django/contrib/admin/views/autocomplete.py",
+          "name": "AutocompleteJsonView.get",
+          "start": 12,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 257,
+          "function_rank": 4857
+        },
+        {
+          "path": "django/contrib/admin/views/autocomplete.py",
+          "name": "AutocompleteJsonView.get_paginator",
+          "start": 35,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 257,
+          "function_rank": 4861
+        }
+      ],
+      "new_functions": [
+        {
+          "path": "django/contrib/admin/views/autocomplete.py",
+          "name": "AutocompleteJsonView.serialize_result",
+          "included": false
+        }
+      ],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "django/contrib/admin/views/autocomplete.py",
+          "included": true,
+          "rank": 257
+        }
+      ],
+      "worst_function_rank": null,
+      "lean_bodies_all_changed": false,
+      "selected_files": 390,
+      "trace_files": 382,
+      "unresolved_count": 762,
+      "parse_errors": [
+        "tests/test_runner_apps/tagged/tests_syntax_error.py"
+      ],
+      "seconds": 14.21755758800009,
+      "presentation_sha256": [
+        "fec09d14b702d52c3122670d654ab32fd41db00d02f0469bde64e43cfddd9898",
+        "8db69e1fdd41db95c37c29462104b9f49c4530c5834c5d5619010190b135532c",
+        "ddbbd44d08d46925fcba5a7e3a00cd5e62e6f8bcd0d929c838f9b042c2a6e17b"
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24570",
+      "repo": "matplotlib/matplotlib",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        4146658,
+        4181604,
+        2193327
+      ],
+      "production_bytes": 5565016,
+      "all_python_bytes": 8456208,
+      "preregistered_docstring_lean_ratio": 0.5297839215556613,
+      "repository_ratios": [
+        0.7451295737514502,
+        0.7514091603689909,
+        0.3941277078089263
+      ],
+      "all_python_ratios": [
+        0.49036849613916783,
+        0.49450108133574766,
+        0.25937476940018506
+      ],
+      "package_bytes": 6073121,
+      "dependency_bytes": 90919613,
+      "primary_package_ratios": [
+        0.6827886353655723,
+        0.6885428431279403,
+        0.3611531863106301
+      ],
+      "free_baseline_ratios": [
+        0.04275225399873768,
+        0.0431125490286726,
+        0.022613312456992912
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "lib/matplotlib/offsetbox.py",
+          "name": "_get_aligned_offsets",
+          "start": 130,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 60,
+          "function_rank": 3352
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "lib/matplotlib/offsetbox.py",
+          "included": true,
+          "rank": 60
+        }
+      ],
+      "worst_function_rank": 3352,
+      "lean_bodies_all_changed": true,
+      "selected_files": 105,
+      "trace_files": 116,
+      "unresolved_count": 576,
+      "parse_errors": [],
+      "seconds": 37.147878785999865,
+      "presentation_sha256": [
+        "e8e2a821f76f36fdc5649ad56a65c308344950c599ab52fa3bbb0e82c8d596ff",
+        "697ab5fe95aacb171b19a873a15ae4dea7bf61967f2f1523c59cc3d0bc54ad75",
+        "310b90109bf4f6d4744f71b6a4c80b8a498284827b73f8875ccd3eb90e43dea3"
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "repo": "matplotlib/matplotlib",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3988892,
+        4018185,
+        1964712
+      ],
+      "production_bytes": 5465385,
+      "all_python_bytes": 8107289,
+      "preregistered_docstring_lean_ratio": 0.5032942784451598,
+      "repository_ratios": [
+        0.7298464792507756,
+        0.7352062114562835,
+        0.3594828177703858
+      ],
+      "all_python_ratios": [
+        0.49201305146516916,
+        0.4956262198128129,
+        0.24233896188972665
+      ],
+      "package_bytes": 5808224,
+      "dependency_bytes": 90426616,
+      "primary_package_ratios": [
+        0.6867662128733327,
+        0.6918095789694061,
+        0.33826381351683404
+      ],
+      "free_baseline_ratios": [
+        0.04144956234145555,
+        0.04175395314212607,
+        0.02041580783009563
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "lib/matplotlib/dates.py",
+          "name": "_wrap_in_tex",
+          "start": 594,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 26,
+          "function_rank": 1100
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "lib/matplotlib/dates.py",
+          "included": true,
+          "rank": 26
+        }
+      ],
+      "worst_function_rank": 1100,
+      "lean_bodies_all_changed": true,
+      "selected_files": 109,
+      "trace_files": 109,
+      "unresolved_count": 557,
+      "parse_errors": [],
+      "seconds": 53.93600790100004,
+      "presentation_sha256": [
+        "e3e8ee96d792e1d75b021e3835b07c24c1e22ff4c45ea5eb1c9dcca24d9d6a21",
+        "92a901eeb6e8ed031e369c077ef035f61d0eaa185856abbe035bf8143b5b139e",
+        "04ecae1a034e4e40944c4c6cfc35ff7c04aea04d0d55b10a8080d73f317d7dcf"
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23412",
+      "repo": "matplotlib/matplotlib",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        4144784,
+        4179537,
+        2143763
+      ],
+      "production_bytes": 5506227,
+      "all_python_bytes": 8312096,
+      "preregistered_docstring_lean_ratio": 0.5288528787498227,
+      "repository_ratios": [
+        0.7527448468797237,
+        0.7590564282947289,
+        0.3893342937005685
+      ],
+      "all_python_ratios": [
+        0.4986448664692997,
+        0.5028258817030025,
+        0.25790883550911825
+      ],
+      "package_bytes": 5986367,
+      "dependency_bytes": 90897663,
+      "primary_package_ratios": [
+        0.6923705145374481,
+        0.6981758719437015,
+        0.35810751328810947
+      ],
+      "free_baseline_ratios": [
+        0.04278087936680586,
+        0.04313958657582679,
+        0.02212710392001654
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "lib/matplotlib/patches.py",
+          "name": "Patch.draw",
+          "start": 584,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 24,
+          "function_rank": 1082
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "lib/matplotlib/patches.py",
+          "included": true,
+          "rank": 24
+        }
+      ],
+      "worst_function_rank": 1082,
+      "lean_bodies_all_changed": true,
+      "selected_files": 114,
+      "trace_files": 125,
+      "unresolved_count": 587,
+      "parse_errors": [],
+      "seconds": 33.944532750000235,
+      "presentation_sha256": [
+        "1ec536e436308e23e9a861b45cdd025d31cae53befc60d4b6fb515bb91c25717",
+        "9035584dd4a3ea7954eaacd87b4f4ac1c547afb49002b1a730c444c83d1c625d",
+        "f4272bb467e040c51c58ef8fe7d4cebf74bebe67d9c3aa5a7c0df23af1aa6abb"
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-26113",
+      "repo": "matplotlib/matplotlib",
+      "verdict": "unknown",
+      "reason": "no captured trace"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-13989",
+      "repo": "matplotlib/matplotlib",
+      "verdict": "unknown",
+      "reason": "no captured trace"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3169478,
+        3178400,
+        1359848
+      ],
+      "production_bytes": 4202238,
+      "all_python_bytes": 8012729,
+      "preregistered_docstring_lean_ratio": 0.5060034676760335,
+      "repository_ratios": [
+        0.7542357191572681,
+        0.756358873533579,
+        0.32360090028218297
+      ],
+      "all_python_ratios": [
+        0.3955553719587921,
+        0.3966688502756052,
+        0.16971096863503057
+      ],
+      "package_bytes": 6717652,
+      "dependency_bytes": 54846595,
+      "primary_package_ratios": [
+        0.4718133657414823,
+        0.47314150837227054,
+        0.20242906301189761
+      ],
+      "free_baseline_ratios": [
+        0.051482445647390115,
+        0.051627367423173386,
+        0.022088274709183075
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sklearn/linear_model/logistic.py",
+          "name": "_log_reg_scoring_path",
+          "start": 774,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 73,
+          "function_rank": 959
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sklearn/linear_model/logistic.py",
+          "included": true,
+          "rank": 73
+        }
+      ],
+      "worst_function_rank": 959,
+      "lean_bodies_all_changed": true,
+      "selected_files": 165,
+      "trace_files": 273,
+      "unresolved_count": 749,
+      "parse_errors": [],
+      "seconds": 17.371003363,
+      "presentation_sha256": [
+        "032a21c0a1c0d2d21368eb01f7706e5bf21ad10f71c16fc977499f0b338507e3",
+        "74eb8fd41f56899629010cd43fc2c7d04c1f1b8a4f0f8a54477f538902d4c0c8",
+        "7b8b237767c18d275dcfc9b70b773457ba73dbf79ca93cac346e2f7b9ff32264"
+      ]
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3065655,
+        3075248,
+        1389382
+      ],
+      "production_bytes": 4312565,
+      "all_python_bytes": 8554611,
+      "preregistered_docstring_lean_ratio": 0.4972609108500394,
+      "repository_ratios": [
+        0.7108658072400068,
+        0.7130902374804785,
+        0.3221706803259777
+      ],
+      "all_python_ratios": [
+        0.3583628758806216,
+        0.35948425942453727,
+        0.16241322954369286
+      ],
+      "package_bytes": 7177517,
+      "dependency_bytes": 55694754,
+      "primary_package_ratios": [
+        0.42711915555198265,
+        0.4284556901780936,
+        0.19357418449862257
+      ],
+      "free_baseline_ratios": [
+        0.04876004876617229,
+        0.04891262795326735,
+        0.02209848599233834
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sklearn/linear_model/logistic.py",
+          "name": "LogisticRegressionCV.fit",
+          "start": 1936,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 52,
+          "function_rank": 729
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sklearn/linear_model/logistic.py",
+          "included": true,
+          "rank": 52
+        }
+      ],
+      "worst_function_rank": 729,
+      "lean_bodies_all_changed": true,
+      "selected_files": 142,
+      "trace_files": 234,
+      "unresolved_count": 569,
+      "parse_errors": [],
+      "seconds": 35.63569893199974,
+      "presentation_sha256": [
+        "0749bb0ebc1f5bd101274f84bce00c6824903e8a4ea8b81077894dec9e994904",
+        "cdb3d46e4b1f25a4a66aaefdf5d751b9a2fbb931a7e6ba6f4c20df1d49b29f9d",
+        "bcb8ca4f41844ecb31efa6517d69dc26f200c72ec9627023f609628a47619f87"
+      ]
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "repo": "scikit-learn/scikit-learn",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3625393,
+        3633517,
+        1366736
+      ],
+      "production_bytes": 4618706,
+      "all_python_bytes": 8534784,
+      "preregistered_docstring_lean_ratio": 0.4972273619494291,
+      "repository_ratios": [
+        0.7849369498729731,
+        0.7866958840852828,
+        0.29591318434210795
+      ],
+      "all_python_ratios": [
+        0.42477852983742764,
+        0.42573039926962414,
+        0.1601371516842137
+      ],
+      "package_bytes": 7219505,
+      "dependency_bytes": 54846595,
+      "primary_package_ratios": [
+        0.5021664227672119,
+        0.5032917076724789,
+        0.18931159407743328
+      ],
+      "free_baseline_ratios": [
+        0.05841180612282711,
+        0.058542698832373875,
+        0.022020652175664332
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sklearn/base.py",
+          "name": "clone",
+          "start": 30,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 5,
+          "function_rank": 8
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sklearn/base.py",
+          "included": true,
+          "rank": 5
+        }
+      ],
+      "worst_function_rank": 8,
+      "lean_bodies_all_changed": true,
+      "selected_files": 205,
+      "trace_files": 299,
+      "unresolved_count": 999,
+      "parse_errors": [],
+      "seconds": 2.577564903000166,
+      "presentation_sha256": [
+        "9e449961de0d7060d11f3deff6995e34d67326ec2891deea40d71caa4667acf3",
+        "3275057ab189d25deb9b41dedbca1c50c83f70b804be2e8a3fad971335a335ec",
+        "e747eb36c4545d2dc55322ed638634a5989c8af0a484e8ba1f84a628abe102e0"
+      ]
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14894",
+      "repo": "scikit-learn/scikit-learn",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3204828,
+        3212994,
+        1331006
+      ],
+      "production_bytes": 4596688,
+      "all_python_bytes": 9106216,
+      "preregistered_docstring_lean_ratio": 0.4735126682515759,
+      "repository_ratios": [
+        0.6972037258130201,
+        0.698980222281782,
+        0.28955761191536167
+      ],
+      "all_python_ratios": [
+        0.3519385000311875,
+        0.3528352501192592,
+        0.14616455397060646
+      ],
+      "package_bytes": 7669299,
+      "dependency_bytes": 55694754,
+      "primary_package_ratios": [
+        0.41787756612436155,
+        0.4189423309744476,
+        0.17354989028332315
+      ],
+      "free_baseline_ratios": [
+        0.05057801463552213,
+        0.05070688896747182,
+        0.021005695453224876
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sklearn/svm/base.py",
+          "name": "BaseLibSVM._sparse_fit",
+          "start": 261,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 20,
+          "function_rank": 168
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sklearn/svm/base.py",
+          "included": true,
+          "rank": 20
+        }
+      ],
+      "worst_function_rank": 168,
+      "lean_bodies_all_changed": true,
+      "selected_files": 145,
+      "trace_files": 240,
+      "unresolved_count": 611,
+      "parse_errors": [],
+      "seconds": 9.08314953099989,
+      "presentation_sha256": [
+        "87d6a29be0aba5c41dd8ab5ed143021a44b6e7424e57a9a97bfa59bbb05dfd4e",
+        "0a1b382ff84b4cac17e162bcb7c76f5b7f306e9c4d7033ebe363cfe2c93dc300",
+        "e08ced4d8ca5d1a342acfe4519a4714f92aa64071bbfea504f6dc1fa55c3480b"
+      ]
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "repo": "scikit-learn/scikit-learn",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        3429135,
+        3440454,
+        1449100
+      ],
+      "production_bytes": 4633875,
+      "all_python_bytes": 8614658,
+      "preregistered_docstring_lean_ratio": 0.48958334007714926,
+      "repository_ratios": [
+        0.740014566642389,
+        0.7424572307194303,
+        0.31271883682663
+      ],
+      "all_python_ratios": [
+        0.3980581701560294,
+        0.3993720934713833,
+        0.16821329413193187
+      ],
+      "package_bytes": 7288628,
+      "dependency_bytes": 54846595,
+      "primary_package_ratios": [
+        0.4704774341618203,
+        0.47203040133204766,
+        0.19881656739786968
+      ],
+      "free_baseline_ratios": [
+        0.05518826254152174,
+        0.05537042974803518,
+        0.02332171560726514
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sklearn/model_selection/_split.py",
+          "name": "StratifiedKFold._make_test_folds",
+          "start": 622,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 54,
+          "function_rank": 658
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [
+        {
+          "path": "sklearn/model_selection/_split.py",
+          "line": 579,
+          "included": true
+        },
+        {
+          "path": "sklearn/model_selection/_split.py",
+          "line": 580,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sklearn/model_selection/_split.py",
+          "included": true,
+          "rank": 54
+        }
+      ],
+      "worst_function_rank": 658,
+      "lean_bodies_all_changed": true,
+      "selected_files": 191,
+      "trace_files": 277,
+      "unresolved_count": 905,
+      "parse_errors": [],
+      "seconds": 8.5918955559996,
+      "presentation_sha256": [
+        "40924b3c9756d715080211df2a1e52729284e9abababf9381328d0f2bc70e4c0",
+        "7d7f93c3618cc00074a3e845e2e72d4ca53d8ca1f36291ef212f29403f9fbe08",
+        "7a9e9abe3f70b4f81c62ab16792bea736c4a312b1e98c4a21b897a469ddef6c0"
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7454",
+      "repo": "sphinx-doc/sphinx",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        2060334,
+        2085999,
+        1286631
+      ],
+      "production_bytes": 2665328,
+      "all_python_bytes": 3633848,
+      "preregistered_docstring_lean_ratio": 0.503340677019864,
+      "repository_ratios": [
+        0.7730133026779443,
+        0.7826425115407935,
+        0.48272895493537754
+      ],
+      "all_python_ratios": [
+        0.5669840895931806,
+        0.5740468506112528,
+        0.35406846956724664
+      ],
+      "package_bytes": 2642021,
+      "dependency_bytes": 25989703,
+      "primary_package_ratios": [
+        0.7798325599985768,
+        0.7895467144280837,
+        0.4869874236427341
+      ],
+      "free_baseline_ratios": [
+        0.07195983029174212,
+        0.07285621361815307,
+        0.04493725211936243
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sphinx/domains/python.py",
+          "name": "_parse_annotation.make_xref",
+          "start": 73,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 75,
+          "function_rank": 1339
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sphinx/domains/python.py",
+          "included": true,
+          "rank": 75
+        }
+      ],
+      "worst_function_rank": 1339,
+      "lean_bodies_all_changed": true,
+      "selected_files": 138,
+      "trace_files": 147,
+      "unresolved_count": 772,
+      "parse_errors": [],
+      "seconds": 6.9423692479995225,
+      "presentation_sha256": [
+        "8889624d7d348fefec62d3a666a20cbb885adf88569c76f294b445c25939a8ba",
+        "c14a8b3a6cb531108dacea7dca0ac9fc1768bfe10e2d985f73a4495baca6aba1",
+        "8c18f773fc3a1944099e7809054c3364887a8af04e08d856246ad7424f697a4c"
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        2149960,
+        2169858,
+        1197641
+      ],
+      "production_bytes": 2527982,
+      "all_python_bytes": 3721314,
+      "preregistered_docstring_lean_ratio": 0.5024695587231238,
+      "repository_ratios": [
+        0.8504649162850052,
+        0.8583360166330298,
+        0.47375376881639186
+      ],
+      "all_python_ratios": [
+        0.5777421631176515,
+        0.583089199137724,
+        0.3218328257169376
+      ],
+      "package_bytes": 2504370,
+      "dependency_bytes": 25866925,
+      "primary_package_ratios": [
+        0.8584833710673743,
+        0.8664286826627056,
+        0.47822047061736084
+      ],
+      "free_baseline_ratios": [
+        0.07577941013972045,
+        0.07648075281724011,
+        0.042213124215866774
+      ],
+      "named_all_changed": false,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sphinx/cmd/quickstart.py",
+          "name": "allow_empty",
+          "start": 98,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 59,
+          "function_rank": 955
+        },
+        {
+          "path": "sphinx/cmd/quickstart.py",
+          "name": "ask_user",
+          "start": 185,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 59,
+          "function_rank": 952
+        }
+      ],
+      "new_functions": [
+        {
+          "path": "sphinx/cmd/quickstart.py",
+          "name": "is_path_or_empty",
+          "included": false
+        }
+      ],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sphinx/cmd/quickstart.py",
+          "included": true,
+          "rank": 59
+        }
+      ],
+      "worst_function_rank": null,
+      "lean_bodies_all_changed": false,
+      "selected_files": 135,
+      "trace_files": 142,
+      "unresolved_count": 751,
+      "parse_errors": [],
+      "seconds": 5.050543328999993,
+      "presentation_sha256": [
+        "c87b482ac7899466e43490dd2d8b66546e2861491ef82378746945b6b6a5baf2",
+        "c6248bc3298a0e8b09e7b6f099351899c6bd53f319cf2f2c3817080bf3de1929",
+        "147269c1f29282c277322b8bb54aacd7ef8704d5a4a21796dc0c59f056085fe1"
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        2149818,
+        2175627,
+        1286217
+      ],
+      "production_bytes": 2514766,
+      "all_python_bytes": 3908553,
+      "preregistered_docstring_lean_ratio": 0.5366197093487028,
+      "repository_ratios": [
+        0.8548779488827191,
+        0.8651409316015883,
+        0.5114658779385438
+      ],
+      "all_python_ratios": [
+        0.5500291284268116,
+        0.5566323393849335,
+        0.3290775384138324
+      ],
+      "package_bytes": 2500600,
+      "dependency_bytes": 25393652,
+      "primary_package_ratios": [
+        0.859720866991922,
+        0.8700419899224187,
+        0.5143633527953291
+      ],
+      "free_baseline_ratios": [
+        0.07707028673864422,
+        0.07799553112232585,
+        0.046110467489861355
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sphinx/ext/inheritance_diagram.py",
+          "name": "html_visit_inheritance_diagram",
+          "start": 398,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 64,
+          "function_rank": 935
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sphinx/ext/inheritance_diagram.py",
+          "included": true,
+          "rank": 64
+        }
+      ],
+      "worst_function_rank": 935,
+      "lean_bodies_all_changed": true,
+      "selected_files": 137,
+      "trace_files": 141,
+      "unresolved_count": 909,
+      "parse_errors": [],
+      "seconds": 7.099273104000531,
+      "presentation_sha256": [
+        "04c287d37372efc7c260ebdab7382a1af18831220d808d1c5123723513b7f9a9",
+        "682d6a6e6b341ffc767cfcf0061b8f5f5de4e57fb1414d1896c5873962373fdd",
+        "fa7e6a54ad9f5fabbbcfa100b8b64e28c9dec761dadce097e345f6ea34e3d373"
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8595",
+      "repo": "sphinx-doc/sphinx",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        2216367,
+        2228974,
+        1126805
+      ],
+      "production_bytes": 2825019,
+      "all_python_bytes": 3943827,
+      "preregistered_docstring_lean_ratio": 0.42636704390306757,
+      "repository_ratios": [
+        0.7845494136499613,
+        0.7890120385031039,
+        0.3988663439077755
+      ],
+      "all_python_ratios": [
+        0.5619838294123957,
+        0.5651804706443766,
+        0.28571359747777986
+      ],
+      "package_bytes": 2801450,
+      "dependency_bytes": 25947142,
+      "primary_package_ratios": [
+        0.7911499402095343,
+        0.7956501097645862,
+        0.40222206357422047
+      ],
+      "free_baseline_ratios": [
+        0.07709480172107211,
+        0.07753332754522378,
+        0.03919513693053211
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sphinx/ext/autodoc/__init__.py",
+          "name": "ModuleDocumenter.get_object_members",
+          "start": 1074,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 70,
+          "function_rank": 1146
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sphinx/ext/autodoc/__init__.py",
+          "included": true,
+          "rank": 70
+        }
+      ],
+      "worst_function_rank": 1146,
+      "lean_bodies_all_changed": true,
+      "selected_files": 140,
+      "trace_files": 142,
+      "unresolved_count": 782,
+      "parse_errors": [],
+      "seconds": 3.2636657029997878,
+      "presentation_sha256": [
+        "4c44476789208db8bfef4c1fed06484eeee9ab8512bb8a7ba521bc6925407bb8",
+        "d50f115a4946a6469a82008b825e2c143a96e10e4b8fef3f1f36da02d6cbcc03",
+        "e948ee70aa0d4553ec5b29fcca6f3969aa9a461fb3c99a09fbc5e3e2d554e276"
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "repo": "sphinx-doc/sphinx",
+      "verdict": "fail",
+      "admitted": true,
+      "unknown_reason": null,
+      "test_body_trace_present": true,
+      "level_bytes": [
+        2091711,
+        2101568,
+        948446
+      ],
+      "production_bytes": 2474995,
+      "all_python_bytes": 3827481,
+      "preregistered_docstring_lean_ratio": 0.4151535659667999,
+      "repository_ratios": [
+        0.8451374649241715,
+        0.8491200992325237,
+        0.3832112792147055
+      ],
+      "all_python_ratios": [
+        0.5464980753660175,
+        0.5490733984048517,
+        0.2477990093223193
+      ],
+      "package_bytes": 2460905,
+      "dependency_bytes": 25393652,
+      "primary_package_ratios": [
+        0.8499763298461338,
+        0.853981766870318,
+        0.3854053691629705
+      ],
+      "free_baseline_ratios": [
+        0.07509403219013679,
+        0.07544790606434702,
+        0.03404994019470495
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sphinx/util/rst.py",
+          "name": "prepend_prolog",
+          "start": 78,
+          "named": true,
+          "executed": true,
+          "lean_body": true,
+          "file_rank": 48,
+          "function_rank": 812
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 13,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 15,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 20,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 21,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 22,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 23,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 24,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 25,
+          "included": true
+        },
+        {
+          "path": "sphinx/util/rst.py",
+          "line": 28,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sphinx/util/rst.py",
+          "included": true,
+          "rank": 48
+        }
+      ],
+      "worst_function_rank": 812,
+      "lean_bodies_all_changed": true,
+      "selected_files": 135,
+      "trace_files": 138,
+      "unresolved_count": 841,
+      "parse_errors": [],
+      "seconds": 3.194932716999574,
+      "presentation_sha256": [
+        "3201a916b11dcaf552e06463f3373a13e3ea345d61de0d4062a245bfb189c688",
+        "c17858a54139971b54834531d864554d03f1a84292637fb86d3745a1d95b4138",
+        "0a64584f13e826acd90b6ace20be98b671f2e624c400e422dcfad1e728194493"
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "verdict": "unknown",
+      "admitted": false,
+      "unknown_reason": "test bodies absent from trace",
+      "test_body_trace_present": false,
+      "level_bytes": [
+        7469126,
+        7482231,
+        2021411
+      ],
+      "production_bytes": 9688318,
+      "all_python_bytes": 15399227,
+      "preregistered_docstring_lean_ratio": 0.4188853008334367,
+      "repository_ratios": [
+        0.7709414575367984,
+        0.7722941175134838,
+        0.20864416300125574
+      ],
+      "all_python_ratios": [
+        0.4850325279314345,
+        0.4858835446740281,
+        0.13126704346912998
+      ],
+      "package_bytes": 15164330,
+      "dependency_bytes": 11006940,
+      "primary_package_ratios": [
+        0.4925457306719123,
+        0.4934099297496164,
+        0.1333003832018955
+      ],
+      "free_baseline_ratios": [
+        0.2853940981847652,
+        0.28589483811828775,
+        0.0772377878490421
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sympy/combinatorics/permutations.py",
+          "name": "Permutation.__new__",
+          "start": 801,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 325,
+          "function_rank": 8965
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sympy/combinatorics/permutations.py",
+          "included": true,
+          "rank": 325
+        }
+      ],
+      "worst_function_rank": 8965,
+      "lean_bodies_all_changed": false,
+      "selected_files": 385,
+      "trace_files": 315,
+      "unresolved_count": 700,
+      "parse_errors": [],
+      "seconds": 3.125788049000221,
+      "presentation_sha256": [
+        "c73b8bc8a4cf3132614c4ef3f5f61a9b896cf82ac9024a0568cea301124d5fe6",
+        "bb208e1d732675d3aa1adf789efaeffdddff3fee9e054dd7e99c470f47f3147a",
+        "971e55c727959ac54ceaa99eb8055a29259ffbe3301731bff76019a59afa1738"
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-12096",
+      "repo": "sympy/sympy",
+      "verdict": "unknown",
+      "admitted": false,
+      "unknown_reason": "test bodies absent from trace",
+      "test_body_trace_present": false,
+      "level_bytes": [
+        7395567,
+        7408440,
+        1982227
+      ],
+      "production_bytes": 9649981,
+      "all_python_bytes": 15309551,
+      "preregistered_docstring_lean_ratio": 0.41603874660478607,
+      "repository_ratios": [
+        0.766381508937686,
+        0.767715501201505,
+        0.20541252879150745
+      ],
+      "all_python_ratios": [
+        0.48306883722455346,
+        0.4839096848758007,
+        0.12947649477113993
+      ],
+      "package_bytes": 15075274,
+      "dependency_bytes": 11006940,
+      "primary_package_ratios": [
+        0.490575959017395,
+        0.491429873845079,
+        0.13148862169934689
+      ],
+      "free_baseline_ratios": [
+        0.2835482831327126,
+        0.2840418378593167,
+        0.07599918473178696
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sympy/core/function.py",
+          "name": "Function._eval_evalf",
+          "start": 500,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 35,
+          "function_rank": 1013
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sympy/core/function.py",
+          "included": true,
+          "rank": 35
+        }
+      ],
+      "worst_function_rank": 1013,
+      "lean_bodies_all_changed": false,
+      "selected_files": 376,
+      "trace_files": 313,
+      "unresolved_count": 694,
+      "parse_errors": [],
+      "seconds": 6.480740742999842,
+      "presentation_sha256": [
+        "8f607f2953e8a1ed3bba85b61a69ed243b033d3c81543d23e1de2c1b0789f727",
+        "f35cc66e65d6000fbdf27f557bfa6094d8c0642eb87650ee7b37d569e33cb7b2",
+        "b7158b1e272764c1a57d03fb82e3758980f70f4da2c3b1981a6bfa595b9e0f20"
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "verdict": "unknown",
+      "admitted": false,
+      "unknown_reason": "test bodies absent from trace",
+      "test_body_trace_present": false,
+      "level_bytes": [
+        9080673,
+        9096737,
+        2531006
+      ],
+      "production_bytes": 16482634,
+      "all_python_bytes": 26770419,
+      "preregistered_docstring_lean_ratio": 0.2975373960254168,
+      "repository_ratios": [
+        0.5509236569834651,
+        0.5518982584943645,
+        0.1535559183077171
+      ],
+      "all_python_ratios": [
+        0.3392054864737082,
+        0.33980555179207317,
+        0.09454487806111664
+      ],
+      "package_bytes": 26511889,
+      "dependency_bytes": 11006940,
+      "primary_package_ratios": [
+        0.3425132400033811,
+        0.3431191568431808,
+        0.09546682999464881
+      ],
+      "free_baseline_ratios": [
+        0.2420297552463591,
+        0.24245791359852942,
+        0.06745962140769372
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [
+        {
+          "path": "sympy/assumptions/ask.py",
+          "name": "get_known_facts",
+          "start": 1475,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 49,
+          "function_rank": 1547
+        },
+        {
+          "path": "sympy/assumptions/ask_generated.py",
+          "name": "get_known_facts_cnf",
+          "start": 14,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 50,
+          "function_rank": 1548
+        },
+        {
+          "path": "sympy/assumptions/ask_generated.py",
+          "name": "get_known_facts_dict",
+          "start": 89,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 50,
+          "function_rank": 1549
+        },
+        {
+          "path": "sympy/core/power.py",
+          "name": "Pow._eval_is_rational",
+          "start": 1182,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 34,
+          "function_rank": 1070
+        },
+        {
+          "path": "sympy/printing/tree.py",
+          "name": "print_tree",
+          "start": 75,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 104,
+          "function_rank": 3751
+        },
+        {
+          "path": "sympy/tensor/indexed.py",
+          "name": "Idx.__new__",
+          "start": 585,
+          "named": true,
+          "executed": false,
+          "lean_body": false,
+          "file_rank": 225,
+          "function_rank": 7385
+        }
+      ],
+      "new_functions": [],
+      "module_edits": [
+        {
+          "path": "sympy/core/assumptions.py",
+          "line": 168,
+          "included": true
+        },
+        {
+          "path": "sympy/core/assumptions.py",
+          "line": 194,
+          "included": true
+        },
+        {
+          "path": "sympy/core/assumptions.py",
+          "line": 179,
+          "included": true
+        },
+        {
+          "path": "sympy/core/assumptions.py",
+          "line": 166,
+          "included": true
+        },
+        {
+          "path": "sympy/core/power.py",
+          "line": 12,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sympy/assumptions/ask.py",
+          "included": true,
+          "rank": 49
+        },
+        {
+          "path": "sympy/assumptions/ask_generated.py",
+          "included": true,
+          "rank": 50
+        },
+        {
+          "path": "sympy/core/assumptions.py",
+          "included": true,
+          "rank": 13
+        },
+        {
+          "path": "sympy/core/power.py",
+          "included": true,
+          "rank": 34
+        },
+        {
+          "path": "sympy/printing/tree.py",
+          "included": true,
+          "rank": 104
+        },
+        {
+          "path": "sympy/tensor/indexed.py",
+          "included": true,
+          "rank": 225
+        }
+      ],
+      "worst_function_rank": 7385,
+      "lean_bodies_all_changed": false,
+      "selected_files": 445,
+      "trace_files": 352,
+      "unresolved_count": 799,
+      "parse_errors": [],
+      "seconds": 19.591075226000612,
+      "presentation_sha256": [
+        "2691ee60ed7222c108def98cdb1775e30dd2f17615a749a9da279cdac227144e",
+        "31cd4500ede24bc01cdef6be7f4e5f2048c292d0bc4ab92cf830bae20b0fa829",
+        "ddc6bbc20931763d2886dd479a3a023b272bcae71e6389c450d1cb414a792f26"
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-22914",
+      "repo": "sympy/sympy",
+      "verdict": "unknown",
+      "admitted": false,
+      "unknown_reason": "test bodies absent from trace",
+      "test_body_trace_present": false,
+      "level_bytes": [
+        10872598,
+        10888271,
+        3146923
+      ],
+      "production_bytes": 18869084,
+      "all_python_bytes": 31201847,
+      "preregistered_docstring_lean_ratio": 0.3159284255663921,
+      "repository_ratios": [
+        0.5762122846026866,
+        0.5770429025595519,
+        0.1667766702400604
+      ],
+      "all_python_ratios": [
+        0.3484600767384059,
+        0.3489623867458872,
+        0.1008569460647634
+      ],
+      "package_bytes": 30878136,
+      "dependency_bytes": 11006940,
+      "primary_package_ratios": [
+        0.35211315864403214,
+        0.35262073461947313,
+        0.10191428005887403
+      ],
+      "free_baseline_ratios": [
+        0.25958167056925,
+        0.2599558611281976,
+        0.07513232159349549
+      ],
+      "named_all_changed": true,
+      "eligible_levels": [],
+      "changed_functions": [],
+      "new_functions": [],
+      "module_edits": [
+        {
+          "path": "sympy/printing/pycode.py",
+          "line": 21,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sympy/printing/pycode.py",
+          "included": true,
+          "rank": 187
+        }
+      ],
+      "worst_function_rank": 0,
+      "lean_bodies_all_changed": true,
+      "selected_files": 549,
+      "trace_files": 405,
+      "unresolved_count": 623,
+      "parse_errors": [],
+      "seconds": 4.013642156999595,
+      "presentation_sha256": [
+        "1be73f1fbfaedbb3ef60f0ec7d9c44a0c32bd918d948f1d60783cfc45deac596",
+        "bfa6ca2fc4bd409dd73c8bb56b314c134cfe5b1082bbec04b3d8d0fc1e42ab86",
+        "8b43d15a175f41c816d561168631829b0455e6475cb8b868fea4cfc0b2365f1a"
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "verdict": "unknown",
+      "admitted": false,
+      "unknown_reason": "test bodies absent from trace",
+      "test_body_trace_present": false,
+      "level_bytes": [
+        9066933,
+        9083046,
+        2491954
+      ],
+      "production_bytes": 16518911,
+      "all_python_bytes": 26834107,
+      "preregistered_docstring_lean_ratio": 0.29479074014019446,
+      "repository_ratios": [
+        0.5488820055995217,
+        0.5498574330959226,
+        0.15085461747448123
+      ],
+      "all_python_ratios": [
+        0.33788838212503214,
+        0.3384888492842337,
+        0.0928651734153106
+      ],
+      "package_bytes": 26573838,
+      "dependency_bytes": 11006940,
+      "primary_package_ratios": [
+        0.3411977223613691,
+        0.3418040706050816,
+        0.09377471180489623
+      ],
+      "free_baseline_ratios": [
+        0.24126517551073584,
+        0.24169393193509725,
+        0.06630927119177789
+      ],
+      "named_all_changed": false,
+      "eligible_levels": [],
+      "changed_functions": [],
+      "new_functions": [
+        {
+          "path": "sympy/printing/pycode.py",
+          "name": "PythonCodePrinter._print_Indexed",
+          "included": false
+        }
+      ],
+      "module_edits": [
+        {
+          "path": "sympy/printing/pycode.py",
+          "line": 360,
+          "included": true
+        }
+      ],
+      "unsupported_fix_source_files": [],
+      "changed_files": [
+        {
+          "path": "sympy/printing/pycode.py",
+          "included": true,
+          "rank": 81
+        }
+      ],
+      "worst_function_rank": null,
+      "lean_bodies_all_changed": false,
+      "selected_files": 444,
+      "trace_files": 352,
+      "unresolved_count": 799,
+      "parse_errors": [],
+      "seconds": 5.091569269000502,
+      "presentation_sha256": [
+        "4815c2755c44d138de1cd998b057b95f50f0029c14dffeba9d8d266d044206b7",
+        "4900e025cd2c08be2d907a99675510a99626b68a6e48f5b72003a3783ff0f125",
+        "7ad70c64e78c4762b79e6bfbbc9f1250b4a50ab44c92408183f774be47a706fc"
+      ]
+    }
+  ]
+}

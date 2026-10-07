@@ -1,0 +1,16 @@
+{
+  "instance_id": "astropy__astropy-7166",
+  "repo": "astropy/astropy",
+  "base_commit": "26d147868f8a891a6009a25cd6a8576d2e1bd747",
+  "test_patch": "diff --git a/astropy/utils/tests/test_misc.py b/astropy/utils/tests/test_misc.py\n--- a/astropy/utils/tests/test_misc.py\n+++ b/astropy/utils/tests/test_misc.py\n@@ -80,14 +80,26 @@ def __call__(self, *args):\n             \"FOO\"\n             pass\n \n+        @property\n+        def bar(self):\n+            \"BAR\"\n+            pass\n+\n     class Subclass(Base):\n         def __call__(self, *args):\n             pass\n \n+        @property\n+        def bar(self):\n+            return 42\n+\n     if Base.__call__.__doc__ is not None:\n         # TODO: Maybe if __doc__ is None this test should be skipped instead?\n         assert Subclass.__call__.__doc__ == \"FOO\"\n \n+    if Base.bar.__doc__ is not None:\n+        assert Subclass.bar.__doc__ == \"BAR\"\n+\n \n def test_set_locale():\n     # First, test if the required locales are available\n",
+  "test_files": [
+    "astropy/utils/tests/test_misc.py"
+  ],
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "astropy/utils/tests/test_misc.py"
+  ]
+}

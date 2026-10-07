@@ -1,0 +1,74 @@
+{
+  "instance_id": "matplotlib__matplotlib-23412",
+  "repo": "matplotlib/matplotlib",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    4144784,
+    4179537,
+    2143763
+  ],
+  "production_bytes": 5506227,
+  "all_python_bytes": 8312096,
+  "preregistered_docstring_lean_ratio": 0.5288528787498227,
+  "repository_ratios": [
+    0.7527448468797237,
+    0.7590564282947289,
+    0.3893342937005685
+  ],
+  "all_python_ratios": [
+    0.4986448664692997,
+    0.5028258817030025,
+    0.25790883550911825
+  ],
+  "package_bytes": 5986367,
+  "dependency_bytes": 90897663,
+  "primary_package_ratios": [
+    0.6923705145374481,
+    0.6981758719437015,
+    0.35810751328810947
+  ],
+  "free_baseline_ratios": [
+    0.04278087936680586,
+    0.04313958657582679,
+    0.02212710392001654
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "lib/matplotlib/patches.py",
+      "name": "Patch.draw",
+      "start": 584,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 24,
+      "function_rank": 1082
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "lib/matplotlib/patches.py",
+      "included": true,
+      "rank": 24
+    }
+  ],
+  "worst_function_rank": 1082,
+  "lean_bodies_all_changed": true,
+  "selected_files": 114,
+  "trace_files": 125,
+  "unresolved_count": 587,
+  "parse_errors": [],
+  "seconds": 33.944532750000235,
+  "presentation_sha256": [
+    "1ec536e436308e23e9a861b45cdd025d31cae53befc60d4b6fb515bb91c25717",
+    "9035584dd4a3ea7954eaacd87b4f4ac1c547afb49002b1a730c444c83d1c625d",
+    "f4272bb467e040c51c58ef8fe7d4cebf74bebe67d9c3aa5a7c0df23af1aa6abb"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "instance_id": "sympy__sympy-16766",
+  "repo": "sympy/sympy",
+  "verdict": "unknown",
+  "admitted": false,
+  "unknown_reason": "test bodies absent from trace",
+  "test_body_trace_present": false,
+  "level_bytes": [
+    9066933,
+    9083046,
+    2491954
+  ],
+  "production_bytes": 16518911,
+  "all_python_bytes": 26834107,
+  "preregistered_docstring_lean_ratio": 0.29479074014019446,
+  "repository_ratios": [
+    0.5488820055995217,
+    0.5498574330959226,
+    0.15085461747448123
+  ],
+  "all_python_ratios": [
+    0.33788838212503214,
+    0.3384888492842337,
+    0.0928651734153106
+  ],
+  "package_bytes": 26573838,
+  "dependency_bytes": 11006940,
+  "primary_package_ratios": [
+    0.3411977223613691,
+    0.3418040706050816,
+    0.09377471180489623
+  ],
+  "free_baseline_ratios": [
+    0.24126517551073584,
+    0.24169393193509725,
+    0.06630927119177789
+  ],
+  "named_all_changed": false,
+  "eligible_levels": [],
+  "changed_functions": [],
+  "new_functions": [
+    {
+      "path": "sympy/printing/pycode.py",
+      "name": "PythonCodePrinter._print_Indexed",
+      "included": false
+    }
+  ],
+  "module_edits": [
+    {
+      "path": "sympy/printing/pycode.py",
+      "line": 360,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sympy/printing/pycode.py",
+      "included": true,
+      "rank": 81
+    }
+  ],
+  "worst_function_rank": null,
+  "lean_bodies_all_changed": false,
+  "selected_files": 444,
+  "trace_files": 352,
+  "unresolved_count": 799,
+  "parse_errors": [],
+  "seconds": 5.091569269000502,
+  "presentation_sha256": [
+    "4815c2755c44d138de1cd998b057b95f50f0029c14dffeba9d8d266d044206b7",
+    "4900e025cd2c08be2d907a99675510a99626b68a6e48f5b72003a3783ff0f125",
+    "7ad70c64e78c4762b79e6bfbbc9f1250b4a50ab44c92408183f774be47a706fc"
+  ]
+}

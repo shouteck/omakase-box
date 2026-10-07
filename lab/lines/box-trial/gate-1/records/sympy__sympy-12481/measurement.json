@@ -1,0 +1,74 @@
+{
+  "instance_id": "sympy__sympy-12481",
+  "repo": "sympy/sympy",
+  "verdict": "unknown",
+  "admitted": false,
+  "unknown_reason": "test bodies absent from trace",
+  "test_body_trace_present": false,
+  "level_bytes": [
+    7469126,
+    7482231,
+    2021411
+  ],
+  "production_bytes": 9688318,
+  "all_python_bytes": 15399227,
+  "preregistered_docstring_lean_ratio": 0.4188853008334367,
+  "repository_ratios": [
+    0.7709414575367984,
+    0.7722941175134838,
+    0.20864416300125574
+  ],
+  "all_python_ratios": [
+    0.4850325279314345,
+    0.4858835446740281,
+    0.13126704346912998
+  ],
+  "package_bytes": 15164330,
+  "dependency_bytes": 11006940,
+  "primary_package_ratios": [
+    0.4925457306719123,
+    0.4934099297496164,
+    0.1333003832018955
+  ],
+  "free_baseline_ratios": [
+    0.2853940981847652,
+    0.28589483811828775,
+    0.0772377878490421
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sympy/combinatorics/permutations.py",
+      "name": "Permutation.__new__",
+      "start": 801,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 325,
+      "function_rank": 8965
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sympy/combinatorics/permutations.py",
+      "included": true,
+      "rank": 325
+    }
+  ],
+  "worst_function_rank": 8965,
+  "lean_bodies_all_changed": false,
+  "selected_files": 385,
+  "trace_files": 315,
+  "unresolved_count": 700,
+  "parse_errors": [],
+  "seconds": 3.125788049000221,
+  "presentation_sha256": [
+    "c73b8bc8a4cf3132614c4ef3f5f61a9b896cf82ac9024a0568cea301124d5fe6",
+    "bb208e1d732675d3aa1adf789efaeffdddff3fee9e054dd7e99c470f47f3147a",
+    "971e55c727959ac54ceaa99eb8055a29259ffbe3301731bff76019a59afa1738"
+  ]
+}

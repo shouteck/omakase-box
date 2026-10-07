@@ -1,0 +1,38 @@
+{
+  "argv": [
+    "docker",
+    "run",
+    "--rm",
+    "--name",
+    "lab-gate-1-dependency-40a88a91-610e-44e2-b6dd-6cc082dea35f",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--read-only",
+    "--memory",
+    "1g",
+    "--cpus",
+    "1",
+    "--pids-limit",
+    "32",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-1\\container.py,dst=/lab/container.py,readonly",
+    "--entrypoint",
+    "/bin/bash",
+    "sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71",
+    "-lc",
+    "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate testbed && python /lab/container.py --dependencies"
+  ],
+  "image_id": "sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71",
+  "result": {
+    "dependency_bytes": 21888212,
+    "dependency_files": 1535
+  },
+  "bridge_sha256": "a7f781d574e5b7e82be1ed4e5c284e44aba4e520d4c275304f2ff35b6ac5486e",
+  "stdout_sha256": "d2069da6163252b6841d9d0b01e12c4862ba1191c2a20d0838595a45663d8ac2"
+}

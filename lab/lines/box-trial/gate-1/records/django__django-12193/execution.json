@@ -1,0 +1,20 @@
+{
+  "base_commit": "3fb7c12158a2402f0f80824f6778112071235803",
+  "python": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+  "argv": [
+    "tests/runtests.py",
+    "--verbosity",
+    "2",
+    "--settings=test_sqlite",
+    "--parallel",
+    "1",
+    "forms_tests.widget_tests.test_checkboxinput",
+    "postgres_tests.test_array"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 3.6240354310000384,
+  "dependency_bytes": 21620604,
+  "dependency_files": 1540,
+  "source_files": 2584
+}

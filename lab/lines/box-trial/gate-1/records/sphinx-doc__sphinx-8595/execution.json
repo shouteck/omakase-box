@@ -1,0 +1,18 @@
+{
+  "base_commit": "b19bce971e82f2497d67fdacdeca8db08ae0ba56",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "tests/roots/test-ext-autodoc/target/empty_all.py",
+    "tests/test_ext_autodoc_automodule.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 3.2636657029997878,
+  "source_files": 530,
+  "dependency_bytes": 25947142,
+  "dependency_files": 2075
+}

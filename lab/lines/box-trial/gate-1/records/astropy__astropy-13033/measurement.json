@@ -1,0 +1,80 @@
+{
+  "instance_id": "astropy__astropy-13033",
+  "repo": "astropy/astropy",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    6581675,
+    6605422,
+    2685674
+  ],
+  "production_bytes": 7114118,
+  "all_python_bytes": 12524089,
+  "preregistered_docstring_lean_ratio": 0.566658579461291,
+  "repository_ratios": [
+    0.9251568500831726,
+    0.9284948605013299,
+    0.3775132771202277
+  ],
+  "all_python_ratios": [
+    0.5255212574742961,
+    0.5274173634505471,
+    0.21444066710161513
+  ],
+  "package_bytes": 12446634,
+  "dependency_bytes": 21888212,
+  "primary_package_ratios": [
+    0.5287915592279808,
+    0.5306994646102713,
+    0.21577512442319746
+  ],
+  "free_baseline_ratios": [
+    0.1916908262818479,
+    0.19238245600402576,
+    0.07822006832359173
+  ],
+  "named_all_changed": false,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "astropy/timeseries/core.py",
+      "name": "BaseTimeSeries._check_required_columns",
+      "start": 57,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 187,
+      "function_rank": 3757
+    }
+  ],
+  "new_functions": [
+    {
+      "path": "astropy/timeseries/core.py",
+      "name": "BaseTimeSeries._check_required_columns.as_scalar_or_list_str",
+      "included": false
+    }
+  ],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "astropy/timeseries/core.py",
+      "included": true,
+      "rank": 187
+    }
+  ],
+  "worst_function_rank": null,
+  "lean_bodies_all_changed": false,
+  "selected_files": 379,
+  "trace_files": 317,
+  "unresolved_count": 1101,
+  "parse_errors": [],
+  "seconds": 5.809740246000047,
+  "presentation_sha256": [
+    "69861f2c652f16f59e1e5eea7eb9b039b1ac2899466b3da276fd246a06027bb5",
+    "d7e553d6bec7d7f9ecb8c2c32d6b802eb2a18023ca5bc8f4c4b94467109a7c9e",
+    "2e1e5dda1a2b793ae6ae2d35eb60e800afcb8eae24ee0a4ce4732be75911f0e5"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "base_commit": "c4e836cdf73fc6aa7bab6a86719a0f08861ffb1d",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "bin/test",
+    "-C",
+    "--verbose",
+    "sympy/printing/tests/test_pycode.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 4.013642156999595,
+  "source_files": 1545,
+  "dependency_bytes": 11006940,
+  "dependency_files": 963
+}

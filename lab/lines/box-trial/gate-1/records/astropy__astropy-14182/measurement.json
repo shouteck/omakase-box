@@ -1,0 +1,126 @@
+{
+  "instance_id": "astropy__astropy-14182",
+  "repo": "astropy/astropy",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    6705976,
+    6726653,
+    2596493
+  ],
+  "production_bytes": 7258141,
+  "all_python_bytes": 12859632,
+  "preregistered_docstring_lean_ratio": 0.5536179305417186,
+  "repository_ratios": [
+    0.9239247349975703,
+    0.9267735360886485,
+    0.35773526582082105
+  ],
+  "all_python_ratios": [
+    0.5214749535601019,
+    0.5230828533818075,
+    0.20191036570875434
+  ],
+  "package_bytes": 12781689,
+  "dependency_bytes": 21888212,
+  "primary_package_ratios": [
+    0.5246549184540478,
+    0.5262726232816336,
+    0.20314161923357704
+  ],
+  "free_baseline_ratios": [
+    0.1934235693375646,
+    0.19401996561801546,
+    0.07489184927294716
+  ],
+  "named_all_changed": false,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "name": "RST.__init__",
+      "start": 60,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 132,
+      "function_rank": 2369
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "name": "RST.write",
+      "start": 63,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 132,
+      "function_rank": 2371
+    }
+  ],
+  "new_functions": [
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "name": "RST.read",
+      "included": false
+    }
+  ],
+  "module_edits": [
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 42,
+      "included": true
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 43,
+      "included": true
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 44,
+      "included": true
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 45,
+      "included": true
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 46,
+      "included": true
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 47,
+      "included": true
+    },
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "line": 30,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "astropy/io/ascii/rst.py",
+      "included": true,
+      "rank": 132
+    }
+  ],
+  "worst_function_rank": null,
+  "lean_bodies_all_changed": false,
+  "selected_files": 386,
+  "trace_files": 294,
+  "unresolved_count": 1115,
+  "parse_errors": [],
+  "seconds": 4.497658468000054,
+  "presentation_sha256": [
+    "f12867bda3fc4557de92031f2de907b94e2a9f7e433b405793e85fd424f02b8d",
+    "0290b157b0244b710b64ddabb37a1d6c66e3600b6eba90b498fbad24c689ae15",
+    "0461f9c51ca3b08ac32f4bd90fead0e5b0e2d7ee83e9bffd51ee09c5df7626a3"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "instance_id": "sympy__sympy-12096",
+  "repo": "sympy/sympy",
+  "verdict": "unknown",
+  "admitted": false,
+  "unknown_reason": "test bodies absent from trace",
+  "test_body_trace_present": false,
+  "level_bytes": [
+    7395567,
+    7408440,
+    1982227
+  ],
+  "production_bytes": 9649981,
+  "all_python_bytes": 15309551,
+  "preregistered_docstring_lean_ratio": 0.41603874660478607,
+  "repository_ratios": [
+    0.766381508937686,
+    0.767715501201505,
+    0.20541252879150745
+  ],
+  "all_python_ratios": [
+    0.48306883722455346,
+    0.4839096848758007,
+    0.12947649477113993
+  ],
+  "package_bytes": 15075274,
+  "dependency_bytes": 11006940,
+  "primary_package_ratios": [
+    0.490575959017395,
+    0.491429873845079,
+    0.13148862169934689
+  ],
+  "free_baseline_ratios": [
+    0.2835482831327126,
+    0.2840418378593167,
+    0.07599918473178696
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sympy/core/function.py",
+      "name": "Function._eval_evalf",
+      "start": 500,
+      "named": true,
+      "executed": false,
+      "lean_body": false,
+      "file_rank": 35,
+      "function_rank": 1013
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sympy/core/function.py",
+      "included": true,
+      "rank": 35
+    }
+  ],
+  "worst_function_rank": 1013,
+  "lean_bodies_all_changed": false,
+  "selected_files": 376,
+  "trace_files": 313,
+  "unresolved_count": 694,
+  "parse_errors": [],
+  "seconds": 6.480740742999842,
+  "presentation_sha256": [
+    "8f607f2953e8a1ed3bba85b61a69ed243b033d3c81543d23e1de2c1b0789f727",
+    "f35cc66e65d6000fbdf27f557bfa6094d8c0642eb87650ee7b37d569e33cb7b2",
+    "b7158b1e272764c1a57d03fb82e3758980f70f4da2c3b1981a6bfa595b9e0f20"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "instance_id": "django__django-15467",
+  "repo": "django/django",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3881900,
+    3958839,
+    2777803
+  ],
+  "production_bytes": 5023396,
+  "all_python_bytes": 15993758,
+  "preregistered_docstring_lean_ratio": 0.5923984491766128,
+  "repository_ratios": [
+    0.7727640823060734,
+    0.788080215057702,
+    0.5529731281388128
+  ],
+  "all_python_ratios": [
+    0.24271343858022612,
+    0.24752400280159298,
+    0.17368044458344312
+  ],
+  "package_bytes": 5213787,
+  "dependency_bytes": 34569279,
+  "primary_package_ratios": [
+    0.7445451837599043,
+    0.7593020198178406,
+    0.5327802996171497
+  ],
+  "free_baseline_ratios": [
+    0.09757669255557126,
+    0.09951065611685132,
+    0.0698237536543815
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "django/contrib/admin/options.py",
+      "name": "BaseModelAdmin.formfield_for_foreignkey",
+      "start": 251,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 247,
+      "function_rank": 4664
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "django/contrib/admin/options.py",
+      "included": true,
+      "rank": 247
+    }
+  ],
+  "worst_function_rank": 4664,
+  "lean_bodies_all_changed": true,
+  "selected_files": 395,
+  "trace_files": 383,
+  "unresolved_count": 750,
+  "parse_errors": [
+    "tests/test_runner_apps/tagged/tests_syntax_error.py"
+  ],
+  "seconds": 6.681792034000068,
+  "presentation_sha256": [
+    "303ffe156022467dd376b8f7e083682921c2b75119dbe443182d31e62fdf1cdc",
+    "d17afd7a73fb58fa83280aea525591eec191e1222ce0c39307f3b5d232fa490c",
+    "c27708b674088e5620044d31ef02fd5699481082fb88076d76e0b127b870e13d"
+  ]
+}

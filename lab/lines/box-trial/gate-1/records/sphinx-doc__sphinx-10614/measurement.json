@@ -1,0 +1,74 @@
+{
+  "instance_id": "sphinx-doc__sphinx-10614",
+  "repo": "sphinx-doc/sphinx",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    2149818,
+    2175627,
+    1286217
+  ],
+  "production_bytes": 2514766,
+  "all_python_bytes": 3908553,
+  "preregistered_docstring_lean_ratio": 0.5366197093487028,
+  "repository_ratios": [
+    0.8548779488827191,
+    0.8651409316015883,
+    0.5114658779385438
+  ],
+  "all_python_ratios": [
+    0.5500291284268116,
+    0.5566323393849335,
+    0.3290775384138324
+  ],
+  "package_bytes": 2500600,
+  "dependency_bytes": 25393652,
+  "primary_package_ratios": [
+    0.859720866991922,
+    0.8700419899224187,
+    0.5143633527953291
+  ],
+  "free_baseline_ratios": [
+    0.07707028673864422,
+    0.07799553112232585,
+    0.046110467489861355
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sphinx/ext/inheritance_diagram.py",
+      "name": "html_visit_inheritance_diagram",
+      "start": 398,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 64,
+      "function_rank": 935
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sphinx/ext/inheritance_diagram.py",
+      "included": true,
+      "rank": 64
+    }
+  ],
+  "worst_function_rank": 935,
+  "lean_bodies_all_changed": true,
+  "selected_files": 137,
+  "trace_files": 141,
+  "unresolved_count": 909,
+  "parse_errors": [],
+  "seconds": 7.099273104000531,
+  "presentation_sha256": [
+    "04c287d37372efc7c260ebdab7382a1af18831220d808d1c5123723513b7f9a9",
+    "682d6a6e6b341ffc767cfcf0061b8f5f5de4e57fb1414d1896c5873962373fdd",
+    "fa7e6a54ad9f5fabbbcfa100b8b64e28c9dec761dadce097e345f6ea34e3d373"
+  ]
+}

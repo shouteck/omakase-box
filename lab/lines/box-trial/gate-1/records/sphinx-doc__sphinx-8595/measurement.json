@@ -1,0 +1,74 @@
+{
+  "instance_id": "sphinx-doc__sphinx-8595",
+  "repo": "sphinx-doc/sphinx",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    2216367,
+    2228974,
+    1126805
+  ],
+  "production_bytes": 2825019,
+  "all_python_bytes": 3943827,
+  "preregistered_docstring_lean_ratio": 0.42636704390306757,
+  "repository_ratios": [
+    0.7845494136499613,
+    0.7890120385031039,
+    0.3988663439077755
+  ],
+  "all_python_ratios": [
+    0.5619838294123957,
+    0.5651804706443766,
+    0.28571359747777986
+  ],
+  "package_bytes": 2801450,
+  "dependency_bytes": 25947142,
+  "primary_package_ratios": [
+    0.7911499402095343,
+    0.7956501097645862,
+    0.40222206357422047
+  ],
+  "free_baseline_ratios": [
+    0.07709480172107211,
+    0.07753332754522378,
+    0.03919513693053211
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sphinx/ext/autodoc/__init__.py",
+      "name": "ModuleDocumenter.get_object_members",
+      "start": 1074,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 70,
+      "function_rank": 1146
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sphinx/ext/autodoc/__init__.py",
+      "included": true,
+      "rank": 70
+    }
+  ],
+  "worst_function_rank": 1146,
+  "lean_bodies_all_changed": true,
+  "selected_files": 140,
+  "trace_files": 142,
+  "unresolved_count": 782,
+  "parse_errors": [],
+  "seconds": 3.2636657029997878,
+  "presentation_sha256": [
+    "4c44476789208db8bfef4c1fed06484eeee9ab8512bb8a7ba521bc6925407bb8",
+    "d50f115a4946a6469a82008b825e2c143a96e10e4b8fef3f1f36da02d6cbcc03",
+    "e948ee70aa0d4553ec5b29fcca6f3969aa9a461fb3c99a09fbc5e3e2d554e276"
+  ]
+}

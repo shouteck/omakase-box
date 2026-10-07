@@ -1,0 +1,74 @@
+{
+  "instance_id": "django__django-13786",
+  "repo": "django/django",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3404586,
+    3430642,
+    1612787
+  ],
+  "production_bytes": 4734918,
+  "all_python_bytes": 14506591,
+  "preregistered_docstring_lean_ratio": 0.40870042522383704,
+  "repository_ratios": [
+    0.7190380065716028,
+    0.7245409529795447,
+    0.3406156136178071
+  ],
+  "all_python_ratios": [
+    0.23469235466830216,
+    0.23648850374288488,
+    0.11117615434253299
+  ],
+  "package_bytes": 4909054,
+  "dependency_bytes": 21972716,
+  "primary_package_ratios": [
+    0.6935319921109037,
+    0.698839735720976,
+    0.32853315526779703
+  ],
+  "free_baseline_ratios": [
+    0.12665036565672572,
+    0.12761964706937082,
+    0.059995565768176724
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "django/db/migrations/operations/models.py",
+      "name": "CreateModel.reduce",
+      "start": 124,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 216,
+      "function_rank": 4177
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "django/db/migrations/operations/models.py",
+      "included": true,
+      "rank": 216
+    }
+  ],
+  "worst_function_rank": 4177,
+  "lean_bodies_all_changed": true,
+  "selected_files": 353,
+  "trace_files": 333,
+  "unresolved_count": 713,
+  "parse_errors": [],
+  "seconds": 1.5563367390000167,
+  "presentation_sha256": [
+    "51a62dd522121ec016dbe9ffdc461d9c89c63657a1fb830ce209e9779733c765",
+    "ec952ae49a38ef4810ddd27c3a6722337e1a7f2f6c764b2afec40935b7aef3d5",
+    "30287be10fbc98ccf4cad21bbc1927b2a698308dfdf1c81761edcb430d6d1256"
+  ]
+}

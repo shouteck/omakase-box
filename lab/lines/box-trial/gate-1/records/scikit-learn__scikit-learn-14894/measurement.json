@@ -1,0 +1,74 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-14894",
+  "repo": "scikit-learn/scikit-learn",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3204828,
+    3212994,
+    1331006
+  ],
+  "production_bytes": 4596688,
+  "all_python_bytes": 9106216,
+  "preregistered_docstring_lean_ratio": 0.4735126682515759,
+  "repository_ratios": [
+    0.6972037258130201,
+    0.698980222281782,
+    0.28955761191536167
+  ],
+  "all_python_ratios": [
+    0.3519385000311875,
+    0.3528352501192592,
+    0.14616455397060646
+  ],
+  "package_bytes": 7669299,
+  "dependency_bytes": 55694754,
+  "primary_package_ratios": [
+    0.41787756612436155,
+    0.4189423309744476,
+    0.17354989028332315
+  ],
+  "free_baseline_ratios": [
+    0.05057801463552213,
+    0.05070688896747182,
+    0.021005695453224876
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sklearn/svm/base.py",
+      "name": "BaseLibSVM._sparse_fit",
+      "start": 261,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 20,
+      "function_rank": 168
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sklearn/svm/base.py",
+      "included": true,
+      "rank": 20
+    }
+  ],
+  "worst_function_rank": 168,
+  "lean_bodies_all_changed": true,
+  "selected_files": 145,
+  "trace_files": 240,
+  "unresolved_count": 611,
+  "parse_errors": [],
+  "seconds": 9.08314953099989,
+  "presentation_sha256": [
+    "87d6a29be0aba5c41dd8ab5ed143021a44b6e7424e57a9a97bfa59bbb05dfd4e",
+    "0a1b382ff84b4cac17e162bcb7c76f5b7f306e9c4d7033ebe363cfe2c93dc300",
+    "e08ced4d8ca5d1a342acfe4519a4714f92aa64071bbfea504f6dc1fa55c3480b"
+  ]
+}

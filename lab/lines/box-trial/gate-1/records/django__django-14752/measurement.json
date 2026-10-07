@@ -1,0 +1,92 @@
+{
+  "instance_id": "django__django-14752",
+  "repo": "django/django",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    4067109,
+    4124792,
+    2663070
+  ],
+  "production_bytes": 4791919,
+  "all_python_bytes": 14931517,
+  "preregistered_docstring_lean_ratio": 0.6087867929320174,
+  "repository_ratios": [
+    0.8487432696587734,
+    0.8607808270548813,
+    0.5557418645849398
+  ],
+  "all_python_ratios": [
+    0.2723841790489205,
+    0.2762473498171686,
+    0.17835227324859224
+  ],
+  "package_bytes": 4978991,
+  "dependency_bytes": 32773418,
+  "primary_package_ratios": [
+    0.8168540573782921,
+    0.828439336403701,
+    0.53486138054879
+  ],
+  "free_baseline_ratios": [
+    0.10773111194043272,
+    0.10925904092636843,
+    0.07054039915704452
+  ],
+  "named_all_changed": false,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "django/contrib/admin/views/autocomplete.py",
+      "name": "AutocompleteJsonView.get",
+      "start": 12,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 257,
+      "function_rank": 4857
+    },
+    {
+      "path": "django/contrib/admin/views/autocomplete.py",
+      "name": "AutocompleteJsonView.get_paginator",
+      "start": 35,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 257,
+      "function_rank": 4861
+    }
+  ],
+  "new_functions": [
+    {
+      "path": "django/contrib/admin/views/autocomplete.py",
+      "name": "AutocompleteJsonView.serialize_result",
+      "included": false
+    }
+  ],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "django/contrib/admin/views/autocomplete.py",
+      "included": true,
+      "rank": 257
+    }
+  ],
+  "worst_function_rank": null,
+  "lean_bodies_all_changed": false,
+  "selected_files": 390,
+  "trace_files": 382,
+  "unresolved_count": 762,
+  "parse_errors": [
+    "tests/test_runner_apps/tagged/tests_syntax_error.py"
+  ],
+  "seconds": 14.21755758800009,
+  "presentation_sha256": [
+    "fec09d14b702d52c3122670d654ab32fd41db00d02f0469bde64e43cfddd9898",
+    "8db69e1fdd41db95c37c29462104b9f49c4530c5834c5d5619010190b135532c",
+    "ddbbd44d08d46925fcba5a7e3a00cd5e62e6f8bcd0d929c838f9b042c2a6e17b"
+  ]
+}

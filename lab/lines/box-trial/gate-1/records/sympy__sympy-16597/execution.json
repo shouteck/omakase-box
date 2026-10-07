@@ -1,0 +1,17 @@
+{
+  "base_commit": "6fd65310fa3167b9626c38a5487e171ca407d988",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "bin/test",
+    "-C",
+    "--verbose",
+    "sympy/core/tests/test_assumptions.py",
+    "sympy/functions/elementary/tests/test_miscellaneous.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 19.591075226000612,
+  "source_files": 1308,
+  "dependency_bytes": 11006940,
+  "dependency_files": 963
+}

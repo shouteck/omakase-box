@@ -1,0 +1,95 @@
+{
+  "instance_id": "astropy__astropy-7166",
+  "repo": "astropy/astropy",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    4272455,
+    4284849,
+    1523312
+  ],
+  "production_bytes": 5479836,
+  "all_python_bytes": 8662352,
+  "preregistered_docstring_lean_ratio": 0.4467734070873654,
+  "repository_ratios": [
+    0.7796684061347822,
+    0.7819301526542035,
+    0.27798496159374114
+  ],
+  "all_python_ratios": [
+    0.49322112516323513,
+    0.4946519143992301,
+    0.1758543176264368
+  ],
+  "package_bytes": 8548474,
+  "dependency_bytes": 21962847,
+  "primary_package_ratios": [
+    0.49979154174183604,
+    0.5012413911535556,
+    0.17819695070722563
+  ],
+  "free_baseline_ratios": [
+    0.1400285159728089,
+    0.1404347258514307,
+    0.04992612414257645
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "astropy/utils/misc.py",
+      "name": "InheritDocstrings.__init__",
+      "start": 523,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 7,
+      "function_rank": 52
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [
+    {
+      "path": "astropy/utils/misc.py",
+      "line": 7,
+      "included": true
+    },
+    {
+      "path": "astropy/utils/misc.py",
+      "line": 8,
+      "included": true
+    },
+    {
+      "path": "astropy/utils/misc.py",
+      "line": 9,
+      "included": true
+    },
+    {
+      "path": "astropy/utils/misc.py",
+      "line": 30,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "astropy/utils/misc.py",
+      "included": true,
+      "rank": 7
+    }
+  ],
+  "worst_function_rank": 52,
+  "lean_bodies_all_changed": true,
+  "selected_files": 261,
+  "trace_files": 92,
+  "unresolved_count": 810,
+  "parse_errors": [],
+  "seconds": 4.011100449999958,
+  "presentation_sha256": [
+    "50c0076921d57694030e23d791e7f1b18c5596f4916cb72b66b6ac7fc4274a66",
+    "5dd75e00849792b3de7482fa995a0c045cc57abd5bcf3e79761cb7f3f85fff64",
+    "a782de586f576803d7831495e282ef09c7a1a68f096dbf72dc46cacb011e9576"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "base_commit": "d7c3045115693e887bcd03599b7ca4650ac5f2cb",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "bin/test",
+    "-C",
+    "--verbose",
+    "sympy/utilities/tests/test_lambdify.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 6.480740742999842,
+  "source_files": 1109,
+  "dependency_bytes": 11006940,
+  "dependency_files": 963
+}

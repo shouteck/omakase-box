@@ -1,5 +1,7 @@
 """Pure source/trace packaging, then score-only historical patch mapping."""
-import ast, gzip, hashlib, importlib.util, json, pathlib, re, sys, statistics
+import ast, gzip, hashlib, importlib.util, json, pathlib, re, sys, statistics, warnings
+
+warnings.filterwarnings('ignore', category=SyntaxWarning)
 
 HERE = pathlib.Path(__file__).resolve().parent
 adapter_path = HERE.parents[1] / 'example-slice/instrument/runtime/python_adapter.py'
@@ -111,7 +113,7 @@ def construct(directory, task):
     log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', log)
     expected = json.loads(task['FAIL_TO_PASS']) if isinstance(task['FAIL_TO_PASS'], str) else task['FAIL_TO_PASS']
     pytest_failed = re.findall(r'^FAILED\s+(\S+)', log, re.M)
-    pytest_failed += re.findall(r'^(\S+::\S+)\s+(?:FAILED|ERROR)\b', log, re.M)
+    pytest_failed += re.findall(r'^(\S+::\S+)\s+FAILED\b', log, re.M)
     django_failed = re.findall(r'^(test\S+)\s+\(([^)]+)\).*?\b(?:FAIL|ERROR)\s*$', log, re.M)
     django_failed += re.findall(r'^(?:FAIL|ERROR): (test\S+)\s+\(([^)]+)\)', log, re.M)
     normal_names = pytest_failed + [a + ' (' + b + ')' for a, b in django_failed]
@@ -122,7 +124,9 @@ def construct(directory, task):
         matched += [name for name in expected if re.search(r'^' + re.escape(name) + r'\s+\.\.\.\s+(?:FAIL|ERROR)\s*$', log, re.M)]
     if task['repo'] == 'sympy/sympy' and re.search(r'\b\d+ failed\b', log):
         matched += [name for name in expected if re.search(r'^' + re.escape(name.rsplit(':', 1)[-1]) + r'\s+F\b', log, re.M)]
-    admitted = bool(matched) and execution['exit'] != 0 and not execution['timed_out'] and not re.search(r'ERROR collecting|errors during collection|ImportError while loading conftest', log)
+    test_body_trace_present = any(r['name'].rsplit('.', 1)[-1].startswith('test') and r['start'] in called.get(p, set())
+                                  for p in tests for r in rows.get(p, []))
+    admitted = bool(matched) and test_body_trace_present and execution['exit'] != 0 and not execution['timed_out'] and not re.search(r'ERROR collecting|errors during collection|ImportError while loading conftest', log)
     package = {'instance_id': task['instance_id'], 'files': ordered,
                'functions': {p: [{'name': r['name'], 'start': r['start'], 'end': r['end'], 'executed': r['start'] in called[p],
                                   'body_present': is_test(p) or any(a['start'] in called[p] and a['start'] <= r['start'] and a['end'] >= r['end'] for a in rows[p])}
@@ -132,6 +136,7 @@ def construct(directory, task):
                'production_bytes': production_bytes, 'all_python_bytes': all_bytes, 'package_bytes': package_bytes,
                'dependency_bytes': dependency_bytes, 'unresolved': unresolved, 'parse_errors': parse_errors,
                'trace_file_count': len(trace['files']), 'admitted': admitted, 'matched_fail_to_pass': sorted(set(matched)),
+               'test_body_trace_present': test_body_trace_present,
                'normal_failed_names': normal_names, 'seconds': execution['seconds']}
     for i, text in enumerate(presentations, 1):
         (directory / ('level-' + str(i) + '.txt')).write_bytes(text.encode())
@@ -223,6 +228,8 @@ def score(package, source, trees, task):
     eligible = [i + 1 for i, ratio in enumerate(ratios) if ratio < .1 and names_all]
     verdict = 'unknown' if unsupported_edits else 'pass' if package['admitted'] and eligible else 'fail' if package['admitted'] else 'unknown'
     return {'instance_id': task['instance_id'], 'repo': task['repo'], 'verdict': verdict, 'admitted': package['admitted'],
+            'unknown_reason': 'unsupported fix language' if unsupported_edits else 'test bodies absent from trace' if not package['test_body_trace_present'] else 'expected normal failure not confirmed' if not package['admitted'] else None,
+            'test_body_trace_present': package['test_body_trace_present'],
             'level_bytes': package['bytes'], 'production_bytes': package['production_bytes'], 'all_python_bytes': package['all_python_bytes'],
             'preregistered_docstring_lean_ratio': package['preregistered_docstring_lean_bytes'] / package['production_bytes'],
             'repository_ratios': ratios, 'all_python_ratios': [n / package['all_python_bytes'] for n in package['bytes']],

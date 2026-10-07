@@ -1,0 +1,17 @@
+{
+  "base_commit": "26d147868f8a891a6009a25cd6a8576d2e1bd747",
+  "python": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "astropy/utils/tests/test_misc.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 4.011100449999958,
+  "dependency_bytes": 21962847,
+  "dependency_files": 1463,
+  "source_files": 704
+}

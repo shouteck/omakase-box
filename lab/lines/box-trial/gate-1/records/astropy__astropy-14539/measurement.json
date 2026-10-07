@@ -1,0 +1,74 @@
+{
+  "instance_id": "astropy__astropy-14539",
+  "repo": "astropy/astropy",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    6825016,
+    6853977,
+    3030839
+  ],
+  "production_bytes": 7343054,
+  "all_python_bytes": 13016027,
+  "preregistered_docstring_lean_ratio": 0.5967552465227683,
+  "repository_ratios": [
+    0.9294519691670523,
+    0.9333959684894051,
+    0.4127491095666735
+  ],
+  "all_python_ratios": [
+    0.5243547819929999,
+    0.5265798081088799,
+    0.23285438790193044
+  ],
+  "package_bytes": 12940637,
+  "dependency_bytes": 21888212,
+  "primary_package_ratios": [
+    0.5274095857877784,
+    0.5296475745359367,
+    0.234210958857744
+  ],
+  "free_baseline_ratios": [
+    0.19595870078853309,
+    0.19679022410416147,
+    0.08702093485776691
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "astropy/io/fits/diff.py",
+      "name": "TableDataDiff._diff",
+      "start": 1344,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 37,
+      "function_rank": 607
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "astropy/io/fits/diff.py",
+      "included": true,
+      "rank": 37
+    }
+  ],
+  "worst_function_rank": 607,
+  "lean_bodies_all_changed": true,
+  "selected_files": 391,
+  "trace_files": 299,
+  "unresolved_count": 1127,
+  "parse_errors": [],
+  "seconds": 8.243681177999974,
+  "presentation_sha256": [
+    "e4b5da1cef9e375d58885814dc20792b963648c6b3affb5d439dd027a42addb8",
+    "e5b2dc9925cbb4a4177a91c4f3c689aa7a525399fa0bceb0b2cb8a5dc2fddcee",
+    "9b8f5feb040e27922a5f3aa2d7dbcff80e53d4e7e7c35002ae8f16b67ae1d936"
+  ]
+}

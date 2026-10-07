@@ -1,0 +1,85 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13124",
+  "repo": "scikit-learn/scikit-learn",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    3429135,
+    3440454,
+    1449100
+  ],
+  "production_bytes": 4633875,
+  "all_python_bytes": 8614658,
+  "preregistered_docstring_lean_ratio": 0.48958334007714926,
+  "repository_ratios": [
+    0.740014566642389,
+    0.7424572307194303,
+    0.31271883682663
+  ],
+  "all_python_ratios": [
+    0.3980581701560294,
+    0.3993720934713833,
+    0.16821329413193187
+  ],
+  "package_bytes": 7288628,
+  "dependency_bytes": 54846595,
+  "primary_package_ratios": [
+    0.4704774341618203,
+    0.47203040133204766,
+    0.19881656739786968
+  ],
+  "free_baseline_ratios": [
+    0.05518826254152174,
+    0.05537042974803518,
+    0.02332171560726514
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sklearn/model_selection/_split.py",
+      "name": "StratifiedKFold._make_test_folds",
+      "start": 622,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 54,
+      "function_rank": 658
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [
+    {
+      "path": "sklearn/model_selection/_split.py",
+      "line": 579,
+      "included": true
+    },
+    {
+      "path": "sklearn/model_selection/_split.py",
+      "line": 580,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sklearn/model_selection/_split.py",
+      "included": true,
+      "rank": 54
+    }
+  ],
+  "worst_function_rank": 658,
+  "lean_bodies_all_changed": true,
+  "selected_files": 191,
+  "trace_files": 277,
+  "unresolved_count": 905,
+  "parse_errors": [],
+  "seconds": 8.5918955559996,
+  "presentation_sha256": [
+    "40924b3c9756d715080211df2a1e52729284e9abababf9381328d0f2bc70e4c0",
+    "7d7f93c3618cc00074a3e845e2e72d4ca53d8ca1f36291ef212f29403f9fbe08",
+    "7a9e9abe3f70b4f81c62ab16792bea736c4a312b1e98c4a21b897a469ddef6c0"
+  ]
+}

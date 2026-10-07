@@ -1,0 +1,431 @@
+{
+  "errors": [],
+  "gold_context_checks": [
+    {
+      "task": "astropy__astropy-14539",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "astropy__astropy-7166",
+      "verified_changed_or_context_lines": 25
+    },
+    {
+      "task": "astropy__astropy-14182",
+      "verified_changed_or_context_lines": 29
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "verified_changed_or_context_lines": 15
+    },
+    {
+      "task": "astropy__astropy-14508",
+      "verified_changed_or_context_lines": 31
+    },
+    {
+      "task": "django__django-13786",
+      "verified_changed_or_context_lines": 11
+    },
+    {
+      "task": "django__django-15467",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "django__django-12193",
+      "verified_changed_or_context_lines": 9
+    },
+    {
+      "task": "django__django-16116",
+      "verified_changed_or_context_lines": 19
+    },
+    {
+      "task": "django__django-14752",
+      "verified_changed_or_context_lines": 19
+    },
+    {
+      "task": "matplotlib__matplotlib-24570",
+      "verified_changed_or_context_lines": 10
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "verified_changed_or_context_lines": 8
+    },
+    {
+      "task": "matplotlib__matplotlib-23412",
+      "verified_changed_or_context_lines": 9
+    },
+    {
+      "task": "matplotlib__matplotlib-26113",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "matplotlib__matplotlib-13989",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "scikit-learn__scikit-learn-11578",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14087",
+      "verified_changed_or_context_lines": 15
+    },
+    {
+      "task": "scikit-learn__scikit-learn-12585",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14894",
+      "verified_changed_or_context_lines": 11
+    },
+    {
+      "task": "scikit-learn__scikit-learn-13124",
+      "verified_changed_or_context_lines": 15
+    },
+    {
+      "task": "sphinx-doc__sphinx-7454",
+      "verified_changed_or_context_lines": 8
+    },
+    {
+      "task": "sphinx-doc__sphinx-9320",
+      "verified_changed_or_context_lines": 13
+    },
+    {
+      "task": "sphinx-doc__sphinx-10614",
+      "verified_changed_or_context_lines": 13
+    },
+    {
+      "task": "sphinx-doc__sphinx-8595",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "sphinx-doc__sphinx-11445",
+      "verified_changed_or_context_lines": 35
+    },
+    {
+      "task": "sympy__sympy-12481",
+      "verified_changed_or_context_lines": 12
+    },
+    {
+      "task": "sympy__sympy-12096",
+      "verified_changed_or_context_lines": 7
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "verified_changed_or_context_lines": 152
+    },
+    {
+      "task": "sympy__sympy-22914",
+      "verified_changed_or_context_lines": 6
+    },
+    {
+      "task": "sympy__sympy-16766",
+      "verified_changed_or_context_lines": 6
+    }
+  ],
+  "call_line_alias_sensitivity": [
+    {
+      "task": "astropy__astropy-14539",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.4127491095666735,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.23285438790193044
+    },
+    {
+      "task": "astropy__astropy-7166",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.27798496159374114,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.1758543176264368
+    },
+    {
+      "task": "astropy__astropy-14182",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.35773526582082105,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.20191036570875434
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.3775132771202277,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.21444066710161513
+    },
+    {
+      "task": "astropy__astropy-14508",
+      "possible_source_line_aliases": [
+        {
+          "path": "astropy/io/fits/tests/test_header.py",
+          "name": "TestRecordValuedKeywordCards.test_overly_aggressive_rvkc_lookup",
+          "start": 3036
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.41836131427271006,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.2360707773064991
+    },
+    {
+      "task": "django__django-13786",
+      "possible_source_line_aliases": [
+        {
+          "path": "django/utils/itercompat.py",
+          "name": "is_iterable",
+          "start": 1
+        },
+        {
+          "path": "django/contrib/admin/decorators.py",
+          "name": "register",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.3403672460642402,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.11109508774321962
+    },
+    {
+      "task": "django__django-15467",
+      "possible_source_line_aliases": [
+        {
+          "path": "django/utils/itercompat.py",
+          "name": "is_iterable",
+          "start": 1
+        },
+        {
+          "path": "django/forms/fields.py",
+          "name": "TypedChoiceField.__init__",
+          "start": 909
+        },
+        {
+          "path": "django/contrib/admin/decorators.py",
+          "name": "action",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.5526870666776021,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.173590597031667
+    },
+    {
+      "task": "django__django-12193",
+      "possible_source_line_aliases": [
+        {
+          "path": "django/db/models/utils.py",
+          "name": "make_model_tuple",
+          "start": 1
+        },
+        {
+          "path": "django/utils/itercompat.py",
+          "name": "is_iterable",
+          "start": 1
+        },
+        {
+          "path": "django/contrib/admin/decorators.py",
+          "name": "register",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.4438979412415355,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.14788165775146037
+    },
+    {
+      "task": "django__django-16116",
+      "possible_source_line_aliases": [
+        {
+          "path": "django/utils/itercompat.py",
+          "name": "is_iterable",
+          "start": 1
+        },
+        {
+          "path": "django/contrib/admin/decorators.py",
+          "name": "action",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.4933076474291276,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.15412307836323086
+    },
+    {
+      "task": "django__django-14752",
+      "possible_source_line_aliases": [
+        {
+          "path": "django/utils/itercompat.py",
+          "name": "is_iterable",
+          "start": 1
+        },
+        {
+          "path": "django/contrib/admin/decorators.py",
+          "name": "action",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.5554855998191957,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.17827003110266693
+    },
+    {
+      "task": "matplotlib__matplotlib-24570",
+      "possible_source_line_aliases": [
+        {
+          "path": "lib/matplotlib/__init__.py",
+          "name": "_rc_params_in_file",
+          "start": 779
+        },
+        {
+          "path": "lib/matplotlib/_blocking_input.py",
+          "name": "blocking_input_loop",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.39330291233664016,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.25883197291268145
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "possible_source_line_aliases": [
+        {
+          "path": "lib/matplotlib/__init__.py",
+          "name": "_rc_params_in_file",
+          "start": 748
+        },
+        {
+          "path": "lib/matplotlib/_blocking_input.py",
+          "name": "blocking_input_loop",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.3586303618134862,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.24176429383484419
+    },
+    {
+      "task": "matplotlib__matplotlib-23412",
+      "possible_source_line_aliases": [
+        {
+          "path": "lib/matplotlib/__init__.py",
+          "name": "_rc_params_in_file",
+          "start": 769
+        },
+        {
+          "path": "lib/matplotlib/_blocking_input.py",
+          "name": "blocking_input_loop",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.38850069203467275,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.2573566282198858
+    },
+    {
+      "task": "scikit-learn__scikit-learn-11578",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.32360090028218297,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.16971096863503057
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14087",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.3221706803259777,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.16241322954369286
+    },
+    {
+      "task": "scikit-learn__scikit-learn-12585",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.29591318434210795,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.1601371516842137
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14894",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.28955761191536167,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.14616455397060646
+    },
+    {
+      "task": "scikit-learn__scikit-learn-13124",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.31271883682663,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.16821329413193187
+    },
+    {
+      "task": "sphinx-doc__sphinx-7454",
+      "possible_source_line_aliases": [
+        {
+          "path": "sphinx/util/fileutil.py",
+          "name": "copy_asset",
+          "start": 58
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.4821143964270064,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.35361770773020773
+    },
+    {
+      "task": "sphinx-doc__sphinx-9320",
+      "possible_source_line_aliases": [
+        {
+          "path": "sphinx/util/fileutil.py",
+          "name": "copy_asset",
+          "start": 57
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.47297330439852814,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.3213026366493126
+    },
+    {
+      "task": "sphinx-doc__sphinx-10614",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.5114658779385438,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.3290775384138324
+    },
+    {
+      "task": "sphinx-doc__sphinx-8595",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.3988663439077755,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.28571359747777986
+    },
+    {
+      "task": "sphinx-doc__sphinx-11445",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.3832112792147055,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.2477990093223193
+    },
+    {
+      "task": "sympy__sympy-12481",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.20864416300125574,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.13126704346912998
+    },
+    {
+      "task": "sympy__sympy-12096",
+      "possible_source_line_aliases": [],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.20541252879150745,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.12947649477113993
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "possible_source_line_aliases": [
+        {
+          "path": "sympy/multipledispatch/utils.py",
+          "name": "expand_tuples",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.15352722143802988,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.09452720930516627
+    },
+    {
+      "task": "sympy__sympy-22914",
+      "possible_source_line_aliases": [
+        {
+          "path": "sympy/printing/tree.py",
+          "name": "pprint_nodes",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.16674010248722196,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.10083483198927294
+    },
+    {
+      "task": "sympy__sympy-16766",
+      "possible_source_line_aliases": [
+        {
+          "path": "sympy/multipledispatch/utils.py",
+          "name": "expand_tuples",
+          "start": 1
+        }
+      ],
+      "lean_ratio_lower_bound_if_all_alias_spans_removed": 0.15082598362567606,
+      "all_python_ratio_lower_bound_if_all_alias_spans_removed": 0.0928475465943398
+    }
+  ],
+  "all_raw_artifact_hashes_match": true,
+  "all_gold_patch_contexts_match_snapshot": true
+}

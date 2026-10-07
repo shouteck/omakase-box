@@ -1,0 +1,17 @@
+{
+  "base_commit": "a5917978be39d13cd90b517e1de4e7a539ffaa48",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "argv": [
+    "pytest",
+    "-rA",
+    "-vv",
+    "--tb=short",
+    "astropy/io/ascii/tests/test_rst.py"
+  ],
+  "exit": 1,
+  "timed_out": false,
+  "seconds": 4.497658468000054,
+  "dependency_bytes": 21888212,
+  "dependency_files": 1535,
+  "source_files": 929
+}

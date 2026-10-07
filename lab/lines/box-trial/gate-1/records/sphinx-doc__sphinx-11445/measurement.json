@@ -1,0 +1,120 @@
+{
+  "instance_id": "sphinx-doc__sphinx-11445",
+  "repo": "sphinx-doc/sphinx",
+  "verdict": "fail",
+  "admitted": true,
+  "unknown_reason": null,
+  "test_body_trace_present": true,
+  "level_bytes": [
+    2091711,
+    2101568,
+    948446
+  ],
+  "production_bytes": 2474995,
+  "all_python_bytes": 3827481,
+  "preregistered_docstring_lean_ratio": 0.4151535659667999,
+  "repository_ratios": [
+    0.8451374649241715,
+    0.8491200992325237,
+    0.3832112792147055
+  ],
+  "all_python_ratios": [
+    0.5464980753660175,
+    0.5490733984048517,
+    0.2477990093223193
+  ],
+  "package_bytes": 2460905,
+  "dependency_bytes": 25393652,
+  "primary_package_ratios": [
+    0.8499763298461338,
+    0.853981766870318,
+    0.3854053691629705
+  ],
+  "free_baseline_ratios": [
+    0.07509403219013679,
+    0.07544790606434702,
+    0.03404994019470495
+  ],
+  "named_all_changed": true,
+  "eligible_levels": [],
+  "changed_functions": [
+    {
+      "path": "sphinx/util/rst.py",
+      "name": "prepend_prolog",
+      "start": 78,
+      "named": true,
+      "executed": true,
+      "lean_body": true,
+      "file_rank": 48,
+      "function_rank": 812
+    }
+  ],
+  "new_functions": [],
+  "module_edits": [
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 13,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 15,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 20,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 21,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 22,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 23,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 24,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 25,
+      "included": true
+    },
+    {
+      "path": "sphinx/util/rst.py",
+      "line": 28,
+      "included": true
+    }
+  ],
+  "unsupported_fix_source_files": [],
+  "changed_files": [
+    {
+      "path": "sphinx/util/rst.py",
+      "included": true,
+      "rank": 48
+    }
+  ],
+  "worst_function_rank": 812,
+  "lean_bodies_all_changed": true,
+  "selected_files": 135,
+  "trace_files": 138,
+  "unresolved_count": 841,
+  "parse_errors": [],
+  "seconds": 3.194932716999574,
+  "presentation_sha256": [
+    "3201a916b11dcaf552e06463f3373a13e3ea345d61de0d4062a245bfb189c688",
+    "c17858a54139971b54834531d864554d03f1a84292637fb86d3745a1d95b4138",
+    "0a64584f13e826acd90b6ace20be98b671f2e624c400e422dcfad1e728194493"
+  ]
+}
