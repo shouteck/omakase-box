@@ -1,0 +1,102 @@
+{
+  "repo": "serde-rs/json",
+  "group": "fixed",
+  "issue": {
+    "url": "https://api.github.com/repos/serde-rs/json/issues/1214",
+    "repository_url": "https://api.github.com/repos/serde-rs/json",
+    "labels_url": "https://api.github.com/repos/serde-rs/json/issues/1214/labels{/name}",
+    "comments_url": "https://api.github.com/repos/serde-rs/json/issues/1214/comments",
+    "events_url": "https://api.github.com/repos/serde-rs/json/issues/1214/events",
+    "html_url": "https://github.com/serde-rs/json/issues/1214",
+    "id": 2661738693,
+    "node_id": "I_kwDOAiO0786epujF",
+    "number": 1214,
+    "title": "impl From<[T; N]> for Value",
+    "user": {
+      "login": "photino",
+      "id": 3446306,
+      "node_id": "MDQ6VXNlcjM0NDYzMDY=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3446306?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/photino",
+      "html_url": "https://github.com/photino",
+      "followers_url": "https://api.github.com/users/photino/followers",
+      "following_url": "https://api.github.com/users/photino/following{/other_user}",
+      "gists_url": "https://api.github.com/users/photino/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/photino/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/photino/subscriptions",
+      "organizations_url": "https://api.github.com/users/photino/orgs",
+      "repos_url": "https://api.github.com/users/photino/repos",
+      "events_url": "https://api.github.com/users/photino/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/photino/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "labels": [],
+    "state": "closed",
+    "locked": false,
+    "assignees": [],
+    "milestone": null,
+    "comments": 0,
+    "created_at": "2024-11-15T11:35:35Z",
+    "updated_at": "2024-11-17T01:25:30Z",
+    "closed_at": "2024-11-17T01:25:30Z",
+    "assignee": null,
+    "author_association": "NONE",
+    "issue_field_values": [],
+    "type": null,
+    "active_lock_reason": null,
+    "sub_issues_summary": {
+      "total": 0,
+      "completed": 0,
+      "percent_completed": 0
+    },
+    "issue_dependencies_summary": {
+      "blocked_by": 0,
+      "total_blocked_by": 0,
+      "blocking": 0,
+      "total_blocking": 0
+    },
+    "body": "We have `impl From<&[T]> for Value` and `impl From<Vec<T>> for Value`, why don't we support the conversion from an array?\r\n\r\n```rust\r\nimpl<T: Into<Value>, const N: usize> From<[T; N]> for Value {\r\n    fn from(array: [T; N]) -> Self {\r\n        let vec = array.into_iter().map(|v| v.into()).collect();\r\n        Self::Array(vec)\r\n    }\r\n}\r\n```",
+    "reactions": {
+      "url": "https://api.github.com/repos/serde-rs/json/issues/1214/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "timeline_url": "https://api.github.com/repos/serde-rs/json/issues/1214/timeline",
+    "performed_via_github_app": null,
+    "state_reason": "completed",
+    "pinned_comment": null,
+    "score": 1
+  },
+  "comments": [],
+  "pr": {
+    "number": 1215,
+    "merged": true,
+    "title": "Implement From<[T; N]> for Value",
+    "createdAt": "2024-11-17T01:20:12Z",
+    "mergedAt": "2024-11-17T01:25:29Z"
+  },
+  "files": [
+    {
+      "sha": "df4b2038cd9e3127c7bd2847357bd90fae2aa6c3",
+      "filename": "src/value/from.rs",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 0,
+      "changes": 6,
+      "blob_url": "https://github.com/serde-rs/json/blob/4e5f985958bedbc7e75ba6c1931edaf73508c4a7/src%2Fvalue%2Ffrom.rs",
+      "raw_url": "https://github.com/serde-rs/json/raw/4e5f985958bedbc7e75ba6c1931edaf73508c4a7/src%2Fvalue%2Ffrom.rs",
+      "contents_url": "https://api.github.com/repos/serde-rs/json/contents/src%2Fvalue%2Ffrom.rs?ref=4e5f985958bedbc7e75ba6c1931edaf73508c4a7",
+      "patch": "@@ -183,6 +183,12 @@ impl<T: Into<Value>> From<Vec<T>> for Value {\n     }\n }\n \n+impl<T: Into<Value>, const N: usize> From<[T; N]> for Value {\n+    fn from(array: [T; N]) -> Self {\n+        Value::Array(array.into_iter().map(Into::into).collect())\n+    }\n+}\n+\n impl<T: Clone + Into<Value>> From<&[T]> for Value {\n     /// Convert a slice to `Value::Array`.\n     ///"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "repo": "spf13/cobra",
+  "group": "fixed",
+  "issue": {
+    "url": "https://api.github.com/repos/spf13/cobra/issues/2323",
+    "repository_url": "https://api.github.com/repos/spf13/cobra",
+    "labels_url": "https://api.github.com/repos/spf13/cobra/issues/2323/labels{/name}",
+    "comments_url": "https://api.github.com/repos/spf13/cobra/issues/2323/comments",
+    "events_url": "https://api.github.com/repos/spf13/cobra/issues/2323/events",
+    "html_url": "https://github.com/spf13/cobra/issues/2323",
+    "id": 3581252214,
+    "node_id": "I_kwDOAL_eiM7VdZJ2",
+    "number": 2323,
+    "title": "Refactor: make minUsagePadding a constant",
+    "user": {
+      "login": "htoyoda18",
+      "id": 95602579,
+      "node_id": "U_kgDOBbLHkw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/95602579?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/htoyoda18",
+      "html_url": "https://github.com/htoyoda18",
+      "followers_url": "https://api.github.com/users/htoyoda18/followers",
+      "following_url": "https://api.github.com/users/htoyoda18/following{/other_user}",
+      "gists_url": "https://api.github.com/users/htoyoda18/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/htoyoda18/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/htoyoda18/subscriptions",
+      "organizations_url": "https://api.github.com/users/htoyoda18/orgs",
+      "repos_url": "https://api.github.com/users/htoyoda18/repos",
+      "events_url": "https://api.github.com/users/htoyoda18/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/htoyoda18/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "labels": [],
+    "state": "closed",
+    "locked": false,
+    "assignees": [],
+    "milestone": null,
+    "comments": 0,
+    "created_at": "2025-11-03T09:29:24Z",
+    "updated_at": "2025-11-18T03:33:28Z",
+    "closed_at": "2025-11-18T03:33:28Z",
+    "assignee": null,
+    "author_association": "CONTRIBUTOR",
+    "active_lock_reason": null,
+    "sub_issues_summary": {
+      "total": 0,
+      "completed": 0,
+      "percent_completed": 0
+    },
+    "issue_dependencies_summary": {
+      "blocked_by": 0,
+      "total_blocked_by": 0,
+      "blocking": 0,
+      "total_blocking": 0
+    },
+    "body": "### Summary\n\nThe variable [minUsagePadding](https://github.com/spf13/cobra/blob/main/command.go#L560) is currently defined as a package-level variable, but it represents a fixed configuration value that never changes at runtime.\nIt would be more idiomatic and safer in Go to define it as a constant.\n\n### Current Code\n\n```go\nvar minUsagePadding = 25\n```\n\n### Proposed Change\n\nChange it to:\n\n```go\nconst minUsagePadding = 25\n```\n\n### Rationale\n\n* The value is immutable and conceptually a compile-time constant.\n* Using `const` makes the intention clearer to readers and contributors.\n* It prevents any accidental modification at runtime and improves code safety.\n\n### Impact\n\nThis change is fully backward compatible and has no functional impact on behavior.\nIt only improves clarity and maintainability of the codebase.\n",
+    "reactions": {
+      "url": "https://api.github.com/repos/spf13/cobra/issues/2323/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "timeline_url": "https://api.github.com/repos/spf13/cobra/issues/2323/timeline",
+    "performed_via_github_app": null,
+    "state_reason": "completed",
+    "pinned_comment": null,
+    "score": 1
+  },
+  "comments": [],
+  "pr": {
+    "number": 2325,
+    "merged": true,
+    "title": "refactor: change minUsagePadding from var to const",
+    "createdAt": "2025-11-12T21:24:28Z",
+    "mergedAt": "2025-11-18T03:33:27Z"
+  },
+  "files": [
+    {
+      "sha": "c05fed45aef0cfed0304728c2289aa18fb152dad",
+      "filename": "command.go",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/spf13/cobra/blob/0a59262298c332c88310bd3e611b320d295b8706/command.go",
+      "raw_url": "https://github.com/spf13/cobra/raw/0a59262298c332c88310bd3e611b320d295b8706/command.go",
+      "contents_url": "https://api.github.com/repos/spf13/cobra/contents/command.go?ref=0a59262298c332c88310bd3e611b320d295b8706",
+      "patch": "@@ -557,7 +557,7 @@ func (c *Command) FlagErrorFunc() (f func(*Command, error) error) {\n \t}\n }\n \n-var minUsagePadding = 25\n+const minUsagePadding = 25\n \n // UsagePadding return padding for the usage.\n func (c *Command) UsagePadding() int {"
+    }
+  ]
+}

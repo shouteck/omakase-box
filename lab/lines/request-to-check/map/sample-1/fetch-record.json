@@ -1,0 +1,219 @@
+{
+  "fetchedAt": "2026-10-07T01:32:54.986Z",
+  "limits": {
+    "body": 6000,
+    "comment": 1500,
+    "comments": 12,
+    "testPatch": 5000
+  },
+  "repositories": [
+    {
+      "repo": "axios/axios",
+      "openQuery": "repo:axios/axios is:issue is:open",
+      "fixedQuery": "repo:axios/axios is:issue is:closed reason:completed linked:pr",
+      "open": [
+        11295,
+        11292,
+        11291,
+        11289,
+        11285
+      ],
+      "fixedPool": [
+        11262,
+        11261,
+        11260,
+        11192,
+        11131,
+        11116,
+        11114,
+        11108,
+        11093,
+        11070,
+        11066,
+        11050,
+        11042,
+        10994,
+        10990
+      ],
+      "fixed": [
+        {
+          "issue": 11262,
+          "pr": 11272
+        },
+        {
+          "issue": 11261,
+          "pr": 11267
+        },
+        {
+          "issue": 11260,
+          "pr": 11266
+        },
+        {
+          "issue": 11192,
+          "pr": 11194
+        },
+        {
+          "issue": 11131,
+          "pr": 11132
+        }
+      ],
+      "shortfall": 0
+    },
+    {
+      "repo": "pallets/click",
+      "openQuery": "repo:pallets/click is:issue is:open",
+      "fixedQuery": "repo:pallets/click is:issue is:closed reason:completed linked:pr",
+      "open": [
+        3847,
+        3840,
+        3696,
+        3652,
+        3406
+      ],
+      "fixedPool": [
+        3822,
+        3802,
+        3786,
+        3766,
+        3740,
+        3702,
+        3700,
+        3612,
+        3572,
+        3571,
+        3502,
+        3501,
+        3489,
+        3487,
+        3481
+      ],
+      "fixed": [
+        {
+          "issue": 3822,
+          "pr": 3858
+        },
+        {
+          "issue": 3802,
+          "pr": 3818
+        },
+        {
+          "issue": 3786,
+          "pr": 3787
+        },
+        {
+          "issue": 3766,
+          "pr": 3768
+        },
+        {
+          "issue": 3740,
+          "pr": 3739
+        }
+      ],
+      "shortfall": 0
+    },
+    {
+      "repo": "spf13/cobra",
+      "openQuery": "repo:spf13/cobra is:issue is:open",
+      "fixedQuery": "repo:spf13/cobra is:issue is:closed reason:completed linked:pr",
+      "open": [
+        2520,
+        2507,
+        2505,
+        2491,
+        2481
+      ],
+      "fixedPool": [
+        2498,
+        2323,
+        2298,
+        2277,
+        2257,
+        2240,
+        2222,
+        2209,
+        2119,
+        2060,
+        2017,
+        2015,
+        1987,
+        1937,
+        1933
+      ],
+      "fixed": [
+        {
+          "issue": 2323,
+          "pr": 2325
+        },
+        {
+          "issue": 2298,
+          "pr": 2316
+        },
+        {
+          "issue": 2257,
+          "pr": 2356
+        },
+        {
+          "issue": 2240,
+          "pr": 2241
+        },
+        {
+          "issue": 2222,
+          "pr": 2231
+        }
+      ],
+      "shortfall": 0
+    },
+    {
+      "repo": "serde-rs/json",
+      "openQuery": "repo:serde-rs/json is:issue is:open",
+      "fixedQuery": "repo:serde-rs/json is:issue is:closed reason:completed linked:pr",
+      "open": [
+        1340,
+        1335,
+        1332,
+        1330,
+        1323
+      ],
+      "fixedPool": [
+        1328,
+        1225,
+        1214,
+        1164,
+        1134,
+        1123,
+        1071,
+        1068,
+        1066,
+        1054,
+        1014,
+        1012,
+        1004,
+        991,
+        979
+      ],
+      "fixed": [
+        {
+          "issue": 1225,
+          "pr": 1226
+        },
+        {
+          "issue": 1214,
+          "pr": 1215
+        },
+        {
+          "issue": 1164,
+          "pr": 1166
+        },
+        {
+          "issue": 1134,
+          "pr": 1135
+        },
+        {
+          "issue": 1123,
+          "pr": 1124
+        }
+      ],
+      "shortfall": 0
+    }
+  ]
+}

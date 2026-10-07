@@ -1,0 +1,162 @@
+[
+  {
+    "id": "axios-11295",
+    "group": "open"
+  },
+  {
+    "id": "axios-11292",
+    "group": "open"
+  },
+  {
+    "id": "axios-11291",
+    "group": "open"
+  },
+  {
+    "id": "axios-11289",
+    "group": "open"
+  },
+  {
+    "id": "axios-11285",
+    "group": "open"
+  },
+  {
+    "id": "axios-11262",
+    "group": "fixed"
+  },
+  {
+    "id": "axios-11261",
+    "group": "fixed"
+  },
+  {
+    "id": "axios-11260",
+    "group": "fixed"
+  },
+  {
+    "id": "axios-11192",
+    "group": "fixed"
+  },
+  {
+    "id": "axios-11131",
+    "group": "fixed"
+  },
+  {
+    "id": "click-3847",
+    "group": "open"
+  },
+  {
+    "id": "click-3840",
+    "group": "open"
+  },
+  {
+    "id": "click-3696",
+    "group": "open"
+  },
+  {
+    "id": "click-3652",
+    "group": "open"
+  },
+  {
+    "id": "click-3406",
+    "group": "open"
+  },
+  {
+    "id": "click-3822",
+    "group": "fixed"
+  },
+  {
+    "id": "click-3802",
+    "group": "fixed"
+  },
+  {
+    "id": "click-3786",
+    "group": "fixed"
+  },
+  {
+    "id": "click-3766",
+    "group": "fixed"
+  },
+  {
+    "id": "click-3740",
+    "group": "fixed"
+  },
+  {
+    "id": "cobra-2520",
+    "group": "open"
+  },
+  {
+    "id": "cobra-2507",
+    "group": "open"
+  },
+  {
+    "id": "cobra-2505",
+    "group": "open"
+  },
+  {
+    "id": "cobra-2491",
+    "group": "open"
+  },
+  {
+    "id": "cobra-2481",
+    "group": "open"
+  },
+  {
+    "id": "cobra-2323",
+    "group": "fixed"
+  },
+  {
+    "id": "cobra-2298",
+    "group": "fixed"
+  },
+  {
+    "id": "cobra-2257",
+    "group": "fixed"
+  },
+  {
+    "id": "cobra-2240",
+    "group": "fixed"
+  },
+  {
+    "id": "cobra-2222",
+    "group": "fixed"
+  },
+  {
+    "id": "serdejson-1340",
+    "group": "open"
+  },
+  {
+    "id": "serdejson-1335",
+    "group": "open"
+  },
+  {
+    "id": "serdejson-1332",
+    "group": "open"
+  },
+  {
+    "id": "serdejson-1330",
+    "group": "open"
+  },
+  {
+    "id": "serdejson-1323",
+    "group": "open"
+  },
+  {
+    "id": "serdejson-1225",
+    "group": "fixed"
+  },
+  {
+    "id": "serdejson-1214",
+    "group": "fixed"
+  },
+  {
+    "id": "serdejson-1164",
+    "group": "fixed"
+  },
+  {
+    "id": "serdejson-1134",
+    "group": "fixed"
+  },
+  {
+    "id": "serdejson-1123",
+    "group": "fixed"
+  }
+]
