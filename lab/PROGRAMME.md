@@ -66,6 +66,8 @@ From the CTO, 7 October 2026, after talking the product through with the owner. 
 
 ### Line A. A slice anchored on an example
 
+**Stage (kept by the lab lead):** first survey done and attacked by a fresh sceptic, 7 October 2026; two registered synthetic logical attacks independently reproduced. Formulation next; no real-change replay or containment rate. Files in `lab/lines/example-slice/`. The unrestricted guarantee is unsupported for an existing-code-only region; state/directory-inclusive and restricted-repair guarantees remain open. See the survey and sceptic review before treating intersection as containment or solver sufficiency.
+
 **The problem for the product.** If the Box misses something the solver needs, the solver fails, and asking for more is friction the owner will not accept. The owner wants a strong guarantee, or an honest statement of how strong it is.
 
 **What the lab must find out.**
