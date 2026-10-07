@@ -1,0 +1,3150 @@
+{
+  "version": 1,
+  "kind": "candidate metadata, not final task manifest",
+  "ordering": "created_at ascending, numeric PR tie break; first 100 API rows; human filter before first 20",
+  "prior_exposure_audit": "Local lab records: public PR URLs only. Known click PR IDs marked without refill. No titles/bodies/fixes requested by this collector.",
+  "repositories": [
+    {
+      "repository": "sindresorhus/ky",
+      "query": "repo:sindresorhus/ky is:pr is:merged created:2026-01-01..2026-09-30 merged:2026-01-01..2026-09-30",
+      "captured_at": "2026-10-07T05:05:10.661Z",
+      "incomplete_results": false,
+      "items": [
+        {
+          "created_at": "2026-02-16T10:36:58Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/823",
+          "number": 823,
+          "updated_at": "2026-05-01T06:14:02Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-20T23:07:56Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/825",
+          "number": 825,
+          "updated_at": "2026-02-22T07:51:09Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-21T12:09:40Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/826",
+          "number": 826,
+          "updated_at": "2026-02-22T16:11:23Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-21T14:09:15Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/827",
+          "number": 827,
+          "updated_at": "2026-02-21T19:26:48Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-22T17:47:53Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/828",
+          "number": 828,
+          "updated_at": "2026-04-01T20:46:04Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-23T07:30:36Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/829",
+          "number": 829,
+          "updated_at": "2026-02-27T10:05:09Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-24T04:15:56Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/830",
+          "number": 830,
+          "updated_at": "2026-03-22T17:02:28Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-27T14:10:30Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/832",
+          "number": 832,
+          "updated_at": "2026-03-13T12:41:01Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-02T09:02:07Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/833",
+          "number": 833,
+          "updated_at": "2026-03-02T10:06:15Z",
+          "user": {
+            "login": "constantly-dev",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-03T08:06:18Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/834",
+          "number": 834,
+          "updated_at": "2026-03-03T10:23:27Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-03T14:04:15Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/835",
+          "number": 835,
+          "updated_at": "2026-03-03T14:08:21Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-24T19:24:57Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/841",
+          "number": 841,
+          "updated_at": "2026-03-25T06:37:17Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-24T21:46:18Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/842",
+          "number": 842,
+          "updated_at": "2026-03-25T10:20:41Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-25T11:03:58Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/845",
+          "number": 845,
+          "updated_at": "2026-03-25T19:16:07Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-25T15:06:29Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/846",
+          "number": 846,
+          "updated_at": "2026-03-25T16:40:38Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-25T19:08:32Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/847",
+          "number": 847,
+          "updated_at": "2026-03-26T02:58:53Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-25T20:59:10Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/848",
+          "number": 848,
+          "updated_at": "2026-03-27T08:36:22Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-26T06:46:25Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/849",
+          "number": 849,
+          "updated_at": "2026-03-26T14:19:04Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-30T15:43:10Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/850",
+          "number": 850,
+          "updated_at": "2026-03-31T00:10:50Z",
+          "user": {
+            "login": "ayushshukla1807",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-30T21:12:27Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/852",
+          "number": 852,
+          "updated_at": "2026-03-31T10:37:41Z",
+          "user": {
+            "login": "Vegapunk-debug",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-31T13:01:42Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/853",
+          "number": 853,
+          "updated_at": "2026-04-04T13:05:18Z",
+          "user": {
+            "login": "Vegapunk-debug",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-01T20:45:41Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/854",
+          "number": 854,
+          "updated_at": "2026-04-02T14:38:06Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-12T22:42:50Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/858",
+          "number": 858,
+          "updated_at": "2026-04-14T12:21:07Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-16T07:23:20Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/861",
+          "number": 861,
+          "updated_at": "2026-04-21T08:03:28Z",
+          "user": {
+            "login": "atharvasingh7007",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-06-10T20:24:28Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/867",
+          "number": 867,
+          "updated_at": "2026-07-06T13:00:20Z",
+          "user": {
+            "login": "chatman-media",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-06-22T07:45:13Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/870",
+          "number": 870,
+          "updated_at": "2026-06-22T11:24:26Z",
+          "user": {
+            "login": "xiao-js",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-07-05T23:25:39Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/873",
+          "number": 873,
+          "updated_at": "2026-07-06T12:26:15Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-07-06T22:16:13Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/874",
+          "number": 874,
+          "updated_at": "2026-07-06T22:20:41Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-08-15T08:52:02Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/877",
+          "number": 877,
+          "updated_at": "2026-08-25T19:23:13Z",
+          "user": {
+            "login": "sholladay",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-08-26T12:31:40Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/880",
+          "number": 880,
+          "updated_at": "2026-08-26T18:19:55Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-08-27T23:01:56Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/881",
+          "number": 881,
+          "updated_at": "2026-08-28T03:13:27Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-08-28T19:40:33Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/883",
+          "number": 883,
+          "updated_at": "2026-09-05T23:23:03Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          }
+        }
+      ],
+      "total_count": 32,
+      "candidates": [
+        {
+          "created_at": "2026-02-16T10:36:58Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/823",
+          "number": 823,
+          "updated_at": "2026-05-01T06:14:02Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 1,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-20T23:07:56Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/825",
+          "number": 825,
+          "updated_at": "2026-02-22T07:51:09Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 2,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-21T12:09:40Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/826",
+          "number": 826,
+          "updated_at": "2026-02-22T16:11:23Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 3,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-21T14:09:15Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/827",
+          "number": 827,
+          "updated_at": "2026-02-21T19:26:48Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 4,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-22T17:47:53Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/828",
+          "number": 828,
+          "updated_at": "2026-04-01T20:46:04Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 5,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-23T07:30:36Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/829",
+          "number": 829,
+          "updated_at": "2026-02-27T10:05:09Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 6,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-24T04:15:56Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/830",
+          "number": 830,
+          "updated_at": "2026-03-22T17:02:28Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 7,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-27T14:10:30Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/832",
+          "number": 832,
+          "updated_at": "2026-03-13T12:41:01Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 8,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-02T09:02:07Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/833",
+          "number": 833,
+          "updated_at": "2026-03-02T10:06:15Z",
+          "user": {
+            "login": "constantly-dev",
+            "type": "User"
+          },
+          "position": 9,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-03T08:06:18Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/834",
+          "number": 834,
+          "updated_at": "2026-03-03T10:23:27Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 10,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-03T14:04:15Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/835",
+          "number": 835,
+          "updated_at": "2026-03-03T14:08:21Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 11,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-24T19:24:57Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/841",
+          "number": 841,
+          "updated_at": "2026-03-25T06:37:17Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 12,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-24T21:46:18Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/842",
+          "number": 842,
+          "updated_at": "2026-03-25T10:20:41Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 13,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-25T11:03:58Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/845",
+          "number": 845,
+          "updated_at": "2026-03-25T19:16:07Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 14,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-25T15:06:29Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/846",
+          "number": 846,
+          "updated_at": "2026-03-25T16:40:38Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 15,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-25T19:08:32Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/847",
+          "number": 847,
+          "updated_at": "2026-03-26T02:58:53Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 16,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-25T20:59:10Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/848",
+          "number": 848,
+          "updated_at": "2026-03-27T08:36:22Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 17,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-26T06:46:25Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/849",
+          "number": 849,
+          "updated_at": "2026-03-26T14:19:04Z",
+          "user": {
+            "login": "sindresorhus",
+            "type": "User"
+          },
+          "position": 18,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-30T15:43:10Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/850",
+          "number": 850,
+          "updated_at": "2026-03-31T00:10:50Z",
+          "user": {
+            "login": "ayushshukla1807",
+            "type": "User"
+          },
+          "position": 19,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-30T21:12:27Z",
+          "html_url": "https://github.com/sindresorhus/ky/pull/852",
+          "number": 852,
+          "updated_at": "2026-03-31T10:37:41Z",
+          "user": {
+            "login": "Vegapunk-debug",
+            "type": "User"
+          },
+          "position": 20,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        }
+      ]
+    },
+    {
+      "repository": "colinhacks/zod",
+      "query": "repo:colinhacks/zod is:pr is:merged created:2026-01-01..2026-09-30 merged:2026-01-01..2026-09-30",
+      "captured_at": "2026-10-07T05:05:12.423Z",
+      "incomplete_results": false,
+      "items": [
+        {
+          "created_at": "2026-01-02T09:35:25Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5595",
+          "number": 5595,
+          "updated_at": "2026-01-02T23:52:46Z",
+          "user": {
+            "login": "alysakowski",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-03T00:35:46Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5599",
+          "number": 5599,
+          "updated_at": "2026-04-30T16:16:00Z",
+          "user": {
+            "login": "uchkunr",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-03T00:51:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5601",
+          "number": 5601,
+          "updated_at": "2026-04-30T16:16:22Z",
+          "user": {
+            "login": "uchkunr",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-03T20:25:59Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5604",
+          "number": 5604,
+          "updated_at": "2026-04-30T16:16:24Z",
+          "user": {
+            "login": "onurtemiz",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-05T14:23:44Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5608",
+          "number": 5608,
+          "updated_at": "2026-04-30T16:16:26Z",
+          "user": {
+            "login": "SaKaNa-Y",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-06T00:06:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5610",
+          "number": 5610,
+          "updated_at": "2026-04-30T16:15:55Z",
+          "user": {
+            "login": "vuki656",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-13T10:19:24Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5628",
+          "number": 5628,
+          "updated_at": "2026-07-12T14:17:56Z",
+          "user": {
+            "login": "bgk614",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-14T00:45:51Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5632",
+          "number": 5632,
+          "updated_at": "2026-07-12T14:17:25Z",
+          "user": {
+            "login": "bgk614",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-14T14:00:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5634",
+          "number": 5634,
+          "updated_at": "2026-01-21T02:23:58Z",
+          "user": {
+            "login": "Andarist",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-14T18:17:28Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5637",
+          "number": 5637,
+          "updated_at": "2026-04-30T16:17:14Z",
+          "user": {
+            "login": "marcalexiei",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-15T04:55:32Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5638",
+          "number": 5638,
+          "updated_at": "2026-01-22T17:46:50Z",
+          "user": {
+            "login": "samchungy",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-19T20:17:48Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5646",
+          "number": 5646,
+          "updated_at": "2026-01-21T02:26:09Z",
+          "user": {
+            "login": "Abdalrhman-Almarakeby",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-21T01:36:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5649",
+          "number": 5649,
+          "updated_at": "2026-04-30T16:17:16Z",
+          "user": {
+            "login": "playoffthecuff",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-21T08:18:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5651",
+          "number": 5651,
+          "updated_at": "2026-04-30T16:16:20Z",
+          "user": {
+            "login": "nakita628",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-22T17:10:19Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5655",
+          "number": 5655,
+          "updated_at": "2026-04-30T16:16:02Z",
+          "user": {
+            "login": "tushargr0ver",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-22T17:37:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5656",
+          "number": 5656,
+          "updated_at": "2026-01-22T19:04:51Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-23T14:30:52Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5657",
+          "number": 5657,
+          "updated_at": "2026-06-03T01:28:35Z",
+          "user": {
+            "login": "tushargr0ver",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-24T13:16:43Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5661",
+          "number": 5661,
+          "updated_at": "2026-08-28T13:31:46Z",
+          "user": {
+            "login": "Cyjin-jani",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-29T01:14:34Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5671",
+          "number": 5671,
+          "updated_at": "2026-04-30T16:16:28Z",
+          "user": {
+            "login": "Fredkiss3",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-29T07:56:58Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5672",
+          "number": 5672,
+          "updated_at": "2026-06-03T01:29:02Z",
+          "user": {
+            "login": "LuckySilver0021",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-30T14:46:15Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5676",
+          "number": 5676,
+          "updated_at": "2026-04-30T16:16:30Z",
+          "user": {
+            "login": "Nikita0x",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-01T12:09:06Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5681",
+          "number": 5681,
+          "updated_at": "2026-04-30T16:15:35Z",
+          "user": {
+            "login": "pullfrog[bot]",
+            "type": "Bot"
+          }
+        },
+        {
+          "created_at": "2026-02-02T01:41:22Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5682",
+          "number": 5682,
+          "updated_at": "2026-04-30T16:16:32Z",
+          "user": {
+            "login": "pavan-sh",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-02T13:24:58Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5683",
+          "number": 5683,
+          "updated_at": "2026-04-30T16:16:34Z",
+          "user": {
+            "login": "pavan-sh",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-03T20:50:37Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5684",
+          "number": 5684,
+          "updated_at": "2026-04-30T16:16:36Z",
+          "user": {
+            "login": "RyanCavanaugh",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-05T04:28:13Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5687",
+          "number": 5687,
+          "updated_at": "2026-04-30T16:15:41Z",
+          "user": {
+            "login": "shakecodeslikecray",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-05T15:34:45Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5689",
+          "number": 5689,
+          "updated_at": "2026-04-30T16:15:53Z",
+          "user": {
+            "login": "jesse-holden",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-08T18:27:36Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5696",
+          "number": 5696,
+          "updated_at": "2026-04-30T16:16:38Z",
+          "user": {
+            "login": "pullfrog[bot]",
+            "type": "Bot"
+          }
+        },
+        {
+          "created_at": "2026-02-08T22:20:34Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5699",
+          "number": 5699,
+          "updated_at": "2026-04-30T16:15:31Z",
+          "user": {
+            "login": "F-A-N-D-E",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-09T17:05:29Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5700",
+          "number": 5700,
+          "updated_at": "2026-04-30T16:15:07Z",
+          "user": {
+            "login": "ebroder",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-11T10:27:02Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5705",
+          "number": 5705,
+          "updated_at": "2026-04-30T16:16:40Z",
+          "user": {
+            "login": "togami2864",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-11T14:20:40Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5708",
+          "number": 5708,
+          "updated_at": "2026-04-30T16:15:18Z",
+          "user": {
+            "login": "dstashevskyi",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-11T22:23:36Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5709",
+          "number": 5709,
+          "updated_at": "2026-04-30T16:16:46Z",
+          "user": {
+            "login": "RobinVdBroeck",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-15T02:07:37Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5718",
+          "number": 5718,
+          "updated_at": "2026-04-30T16:16:10Z",
+          "user": {
+            "login": "pullfrog[bot]",
+            "type": "Bot"
+          }
+        },
+        {
+          "created_at": "2026-02-15T10:10:14Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5719",
+          "number": 5719,
+          "updated_at": "2026-04-30T16:15:24Z",
+          "user": {
+            "login": "veeceey",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-15T11:26:46Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5720",
+          "number": 5720,
+          "updated_at": "2026-04-30T16:16:48Z",
+          "user": {
+            "login": "chisaki66",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-16T16:05:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5721",
+          "number": 5721,
+          "updated_at": "2026-04-30T19:01:52Z",
+          "user": {
+            "login": "mxdvl",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-18T12:34:15Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5723",
+          "number": 5723,
+          "updated_at": "2026-04-30T16:15:20Z",
+          "user": {
+            "login": "Danielchinasa",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-28T13:44:25Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5736",
+          "number": 5736,
+          "updated_at": "2026-04-30T16:16:42Z",
+          "user": {
+            "login": "vedanshshetti",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-02T14:08:26Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5740",
+          "number": 5740,
+          "updated_at": "2026-04-30T16:16:44Z",
+          "user": {
+            "login": "mrspence",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-02T14:10:09Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5741",
+          "number": 5741,
+          "updated_at": "2026-04-30T16:15:33Z",
+          "user": {
+            "login": "vilvai",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-04T02:06:46Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5744",
+          "number": 5744,
+          "updated_at": "2026-04-30T16:16:12Z",
+          "user": {
+            "login": "rishadaufa",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-04T06:41:47Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5745",
+          "number": 5745,
+          "updated_at": "2026-04-30T16:16:52Z",
+          "user": {
+            "login": "xgaia",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-05T00:49:16Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5748",
+          "number": 5748,
+          "updated_at": "2026-04-30T16:25:05Z",
+          "user": {
+            "login": "mrlubos",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-07T03:22:15Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5758",
+          "number": 5758,
+          "updated_at": "2026-04-30T16:15:26Z",
+          "user": {
+            "login": "mibragimov",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-07T03:25:06Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5759",
+          "number": 5759,
+          "updated_at": "2026-04-30T16:15:05Z",
+          "user": {
+            "login": "mibragimov",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-09T11:42:52Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5763",
+          "number": 5763,
+          "updated_at": "2026-04-30T16:16:14Z",
+          "user": {
+            "login": "andrewdamelio",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-13T01:09:12Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5765",
+          "number": 5765,
+          "updated_at": "2026-04-30T16:16:56Z",
+          "user": {
+            "login": "siekmang",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-13T14:22:47Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5769",
+          "number": 5769,
+          "updated_at": "2026-04-30T16:15:28Z",
+          "user": {
+            "login": "mahmoodhamdi",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-13T15:01:28Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5770",
+          "number": 5770,
+          "updated_at": "2026-04-30T16:15:30Z",
+          "user": {
+            "login": "mahmoodhamdi",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-13T17:33:22Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5776",
+          "number": 5776,
+          "updated_at": "2026-04-30T16:16:57Z",
+          "user": {
+            "login": "alanskovrlj",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-15T00:35:18Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5779",
+          "number": 5779,
+          "updated_at": "2026-04-30T18:58:03Z",
+          "user": {
+            "login": "WolfieLeader",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-18T20:41:23Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5791",
+          "number": 5791,
+          "updated_at": "2026-04-30T02:55:07Z",
+          "user": {
+            "login": "FucciUnavailable",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-19T04:09:28Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5793",
+          "number": 5793,
+          "updated_at": "2026-04-30T16:15:43Z",
+          "user": {
+            "login": "cyphercodes",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-19T23:36:45Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5797",
+          "number": 5797,
+          "updated_at": "2026-04-30T16:15:09Z",
+          "user": {
+            "login": "Hassad674",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-25T06:35:02Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5806",
+          "number": 5806,
+          "updated_at": "2026-04-30T16:16:59Z",
+          "user": {
+            "login": "wakita181009",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-27T18:33:24Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5812",
+          "number": 5812,
+          "updated_at": "2026-04-30T16:16:18Z",
+          "user": {
+            "login": "claygeo",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-06T14:11:32Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5840",
+          "number": 5840,
+          "updated_at": "2026-04-30T16:15:56Z",
+          "user": {
+            "login": "saileshbro",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-07T09:47:47Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5843",
+          "number": 5843,
+          "updated_at": "2026-04-30T16:17:03Z",
+          "user": {
+            "login": "nameearly",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-08T21:00:07Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5845",
+          "number": 5845,
+          "updated_at": "2026-04-30T16:16:04Z",
+          "user": {
+            "login": "Ouaziz-chedli",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-09T09:34:58Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5848",
+          "number": 5848,
+          "updated_at": "2026-04-30T16:17:01Z",
+          "user": {
+            "login": "chiptoma",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-10T10:46:05Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5852",
+          "number": 5852,
+          "updated_at": "2026-04-30T16:16:06Z",
+          "user": {
+            "login": "pastorello",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-11T18:46:23Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5855",
+          "number": 5855,
+          "updated_at": "2026-04-30T17:35:42Z",
+          "user": {
+            "login": "artur-seppa",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-13T05:07:23Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5856",
+          "number": 5856,
+          "updated_at": "2026-05-05T03:31:16Z",
+          "user": {
+            "login": "solssak",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-18T09:37:20Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5864",
+          "number": 5864,
+          "updated_at": "2026-10-02T16:20:26Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-20T10:44:04Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5869",
+          "number": 5869,
+          "updated_at": "2026-04-30T16:15:39Z",
+          "user": {
+            "login": "tjenkinson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-27T16:09:20Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5880",
+          "number": 5880,
+          "updated_at": "2026-04-30T16:15:13Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T03:28:30Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5882",
+          "number": 5882,
+          "updated_at": "2026-04-30T16:17:10Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T04:00:21Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5883",
+          "number": 5883,
+          "updated_at": "2026-04-30T16:17:08Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T16:53:24Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5888",
+          "number": 5888,
+          "updated_at": "2026-04-30T16:15:14Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T17:27:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5889",
+          "number": 5889,
+          "updated_at": "2026-04-30T16:15:45Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T18:13:04Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5890",
+          "number": 5890,
+          "updated_at": "2026-04-30T16:17:06Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T19:33:13Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5891",
+          "number": 5891,
+          "updated_at": "2026-04-30T16:15:22Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-28T22:17:22Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5893",
+          "number": 5893,
+          "updated_at": "2026-04-30T16:15:11Z",
+          "user": {
+            "login": "mixelburg",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T02:43:56Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5895",
+          "number": 5895,
+          "updated_at": "2026-04-30T16:17:12Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T03:19:40Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5897",
+          "number": 5897,
+          "updated_at": "2026-04-30T16:15:51Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T05:12:42Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5898",
+          "number": 5898,
+          "updated_at": "2026-04-30T16:15:49Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T23:01:07Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5900",
+          "number": 5900,
+          "updated_at": "2026-04-30T16:17:18Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T23:30:16Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5901",
+          "number": 5901,
+          "updated_at": "2026-04-29T23:40:37Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-30T01:37:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5906",
+          "number": 5906,
+          "updated_at": "2026-08-13T20:46:03Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-30T04:03:31Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5907",
+          "number": 5907,
+          "updated_at": "2026-05-04T05:51:42Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-30T16:57:51Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5910",
+          "number": 5910,
+          "updated_at": "2026-08-19T21:24:00Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-30T17:38:08Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5912",
+          "number": 5912,
+          "updated_at": "2026-08-19T18:53:45Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-30T18:12:16Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5913",
+          "number": 5913,
+          "updated_at": "2026-09-01T06:27:39Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-01T16:25:59Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5925",
+          "number": 5925,
+          "updated_at": "2026-10-02T16:20:24Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-01T16:51:53Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5926",
+          "number": 5926,
+          "updated_at": "2026-10-02T16:20:23Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-01T17:57:32Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5928",
+          "number": 5928,
+          "updated_at": "2026-10-02T16:20:21Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-01T18:34:28Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5929",
+          "number": 5929,
+          "updated_at": "2026-05-01T19:35:52Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-01T22:59:34Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5931",
+          "number": 5931,
+          "updated_at": "2026-10-02T16:20:20Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-03T20:06:59Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5939",
+          "number": 5939,
+          "updated_at": "2026-05-04T03:27:42Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T00:35:54Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5941",
+          "number": 5941,
+          "updated_at": "2026-05-04T07:01:20Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T15:18:14Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5945",
+          "number": 5945,
+          "updated_at": "2026-10-02T16:20:18Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T16:48:48Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5946",
+          "number": 5946,
+          "updated_at": "2026-09-09T19:28:05Z",
+          "user": {
+            "login": "gunzip",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T17:06:57Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5947",
+          "number": 5947,
+          "updated_at": "2026-10-02T16:20:16Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-05T17:32:11Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5959",
+          "number": 5959,
+          "updated_at": "2026-08-13T05:34:08Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-06T08:21:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5964",
+          "number": 5964,
+          "updated_at": "2026-10-02T16:20:14Z",
+          "user": {
+            "login": "dokson",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-08T21:57:30Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5974",
+          "number": 5974,
+          "updated_at": "2026-08-16T23:04:31Z",
+          "user": {
+            "login": "musaddiq-rafi",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-09T04:13:26Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5975",
+          "number": 5975,
+          "updated_at": "2026-08-12T18:11:06Z",
+          "user": {
+            "login": "marcalexiei",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-16T17:15:11Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/6001",
+          "number": 6001,
+          "updated_at": "2026-08-27T00:53:34Z",
+          "user": {
+            "login": "codinsonn",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-16T17:27:24Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/6002",
+          "number": 6002,
+          "updated_at": "2026-08-12T18:59:00Z",
+          "user": {
+            "login": "IdanGonen",
+            "type": "User"
+          }
+        }
+      ],
+      "total_count": 287,
+      "candidates": [
+        {
+          "created_at": "2026-01-02T09:35:25Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5595",
+          "number": 5595,
+          "updated_at": "2026-01-02T23:52:46Z",
+          "user": {
+            "login": "alysakowski",
+            "type": "User"
+          },
+          "position": 1,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-03T00:35:46Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5599",
+          "number": 5599,
+          "updated_at": "2026-04-30T16:16:00Z",
+          "user": {
+            "login": "uchkunr",
+            "type": "User"
+          },
+          "position": 2,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-03T00:51:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5601",
+          "number": 5601,
+          "updated_at": "2026-04-30T16:16:22Z",
+          "user": {
+            "login": "uchkunr",
+            "type": "User"
+          },
+          "position": 3,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-03T20:25:59Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5604",
+          "number": 5604,
+          "updated_at": "2026-04-30T16:16:24Z",
+          "user": {
+            "login": "onurtemiz",
+            "type": "User"
+          },
+          "position": 4,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-05T14:23:44Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5608",
+          "number": 5608,
+          "updated_at": "2026-04-30T16:16:26Z",
+          "user": {
+            "login": "SaKaNa-Y",
+            "type": "User"
+          },
+          "position": 5,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-06T00:06:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5610",
+          "number": 5610,
+          "updated_at": "2026-04-30T16:15:55Z",
+          "user": {
+            "login": "vuki656",
+            "type": "User"
+          },
+          "position": 6,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-13T10:19:24Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5628",
+          "number": 5628,
+          "updated_at": "2026-07-12T14:17:56Z",
+          "user": {
+            "login": "bgk614",
+            "type": "User"
+          },
+          "position": 7,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-14T00:45:51Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5632",
+          "number": 5632,
+          "updated_at": "2026-07-12T14:17:25Z",
+          "user": {
+            "login": "bgk614",
+            "type": "User"
+          },
+          "position": 8,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-14T14:00:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5634",
+          "number": 5634,
+          "updated_at": "2026-01-21T02:23:58Z",
+          "user": {
+            "login": "Andarist",
+            "type": "User"
+          },
+          "position": 9,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-14T18:17:28Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5637",
+          "number": 5637,
+          "updated_at": "2026-04-30T16:17:14Z",
+          "user": {
+            "login": "marcalexiei",
+            "type": "User"
+          },
+          "position": 10,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-15T04:55:32Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5638",
+          "number": 5638,
+          "updated_at": "2026-01-22T17:46:50Z",
+          "user": {
+            "login": "samchungy",
+            "type": "User"
+          },
+          "position": 11,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-19T20:17:48Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5646",
+          "number": 5646,
+          "updated_at": "2026-01-21T02:26:09Z",
+          "user": {
+            "login": "Abdalrhman-Almarakeby",
+            "type": "User"
+          },
+          "position": 12,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-21T01:36:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5649",
+          "number": 5649,
+          "updated_at": "2026-04-30T16:17:16Z",
+          "user": {
+            "login": "playoffthecuff",
+            "type": "User"
+          },
+          "position": 13,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-21T08:18:10Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5651",
+          "number": 5651,
+          "updated_at": "2026-04-30T16:16:20Z",
+          "user": {
+            "login": "nakita628",
+            "type": "User"
+          },
+          "position": 14,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-22T17:10:19Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5655",
+          "number": 5655,
+          "updated_at": "2026-04-30T16:16:02Z",
+          "user": {
+            "login": "tushargr0ver",
+            "type": "User"
+          },
+          "position": 15,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-22T17:37:33Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5656",
+          "number": 5656,
+          "updated_at": "2026-01-22T19:04:51Z",
+          "user": {
+            "login": "colinhacks",
+            "type": "User"
+          },
+          "position": 16,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-23T14:30:52Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5657",
+          "number": 5657,
+          "updated_at": "2026-06-03T01:28:35Z",
+          "user": {
+            "login": "tushargr0ver",
+            "type": "User"
+          },
+          "position": 17,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-24T13:16:43Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5661",
+          "number": 5661,
+          "updated_at": "2026-08-28T13:31:46Z",
+          "user": {
+            "login": "Cyjin-jani",
+            "type": "User"
+          },
+          "position": 18,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-29T01:14:34Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5671",
+          "number": 5671,
+          "updated_at": "2026-04-30T16:16:28Z",
+          "user": {
+            "login": "Fredkiss3",
+            "type": "User"
+          },
+          "position": 19,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-29T07:56:58Z",
+          "html_url": "https://github.com/colinhacks/zod/pull/5672",
+          "number": 5672,
+          "updated_at": "2026-06-03T01:29:02Z",
+          "user": {
+            "login": "LuckySilver0021",
+            "type": "User"
+          },
+          "position": 20,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        }
+      ]
+    },
+    {
+      "repository": "pallets/click",
+      "query": "repo:pallets/click is:pr is:merged created:2026-01-01..2026-09-30 merged:2026-01-01..2026-09-30",
+      "captured_at": "2026-10-07T05:05:14.061Z",
+      "incomplete_results": false,
+      "items": [
+        {
+          "created_at": "2026-01-15T10:00:55Z",
+          "html_url": "https://github.com/pallets/click/pull/3186",
+          "number": 3186,
+          "updated_at": "2026-05-14T00:48:33Z",
+          "user": {
+            "login": "karpierz",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-01-22T15:09:28Z",
+          "html_url": "https://github.com/pallets/click/pull/3192",
+          "number": 3192,
+          "updated_at": "2026-03-30T00:33:55Z",
+          "user": {
+            "login": "brihall",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-14T03:27:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3208",
+          "number": 3208,
+          "updated_at": "2026-05-14T00:48:42Z",
+          "user": {
+            "login": "Mr-Neutr0n",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-17T09:06:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3211",
+          "number": 3211,
+          "updated_at": "2026-05-23T00:47:56Z",
+          "user": {
+            "login": "StevOti",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-20T07:10:43Z",
+          "html_url": "https://github.com/pallets/click/pull/3223",
+          "number": 3223,
+          "updated_at": "2026-08-08T05:54:58Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-20T08:29:51Z",
+          "html_url": "https://github.com/pallets/click/pull/3224",
+          "number": 3224,
+          "updated_at": "2026-08-08T05:54:59Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-21T14:13:40Z",
+          "html_url": "https://github.com/pallets/click/pull/3225",
+          "number": 3225,
+          "updated_at": "2026-08-08T05:55:00Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-23T16:10:36Z",
+          "html_url": "https://github.com/pallets/click/pull/3228",
+          "number": 3228,
+          "updated_at": "2026-05-15T00:45:46Z",
+          "user": {
+            "login": "RC2215",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-27T21:08:23Z",
+          "html_url": "https://github.com/pallets/click/pull/3233",
+          "number": 3233,
+          "updated_at": "2026-08-08T09:37:59Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-02-28T12:47:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3235",
+          "number": 3235,
+          "updated_at": "2026-04-26T00:39:58Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-02T05:37:29Z",
+          "html_url": "https://github.com/pallets/click/pull/3238",
+          "number": 3238,
+          "updated_at": "2026-04-24T00:40:07Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-02T07:53:49Z",
+          "html_url": "https://github.com/pallets/click/pull/3239",
+          "number": 3239,
+          "updated_at": "2026-08-08T05:55:01Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-02T12:28:32Z",
+          "html_url": "https://github.com/pallets/click/pull/3240",
+          "number": 3240,
+          "updated_at": "2026-08-08T05:55:02Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-04T03:46:19Z",
+          "html_url": "https://github.com/pallets/click/pull/3243",
+          "number": 3243,
+          "updated_at": "2026-05-01T00:46:57Z",
+          "user": {
+            "login": "denuoweb",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-04T10:53:29Z",
+          "html_url": "https://github.com/pallets/click/pull/3244",
+          "number": 3244,
+          "updated_at": "2026-05-01T00:46:57Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-05T08:20:43Z",
+          "html_url": "https://github.com/pallets/click/pull/3245",
+          "number": 3245,
+          "updated_at": "2026-04-24T00:40:04Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-05T18:53:00Z",
+          "html_url": "https://github.com/pallets/click/pull/3248",
+          "number": 3248,
+          "updated_at": "2026-08-08T05:55:03Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-06T06:30:18Z",
+          "html_url": "https://github.com/pallets/click/pull/3250",
+          "number": 3250,
+          "updated_at": "2026-05-01T00:46:55Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-10T17:11:51Z",
+          "html_url": "https://github.com/pallets/click/pull/3256",
+          "number": 3256,
+          "updated_at": "2026-07-28T00:35:52Z",
+          "user": {
+            "login": "doiken",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-11T23:09:07Z",
+          "html_url": "https://github.com/pallets/click/pull/3259",
+          "number": 3259,
+          "updated_at": "2026-05-01T00:46:58Z",
+          "user": {
+            "login": "denuoweb",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-12T00:16:28Z",
+          "html_url": "https://github.com/pallets/click/pull/3260",
+          "number": 3260,
+          "updated_at": "2026-04-28T00:42:41Z",
+          "user": {
+            "login": "denuoweb",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-15T05:28:37Z",
+          "html_url": "https://github.com/pallets/click/pull/3264",
+          "number": 3264,
+          "updated_at": "2026-03-30T00:33:54Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-15T05:51:24Z",
+          "html_url": "https://github.com/pallets/click/pull/3266",
+          "number": 3266,
+          "updated_at": "2026-08-08T13:06:56Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-03-15T08:13:39Z",
+          "html_url": "https://github.com/pallets/click/pull/3267",
+          "number": 3267,
+          "updated_at": "2026-04-28T00:42:42Z",
+          "user": {
+            "login": "denuoweb",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-01T16:44:59Z",
+          "html_url": "https://github.com/pallets/click/pull/3299",
+          "number": 3299,
+          "updated_at": "2026-04-24T00:40:08Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-03T06:08:58Z",
+          "html_url": "https://github.com/pallets/click/pull/3301",
+          "number": 3301,
+          "updated_at": "2026-08-08T13:07:12Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-03T06:14:09Z",
+          "html_url": "https://github.com/pallets/click/pull/3302",
+          "number": 3302,
+          "updated_at": "2026-08-08T09:11:08Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-03T22:49:30Z",
+          "html_url": "https://github.com/pallets/click/pull/3304",
+          "number": 3304,
+          "updated_at": "2026-08-08T05:45:20Z",
+          "user": {
+            "login": "davidism",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-05T23:27:13Z",
+          "html_url": "https://github.com/pallets/click/pull/3315",
+          "number": 3315,
+          "updated_at": "2026-05-01T00:46:51Z",
+          "user": {
+            "login": "john0isaac",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-09T09:45:56Z",
+          "html_url": "https://github.com/pallets/click/pull/3328",
+          "number": 3328,
+          "updated_at": "2026-05-01T00:46:53Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-10T16:17:46Z",
+          "html_url": "https://github.com/pallets/click/pull/3330",
+          "number": 3330,
+          "updated_at": "2026-04-28T00:42:40Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-11T10:38:43Z",
+          "html_url": "https://github.com/pallets/click/pull/3333",
+          "number": 3333,
+          "updated_at": "2026-08-08T09:38:01Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-16T08:52:09Z",
+          "html_url": "https://github.com/pallets/click/pull/3343",
+          "number": 3343,
+          "updated_at": "2026-05-04T00:43:37Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-17T22:01:05Z",
+          "html_url": "https://github.com/pallets/click/pull/3350",
+          "number": 3350,
+          "updated_at": "2026-08-08T09:11:11Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-21T11:02:48Z",
+          "html_url": "https://github.com/pallets/click/pull/3363",
+          "number": 3363,
+          "updated_at": "2026-08-08T13:07:39Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-21T15:07:15Z",
+          "html_url": "https://github.com/pallets/click/pull/3364",
+          "number": 3364,
+          "updated_at": "2026-08-08T05:55:03Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-22T16:23:07Z",
+          "html_url": "https://github.com/pallets/click/pull/3371",
+          "number": 3371,
+          "updated_at": "2026-05-15T00:45:44Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-22T17:14:54Z",
+          "html_url": "https://github.com/pallets/click/pull/3372",
+          "number": 3372,
+          "updated_at": "2026-08-08T05:55:04Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-22T19:04:10Z",
+          "html_url": "https://github.com/pallets/click/pull/3373",
+          "number": 3373,
+          "updated_at": "2026-08-08T13:07:43Z",
+          "user": {
+            "login": "davidism",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T06:28:10Z",
+          "html_url": "https://github.com/pallets/click/pull/3389",
+          "number": 3389,
+          "updated_at": "2026-08-08T09:11:13Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T06:50:12Z",
+          "html_url": "https://github.com/pallets/click/pull/3390",
+          "number": 3390,
+          "updated_at": "2026-05-14T00:48:37Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-29T10:28:06Z",
+          "html_url": "https://github.com/pallets/click/pull/3391",
+          "number": 3391,
+          "updated_at": "2026-07-28T00:35:44Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-04-30T05:38:45Z",
+          "html_url": "https://github.com/pallets/click/pull/3393",
+          "number": 3393,
+          "updated_at": "2026-07-28T00:35:46Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-01T01:12:22Z",
+          "html_url": "https://github.com/pallets/click/pull/3396",
+          "number": 3396,
+          "updated_at": "2026-05-19T00:49:35Z",
+          "user": {
+            "login": "AndreasBackx",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T14:52:14Z",
+          "html_url": "https://github.com/pallets/click/pull/3404",
+          "number": 3404,
+          "updated_at": "2026-08-08T05:55:05Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T19:33:28Z",
+          "html_url": "https://github.com/pallets/click/pull/3405",
+          "number": 3405,
+          "updated_at": "2026-07-28T00:35:37Z",
+          "user": {
+            "login": "AndreasBackx",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-04T20:26:48Z",
+          "html_url": "https://github.com/pallets/click/pull/3407",
+          "number": 3407,
+          "updated_at": "2026-08-06T00:31:09Z",
+          "user": {
+            "login": "AndreasBackx",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-12T15:05:57Z",
+          "html_url": "https://github.com/pallets/click/pull/3420",
+          "number": 3420,
+          "updated_at": "2026-07-24T00:34:25Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-12T20:13:38Z",
+          "html_url": "https://github.com/pallets/click/pull/3422",
+          "number": 3422,
+          "updated_at": "2026-07-27T00:39:52Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-13T13:58:12Z",
+          "html_url": "https://github.com/pallets/click/pull/3423",
+          "number": 3423,
+          "updated_at": "2026-07-28T00:35:49Z",
+          "user": {
+            "login": "sjoubert",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-15T11:13:19Z",
+          "html_url": "https://github.com/pallets/click/pull/3430",
+          "number": 3430,
+          "updated_at": "2026-07-27T00:39:47Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-15T11:24:30Z",
+          "html_url": "https://github.com/pallets/click/pull/3431",
+          "number": 3431,
+          "updated_at": "2026-08-08T05:55:06Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-16T06:20:23Z",
+          "html_url": "https://github.com/pallets/click/pull/3434",
+          "number": 3434,
+          "updated_at": "2026-07-27T00:39:53Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-16T16:47:35Z",
+          "html_url": "https://github.com/pallets/click/pull/3436",
+          "number": 3436,
+          "updated_at": "2026-08-08T09:11:18Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-17T05:13:17Z",
+          "html_url": "https://github.com/pallets/click/pull/3442",
+          "number": 3442,
+          "updated_at": "2026-08-08T09:11:21Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-17T05:16:42Z",
+          "html_url": "https://github.com/pallets/click/pull/3443",
+          "number": 3443,
+          "updated_at": "2026-08-08T09:11:24Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-17T05:31:05Z",
+          "html_url": "https://github.com/pallets/click/pull/3444",
+          "number": 3444,
+          "updated_at": "2026-08-08T13:08:11Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-17T20:19:24Z",
+          "html_url": "https://github.com/pallets/click/pull/3446",
+          "number": 3446,
+          "updated_at": "2026-08-08T13:08:15Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-17T23:43:28Z",
+          "html_url": "https://github.com/pallets/click/pull/3447",
+          "number": 3447,
+          "updated_at": "2026-07-28T00:35:30Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T12:19:03Z",
+          "html_url": "https://github.com/pallets/click/pull/3450",
+          "number": 3450,
+          "updated_at": "2026-07-26T00:39:57Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T12:57:25Z",
+          "html_url": "https://github.com/pallets/click/pull/3451",
+          "number": 3451,
+          "updated_at": "2026-07-27T00:39:11Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T13:09:04Z",
+          "html_url": "https://github.com/pallets/click/pull/3452",
+          "number": 3452,
+          "updated_at": "2026-07-26T00:40:01Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T13:44:06Z",
+          "html_url": "https://github.com/pallets/click/pull/3453",
+          "number": 3453,
+          "updated_at": "2026-07-27T00:39:13Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T13:55:47Z",
+          "html_url": "https://github.com/pallets/click/pull/3454",
+          "number": 3454,
+          "updated_at": "2026-07-27T00:39:12Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T14:06:17Z",
+          "html_url": "https://github.com/pallets/click/pull/3455",
+          "number": 3455,
+          "updated_at": "2026-07-27T00:39:14Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T15:49:38Z",
+          "html_url": "https://github.com/pallets/click/pull/3460",
+          "number": 3460,
+          "updated_at": "2026-07-25T00:37:38Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T16:36:53Z",
+          "html_url": "https://github.com/pallets/click/pull/3463",
+          "number": 3463,
+          "updated_at": "2026-07-26T00:40:00Z",
+          "user": {
+            "login": "jorenham",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T17:22:30Z",
+          "html_url": "https://github.com/pallets/click/pull/3466",
+          "number": 3466,
+          "updated_at": "2026-07-27T00:39:41Z",
+          "user": {
+            "login": "falkben",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T17:59:40Z",
+          "html_url": "https://github.com/pallets/click/pull/3467",
+          "number": 3467,
+          "updated_at": "2026-07-27T00:39:45Z",
+          "user": {
+            "login": "rogerb121",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T18:13:00Z",
+          "html_url": "https://github.com/pallets/click/pull/3469",
+          "number": 3469,
+          "updated_at": "2026-07-27T00:39:42Z",
+          "user": {
+            "login": "pamelafox",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T20:05:41Z",
+          "html_url": "https://github.com/pallets/click/pull/3470",
+          "number": 3470,
+          "updated_at": "2026-07-27T00:39:38Z",
+          "user": {
+            "login": "Jazzcort",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T21:26:12Z",
+          "html_url": "https://github.com/pallets/click/pull/3471",
+          "number": 3471,
+          "updated_at": "2026-07-27T00:39:36Z",
+          "user": {
+            "login": "panyamkeerthana",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-18T23:46:45Z",
+          "html_url": "https://github.com/pallets/click/pull/3472",
+          "number": 3472,
+          "updated_at": "2026-07-27T00:39:26Z",
+          "user": {
+            "login": "saxenanurag",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-19T00:21:24Z",
+          "html_url": "https://github.com/pallets/click/pull/3473",
+          "number": 3473,
+          "updated_at": "2026-08-08T05:55:07Z",
+          "user": {
+            "login": "yurishevtsov",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-19T16:39:09Z",
+          "html_url": "https://github.com/pallets/click/pull/3478",
+          "number": 3478,
+          "updated_at": "2026-07-27T00:39:31Z",
+          "user": {
+            "login": "PlumLariat",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-19T18:46:41Z",
+          "html_url": "https://github.com/pallets/click/pull/3479",
+          "number": 3479,
+          "updated_at": "2026-08-08T09:11:26Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-19T19:45:38Z",
+          "html_url": "https://github.com/pallets/click/pull/3482",
+          "number": 3482,
+          "updated_at": "2026-07-27T00:39:23Z",
+          "user": {
+            "login": "ChrisPappalardo",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-19T22:39:14Z",
+          "html_url": "https://github.com/pallets/click/pull/3483",
+          "number": 3483,
+          "updated_at": "2026-07-27T00:39:30Z",
+          "user": {
+            "login": "alexkoster",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-20T00:09:11Z",
+          "html_url": "https://github.com/pallets/click/pull/3484",
+          "number": 3484,
+          "updated_at": "2026-08-08T05:55:08Z",
+          "user": {
+            "login": "yurishevtsov",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-21T10:18:42Z",
+          "html_url": "https://github.com/pallets/click/pull/3493",
+          "number": 3493,
+          "updated_at": "2026-08-08T13:08:32Z",
+          "user": {
+            "login": "Iain-S",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-21T14:34:23Z",
+          "html_url": "https://github.com/pallets/click/pull/3495",
+          "number": 3495,
+          "updated_at": "2026-07-27T00:39:37Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-22T04:02:22Z",
+          "html_url": "https://github.com/pallets/click/pull/3496",
+          "number": 3496,
+          "updated_at": "2026-08-08T09:11:29Z",
+          "user": {
+            "login": "davidism",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-22T07:27:52Z",
+          "html_url": "https://github.com/pallets/click/pull/3498",
+          "number": 3498,
+          "updated_at": "2026-07-26T00:40:03Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-22T09:46:46Z",
+          "html_url": "https://github.com/pallets/click/pull/3499",
+          "number": 3499,
+          "updated_at": "2026-07-26T00:40:09Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-22T11:06:00Z",
+          "html_url": "https://github.com/pallets/click/pull/3500",
+          "number": 3500,
+          "updated_at": "2026-08-08T09:38:03Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-22T14:17:25Z",
+          "html_url": "https://github.com/pallets/click/pull/3503",
+          "number": 3503,
+          "updated_at": "2026-07-27T00:39:17Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-22T16:29:56Z",
+          "html_url": "https://github.com/pallets/click/pull/3504",
+          "number": 3504,
+          "updated_at": "2026-07-27T00:39:24Z",
+          "user": {
+            "login": "sitiyou",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-23T04:45:43Z",
+          "html_url": "https://github.com/pallets/click/pull/3505",
+          "number": 3505,
+          "updated_at": "2026-07-24T00:34:17Z",
+          "user": {
+            "login": "davidism",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-23T05:31:00Z",
+          "html_url": "https://github.com/pallets/click/pull/3507",
+          "number": 3507,
+          "updated_at": "2026-08-08T05:48:05Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-23T07:25:16Z",
+          "html_url": "https://github.com/pallets/click/pull/3508",
+          "number": 3508,
+          "updated_at": "2026-07-27T00:39:22Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-23T13:56:05Z",
+          "html_url": "https://github.com/pallets/click/pull/3509",
+          "number": 3509,
+          "updated_at": "2026-08-08T05:55:09Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-23T17:02:10Z",
+          "html_url": "https://github.com/pallets/click/pull/3510",
+          "number": 3510,
+          "updated_at": "2026-07-27T00:39:10Z",
+          "user": {
+            "login": "hernanr2205",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-28T03:53:00Z",
+          "html_url": "https://github.com/pallets/click/pull/3521",
+          "number": 3521,
+          "updated_at": "2026-08-08T09:11:31Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-28T12:28:24Z",
+          "html_url": "https://github.com/pallets/click/pull/3526",
+          "number": 3526,
+          "updated_at": "2026-08-08T13:08:40Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-28T16:19:47Z",
+          "html_url": "https://github.com/pallets/click/pull/3528",
+          "number": 3528,
+          "updated_at": "2026-07-26T00:40:07Z",
+          "user": {
+            "login": "DineshBunny-1",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-29T13:38:20Z",
+          "html_url": "https://github.com/pallets/click/pull/3533",
+          "number": 3533,
+          "updated_at": "2026-07-26T00:39:43Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-05-29T14:49:22Z",
+          "html_url": "https://github.com/pallets/click/pull/3534",
+          "number": 3534,
+          "updated_at": "2026-08-08T13:08:48Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-06-04T12:52:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3553",
+          "number": 3553,
+          "updated_at": "2026-08-08T09:11:35Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-06-06T05:32:13Z",
+          "html_url": "https://github.com/pallets/click/pull/3559",
+          "number": 3559,
+          "updated_at": "2026-07-26T00:39:34Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        },
+        {
+          "created_at": "2026-06-06T06:00:50Z",
+          "html_url": "https://github.com/pallets/click/pull/3560",
+          "number": 3560,
+          "updated_at": "2026-07-25T00:37:52Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          }
+        }
+      ],
+      "total_count": 159,
+      "candidates": [
+        {
+          "created_at": "2026-01-15T10:00:55Z",
+          "html_url": "https://github.com/pallets/click/pull/3186",
+          "number": 3186,
+          "updated_at": "2026-05-14T00:48:33Z",
+          "user": {
+            "login": "karpierz",
+            "type": "User"
+          },
+          "position": 1,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-01-22T15:09:28Z",
+          "html_url": "https://github.com/pallets/click/pull/3192",
+          "number": 3192,
+          "updated_at": "2026-03-30T00:33:55Z",
+          "user": {
+            "login": "brihall",
+            "type": "User"
+          },
+          "position": 2,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-14T03:27:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3208",
+          "number": 3208,
+          "updated_at": "2026-05-14T00:48:42Z",
+          "user": {
+            "login": "Mr-Neutr0n",
+            "type": "User"
+          },
+          "position": 3,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-17T09:06:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3211",
+          "number": 3211,
+          "updated_at": "2026-05-23T00:47:56Z",
+          "user": {
+            "login": "StevOti",
+            "type": "User"
+          },
+          "position": 4,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-20T07:10:43Z",
+          "html_url": "https://github.com/pallets/click/pull/3223",
+          "number": 3223,
+          "updated_at": "2026-08-08T05:54:58Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 5,
+          "partition": "development",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-20T08:29:51Z",
+          "html_url": "https://github.com/pallets/click/pull/3224",
+          "number": 3224,
+          "updated_at": "2026-08-08T05:54:59Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 6,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-21T14:13:40Z",
+          "html_url": "https://github.com/pallets/click/pull/3225",
+          "number": 3225,
+          "updated_at": "2026-08-08T05:55:00Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 7,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-23T16:10:36Z",
+          "html_url": "https://github.com/pallets/click/pull/3228",
+          "number": 3228,
+          "updated_at": "2026-05-15T00:45:46Z",
+          "user": {
+            "login": "RC2215",
+            "type": "User"
+          },
+          "position": 8,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-27T21:08:23Z",
+          "html_url": "https://github.com/pallets/click/pull/3233",
+          "number": 3233,
+          "updated_at": "2026-08-08T09:37:59Z",
+          "user": {
+            "login": "Rowlando13",
+            "type": "User"
+          },
+          "position": 9,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-02-28T12:47:26Z",
+          "html_url": "https://github.com/pallets/click/pull/3235",
+          "number": 3235,
+          "updated_at": "2026-04-26T00:39:58Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 10,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-02T05:37:29Z",
+          "html_url": "https://github.com/pallets/click/pull/3238",
+          "number": 3238,
+          "updated_at": "2026-04-24T00:40:07Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 11,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-02T07:53:49Z",
+          "html_url": "https://github.com/pallets/click/pull/3239",
+          "number": 3239,
+          "updated_at": "2026-08-08T05:55:01Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 12,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-02T12:28:32Z",
+          "html_url": "https://github.com/pallets/click/pull/3240",
+          "number": 3240,
+          "updated_at": "2026-08-08T05:55:02Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 13,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-04T03:46:19Z",
+          "html_url": "https://github.com/pallets/click/pull/3243",
+          "number": 3243,
+          "updated_at": "2026-05-01T00:46:57Z",
+          "user": {
+            "login": "denuoweb",
+            "type": "User"
+          },
+          "position": 14,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-04T10:53:29Z",
+          "html_url": "https://github.com/pallets/click/pull/3244",
+          "number": 3244,
+          "updated_at": "2026-05-01T00:46:57Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 15,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-05T08:20:43Z",
+          "html_url": "https://github.com/pallets/click/pull/3245",
+          "number": 3245,
+          "updated_at": "2026-04-24T00:40:04Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 16,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-05T18:53:00Z",
+          "html_url": "https://github.com/pallets/click/pull/3248",
+          "number": 3248,
+          "updated_at": "2026-08-08T05:55:03Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 17,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-06T06:30:18Z",
+          "html_url": "https://github.com/pallets/click/pull/3250",
+          "number": 3250,
+          "updated_at": "2026-05-01T00:46:55Z",
+          "user": {
+            "login": "kdeldycke",
+            "type": "User"
+          },
+          "position": 18,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-10T17:11:51Z",
+          "html_url": "https://github.com/pallets/click/pull/3256",
+          "number": 3256,
+          "updated_at": "2026-07-28T00:35:52Z",
+          "user": {
+            "login": "doiken",
+            "type": "User"
+          },
+          "position": 19,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        },
+        {
+          "created_at": "2026-03-11T23:09:07Z",
+          "html_url": "https://github.com/pallets/click/pull/3259",
+          "number": 3259,
+          "updated_at": "2026-05-01T00:46:58Z",
+          "user": {
+            "login": "denuoweb",
+            "type": "User"
+          },
+          "position": 20,
+          "partition": "confirmation",
+          "exposure": "no-known-prior-exposure"
+        }
+      ]
+    },
+    {
+      "repository": "pallets/itsdangerous",
+      "query": "repo:pallets/itsdangerous is:pr is:merged created:2026-01-01..2026-09-30 merged:2026-01-01..2026-09-30",
+      "captured_at": "2026-10-07T05:05:14.604Z",
+      "incomplete_results": false,
+      "items": [],
+      "total_count": 0,
+      "candidates": []
+    }
+  ]
+}

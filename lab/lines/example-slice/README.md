@@ -1,6 +1,6 @@
 # Line A: a slice anchored on an example
 
-**Stage:** survey session 1 completed and attacked by a fresh sceptic, 7 October 2026. Formulation next. Survey, sources and independently reproduced synthetic attacks in this folder.
+**Stage:** formulation session 2 completed and attacked by a fresh sceptic, 7 October 2026. Protocol and metadata-only candidate pool frozen at the session commit; instrument next. No real-change replay has run.
 
 **Problem:** choose a small portable work package before a solver has solved the task, with no second request for missing context.
 
@@ -15,5 +15,10 @@
 - [Executable attacks and prior predictions](attacks.md)
 - [Notebook](notebook.md)
 - [Independent sceptic review](sceptic-survey.md)
+- [Replay formulation and freeze](replay-protocol.md)
+- [Formulation sceptic review](sceptic-formulation.md)
+- [Frozen candidate metadata](replay-1/candidate-metadata.json)
 
-**Next:** formulate and freeze the replay rules and sampling procedure, including allowed new paths and a useful-size threshold. Read the primary predicate-switching method and restricted-repair framing before choosing a sophisticated baseline. Do not tune a selector on the eventual held-out cases. Line D can use the simple execution/import rule once its actual implementation is fixed; A need not first produce a successful rule.
+**Formulation result:** four file rules (execution, execution plus imports, module reach from the example, whole registered source root), separate failure/edit/new-path/context scores, explicit primary versus expanded packages, and a 25% file-and-byte operational size threshold. The threshold is a lab choice, not customer evidence. Public metadata yields 60 candidates across ky, zod and click, of which 45 are confirmation; itsdangerous has zero in the fixed window. Therefore this cohort cannot meet its four-project positive screen. Do not substitute a project or alter the window to rescue that result.
+
+**Next:** build and mechanically check the instrument using development candidates only. Freeze runtime/images, adapters, configuration allowlists and failure-identity normalization before opening confirmation content. Then freeze admitted task manifests before any selector score or production-fix reveal. The three available projects can supply descriptive replay evidence; a broader study needs a fresh reviewed protocol. Line D can use the execution/import rule once implemented; A need not first produce a successful rule.
