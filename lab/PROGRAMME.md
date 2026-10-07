@@ -60,7 +60,7 @@ From the CTO, 7 October 2026, after talking the product through with the owner. 
 
 **The decision the lab is working towards.** Whether to build that MVP, reshape it, or stop. The CTO takes it to the owner when Lines A and B each have a first result a sceptic has attacked. No dates. Say early if a line is aimed wrong.
 
-**Resources.** The owner is putting more into the lab. Lines A and B can run in separate sessions and do not wait for each other. Line C continues behind them. Cost stays at zero. The lab may prototype whatever it needs in its own folder; it does not need the kitchen to build anything first.
+**Resources.** The owner is putting more into the lab. Lines A and B can run in separate sessions and do not wait for each other. Line C continues behind them. Line D (the evals) opened on 7 October 2026 and runs beside Line A. Cost stays at zero. The lab may prototype whatever it needs in its own folder; it does not need the kitchen to build anything first.
 
 ## Active lines, in priority order
 
@@ -125,9 +125,32 @@ Formerly Line 1. It continues, behind A and B, with one change of emphasis: unde
 
 **Sequence.** First. Whatever the survey shows that bears on R2 goes to the CTO before the kitchen writes the R2 brief, if the kitchen has not reached it yet; R2 does not wait for the lab. The map of real requests comes before any work on new ways of getting a check, because it decides which ways are worth studying.
 
-### Does a Box help? (not open)
+### Line D. Does boxing give better results? (open, 7 October 2026)
 
-Formerly Line 2. Same agent, same task, same checks: the Box against the whole repository. It matters more under the new direction, because if an agent does clearly worse with a Box the product does not work. It opens when Line A has a rule worth testing; until then there is nothing to compare. Line B should report what is publicly known about agents working on reduced context.
+Formerly Line 2, "Does a Box help?". Opened by the CTO after Line B's first result, at the owner's request and on the lab's own recommendation. It runs beside Line A and shares its tooling; it does not wait for Line A to finish.
+
+**The problem for the product.** Line B found that the way of working that took hold gives an agent the whole repository and lets it search, and that the makers of these tools choose to share everything with helper agents. Their bet is that searching beats choosing. A Box is the opposite bet. If an agent on a Box does clearly worse, the idea is finished; if it does as well for less, or better, that is the first hard evidence the product has ever had. The owner's question, in their words: can we do evals, and does boxing generate better results on coding, and on other work?
+
+**What the lab must find out.** Same agent, same task, same check, with only what the agent can see changed:
+
+- **Whole repository.** The agent searches freely. This is the incumbent.
+- **Box by a rule that can miss.** Whatever rule Line A has, starting with the simplest one that can be computed today (the files the failing example executes, widened to what they import). Do not wait for a better rule.
+- **Generous Box.** The whole source folder.
+- **Oracle Box.** The files the real change touched plus what they need. Nobody could ship this; it is the ceiling, and it separates "a Box cannot help" from "this rule is not good enough".
+
+The boundary must be real: the agent runs where only that condition's files exist, not under an instruction to look nowhere else. R3b's solver was not isolated and its result cannot be used here.
+
+**Measure, per run:** solved or not, by a check the agent was not shown as well as the one it was; tokens, tool calls and time; whether it failed for want of a file that was not in the Box, counted separately from failing for any other reason; and whether a passing answer is actually right, read by someone who is named. Keep every transcript.
+
+**Tasks.** Real merged changes with a test, as in R3b's screening, from several projects, bugs and feature extensions counted apart. Prefer changes merged after the solver model's knowledge cut-off and say which are not. Fix the task list, the conditions and how many runs before the first run. Their code runs only in containers, with install scripts disabled, and nothing is sent to any project.
+
+**"And on other work."** Coding first, because it is the one kind of work with a check that can decide. If the coding result is not negative, say what the same comparison would look like for one other kind of work a repository holds (documentation, configuration, data or analysis work) and whether it can be scored honestly. Do not run it before coding has a result.
+
+**Constraint.** Zero cost and one model family limit the number of runs and the reach of the result. State the count. With few tasks only a large difference means anything; say how large a difference this design could see and treat anything smaller as "no difference shown". Repeat runs on the same task to learn how much one agent varies before reading anything into a gap.
+
+**The bar.** A table the owner can read: for each condition, solved out of how many, the cost, and how many failures were a missing file. Then one plain sentence: on this evidence boxing helps, hurts, or makes no difference that this design could see. A sceptic reruns a sample and tries to explain any gap by something other than the Box.
+
+**Decision it informs.** Whether there is a product at all, and if so whether its claim is "as good for less", "better", or only "less disclosed".
 
 ## Parked, with what would unpark them
 
