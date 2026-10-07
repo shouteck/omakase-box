@@ -84,6 +84,8 @@ From the CTO, 7 October 2026, after talking the product through with the owner. 
 
 ### Line B. Where the product stands
 
+**Stage (kept by the lab lead):** survey done and attacked by a sceptic, 7 October 2026 (Line B session 1); formulation next. Files in `lab/lines/where-it-stands/`.
+
 **The problem for the product.** The owner does not want another issue board, bounty site or open-source task delegator, and does not want conversations with possible customers until the MVP is clear. So direction has to be worked out from what is public.
 
 **What the lab must find out.**
@@ -156,6 +158,7 @@ None yet.
 - **Not built:** a candidate-set harness for the neutral format. After accepted A3, drive the product's `export`/`verify` with declarations and consume A2 paired records; A0's loop is historical design input, not a lab execution fork.
 - **Labelling guide, version 1** (`lab/lines/request-to-check/map/GUIDE.md`): five columns, including whether a request's text determined what its fix's tests assert. Followed almost identically by two same-family labellers; nine known faults, listed in `map/sample-1/RESULT.md`.
 - **Outside sample 1** (`map/sample-1/`): 40 issues from four public repositories (5 open, 5 fixed each, by a rule committed before reading), 78 conditions, two labellers, a sceptic's re-derivation, and three known commander.js cases kept apart. Issue text, comments and test diffs are kept. Small and from hand-picked repositories; counts, not rates.
+- **Line B survey** (`lab/lines/where-it-stands/`): the owner's questions answered by name from public sources, a source list tagged by how each was read, and a sceptic's re-reading of fifteen sources with 27 corrections applied. A survey, not a measurement; roughly half its numbers are search-summary leads. 7 October 2026.
 - **Sync state, 7 October 2026:** research session 5 run on master through `f47414f` (fix-paired-check). Brief replaced at the end of that session. Programme rewritten by the CTO afterwards: the lab leads; Lines A, B, C.
 
 - **Labelling guide for the map, version 0, with pilot.** `lab/lines/request-to-check/map/`. 79 bullets from 15 wave briefs, two blind labellers, kappa 0.71. Measures whether the guide can be followed, not yet what real requests need. Faults known; version 1 specified, untested.
