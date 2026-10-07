@@ -235,7 +235,7 @@ export function exportBox(options: ExportOptions): ExportResult {
           throw new ExportFailed(`paired check '${check.name}' disagrees between the untouched base and the isolated Box (base ${owner.result} exit ${owner.exit}; box ${isolated.result} exit ${isolated.exit}): ${isolated.log}`);
         }
         if (owner.outputSha256 !== isolated.outputSha256) {
-          throw new ExportFailed(`paired check '${check.name}' exits identically but fails differently in the isolated Box than on the untouched base — a missing selected file cannot masquerade as the declared outcome. base: ${owner.log.slice(-800)} | box: ${isolated.log.slice(-800)}`);
+          throw new ExportFailed(`paired check '${check.name}' exits identically (base exit ${owner.exit}, box exit ${isolated.exit}) but its output hash differs between the base and the Box. Output tails:\n  base: ${owner.log.slice(-800)}\n  box:  ${isolated.log.slice(-800)}`);
         }
         paired.push({ check, owner, box: isolated });
       }

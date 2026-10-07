@@ -129,6 +129,18 @@ function containedCwd(root: string, cwd: string): string {
   return target;
 }
 
+// Normalise timing-variable content for stable cross-run comparison:
+// test durations, start times and elapsed times change every run even
+// when the check itself is identical.  Only the digest (outputSha256)
+// uses this — the raw log is unchanged.
+function normaliseTimings(text: string): string {
+  return text
+    .replace(/\b\d+ms\b/g, 'Nms')
+    .replace(/\b\d+\.\d+s\b/g, 'N.Ns')
+    .replace(/\bStart at \d+:\d+:\d+/g, 'Start at HH:MM:SS')
+    .replace(/Duration \d+\.?\d*s/g, m => m.replace(/\d+\.?\d*/g, 'N'));
+}
+
 export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: string): CheckRecord {
   const role: CommandRole = 'role' in check ? check.role : 'setup';
   const canonicalRoot = realpathSync(root);
@@ -138,7 +150,10 @@ export function runDeclaredCheck(check: SetupCommand | CommandCheck, root: strin
     for (const spelling of new Set([canonicalRoot, toPosix(canonicalRoot)])) if (spelling !== '') out = out.split(spelling).join('<root>');
     return out;
   };
-  const digest = (stdout: string, stderr: string): string => createHash('sha256').update(JSON.stringify([normalize(stdout), normalize(stderr)])).digest('hex');
+  const digest = (stdout: string, stderr: string): string => {
+    const normalised = (text: string): string => normaliseTimings(normalize(text));
+    return createHash('sha256').update(JSON.stringify([normalised(stdout), normalised(stderr)])).digest('hex');
+  };
   const cwd = containedCwd(canonicalRoot, check.cwd);
   let resolved: ResolvedProgram;
   let run: ReturnType<typeof launch>;
