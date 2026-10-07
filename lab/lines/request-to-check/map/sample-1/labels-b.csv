@@ -1,0 +1,108 @@
+id,about,source,role,observable,determined,notes
+axios-11131.1,RESULT,REQUEST,OUTCOME,y,-,full script and expected output are in the body
+axios-11131.2,RESULT,NEW,GUARD,y,-,no input given for the three-or-more-frames case; existing suite probably covers it but the text names no test
+axios-11131.T,-,-,-,-,PARTLY,tests assert that a short stack already present in the error is not appended twice; the text states this only indirectly through a version table
+axios-11192.1,RESULT,REQUEST,OUTCOME,y,-,REQUEST by the letter (wrangler and versions named) but the check needs a Workers runtime and a live network call
+axios-11192.T,-,-,-,-,PARTLY,tests assert behaviour under Object.prototype pollution and that redirect follow is still sent; the text gives neither
+axios-11260.1,RESULT,REQUEST,OUTCOME,y,-,file named and wanted content stated; observable taken as y because package.json is a file not program source
+axios-11260.2,RESULT,NEW,GUARD,y,-,unbounded nothing-else-changes clause; really means the existing suite but the text names none so REPO does not apply; PERSON also fits; took cheaper
+axios-11260.T,-,-,-,-,NO-TEST,
+axios-11261.1,RESULT,REQUEST,OUTCOME,y,-,file named and wanted content stated
+axios-11261.2,RESULT,NEW,GUARD,y,-,same unbounded no-effect clause as axios-11260.2; took cheaper of NEW and PERSON
+axios-11261.T,-,-,-,-,NO-TEST,only a lock file under tests/ changed and no patch text is shown; no assertions exist to judge; guide has no value for this
+axios-11262.1,RESULT,REQUEST,OUTCOME,y,-,file named and wanted content stated
+axios-11262.2,RESULT,REQUEST,GUARD,y,-,file named and wanted content stated
+axios-11262.T,-,-,-,-,NO-TEST,the changed files under tests/ are the package manifests the request itself targets; they hold no assertions; YES would also be defensible
+axios-11285.1,RESULT,PERSON,OUTCOME,y,-,public name and location left open (perhaps under utils or helpers) and offered subject to maintainer approval; NEW considered
+axios-11289.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11289.2,RESULT,REQUEST,OUTCOME,y,-,same script plus one named option; expected names stated
+axios-11291.1,RESULT,PERSON,OUTCOME,y,-,text does not say which of the three behaviours is wanted
+axios-11292.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11292.2,RESULT,REQUEST,GUARD,y,-,the given script already prints the error code and states the expected one
+axios-11292.3,RESULT,NEW,GUARD,y,-,needs designed fixtures (rejecting and never-settling cleanup and throwing getters); role unclear because it constrains code that does not exist yet
+axios-11292.4,RESULT,PERSON,GUARD,n,-,split joins two things: no added overhead (only judged by reading code) and keeping custom responses working (would be NEW and y)
+axios-11295.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11295.2,RESULT,REQUEST,OUTCOME,y,-,field names given and should-not-throw is unmistakable but the exact expected objects are not stated; NEW also fits; took cheaper
+axios-11295.3,RESULT,NEW,OUTCOME,y,-,no code for the posting path
+axios-11295.4,RESULT,NEW,OUTCOME,y,-,worded as a guard but the inputs concerned throw today so it is false today; no inputs given
+click-3406.1,RESULT,NEW,OUTCOME,n,-,which sentinels is open (values like at one file); PERSON also fits; took cheaper
+click-3406.2,RESULT,NEW,OUTCOME,n,-,
+click-3652.1,RESULT,REQUEST,OUTCOME,y,-,exact expected help text given and the script is a few obvious lines; but comment 4 by the requester withdraws the exact form and a maintainer disagrees; guide has no rule for a condition later unsettled
+click-3652.2,RESULT,PERSON,OUTCOME,y,-,obvious to the user is a judgement
+click-3696.1,RECORD,-,-,-,-,
+click-3696.2,RECORD,-,-,-,-,
+click-3696.3,RESULT,PERSON,OUTCOME,y,-,typing need checking names an activity not a result; PROCESS also fits; took earlier value
+click-3696.4,RESULT,PERSON,OUTCOME,y,-,adding tests is not clearly RESULT or PROCESS; no threshold for complete
+click-3696.5,RECORD,-,-,-,-,
+click-3740.1,RESULT,NEW,OUTCOME,y,-,one call and the error are given but no runnable reproduction; Windows-only path
+click-3740.T,-,-,-,-,PARTLY,tests assert ANSI colour stripping and preserving on the temp file path which the text does not mention; also the fix was opened one minute before the issue so no text predates it
+click-3766.1,RESULT,NEW,OUTCOME,y,-,condition is docs matching reality and two different fixes satisfy it (edit docs = RECORD or restore workflow = RESULT); about is forced; PERSON also fits source
+click-3766.T,-,-,-,-,NO-TEST,
+click-3786.1,RECORD,-,-,-,-,
+click-3786.2,RECORD,-,-,-,-,
+click-3786.3,RESULT,REQUEST,OUTCOME,y,-,file and wanted value stated
+click-3786.4,PROCESS,-,-,-,-,release actions (tag and publish); the tag is a checkable result but not part of the software; RESULT considered
+click-3786.5,RESULT,NEW,OUTCOME,y,-,split joins a changelog section (RECORD) and a version bump (RESULT); next version number not given
+click-3786.T,-,-,-,-,NO-TEST,
+click-3802.1,RESULT,NEW,OUTCOME,y,-,race with no reproduction; gracefully is not defined
+click-3802.T,-,-,-,-,PARTLY,tests assert that the original exit code survives a late interrupt and that the interrupt propagates when standalone mode is off; the text only says handle gracefully
+click-3822.1,RESULT,REQUEST,OUTCOME,y,-,observable only through a type checker run at the command line
+click-3822.T,-,-,-,-,PARTLY,tests assert runtime subscripting click.Path[pathlib.Path] and typed convert and call forms; the text gives only the prompt case
+click-3840.1,RESULT,NEW,OUTCOME,y,-,script and wanted result are given but the failure is intermittent and opens a GUI editor so one run decides nothing; REQUEST by the letter
+click-3847.1,RESULT,REQUEST,OUTCOME,y,-,old and new name given; one import decides it; whether the old name must keep working is not said; NEW also fits; took cheaper
+click-3847.2,RESULT,PERSON,OUTCOME,y,-,stated as a question (maybe typing thing?)
+click-3847.3,RESULT,PERSON,OUTCOME,y,-,consider deprecating is a request to decide; NONE also fits; a maintainer comment says it is public on purpose
+click-3847.4,RESULT,NEW,OUTCOME,y,-,hedged with if I remember correctly
+click-3847.5,RESULT,PERSON,OUTCOME,y,-,invisible to the public API is not defined; NEW considered
+cobra-2222.1,RECORD,-,-,-,-,
+cobra-2222.2,RECORD,-,-,-,-,Go examples are documentation that the test runner executes; RESULT with NEW also defensible
+cobra-2222.3,RESULT,PERSON,OUTCOME,y,-,text says it requires some design and ends with let us talk
+cobra-2222.T,-,-,-,-,PARTLY,tests assert function helpers named CompletionWithDesc and Completion; the text suggested a struct with validation; borders on NO
+cobra-2240.1,RESULT,NEW,OUTCOME,y,-,no code given; behaviour clear
+cobra-2240.T,-,-,-,-,YES,
+cobra-2257.1,RESULT,REQUEST,OUTCOME,y,-,
+cobra-2257.T,-,-,-,-,YES,
+cobra-2298.1,NONE,-,-,-,-,a question
+cobra-2298.2,RECORD,-,-,-,-,
+cobra-2298.T,-,-,-,-,NO-TEST,
+cobra-2323.1,RESULT,REQUEST,OUTCOME,n,-,exact old and new line given; decided by a text search of the source so REQUEST and not observable at once
+cobra-2323.2,RESULT,NEW,GUARD,y,-,unbounded no-impact clause; took cheaper of NEW and PERSON
+cobra-2323.T,-,-,-,-,NO-TEST,
+cobra-2481.1,RESULT,NEW,OUTCOME,y,-,no reproduction; needs PowerShell and a generated script
+cobra-2481.2,RESULT,NEW,OUTCOME,y,-,
+cobra-2481.3,RESULT,NEW,OUTCOME,y,-,
+cobra-2491.1,RESULT,PERSON,OUTCOME,y,-,two alternative interfaces offered and the text opens a discussion on the API surface; NEW considered
+cobra-2505.1,RECORD,-,-,-,-,a documentation fix that is mechanically checkable (the snippet compiles); RECORD gets no source so that is lost
+cobra-2505.2,RECORD,-,-,-,-,
+cobra-2507.1,RECORD,-,-,-,-,
+cobra-2507.2,RESULT,PERSON,OUTCOME,y,-,reproduction given but the right result is one of several (return false or a clear error or only document it)
+cobra-2520.1,RESULT,NEW,OUTCOME,y,-,expected layout is shown for a different command than the reproduction; what to assert on the output must be designed
+commander-2342.1,RESULT,REQUEST,OUTCOME,y,-,
+commander-2342.2,RESULT,REQUEST,GUARD,y,-,
+commander-2342.T,-,-,-,-,YES,
+commander-2603.1,RESULT,REQUEST,OUTCOME,y,-,needs an Electron run; tool and version named
+commander-2603.2,RESULT,REQUEST,OUTCOME,y,-,code given; the right result is implied not stated
+commander-2603.T,-,-,-,-,PARTLY,tests assert the argv convention for an Electron renderer process which was raised only in comments after the fix was opened
+commander-2614.1,RESULT,REQUEST,OUTCOME,y,-,
+commander-2614.2,RESULT,REQUEST,GUARD,y,-,REQUEST for the one named example only; the wider existing behaviour clause would be NEW
+commander-2614.T,-,-,-,-,PARTLY,the test input ends in a combining accent mark inside optional brackets; the text speaks of a non-ASCII letter and a letter or number check which a mark would not meet
+serdejson-1123.1,RESULT,REQUEST,OUTCOME,y,-,tool and version and exact replacement code given; needs a host project a few lines long
+serdejson-1123.T,-,-,-,-,NO-TEST,
+serdejson-1134.1,RESULT,NEW,OUTCOME,y,-,
+serdejson-1134.2,RESULT,NEW,OUTCOME,y,-,
+serdejson-1134.T,-,-,-,-,NO-TEST,
+serdejson-1164.1,RESULT,REQUEST,OUTCOME,y,-,
+serdejson-1164.T,-,-,-,-,NO-TEST,
+serdejson-1214.1,RESULT,NEW,OUTCOME,y,-,text gives the implementation not an input and expected value
+serdejson-1214.T,-,-,-,-,NO-TEST,
+serdejson-1225.1,RESULT,NEW,OUTCOME,y,-,
+serdejson-1225.2,RESULT,NEW,OUTCOME,y,-,declined by a maintainer in comment 1 before the fix; guide has no label for a declined condition
+serdejson-1225.3,RESULT,NEW,OUTCOME,y,-,declined by a maintainer in comment 1 before the fix
+serdejson-1225.4,RESULT,NEW,OUTCOME,n,-,which line to remove is not given; the no-new-warnings half would be a lint run
+serdejson-1225.T,-,-,-,-,NO-TEST,
+serdejson-1323.1,RESULT,NEW,OUTCOME,y,-,assertion given verbatim but the set-up uses a Url type whose crate is not named so the set-up rule applies; otherwise REQUEST; may be intended behaviour
+serdejson-1323.2,NONE,-,-,-,-,a question
+serdejson-1330.1,RESULT,PERSON,OUTCOME,y,-,forwarded report naming a missing limit with no specific request; NONE also fits
+serdejson-1332.1,NONE,-,-,-,-,
+serdejson-1335.1,RESULT,REQUEST,OUTCOME,y,-,
+serdejson-1340.1,RESULT,REQUEST,OUTCOME,y,-,a test is given verbatim; requester is unsure whether it is a bug so PERSON also fits; took cheaper

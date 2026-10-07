@@ -1,0 +1,108 @@
+id,about,source,role,observable,determined,notes
+axios-11131.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11131.2,RESULT,NEW,GUARD,y,-,no input given for the three or more frame case
+axios-11131.T,-,-,-,-,PARTLY,tests assert that a short stack already present in the error is not appended twice and compare exact stack strings from a mocked captureStackTrace
+axios-11192.1,RESULT,REQUEST,OUTCOME,y,-,needs wrangler and a live URL but tool and version are named and config is given
+axios-11192.T,-,-,-,-,PARTLY,tests assert the default cache mode is kept where the runtime accepts it and dropped only when the Request constructor rejects it plus prototype pollution cases
+axios-11260.1,RESULT,REQUEST,OUTCOME,n,-,literal file edit; no code in text but file and wanted content are named; observable n because a dev manifest is only seen by reading the repo
+axios-11260.2,RESULT,NEW,GUARD,y,-,unbounded guard with no check named; NEW over PERSON by the cheaper rule
+axios-11260.T,-,-,-,-,NO-TEST,
+axios-11261.1,RESULT,REQUEST,OUTCOME,n,-,literal file edit as axios-11260.1
+axios-11261.2,RESULT,NEW,GUARD,y,-,unbounded guard with no check named; NEW over PERSON by the cheaper rule
+axios-11261.T,-,-,-,-,NO-TEST,the one file counted as a test is a lockfile under tests/ with no patch text and no assertions; guide has no value for this
+axios-11262.1,RESULT,REQUEST,OUTCOME,n,-,literal file edit as axios-11260.1
+axios-11262.2,RESULT,REQUEST,GUARD,n,-,file and wanted content named
+axios-11262.T,-,-,-,-,NO-TEST,the files counted as tests are a package manifest and lockfile under tests/ with no assertions; the edit itself is exactly what the text asks; YES would also be defensible
+axios-11285.1,RESULT,PERSON,OUTCOME,y,-,where to expose is left open (perhaps utils or helpers)
+axios-11289.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11289.2,RESULT,REQUEST,OUTCOME,y,-,one option added to the given reproduction and names stated; role assumed OUTCOME as text does not say what happens today
+axios-11291.1,RESULT,PERSON,OUTCOME,y,-,inputs given but text does not say which behaviour is wanted
+axios-11292.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11292.2,RESULT,REQUEST,GUARD,y,-,the reproduction already prints the error code
+axios-11292.3,RESULT,NEW,GUARD,y,-,constrains code that does not exist yet; GUARD because the size error is not replaced or delayed today
+axios-11292.4,RESULT,PERSON,GUARD,n,-,compound: no added overhead cannot be checked mechanically as written while the custom response half would be NEW; split looks wrong
+axios-11295.1,RESULT,REQUEST,OUTCOME,y,-,
+axios-11295.2,RESULT,REQUEST,OUTCOME,y,-,inputs named in prose and only does not throw is stated; exact outputs not given
+axios-11295.3,RESULT,NEW,OUTCOME,y,-,needs a request set-up the text does not give
+axios-11295.4,RESULT,NEW,GUARD,y,-,no example of numeric siblings given
+click-3406.1,RESULT,NEW,OUTCOME,n,-,internal refactor; could be read as PROCESS
+click-3406.2,RESULT,NEW,OUTCOME,n,-,internal refactor; could be read as PROCESS
+click-3652.1,RESULT,REQUEST,OUTCOME,y,-,expected output given and input only described in prose; REQUEST over NEW by the cheaper rule; requester later says exact form is open
+click-3652.2,RESULT,PERSON,OUTCOME,y,-,form explicitly left open
+click-3696.1,RECORD,-,-,-,-,
+click-3696.2,RECORD,-,-,-,-,
+click-3696.3,RESULT,PERSON,OUTCOME,y,-,RESULT over PROCESS by the earlier-in-table rule; nothing says what correct typing is
+click-3696.4,RESULT,PERSON,OUTCOME,y,-,tests are neither behaviour nor a record; no coverage target stated
+click-3696.5,RECORD,-,-,-,-,
+click-3740.1,RESULT,NEW,OUTCOME,y,-,input and no TypeError are stated but reaching the Windows temp file pager needs set-up the text does not give
+click-3740.T,-,-,-,-,PARTLY,tests assert ANSI colour is stripped or kept on the temp file pager path which the text does not mention; the issue itself was filed one minute after the fix was opened
+click-3766.1,RESULT,PERSON,OUTCOME,y,-,RESULT over RECORD by the earlier-in-table rule; text leaves open whether to edit the docs or restore the workflow
+click-3766.T,-,-,-,-,NO-TEST,
+click-3786.1,RECORD,-,-,-,-,
+click-3786.2,RECORD,-,-,-,-,
+click-3786.3,RESULT,REQUEST,OUTCOME,y,-,literal file edit; version taken from the title
+click-3786.4,RESULT,NEW,OUTCOME,y,-,a release action; none of the about values fits well; could be PROCESS
+click-3786.5,RESULT,NEW,OUTCOME,y,-,mixes a changelog section (RECORD) with a version bump; next version number not stated
+click-3786.T,-,-,-,-,NO-TEST,
+click-3802.1,RESULT,NEW,OUTCOME,y,-,race with no reproduction; someone must design how to inject the second interrupt
+click-3802.T,-,-,-,-,PARTLY,tests assert exit codes are kept for error reports and successful exits and that the interrupt propagates without standalone mode; none of that policy is in the text
+click-3822.1,RESULT,REQUEST,OUTCOME,y,-,
+click-3822.T,-,-,-,-,PARTLY,tests assert explicit subscripting click.Path[pathlib.Path] at runtime and the types of convert and direct calls beyond the prompt case in the text
+click-3840.1,RESULT,NEW,OUTCOME,y,-,two line reproduction and unmistakable wanted result but the failure is intermittent so the number of runs is a design decision
+click-3847.1,RESULT,REQUEST,OUTCOME,y,-,literal rename; no code in text but old and new names are given
+click-3847.2,RESULT,PERSON,OUTCOME,y,-,how to mark as private is not settled
+click-3847.3,RESULT,PERSON,OUTCOME,y,-,asks to consider; a decision not a behaviour; could be NONE
+click-3847.4,RESULT,NEW,OUTCOME,y,-,
+click-3847.5,RESULT,PERSON,OUTCOME,y,-,what invisible means for the signature is not settled
+cobra-2222.1,RECORD,-,-,-,-,
+cobra-2222.2,RECORD,-,-,-,-,Go examples are also compiled and run as tests so RESULT could fit
+cobra-2222.3,RESULT,PERSON,OUTCOME,y,-,text says it requires some design
+cobra-2222.T,-,-,-,-,PARTLY,tests assert function helpers named Completion and CompletionWithDesc while the text floats a struct with Text and description
+cobra-2240.1,RESULT,NEW,OUTCOME,y,-,
+cobra-2240.T,-,-,-,-,YES,text has no code but the single assertion (context inside the help function equals the execution context via the help command) is what the text describes; PARTLY is defensible because no input is stated
+cobra-2257.1,RESULT,REQUEST,OUTCOME,y,-,
+cobra-2257.T,-,-,-,-,YES,
+cobra-2298.1,NONE,-,-,-,-,
+cobra-2298.2,RECORD,-,-,-,-,
+cobra-2298.T,-,-,-,-,NO-TEST,
+cobra-2323.1,RESULT,REQUEST,OUTCOME,n,-,literal one line edit with before and after given
+cobra-2323.2,RESULT,NEW,GUARD,y,-,unbounded guard with no check named; NEW over PERSON by the cheaper rule
+cobra-2323.T,-,-,-,-,NO-TEST,
+cobra-2481.1,RESULT,NEW,OUTCOME,y,-,needs PowerShell and a command fixture the text does not give
+cobra-2481.2,RESULT,NEW,OUTCOME,y,-,needs PowerShell and a command fixture the text does not give
+cobra-2481.3,RESULT,NEW,OUTCOME,y,-,needs PowerShell and a command fixture the text does not give
+cobra-2491.1,RESULT,PERSON,OUTCOME,y,-,example command line and wanted value are given but the interface is left as either of two designs
+cobra-2505.1,RECORD,-,-,-,-,a rendered page that could be checked mechanically but the guide gives RECORD no source column
+cobra-2505.2,RECORD,-,-,-,-,
+cobra-2507.1,RECORD,-,-,-,-,
+cobra-2507.2,RESULT,PERSON,OUTCOME,y,-,input given but wanted result is left as either false or a clear error
+cobra-2520.1,RESULT,NEW,OUTCOME,y,-,reproduction given but the expected output shown is for another program so what to assert must be decided
+commander-2342.1,RESULT,NEW,OUTCOME,y,-,reproduction given but how to observe a help width of 70 must be decided
+commander-2342.2,RESULT,REQUEST,GUARD,y,-,
+commander-2342.T,-,-,-,-,YES,
+commander-2603.1,RESULT,REQUEST,OUTCOME,y,-,needs Electron; version is named
+commander-2603.2,RESULT,REQUEST,OUTCOME,y,-,wanted result is implied not stated
+commander-2603.T,-,-,-,-,PARTLY,tests assert a renderer process keeps the app/args convention which was only raised after the fix was opened; test diff is cut in the file
+commander-2614.1,RESULT,REQUEST,OUTCOME,y,-,
+commander-2614.2,RESULT,REQUEST,GUARD,y,-,one named example of a broad preserve existing behaviour clause
+commander-2614.T,-,-,-,-,PARTLY,the test input ends in a combining accent (a mark not a letter or number) and uses the optional bracket form while the text speaks of a non-ASCII letter and a letter/number check
+serdejson-1123.1,RESULT,REQUEST,OUTCOME,y,-,tool and version named and the error line to disappear is quoted
+serdejson-1123.T,-,-,-,-,NO-TEST,
+serdejson-1134.1,RESULT,NEW,OUTCOME,y,-,
+serdejson-1134.2,RESULT,NEW,OUTCOME,y,-,
+serdejson-1134.T,-,-,-,-,NO-TEST,
+serdejson-1164.1,RESULT,REQUEST,OUTCOME,y,-,
+serdejson-1164.T,-,-,-,-,NO-TEST,
+serdejson-1214.1,RESULT,NEW,OUTCOME,y,-,text gives the implementation not an input and result
+serdejson-1214.T,-,-,-,-,NO-TEST,
+serdejson-1225.1,RESULT,NEW,OUTCOME,y,-,
+serdejson-1225.2,RESULT,NEW,OUTCOME,y,-,maintainer rejected this before the fix; guide has no way to record that
+serdejson-1225.3,RESULT,NEW,OUTCOME,y,-,maintainer rejected this before the fix; guide has no way to record that
+serdejson-1225.4,RESULT,NEW,OUTCOME,n,-,text mentions clippy shows no new warnings but does not locate the workaround
+serdejson-1225.T,-,-,-,-,NO-TEST,
+serdejson-1323.1,RESULT,REQUEST,OUTCOME,y,-,requester is partly asking whether this is a bug
+serdejson-1323.2,NONE,-,-,-,-,
+serdejson-1330.1,RESULT,PERSON,OUTCOME,y,-,no specific request
+serdejson-1332.1,NONE,-,-,-,-,
+serdejson-1335.1,RESULT,REQUEST,OUTCOME,y,-,
+serdejson-1340.1,RESULT,REQUEST,OUTCOME,y,-,requester unsure whether this is a bug
