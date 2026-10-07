@@ -15,6 +15,27 @@ The lab exists to close the gap in claim 3 and to tell the product how far claim
 
 The aim behind all of it, from the owner: the person who posed the problem accepts the solution. The product gives them the most certainty it honestly can and guides them to the best solution available: proof where proof is possible, a stated degree of certainty where it is not.
 
+## A note to the lab, from the owner and the CTO
+
+Written 7 October 2026. Read it before the lines below; it is why they are what they are.
+
+**Why a Box.** The idea at the centre is simple enough to say in a breath. A Box is a box of a repository: only the relevant pieces are inside. It is portable. You can hand it to a person or an agent to work on, and take the work back. That picture is the product, and everything else is in service of it.
+
+**What troubles us.** If that picture were enough, the industry would already work this way, and it does not. Software work is still done by people and agents who hold the whole repository. Handing out a bounded piece of work to someone outside has been possible for a long time, through bounties, issue boards and contracting, and it has stayed at the edges. There is a reason. We have guesses (each task is worth too little, switching context costs too much, solvers compete against everyone for no security, reviewing a stranger's work costs the owner more than doing it), but they are guesses. We need to know.
+
+**What we will not be.** A copy of a bounty site. A copy of an issue tracker with a hand-out button. If the honest conclusion is that a Box adds nothing those do not already offer, say so; that is a result we need as much as the opposite.
+
+**What we need answered before there is an MVP.**
+
+1. **Why has this way of working not taken hold?** What has actually been tried, what happened to it, and what stopped it: on the owner's side, on the solver's side, and in between. Evidence, not our guesses above.
+2. **What is the friction, exactly, and which parts can a Box remove?** Separate the friction a Box could take away (getting context, deciding what to share, knowing when the work is done) from the friction it cannot (trust, price, who is accountable).
+3. **What value would a Box add that existing options do not?** Stated so that someone who uses bounties or contractors today, or who runs agents on their whole repository, would recognise it as something they lack.
+4. **How does the industry really hand work out today,** and what is changing now that agents do much of it? Where is work already bounded and handed over, by whom, and to whom?
+5. **How could more software work get done through this idea?** Not "who might try it once" but what would have to be true for it to become a normal way of working, and what the first foothold would be.
+6. **Is the technical core sound?** A Box that does not reliably hold what the solver needs is not a Box. That is Line A.
+
+**How we feel about it.** We believe in the idea and we are not attached to the current design. The building so far has produced a mechanism that works and a product we cannot yet describe to a stranger in a way that makes them want it. We would rather the lab take the time to get these answers right than have the kitchen build further on a guess. Tell us what is true, including when it is not what we hoped. The owner is not a research scientist and does not want to steer the method; the questions are ours, the way of answering them is yours.
+
 ## Standing direction: the lab leads
 
 From the CTO, 7 October 2026, after talking the product through with the owner. This replaces every earlier standing direction on this page.
@@ -59,6 +80,9 @@ From the CTO, 7 October 2026, after talking the product through with the owner. 
 - **The strongest argument against us.** If an owner can run a capable agent inside their own boundary, or trusts a vendor's promise not to keep their code, who still needs a Box? Find the cases that survive that argument, if any, and say how large they look from public evidence.
 - **Where a small Box with a stated guarantee would matter** and where it would not: restricted code, specialised outside agents, cost and accuracy of agents on less context, auditability of what an outsider saw.
 - **Two or three candidate directions** stated as one sentence each, with what each needs to be true and what public evidence there is. One recommendation.
+
+- **The owner's questions, in the note at the top of this page, are this line's brief.** Questions 1 to 5 belong here. Answer each one by name in the result, with what the evidence supports, what it does not, and what remains unknown. Start with question 1: the history of attempts to hand out bounded software work (bounty platforms, crowdsourced development, micro-task programming, open-source "good first issue" programmes, outsourcing by ticket) and what the people who studied or ran them say stopped them. There is research literature on this as well as public post-mortems; use both.
+- **What changes with agents.** Several of the old obstacles are about people: pay per task, competition, job security, the cost of switching context. Say which obstacles disappear when the solver is an agent, which remain, and which new ones appear.
 
 **The bar.** Sources for every claim about another product, dated, with what was actually read. No claim about what customers want without evidence; say "unknown" where it is. A sceptic argues the opposite direction before the result goes in the brief.
 
