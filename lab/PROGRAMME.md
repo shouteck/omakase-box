@@ -181,6 +181,8 @@ The boundary must be real: the agent runs where only that condition's files exis
 
 Opened by the CTO at the owner's request. It does not depend on the Box and may outlive it.
 
+**Stage (kept by the lab lead):** session 1 done and attacked by a sceptic, 7 October 2026. It searched the layer next to the model, before the redirection below was read: 26 areas between lead and sceptic, none survive, one near miss (a transaction and undo layer under agent actions). The redirected area has not been searched. Files in `lab/lines/unbuilt-research/`.
+
 **The owner's reasoning.** After a day of testing the Box idea from several sides, the owner's view is that a product in the agent space that earns revenue without many competitors probably has to come out of research results that have not been turned into products yet. The owner is not a research scientist and wants to bring something to market, so the research has to be already done by someone else: the lab's job is to find it, not to do it.
 
 **What the lab must find.** Published results from roughly the last eighteen months, in or next to the agent space, where a paper reports something that works, building it is engineering, and no product does it yet. Three candidates, each with the strongest argument against it.

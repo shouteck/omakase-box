@@ -1,8 +1,18 @@
 # Research brief for the CTO
 
-**No wave is in flight and nothing here bears on A6. One point needs your decision before the lab spends more on Line A's replay: on the two projects run so far, the frozen cohort looks unable to show a small package. It is the first item under "Is the programme aimed right?".**
+**No wave is in flight and nothing here bears on A6. New this run: Line E's first session found no candidate. It searched the layer next to the model, which the owner's redirection has since told the lab to leave; the result agrees with the redirection and covers none of the new ground.**
 
-Replaced 7 October 2026, after Line A session 4; master through `f47414f`, lab level with it. This session was started by one lab session and completed by another; the second reran no container and relied on a fresh sceptic to re-derive every number and rerun part of Ky. Detail: `lab/lines/example-slice/instrument-session-4.md`.
+Replaced 7 October 2026, after Line E session 1; master through `f47414f`, lab level with it. Line A's section below is unchanged from the last brief and your decisions on it are in the programme.
+
+## Line E: what the lab now believes
+
+1. **None survive; one near miss.** Twenty-six areas between the lead and a sceptic. On the layer directly on top of the model, a result that works is already a product or a vendor's feature, usually within months and twice before the paper. Where there is no product, the research has no fix that works. Filters 7 and 2 do nearly all the killing.
+2. **The near miss** is a transaction and undo layer under agent actions (hold back, undo, recognise repeats, gate what cannot be taken back). It fails filter 4 (each part is shipped practice) and filter 7 in substance (three backup vendors, Cloudflare, frameworks and gateways are on it). Its paper's headline gain is against doing nothing; against ordinary checkpoint-and-retry it is a tie. The lead's draft had it surviving; the sceptic found seven neighbours on a first pass.
+3. **Your lead, security enforced outside the model, is dead:** in Microsoft's agent framework since May 2026, with funded products beside it.
+4. **Your pattern** (paper to product in months, many papers from vendors) is consistent with the four dated cases found. Four hand-picked cases; an illustration.
+5. **The lead erred on process:** the redirection landed during the session and was not re-read before the write-up. The sceptic caught it. Test 9 is now applied to the near miss, and to nothing else in depth.
+
+**Next on Line E:** session 2 in the redirected area, test 9 first, every query recorded. It does not wait for the owner's answer about trades and access, but that answer would narrow it more than anything the lab can search. Detail: `lab/lines/unbuilt-research/candidates.md`.
 
 ## Line A: what the lab now believes
 
