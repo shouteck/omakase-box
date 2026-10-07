@@ -25,6 +25,17 @@ No deadlines. The CTO decides which problem and in what order; the lab lead deci
 
 **A Box is used only when it earns its place** (the owner's principle). The program applies a gate using only what it knows before the agent starts: there is a failing test; the Box passed its run; it is small against the whole repository and against the free baseline (the test's own package plus its dependencies); stand-ins are not most of what is left. If the gate says no, the agent works the pstack way. The gate's rule is fixed before any agent run.
 
+**The Box is open by default. The owner's decision, 8 October 2026; where this conflicts with the text above or the gates below, this wins.** In the owner's words, closely: it has very little drawback; you run the tool and it contains the relevant files; you mostly look in there to do the work; but the Box is not sealed, you can still search outside; we just provided a packaging to help you. So:
+
+- **The product is a packaging, not a wall.** A program computes what is relevant to the task and hands it to the agent as the place to start: the files, and within them the functions the failing test ran through. The agent has the whole repository and may look anywhere. A wrong or incomplete Box then costs a little wasted reading and never a failure.
+- **Sealing becomes an option for later,** for an owner who needs a boundary. It is not part of this trial.
+- **This makes the trial smaller.** An open Box does not have to run alone, so levels 1 to 3 as *programs that still execute* are not needed here. What matters is the content of the packaging: which files, which functions, in what order, and how much text that is. Keep the levels as levels of *detail in the packaging* (files; files with the functions that ran marked; only those functions shown, with the rest as signatures) and drop the paired-run requirement for this trial.
+- **The comparison is unchanged and sharper:** pstack has an agent read around to write the scope; we hand over a scope a program computed. Same helper, same repository, same failing test.
+- **Gate 1 becomes a measure of the packaging, by script:** for each task, how much text is the Box at each level of detail against the repository; are the real fix's files and functions in it; how far down an ordered list do they sit. *Pass:* on at least half the tasks the Box is under a tenth of the repository's source and names every function the real fix changed.
+- **Gate 2 is unchanged:** how much of a published agent's reading fell outside the Box, and whether what it needed was inside.
+- **Gate 3 arms:** pstack-style brief written by an agent; and the same helper given the program's Box in place of that brief's scope. Count the brief-writing agent's tokens in the first arm and the program's run time in the second.
+- **Two things to watch that an open Box brings, from gate 0's reading:** an agent may lean on the Box too hard and miss a fix that lies outside it (one paper in the reading list found whole-file context gave more correct fixes than slices); and with a failing test an agent can already read the error trace, so the Box has to beat that, not beat nothing. Say in gate 3's result how often the helper went outside the Box and whether it needed to.
+
 ### Spend almost no tokens until the cheap evidence says it is worth it
 
 The owner's instruction, 8 October 2026: do not consume many tokens on this. The trial is four gates, the first of which is reading. Each costs more than the one before; stop at the first that fails and report.
