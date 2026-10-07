@@ -20,7 +20,7 @@ Agreed with the owner on 6 October 2026. The product is useful when all of this 
 - solved by an agent or person that **has never seen the repository**,
 - and accepted by the owner-side check, with the evidence stated honestly.
 
-Everything before that is a working mechanism, not a useful product. Two steps get there, in order: **R2**, a real request of our own prepared without request-specific code; then **R3**, the same on a public repository that is not ours. Until both are done, kitchen improvements pause (except fixing something that blocks them) and the lab stays on its first line of research. The owner's conversations with people who hand work to outsiders run alongside.
+Everything before that is a working mechanism, not a useful product. The route so far: **R2** (a real request of our own, no request-specific code), **R3** (a public repository; it could not prepare a Box), **milestone A** (a core that works on any repository) and **R3b** (a replay of a fixed public issue). The route from here is in "Where we are and what comes next" below. Until the milestone is met, kitchen improvements pause (except fixing something that blocks it) and the lab stays on its first line of research, plus the reading for its third. The owner's conversations with people who hand work to outsiders run alongside.
 
 ## Milestone A: a repository-agnostic core
 
@@ -44,7 +44,40 @@ Also noted: a Box carries the project's dependency file unchanged, so it names p
 
 Known limits, stated up front: the product's own command-line tool still needs Node to run, though the repository it works on can be anything. Without a language helper a Box is less lean. "Any repository" means any whose setup and checks can run in a clean folder; projects that need running services are harder.
 
-The next attempt on an outside repository (R3b, a replay of recently fixed issues) follows milestone A.
+The next attempt on an outside repository (R3b, a replay of recently fixed issues) followed milestone A; its result is below.
+
+## Where we are and what comes next
+
+Written by the CTO on 7 October 2026, after R3b and the paired-check fix.
+
+**What R3b showed.** One closed issue from `tj/commander.js` went through the product end to end. The hand-over and the acceptance worked: a Box of 39 files went out, a solver working from that folder changed one line, and the owner-side check accepted it and rejected a do-nothing submission. Preparing the Box did not work cleanly: export refused five times, twice because the "does the Box behave like the repository" check could not cope with a test tool that prints run times. That check has since been fixed (`waves/fix-paired-check.md`).
+
+**Against the four things to prove:**
+
+| What must be proven | State |
+|---|---|
+| A Box runs with the rest of the repository absent | Shown on our own code, small fixtures and one outside project |
+| A stranger can finish from the Box alone | Shown once on outside code, with a solver that was not properly isolated and was shown the test |
+| It costs the owner less than ordinary delegation | Not shown. Preparation is the weak point: the agreement was 186 hand-written lines |
+| Someone chooses it again and will pay | Untested. No kitchen wave can test it; only the owner's conversations can |
+
+**The order from here.** Each step depends on the one before it. There are no dates.
+
+| Step | Outcome | Why here |
+|---|---|---|
+| A6 | The tool starts cleanly on a machine that is not ours: the three first-run failures from R3b are gone, and what the Box tells a solver is correct (which commands are theirs to run, how to submit). | The next replay runs the product in a clean container. Without this, every run begins with the same workarounds. |
+| R3c | A stricter replay: several fixed issues across two public projects, one of them not commander.js. The solver runs in a container with nothing but the Box. Some cases hide the acceptance test from the solver. Each case includes one answer that is wrong in substance but well-formed, to see whether it is accepted. | Turns one anecdote into a count, and tests the two things R3b could not: real isolation, and whether wrong work gets through. |
+| P1 | Preparing a Box is cheap for a person: a command drafts the agreement from the repository (files by a stated rule, the setup and test commands it can find), and the owner edits it. | "Prepared in minutes" has to be true for a requester, not for an agent that has read the format. After R3c, so two projects inform it. |
+| R4 | A live attempt: an open issue, with a project owner who has agreed. | The useful milestone itself. **Owner's decision** when we get there, since it means contact with an outside party. |
+
+**Held back, on purpose:**
+
+- *The web journey (D3.2) and a GitHub integration* wait until R4 has worked.
+- *Leaner slicing* (steps 2 and 3 of the ladder below) waits for the lab's third line to say it is worth it. R3b shipped 36% of the repository's bytes, which is acceptable for public code.
+- *Kitchen improvements* (K9, the leftovers of K7) only when they block a step above.
+- *D4* is retired as a separate step. Its questions are answered inside the steps above: counterexamples in R3c, effort against ordinary delegation in P1 and R4.
+
+**The lab, alongside.** It runs beside the kitchen and does not wait for it. Its next work feeds two steps directly: how often a request and its check disagree, and whether that can be seen before hand-off (shapes how R3c hides the test); and what the field knows about whether a slice contains what a change needs (shapes P1's file rule).
 
 ## Sequence
 
@@ -54,11 +87,12 @@ The next attempt on an outside repository (R3b, a replay of recently fixed issue
 | K1 | The kitchen verifies on the host with no Docker. | Kitchen tooling |
 | D2 | A Box exports as a plain folder, proves itself in a clean directory, and a recipient submits a patch from it. | Command line and file format |
 | D3.1 | The owner verifies the patch in the original repository and merges it. | Command line |
-| D4 | Fresh recipients complete real Boxes; counterexamples fail honestly; effort and disclosure are compared with ordinary delegation. A recommendation follows. | Measured runs and a report |
+| D4 | Retired as a separate step on 7 October 2026; its questions moved into R3c, P1 and R4 (see above). | Not run |
 | R1 | A real request of our own goes through the whole loop. Done; it showed preparation cost is the main risk. | Command line |
 | R2 | A second real request prepared with no request-specific code; every check run on the untouched code at export. | Command line |
 | R3 | A real issue from a public repository that is not ours, prepared in minutes, solved from the Box alone, accepted by the owner-side check. | Command line; nothing sent to that project |
-| D3.2 | A minimal web journey for prepare, delegate, accept. | Web, only if D4 says continue |
+| R3b | A replay of a fixed public issue through the whole product. Done; hand-over and acceptance worked, preparation did not work cleanly. | Command line, in containers; nothing sent to that project |
+| D3.2 | A minimal web journey for prepare, delegate, accept. | Web, only after R4 has worked |
 
 Why this order: D2 is where the idea can fail, so it comes before more screens. A Box that is a folder plus three commands (`export`, `submit`, `verify`) needs no server, database, accounts or containers, and can be tested this week. The web journey is worth building once D4 shows what users actually need from it.
 

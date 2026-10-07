@@ -145,6 +145,26 @@ describe('declared command checks: runner', () => {
     expect(record.exit).toBeNull();
     expect(record.log).toContain('box-a1-no-such-program-xyz');
   });
+
+  it('normalises timing-variable output before hashing, while real differences still hash differently', () => {
+    const script = (tail: string, start: string, duration: string, ms: string) =>
+      `console.log('${tail}\\nStart at ${start}\\nDuration ${duration}\\n${ms}');console.error('elapsed ${ms}')`;
+    const timed = (tail: string, start: string, duration: string, ms: string) =>
+      runDeclaredCheck(check({ args: ['-e', script(tail, start, duration, ms)] }), process.cwd());
+    const first = timed('2 passed', '09:12:33', '1.234s', '512ms');
+    const second = timed('2 passed', '23:59:01', '9.876s', '2ms');
+    expect(first.result, first.log).toBe('pass');
+    expect(second.result, second.log).toBe('pass');
+    // Only the digest is normalised — the raw log keeps the real timings.
+    expect(first.log).toContain('Start at 09:12:33');
+    expect(first.log).toContain('512ms');
+    expect(first.outputSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(first.outputSha256).toBe(second.outputSha256);
+    // The negative that makes this a check: identical timings but a different
+    // substantive line must still produce a different digest.
+    const substantive = timed('1 passed 1 failed', '09:12:33', '1.234s', '512ms');
+    expect(substantive.outputSha256).not.toBe(first.outputSha256);
+  });
 });
 
 describe('declared command checks: the Windows command-file launch rule', () => {

@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone A and R3b are delivered. Next, when named: fix the export paired check so it works with real test runners (first product item in BACKLOG.md), then a second replay with an isolated solver. D4 waits for the lab's benchmark.",
+    "sequence": "Order from here, each when named: A6 (the tool starts cleanly off our machine), R3c (a stricter replay on two projects with an isolated solver), P1 (draft the agreement from the repository), R4 (a live attempt; owner approval first). D4 is retired into those. The lab runs alongside. See \"Where we are and what comes next\" in PLAN.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -296,7 +296,8 @@
       "verification": [
         "Reviewer audits inputs and artifacts end to end on the current commit and reruns at least one delegation from a clean directory."
       ],
-      "handoff": "waves/D4.1.md"
+      "handoff": "waves/D4.1.md",
+      "retired": "Retired as a separate step on 7 October 2026. Counterexamples move to R3c; effort against ordinary delegation moves to P1 and R4. See PLAN.md."
     },
     {
       "id": "D4.2",
@@ -328,7 +329,8 @@
       "verification": [
         "Independent metric/artifact reconciliation, all-attempt denominator and reproducible fresh-start instructions; empty customer-study data remains explicitly empty."
       ],
-      "handoff": "waves/D4.2.md"
+      "handoff": "waves/D4.2.md",
+      "retired": "Retired as a separate step on 7 October 2026. Counterexamples move to R3c; effort against ordinary delegation moves to P1 and R4. See PLAN.md."
     },
     {
       "id": "K2",
@@ -875,6 +877,106 @@
         "measurement fairness: two runs is thin; report both figures and call it an indication"
       ],
       "handoff": "waves/K7a.md"
+    },
+    {
+      "id": "fix-paired-check",
+      "milestone": "A",
+      "title": "Paired check tolerates output that carries run times",
+      "dependencies": [
+        "R3b"
+      ],
+      "result": "Done 7 October 2026, PASS on acc9322, merged f47414f. Timing tokens are normalised before the comparison and the refusal says what was observed. Limit: any integer-millisecond token is masked. See waves/fix-paired-check.md.",
+      "handoff": "waves/fix-paired-check.md"
+    },
+    {
+      "id": "A6",
+      "milestone": "A",
+      "title": "The tool starts cleanly on a machine that is not ours",
+      "dependencies": [
+        "fix-paired-check"
+      ],
+      "why": "R3b-2 was the first hand use of the product on Linux and met three refusals before any real work. R3c runs the product in a clean container for every case.",
+      "writePaths": [
+        "packages/box-cli/**",
+        "packages/box-package/**",
+        "scripts/workspace.mjs",
+        "tests/box/package/**",
+        "docs/box-v4/delegation/SUBMISSION-CONTRACT.md"
+      ],
+      "deliverables": [
+        "The built command-line tool runs from a single copied folder with its runtime dependencies stated or bundled; it does not fail to start for a missing typescript package.",
+        "export creates the parent of --out, or refuses with a message that names it.",
+        "The scratch clone works when the temp folder is on a different filesystem from the repository.",
+        "What box.json tells the solver is correct: only the commands the solver can run are presented as theirs, and the submit instruction matches how a Box is actually sealed."
+      ],
+      "acceptance": [
+        "Each of the four has a test that fails before the change and passes after.",
+        "One executed run of export and verify inside the pinned Linux container on an existing fixture, with no workaround, recorded in the wave file.",
+        "No change to what a Box contains or to the agreement format beyond the solver-facing text."
+      ],
+      "verification": [
+        "Reviewer reruns the container run from the recorded command."
+      ],
+      "lenses": [
+        "security: the container run follows the R3b rules",
+        "user experience: read box.json as a solver would"
+      ],
+      "handoff": "waves/A6.md"
+    },
+    {
+      "id": "R3c",
+      "milestone": "R",
+      "title": "A stricter replay: several fixed issues, two public projects, an isolated solver",
+      "dependencies": [
+        "A6"
+      ],
+      "why": "R3b was one case with a solver that was not isolated and was shown the test. A count across projects, with real isolation and a wrong answer tried, is what tells us whether the product is ready for a live attempt.",
+      "writePaths": [
+        "waves/R3c-*.md",
+        "research/box-delegation/r3c/**"
+      ],
+      "deliverables": [
+        "Screening as in R3b-1, on commander.js cases already found and on one further project chosen by a rule committed first; issue comments saved with the bodies.",
+        "For each case: agreement, export with the default test output (no silent reporter), a solver that runs in a container holding only the Box, started outside every checkout, with its report and start time saved at hand-off.",
+        "Two conditions, assigned before any run: the solver sees the acceptance test; the solver does not (it travels owner-side only).",
+        "Per case, one submission that is wrong in substance but well-formed, written and labelled by the cook before verify, and a do-nothing submission.",
+        "A table of the four useful conditions per case, and the counts across cases."
+      ],
+      "acceptance": [
+        "Nothing is sent to either project; their code runs only in containers with install scripts disabled.",
+        "Every attempt is recorded, including export refusals and solver failures; no case is rerun for a better answer without the earlier attempt on record.",
+        "Results are labelled as a replay and state the limits: model family, number of cases, what the solver could see."
+      ],
+      "verification": [
+        "Reviewer rebuilds one case independently, as in R3b-2."
+      ],
+      "lenses": [
+        "security",
+        "measurement fairness"
+      ],
+      "handoff": "waves/R3c-1.md"
+    },
+    {
+      "id": "P1",
+      "milestone": "P",
+      "title": "Draft the agreement from the repository",
+      "dependencies": [
+        "R3c"
+      ],
+      "why": "In R3b the agreement was 186 hand-written lines, with 27 test files typed three times. Preparation has to be cheap for a person who has not read the format.",
+      "proposal": "A command that drafts an agreement for the owner to edit: files by a stated rule, the setup and check commands it can find, editable paths left for the owner to choose. It proposes; it never exports on its own. Scope and rule to be set after R3c, using what two projects showed and the lab reading on slice sufficiency.",
+      "handoff": "waves/P1.md"
+    },
+    {
+      "id": "R4",
+      "milestone": "R",
+      "title": "A live attempt on an open issue, with an owner who has agreed",
+      "dependencies": [
+        "P1"
+      ],
+      "ownerApproval": "Required before anything starts: it involves contact with an outside party. Not an overnight wave.",
+      "proposal": "The useful milestone itself. Not designed yet.",
+      "handoff": "waves/R4.md"
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"
