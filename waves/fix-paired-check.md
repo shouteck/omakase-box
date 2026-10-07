@@ -24,3 +24,25 @@ export's paired check (outcome/recipient checks in the base clone vs the staged 
 
 - [ ] **Measurement fairness:** the normalization must not hide a substantive difference. Only timing-variable patterns are replaced; everything else passes through unchanged.
 - [ ] **User experience:** the refusal message now tells the requester what actually happened.
+
+## Result
+
+**FAIL (test-verified)** — reviewed commit `3e1fb5b89ad4563c314aa460848c2f91b87cc54f` on `wave/fix-paired-check` (cook's `70c5e0b` plus a reviewer-added test; the product code under review is identical).
+
+Verify lines:
+- `verify 70c5e0b PASS check=0 build=0 db=embedded 112s` (worker's run; `check` covered bootstrap/auth/contracts/planner only — `test:box-package` never ran on `70c5e0b`)
+- `verify 3e1fb5b FAIL check=0 build=0 test:box-package=1 db=embedded 337s` (reviewer's executed `node scripts/verify.mjs --full --fresh test:box-package`, run `.kitchen/runs/2026-10-07T00-47-20-207Z-3e1fb5b/`)
+
+**Blocking defect:** the new `outputSha256`-mismatch message in `export.ts` says "its output hash differs" — it dropped the word *differently* that two existing tests assert: `a2-selection.test.ts:188` and `:209` (`toMatch(/differently/)`, the stream-partition and NUL-split refusal probes). `test:box-package` fails 2 tests on this commit; the earlier `70c5e0b` PASS never exercised this suite. The refusal still fires (ExportFailed is thrown — the digest comparison still gates export); only the wording broke the existing contract. Fix is one word in the message (e.g. "…exits identically but its output differs — the Box fails differently than the base. Output tails: …"), or a deliberate test update by the cook. The reviewer may not do either: editing product code is out of role, and rewriting `/differently/` to `/differ/` would weaken an existing test to make the candidate pass.
+
+**Reviewer-added test:** `command-checks.test.ts` gains 'normalises timing-variable output before hashing, while real differences still hash differently' — runs `runDeclaredCheck` on `node -e` output with `Start at HH:MM:SS`, `Duration N.NNNs`, `Nms` on stdout and stderr; two records differing only in timing text hash equal, the raw `log` keeps the real timings, and a record differing in substantive output hashes differently (the negative that makes it a check). Passed in a scoped run and inside the suite (33/33 in the file).
+
+**Lens — measurement fairness:** the four replacements are exactly the scoped patterns and nothing else is touched; the digest still frames `[stdout, stderr]` so stream partition is preserved and stderr is normalised symmetrically. The negative test proves substantive differences survive. Residual risks worth naming: `\b\d+ms\b` masks *any* integer-ms token, so real data like `timeout=500ms` vs `timeout=900ms` would collapse to `Nms` (a substantive difference could hide behind a number-with-ms token); `1.5ms` normalises to `1.Nms` (fraction masked, integer kept); coverage is narrow — `Time: 1.2 s`, lowercase `duration`, ISO timestamps are not normalised, so equivalent runs can still refuse (the safe direction). Not collapse-to-constant: the a2 same-exit/different-reason and stream-repartition probes still refuse.
+
+**Lens — user experience:** the message now reports what was observed — identical exits on both sides, differing output hash, and quotes the tail of each log — with no causal attribution. Wording matches the done-when's intent, though not its example literally ("output hash differs" vs "output differs: …"), and see the blocking defect above for the dropped "differently".
+
+**Lab-advice checks:** `outputSha256 !== outputSha256` still gates export (`export.ts:237`); `log` fields and `outputSha256` are still recorded verbatim in the paired record (`export.ts:284–285`), and `log` is cut from the un-timing-normalised text; nothing else consumes the raw hash (verify path does not compare `outputSha256`).
+
+**Findings:** 1 blocking defect (above). **Limits:** reviewer test covers the digest path, not an end-to-end export pair; the masking risk of `\d+ms\b` on substantive data is noted, not exploited — narrowing it would be a scope decision for the head chef.
+
+Host/model: Devin Desktop, SWE-2.
