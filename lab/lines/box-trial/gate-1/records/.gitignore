@@ -1,0 +1,17 @@
+# Large source snapshots and raw logs remain on this lab host; hashes are committed.
+*/sources.json.gz
+*/test.log
+*/pull.log
+*/container.log
+*/tests.json
+*/trace.json
+*/packaging.json
+*/level-*.txt
+history/*/sources.json.gz
+history/*/test.log
+history/*/pull.log
+history/*/container.log
+history/*/tests.json
+history/*/trace.json
+history/*/packaging.json
+history/*/level-*.txt
