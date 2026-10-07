@@ -27,7 +27,23 @@ No deadlines. The CTO decides which problem and in what order; the lab lead deci
 
 ### Spend almost no tokens until the cheap evidence says it is worth it
 
-The owner's instruction, 8 October 2026: do not consume many tokens on this. The trial is three gates. Each costs more than the one before; stop at the first that fails and report.
+The owner's instruction, 8 October 2026: do not consume many tokens on this. The trial is four gates, the first of which is reading. Each costs more than the one before; stop at the first that fails and report.
+
+**Gate 0. Read before running. No machine time, no agent runs. This is the next session.** The owner's challenge, 8 October 2026: running trials costs more than reading, and it would be strange if nobody who researched slicing had checked it on real projects. The owner is right. A ten-minute search by the CTO found work the lab's Tuesday survey did not read, and it bears directly on gates 1 to 3. Read these in full, not as abstracts, and nothing else:
+
+1. *Stubbifier: debloating dynamic server-side JavaScript applications* (arXiv 2110.14162; Empirical Software Engineering 2022). Replaces code the tests never reach with file-level and function-level stubs that fetch the original on demand. Reported: about 56% smaller on average over 15 Node.js applications, few stubs ever expanded. This is our levels 1 and 2, and the "put the real code back automatically" option, already built and open source.
+2. *The Impact of Program Reduction on Automated Program Repair* (arXiv 2408.01134; ICSME 2024). Slices away code irrelevant to a bug before repair. Reported: median repair time down from 80 minutes to under 18 on Defects4J examples, repair ability better on average and worse in a few cases.
+3. *CausalRepair* (arXiv 2608.10613, August 2026). Dynamic slicing of the source from execution traces to give a model a minimal context for repair; 313 Defects4J bugs fixed. The nearest thing to our idea with a current model.
+4. *On the Role of Context Granularity in LLM-Driven Program Repair* (NeurIPS 2024 workshop). Slice context gave the best ratio of correct to plausible patches; whole-file context gave more correct patches in total. A warning that less context is not simply better.
+5. The measured sizes of slices from a real run: Zhang and colleagues (ICSE 2003, PLDI 2004, Empirical Software Engineering 2006) and Beszédes and colleagues on union slices. Reported ranges from a few percent of executed code to over half.
+
+For each, record in one table: what was cut and at what grain; whether the result is a runnable program or only text for a model; how small it came out, and against what; what it did to repair success, time and cost; language and benchmark; and what the authors say went wrong. Then answer three questions in a sentence each:
+
+- **Does this already answer gate 1?** If published sizes on real projects make the outcome of gate 1 predictable either way, say so and say which way.
+- **What should gate 1 reuse instead of building?** In particular whether Stubbifier or its method can make levels 1 and 2 for TypeScript, and whether a Python equivalent exists.
+- **What is left that nobody has measured?** The CTO's guess, to be confirmed or corrected: a sealed, runnable Box for a coding agent on Python or TypeScript, against a prompt-made brief.
+
+*Pass:* the reading leaves a question worth machine time, and gate 1 is narrowed to it. *Stop:* the reading shows the Box is clearly not small enough, or clearly does not help, on evidence stronger than ours would be. One sceptic check: a fresh reader confirms the table's numbers against two of the papers. A sixth paper may be added only if one of these five cites it as the direct measurement of what we are asking.
 
 **Gate 1. Size. No agent runs.** About thirty tasks from a public benchmark with large repositories and ready-made environments (SWE-bench Verified or a current equivalent), chosen by a rule committed first, Python first because the instrument traces it. For each task a script computes every level, runs the paired check, and writes one row: size of each level against the repository and the free baseline, whether it ran, whether the real fix's edits fall inside kept code, and whether the real fix touches or calls anything reduced to a stand-in.
 *Pass:* on at least half the tasks the leanest working level is under a quarter of the free baseline and holds the real fix. *Fail:* say so and stop. This is a few hours of machine time and nothing else.
@@ -41,7 +57,7 @@ The owner's instruction, 8 October 2026: do not consume many tokens on this. The
 **Rules that keep the lab's own cost down, for this trial:**
 
 - Scripts do the work and write a summary file; the lab lead reads the summary, not the logs or the raw records.
-- No literature survey. No new lines. Lines B, C and E are paused, below.
+- No literature survey beyond gate 0's named papers. No new lines. Lines B, C and E are paused, below.
 - One sceptic pass at the end of each gate, and it reruns scripts on a sample; it does not run agents.
 - A session ends when its gate has a result. Do not start the next gate in the same session; the owner sends `LAB.md` again after the CTO has read the result.
 - Their code runs only in containers, network off, install scripts disabled; nothing is sent to any project.
@@ -73,4 +89,4 @@ Each has its last result in `lab/lines/` and its full brief in the archive. None
 
 Listed in the archive page. The one this trial uses: the runtime instrument in `lab/lines/example-slice/instrument/` (sealed runs, execution tracing for Python and TypeScript, package export, paired observations). The lab lead adds new instruments here in one line each.
 
-- **Sync state, 8 October 2026:** programme rewritten by the CTO; the Box trial is the only active work; next session is gate 1.
+- **Sync state, 8 October 2026:** programme rewritten by the CTO; the Box trial is the only active work; next session is gate 0, the reading.
