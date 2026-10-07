@@ -1,49 +1,73 @@
-# Labelling guide for the map of requests, version 0 (pilot)
+# Labelling guide for the map of requests, version 1
 
-Purpose: for each thing a request asks for, record the cheapest kind of check that could decide whether it was done, without the requester reading the solution's code. Counted over many real requests, this says what share of real work each kind of check would unlock.
+Version 0 is kept as `GUIDE-v0.md`; what its pilot found wrong is in `pilot/RESULT.md` and `outside-sample/RESULT.md`. This version is written for requests from outside our own kitchen: issues on public trackers.
 
-Label alone. Do not look at anyone else's labels. If two labels seem to fit, apply the tie-break rule; do not invent a new label. Use the notes column for doubts.
+Purpose: for each thing a request asks for, record where a check that decides it could come from, and how much of that check the request itself pins down. Counted over many real requests, this says what share of real work each way of getting a check would cover.
 
-## The unit
+Label alone. Do not look at anyone else's labels or at any result file. Label what the text says, not what you know or can guess about the project. If two values seem to fit, take the cheaper one (the one earlier in its table) and say so in the notes.
 
-One **clause**: one acceptance condition as the requester wrote it. In a wave brief, each bullet under "Done when" is one clause. Use the brief's "Outcome" paragraph only as background.
+## The unit: one condition
 
-## The question
+A request is one issue: its title, body and comments. It has been split beforehand into **conditions**, each a single thing that would have to be true for the requester to be satisfied, quoted or closely paraphrased from the text with its source (body, or comment number). You label the conditions you are given; you do not re-split. If you think a split is wrong, label it anyway and say so in the notes.
 
-> What is the cheapest thing the requester would have to supply so that a machine, or failing that a person, can say yes or no to this clause?
+## Column 1: `about`
 
-## The labels
+| Value | Use when |
+|---|---|
+| `RESULT` | The condition is about what the software does or contains after the change. |
+| `RECORD` | It asks for something to be written down: documentation, a changelog entry, a comment, a report. |
+| `PROCESS` | It is about how or by whom the work is done, not about the result. |
+| `NONE` | It is not a request for a change: a question, a discussion, a duplicate, a request for support. |
 
-Listed from cheapest for the requester to most expensive. Give each clause exactly one.
+Only `RESULT` conditions get columns 2 to 4. For the others write `-` in those columns.
 
-| Label | Use when | Typical wording |
+## Column 2: `source`, the cheapest place a deciding check could come from
+
+Listed from cheapest for the requester to dearest.
+
+| Value | Use when | What the requester would have to supply |
 |---|---|---|
-| `EXISTING` | A test, suite or command that was already in the repository before this request decides the clause. The requester only names it. | "suite X still exits 0", "existing tests unchanged and green" |
-| `COMMAND` | Nothing existing decides it, but one or a few short shell commands do: run something and look at the exit code, search the output or the files for a string, see whether a file, tag, process or container exists. No fixtures, no fabricated inputs. | "git grep finds no reference to Y", "the tag exists on origin", "a new suite Z exits 0" |
-| `EXAMPLE` | The clause gives concrete inputs and the exact expected result, and comparing them needs no further thought. | "request A ships exactly these three files" |
-| `MEASURE` | A quantity is measured and compared with a threshold or with a before/after value. | "within 10% of the known figure", "at least five runs each, with spread" |
-| `NEW-TEST` | Deciding it needs purpose-built test code: set-up, fixtures, fabricated or hostile inputs, a negative case that must be constructed. | "a non-owner cannot approve, and this is tested", "a fabricated violation trips the limit" |
-| `READ` | No mechanical verdict is possible as written. A person has to read a report, a record, a document or the code and judge. | "the wave file records what the recipient needed", "no assertion is weakened", "a recommendation names the approach" |
+| `REPO` | The text itself points to a test, suite or command already in the repository that decides the condition. | Its name. |
+| `REQUEST` | The text contains both a concrete input (code, a command line, a file, a call) and the result that is wanted, closely enough that turning them into a command needs no design decision. A reproduction with only the *wrong* result counts only if the right result is stated or is unmistakable (for example "should not throw"). | A copy of what they already wrote. |
+| `NEW` | Deciding it needs a check somebody has to design: choosing inputs, building fixtures, deciding what exactly to assert. The behaviour wanted is clear enough that a competent stranger could design it. | A test, or review of one. |
+| `PERSON` | No mechanical check is possible as written, or what is wanted is not settled in the text: someone has to decide or judge. | Their own judgement, after the fact. |
 
-## Rules
+Set-up rule: if the reproduction needs tools or versions the text does not name, or more than a few lines of surrounding set-up that the text does not give, it is `NEW`, not `REQUEST`.
 
-1. **Compound clauses.** If a clause has several parts needing different labels, give the label of its most expensive part, in the table's order. Put "compound" in the notes.
-2. **"Suite or command X exits 0."** `EXISTING` if X existed before the request; `COMMAND` if the request itself creates X. If the brief does not say, assume it existed.
-3. **"…and this is tested" or "prove it".** The clause asks for a constructed case, so `NEW-TEST`, unless a single plain command on the real repository would show it (`COMMAND`).
-4. **"Record", "state", "report", "the file says".** `READ`, even if the thing recorded is a number.
-5. **Do not label how you would prefer to check it.** Label the cheapest check that decides the clause as written.
+## Column 3: `role`
 
-## The second column: observable
+| Value | Use when |
+|---|---|
+| `OUTCOME` | The condition is false today and should become true: it is what was asked for. |
+| `GUARD` | The condition is true today and must stay true ("without breaking X", "keep Y working"). |
 
-`y` if whether the clause holds can be seen from outside the code: at a command line, over HTTP, in the file system, in Git or in a browser. `n` if it can only be seen by reading code, tests or prose.
+## Column 4: `observable`
+
+`y` if whether the condition holds can be seen from outside the code: at a command line, through the public interface, over HTTP, in a file or in a browser. `n` if it can only be seen by reading the source.
+
+## Column 5: `determined` (only for requests that come with a fix)
+
+Some requests in a sample are already fixed, and the file you are given includes the test changes from the fix. For these there is one more line per request, not per condition, with the id `<request>.T`:
+
+> Reading only the request text written **before** the fix (the file marks which comments those are), is what the fix's tests assert already determined?
+
+| Value | Use when |
+|---|---|
+| `YES` | The inputs the tests use, or equivalent ones, and the results they expect are stated in the text. Someone holding only the text would have written essentially these assertions. |
+| `PARTLY` | The text names the behaviour, but the tests assert specifics the text does not give: exact messages, edge cases, a chosen interface, a broader or narrower rule. |
+| `NO` | The tests assert something the text does not ask for, or something that differs from what the text asks for or suggests. |
+| `NO-TEST` | The fix changed no test files. |
+
+In the notes for a `PARTLY` or `NO`, name the one specific thing the tests assert that the text does not determine.
 
 ## The file to produce
 
-A CSV with a header line and one line per clause id, in the order of `pilot/ids.txt`:
+A CSV with a header line and one line per id, in the order of the ids file you are given:
 
 ```
-id,label,observable,notes
-D1.2.1,COMMAND,y,compound
+id,about,source,role,observable,determined,notes
+click-3010.1,RESULT,REQUEST,OUTCOME,y,-,
+click-3010.T,-,-,-,-,PARTLY,tests assert an exact error message the issue does not give
 ```
 
-Notes must not contain commas.
+Notes must not contain commas. Use `-` for a column that does not apply.
