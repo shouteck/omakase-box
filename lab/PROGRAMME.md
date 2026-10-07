@@ -62,7 +62,7 @@ From the CTO, 7 October 2026, after talking the product through with the owner. 
 
 **The decision the lab is working towards.** Whether to build that MVP, reshape it, or stop. The CTO takes it to the owner when Lines A and B each have a first result a sceptic has attacked. No dates. Say early if a line is aimed wrong.
 
-**Resources.** The owner is putting more into the lab. Lines A and B can run in separate sessions and do not wait for each other. Line C continues behind them. Line D (the evals) opened on 7 October 2026 and runs beside Line A. Cost stays at zero. The lab may prototype whatever it needs in its own folder; it does not need the kitchen to build anything first.
+**Resources.** The owner is putting more into the lab. Lines A and B can run in separate sessions and do not wait for each other. Line C continues behind them. Line D (the evals) opened on 7 October 2026 and runs beside Line A. **From 8 October 2026 the Box trial at the top of Line D is the first priority; Line E continues after it.** Cost stays at zero. The lab may prototype whatever it needs in its own folder; it does not need the kitchen to build anything first.
 
 ## Active lines, in priority order
 
@@ -140,6 +140,21 @@ Formerly Line 1. It continues, behind A and B, with one change of emphasis: unde
 **Sequence.** First. Whatever the survey shows that bears on R2 goes to the CTO before the kitchen writes the R2 brief, if the kitchen has not reached it yet; R2 does not wait for the lab. The map of real requests comes before any work on new ways of getting a check, because it decides which ways are worth studying.
 
 ### Line D. Does boxing give better results? (open, 7 October 2026)
+
+**The owner's decision, 8 October 2026: the Box gets one real trial. This is now the lab's first priority, ahead of Line E, and it replaces the order of work written further down this section.** The owner has not given up on Boxes. Their reasoning: people who run agents seriously already make a "box" by prompt, so the job is real; the frontier labs let agents search because that is simpler, not because it was shown to be best; so if a Box made by a program is lightweight and improves results on a benchmark people recognise, it is worth building. The CTO puts the odds at about one in five and agrees the trial is worth its cost, because it settles the question either way.
+
+**The claim, stated so it can fail:** *given a failing test, a Box computed by a program lets the same agent fix the problem at least as often, for clearly fewer tokens and less time, than the same agent with the failing test and the whole repository.*
+
+**The trial. One experiment that does the work of Line A's version 2 cohort and Line D together.**
+
+- **Tasks from a public benchmark people recognise,** so the result needs no explaining: a fixed subset of SWE-bench Verified or a current equivalent, whose repositories are large (the size question Click and Ky could not answer) and whose environments are already built. Choose the subset by a rule committed first. Start small enough to finish on this machine, one container at a time: about twenty to thirty tasks.
+- **Both arms get the failing test.** This is the honest setting for a Box anchored on an example, and it is a real one: a red build, a regression, a bug report that comes with a reproduction. Say plainly that it is not the benchmark's standard setting, where the test is hidden, and that the result does not transfer to tasks with no failing test.
+- **Arms, same agent, same limits:** (1) whole repository plus the failing test; (2) whole repository plus the failing test plus a note listing the Box's files; (3) the sealed Box. The oracle Box as the ceiling if runs allow.
+- **The Box is whatever the existing instrument computes today** (executed files plus imports), with one addition the CTO asks the lab to try because file level looked too coarse: the same rule at function level for display only, meaning the Box still ships whole files so it runs, but its note tells the agent which functions the failing test ran through. That costs no research and may be where "lightweight" comes from.
+- **Measure:** solved by the benchmark's own tests; total tokens and wall time including making the Box; Box size against the whole repository and against the free baseline (the test's own package and its dependencies); failures for want of a missing file, counted apart.
+- **Repeat runs** on a few tasks first to learn how much one agent varies; say how big a difference this design can see.
+
+**What counts, fixed now.** Worth building: the sealed Box or the hinted repository solves at least as many as the whole repository and uses no more than half the tokens. Not worth building: anything less, or a Box that is no smaller than the free baseline in most tasks. If the hint does as well as the seal, the product is the program that computes the Box, offered as a tool an agent calls, and sealing is optional. A sceptic reruns a sample before the result is reported. Whatever the outcome, this is the last trial of the file-level Box; the owner and CTO decide from it.
 
 Formerly Line 2, "Does a Box help?". Opened by the CTO after Line B's first result, at the owner's request and on the lab's own recommendation. It runs beside Line A and shares its tooling; it does not wait for Line A to finish.
 
