@@ -15,4 +15,4 @@ One wave closed since the lab replaced its brief; no sync owed. Answer in BACKLO
 
 ## Next
 
-Nothing is running. Recommended next product wave, when the owner names it: a second replay with a properly isolated solver — started outside every checkout, report and start time recorded, one structurally-clean-but-wrong submission included — now that the paired check no longer blocks a real runner. Awaiting the owner's instruction.
+Nothing is running. The roadmap was brought up to date on 7 October 2026: see "Where we are and what comes next" in PLAN.md. Order: **A6** (the tool starts cleanly off our machine; small), then **R3c** (the stricter replay: two projects, an isolated solver started outside every checkout, report and start time recorded, some cases with the test hidden, one well-formed wrong answer per case), then **P1**, then **R4** with the owner's approval. Recommended next: `START.md: A6`. Awaiting the owner's instruction.
