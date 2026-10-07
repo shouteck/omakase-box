@@ -116,6 +116,16 @@ Keep it bounded: one session, a fixed list of search queries recorded in the not
 - Their code runs only in containers, network off, install scripts disabled; nothing is sent to any project.
 - Report each gate in the brief as one table and one sentence: passed, failed, or could not be decided and why.
 
+**The owner's plan for the Box, 8 October 2026: build the best one the state of the art allows, measure it on several metrics, then hill-climb it on benchmarks.** The gates above are the first rung, not the whole plan. What the lab's work should leave behind is therefore a **scoreboard that can be rerun cheaply**, so that every later change to how a Box is made can be scored the same way:
+
+- *Offline metrics, by script, no agent tokens, on as many tasks as machine time allows:* where the real fix's functions sit in the Box's ordered list (in the first 1, 5, 10, 20; and the average position); how often the fix is in the Box at all; how long the list is; how long the Box takes to make; and the same numbers for the plain error trace and for ordinary search, as the baselines to beat.
+- *Online metrics, with agents, on a small fixed sample, run rarely:* tasks solved, total tokens, time, and how often the agent went outside the Box and needed to.
+- *Check once that the offline numbers predict the online ones.* If a Box that ranks the fix higher does not also make an agent cheaper or better, the offline scoreboard is measuring the wrong thing and must change before anyone climbs it.
+- *Keep some tasks and whole projects aside,* never used while improving the Box, and score on them only at milestones. Thirty tasks from six Python projects is small enough to overfit without noticing. Add a second language to the held-aside set as soon as the tracer allows.
+- Gate 1b's script and its thirty tasks are the seed of this. Write it so tasks and techniques can be added without rewriting it.
+
+Climbing the scoreboard is engineering and belongs to the kitchen, under pstack's hillclimb playbook, once the lab has shown the first Box is worth climbing from. The lab keeps the scoreboard honest and supplies the catalogue of what to try.
+
 **What happens after.** All three pass: the kitchen turns the instrument into the product's `prepare` step. Any fails: the owner and CTO decide from the numbers; this is the last trial of the Box in this form.
 
 **Not built in this trial, to be costed in a sentence each if the results point there:** putting real code back automatically when an agent in a Box reaches for a stand-in; further reductions from the literature.
