@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone A is delivered. Next, when named: K7a (packaging tests on three workers, a small wave) and R3b (a replay of fixed issues on a public repository). D4 waits for the lab's benchmark.",
+    "sequence": "Milestone A and R3b are delivered. Next, when named: fix the export paired check so it works with real test runners (first product item in BACKLOG.md), then a second replay with an isolated solver. D4 waits for the lab's benchmark.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -834,12 +834,13 @@
       "dependencies": [
         "A4"
       ],
-      "proposal": "Not started and not yet named by the owner. Recently fixed issues, on the code as it was just before each fix, with the maintainers' own test as the check; so the issue is known to be solvable and the real fix can be compared with what the Box contained. Label results as a replay: the check was written with hindsight, and an agent may have seen the public fix. Same safeguards as R3: nothing sent to the project; its code runs in a container with install scripts disabled.",
       "writePaths": [
-        "waves/R3b.md",
+        "waves/R3b-1.md",
+        "waves/R3b-2.md",
         "research/box-delegation/r3b/**"
       ],
-      "handoff": "waves/R3b.md"
+      "handoff": "waves/R3b-2.md",
+      "result": "Done 7 October 2026 in two waves, both PASS WITH NOTES. R3b-1 screened tj/commander.js: 8 bug-fix candidates, 3 replayable cases with a linked issue. R3b-2 took one (issue #2614) through the product: owner-side verify accepted a blind solver's one-line change and rejected a no-op; the pass rebuilt the case independently and matched. Export needed six attempts: the paired check refuses any test runner that prints run times, and exported only with that output silenced. Replay, one case, one solver; solver saw the acceptance test and was blind by instruction only. Useful milestone still unmet."
     },
     {
       "id": "K7a",
