@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "kind": "development test-only ingestion, not admitted task",
+  "captured_at": "2026-10-07T05:43:02.657Z",
+  "repository": "pallets/click",
+  "number": 3186,
+  "candidate": {
+    "created_at": "2026-01-15T10:00:55Z",
+    "html_url": "https://github.com/pallets/click/pull/3186",
+    "number": 3186,
+    "updated_at": "2026-05-14T00:48:33Z",
+    "user": {
+      "login": "karpierz",
+      "type": "User"
+    },
+    "position": 1,
+    "partition": "development",
+    "exposure": "no-known-prior-exposure"
+  },
+  "acceptedCommit": "c5cced7b3096804567688df645194e3ed3dfa88b",
+  "baseCommit": "2468b70997a6ec27ced4b4867954c90da3f92075",
+  "parentCount": 1,
+  "acceptedCommitDate": "2026-04-29T23:25:38Z",
+  "pr": {
+    "created_at": "2026-01-15T10:00:55Z",
+    "merge_commit_sha": "c5cced7b3096804567688df645194e3ed3dfa88b",
+    "merged": true,
+    "merged_at": "2026-04-29T23:25:38Z",
+    "number": 3186
+  },
+  "overlay": [],
+  "request": "not yet collected",
+  "admission": "not evaluated",
+  "limits": [
+    "No production paths/diff emitted",
+    "Test-only path family is provisional; fixture semantics require review",
+    "No project execution",
+    "No commands or runtime frozen"
+  ]
+}

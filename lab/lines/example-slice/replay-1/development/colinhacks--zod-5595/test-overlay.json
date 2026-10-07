@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "kind": "development test-only ingestion, not admitted task",
+  "captured_at": "2026-10-07T05:44:17.725Z",
+  "repository": "colinhacks/zod",
+  "number": 5595,
+  "candidate": {
+    "created_at": "2026-01-02T09:35:25Z",
+    "html_url": "https://github.com/colinhacks/zod/pull/5595",
+    "number": 5595,
+    "updated_at": "2026-01-02T23:52:46Z",
+    "user": {
+      "login": "alysakowski",
+      "type": "User"
+    },
+    "position": 1,
+    "partition": "development",
+    "exposure": "no-known-prior-exposure"
+  },
+  "acceptedCommit": "21afffdb42ccab554036312e33fed0ea3cb8f982",
+  "baseCommit": "b4ab94ca608cd5b581bfc12b20dd8d95b35b3009",
+  "parentCount": 1,
+  "acceptedCommitDate": "2026-01-02T23:52:46Z",
+  "pr": {
+    "created_at": "2026-01-02T09:35:25Z",
+    "merge_commit_sha": "21afffdb42ccab554036312e33fed0ea3cb8f982",
+    "merged": true,
+    "merged_at": "2026-01-02T23:52:46Z",
+    "number": 5595
+  },
+  "overlay": [],
+  "request": "not yet collected",
+  "admission": "not evaluated",
+  "limits": [
+    "No production paths/diff emitted",
+    "Test-only path family is provisional; fixture semantics require review",
+    "No project execution",
+    "No commands or runtime frozen"
+  ]
+}

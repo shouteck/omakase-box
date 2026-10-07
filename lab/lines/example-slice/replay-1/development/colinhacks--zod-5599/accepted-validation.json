@@ -1,0 +1,11 @@
+{
+  "kind": "accepted-overlay validation only, not admission",
+  "repository": "colinhacks/zod",
+  "number": 5599,
+  "acceptedCommit": "119376b9dc2e80f44bedd282702b46e18e2ee72c",
+  "baseCommit": "7b43bc64e7a2720fe66d6e99239c2a00c782e06b",
+  "validated_at": "2026-10-07T05:44:57.106Z",
+  "snapshotSHA256": "cad05882a1e43fbac5e1a67bf5f76c41542921ff502a2d6227a509ce34104ada",
+  "status": "matched",
+  "tests": 1
+}

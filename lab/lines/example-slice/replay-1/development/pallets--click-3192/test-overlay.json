@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "kind": "development test-only ingestion, not admitted task",
+  "captured_at": "2026-10-07T05:44:59.355Z",
+  "repository": "pallets/click",
+  "number": 3192,
+  "candidate": {
+    "created_at": "2026-01-22T15:09:28Z",
+    "html_url": "https://github.com/pallets/click/pull/3192",
+    "number": 3192,
+    "updated_at": "2026-03-30T00:33:55Z",
+    "user": {
+      "login": "brihall",
+      "type": "User"
+    },
+    "position": 2,
+    "partition": "development",
+    "exposure": "no-known-prior-exposure"
+  },
+  "acceptedCommit": "81efdc9da4c43d7474170c5bd7c74e910496faac",
+  "baseCommit": "bb7be1f6a91f3fd1267d1a6d68771273d593f9c7",
+  "parentCount": 2,
+  "acceptedCommitDate": "2026-03-15T05:01:45Z",
+  "pr": {
+    "created_at": "2026-01-22T15:09:28Z",
+    "merge_commit_sha": "81efdc9da4c43d7474170c5bd7c74e910496faac",
+    "merged": true,
+    "merged_at": "2026-03-15T05:01:45Z",
+    "number": 3192
+  },
+  "overlay": [],
+  "request": "not yet collected",
+  "admission": "not evaluated",
+  "limits": [
+    "No production paths/diff emitted",
+    "Test-only path family is provisional; fixture semantics require review",
+    "No project execution",
+    "No commands or runtime frozen"
+  ]
+}

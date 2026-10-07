@@ -1,0 +1,121 @@
+{
+  "status": "passed",
+  "kind": "known-answer mechanical checks; no real project execution",
+  "versions": {
+    "node": "v24.11.0",
+    "typescript": "6.0.3"
+  },
+  "rules": {
+    "E": {
+      "files": [
+        "source/main.ts",
+        "source/warm.ts"
+      ],
+      "unresolved": []
+    },
+    "EI": {
+      "files": [
+        "source/main.ts",
+        "source/types.ts",
+        "source/warm.ts"
+      ],
+      "unresolved": []
+    },
+    "R": {
+      "files": [
+        "source/cold.ts",
+        "source/main.ts",
+        "source/types.ts",
+        "source/warm.ts"
+      ],
+      "unresolved": []
+    },
+    "G": {
+      "files": [
+        "source/cold.ts",
+        "source/generated.ts",
+        "source/main.ts",
+        "source/runtime.json",
+        "source/types.ts",
+        "source/warm.ts"
+      ],
+      "unresolved": []
+    }
+  },
+  "disclosure": {
+    "repositorySource": {
+      "denominatorPaths": [
+        "sibling/reuse.ts",
+        "source/cold.ts",
+        "source/generated.ts",
+        "source/main.ts",
+        "source/types.ts",
+        "source/warm.ts"
+      ],
+      "numeratorPaths": [
+        "sibling/reuse.ts",
+        "source/generated.ts"
+      ],
+      "fileCount": 2,
+      "fileTotal": 6,
+      "bytes": 57,
+      "byteTotal": 254,
+      "fileFraction": 0.3333333333333333,
+      "byteFraction": 0.22440944881889763
+    },
+    "rootSource": {
+      "denominatorPaths": [
+        "source/cold.ts",
+        "source/generated.ts",
+        "source/main.ts",
+        "source/types.ts",
+        "source/warm.ts"
+      ],
+      "numeratorPaths": [
+        "source/generated.ts"
+      ],
+      "fileCount": 1,
+      "fileTotal": 5,
+      "bytes": 35,
+      "byteTotal": 232,
+      "fileFraction": 0.2,
+      "byteFraction": 0.15086206896551724
+    },
+    "totalRepository": {
+      "denominatorPaths": [
+        "README.md",
+        "sibling/reuse.ts",
+        "source/cold.ts",
+        "source/generated.ts",
+        "source/main.ts",
+        "source/runtime.json",
+        "source/types.ts",
+        "source/warm.ts",
+        "test/example.ts",
+        "test/helper.ts"
+      ],
+      "numeratorPaths": [
+        "sibling/reuse.ts",
+        "source/generated.ts",
+        "test/example.ts"
+      ],
+      "fileCount": 3,
+      "fileTotal": 10,
+      "bytes": 124,
+      "byteTotal": 384,
+      "fileFraction": 0.3,
+      "byteFraction": 0.3229166666666667
+    },
+    "small": false,
+    "nearlyEverything": false,
+    "sizeUnknown": false
+  },
+  "primaryCounterexamples": 13,
+  "confirmationIDsRejected": 45,
+  "sourceHashes": {
+    "core.mjs": "16166419ee060c901206246ee1daf9b3959b8dd0ae2ea12aa16944dcda4de2c8",
+    "typescript-graph.mjs": "b88960231a2e198e7cfa4dcd97dc4d3068ef2a709fd0033f85abe80647092fc7",
+    "collect-development.mjs": "fa1d08c5e570f988689b35c8a9f5b81bf1153f035f143d779d921b4c116c4d94",
+    "check.mjs": "e20481707d96dac55887d27a12202a01c857f1127ff6b54c481e9dfedbb9f439"
+  }
+}

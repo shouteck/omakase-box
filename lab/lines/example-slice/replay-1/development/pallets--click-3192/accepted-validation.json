@@ -1,0 +1,11 @@
+{
+  "kind": "accepted-overlay validation only, not admission",
+  "repository": "pallets/click",
+  "number": 3192,
+  "acceptedCommit": "81efdc9da4c43d7474170c5bd7c74e910496faac",
+  "baseCommit": "bb7be1f6a91f3fd1267d1a6d68771273d593f9c7",
+  "validated_at": "2026-10-07T05:44:59.938Z",
+  "snapshotSHA256": "03f85c5f32c4733cab4b8348ca4b53cb770be1ac324fa538b0b58e7ee2ab244a",
+  "status": "matched",
+  "tests": 0
+}

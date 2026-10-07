@@ -1,0 +1,11 @@
+{
+  "kind": "accepted-overlay validation only, not admission",
+  "repository": "sindresorhus/ky",
+  "number": 823,
+  "acceptedCommit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
+  "baseCommit": "eb5c3eba37451b7a6d598efa23d33c97919ae9e6",
+  "validated_at": "2026-10-07T05:44:18.484Z",
+  "snapshotSHA256": "cd236d68f6f67fe6b9b3d6910aa6448cb9c3109b1bee9260e3cd1efae216b990",
+  "status": "matched",
+  "tests": 2
+}
