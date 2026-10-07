@@ -8,9 +8,14 @@ def command(argv, timeout=1200):
     return subprocess.run(argv, capture_output=True, timeout=timeout)
 
 def idle():
-    result = command(['node', str(REPO / 'lab/tools/kitchen-busy.mjs')])
-    if result.returncode or not result.stdout.startswith(b'idle '):
-        raise RuntimeError('Kitchen busy: ' + result.stdout.decode())
+    for attempt in range(16):
+        result = command(['node', str(REPO / 'lab/tools/kitchen-busy.mjs')])
+        if result.returncode == 0 and result.stdout.startswith(b'idle '):
+            return
+        if attempt < 15:
+            print('Kitchen busy; waiting one minute before any heavy work', flush=True)
+            time.sleep(60)
+    raise RuntimeError('Kitchen remained busy for fifteen minutes: ' + result.stdout.decode())
 
 def prepare(row):
     files = re.findall(r'^\+\+\+ b/(.+\.py)$', row['test_patch'], re.M)
@@ -36,6 +41,9 @@ def run(row):
     record = {'instance_id': ident, 'started': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
     name = 'lab-gate-1-' + str(uuid.uuid4())
     image = 'ghcr.io/epoch-research/swe-bench.eval.x86_64.' + ident + ':latest'
+    digest_file = HERE / 'image-digests.json'
+    if digest_file.exists():
+        image = json.loads(digest_file.read_text())[ident]
     existed = command(['docker', 'image', 'inspect', image]).returncode == 0
     created = False
     try:

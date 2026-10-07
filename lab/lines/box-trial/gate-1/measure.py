@@ -28,7 +28,7 @@ def functions(text):
     visit(tree)
     return rows
 
-def lean(text, rows, called):
+def lean(text, rows, called, keep_docstrings=False):
     lines = text.splitlines(keepends=True)
     replacements = []
     for row in sorted(rows, key=lambda r: (r['start'], -r['end'])):
@@ -43,7 +43,7 @@ def lean(text, rows, called):
             line = lines[row['def_line'] - 1]
             prefix = ''.join(lines[row['start'] - 1:row['def_line'] - 1]) + line[:node.body[0].col_offset].rstrip() + '\n'
         first = node.body[0]
-        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+        if keep_docstrings and isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
             prefix += ''.join(lines[first.lineno - 1:first.end_lineno])
         prefix += ' ' * (node.col_offset + 4) + '[body omitted; repository remains searchable]\n'
         replacements.append((row['start'], row['end'], prefix))
@@ -86,14 +86,17 @@ def construct(directory, task):
     is_test = lambda p: not production(p) or pathlib.PurePosixPath(p).name == 'conftest.py'
     header = 'Open repository context. Entry: ' + json.dumps(execution['argv']) + '\nUnresolved import observations: ' + str(len(unresolved)) + '; subprocess coverage unavailable.\n'
     presentations = [header, header, header]
+    preregistered_lean = header
     for path in ordered:
         banner = '\n### ' + path + '\n'
         full = contents[path]
         index = 'Executed functions: ' + ', '.join(r['name'] for r in rows[path] if r['name'] in called[path]) + '\n'
         reduced = full if is_test(path) or path in parse_errors else lean(full, rows[path], called[path])
+        original_reduced = full if is_test(path) or path in parse_errors else lean(full, rows[path], called[path], keep_docstrings=True)
         presentations[0] += banner + full
         presentations[1] += banner + index + full
         presentations[2] += banner + index + reduced
+        preregistered_lean += banner + index + original_reduced
     production_bytes = sum(len(t.encode()) for p, t in source.items() if production(p))
     all_bytes = sum(len(t.encode()) for t in source.values())
     package_root = {'astropy/astropy': 'astropy/', 'django/django': 'django/', 'matplotlib/matplotlib': 'lib/matplotlib/',
@@ -124,6 +127,7 @@ def construct(directory, task):
                                   'body_present': is_test(p) or any(a['name'] in called[p] and a['start'] <= r['start'] and a['end'] >= r['end'] for a in rows[p])}
                                  for r in rows[p]] for p in ordered},
                'bytes': [len(t.encode()) for t in presentations], 'sha256': [hashlib.sha256(t.encode()).hexdigest() for t in presentations],
+               'preregistered_docstring_lean_bytes': len(preregistered_lean.encode()),
                'production_bytes': production_bytes, 'all_python_bytes': all_bytes, 'package_bytes': package_bytes,
                'dependency_bytes': dependency_bytes, 'unresolved': unresolved, 'parse_errors': parse_errors,
                'trace_file_count': len(trace['files']), 'admitted': admitted, 'matched_fail_to_pass': sorted(set(matched)),
@@ -217,6 +221,7 @@ def score(package, source, trees, task):
     verdict = 'pass' if package['admitted'] and eligible else 'fail' if package['admitted'] else 'unknown'
     return {'instance_id': task['instance_id'], 'repo': task['repo'], 'verdict': verdict, 'admitted': package['admitted'],
             'level_bytes': package['bytes'], 'production_bytes': package['production_bytes'], 'all_python_bytes': package['all_python_bytes'],
+            'preregistered_docstring_lean_ratio': package['preregistered_docstring_lean_bytes'] / package['production_bytes'],
             'repository_ratios': ratios, 'all_python_ratios': [n / package['all_python_bytes'] for n in package['bytes']],
             'package_bytes': package['package_bytes'], 'dependency_bytes': package['dependency_bytes'],
             'primary_package_ratios': [n / package['package_bytes'] if package['package_bytes'] else None for n in package['bytes']],

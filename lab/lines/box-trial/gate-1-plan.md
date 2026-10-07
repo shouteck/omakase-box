@@ -31,3 +31,7 @@ For each task: all three sizes/ratios; trace/test status; actual changed-file/fu
 One fresh sceptic at the end reruns scoring/packaging on three deterministic tasks (first by instance ID from completed rows) and checks raw trace/admission and patch mapping. No repair agents. Stop after Gate 1; Gate 2 needs a new owner session.
 
 Sources checked: [Verified dataset](https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified), [Epoch image registry and naming](https://github.com/epoch-research/SWE-bench), [official container evaluation](https://www.swebench.com/SWE-bench/guides/quickstart/).
+
+## Recorded implementation correction during execution
+
+After the first three Astropy presentations had been measured (two failed the size threshold; one had an older-output admission parse issue), corrected the third presentation to match the owner's "rest as signatures": unexecuted function docstrings are body text and must be omitted along with the body. The initial plan above retained them in full. Keep that original docstring-retaining size in every row as a sensitivity, rather than erase it. Executed bodies and their intent comments/docstrings, test setup, module/class text, signatures, paths and ranks are unchanged. Selection, sample, denominators and threshold remain frozen. This is an openly recorded correction after preliminary results, so the final detail implementation was not completely preregistered; the sceptic must assess it. No production fix influenced the new omission rule.

@@ -8,7 +8,8 @@ text = 'class C:\n    def __init__(self):\n        self.x = 1\n\n    def unused(
 rows = m.functions(text)
 reduced = m.lean(text, rows, {'C.__init__', 'C.used'})
 assert 'self.x = 1' in reduced and 'return self.x' in reduced
-assert 'return 2' not in reduced and '"intent"' in reduced
+assert 'return 2' not in reduced and '"intent"' not in reduced
+assert '"intent"' in m.lean(text, rows, {'C.__init__', 'C.used'}, keep_docstrings=True)
 assert [r['name'] for r in rows] == ['C.__init__', 'C.unused', 'C.used']
 patch = 'diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -3,1 +3,1 @@\n-        self.x = 1\n+        self.x = 2\n'
 changed = m.patch_changes(patch, {'a.py': text})
