@@ -1,0 +1,43 @@
+{
+  "reviewed_frozen_commit": "2e85d53224be31e346df49a149b0606b5875d575",
+  "review_original_manifests_verified": true,
+  "review_receipt_sha256": "982b1f883269f275d1cf4854979a39fea953d2db29d95ae63aa744f4cb216189",
+  "files": {
+    "BRIEF.md": {
+      "sha256": "4f48931fa3e197ce6a1f1848ac0ad79a2dba40a1f9e2e87207eaf17a88f1c808",
+      "bytes": 2186
+    },
+    "PROGRAMME.md": {
+      "sha256": "92ebc9df0694373705c863eb942efcfdbee9aaf48c782dcabff67bbb9e440d0c",
+      "bytes": 17424
+    },
+    "lines\\box-trial\\README.md": {
+      "sha256": "1ad06a1ede570641abcd989e583acb9b521131a3da9443fb044177ef825dc2a7",
+      "bytes": 5821
+    },
+    "lines\\box-trial\\ideal-box\\README.md": {
+      "sha256": "8dcef78e58891172507ec4065f68c2689186d7ba66e489a934ffb25dfed6cae5",
+      "bytes": 2355
+    },
+    "lines\\box-trial\\notebook.md": {
+      "sha256": "bd33dca527b3b0d964258b1cafeaa093cdae0a1cf1d6ad67b5c1428d2763d376",
+      "bytes": 35107
+    },
+    "lines\\box-trial\\live-three\\result.md": {
+      "sha256": "fab82a91347679fb3de9277420b1f90712cccad05d65163099b5263d50b9d31e",
+      "bytes": 9128
+    },
+    "lines\\box-trial\\live-three\\README.md": {
+      "sha256": "26032b0834cd4b3c7620dee3887abce6bdf6c1c47649f6aa8596e85d73022bc8",
+      "bytes": 1841
+    },
+    "lines\\box-trial\\live-three\\closeout-cleanup.json": {
+      "sha256": "ae8b9bcbd2e30bfd6ed4a32527d1c7d31b3b0214a023b6e5f44e184ca224f8b9",
+      "bytes": 4589
+    },
+    "lines\\box-trial\\live-three\\review-manifest.json": {
+      "sha256": "982b1f883269f275d1cf4854979a39fea953d2db29d95ae63aa744f4cb216189",
+      "bytes": 16752
+    }
+  }
+}

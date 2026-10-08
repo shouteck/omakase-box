@@ -1,0 +1,21 @@
+{
+  "sympy__sympy-16597": {
+    "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sympy__sympy-16597@sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860",
+    "inspect_exit": 0,
+    "preexisted": true,
+    "pulled_by_review": false
+  },
+  "matplotlib__matplotlib-21568": {
+    "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.matplotlib__matplotlib-21568@sha256:e561c8616c27450b082544829e6558210087ced3806a2dbddff3d73890951a0f",
+    "inspect_exit": 0,
+    "preexisted": true,
+    "pulled_by_review": false
+  },
+  "sphinx-doc__sphinx-10614": {
+    "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sphinx-doc__sphinx-10614@sha256:e343d48acbbb8f0052e3c10d196d2bf7b10d90d951bdd4217cfc40e602359b37",
+    "inspect_exit": 1,
+    "preexisted": false,
+    "pulled_by_review": true,
+    "pull_exit": 0
+  }
+}

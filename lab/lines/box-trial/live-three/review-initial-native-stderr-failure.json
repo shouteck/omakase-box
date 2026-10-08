@@ -1,0 +1,10 @@
+{
+  "status": "failed exact native stderr assertion",
+  "task": "matplotlib__matplotlib-21568",
+  "command_step": 3,
+  "script": "review-replay-before-stderr-finding.py",
+  "error": "AssertionError: native.stderr != decoded wrapped native_stderr_b64",
+  "first_review_run_container_cleanup_exit": 0,
+  "followup_receipt": "review-replay-matplotlib__matplotlib-21568.json",
+  "meaning": "Initial exact-identity assertion was not called passed; subsequent full-output receipt diagnoses recorder buffering."
+}

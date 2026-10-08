@@ -1,0 +1,214 @@
+{
+  "frozen_candidate": "2e85d53224be31e346df49a149b0606b5875d575",
+  "task_folder": "live-pilot",
+  "manifests": {
+    "manifest.json": 263,
+    "pre-agent-manifest.json": 243
+  },
+  "runs": {
+    "control": {
+      "events": 145,
+      "steps": 14,
+      "searches": 8,
+      "reordered": 0,
+      "changed_display_steps": [],
+      "truncated_steps": [],
+      "reported_tokens": 200832,
+      "candidate_sha256": "84a260cfe32b92104d42d6cd2bb09bff2a3a5b60cd7be2151cdf691cd952328c",
+      "started_utc": "2026-10-08T21:11:15Z",
+      "settings": {
+        "disabledPluginIds": [],
+        "cwd": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-pilot\\scratch\\agent-control",
+        "approvalPolicy": "never",
+        "approvalsReviewer": "user",
+        "sandboxPolicy": {
+          "type": "readOnly",
+          "networkAccess": false
+        },
+        "activePermissionProfile": null,
+        "model": "gpt-5.6-luna",
+        "modelProvider": "openai",
+        "serviceTier": "default",
+        "effort": "low",
+        "summary": null,
+        "collaborationMode": {
+          "mode": "default",
+          "settings": {
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "low",
+            "developer_instructions": null
+          }
+        },
+        "multiAgentMode": "explicitRequestOnly",
+        "personality": null
+      },
+      "source_identities": [
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          165,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ],
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          347,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ],
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          393,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ],
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          398,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ],
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          466,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ],
+        [
+          "sphinx/util/osutil.py",
+          44,
+          "8b5ef53c85693f8cbff619688beaef60b9cf3baa20ae040fa24377dee5ab399e"
+        ]
+      ],
+      "nonzero_steps": [
+        6,
+        8,
+        10,
+        13
+      ],
+      "event_methods": {
+        "response": 3,
+        "remoteControl/status/changed": 1,
+        "thread/started": 1,
+        "warning": 1,
+        "mcpServer/startupStatus/updated": 2,
+        "thread/settings/updated": 1,
+        "thread/status/changed": 2,
+        "turn/started": 1,
+        "account/updated": 1,
+        "item/started": 29,
+        "item/completed": 29,
+        "item/tool/call": 14,
+        "thread/tokenUsage/updated": 16,
+        "account/rateLimits/updated": 16,
+        "item/agentMessage/delta": 27,
+        "turn/completed": 1
+      }
+    },
+    "box": {
+      "events": 158,
+      "steps": 10,
+      "searches": 5,
+      "reordered": 1,
+      "changed_display_steps": [
+        5
+      ],
+      "truncated_steps": [
+        2
+      ],
+      "reported_tokens": 182429,
+      "candidate_sha256": "dbc88db89a3694be80b3dc23c0aa3be7d55f15bbda9f299f2f1509b809b60f61",
+      "started_utc": "2026-10-08T21:12:49Z",
+      "settings": {
+        "disabledPluginIds": [],
+        "cwd": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-pilot\\scratch\\agent-box",
+        "approvalPolicy": "never",
+        "approvalsReviewer": "user",
+        "sandboxPolicy": {
+          "type": "readOnly",
+          "networkAccess": false
+        },
+        "activePermissionProfile": null,
+        "model": "gpt-5.6-luna",
+        "modelProvider": "openai",
+        "serviceTier": "default",
+        "effort": "low",
+        "summary": null,
+        "collaborationMode": {
+          "mode": "default",
+          "settings": {
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "low",
+            "developer_instructions": null
+          }
+        },
+        "multiAgentMode": "explicitRequestOnly",
+        "personality": null
+      },
+      "source_identities": [
+        [
+          "sphinx/builders/__init__.py",
+          144,
+          "f827f956117691239072e7cd4a67c4510e2f5016f076a91e7d5b847e3971e03b"
+        ],
+        [
+          "sphinx/ext/graphviz.py",
+          220,
+          "8a226509a4777d2300f8c703a2e718423729eebe21d14408bb8d60cd3753b592"
+        ],
+        [
+          "sphinx/ext/graphviz.py",
+          251,
+          "8a226509a4777d2300f8c703a2e718423729eebe21d14408bb8d60cd3753b592"
+        ],
+        [
+          "sphinx/ext/graphviz.py",
+          308,
+          "8a226509a4777d2300f8c703a2e718423729eebe21d14408bb8d60cd3753b592"
+        ],
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          347,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ],
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          398,
+          "9b858e44574bcc37c29df8c497ebd4e9ea98a5b7bcdf3a7b714625d896d47952"
+        ]
+      ],
+      "nonzero_steps": [
+        8,
+        9
+      ],
+      "event_methods": {
+        "response": 3,
+        "remoteControl/status/changed": 1,
+        "thread/started": 1,
+        "warning": 1,
+        "mcpServer/startupStatus/updated": 2,
+        "thread/settings/updated": 1,
+        "thread/status/changed": 2,
+        "turn/started": 1,
+        "account/updated": 1,
+        "item/started": 24,
+        "item/completed": 24,
+        "item/tool/call": 10,
+        "thread/tokenUsage/updated": 14,
+        "account/rateLimits/updated": 14,
+        "skills/changed": 2,
+        "item/agentMessage/delta": 56,
+        "turn/completed": 1
+      }
+    }
+  },
+  "launch_commit": "95083b16578bbf1bc31125bd2b50ac73028fefd5",
+  "launch_commit_time": "2026-10-09T05:11:05+08:00",
+  "pre_agent_replay": {
+    "actions": 31,
+    "captures": 34,
+    "reordered": 6
+  },
+  "source_count": 577,
+  "exact_called_identities": 761,
+  "pair_tokens": 383261,
+  "attacks": {
+    "all_called_stale_hash_rejected": 761,
+    "all_wrong_names_rejected": true,
+    "all_code_starts_plus_one_rejected": true
+  }
+}

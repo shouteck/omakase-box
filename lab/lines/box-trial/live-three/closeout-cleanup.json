@@ -1,0 +1,77 @@
+{
+  "images": [
+    {
+      "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+      "ownership_receipt": "live-three-astropy__astropy-13033\\ownership.json",
+      "ownership_sha256": "0e48b3886895866c4bd28cf0ad9589a87ca20707002ba528b6259dc5c29bcca3",
+      "remove": {
+        "exit": 0,
+        "stdout": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214\nDeleted: sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214\n",
+        "stderr": ""
+      },
+      "absence": {
+        "exit": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such image: ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214\n"
+      }
+    },
+    {
+      "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sympy__sympy-16597@sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860",
+      "ownership_receipt": "live-three-sympy__sympy-16597\\before-guard-entry-ownership.json",
+      "ownership_sha256": "cfb66f646e20c400c493dc1f8827812e6b7655d86c39fa424ceeb46da773e67d",
+      "remove": {
+        "exit": 0,
+        "stdout": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.sympy__sympy-16597@sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860\nDeleted: sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860\n",
+        "stderr": ""
+      },
+      "absence": {
+        "exit": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such image: ghcr.io/epoch-research/swe-bench.eval.x86_64.sympy__sympy-16597@sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860\n"
+      }
+    },
+    {
+      "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.matplotlib__matplotlib-21568@sha256:e561c8616c27450b082544829e6558210087ced3806a2dbddff3d73890951a0f",
+      "ownership_receipt": "live-three-matplotlib__matplotlib-21568\\before-fresh-guard-trace-ownership.json",
+      "ownership_sha256": "8f5e404ec6d77b710ff3e461d1ab286039596e16bbfe89e69e76c3719ab87230",
+      "remove": {
+        "exit": 0,
+        "stdout": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.matplotlib__matplotlib-21568@sha256:e561c8616c27450b082544829e6558210087ced3806a2dbddff3d73890951a0f\nDeleted: sha256:e561c8616c27450b082544829e6558210087ced3806a2dbddff3d73890951a0f\n",
+        "stderr": ""
+      },
+      "absence": {
+        "exit": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such image: ghcr.io/epoch-research/swe-bench.eval.x86_64.matplotlib__matplotlib-21568@sha256:e561c8616c27450b082544829e6558210087ced3806a2dbddff3d73890951a0f\n"
+      }
+    },
+    {
+      "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sphinx-doc__sphinx-10614@sha256:e343d48acbbb8f0052e3c10d196d2bf7b10d90d951bdd4217cfc40e602359b37",
+      "ownership_receipt": "live-three\\review-image-ownership.json",
+      "ownership_sha256": "3b81f21d32f6934c96f88d4b89148d6e88ba23c1af24e7f7f035813b8620ee74",
+      "remove": {
+        "exit": 0,
+        "stdout": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.sphinx-doc__sphinx-10614@sha256:e343d48acbbb8f0052e3c10d196d2bf7b10d90d951bdd4217cfc40e602359b37\nDeleted: sha256:e343d48acbbb8f0052e3c10d196d2bf7b10d90d951bdd4217cfc40e602359b37\n",
+        "stderr": ""
+      },
+      "absence": {
+        "exit": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such image: ghcr.io/epoch-research/swe-bench.eval.x86_64.sphinx-doc__sphinx-10614@sha256:e343d48acbbb8f0052e3c10d196d2bf7b10d90d951bdd4217cfc40e602359b37\n"
+      }
+    }
+  ],
+  "scratch": [
+    "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-sympy__sympy-16597\\scratch\\agent-control",
+    "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-sympy__sympy-16597\\scratch\\agent-box",
+    "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-matplotlib__matplotlib-21568\\scratch\\agent-control",
+    "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-matplotlib__matplotlib-21568\\scratch\\agent-box"
+  ],
+  "scientific_raw_retained": true,
+  "no_global_prune": true,
+  "container_absence": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

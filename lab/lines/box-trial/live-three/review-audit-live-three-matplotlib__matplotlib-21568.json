@@ -1,0 +1,201 @@
+{
+  "frozen_candidate": "2e85d53224be31e346df49a149b0606b5875d575",
+  "task_folder": "live-three-matplotlib__matplotlib-21568",
+  "manifests": {
+    "manifest.json": 142,
+    "pre-agent-manifest.json": 118
+  },
+  "runs": {
+    "control": {
+      "events": 102,
+      "steps": 5,
+      "searches": 2,
+      "reordered": 0,
+      "changed_display_steps": [],
+      "truncated_steps": [],
+      "reported_tokens": 52956,
+      "candidate_sha256": "77cad7956638652a3b7eca5041fe18a402f2c4676625e0f9e3fee5131385e78f",
+      "started_utc": "2026-10-08T22:10:31Z",
+      "settings": {
+        "disabledPluginIds": [],
+        "cwd": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-matplotlib__matplotlib-21568\\scratch\\agent-control",
+        "approvalPolicy": "never",
+        "approvalsReviewer": "user",
+        "sandboxPolicy": {
+          "type": "readOnly",
+          "networkAccess": false
+        },
+        "activePermissionProfile": null,
+        "model": "gpt-5.6-luna",
+        "modelProvider": "openai",
+        "serviceTier": "default",
+        "effort": "low",
+        "summary": null,
+        "collaborationMode": {
+          "mode": "default",
+          "settings": {
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "low",
+            "developer_instructions": null
+          }
+        },
+        "multiAgentMode": "explicitRequestOnly",
+        "personality": null
+      },
+      "source_identities": [
+        [
+          "lib/matplotlib/dates.py",
+          594,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          613,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          632,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          711,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          775,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          913,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          956,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ]
+      ],
+      "nonzero_steps": [],
+      "event_methods": {
+        "response": 3,
+        "remoteControl/status/changed": 1,
+        "thread/started": 1,
+        "warning": 1,
+        "mcpServer/startupStatus/updated": 2,
+        "thread/settings/updated": 1,
+        "thread/status/changed": 2,
+        "turn/started": 1,
+        "account/updated": 1,
+        "item/started": 12,
+        "item/completed": 12,
+        "item/tool/call": 5,
+        "skills/changed": 3,
+        "thread/tokenUsage/updated": 6,
+        "account/rateLimits/updated": 6,
+        "item/agentMessage/delta": 44,
+        "turn/completed": 1
+      }
+    },
+    "box": {
+      "events": 116,
+      "steps": 5,
+      "searches": 4,
+      "reordered": 1,
+      "changed_display_steps": [
+        3
+      ],
+      "truncated_steps": [
+        3
+      ],
+      "reported_tokens": 70840,
+      "candidate_sha256": "37d59434683a306bd6f06cf618520872b942dc9928e4a9fbe0c33c857326c611",
+      "started_utc": "2026-10-08T22:11:49Z",
+      "settings": {
+        "disabledPluginIds": [],
+        "cwd": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-matplotlib__matplotlib-21568\\scratch\\agent-box",
+        "approvalPolicy": "never",
+        "approvalsReviewer": "user",
+        "sandboxPolicy": {
+          "type": "readOnly",
+          "networkAccess": false
+        },
+        "activePermissionProfile": null,
+        "model": "gpt-5.6-luna",
+        "modelProvider": "openai",
+        "serviceTier": "default",
+        "effort": "low",
+        "summary": null,
+        "collaborationMode": {
+          "mode": "default",
+          "settings": {
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "low",
+            "developer_instructions": null
+          }
+        },
+        "multiAgentMode": "explicitRequestOnly",
+        "personality": null
+      },
+      "source_identities": [
+        [
+          "lib/matplotlib/dates.py",
+          594,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          632,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/dates.py",
+          775,
+          "a7fcccefebe3026281c1999e8408c9a89e8de536a6a796e0d074e46520a77ed7"
+        ],
+        [
+          "lib/matplotlib/pyplot.py",
+          2028,
+          "b81448659164eda873ecd94a187658685ce083d28fb2c84fbde69ebec34fecdc"
+        ]
+      ],
+      "nonzero_steps": [],
+      "event_methods": {
+        "response": 3,
+        "remoteControl/status/changed": 1,
+        "thread/started": 1,
+        "warning": 1,
+        "mcpServer/startupStatus/updated": 2,
+        "thread/settings/updated": 1,
+        "thread/status/changed": 2,
+        "turn/started": 1,
+        "account/updated": 1,
+        "item/started": 13,
+        "item/completed": 13,
+        "item/tool/call": 5,
+        "thread/tokenUsage/updated": 7,
+        "account/rateLimits/updated": 7,
+        "item/agentMessage/delta": 57,
+        "turn/completed": 1
+      }
+    }
+  },
+  "launch_commit": "55a641976fbb5fe94c73122bd32f5dda929c4877",
+  "launch_commit_time": "2026-10-09T06:10:07+08:00",
+  "pre_agent_replay": {
+    "actions": 20,
+    "captures": 20,
+    "reordered": 4
+  },
+  "source_count": 900,
+  "exact_called_identities": 290,
+  "pair_tokens": 123796,
+  "attacks": {
+    "all_called_stale_hash_rejected": 290,
+    "all_wrong_names_rejected": true,
+    "all_code_starts_plus_one_rejected": true
+  }
+}

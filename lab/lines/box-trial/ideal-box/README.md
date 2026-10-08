@@ -1,6 +1,8 @@
 # Ideal Box: checked lab prototype
 
-9 October 2026. The prescribed prototype and one subsequently authorized silent live pair are complete and independently reviewed. [Pilot result](../live-pilot/result.md), [pilot review](../live-pilot/sceptic.md), [owner design](prototype/owner-design.md), [prototype result](prototype/result.md), [prototype review](prototype/sceptic-followup.md). One ordinary search was reordered and the agent then opened promoted code; both actual repairs failed the named test and passed all five guards. No comparative benefit established. Stop awaiting the owner's word before any broader comparison; no product transfer.
+9 October 2026. The prescribed prototype and one subsequently authorized silent live pair are complete and independently reviewed. [Pilot result](../live-pilot/result.md), [pilot review](../live-pilot/sceptic.md), [owner design](prototype/owner-design.md), [prototype result](prototype/result.md), [prototype review](prototype/sceptic-followup.md). One ordinary search was reordered and the agent then opened promoted code; both actual repairs failed the named test and passed all five guards. No comparative benefit established. That pilot was followed only by the separately authorized continuation below; no product transfer.
+
+The subsequent owner-authorized continuation is now closed early: both new Box arms reorder searches, both solve the same tasks as control, and both use more reported tokens. Fresh review reproduced all six patch scores including pilot and found a live buffering/native-stderr fault. [Continuation result](../live-three/result.md), [review](../live-three/sceptic.md). No further comparison until a no-agent streaming/native correction; descriptive signs establish no advantage. No product transfer.
 
 The 8 October reading prerequisite below remains the basis.
 

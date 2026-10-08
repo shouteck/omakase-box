@@ -42,7 +42,9 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
-## Next session: three more pairs. Authorised by the owner on 9 October 2026.
+## Completed on 9 October 2026: continuation stopped after two new pairs (authorization/protocol retained)
+
+Both new Box runs used more reported tokens with the same successful repair outcomes as control. The frozen two-against rule stopped the session before a third task was prepared. New usage 380,096, within caps. Fresh review independently rescored all six patches including pilot; all scores match. It also found a live recorder/native stderr fault, which prevents a clean ordinary-native comparison. [Result](lines/box-trial/live-three/result.md), [review](lines/box-trial/live-three/sceptic.md). Further comparisons are stopped; a no-agent streaming/native safeguard correction is required first, and no additional repair run is authorized here.
 
 The pilot was clean: the silent Box reordered a search for a live agent, the agent opened what was moved up, nothing errored, and both arms failed the task (control 14 commands and 200,832 tokens; Box 10 commands and 182,429). The owner read that as a first sign of saving and has authorised three more pairs. The CTO's advice was that a comparison able to detect a small saving would need far more runs than we can afford, and that three pairs cannot prove one; the owner has chosen three as a cheap next look, and that is what the lab runs. Report what they show without stretching it.
 
@@ -106,4 +108,4 @@ The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/proto
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** reading, prototype and one-pair live pilot closed and reviewed. The owner has authorised three more pairs. Next session: those three, then stop.
+- **Sync state, 9 October 2026:** reading, prototype, pilot and owner-authorized continuation closed and reviewed. Continuation stopped after two new pairs under the two-against rule; third never prepared. Review found a buffering/native-stderr instrument fault. No further comparison or product work; owner/CTO decides next, with a no-agent instrument correction required before any new native comparison.

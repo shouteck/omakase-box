@@ -1,0 +1,100 @@
+{
+  "frozen_candidate": "2e85d53224be31e346df49a149b0606b5875d575",
+  "selection_reconstructed": true,
+  "ranked_candidates": [
+    {
+      "task": "astropy__astropy-13033",
+      "published_failures": 2,
+      "max_published_commands": 35
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "published_failures": 1,
+      "max_published_commands": 71
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "published_failures": 1,
+      "max_published_commands": 68
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14087",
+      "published_failures": 1,
+      "max_published_commands": 34
+    },
+    {
+      "task": "django__django-12193",
+      "published_failures": 1,
+      "max_published_commands": 32
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "published_failures": 0,
+      "max_published_commands": 59
+    },
+    {
+      "task": "sympy__sympy-16766",
+      "published_failures": 0,
+      "max_published_commands": 55
+    },
+    {
+      "task": "sympy__sympy-12096",
+      "published_failures": 0,
+      "max_published_commands": 53
+    },
+    {
+      "task": "sympy__sympy-22914",
+      "published_failures": 0,
+      "max_published_commands": 49
+    },
+    {
+      "task": "matplotlib__matplotlib-13989",
+      "published_failures": 0,
+      "max_published_commands": 44
+    },
+    {
+      "task": "astropy__astropy-14508",
+      "published_failures": 0,
+      "max_published_commands": 43
+    },
+    {
+      "task": "django__django-16116",
+      "published_failures": 0,
+      "max_published_commands": 43
+    },
+    {
+      "task": "astropy__astropy-7166",
+      "published_failures": 0,
+      "max_published_commands": 42
+    },
+    {
+      "task": "scikit-learn__scikit-learn-11578",
+      "published_failures": 0,
+      "max_published_commands": 42
+    }
+  ],
+  "signs": [
+    "for",
+    "against",
+    "against"
+  ],
+  "new_tokens": 380096,
+  "including_pilot_tokens": 763357,
+  "new_starts": 4,
+  "third_started": false,
+  "root_protocol_unchanged_since_first_launch": true,
+  "native_stderr_discrepancy": [
+    {
+      "step": 3,
+      "receipt": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-91bce831-bd44-4258-b327-da7dbf9f3e35\\step-3.json",
+      "receipt_sha256": "4e7d3383bdd6f99ea8e3b1a388e6b5681e06193c3e521e359b5d9c5e6f071112",
+      "matched_saved_promotions": true,
+      "native_stdout_exit_equal": true,
+      "native_stderr_equal": false,
+      "native_stderr_bytes": 4316,
+      "wrapped_stderr_bytes": 22925,
+      "native_prefix_of_wrapped": true,
+      "extra_wrapped_lines": 189
+    }
+  ]
+}

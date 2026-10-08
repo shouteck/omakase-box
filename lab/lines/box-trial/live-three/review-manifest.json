@@ -1,0 +1,299 @@
+{
+  "reviewed_frozen_commit": "2e85d53224be31e346df49a149b0606b5875d575",
+  "original_manifests_reverified_unchanged": true,
+  "review_writer_release": true,
+  "files": {
+    "live-three\\review-audit-live-pilot.json": {
+      "sha256": "e413f0e2b162001277a708e65d81739e36571a78c1819487dfb150afe9f5d541",
+      "bytes": 6522
+    },
+    "live-three\\review-audit-live-three-matplotlib__matplotlib-21568.json": {
+      "sha256": "34bd6f8464e5ae608c657d127a1603d4fa1d414ba995904ce137417f44b348e5",
+      "bytes": 6290
+    },
+    "live-three\\review-audit-live-three-sympy__sympy-16597.json": {
+      "sha256": "1d864dfdeb2ec14e4f556145a2a48dffd026b9db7576e9ec1a535c6e6ba7a8ac",
+      "bytes": 5289
+    },
+    "live-three\\review-audit.py": {
+      "sha256": "4bb494dba399c5c9c9a6e96cfc6b99bbed65205809bb0123767ca13f352a7025",
+      "bytes": 8271
+    },
+    "live-three\\review-image-ownership.json": {
+      "sha256": "3b81f21d32f6934c96f88d4b89148d6e88ba23c1af24e7f7f035813b8620ee74",
+      "bytes": 854
+    },
+    "live-three\\review-initial-native-stderr-failure.json": {
+      "sha256": "d6e633b805584df3e22989ac1561e3014a83aa10e8203cd8295207d5a15ce539",
+      "bytes": 515
+    },
+    "live-three\\review-pilot-pull.log": {
+      "sha256": "fae3c3ed095db20c572cfcb52a87d442ba5134de5f3223a7f8e72e5df65d8a0a",
+      "bytes": 1254
+    },
+    "live-three\\review-replay-before-stderr-finding.py": {
+      "sha256": "f7d9d5241d01cab89830a0cfba5a1e4f6333ba116c9a4e954962cde073b37f29",
+      "bytes": 2556
+    },
+    "live-three\\review-replay-matplotlib__matplotlib-21568.json": {
+      "sha256": "68777de6d0c0e0bb3303e84cba0290ebc759249bcdef231ed6f9e14fc3a684bd",
+      "bytes": 2707
+    },
+    "live-three\\review-replay-sympy__sympy-16597.json": {
+      "sha256": "a2df9022039c8d2ace76bc5489e20eabd055e7d0cad13af53ad36521ffa29d85",
+      "bytes": 2909
+    },
+    "live-three\\review-replay.py": {
+      "sha256": "2eb200d890df539ccd3ec46ace3ffcba23202c75161772bb3fb50464d595c78d",
+      "bytes": 2759
+    },
+    "live-three\\review-score-matplotlib__matplotlib-21568.json": {
+      "sha256": "dfdf6c6727ca71846c17a1f2c3617106e171019cc144b35e6f799dc3ed6340b1",
+      "bytes": 103568
+    },
+    "live-three\\review-score-sphinx-doc__sphinx-10614.json": {
+      "sha256": "9cea00d8cd4cf626865d9fa1a7e93170e97f08b898441e1a296be34282922079",
+      "bytes": 78268
+    },
+    "live-three\\review-score-sympy__sympy-16597.json": {
+      "sha256": "8aec8a5273e180ae91845526f482063958da43a5e0865429c8bc541905194e16",
+      "bytes": 36076
+    },
+    "live-three\\review-score.py": {
+      "sha256": "05fc14f9dfaf8f21f4c27a8e0ae27855066c91475108a791d0d6b75effcd2a0c",
+      "bytes": 2029
+    },
+    "live-three\\review-selection-stop.json": {
+      "sha256": "902cbbbe072c7c4229f0522b87bf0e88ac949d4904705c52de7ff1f29a91202b",
+      "bytes": 2774
+    },
+    "live-three\\review-selection.py": {
+      "sha256": "0e48d4365c939726e46f41e682b63407715f5fe5e250fc654c121486f87f1cb5",
+      "bytes": 3372
+    },
+    "live-three\\sceptic.md": {
+      "sha256": "0f1f6b1871c77e9833999b0ef4e5ebf936d807bf2bf036a7a2e805a0e73d3980",
+      "bytes": 12600
+    },
+    "live-pilot\\raw\\review\\continuation-complete-record-read.txt": {
+      "sha256": "9ddfa3804d2122342bf33b4f585eaed97e85f42cda3ef9e1cde4e6e8122e9abb",
+      "bytes": 474626
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\box\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\box\\candidate.patch": {
+      "sha256": "dbc88db89a3694be80b3dc23c0aa3be7d55f15bbda9f299f2f1509b809b60f61",
+      "bytes": 1797
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\box\\evaluation.json": {
+      "sha256": "dd85604a6c465bc263ad65a5574b819899dbe2342f576ac7e65e74515ae0e0b4",
+      "bytes": 37171
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\box\\failing.log": {
+      "sha256": "9b2b010d6236ea6e3a3f20f428cbe068c58c5f1709f4714d5f24ccd74aad311a",
+      "bytes": 2926
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\box\\guards.log": {
+      "sha256": "f699374a64df76f562d515f8f6e961c9083a9cd54980b376b1e70bda8c6742b1",
+      "bytes": 8446
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\box\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\control\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\control\\candidate.patch": {
+      "sha256": "84a260cfe32b92104d42d6cd2bb09bff2a3a5b60cd7be2151cdf691cd952328c",
+      "bytes": 2267
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\control\\evaluation.json": {
+      "sha256": "7b275a74594a0811b84cf04135a95c487d832e8a17c3077867857b4bca410630",
+      "bytes": 37170
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\control\\failing.log": {
+      "sha256": "4366be9aadfb7edb78985248a21aa30beb981e351ad589212549ff077c43b98c",
+      "bytes": 2926
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\control\\guards.log": {
+      "sha256": "985c3db35621b6c41130f277cd8da757bcfff2e9d00b68ff7c149e7d2da5486a",
+      "bytes": 8446
+    },
+    "live-pilot\\raw\\review\\continuation-rescore-38b0604a-92a3-4c41-8901-25e1074b4390\\control\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-complete-record-read.txt": {
+      "sha256": "68f6cbcae92626995c2705c9ebf25aebf9dae1b42c850bef32b202b7b3bceb1f",
+      "bytes": 388932
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\box\\baseline-tree.json": {
+      "sha256": "129972281c13b8638b69f3b748819e6b1ea9fbc41acc45b07fd22b4201cc1e8d",
+      "bytes": 138
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\box\\candidate.patch": {
+      "sha256": "d1c318f39837c189559a9381e6eefddf724fb3b33d6ebb81d6cbcc344e111c0b",
+      "bytes": 1047
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\box\\evaluation.json": {
+      "sha256": "e58a3fc81873c665ae60e5513ae35be692f76bc5c53d64a685a13944d8e00974",
+      "bytes": 16626
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\box\\failing.log": {
+      "sha256": "650278dfd0f38e22faadc9c6e6a0ea5c800fe520adebd984e938e44b9abdb675",
+      "bytes": 1190
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\box\\guards.log": {
+      "sha256": "f36ef6c7f352f75b417b330b8af92d230f22996f7f6650d9a39720a30508472d",
+      "bytes": 2975
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\box\\test.patch": {
+      "sha256": "aa1263270ae0b8e7befe02678ac8ace76ea44779054690595982de41a56956e9",
+      "bytes": 5072
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\control\\baseline-tree.json": {
+      "sha256": "129972281c13b8638b69f3b748819e6b1ea9fbc41acc45b07fd22b4201cc1e8d",
+      "bytes": 138
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\control\\candidate.patch": {
+      "sha256": "1cc4654a4a642386ca581712c13058ddb33bd8852d6f887883926cdb21aa80c7",
+      "bytes": 1151
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\control\\evaluation.json": {
+      "sha256": "7ce417cf37ae7127180e8b6bd2c9dbe2fa14785c9d30f3e5ffcfa3818cf7bd33",
+      "bytes": 16625
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\control\\failing.log": {
+      "sha256": "fe536e0ffa6ce468a87e541992707d57b17d83109f20ed50f8c6983f9d9bed52",
+      "bytes": 1190
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\control\\guards.log": {
+      "sha256": "a891a0e6b5ef4f697ac63a35c65f604fe47930e8e4e52449a5c87896d05841a8",
+      "bytes": 2975
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\continuation-rescore-d4bd635a-48d1-4a00-8f36-b30da45986d6\\control\\test.patch": {
+      "sha256": "aa1263270ae0b8e7befe02678ac8ace76ea44779054690595982de41a56956e9",
+      "bytes": 5072
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\actual-promoted-replay-b3fc8589-22cd-428c-a4fa-b6073f5c3f32\\baseline-tree.json": {
+      "sha256": "129972281c13b8638b69f3b748819e6b1ea9fbc41acc45b07fd22b4201cc1e8d",
+      "bytes": 138
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\actual-promoted-replay-b3fc8589-22cd-428c-a4fa-b6073f5c3f32\\step-1.json": {
+      "sha256": "60586ca2e78dbd449017be13bf3637dff3c71d9155ed622ce8fad95135af7421",
+      "bytes": 76537
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\actual-promoted-replay-b3fc8589-22cd-428c-a4fa-b6073f5c3f32\\step-3.json": {
+      "sha256": "b569d21a94b0393734261aed2d88fbf1ba0d30fc0a1ffd9317c2b276ce9ba513",
+      "bytes": 30515
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\actual-promoted-replay-b3fc8589-22cd-428c-a4fa-b6073f5c3f32\\sympy__core__assumptions.py.source": {
+      "sha256": "a3197fc31fa2be05994b7a6dec9d561566b67654ca986482baff6014817899a7",
+      "bytes": 10631
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\actual-promoted-replay-b3fc8589-22cd-428c-a4fa-b6073f5c3f32\\sympy__core__power.py.source": {
+      "sha256": "a9a8986f22dc86f71c48cbed71c3bceb47a11c9bdb4e5bbd8f8daaea4c6a9063",
+      "bytes": 61867
+    },
+    "live-three-sympy__sympy-16597\\raw\\review\\actual-promoted-replay-b3fc8589-22cd-428c-a4fa-b6073f5c3f32\\test.patch": {
+      "sha256": "aa1263270ae0b8e7befe02678ac8ace76ea44779054690595982de41a56956e9",
+      "bytes": 5072
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-complete-record-read.txt": {
+      "sha256": "6986e91dd30643e12226049bc4a24aee0b6a3f9432a2d8c07434db0514f3d2f9",
+      "bytes": 295985
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\candidate.patch": {
+      "sha256": "37d59434683a306bd6f06cf618520872b942dc9928e4a9fbe0c33c857326c611",
+      "bytes": 738
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\evaluation.json": {
+      "sha256": "8ae53eb3d059dbb4bc3d6be59ae1b475aec243332d91faa191b9c29ef2e7907e",
+      "bytes": 49566
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\failing.log": {
+      "sha256": "163550a6c8c00f5a56ff2b7111e31e9d938711aba3c8c24313f3d6e30598f1d5",
+      "bytes": 1322
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\guard-collection.log": {
+      "sha256": "869ff89798647f99980767682b45e9f6d4677d9b31b5f557ecb6a2b4fbe0d960",
+      "bytes": 1339
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\guards.log": {
+      "sha256": "55ea361d118f8b53c1853a68421f983e8744bc34f0978a8dedc1c0d471b17a9c",
+      "bytes": 12657
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\box\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\candidate.patch": {
+      "sha256": "77cad7956638652a3b7eca5041fe18a402f2c4676625e0f9e3fee5131385e78f",
+      "bytes": 798
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\evaluation.json": {
+      "sha256": "0059c0efa210f5f683de38c159b92e42f89886dafc4d63f0dee6e51b3e09cf25",
+      "bytes": 49567
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\failing.log": {
+      "sha256": "dc89c306a019b35239c3519035a3c0f5efb074a1832cc4fc22983c79d200159d",
+      "bytes": 1322
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\guard-collection.log": {
+      "sha256": "1ef7e2cf6fab1512ae3654553b676d1a39c45917329ee3618542717796d9cb21",
+      "bytes": 1339
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\guards.log": {
+      "sha256": "46f1d74986b34921f6f79602c8ce5361222eaf2c90d7799f772a1750bbf08c4c",
+      "bytes": 12657
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\continuation-rescore-54242adb-e912-4843-bc04-9dc4d14123b4\\control\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-5b05d097-3751-4d60-83a9-6b2ea6551495\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-5b05d097-3751-4d60-83a9-6b2ea6551495\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-91bce831-bd44-4258-b327-da7dbf9f3e35\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-91bce831-bd44-4258-b327-da7dbf9f3e35\\lib__matplotlib__pyplot.py.source": {
+      "sha256": "b81448659164eda873ecd94a187658685ce083d28fb2c84fbde69ebec34fecdc",
+      "bytes": 105686
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-91bce831-bd44-4258-b327-da7dbf9f3e35\\step-3.json": {
+      "sha256": "4e7d3383bdd6f99ea8e3b1a388e6b5681e06193c3e521e359b5d9c5e6f071112",
+      "bytes": 130415
+    },
+    "live-three-matplotlib__matplotlib-21568\\raw\\review\\actual-promoted-replay-91bce831-bd44-4258-b327-da7dbf9f3e35\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    }
+  }
+}
