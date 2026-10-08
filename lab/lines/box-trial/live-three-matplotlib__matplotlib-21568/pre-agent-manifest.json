@@ -1,0 +1,477 @@
+{
+  "files": {
+    "raw\\harness-after-guard-entry\\pull.log": {
+      "sha256": "f8e2de1b2bc75a3149cbb35f0e8677e6d4f2cae69c8ed45beeaaa0794a11d573",
+      "bytes": 1270
+    },
+    "raw\\box-check\\control\\001.json": {
+      "sha256": "69097c8890b11f46d15529c99f9677b4546b9ba0cd4ca74e475be046d41c3ad0",
+      "bytes": 75421
+    },
+    "raw\\box-check\\control\\002.json": {
+      "sha256": "c7ff7e04e5b17b5702fc375b0b12818bd4b73492b2ca1ccf47c1c1278bc7ba54",
+      "bytes": 214941
+    },
+    "raw\\box-check\\control\\003.json": {
+      "sha256": "1441460ca3dd266b7d12698b05f292ea00fd5d1bd43d092d188cef93736b357f",
+      "bytes": 110497
+    },
+    "raw\\box-check\\control\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\box-check\\control\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\box-check\\gpt-5-2-codex\\006.json": {
+      "sha256": "c583c2e0555b50d3823f7baecd1741d903c6e7211651177aada18b670af042a1",
+      "bytes": 9941
+    },
+    "raw\\box-check\\gpt-5-2-codex\\009.json": {
+      "sha256": "84c0b220b448026534038b28948c5838de6c5b4185e981f4036183233b08e803",
+      "bytes": 1662
+    },
+    "raw\\box-check\\gpt-5-2-codex\\010.json": {
+      "sha256": "f239767482e9cb6450fa7208d4f447f88cd9fd6065fccd1656642016636fc4ca",
+      "bytes": 37623
+    },
+    "raw\\box-check\\gpt-5-2-codex\\012.json": {
+      "sha256": "495d45f90c96693d241207ffbf710a879390a9727d8d45710c01fb12d651d724",
+      "bytes": 3811
+    },
+    "raw\\box-check\\gpt-5-2-codex\\015.json": {
+      "sha256": "0518dfdd7ba4e74060b4f4947db947de9cc2927097aea2eae06df366ce2d8c17",
+      "bytes": 5373
+    },
+    "raw\\box-check\\gpt-5-2-codex\\018.json": {
+      "sha256": "5ee810844c03a1c269d0909dd19d7a5dcca73cb391e3d4030a8c6622cc6fff42",
+      "bytes": 2636
+    },
+    "raw\\box-check\\gpt-5-2-codex\\019.json": {
+      "sha256": "f1845573b639ec6658a7195c9e6d56b5bc934938a2e6497b6ec2ca2e9f2c8258",
+      "bytes": 23639
+    },
+    "raw\\box-check\\gpt-5-2-codex\\021.json": {
+      "sha256": "041c57e5b2c465b83e4b9a9a5e4f528171075719f9399633afdcf4b9a207c49a",
+      "bytes": 10592
+    },
+    "raw\\box-check\\gpt-5-2-codex\\022.json": {
+      "sha256": "c93920d3e5f7320e51e43c820b89e60c0aebd8ff8acf716f748562cce7778e18",
+      "bytes": 2532
+    },
+    "raw\\box-check\\gpt-5-2-codex\\023.json": {
+      "sha256": "70cab30ceb1ea274717bc1e090a729e1adea72653bca84edb9d1391545b4879a",
+      "bytes": 18797
+    },
+    "raw\\box-check\\gpt-5-2-codex\\025.json": {
+      "sha256": "974717fa0cb947afd91db04354c721796216cd5884ed3cd9c77bbd252d1cf4e0",
+      "bytes": 15148
+    },
+    "raw\\box-check\\gpt-5-2-codex\\028.json": {
+      "sha256": "264d081c7e384f2794017ac42f48b9fa39a4c3c947119105735b0f463d756323",
+      "bytes": 8392
+    },
+    "raw\\box-check\\gpt-5-2-codex\\030.json": {
+      "sha256": "a708d3682226cf0ca69c87ff64bb6411542ca02419450217a7b1cce78267b860",
+      "bytes": 10918
+    },
+    "raw\\box-check\\gpt-5-2-codex\\032.json": {
+      "sha256": "c6fc19d85f61323a2032250964b268ccee4007ab7380efb2d1b3e03b1a29011a",
+      "bytes": 19954
+    },
+    "raw\\box-check\\gpt-5-2-codex\\035.json": {
+      "sha256": "b86fa1327ab7c355e9671bc1cbfad2154e531e38ac97c409e283d9b7837b1125",
+      "bytes": 3828
+    },
+    "raw\\box-check\\gpt-5-2-codex\\041.json": {
+      "sha256": "4629d998f0302f7de63291e10d975e08bf42576be47c5f60d8475ed23a3b7a96",
+      "bytes": 6028
+    },
+    "raw\\box-check\\gpt-5-2-codex\\063.json": {
+      "sha256": "6b53a52bad613c5e4f2f4c317c1714a4b60436b2cd7f123af79d96ae4262b09b",
+      "bytes": 8561
+    },
+    "raw\\box-check\\gpt-5-2-codex\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\box-check\\gpt-5-2-codex\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\box-check\\trace\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\box-check\\trace\\failing.trace.json": {
+      "sha256": "c45505121b4290ebcb332b7ea129324e09a0ac600c234f63245a88e20b19d5c4",
+      "bytes": 64550
+    },
+    "raw\\box-check\\trace\\result.json": {
+      "sha256": "9d1b2b832319d2e6770b4ef09c8ae2939e64e3d8cc9160b036779c26178497bc",
+      "bytes": 68761
+    },
+    "raw\\box-check\\trace\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\harness-after-guard-entry\\broken-guard\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\harness-after-guard-entry\\broken-guard\\create.json": {
+      "sha256": "f57ba062aca83e10901cda2f635633d45f02dfa3cc9d8ada2f7e6abcf3c9eac9",
+      "bytes": 1717
+    },
+    "raw\\harness-after-guard-entry\\broken-guard\\gold-input.patch": {
+      "sha256": "acffdf0c448cee8f8cf453287a55d0c359c1c10b9f62cd7eb1776253a175bfe4",
+      "bytes": 743
+    },
+    "raw\\harness-after-guard-entry\\broken-guard\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\harness-after-guard-entry\\empty\\all.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-after-guard-entry\\empty\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\harness-after-guard-entry\\empty\\candidate.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-after-guard-entry\\empty\\create.json": {
+      "sha256": "22bf5a030f757f19f8967c1fe704212e8353ee212c0cef5ec9a7c3484c78c362",
+      "bytes": 1717
+    },
+    "raw\\harness-after-guard-entry\\empty\\evaluation.json": {
+      "sha256": "23fe573af5bd47dfd82b4de3724e18463cb61fa60967ab8033362e51d1149146",
+      "bytes": 97060
+    },
+    "raw\\harness-after-guard-entry\\empty\\failing.log": {
+      "sha256": "8d04d41bb647782e51b84ccfedfd71b1cef9ffaa3d6a2b47823c8a26a88a0b62",
+      "bytes": 17478
+    },
+    "raw\\harness-after-guard-entry\\empty\\guard-collection.log": {
+      "sha256": "2270380a25177c2502832f154e6772983ffc7c09bcfa73688bac2e09db8b72b8",
+      "bytes": 1339
+    },
+    "raw\\harness-after-guard-entry\\empty\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "raw\\harness-after-guard-entry\\empty\\guards.log": {
+      "sha256": "eced64bf3b541aa9144f503cf889c993411bd5c754b6a7fcb00bbad07ed2e365",
+      "bytes": 12657
+    },
+    "raw\\harness-after-guard-entry\\empty\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\all.patch": {
+      "sha256": "30d75532ac85422c36a1f2eedc29adc6dab65171c7668a436f501e3ef2af0fb4",
+      "bytes": 779
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\candidate.patch": {
+      "sha256": "30d75532ac85422c36a1f2eedc29adc6dab65171c7668a436f501e3ef2af0fb4",
+      "bytes": 779
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\create.json": {
+      "sha256": "922ac6b98ad84f35e8e1faec573f27939dad466f03244ab02838a5d20dbfefc7",
+      "bytes": 1717
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\evaluation.json": {
+      "sha256": "c3f424f75a548a2c23f9c41eef231b2fbc32fafeab820c6f190d799c5cd9321d",
+      "bytes": 49568
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\failing.log": {
+      "sha256": "8fab0b77c53f41e82b2396752ec770d777c132ea7af6f589c0db2306b77acafe",
+      "bytes": 1322
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\gold-input.patch": {
+      "sha256": "acffdf0c448cee8f8cf453287a55d0c359c1c10b9f62cd7eb1776253a175bfe4",
+      "bytes": 743
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\guard-collection.log": {
+      "sha256": "bca93fac276795e1874d022b89d0edee1468701a23e364801c51dd15ad57b380",
+      "bytes": 1339
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\guards.log": {
+      "sha256": "32464880a2bfc3c3e7b230ab52cc8d7ecbf5db6a79c04b2d925a55203c393d87",
+      "bytes": 12657
+    },
+    "raw\\harness-after-guard-entry\\real-fix\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\all.patch": {
+      "sha256": "45d7d608434427bb529ec8af36426d9aad994ca650973e8f079ca9347c59d05b",
+      "bytes": 1097
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\candidate.patch": {
+      "sha256": "45d7d608434427bb529ec8af36426d9aad994ca650973e8f079ca9347c59d05b",
+      "bytes": 1097
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\create.json": {
+      "sha256": "f9f96953608e9fe4fdb938bec3188fbe433ad0b6d67fa426a0fccb76a7d2380c",
+      "bytes": 1717
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\evaluation.json": {
+      "sha256": "59b3244f266046c144c9eb74934712a24261f70c3fbc4c88c633c80799a883d8",
+      "bytes": 112716
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\failing.log": {
+      "sha256": "be1b049f08bd3d04c4d260b8393166c253fa88ce6c836078207e1399c079e51c",
+      "bytes": 1322
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\fresh-guard-trace-result.json": {
+      "sha256": "9a980d8afd6abc6cd09d51d301ab176b2497cfec9239d909bd6c9720fff163b6",
+      "bytes": 48510
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\fresh-guard.trace.json": {
+      "sha256": "95bb54305f10ba9a3b3d32d7aa084f718cb2f69f2c7c1786807b52334fa2c1c6",
+      "bytes": 121864
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\gold-input.patch": {
+      "sha256": "acffdf0c448cee8f8cf453287a55d0c359c1c10b9f62cd7eb1776253a175bfe4",
+      "bytes": 743
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\guard-collection.log": {
+      "sha256": "b0ae65d48775cb59a48b790024f6e9ef7ef859bf75cf13b14ccc744e76651cf3",
+      "bytes": 1339
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\guard-identity.json": {
+      "sha256": "334a163fe542a44429c02fa28972aca2b8641dd7cea9dabbadd410ab91cffd5d",
+      "bytes": 155
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\guard-source.py": {
+      "sha256": "84737d604c72dfb15b3fd80e2907be982a1d22b4f1f1788c37ec10d578a1720b",
+      "bytes": 67592
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\guards.log": {
+      "sha256": "fa7a807d4c7b823bd0e0e7c449e582426272adfdf79c01462229039efceb5f12",
+      "bytes": 33603
+    },
+    "raw\\harness-fresh-guard-trace\\broken-guard\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\all.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\candidate.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\create.json": {
+      "sha256": "69a04be0cb76ea0bec9507f8a489cc82b07c7f09cddf91ba362fdd23be152785",
+      "bytes": 1717
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\evaluation.json": {
+      "sha256": "4e4afa5a6f5c12c01582665facd991000274c1b3239d48448aae7bc023118a34",
+      "bytes": 97059
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\failing.log": {
+      "sha256": "3da6d20dee62c67ab8c0d317ce2fb8a36b51ba281d8ed19293cf1f18ed16452d",
+      "bytes": 17478
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\guard-collection.log": {
+      "sha256": "d0faf95a9b3df787abc6020f81069de5c5778ea5a93be560f8357b49ddd971ed",
+      "bytes": 1339
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\guards.log": {
+      "sha256": "10488b56f8c3e1d9f66842c976b5984e88e1b24f9b769993df94700cd6e0718d",
+      "bytes": 12657
+    },
+    "raw\\harness-fresh-guard-trace\\empty\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\all.patch": {
+      "sha256": "30d75532ac85422c36a1f2eedc29adc6dab65171c7668a436f501e3ef2af0fb4",
+      "bytes": 779
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\candidate.patch": {
+      "sha256": "30d75532ac85422c36a1f2eedc29adc6dab65171c7668a436f501e3ef2af0fb4",
+      "bytes": 779
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\create.json": {
+      "sha256": "0fa4846fd85de060445930bdee538881623c4b798287c8f7bfbdda05a8c3ce53",
+      "bytes": 1717
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\evaluation.json": {
+      "sha256": "355aaad1fcb0fea88907e786be4861d484b1488f7f98818fe9f3b2f66b436758",
+      "bytes": 49566
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\failing.log": {
+      "sha256": "7b6fb69735814e0446889e83ae3c052ea54cde929b30a24d7969eb7faf4c11a3",
+      "bytes": 1322
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\gold-input.patch": {
+      "sha256": "acffdf0c448cee8f8cf453287a55d0c359c1c10b9f62cd7eb1776253a175bfe4",
+      "bytes": 743
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\guard-collection.log": {
+      "sha256": "2e874bf26c62dc99cf446fdb89096fc184925ccbf86a6e0334f1206da4a699ba",
+      "bytes": 1339
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\guard-node-map.json": {
+      "sha256": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+      "bytes": 400
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\guards.log": {
+      "sha256": "ff3879afb427ba1ee9a23f07b8846f5c15819011930947b2dc75cc61a265746c",
+      "bytes": 12657
+    },
+    "raw\\harness-fresh-guard-trace\\real-fix\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\native-check\\control\\001.json": {
+      "sha256": "146b2e2f36179354234cd87b2ff5df4415a051376900b446070c11632e51328a",
+      "bytes": 50007
+    },
+    "raw\\native-check\\control\\002.json": {
+      "sha256": "353b031b2fff0a49e892cc52496e7767689c044c5614bbf913ae8b031a8e862b",
+      "bytes": 141552
+    },
+    "raw\\native-check\\control\\003.json": {
+      "sha256": "011497c03c229784713a1244300c1568003f8e1aebfbc13a15afe30b0ec20c27",
+      "bytes": 73264
+    },
+    "raw\\native-check\\gpt-5-2-codex\\006.json": {
+      "sha256": "d6988dfa8786fcdafdd091089b035652ab6c3c0c15c810b0f85c834025aa1424",
+      "bytes": 6105
+    },
+    "raw\\native-check\\gpt-5-2-codex\\009.json": {
+      "sha256": "7cf97f4dd0c419d06cf56d24d60dbc4f7aaa62ee2edeb5199e91fd9f296dce45",
+      "bytes": 1110
+    },
+    "raw\\native-check\\gpt-5-2-codex\\010.json": {
+      "sha256": "009e3b411d8a28040b857551915ae25aab788ccb920ae850bbf688a7d98d4a2a",
+      "bytes": 20341
+    },
+    "raw\\native-check\\gpt-5-2-codex\\012.json": {
+      "sha256": "1260822c3552e1ee8f20b877e198f5ec5aa550fb3c47f2b21352e016a698ffbd",
+      "bytes": 2190
+    },
+    "raw\\native-check\\gpt-5-2-codex\\015.json": {
+      "sha256": "6fe857906a818b853a9afbb1fb845f61b1d8d691a2795f714349f2ca948790c1",
+      "bytes": 3038
+    },
+    "raw\\native-check\\gpt-5-2-codex\\018.json": {
+      "sha256": "c275e5748d77d3dc5fbfaaaf048c855930284eae5a27809f67fd91d17d296dc4",
+      "bytes": 1551
+    },
+    "raw\\native-check\\gpt-5-2-codex\\019.json": {
+      "sha256": "0bdbc1f6ad2f6e8b179a7c319ca1fb530df450139d6877ee98739868fa0799b7",
+      "bytes": 12968
+    },
+    "raw\\native-check\\gpt-5-2-codex\\021.json": {
+      "sha256": "c4507d54c10320a31b4199a8ce025352a6b82996e95315881f1e9cec5fc2e0ae",
+      "bytes": 6091
+    },
+    "raw\\native-check\\gpt-5-2-codex\\022.json": {
+      "sha256": "ba75b36ec45758f1489b97f10141a2a730639d7c9aa4569b8ad28dcb3db208ba",
+      "bytes": 1486
+    },
+    "raw\\native-check\\gpt-5-2-codex\\023.json": {
+      "sha256": "498490485f2d8c8802442d8b4f0b52f50a8b2c111598fbfce9ff1a33a2e0e8df",
+      "bytes": 10561
+    },
+    "raw\\native-check\\gpt-5-2-codex\\025.json": {
+      "sha256": "1296757afd3cbb9ac5c40085e334a18921d1079bbf8a514dca37f6a7bdf4f72c",
+      "bytes": 8636
+    },
+    "raw\\native-check\\gpt-5-2-codex\\028.json": {
+      "sha256": "7035df9e577e2b6cdc0cc1d149ac4d64966c83c073449c932ce46d9db2c18d80",
+      "bytes": 4729
+    },
+    "raw\\native-check\\gpt-5-2-codex\\030.json": {
+      "sha256": "ee6b15f76f7a21abca0a9a8f408dc09b927346ccdad82b792ab7168e01a746d7",
+      "bytes": 6202
+    },
+    "raw\\native-check\\gpt-5-2-codex\\032.json": {
+      "sha256": "f91d96498246dc236174a1278b29898854b711e602140a483f01f702443adb5a",
+      "bytes": 12278
+    },
+    "raw\\native-check\\gpt-5-2-codex\\035.json": {
+      "sha256": "0c1c7c709b3352626b4f1c67e3da51736e11e8cab73910eb856b514bf950fe20",
+      "bytes": 2171
+    },
+    "raw\\native-check\\gpt-5-2-codex\\041.json": {
+      "sha256": "8fa357853eb2a84c59f689e02d825fe730e6c500ee13effae24154e8cc323588",
+      "bytes": 3648
+    },
+    "raw\\native-check\\gpt-5-2-codex\\063.json": {
+      "sha256": "c199aa5986f28a6ff035288d6d5d99a5a35ed2648a970f97b86adf1ed442b291",
+      "bytes": 4798
+    },
+    "raw\\native-check\\control\\native\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\native-check\\control\\native\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\native-check\\control\\recorded\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\native-check\\control\\recorded\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\native-check\\gpt-5-2-codex\\native\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\native-check\\gpt-5-2-codex\\native\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    },
+    "raw\\native-check\\gpt-5-2-codex\\recorded\\baseline-tree.json": {
+      "sha256": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+      "bytes": 138
+    },
+    "raw\\native-check\\gpt-5-2-codex\\recorded\\test.patch": {
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6",
+      "bytes": 2599
+    }
+  },
+  "evidence_sha256": "bacf0eaa0864b27b8e1a6fe0a564329730512bdbaa26f429a30c53c6a012c6d8"
+}

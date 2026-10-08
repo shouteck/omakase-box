@@ -1,0 +1,45 @@
+{
+  "files": {
+    "raw\\harness\\pull.log": {
+      "sha256": "4852cf547f9390c1b51e05af59cf54f68647b806c246b36785b7cb5f1f52f18c",
+      "bytes": 1792
+    },
+    "raw\\harness\\real-fix\\all.patch": {
+      "sha256": "cfc9393f3fa686af367bb70b3182146eb7f133a7285ee5b08af0719633d3e625",
+      "bytes": 1517
+    },
+    "raw\\harness\\real-fix\\baseline-tree.json": {
+      "sha256": "fb97c7e80bad0598454b669c68eca52800cb0a6c355272f6c7422e397706ea49",
+      "bytes": 138
+    },
+    "raw\\harness\\real-fix\\candidate.patch": {
+      "sha256": "cfc9393f3fa686af367bb70b3182146eb7f133a7285ee5b08af0719633d3e625",
+      "bytes": 1517
+    },
+    "raw\\harness\\real-fix\\create.json": {
+      "sha256": "2db53e7c04bdb5a395a858660c87c931a390948c6ea2e6755cebfa2873b0fe77",
+      "bytes": 1681
+    },
+    "raw\\harness\\real-fix\\evaluation.json": {
+      "sha256": "bfcc3b2168b00dd159673054d4ae81b5a0bcdd544bdf07d61c6cf64550b364b3",
+      "bytes": 33386
+    },
+    "raw\\harness\\real-fix\\failing.log": {
+      "sha256": "b9634168153075ae0e412cf8d6095c80d1fe85964a964ac371566b54d3f0a089",
+      "bytes": 1936
+    },
+    "raw\\harness\\real-fix\\gold-input.patch": {
+      "sha256": "7de34e6ed106dd91f81473f3646ed1340692a28c437324bf78adaf093d2c0c8d",
+      "bytes": 1486
+    },
+    "raw\\harness\\real-fix\\guards.log": {
+      "sha256": "b034f0a3e7635ccd80a360cfdb9058ca64dcdbe9031fe7f0902ce8e1c6d03f0f",
+      "bytes": 7860
+    },
+    "raw\\harness\\real-fix\\test.patch": {
+      "sha256": "d8d016d036e3f70137f8769246a57180e177ae2afc7e6ac41dfd80893d967b5d",
+      "bytes": 910
+    }
+  },
+  "evidence_sha256": "a5391ae67b1c702b230bdcd8fb3cf383777c3a63d1ae0e7e00750f052e706aa5"
+}

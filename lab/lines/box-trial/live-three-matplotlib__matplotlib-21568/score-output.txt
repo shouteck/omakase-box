@@ -1,0 +1,134 @@
+{
+  "task": "matplotlib__matplotlib-21568",
+  "frozen_pushed_commit": "55a641976fbb5fe94c73122bd32f5dda929c4877",
+  "runs": [
+    {
+      "arm": "control",
+      "status": "completed",
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "tokens": {
+        "totalTokens": 52956,
+        "inputTokens": 51848,
+        "cachedInputTokens": 36608,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 1108,
+        "reasoningOutputTokens": 469
+      },
+      "steps": 5,
+      "search_actions": 2,
+      "searches": 2,
+      "searches_reordered": 0,
+      "promotions": [],
+      "subsequent_explicit_opens": [],
+      "command_errors": [],
+      "nonzero_command_steps": [],
+      "native_search_errors": [],
+      "native_no_match_searches": 0,
+      "box_valid": true,
+      "solved": true,
+      "evaluation_status": "scored",
+      "phases": {
+        "failing": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 4,
+          "matched_passes": 4,
+          "all_pass": true
+        },
+        "guards": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 73,
+          "matched_passes": 73,
+          "all_pass": true
+        }
+      },
+      "agent_seconds": 47.10900000005495,
+      "token_cap_excess": 0,
+      "candidate_sha256": "77cad7956638652a3b7eca5041fe18a402f2c4676625e0f9e3fee5131385e78f",
+      "attempt_sha256": "411be5980b5e001679679f92b26e0deab59a82909e72ba29276570898f10ce98",
+      "steps_sha256": "eba0233179853b26209175fd163d1af1216b2b13b380bed229c6a5d84852c78a",
+      "events_sha256": "bf22b4403e545270b122dadf4e9fd9a28f28c5465a5130a1cd3c5a76e7357466"
+    },
+    {
+      "arm": "box",
+      "status": "completed",
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "tokens": {
+        "totalTokens": 70840,
+        "inputTokens": 69469,
+        "cachedInputTokens": 50688,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 1371,
+        "reasoningOutputTokens": 619
+      },
+      "steps": 5,
+      "search_actions": 2,
+      "searches": 4,
+      "searches_reordered": 1,
+      "promotions": [
+        {
+          "step": 3,
+          "path": "lib/matplotlib/pyplot.py",
+          "line": 2059,
+          "function_start": 2028,
+          "ordinary_ordinal": 9,
+          "shown_ordinal": 4
+        },
+        {
+          "step": 3,
+          "path": "lib/matplotlib/pyplot.py",
+          "line": 2062,
+          "function_start": 2028,
+          "ordinary_ordinal": 10,
+          "shown_ordinal": 5
+        }
+      ],
+      "subsequent_explicit_opens": [],
+      "command_errors": [],
+      "nonzero_command_steps": [],
+      "native_search_errors": [],
+      "native_no_match_searches": 0,
+      "box_valid": true,
+      "solved": true,
+      "evaluation_status": "scored",
+      "phases": {
+        "failing": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 4,
+          "matched_passes": 4,
+          "all_pass": true
+        },
+        "guards": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 73,
+          "matched_passes": 73,
+          "all_pass": true
+        }
+      },
+      "agent_seconds": 35.17099999997299,
+      "token_cap_excess": 0,
+      "candidate_sha256": "37d59434683a306bd6f06cf618520872b942dc9928e4a9fbe0c33c857326c611",
+      "attempt_sha256": "80df893a042383b2248af43285d3509e585365b189746cf6608b365ef5b05fe6",
+      "steps_sha256": "eef7230620e6713533316fa30e006b69c89ffe289abc0fde1b464d9a5db2019c",
+      "events_sha256": "c59192942d9982f58c40a6c119491003925f1c295736b7162e382756b2bb2551"
+    }
+  ],
+  "pair_tokens": 123796,
+  "pair_cap_excess": 0,
+  "repair_starts": 2,
+  "repeated": false,
+  "standing": "Silent ordering reached the live agent and promoted source was subsequently opened. Both repairs failed. One pair establishes no superiority.",
+  "limits": [
+    "One task and one pair; no repeat or counterfactual attribution",
+    "Promoted function was a helper, not necessarily the bug location",
+    "Whole native command output conserved before the common 16 KB return cap",
+    "Recorder covers available shell search commands; explicit executable bypasses and arbitrary Python searches are not intercepted",
+    "Context/unsupported formats fall back; no universal shell-support claim",
+    "Token totals include cached input and reasoning output, not an invoice or lead/reviewer usage"
+  ]
+}
