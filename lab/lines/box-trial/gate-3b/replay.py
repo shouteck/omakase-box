@@ -45,10 +45,18 @@ def create(image,ident,agent,scratch,scope,task,fixture=False):
     except Exception:command(['docker','rm','-f',name],timeout=60);raise
 
 def execute(name,text,mode='box'):
+    previous=len(logs(name))
     env=['-e','LAB_BOX_SCOPE=/lab/scope.json','-e','LAB_BOX_LOG=/tmp/lab-box-search.jsonl','-e','LAB_BOX_MODE='+mode,'-e','LAB_BOX_ROOT=/testbed']
     shell=ACTIVATE+'source /lab/shell.sh && exec timeout -k 3 30 /bin/bash -c "$1"'
     p=command(['docker','exec','-i']+env+[name,'/bin/bash','-lc',shell,'lab-replay',text],timeout=45)
-    return {'exit':p.returncode,'stdout_b64':base64.b64encode(p.stdout).decode(),'stderr_b64':base64.b64encode(p.stderr).decode(),'stdout_sha256':sha(p.stdout),'stderr_sha256':sha(p.stderr)}
+    shown=p.stdout;marks=set()
+    if mode=='box':
+        for q in logs(name)[previous:]:
+            original=base64.b64decode(q['stdout_b64']).splitlines(keepends=True)
+            for loc in q['locations']:
+                if loc['priority']:marks.add(original[loc['ordinal']])
+        shown=b''.join((b'[BOX] ' if line in marks else b'')+line for line in shown.splitlines(keepends=True))
+    return {'exit':p.returncode,'unmarked_stdout_sha256':sha(p.stdout),'stdout_b64':base64.b64encode(shown).decode(),'stderr_b64':base64.b64encode(p.stderr).decode(),'stdout_sha256':sha(shown),'stderr_sha256':sha(p.stderr)}
 def logs(name):
     p=command(['docker','exec',name,'cat','/tmp/lab-box-search.jsonl'],timeout=30)
     if p.returncode:return []
@@ -61,6 +69,29 @@ def state(name):
 def expensive(c):
     shell=__import__('corpus').shell_only(c)
     return bool(re.search(r'\b(pip[23]?|pytest|tox|npm|pnpm|make|sphinx-build)\b|setup\.py|runtests\.py|python(?:[23.]*)?\s+-m\s+(pytest|pip|sphinx|build)|\bpython(?:[23.]*)?\s+[^\n;&|]*test',shell))
+
+def fragments(text):
+    # Original spelling and pipe/glob semantics are retained. Used only for
+    # search portions of actions whose costly build/test cannot be replayed.
+    text=__import__('corpus').shell_only(text);out=[];start=0;quote=None;escape=False;depth=0;i=0
+    while i<len(text):
+        ch=text[i]
+        if escape:escape=False;i+=1;continue
+        if ch=='\\' and quote!="'":escape=True;i+=1;continue
+        if quote:
+            if ch==quote:quote=None
+            i+=1;continue
+        if ch in ("'",'"','`'):quote=ch;i+=1;continue
+        if ch=='(':depth+=1
+        if ch==')':depth=max(0,depth-1)
+        width=2 if text[i:i+2] in ('&&','||') else 1 if ch in (';','\n') else 0
+        if width and not depth:
+            piece=text[start:i].strip()
+            if piece:out.append(piece)
+            i+=width;start=i;continue
+        i+=1
+    if text[start:].strip():out.append(text[start:].strip())
+    return out
 
 def score_query(q,targets,files):
     loc=q['locations'];by={r['ordinal']:r for r in loc};order=q['proof'].get('order',[])
@@ -104,6 +135,23 @@ def run_task(ident,trajectories):
                     if expensive(text):
                         item.update(status='skipped-expensive',state_risk='source' if mutation else 'environment');skips.append(action['step'])
                         if mutation:uncertain.append(action['step'])
+                        # Every search portion is attempted, even when its
+                        # generated environment is unknown. Do not fabricate
+                        # that environment or count its absence as evidence.
+                        cwd='/testbed';extracted=[];total=0
+                        for part in fragments(text):
+                            words=measure.words(part)
+                            if len(words)==2 and words[0]=='cd':
+                                cwd=str(pathlib.PurePosixPath(words[1])) if words[1].startswith('/') else str(pathlib.PurePosixPath(cwd)/words[1])
+                                continue
+                            if not has_search(part):continue
+                            snapshot=state(name);piece='cd '+__import__('shlex').quote(cwd)+' && '+part;out=execute(name,piece)
+                            allqueries=logs(name);newqueries=allqueries[count:];count=len(allqueries);total+=len(newqueries)
+                            for j,q in enumerate(newqueries):
+                                q.update(task=ident,agent=traj['agent'],step=action['step'],invocation=total-len(newqueries)+j+1,command=text,replayed_fragment=piece,state_before=snapshot,source_state_unknown=True,environment_state_unknown=True,prior_environment_skips=list(skips),pre_edit=not edited)
+                                q['metrics']=score_query(q,targets,files);receipt['queries'].append(q)
+                            extracted.append({'fragment':piece,'result':out,'search_invocations':len(newqueries)})
+                        item['extracted_searches']=extracted;item['search_invocations']=total
                         record['actions'].append(item);continue
                     if not action['search_action'] and not mutation:
                         item.update(status='skipped-observation');record['actions'].append(item);continue

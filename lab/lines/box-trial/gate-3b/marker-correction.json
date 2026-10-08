@@ -1,0 +1,11 @@
+{
+  "reason": "Injected markers must not become input to downstream filters. Move annotation to final command display; preserve native unmarked ordering inside pipelines.",
+  "stopped_owned_driver_pid": 420708,
+  "stopped_owned_container": "lab-gate-3b-dbbda975-57b1-4d33-8a40-766e3a89c580",
+  "prior_results_excluded": true,
+  "prior_sources_and_receipts": "raw/before-final-display-marks/",
+  "ranking_rule_unchanged": true,
+  "repair_agent_runs": 0,
+  "legacy_python_fault": "Preliminary Django 12193 image has Python without AST end_lineno. Added token-based function-end fallback and fail-open native output on ordering faults.",
+  "sources_corrected_before_final_corpus_replay": true
+}

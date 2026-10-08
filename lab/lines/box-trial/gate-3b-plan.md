@@ -25,3 +25,7 @@ Per task, on scoreable content queries reaching a target, use median places befo
 A fresh sceptic reruns the wrapper checks and a preselected sample: first selected task and first selected Django task, plus any scored regression. It checks corpus completeness/provenance and framing. No repair-agent tokens for steps 1/2. If free evidence fails, no live pair. If it passes, freeze the one-pair model/limits/task and spend cap separately before first agent, then stop after step 3 as PROGRAMME requires.
 
 Session-owned containers/images/scratch only; preserve receipts and remove disposable resources. No product code, master merge, external project message, new service or purchase.
+
+## Compatibility corrections before the final corpus replay
+
+Preliminary free replays are preserved separately, not included in the comparison. Marks are applied only to the final displayed command output; native unmarked reordered records pass through pipelines. Context separators remain between intact reordered groups. Legacy Python images without AST end positions use token-derived function boundaries, checked against current AST and in the actual legacy image. Any ordering fault passes through all native output, is recorded, and blocks a go decision. Mixed expensive actions retain their extracted original search portions with unknown source/environment flags. A sample-only aggregate cannot authorize a live pair; the whole frozen corpus must be accounted for. None of these corrections changes the task selection or frozen ranking/decision rule. No repair model has run.

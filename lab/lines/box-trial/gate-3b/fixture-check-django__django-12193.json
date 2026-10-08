@@ -1,0 +1,1664 @@
+{
+  "task_image": "django__django-12193",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+  "preexisted": false,
+  "cases": [
+    {
+      "label": "single",
+      "command": "grep -n needle lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+        "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+        "stdout_b64": "W0JPWF0gNjogICAgbmVlZGxlID0gMgpbQk9YXSA3OiAgICByZXR1cm4gbmVlZGxlCjI6ICAgIG5lZWRsZSA9IDEKMzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+          "ordered_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+          "native_bytes": 74,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "recursive",
+      "command": "grep -Rn needle lab-gate-3b-fixture",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "f28338995cb78e73eb805f5559417ffb59f2bd95a46e20503cc8e5479d0a21a5",
+        "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6MjogICAgbmVlZGxlID0gMQpsYWItZ2F0ZS0zYi1maXh0dXJlL3NhbXBsZS5weTozOiAgICByZXR1cm4gbmVlZGxlCmxhYi1nYXRlLTNiLWZpeHR1cmUvc2FtcGxlLnB5OjY6ICAgIG5lZWRsZSA9IDIKbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6NzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "f28338995cb78e73eb805f5559417ffb59f2bd95a46e20503cc8e5479d0a21a5",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "8fa501eed61d94740f1aa8f61614675265b3e71c063fa24b21eb958509092ca5",
+        "stdout_b64": "W0JPWF0gbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6NjogICAgbmVlZGxlID0gMgpbQk9YXSBsYWItZ2F0ZS0zYi1maXh0dXJlL3NhbXBsZS5weTo3OiAgICByZXR1cm4gbmVlZGxlCmxhYi1nYXRlLTNiLWZpeHR1cmUvc2FtcGxlLnB5OjI6ICAgIG5lZWRsZSA9IDEKbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6MzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "27edcd45ad02aded7ab031ac83cd28024ee23510e4740e5f41ecd2f8102ed769",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-Rn",
+            "needle",
+            "lab-gate-3b-fixture"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "f28338995cb78e73eb805f5559417ffb59f2bd95a46e20503cc8e5479d0a21a5",
+          "ordered_sha256": "27edcd45ad02aded7ab031ac83cd28024ee23510e4740e5f41ecd2f8102ed769",
+          "native_bytes": 194,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "8fa501eed61d94740f1aa8f61614675265b3e71c063fa24b21eb958509092ca5",
+          "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6MjogICAgbmVlZGxlID0gMQpsYWItZ2F0ZS0zYi1maXh0dXJlL3NhbXBsZS5weTozOiAgICByZXR1cm4gbmVlZGxlCmxhYi1nYXRlLTNiLWZpeHR1cmUvc2FtcGxlLnB5OjY6ICAgIG5lZWRsZSA9IDIKbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6NzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "absolute",
+      "command": "cd /tmp && grep -n needle /testbed/lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+        "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+        "stdout_b64": "W0JPWF0gNjogICAgbmVlZGxlID0gMgpbQk9YXSA3OiAgICByZXR1cm4gbmVlZGxlCjI6ICAgIG5lZWRsZSA9IDEKMzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "/testbed/lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/tmp",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+          "ordered_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+          "native_bytes": 74,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "plain",
+      "command": "grep needle lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "49241588516e9fc6710e934e61dc8d33ff45735bf1a5d692999e3f0c6e327594",
+        "stdout_b64": "ICAgIG5lZWRsZSA9IDEKICAgIHJldHVybiBuZWVkbGUKICAgIG5lZWRsZSA9IDIKICAgIHJldHVybiBuZWVkbGUK",
+        "stderr_b64": "",
+        "stdout_sha256": "49241588516e9fc6710e934e61dc8d33ff45735bf1a5d692999e3f0c6e327594",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "edcd36080b45e1ec77ba0d4cec594f9158ef1382af54a874e46fb086e4c65446",
+        "stdout_b64": "W0JPWF0gICAgIG5lZWRsZSA9IDIKW0JPWF0gICAgIHJldHVybiBuZWVkbGUKICAgIG5lZWRsZSA9IDEKW0JPWF0gICAgIHJldHVybiBuZWVkbGUK",
+        "stderr_b64": "",
+        "stdout_sha256": "7d6c319752426823496d9e828a18637d6b6b1de840d94e05565aea3f09bf05c5",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "49241588516e9fc6710e934e61dc8d33ff45735bf1a5d692999e3f0c6e327594",
+          "ordered_sha256": "e5bb8ac1718e2186e99014fab8930f1c9f24a82381c21d7852ee9dea33dd9af2",
+          "native_bytes": 66,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "edcd36080b45e1ec77ba0d4cec594f9158ef1382af54a874e46fb086e4c65446",
+          "stdout_b64": "ICAgIG5lZWRsZSA9IDEKICAgIHJldHVybiBuZWVkbGUKICAgIG5lZWRsZSA9IDIKICAgIHJldHVybiBuZWVkbGUK",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "context",
+      "command": "grep -n -C 1 \"needle =\" lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "fd04b151cc933d075fce5d8ecd9c7ecbeb5290838daf407240858cd4e1dee45b",
+        "stdout_b64": "MS1kZWYgb3JkaW5hcnkoKToKMjogICAgbmVlZGxlID0gMQozLSAgICByZXR1cm4gbmVlZGxlCi0tCjUtZGVmIGJveGVkKCk6CjY6ICAgIG5lZWRsZSA9IDIKNy0gICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "fd04b151cc933d075fce5d8ecd9c7ecbeb5290838daf407240858cd4e1dee45b",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "a20e017c911731864fa86cb38308f36db00b6d58288f13fc5f95467563dfc4d5",
+        "stdout_b64": "NS1kZWYgYm94ZWQoKToKW0JPWF0gNjogICAgbmVlZGxlID0gMgo3LSAgICByZXR1cm4gbmVlZGxlCi0tCjEtZGVmIG9yZGluYXJ5KCk6CjI6ICAgIG5lZWRsZSA9IDEKMy0gICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "0ba6c92dba2e3eee1ab8c207bff3328e744307bd7a58eadd471bc8bd5fe1ad27",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "-C",
+            "1",
+            "needle =",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "fd04b151cc933d075fce5d8ecd9c7ecbeb5290838daf407240858cd4e1dee45b",
+          "ordered_sha256": "0ba6c92dba2e3eee1ab8c207bff3328e744307bd7a58eadd471bc8bd5fe1ad27",
+          "native_bytes": 110,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 1,
+              "kind": "line",
+              "is_match": false,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": false,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": null,
+              "kind": "unlocated",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": []
+            },
+            {
+              "ordinal": 4,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 5,
+              "kind": "line",
+              "is_match": false,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 5,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 6,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": false,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              4,
+              5,
+              6,
+              3,
+              0,
+              1,
+              2
+            ],
+            "marked": [
+              5
+            ],
+            "context_groups": 2,
+            "context": true
+          },
+          "mode": "box",
+          "emitted_sha256": "a20e017c911731864fa86cb38308f36db00b6d58288f13fc5f95467563dfc4d5",
+          "stdout_b64": "MS1kZWYgb3JkaW5hcnkoKToKMjogICAgbmVlZGxlID0gMQozLSAgICByZXR1cm4gbmVlZGxlCi0tCjUtZGVmIGJveGVkKCk6CjY6ICAgIG5lZWRsZSA9IDIKNy0gICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "compound",
+      "command": "cd /testbed && grep -n needle lab-gate-3b-fixture/sample.py && grep -n missing lab-gate-3b-fixture/sample.py || true",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+        "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+        "stdout_b64": "W0JPWF0gNjogICAgbmVlZGxlID0gMgpbQk9YXSA3OiAgICByZXR1cm4gbmVlZGxlCjI6ICAgIG5lZWRsZSA9IDEKMzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+          "ordered_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+          "native_bytes": 74,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        },
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "missing",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 1,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ordered_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_bytes": 0,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [],
+            "marked": [],
+            "context_groups": 0,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_b64": "",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "head",
+      "command": "grep -n needle lab-gate-3b-fixture/sample.py | head -1",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+        "stdout_b64": "MjogICAgbmVlZGxlID0gMQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "f1ca8faf9c410dfe4508cf4163f6fcd43bd9f5a09b1f6db3026c651ff42fd464",
+        "stdout_b64": "W0JPWF0gNjogICAgbmVlZGxlID0gMgo=",
+        "stderr_b64": "",
+        "stdout_sha256": "6034f76bb160b28ca12bb7b078b05a34cd84c29e2fe8ea3f966d016e57383324",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+          "ordered_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+          "native_bytes": 74,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "filter-semantic",
+      "command": "grep -n needle lab-gate-3b-fixture/sample.py | grep \"^2:\"",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+        "stdout_b64": "MjogICAgbmVlZGxlID0gMQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+        "stdout_b64": "MjogICAgbmVlZGxlID0gMQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+          "ordered_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+          "native_bytes": 74,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        },
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "^2:"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+          "ordered_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+          "native_bytes": 17,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              0
+            ],
+            "marked": [],
+            "context_groups": 1,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "d7f75cadf503f2e8d666e6e93959e23489228cf252954f1731a771c9385910b4",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "no-marker-input",
+      "command": "grep -n needle lab-gate-3b-fixture/sample.py | grep -F \"[BOX]\"",
+      "status": "pass",
+      "ordinary": {
+        "exit": 1,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 1,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "c03cabe0def026f8803aa06a326f53abe0c52f1225525dfbea87e156a3ca41f0",
+          "ordered_sha256": "faeaeb0eb2f2bee3bf77b2ef0975c0b64cc2acd4cbd6e3d26767a572ae34c154",
+          "native_bytes": 74,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4762e1ee1b6d7077b5ace20659ee4df60b39169730b935c79f4836277f672040",
+          "stdout_b64": "MjogICAgbmVlZGxlID0gMQozOiAgICByZXR1cm4gbmVlZGxlCjY6ICAgIG5lZWRsZSA9IDIKNzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        },
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-F",
+            "[BOX]"
+          ],
+          "cwd": "/testbed",
+          "exit": 1,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ordered_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_bytes": 0,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [],
+            "marked": [],
+            "context_groups": 0,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_b64": "",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "stdin",
+      "command": "printf \"needle\\nother\\n\" | grep -n needle",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+        "stdout_b64": "MTpuZWVkbGUK",
+        "stderr_b64": "",
+        "stdout_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+        "stdout_b64": "MTpuZWVkbGUK",
+        "stderr_b64": "",
+        "stdout_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+          "ordered_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+          "native_bytes": 9,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              0
+            ],
+            "marked": [],
+            "context_groups": 1,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "b682326eebf12d37d9faf0d5a627862cf21750679a2d3e2e4950f7a50ae4a7f7",
+          "stdout_b64": "MTpuZWVkbGUK",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "git",
+      "command": "git grep -n needle -- lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "f28338995cb78e73eb805f5559417ffb59f2bd95a46e20503cc8e5479d0a21a5",
+        "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6MjogICAgbmVlZGxlID0gMQpsYWItZ2F0ZS0zYi1maXh0dXJlL3NhbXBsZS5weTozOiAgICByZXR1cm4gbmVlZGxlCmxhYi1nYXRlLTNiLWZpeHR1cmUvc2FtcGxlLnB5OjY6ICAgIG5lZWRsZSA9IDIKbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6NzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "f28338995cb78e73eb805f5559417ffb59f2bd95a46e20503cc8e5479d0a21a5",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "8fa501eed61d94740f1aa8f61614675265b3e71c063fa24b21eb958509092ca5",
+        "stdout_b64": "W0JPWF0gbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6NjogICAgbmVlZGxlID0gMgpbQk9YXSBsYWItZ2F0ZS0zYi1maXh0dXJlL3NhbXBsZS5weTo3OiAgICByZXR1cm4gbmVlZGxlCmxhYi1nYXRlLTNiLWZpeHR1cmUvc2FtcGxlLnB5OjI6ICAgIG5lZWRsZSA9IDEKbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6MzogICAgcmV0dXJuIG5lZWRsZQo=",
+        "stderr_b64": "",
+        "stdout_sha256": "27edcd45ad02aded7ab031ac83cd28024ee23510e4740e5f41ecd2f8102ed769",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "git",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "--",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "f28338995cb78e73eb805f5559417ffb59f2bd95a46e20503cc8e5479d0a21a5",
+          "ordered_sha256": "27edcd45ad02aded7ab031ac83cd28024ee23510e4740e5f41ecd2f8102ed769",
+          "native_bytes": 194,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 2,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 3,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "ordinary"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 6,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": 7,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": [
+                "boxed"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              2,
+              3,
+              0,
+              1
+            ],
+            "marked": [
+              2,
+              3
+            ],
+            "context_groups": 4,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "8fa501eed61d94740f1aa8f61614675265b3e71c063fa24b21eb958509092ca5",
+          "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6MjogICAgbmVlZGxlID0gMQpsYWItZ2F0ZS0zYi1maXh0dXJlL3NhbXBsZS5weTozOiAgICByZXR1cm4gbmVlZGxlCmxhYi1nYXRlLTNiLWZpeHR1cmUvc2FtcGxlLnB5OjY6ICAgIG5lZWRsZSA9IDIKbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHk6NzogICAgcmV0dXJuIG5lZWRsZQo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "find",
+      "command": "find lab-gate-3b-fixture -name \"*.py\"",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHkK",
+        "stderr_b64": "",
+        "stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stdout_b64": "W0JPWF0gbGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHkK",
+        "stderr_b64": "",
+        "stdout_sha256": "1d01f5616818e736c4a6e637bca8f5cd9a90e6625a7fdd3235974d22303ddf74",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "find",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "lab-gate-3b-fixture",
+            "-name",
+            "*.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+          "ordered_sha256": "1d01f5616818e736c4a6e637bca8f5cd9a90e6625a7fdd3235974d22303ddf74",
+          "native_bytes": 30,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "lab-gate-3b-fixture/sample.py",
+              "line": null,
+              "kind": "file",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f",
+              "function_names": []
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              0
+            ],
+            "marked": [
+              0
+            ],
+            "context_groups": 1,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+          "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHkK",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "count",
+      "command": "grep -c needle lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+        "stdout_b64": "NAo=",
+        "stderr_b64": "",
+        "stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+        "stdout_b64": "NAo=",
+        "stderr_b64": "",
+        "stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-c",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+          "ordered_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+          "native_bytes": 2,
+          "locations": [],
+          "proof": {
+            "format": "machine-pass-through",
+            "same_records": true
+          },
+          "mode": "box",
+          "emitted_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+          "stdout_b64": "NAo=",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "file-list",
+      "command": "grep -l needle lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHkK",
+        "stderr_b64": "",
+        "stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHkK",
+        "stderr_b64": "",
+        "stdout_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-l",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+          "ordered_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+          "native_bytes": 30,
+          "locations": [],
+          "proof": {
+            "format": "machine-pass-through",
+            "same_records": true
+          },
+          "mode": "box",
+          "emitted_sha256": "9fca31d7298a65c830e80c5a6afde35361fcdfd6904df247ab47bb2b0bf75e7a",
+          "stdout_b64": "bGFiLWdhdGUtM2ItZml4dHVyZS9zYW1wbGUucHkK",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "no-match",
+      "command": "grep -n absent lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 1,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 1,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "absent",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 1,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ordered_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_bytes": 0,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [],
+            "marked": [],
+            "context_groups": 0,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_b64": "",
+          "stderr_b64": ""
+        }
+      ]
+    },
+    {
+      "label": "bad-regex",
+      "command": "grep -n \"[\" lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 2,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "L3Vzci9iaW4vZ3JlcDogSW52YWxpZCByZWd1bGFyIGV4cHJlc3Npb24K",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "77c8d2153fdf9ebd6542a82e29ac88c4fb865e276c591cb85fc16c11d9964128"
+      },
+      "box": {
+        "exit": 2,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "L3Vzci9iaW4vZ3JlcDogSW52YWxpZCByZWd1bGFyIGV4cHJlc3Npb24K",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "77c8d2153fdf9ebd6542a82e29ac88c4fb865e276c591cb85fc16c11d9964128"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "[",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 2,
+          "stderr_sha256": "77c8d2153fdf9ebd6542a82e29ac88c4fb865e276c591cb85fc16c11d9964128",
+          "native_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ordered_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_bytes": 0,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [],
+            "marked": [],
+            "context_groups": 0,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_b64": "",
+          "stderr_b64": "L3Vzci9iaW4vZ3JlcDogSW52YWxpZCByZWd1bGFyIGV4cHJlc3Npb24K"
+        }
+      ]
+    },
+    {
+      "label": "bad-path",
+      "command": "grep -n needle /testbed/absent",
+      "status": "pass",
+      "ordinary": {
+        "exit": 2,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "L3Vzci9iaW4vZ3JlcDogL3Rlc3RiZWQvYWJzZW50OiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cg==",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "c851c95a029e9c1eccbd04c69c52b11854df6683a588cc029d3fc4650ee97eae"
+      },
+      "box": {
+        "exit": 2,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "L3Vzci9iaW4vZ3JlcDogL3Rlc3RiZWQvYWJzZW50OiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cg==",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "c851c95a029e9c1eccbd04c69c52b11854df6683a588cc029d3fc4650ee97eae"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "/testbed/absent"
+          ],
+          "cwd": "/testbed",
+          "exit": 2,
+          "stderr_sha256": "c851c95a029e9c1eccbd04c69c52b11854df6683a588cc029d3fc4650ee97eae",
+          "native_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ordered_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_bytes": 0,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [],
+            "marked": [],
+            "context_groups": 0,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_b64": "",
+          "stderr_b64": "L3Vzci9iaW4vZ3JlcDogL3Rlc3RiZWQvYWJzZW50OiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cg=="
+        }
+      ]
+    },
+    {
+      "label": "native-missing",
+      "command": "rg -n needle lab-gate-3b-fixture/sample.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 127,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "cmc6IGNvbW1hbmQgbm90IGZvdW5kCg==",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "520cd5197402e88854777c5150a13fda625a2121fa77125eafea9e3389214b73"
+      },
+      "box": {
+        "exit": 127,
+        "unmarked_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_b64": "",
+        "stderr_b64": "cmc6IGNvbW1hbmQgbm90IGZvdW5kCg==",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "520cd5197402e88854777c5150a13fda625a2121fa77125eafea9e3389214b73"
+      },
+      "queries": [
+        {
+          "tool": "rg",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "needle",
+            "lab-gate-3b-fixture/sample.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 127,
+          "stderr_sha256": "520cd5197402e88854777c5150a13fda625a2121fa77125eafea9e3389214b73",
+          "native_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ordered_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_bytes": 0,
+          "locations": [],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [],
+            "marked": [],
+            "context_groups": 0,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_b64": "",
+          "stderr_b64": "cmc6IGNvbW1hbmQgbm90IGZvdW5kCg=="
+        }
+      ]
+    }
+  ],
+  "create_argv": [
+    "docker",
+    "create",
+    "--name",
+    "lab-gate-3b-ec4b464c-44d4-4be7-8f0b-d05179f691af",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "--pids-limit",
+    "128",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "--env",
+    "MPLBACKEND=Agg",
+    "--workdir",
+    "/testbed",
+    "--entrypoint",
+    "/bin/bash",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3b\\search.py,dst=/lab/search.py,readonly",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3b\\shell.sh,dst=/lab/shell.sh,readonly",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3b\\scratch\\fixture\\scope.json,dst=/lab/scope.json,readonly",
+    "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+    "-lc",
+    "sleep infinity"
+  ],
+  "base_head": "3fb7c12158a2402f0f80824f6778112071235803",
+  "scope_sha256": "b3cb8d342b87a08eed02681d7aa12f3f9bb9fa79ebb1191ad469ecda62ff4ad7",
+  "status": "pass",
+  "container_cleanup_exit": 0,
+  "retained_owned_image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645"
+}

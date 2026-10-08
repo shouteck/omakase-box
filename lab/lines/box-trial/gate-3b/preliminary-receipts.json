@@ -1,0 +1,37 @@
+{
+  "excluded_from_final_comparison": true,
+  "files": [
+    {
+      "path": "raw\\before-final-display-marks\\astropy__astropy-13033\\replay.json",
+      "sha256": "b8b650b183bccb0820917d95f4c6a8734a362bd42b45965c9605984143f62598"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\astropy__astropy-14539\\replay.json",
+      "sha256": "978d3b62ad3dcee76ca94d58a44f8da4a4d316f04ea7d5fd9048945199817052"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\check.py",
+      "sha256": "5f5337ee5eecda51ff557fb1d65b50a49ce51dc9610506dfcf6dffed633a37d0"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\django__django-12193\\replay.json",
+      "sha256": "1c26147c110249ada5a513ed829ad6a34e4db763ab20fcce878e64c7f8373118"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\fixture-check.json",
+      "sha256": "58c8a75baf0e217e0b4176bdddeaa3e882a5b53ce57a6677d4463432c9349981"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\replay.py",
+      "sha256": "1ab9da87b7d1c21c0672748d08294e1dc49d388a94129834167d362667f8b309"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\score.py",
+      "sha256": "42452ed1bd6efc1b6f04025d49e8af180b14109d868e3289802b46732f36172d"
+    },
+    {
+      "path": "raw\\before-final-display-marks\\search.py",
+      "sha256": "433a607ca845eaf1f8d98aba612ca0598728ac3a2e6bb927792b925fd65d0bfa"
+    }
+  ]
+}
