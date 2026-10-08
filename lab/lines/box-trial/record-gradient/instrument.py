@@ -1,6 +1,6 @@
 """Offline only: normalized old/new mini-agent records, source provenance and corrected ordering."""
 import pathlib,json,gzip,importlib.util,re,hashlib,collections
-from views import visible_lines,tally
+from views import visible_lines,tally,verified_patch_paths
 HERE=pathlib.Path(__file__).resolve().parent;ROOT=HERE.parent;REPO=HERE.parents[3]
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
@@ -21,7 +21,8 @@ def normalized(record):
   if m.get('role')=='assistant':
    calls=re.findall(r'```(?:bash|sh)\s*\n(.*?)```',content,re.S)
    if len(calls)==1:steps.append(dict(command=calls[0].strip(),output='',input_tokens=None,exit=None))
-   elif calls:unparsed+=1
+   else:
+    unparsed+=1;steps.append(dict(command='',output='',input_tokens=None,exit=None,unknown_action=True))
   elif m.get('role') in ['user','tool'] and steps:
    match=re.search(r'<output>\n?(.*?)</output>',content,re.S)
    code=re.search(r'<returncode>(-?\d+)</returncode>',content)
@@ -64,7 +65,13 @@ def measure(row,agent):
  if not steps:return dict(out,status='unparsed record',format=fmt)
  details=HERE/'records'/agent['folder']/'published-results.json';published=json.loads(details.read_bytes()).get(ident,{}) if details.exists() else {}
  out.update(status='measured',format=fmt,unparsed_actions=unparsed,resolved=published.get('resolved'),exit_status=record.get('info',{}).get('exit_status'),steps=len(steps),has_box=ev.valid,target_in_box=bool(target&ev.called) if ev.valid and target else None,function_target=bool(target),target_files=sorted(files),target_functions=sorted(p+':'+str(n) for p,n in target),record_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
- def locate(p,line):return ev.locate(p,line,ev.digests[p]) if p in source else None
+ out['complete_record']=out['exit_status']=='Submitted' and unparsed==0
+ def locate(p,line):
+  if p not in source:return None
+  containing=[r for r in trees.get(p,[]) if r['start']<=line<=r['end']]
+  if not containing:return None
+  width=min(r['end']-r['start'] for r in containing);unique=[r for r in containing if r['end']-r['start']==width]
+  return unique[0] if len(unique)==1 else None
  seen='\n'.join(content_of(m) for m in record.get('messages',[])[:2]);issue_given={p for p in files if p in seen};anticipation=None;reached=None;firstedit=None;firstanyedit=None;stale=set();actions=[];searches=[];readfunctions=set();unknownviews=0;broad_reached=None;signature_cache={};all_verified_edits=set()
  for i,s in enumerate(steps,1):
   command=s['command'];output=s['output'];chars=len(output);bytecount=len(output.encode());views=[];verifiedlines=set();edited=set();kinds=set();segmentlist=g2.segments(command)
@@ -77,22 +84,20 @@ def measure(row,agent):
     numbers=visible_lines(source[p],a,b,output)
     if not numbers:unknownviews+=1;continue
     verifiedlines.update((p,n) for n in numbers);views.append((p,a,b))
-  vf={(p,r['start']) for p,n in verifiedlines for r in trees.get(p,[]) if r['start']<=n<=r['end']}
+  vf={(p,hit['start']) for p,n in verifiedlines if (hit:=locate(p,n)) is not None}
   readfunctions |= vf
   verifiededit=set()
-  if edited:
+  if edited and s.get('exit')==0:
    if firstanyedit is None:firstanyedit=i
-   # Only a literal unified diff can establish edited definition from the command itself.
+   # A successful literal patch action with base-matching context; writing a
+   # patch file or a numeric sed address alone does not establish an edit.
+   patch_action=any(re.match(r'^(?:git\s+apply|patch\b)',z) for z in segmentlist) and not re.search(r'--directory|--reverse|(?:^|\s)-R(?:\s|$)',command)
+   verified_paths=verified_patch_paths(command,source) if patch_action else set()
    for p,change in g2.patch_changes(command,source).items():
+    if p in stale or p not in verified_paths:continue
     for line in change['old_lines']:
      hit=locate(p,line)
      if hit:verifiededit.add((p,hit['start']))
-   for segment in segmentlist:
-    if re.search(r'^sed\s+.*(?:-i|--in-place)',segment):
-     for path2 in edited:
-      for a2,b2 in re.findall(r'(\d+),(\d+)[scd]',segment):
-       for q in trees.get(path2,[]):
-        if q['start']<=int(b2) and q['end']>=int(a2):verifiededit.add((path2,q['start']))
    all_verified_edits|=verifiededit
    if firstedit is None and verifiededit&target:firstedit=i
   if reached is None and (vf|verifiededit)&target:reached=i
@@ -106,22 +111,25 @@ def measure(row,agent):
      if hitrow and any(len(line.strip())>=16 and lines0.count(line)==1 and line.strip() in output for line in lines0[start-1:min(hitrow['end'],start+3)]):
       if path0 in command or path0 in output:broad_reached=i
   if 'search' in kinds:
-   sr=dict(step=i,measurable=False,unknown_reason=None,order_changed=None,ordinary_rank=None,box_rank=None,fix_present=None,opportunity=None,top3_rescue=None,regression=None)
+   sr=dict(step=i,measurable=False,unknown_reason=None,order_changed=None,ordinary_rank=None,box_rank=None,fix_present=None,opportunity=None,top3_rescue=None,regression=None,partial_unknown_results=False)
    searchsegments=[z for z in segmentlist if g2.SEARCH.search(z)]
    if len(searchsegments)!=1 or len(segmentlist)!=1:sr['unknown_reason']='inseparable combined command'
    elif not ev.valid:sr['unknown_reason']='invalid trace'
    elif any(z in command for z in ['-A','-B','-C','--context','-U','--multiline']):sr['unknown_reason']='context/multiline fallback'
    else:
     segment=searchsegments[0];words=g2.words(segment);explicit=[g2.norm(w,source) for w in words];explicit=[x for x in explicit if x]
-    lines=output.encode().splitlines(keepends=True); locations=[];matched=[]
+    lines=output.encode().splitlines(keepends=True); locations=[];matched=[];unverified_matches=0
     for ordinal,line in enumerate(lines):
      text=line.rstrip(b'\r\n').decode(errors='replace');m=re.match(r'^(?:\./|/testbed/)?([^:]+\.pyi?):(\d+):(.*)$',text);short=re.match(r'^(\d+):(.*)$',text) if not m and len(set(explicit))==1 else None
      p0=m.group(1) if m else explicit[0] if short else None;n=int(m.group(2)) if m else int(short.group(1)) if short else None;content=m.group(3) if m else short.group(2) if short else None
-     if p0 not in source or p0 in stale or n is None:continue
+     if p0 not in source or p0 in stale or n is None:
+      if m or short:unverified_matches+=1
+      continue
      base=source[p0].splitlines()
-     if not 1<=n<=len(base) or base[n-1]!=content:continue
+     if not 1<=n<=len(base) or base[n-1]!=content:unverified_matches+=1;continue
      locations.append(dict(ordinal=ordinal,path=p0,line=n,source_sha256=ev.digests[p0],kind='line',is_match=True));hit=locate(p0,n)
      matched.append((ordinal,None if hit is None else (p0,hit['start'])))
+    sr['partial_unknown_results']=unverified_matches>0;sr['unverified_matches']=unverified_matches
     if not locations:sr['unknown_reason']='no verified numbered matches'
     else:
      shown,proof=adapter.present(output.encode(),'grep',words[1:],ev,locations=locations)
@@ -131,9 +139,9 @@ def measure(row,agent):
    searches.append(sr)
   counts,outside_keys=tally(source,ev,verifiedlines,signature_cache)
   inside_bytes=counts['inside'];outside_bytes=counts['outside'];module_bytes=counts['module']
-  actions.append(dict(step=i,classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
+  actions.append(dict(step=i,unknown_action=s.get('unknown_action',False),classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
   stale|=edited;seen+='\n'+output
- out.update(reached_step=reached,broad_visible_step=broad_reached,first_verified_target_edit=firstedit,first_any_edit=firstanyedit,anticipation_step=anticipation,issue_supplied_target_files=sorted(issue_given),unknown_views=unknownviews,whole_bytes=sum(a['bytes'] for a in actions),before_bytes=sum(a['bytes'] for a in actions[:reached-1]) if reached else None,locating_step_share=(reached-1)/len(steps) if reached else None,pre_reach_opportunity=any(s.get('opportunity') and (not reached or s['step']<reached) for s in searches) if ev.valid and target else None,never_reach_top3=any(s.get('top3_rescue') for s in searches) if not reached else None,searches=searches,actions=actions)
+ out.update(reached_step=reached,broad_visible_step=broad_reached,first_verified_target_edit=firstedit,first_any_edit=firstanyedit,anticipation_step=anticipation,issue_supplied_target_files=sorted(issue_given),unknown_views=unknownviews,whole_bytes=sum(a['bytes'] for a in actions),before_bytes=sum(a['bytes'] for a in actions[:reached-1]) if reached else None,locating_step_share=(reached-1)/len(steps) if reached else None,pre_reach_opportunity=any(s.get('opportunity') and (not reached or s['step']<reached) for s in searches) if ev.valid and target else None,never_reach_top3=any(s.get('top3_rescue') for s in searches) if not reached and out['complete_record'] else None,searches=searches,actions=actions)
  after=[a for a in actions if reached and a['step']>reached and (not firstedit or a['step']<firstedit)]
  after_keys=set(k for a in after for k in a['view_functions']);called={p+':'+str(n) for p,n in ev.called};out['after_finding']=dict(censored=firstedit is None,returned_bytes=sum(a['bytes'] for a in after),source_bytes_inside=sum(a['view_source_bytes_inside'] or 0 for a in after) if ev.valid else None,source_bytes_outside=sum(a['view_source_bytes_outside'] or 0 for a in after) if ev.valid else None,inside_functions=len(after_keys&called) if ev.valid else None,outside_functions=len(after_keys-called) if ev.valid else None)
  # Final submitted patch supplies an additional observed-edit check, not a time

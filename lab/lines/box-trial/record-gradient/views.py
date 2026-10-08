@@ -35,9 +35,27 @@ def tally(source,ev,verified,signature_cache):
   if hit is None:result['module']+=size
   elif (path,hit['start']) in ev.called:result['inside']+=size
   else:
-   result['outside']+=size;outside.add((path,hit['start']))
+   result['outside']+=size
    if path not in signature_cache:signature_cache[path]=signature_ends(source[path])
    # Keep decorators, complete signatures and module-level text. Never remove
    # ambiguous/no-AST regions. A same-line body is kept with its signature.
-   if number>max(hit['def_line'],signature_cache[path].get(hit['start'],hit['end'])):result['removable']+=size
+   if number>max(hit['def_line'],signature_cache[path].get(hit['start'],hit['end'])):
+    result['removable']+=size;outside.add((path,hit['start']))
  return result,outside
+
+def verified_patch_paths(text,sources):
+ current=None;old=None;good={};changed=set()
+ for line in text.splitlines():
+  if line.startswith('diff --git '):
+   current=line.split(' b/',1)[-1];old=None;good[current]=current in sources
+  elif line.startswith('@@ '):
+   m=re.match(r'@@ -(\d+)(?:,\d+)? \+\d+',line)
+   old=int(m[1]) if m else None
+   if old is None and current:good[current]=False
+  elif current and old is not None and line.startswith((' ','-','+')) and not line.startswith(('---','+++')):
+   if line[0]!='+':
+    source=sources.get(current,'').splitlines()
+    if not 1<=old<=len(source) or source[old-1]!=line[1:]:good[current]=False
+    old+=1
+   if line[0] in '-+':changed.add(current)
+ return {p for p in changed if good.get(p)}
