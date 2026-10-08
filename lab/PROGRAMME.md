@@ -127,6 +127,13 @@ Gate 2 showed that published agents find the fix in a few steps, so the reason w
 - **A cheap agent, and the same one in both arms.** The cheapest model that published results show solving a fair share of these tasks. A weaker agent is also where a Box is most likely to show an effect. Fixed limits on steps and tokens per run.
 - **Runs:** each of the twelve tasks once per arm; then three of them twice more per arm to see how much one agent varies. About thirty-six short runs. If the first twelve pairs already show the arms indistinguishable or the Box arm clearly worse, stop there and do not run the repeats.
 - **Measure:** solved, by the benchmark's own tests; total tokens and steps; steps and text read before first reaching the fix and between reaching and first editing (gate 2's measures, so the two can be compared); whether the agent used the Box at all, and how; and for any task solved in one arm and not the other, a short reading of why.
+- **What "better" means, fixed before any run** (the owner, 8 October 2026: an open Box cannot make an agent worse, so the work is to say what better is and show it). In this order:
+  1. *More right.* More tasks solved by the benchmark's tests, and no solved task lost.
+  2. *Same result for less.* On tasks both arms solve: fewer total tokens, fewer steps, less time.
+  3. *A cheaper agent reaching a dearer one's result.* If the published record shows a stronger model's solve rate on these tasks, say how far the cheap agent with the Box closes the gap.
+  4. *Steadier.* On the repeated tasks, less variation from run to run.
+  5. *No harm where nothing was needed.* On the four easy tasks, the Box arm costs no more than the few hundred tokens the Box itself adds.
+  The Box counts as better if it wins on 1 or 2 beyond the noise and loses on none of the five. "The same" is the outcome to watch for: it would mean the tool is harmless and adds nothing these agents use.
 - **Report one table and one sentence.** With this few tasks only a large difference means anything; say what size of difference this could and could not see. The owner's standard is that any real improvement is worth having; the lab's job is to say whether what it saw is real or within the noise.
 - **Rules:** their code only in containers, network off for the agent's work; nothing sent to any project; record the model, the limits and every run including failed starts; one sceptic pass that rereads the solved-in-one-arm cases and reruns the scoring, not the agents.
 
