@@ -42,6 +42,24 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
+## Next session: three more pairs. Authorised by the owner on 9 October 2026.
+
+The pilot was clean: the silent Box reordered a search for a live agent, the agent opened what was moved up, nothing errored, and both arms failed the task (control 14 commands and 200,832 tokens; Box 10 commands and 182,429). The owner read that as a first sign of saving and has authorised three more pairs. The CTO's advice was that a comparison able to detect a small saving would need far more runs than we can afford, and that three pairs cannot prove one; the owner has chosen three as a cheap next look, and that is what the lab runs. Report what they show without stretching it.
+
+**Same Box, same rules as the pilot** (`lab/lines/box-trial/live-pilot/plan.md`): silent ordering of ordinary search, no instruction, no marks, no facts tool; identical prompts; same model and effort as the pilot; whole repository open; their code only in containers.
+
+**What changes from the pilot:**
+
+- **Three new tasks, not repeats of the pilot's.** From the thirty, chosen by a rule fixed and pushed before any run: tasks published agents failed or laboured on, from three different projects and none from Sphinx, on which the no-token Box check shows at least one recorded agent search actually reordered. If a project has no such task, take the next by the rule and say so.
+- **Alternate which arm runs first.** The pilot ran the control first. Run the Box arm first on two of the three, so that anything owed to order (a warm cache, time of day) does not all fall on one side.
+- **Every safeguard again, per task, before its pair:** the scoring check (real fix solved, empty change not, broken guard not) and the Box check (recorded commands through the exact wrapper, at least one reordered, nothing rejected, no text added). No tokens until both pass for that task.
+- **Ceilings:** 400,000 tokens per run, 2,400,000 for the three pairs in all. A run at its cap is stopped and recorded as capped. If the first of the three pairs shows a fault in the tool or the scoring, stop and report; do not run the other two.
+- **A Box-arm run is valid** only if the record shows at least one search the Box actually reordered.
+
+**Report.** One table with all four pairs, the pilot included and marked as such: task, which arm ran first, solved or not in each arm, commands, tokens, searches made and reordered, whether the agent opened something the Box moved up. Then, in plain words: on how many of the four the Box arm used fewer tokens, and on how many it solved what the control did not or the reverse. State what four pairs can and cannot support. If all four go the same way, say that this would happen by chance about one time in eight for a tool that does nothing, so it is a sign and not a proof; if they split, say that this is what no effect and a small effect both look like. Say nothing about percentages saved as if they were a measurement. One sceptic pass rereads the records and reruns the scoring, not the agents.
+
+**Then stop.** The owner and CTO decide from the table.
+
 ## Completed on 9 October 2026: the live pilot (authorization and protocol retained below)
 
 The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/prototype/`). The owner has read the design and wants a live run, because nothing so far shows an agent doing better and only a live run can. What is tested is **the Box as the lab recommended it: silent ordering of ordinary search, no instruction, no marks.** Facts on request are not part of this run.
@@ -82,4 +100,4 @@ The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/proto
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** reading, prototype and authorized one-pair silent live pilot closed and independently reviewed. Box reordered one search and the next command opened promoted code. Both actual patches fail the named test and pass all five guards; 383,261 total reported tokens, within caps. [Result](lines/box-trial/live-pilot/result.md), [review](lines/box-trial/live-pilot/sceptic.md). No superiority established. No more pairs or product work; await the owner's word before a separately planned broader comparison.
+- **Sync state, 9 October 2026:** reading, prototype and one-pair live pilot closed and reviewed. The owner has authorised three more pairs. Next session: those three, then stop.
