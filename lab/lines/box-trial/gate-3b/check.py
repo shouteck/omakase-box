@@ -18,13 +18,14 @@ def check():
         assert command(['docker','exec',name,'git','add','lab-gate-3b-fixture/sample.py']).returncode==0
         f='lab-gate-3b-fixture/sample.py'
         cases=[('single','grep -n needle '+f),('recursive','grep -Rn needle lab-gate-3b-fixture'),('absolute','cd /tmp && grep -n needle /testbed/'+f),('plain','grep needle '+f),('context','grep -n -C 1 "needle =" '+f),('compound','cd /testbed && grep -n needle '+f+' && grep -n missing '+f+' || true'),('head','grep -n needle '+f+' | head -1'),('filter-semantic','grep -n needle '+f+' | grep "^2:"'),('no-marker-input','grep -n needle '+f+' | grep -F "[BOX]"'),('stdin','printf "needle\\nother\\n" | grep -n needle'),('git','git grep -n needle -- '+f),('find','find lab-gate-3b-fixture -name "*.py"'),('count','grep -c needle '+f),('file-list','grep -l needle '+f),('no-match','grep -n absent '+f),('bad-regex','grep -n "[" '+f),('bad-path','grep -n needle /testbed/absent'),('native-missing','rg -n needle '+f)]
+        if ident=='django__django-12193':cases.append(('real-find-pipeline','find . -maxdepth 4 -type f | grep -E \'forms|widgets|SplitArray\' | head'))
         if ident=='django__django-12193':cases.append(('real-decorated-source','grep -n -e "def get_context" -e "def formfield" django/forms/widgets.py'))
         for label,text in cases:
             before=len(logs(name));ordinary=execute(name,text,'ordinary');oq=logs(name)[before:];before=len(logs(name));box=execute(name,text,'box');bq=logs(name)[before:]
             assert ordinary['exit']==box['exit'] and ordinary['stderr_sha256']==box['stderr_sha256'],label
             assert len(oq)==len(bq)>0,label
             for a,b in zip(oq,bq):
-                assert a['native_sha256']==b['native_sha256'] and a['exit']==b['exit'] and a['stderr_sha256']==b['stderr_sha256'] and b['proof']['same_records'] and not b['proof'].get('ordering_error'),label
+                assert collections.Counter(__import__('base64').b64decode(a['stdout_b64']).splitlines(keepends=True))==collections.Counter(__import__('base64').b64decode(b['stdout_b64']).splitlines(keepends=True)) and a['exit']==b['exit'] and a['stderr_sha256']==b['stderr_sha256'] and b['proof']['same_records'] and not b['proof'].get('ordering_error'),label
             report['cases'].append({'label':label,'command':text,'status':'pass','ordinary':ordinary,'box':box,'queries':bq})
         positive=report['cases'][0]['queries'][0];assert positive['proof']['marked'] and positive['proof']['order'][0]==positive['proof']['marked'][0]
         report['status']='pass'

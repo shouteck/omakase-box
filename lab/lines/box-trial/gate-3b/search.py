@@ -1,5 +1,5 @@
 """Native search wrapper; executes only inside owned network-off containers."""
-import ast, base64, collections, hashlib, io, json, os, pathlib, re, shutil, subprocess, sys, tokenize
+import ast, base64, collections, hashlib, io, json, os, pathlib, re, shutil, subprocess, sys, tokenize, signal
 MARK = b'[BOX] '
 def sha(v): return hashlib.sha256(v).hexdigest()
 def function_rows(text):
@@ -48,6 +48,22 @@ def reorder(raw, tool, args, scope, root, cwd):
         except (OSError,ValueError):return None
     machine=tool!='find' and any(a in ('--null','--null-data','--json','--count','--count-matches','--only-matching','--quiet','--files-without-match','--files-with-matches') or (a.startswith('-') and not a.startswith('--') and any(c in a[1:] for c in 'zZqclLo')) for a in args)
     if machine or b'\0' in raw:return raw,[],{'format':'machine-pass-through','same_records':True}
+    if tool=='find':
+        # Find returns names, not source lines. Never read every binary/object
+        # in the repository just to prioritize the traced source-file names.
+        records=[]
+        for i,line in enumerate(lines):
+            path=pathlib.Path(line.decode('utf-8',errors='replace').rstrip('\r\n'))
+            if not path.is_absolute():path=cwd/path
+            try:rel=path.resolve().relative_to(root).as_posix()
+            except (OSError,ValueError):continue
+            if not path.is_file():continue
+            records.append({'ordinal':i,'path':rel,'line':None,'kind':'file','is_match':True,'priority':bool(scope.get(rel)),'source_sha256':None,'function_names':[]})
+        by={r['ordinal']:r for r in records};order=sorted(range(len(lines)),key=lambda i:not by.get(i,{}).get('priority'))
+        marked=[i for i in order if by.get(i,{}).get('priority')]
+        output=b''.join((MARK if i in marked else b'')+lines[i] for i in order)
+        assert collections.Counter(lines)==collections.Counter(lines[i] for i in order)
+        return output,records,{'format':'file-names','same_records':True,'order':order,'marked':marked,'context_groups':len(lines),'context':False}
     candidates=[a for a in args if not a.startswith('-') and filedata(a)]
     unique=list(dict.fromkeys(candidates));single=unique[0] if len(unique)==1 else None
     for i,byte in enumerate(lines):
@@ -115,9 +131,12 @@ def main():
         p=subprocess.run(command,stdin=sys.stdin.buffer,stdout=subprocess.PIPE,stderr=subprocess.PIPE);out,err,code=p.stdout,p.stderr,p.returncode
     scope=json.loads(pathlib.Path(os.environ['LAB_BOX_SCOPE']).read_text(encoding='utf-8'))
     root=pathlib.Path(os.environ.get('LAB_BOX_ROOT','/testbed')).resolve();cwd=pathlib.Path.cwd()
+    def annotation_timeout(signum,frame):raise TimeoutError('Annotation exceeded 10 seconds; native output retained')
+    signal.signal(signal.SIGALRM,annotation_timeout);signal.alarm(10)
     try:ordered,locations,proof=reorder(out,'grep' if tool=='git' else tool,args,scope,root,cwd)
     except Exception as error:
         ordered,locations,proof=out,[],{'format':'fault-pass-through','same_records':True,'ordering_error':repr(error)}
+    finally:signal.alarm(0)
     mode=os.environ.get('LAB_BOX_MODE','box')
     # Keep annotation out of all pipes. The trusted final command adapter adds
     # marks only to source records actually displayed after downstream filters.

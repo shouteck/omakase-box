@@ -1,6 +1,10 @@
 """Sequential native-search replay in owned pinned containers; never runs models."""
 import base64,collections,gzip,hashlib,importlib.util,json,pathlib,re,subprocess,sys,time,uuid
 HERE=pathlib.Path(__file__).resolve().parent;ROOT=HERE.parent;REPO=HERE.parents[3]
+OUTPUT=HERE
+for arg in list(sys.argv[1:]):
+    if arg.startswith('--output='):
+        OUTPUT=(HERE/arg.split('=',1)[1]).resolve();OUTPUT.relative_to(HERE);sys.argv.remove(arg)
 sys.path.insert(0,str(ROOT/'gate-3'));from prepare import make,gate1
 sys.path.insert(0,str(ROOT/'gate-2'));import measure
 from corpus import collect,has_search
@@ -118,7 +122,7 @@ def score_query(q,targets,files):
 def run_task(ident,trajectories):
     images=read(ROOT/'gate-1/image-digests.json');image=images[ident];existed=command(['docker','image','inspect',image],timeout=30).returncode==0
     receipt={'task':ident,'image':image,'image_preexisted':existed,'trajectories':[],'queries':[]}
-    scratch=HERE/'scratch'/ident;scratch.mkdir(parents=True,exist_ok=True)
+    scratch=OUTPUT/'scratch'/ident;scratch.mkdir(parents=True,exist_ok=True)
     try:
         if not existed:
             idle();p=command(['docker','pull',image]);receipt['pull_exit']=p.returncode;receipt['pull_stderr_sha256']=sha(p.stderr)
@@ -175,12 +179,12 @@ def run_task(ident,trajectories):
     except Exception as error:receipt['error']=repr(error)
     finally:
         if not existed:receipt['image_cleanup_exit']=command(['docker','image','rm',image],timeout=180).returncode
-        write(HERE/'raw'/ident/'replay.json',receipt)
+        write(OUTPUT/'raw'/ident/'replay.json',receipt)
     return receipt
 
 if __name__=='__main__':
     corpus=read(HERE/'corpus.json');assert corpus==collect(),'Corpus changed'
     ids=sys.argv[1:] or list(dict.fromkeys(t['task'] for t in corpus['trajectories']))
     for ident in ids:
-        if (HERE/'raw'/ident/'replay.json').exists():print(ident,'saved receipt exists; retained',flush=True);continue
+        if (OUTPUT/'raw'/ident/'replay.json').exists():print(ident,'saved receipt exists; retained',flush=True);continue
         print(ident,'replay starting; no model',flush=True);r=run_task(ident,[t for t in corpus['trajectories'] if t['task']==ident]);print(ident,'queries',len(r['queries']),'error',r.get('error'),flush=True)

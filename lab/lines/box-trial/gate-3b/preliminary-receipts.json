@@ -80,6 +80,14 @@
     {
       "path": "raw\\before-decorator-correction\\search.py",
       "sha256": "96b8f059467d584d3ab60fa0bffda61ba076c0e903f74caf62d15072df82305e"
+    },
+    {
+      "path": "raw\\before-find-compatibility\\django__django-12193\\replay.json",
+      "sha256": "002a4d6044772a0b5830829493560d7e6575893af118e6001ea1ca684654009f"
+    },
+    {
+      "path": "raw\\before-find-compatibility\\search.py",
+      "sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d"
     }
   ]
 }
