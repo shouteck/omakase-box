@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone B, the Box as a tool for coding agents: B1 (core), B2 (search), B3 (path to the failure), B4 (one-step use), B5 (kitchen use), B6 (fair live test; owner approval), B7 (second language). Each cooks only when named. The outsider-delegation order A6, R3c, P1, R4 is retired. See PLAN.md.",
+    "sequence": "The kitchen is idle. The lab is defining the ideal Box; milestone B (B1 to B7) is a draft on hold and will be rewritten from the agreed design. The outsider-delegation order A6, R3c, P1, R4 is retired. See PLAN.md and STATUS.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -987,8 +987,8 @@
       "milestone": "B",
       "title": "The Box core: one command records what a failing test ran",
       "dependencies": [],
-      "ownerApproval": "Milestone B approved by the owner on 8 October 2026.",
-      "handoff": "waves/B1.md"
+      "handoff": "waves/B1.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     },
     {
       "id": "B2",
@@ -998,7 +998,8 @@
         "B1"
       ],
       "proposal": "Wraps the usual search commands; returns exactly the matches an ordinary search returns, reordered; never fewer. Lessons from the lab gate 3 and 3b records apply.",
-      "handoff": "waves/B2.md"
+      "handoff": "waves/B2.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     },
     {
       "id": "B3",
@@ -1008,7 +1009,8 @@
         "B1"
       ],
       "proposal": "A runtime fact for understanding, not only locating. Not designed yet.",
-      "handoff": "waves/B3.md"
+      "handoff": "waves/B3.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     },
     {
       "id": "B4",
@@ -1019,7 +1021,8 @@
         "B3"
       ],
       "proposal": "No setup, nothing to remember. Not designed yet.",
-      "handoff": "waves/B4.md"
+      "handoff": "waves/B4.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     },
     {
       "id": "B5",
@@ -1029,7 +1032,8 @@
         "B4"
       ],
       "proposal": "Kitchen wave; records whether cooks used it and what it changed.",
-      "handoff": "waves/B5.md"
+      "handoff": "waves/B5.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     },
     {
       "id": "B6",
@@ -1038,9 +1042,9 @@
       "dependencies": [
         "B4"
       ],
-      "ownerApproval": "Required separately: it spends agent tokens. One pilot pair first; a token ceiling fixed in advance.",
       "proposal": "Tasks with room to improve, code the model has not memorised, the agent actually using the Box, same agent with and without.",
-      "handoff": "waves/B6.md"
+      "handoff": "waves/B6.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     },
     {
       "id": "B7",
@@ -1050,7 +1054,8 @@
         "B6"
       ],
       "proposal": "Same Box format. After the first language has shown whether widening is worth it.",
-      "handoff": "waves/B7.md"
+      "handoff": "waves/B7.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"

@@ -50,7 +50,7 @@ The next attempt on an outside repository (R3b, a replay of recently fixed issue
 
 ## Where we are and what comes next: milestone B, the Box as a tool for agents
 
-Written by the CTO on 8 October 2026 and approved by the owner the same day. It replaces the order A6, R3c, P1, R4, which is retired. The earlier text of this section is in Git history.
+**On hold. No wave of milestone B is to be cooked.** The CTO wrote this section on 8 October 2026 having misread the owner, and corrected it the same day. The owner's decision is that the ideal Box is designed and finalised in the lab first, and that product work does not resume before that. What follows is the CTO's draft of what the kitchen might build afterwards. It is not approved, its waves and their order are provisional, and the lab's design will replace it. It still replaces the order A6, R3c, P1, R4, which is retired. The earlier text of this section is in Git history.
 
 **What changed.** Three days of research (the `lab` branch, `lab/lines/`) tested the Box from several sides. What it settled:
 
@@ -86,7 +86,7 @@ Written by the CTO on 8 October 2026 and approved by the owner the same day. It 
 
 **Held back, on purpose:** a sealed Box; a trained model that makes Boxes; ranking by a learned ranker; any marketplace; conversations with possible customers. Each needs its own decision.
 
-**The lab.** Its Box trial is closed as a research question. It keeps its scoring instruments available to the kitchen and stays otherwise paused until the owner reopens a line.
+**The lab.** It is working out what the ideal Box is (`lab/PROGRAMME.md` on the `lab` branch). The kitchen waits for that.
 
 ## Sequence
 
