@@ -64,7 +64,7 @@ def measure(row,agent):
  if not steps:return dict(out,status='unparsed record',format=fmt)
  details=HERE/'records'/agent['folder']/'published-results.json';published=json.loads(details.read_bytes()).get(ident,{}) if details.exists() else {}
  out.update(status='measured',format=fmt,unparsed_actions=unparsed,resolved=published.get('resolved'),exit_status=record.get('info',{}).get('exit_status'),steps=len(steps),has_box=ev.valid,target_in_box=bool(target&ev.called) if ev.valid and target else None,function_target=bool(target),target_files=sorted(files),target_functions=sorted(p+':'+str(n) for p,n in target),record_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
- def locate(p,line):return ev.locate(p,line,ev.digests.get(p))
+ def locate(p,line):return ev.locate(p,line,ev.digests[p]) if p in source else None
  seen='\n'.join(content_of(m) for m in record.get('messages',[])[:2]);issue_given={p for p in files if p in seen};anticipation=None;reached=None;firstedit=None;firstanyedit=None;stale=set();actions=[];searches=[];readfunctions=set();unknownviews=0;broad_reached=None;signature_cache={};all_verified_edits=set()
  for i,s in enumerate(steps,1):
   command=s['command'];output=s['output'];chars=len(output);bytecount=len(output.encode());views=[];verifiedlines=set();edited=set();kinds=set();segmentlist=g2.segments(command)

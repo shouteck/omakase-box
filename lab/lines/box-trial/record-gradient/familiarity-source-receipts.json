@@ -1,0 +1,58 @@
+[
+  {
+    "name": "pro-traj-readme",
+    "url": "https://raw.githubusercontent.com/scaleapi/SWE-bench_Pro-os/main/traj/README.md",
+    "sha256": "41520a962d15cb82e15d66adc18a18a0f973ae4542ef5c5d1e29e2fdec864d04",
+    "bytes": 1091,
+    "status": "read"
+  },
+  {
+    "name": "pro-unsigned-bucket",
+    "url": "https://scaleapi-results.s3.amazonaws.com/?list-type=2&prefix=swe-bench-pro/&max-keys=3",
+    "sha256": "aba8b0ea7fe123939a9a942f48491e45a60e391ce4488c4240e844fe6fe4e4bc",
+    "bytes": 1731,
+    "status": "read"
+  },
+  {
+    "name": "rebench-tree",
+    "url": "https://huggingface.co/api/datasets/nebius/SWE-rebench-openhands-trajectories/tree/13fa32b010d4e0a691a48e0c5067de1f543b7ca5",
+    "sha256": "d0c7d2c8844e1e01356b259dfda3b0c081d6ff3eb5efff370e74902c91f7be1b",
+    "bytes": 391,
+    "status": "read"
+  },
+  {
+    "name": "pro-arms",
+    "url": "https://scaleapi-results.s3.amazonaws.com/?list-type=2&prefix=swe-bench-pro/&delimiter=/&max-keys=100",
+    "sha256": "03b18f7c0ce07e2d3cfc8c521a7821b00a2cc831596aafa6e43170401c4dc2cd",
+    "bytes": 1905,
+    "status": "read"
+  },
+  {
+    "name": "pro-arm-layout",
+    "url": "https://scaleapi-results.s3.amazonaws.com/?list-type=2&prefix=swe-bench-pro/claude-45haiku-10222025/&delimiter=/&max-keys=20",
+    "sha256": "9f63c6cf894c8f3dd0a51c77adbbb7ea56fe5d2014c30dac4f9762fe5abed5ec",
+    "bytes": 493,
+    "status": "read"
+  },
+  {
+    "name": "pro-traj-layout",
+    "url": "https://scaleapi-results.s3.amazonaws.com/?list-type=2&prefix=swe-bench-pro/claude-45haiku-10222025/trajs/&max-keys=3",
+    "sha256": "2f4332b693f0763b0fed602b750ba241c5e6055c7337a7299b0c155b85ffc8a6",
+    "bytes": 288,
+    "status": "read"
+  },
+  {
+    "name": "pro-python-traj-listing",
+    "url": "https://scaleapi-results.s3.amazonaws.com/?list-type=2&prefix=swe-bench-pro/claude-45haiku-10222025/traj/instance_ansible&max-keys=3",
+    "sha256": "b643084dcb07334fbe3d5e5d8a97d32605139a22b6d1d7898686830d7d7bf69e",
+    "bytes": 2413,
+    "status": "read"
+  },
+  {
+    "name": "pro-python-record-head",
+    "url": "https://scaleapi-results.s3.amazonaws.com/swe-bench-pro/claude-45haiku-10222025/traj/instance_ansible__ansible-0ea40e09d1b35bcb69ff4d9cecf3d0defa4b36e8-v30a923fb5c164d6cd18280c02422f75e611e8fb2/instance_ansible__ansible-0ea40e09d1b35bcb69ff4d9cecf3d0defa4b36e8-v30a923fb5c164d6cd18280c02422f75e611e8fb2.traj",
+    "status": "HEAD accessible without credentials",
+    "content_length": "9256783",
+    "etag": "\"c31454afd9ad239e397608f4875463a8-2\""
+  }
+]

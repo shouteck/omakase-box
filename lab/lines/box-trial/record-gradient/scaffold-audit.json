@@ -1,0 +1,141 @@
+{
+  "20250802_mini-v1.0.0_claude-4-opus-20250514": {
+    "system_prompt_hash_counts": {
+      "75434201e849f434256fd3ad6cc5c936b4ac41dec988c3546e8532fc6fa73098": 150
+    },
+    "issue_template_hash_counts": {
+      "daefb105bae28d0661b0bf665763182de98f2093cfd1e8563a311bee6c16f733": 150
+    },
+    "exit_status": {
+      "Submitted": 143,
+      "LimitsExceeded": 7
+    },
+    "format": {
+      "bash-fences": 150
+    },
+    "median_steps": 28.0,
+    "max_steps": 97,
+    "min_steps": 10,
+    "median_published_record_cost": 0.91875675,
+    "config_unavailable": "No config/model sampling or common step/cost ceilings in these trajectory files. Same published scaffold version does not prove identical limits.",
+    "system_prompt_examples": [
+      "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n"
+    ]
+  },
+  "20250726_mini-v1.0.0_o3-2025-04-16": {
+    "system_prompt_hash_counts": {
+      "3604321898e7e20c093291f6a21a5c4ce122e876a0ea5222eda23488fa49f376": 150
+    },
+    "issue_template_hash_counts": {
+      "4e09528d85390c614fe372aa06f539c09a2d7154e93670fae609cda9055a1e60": 150
+    },
+    "exit_status": {
+      "Submitted": 149,
+      "LimitsExceeded": 1
+    },
+    "format": {
+      "bash-fences": 150
+    },
+    "median_steps": 20.5,
+    "max_steps": 110,
+    "min_steps": 7,
+    "median_published_record_cost": 0.22354599999999997,
+    "config_unavailable": "No config/model sampling or common step/cost ceilings in these trajectory files. Same published scaffold version does not prove identical limits.",
+    "system_prompt_examples": [
+      "You are a helpful assistant that can interact with a computer.\n\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nYour reasoning and analysis here. Explain why you want to perform the action.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n"
+    ]
+  },
+  "20250802_mini-v1.0.0_qwen3-coder-480b-a35b-instruct": {
+    "system_prompt_hash_counts": {
+      "29494160646e80451ae1c40aedae64ae8aa1024c3c7f5cfb142cafcb6bd30dd0": 150
+    },
+    "issue_template_hash_counts": {
+      "537c73ea3ede3e7d860d259b8f2aef1744fc0ce5c8ba8855851d823aa919126e": 150
+    },
+    "exit_status": {
+      "Submitted": 139,
+      "LimitsExceeded": 11
+    },
+    "format": {
+      "bash-fences": 150
+    },
+    "median_steps": 57.0,
+    "max_steps": 250,
+    "min_steps": 13,
+    "median_published_record_cost": 0.1480143,
+    "config_unavailable": "No config/model sampling or common step/cost ceilings in these trajectory files. Same published scaffold version does not prove identical limits.",
+    "system_prompt_examples": [
+      "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected."
+    ]
+  },
+  "20250726_mini-v1.0.0_o4-mini-2025-04-16": {
+    "system_prompt_hash_counts": {
+      "75434201e849f434256fd3ad6cc5c936b4ac41dec988c3546e8532fc6fa73098": 150
+    },
+    "issue_template_hash_counts": {
+      "1f04c6344b178ef3f62c80d56273019b5346da5c3d016e5c37ae21459e8907e0": 150
+    },
+    "exit_status": {
+      "Submitted": 150
+    },
+    "format": {
+      "bash-fences": 150
+    },
+    "median_steps": 20.0,
+    "max_steps": 76,
+    "min_steps": 4,
+    "median_published_record_cost": 0.15393400000000002,
+    "config_unavailable": "No config/model sampling or common step/cost ceilings in these trajectory files. Same published scaffold version does not prove identical limits.",
+    "system_prompt_examples": [
+      "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n"
+    ]
+  },
+  "20250726_mini-v1.0.0_gpt-4.1-2025-04-14": {
+    "system_prompt_hash_counts": {
+      "75434201e849f434256fd3ad6cc5c936b4ac41dec988c3546e8532fc6fa73098": 150
+    },
+    "issue_template_hash_counts": {
+      "1f04c6344b178ef3f62c80d56273019b5346da5c3d016e5c37ae21459e8907e0": 150
+    },
+    "exit_status": {
+      "Submitted": 148,
+      "LimitsExceeded": 2
+    },
+    "format": {
+      "bash-fences": 150
+    },
+    "median_steps": 13.0,
+    "max_steps": 207,
+    "min_steps": 5,
+    "median_published_record_cost": 0.06142299999999999,
+    "config_unavailable": "No config/model sampling or common step/cost ceilings in these trajectory files. Same published scaffold version does not prove identical limits.",
+    "system_prompt_examples": [
+      "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected.\n"
+    ]
+  },
+  "20250803_mini-v1.0.0_qwen2-5-coder-32b-instruct": {
+    "system_prompt_hash_counts": {
+      "29494160646e80451ae1c40aedae64ae8aa1024c3c7f5cfb142cafcb6bd30dd0": 150
+    },
+    "issue_template_hash_counts": {
+      "537c73ea3ede3e7d860d259b8f2aef1744fc0ce5c8ba8855851d823aa919126e": 150
+    },
+    "exit_status": {
+      "APIError": 74,
+      "Submitted": 55,
+      "LimitsExceeded": 6,
+      "RetryError": 15
+    },
+    "format": {
+      "bash-fences": 150
+    },
+    "median_steps": 25.5,
+    "max_steps": 250,
+    "min_steps": 4,
+    "median_published_record_cost": 0.015991439999999996,
+    "config_unavailable": "No config/model sampling or common step/cost ceilings in these trajectory files. Same published scaffold version does not prove identical limits.",
+    "system_prompt_examples": [
+      "You are a helpful assistant that can interact multiple times with a computer shell to solve programming tasks.\nYour response must contain exactly ONE bash code block with ONE command (or commands connected with && or ||).\n\nInclude a THOUGHT section before your command where you explain your reasoning process.\nFormat your response as shown in <format_example>.\n\n<format_example>\nTHOUGHT: Your reasoning and analysis here\n\n```bash\nyour_command_here\n```\n</format_example>\n\nFailure to follow these rules will cause your response to be rejected."
+    ]
+  }
+}

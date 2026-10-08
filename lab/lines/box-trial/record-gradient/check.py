@@ -20,3 +20,6 @@ counts,keys=tally({'a.py':text},ev,{('a.py',1),('a.py',2)},{})
 assert counts['removable']==len("    return 'first result is unique'\n".encode())
 assert keys=={('a.py',1)}
 print('3 visible-source/slicing checks passed')
+
+assert visible_lines(text,1,5,"  1\tdef first_function():\n  2\t    return 'first result is unique'\n")=={1,2}
+print('numbered-view indentation check passed')

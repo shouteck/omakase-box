@@ -6,8 +6,11 @@ def visible_lines(source,a,b,output):
  shown=output.splitlines()
  # nl/bat prefixes are stripped only when their numbered content equals base.
  for i,line in enumerate(shown):
-  m=re.match(r"^\s*(\d+)\s+(.*)$",line)
-  if m and a<=int(m[1])<=b and base[int(m[1])-1]==m[2]:shown[i]=m[2]
+  m=re.match(r"^\s*(\d+)(?=\s)",line)
+  if m and a<=int(m[1])<=b:
+   expected=base[int(m[1])-1];rest=line[m.end():]
+   prefix=rest[:-len(expected)] if expected else rest
+   if rest.endswith(expected) and prefix and not prefix.strip():shown[i]=expected
  piece=base[a-1:b];counts=collections.Counter(base);found=set()
  for block in difflib.SequenceMatcher(None,piece,shown,autojunk=False).get_matching_blocks():
   segment=piece[block.a:block.a+block.size]

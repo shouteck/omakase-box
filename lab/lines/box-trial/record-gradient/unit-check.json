@@ -1,0 +1,108 @@
+{
+  "calibration_only": true,
+  "checks": "10 behavior checks pass",
+  "updated_six": [
+    {
+      "agent": "20250802_mini-v1.0.0_claude-4-opus-20250514",
+      "has_box": true,
+      "reached_step": 5,
+      "broad_visible_step": 4,
+      "unknown_views": 1,
+      "whole_bytes": 9234,
+      "slicing": {
+        "verified_view_source_bytes": 2928,
+        "removable_source_bytes": 1004,
+        "omitted_functions": 1,
+        "omitted_gold_functions": [],
+        "omitted_edited_functions": [],
+        "repeated_outside_functions": 0,
+        "unknown_view_actions": 1
+      }
+    },
+    {
+      "agent": "20250726_mini-v1.0.0_o3-2025-04-16",
+      "has_box": true,
+      "reached_step": 4,
+      "broad_visible_step": 3,
+      "unknown_views": 6,
+      "whole_bytes": 31761,
+      "slicing": {
+        "verified_view_source_bytes": 6961,
+        "removable_source_bytes": 5096,
+        "omitted_functions": 4,
+        "omitted_gold_functions": [],
+        "omitted_edited_functions": [],
+        "repeated_outside_functions": 0,
+        "unknown_view_actions": 6
+      }
+    },
+    {
+      "agent": "20250802_mini-v1.0.0_qwen3-coder-480b-a35b-instruct",
+      "has_box": true,
+      "reached_step": 4,
+      "broad_visible_step": 3,
+      "unknown_views": 10,
+      "whole_bytes": 18992,
+      "slicing": {
+        "verified_view_source_bytes": 3633,
+        "removable_source_bytes": 0,
+        "omitted_functions": 0,
+        "omitted_gold_functions": [],
+        "omitted_edited_functions": [],
+        "repeated_outside_functions": 0,
+        "unknown_view_actions": 10
+      }
+    },
+    {
+      "agent": "20250726_mini-v1.0.0_o4-mini-2025-04-16",
+      "has_box": true,
+      "reached_step": 2,
+      "broad_visible_step": 1,
+      "unknown_views": 2,
+      "whole_bytes": 32883,
+      "slicing": {
+        "verified_view_source_bytes": 20811,
+        "removable_source_bytes": 8519,
+        "omitted_functions": 22,
+        "omitted_gold_functions": [],
+        "omitted_edited_functions": [],
+        "repeated_outside_functions": 0,
+        "unknown_view_actions": 2
+      }
+    },
+    {
+      "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+      "has_box": true,
+      "reached_step": 4,
+      "broad_visible_step": 3,
+      "unknown_views": 0,
+      "whole_bytes": 5219,
+      "slicing": {
+        "verified_view_source_bytes": 1759,
+        "removable_source_bytes": 0,
+        "omitted_functions": 0,
+        "omitted_gold_functions": [],
+        "omitted_edited_functions": [],
+        "repeated_outside_functions": 0,
+        "unknown_view_actions": 0
+      }
+    },
+    {
+      "agent": "20250803_mini-v1.0.0_qwen2-5-coder-32b-instruct",
+      "has_box": true,
+      "reached_step": null,
+      "broad_visible_step": 2,
+      "unknown_views": 0,
+      "whole_bytes": 24861,
+      "slicing": {
+        "verified_view_source_bytes": 0,
+        "removable_source_bytes": 0,
+        "omitted_functions": 0,
+        "omitted_gold_functions": [],
+        "omitted_edited_functions": [],
+        "repeated_outside_functions": 0,
+        "unknown_view_actions": 0
+      }
+    }
+  ]
+}
