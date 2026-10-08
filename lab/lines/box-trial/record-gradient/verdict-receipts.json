@@ -1,0 +1,902 @@
+[
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-13453",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-13453/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-14011",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-14011/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-23314",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-23314/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "mwaskom__seaborn-3187",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/mwaskom__seaborn-3187/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pallets__flask-5014",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pallets__flask-5014/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-1921",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-1921/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4075",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4075/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-4551",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-4551/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7236",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7236/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-12682",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-12682/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-8638",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-8638/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-13798",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-13798/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-14182",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-14182/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-14792",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-14792/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-25960",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-25960/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "mwaskom__seaborn-3069",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/mwaskom__seaborn-3069/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-2317",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-2317/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-3151",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-3151/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-4970",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-4970/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7571",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7571/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-9288",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-9288/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-10435",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-10435/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-13091",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-13091/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-14365",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-14365/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-13417",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-13417/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-24026",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-24026/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-1142",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-1142/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-3677",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-3677/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-7277",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-7277/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-8399",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-8399/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-26323",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-26323/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-8459",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-8459/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-15809",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-15809/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-13977",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-13977/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-14122",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-14122/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-20488",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-20488/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-1724",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-1724/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4356",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4356/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-4661",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-4661/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-6202",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-6202/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-13328",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-13328/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-9229",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-9229/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-13031",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-13031/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-7166",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-7166/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-13195",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-13195/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-26291",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-26291/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-2931",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-2931/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-6744",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-6744/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-8898",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-8898/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-5787",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-5787/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-13142",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-13142/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-10614",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-10614/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-20154",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-20154/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-13579",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-13579/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-15098",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-15098/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-24149",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-24149/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-1766",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-1766/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-6938",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-6938/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-6528",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-6528/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7490",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7490/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-11310",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-11310/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-9258",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-9258/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-19783",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-19783/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-14995",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-14995/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-14765",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-14765/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-20676",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-20676/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-5414",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-5414/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-3095",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-3095/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-6903",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-6903/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7982",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7982/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-13135",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-13135/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-9602",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-9602/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-17655",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-17655/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-13398",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-13398/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-11848",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-11848/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-26208",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-26208/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "psf__requests-6028",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/psf__requests-6028/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4966",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4966/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-4604",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-4604/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-6197",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-6197/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-10844",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-10844/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-7889",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-7889/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-13480",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-13480/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-14096",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-14096/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-12308",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-12308/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-25287",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-25287/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-6721",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-6721/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-7080",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-7080/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-10051",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-10051/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-14496",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-14496/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-9281",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-9281/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-20438",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-20438/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-14598",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-14598/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-14007",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-14007/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-26113",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-26113/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-3305",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-3305/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pylint-dev__pylint-6386",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pylint-dev__pylint-6386/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-5262",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-5262/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-14053",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-14053/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-9711",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-9711/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-20590",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-20590/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-8872",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-8872/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-13794",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-13794/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-24570",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-24570/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4695",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4695/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7205",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7205/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-25232",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-25232/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-8269",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-8269/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-12481",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-12481/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-14369",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-14369/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-13964",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-13964/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-14623",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-14623/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-7393",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-7393/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-5631",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-5631/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-26194",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-26194/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-7910",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-7910/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-22914",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-22914/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-7671",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-7671/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-15315",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-15315/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-24177",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-24177/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4094",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4094/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-10356",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-10356/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-14710",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-14710/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-11445",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-11445/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-23824",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-23824/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-8707",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-8707/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-16139",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-16139/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-21568",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-21568/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-6992",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-6992/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7324",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7324/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-25747",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-25747/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-10673",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-10673/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-16766",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-16766/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-7336",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-7336/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-13028",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-13028/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-22865",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-22865/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4687",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4687/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-5840",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-5840/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-14141",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-14141/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-8595",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-8595/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-18211",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-18211/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-7606",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-7606/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "django__django-13406",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/django__django-13406/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "matplotlib__matplotlib-25775",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/matplotlib__matplotlib-25775/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pydata__xarray-4629",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pydata__xarray-4629/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "pytest-dev__pytest-7432",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/pytest-dev__pytest-7432/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "scikit-learn__scikit-learn-10908",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/scikit-learn__scikit-learn-10908/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sphinx-doc__sphinx-8721",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sphinx-doc__sphinx-8721/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "sympy__sympy-24213",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/sympy__sympy-24213/report.json",
+  "error": "HTTP Error 404: Not Found"
+ },
+ {
+  "agent": "20250726_mini-v1.0.0_gpt-4.1-2025-04-14",
+  "instance_id": "astropy__astropy-13033",
+  "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20250726_mini-v1.0.0_gpt-4.1-2025-04-14/logs/astropy__astropy-13033/report.json",
+  "error": "HTTP Error 404: Not Found"
+ }
+]
