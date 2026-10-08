@@ -1,21 +1,13 @@
 # Research brief for the CTO
 
-**Gate 3b free checks failed under the fixed rule. No live pair or product transfer.**
+**The reading prerequisite is finished and independently reviewed. First version remains the failing-test Box; no prototype or live trial ran.**
 
-8 October 2026. Rebuilt native whole-repository search to retain matches and prioritize traced-function identities. Plan pushed before measurements. Replayed all actual search actions from twelve Gate 3 controls and both Gate 2 published agents on the same tasks.
+8 October 2026. Synced the accepted kitchen documents from master; kitchen remains idle and milestone B remains draft/on hold. The previous For the lab advice is already reflected in historical closeout.
 
-| Free gate | Finding |
-|---|---|
-| Corpus | 36 trajectories, 226 search actions |
-| Native invocations / covered actions / unknown actions | 243 / 220 / 6 |
-| Eligible tasks clearly nearer | 5/11; majority rule fails |
-| Recreated-native historical-target regressions | 3 on SymPy; direct query 1 to 3, all 28 matches retained |
-| Independent checks | Full aggregation and hashes; fresh samples 17/22/48 invocations; fixtures 18/20 |
-| Additional review fault | Unexecuted setter falsely marked; 48 ambiguous qualified names across seven tasks |
-| Repair agents / repair tokens / live pairs | 0 / 0 / 0 |
+The three named papers report useful runtime information for agents, with model/task-dependent costs and gains. They deliver debugging commands, reports or diagnoses. Wallaby and Coco also require coverage queries; Entire supplies static search ranking. No inspected item establishes runtime evidence silently shaping ordinary search. This is not a novelty claim or “the Box already exists.” [Comparison](lines/box-trial/ideal-box/related-work.md), [review](lines/box-trial/ideal-box/sceptic.md).
 
-**Sentence:** this instrument brings the historical patch nearer on only five of eleven eligible tasks and sometimes later in recreated native order, so the written gate stops before a live pair.
+The case map cannot identify a public-evidence-backed “least covered and most common” pair: representative prevalence is unknown. Keep failing-test scope under the later narrowing. A reproduction script is the closest later engineering extension, already served by runtime tools; log-only and future-feature cells lack reliable execution anchors. [Map](lines/box-trial/ideal-box/case-map.md).
 
-The original published SymPy output has the same matches/source but different traversal order and projects 3 to 3; the recreated 1 to 3 is not a historical original-stream regression. Historical generated/collateral patch functions need not be necessary for every correct repair, and module-level fixes are excluded. Counts use qualified identities that can collide. Invocation ranks precede downstream filters; stdin stages can already inherit reordered input. Six generated Sphinx environment queries remain unknown. This is a bounded ranking result, not evidence that Box ordering harms repair quality. The false marks also leave the instrument uncleared for agent use.
+Multi-language coverage tooling already exists. Python, JavaScript and Go documentation supports a common report core, but line/region hits do not universally establish exact function calls, call order or child attribution. Reuse checked native collectors and parser helpers; keep unknown/stale evidence unmarked. ADI's core licence is unconfirmed; coverctl's README licence claims conflict. No unsupported reuse permission. [Design](lines/box-trial/ideal-box/language-design.md).
 
-[Full task table](lines/box-trial/gate-3b-result.md), [fresh review](lines/box-trial/gate-3b-sceptic.md), [fixed plan](lines/box-trial/gate-3b-plan.md). Stop here for CTO review. Gate 3's passive non-use and empty/error required calls remain historical findings (about 5.8M reported repair tokens); this session ran no repair models or paid services. No wave in flight; other lines paused.
+**Next session:** the prescribed thirty-task prototype, fix file/start-line identity in Q1, and script-check Q2–4 plus all-match retention and footprint. Keep silent Box delivery separate from facts on request; the owner decides the latter's product role. Gate 3b remains uncleared until its marking fault is fixed and verified. Historical stop/results remain recorded. No product transfer is ready; live comparison still requires the owner's design agreement and request.

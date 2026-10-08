@@ -37,3 +37,7 @@ For every U in the map, the cited search family plus inspected primary contract 
 ## Interpretation and reproducibility
 
 Numerical results are authors' own, with matched baseline/subset and cost caveats in the comparison. No confidence interval, replication or cost total was invented for this session. The local receipts allow byte checks of saved full texts; URLs identify public readings without local copies. A fresh sceptic audits the written conclusions from these sources. This source list is bounded and date/version-specific, not a catalogue of all work.
+
+## Review corrections
+
+Fresh review of 7d99fa1 confirmed primary comparisons and delivery categories, then corrected the SWE-Doctor comparator name to live-SWE-agent and found conflicting coverctl licence statements. The final comparison qualifies that conflict; no code reuse permission is asserted. Reviewer additionally checked AutoCodeRover section 6.2, supporting its evaluated SBFL cell, and coverage.py FAQ/Node function-count contracts. All five source-text receipts matched independently. See sceptic.md for checks and limitations.
