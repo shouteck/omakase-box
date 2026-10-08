@@ -12,6 +12,34 @@ No deadlines. The CTO decides which problem and in what order; the lab lead deci
 
 **What the trial did settle, to build on and not to redo.** A program makes a Box from one failing test in about two seconds, a median of 5% of a large project's source, holding the real fix on 28 of 29 tasks; the error trace names the fix on 6 of 29 (gate 1b). Strong agents on well-known public projects reach the right function in two to four steps of about thirty-five, and their own searches already put the fix at or near the top (gates 2 and 3b): so a Box that only says *where to look* has little to add for them. After finding the place they read hundreds of other functions before editing, about two fifths of all they read, and eight of nine failed runs had found the place (gate 2): the effort and the failures are in *understanding and fixing*. A tool that is only mentioned is not called; one that can return nothing costs real steps (gate 3).
 
+### What a Box is, and what it is not. Read this before judging anything as "already done".
+
+The owner asked for this distinction to be made plain to the lab, 8 October 2026. It governs how the reading, the map and every later comparison are done.
+
+**A Box tells the agent where the relevant code is, by shaping where it looks. It is not information handed to the agent to think about.**
+
+| | A Box | Coverage data, traces and reports for agents |
+|---|---|---|
+| What it is for | Pointing the agent at the relevant part of the repository | Telling the agent facts about what ran |
+| What the agent receives | Its ordinary search and navigation, with the relevant code first | Data to query or a report to read: lines that ran, tests that cover a line, execution paths, call stacks, values |
+| What the agent has to do | Nothing it was not already doing | Decide to ask, know what to ask, read the answer, work out what follows from it |
+| Load on the agent | None added; if anything, less to look through | Added: one more source to reason about, and its text in the context |
+| If the agent ignores it | It cannot: it is in the path of what the agent already does | Then it does nothing. Gate 3 showed a tool that is only offered is not called |
+| If it is wrong or incomplete | The agent looks further, as it would have anyway; the whole repository stays open | The agent may reason from a wrong or partial fact |
+| Language | Agnostic: the same for the agent in every language | Usually one ecosystem's tool |
+
+Both rest on the same underlying fact, what actually ran. That shared fact is not the product. A coverage report, a trace, a test-impact map: each is **raw material a Box may be made from, behind the tool, where the agent never sees it.** Something that shows that material to the agent is a different thing from a Box, however good it is.
+
+**So, when reading other work, sort each item into one of three kinds and say which:**
+
+1. *A Box in this sense:* it changes where the agent looks without asking the agent to do or read anything new. If one is found, that is the finding that matters most; say exactly how it delivers, in what languages, and whether it rests on runtime evidence.
+2. *Runtime information for agents:* coverage connectors (Wallaby, Coco), trace and debugging interfaces (ADI), runtime reports (DAIRA), diagnoses (SWE-Doctor). These are **not** a Box and do not make the Box "already done". They are evidence about whether runtime facts help an agent, and possible sources of raw material. Record what the agent must do to benefit from each.
+3. *Better search or ranking for agents with no runtime evidence* (for example the Entire write-up): the delivery half of a Box without its evidence. Say what it ranks by.
+
+**Do not report "this already exists" unless an item is of the first kind.** For the second and third kinds say "this exists and is a different thing", and what it shows.
+
+**The same distinction applies to the lab's own four questions, and it cuts against two of them.** Question 1, search with what ran first, is a Box: silent, in the agent's path, nothing to learn. Question 4, "did this run", can be folded into the mark on a search result and stay silent. Questions 2 and 3, "what ran in this file" and "how did the test get to the failure", are things the agent must choose to ask and then read: by the table above they are runtime information, not a Box. They are not ruled out, since others report gains from exactly that kind of tool. But they are a second thing, and the lab must not let them blur into the first. In the design page, keep them apart: **the Box** (silent, where to look), and separately, if the evidence supports it, **facts on request** (what happened when it failed). The owner decides whether the second belongs in the product at all. Wherever a fact can be delivered silently instead of on request (in the order of results, in a mark, in what a file view shows first) prefer that, and say so.
+
 ### Narrowed by the owner and CTO later the same day: this is the lab's only job, and it is smaller than the sections below make it
 
 The sections below ("The question", "The work, in order") were written before this and are too broad. Where they differ from this, this wins.
