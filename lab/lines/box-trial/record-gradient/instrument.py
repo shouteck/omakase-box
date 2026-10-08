@@ -87,19 +87,21 @@ def measure(row,agent):
   vf={(p,hit['start']) for p,n in verifiedlines if (hit:=locate(p,n)) is not None}
   readfunctions |= vf
   verifiededit=set()
-  if edited and s.get('exit')==0:
-   if firstanyedit is None:firstanyedit=i
-   # A successful literal patch action with base-matching context; writing a
-   # patch file or a numeric sed address alone does not establish an edit.
-   patch_action=any(re.match(r'^(?:git\s+apply|patch\b)',z) for z in segmentlist) and not re.search(r'--directory|--reverse|(?:^|\s)-R(?:\s|$)',command)
-   verified_paths=verified_patch_paths(command,source) if patch_action else set()
-   for p,change in g2.patch_changes(command,source).items():
-    if p in stale or p not in verified_paths:continue
-    for line in change['old_lines']:
-     hit=locate(p,line)
-     if hit:verifiededit.add((p,hit['start']))
-   all_verified_edits|=verifiededit
-   if firstedit is None and verifiededit&target:firstedit=i
+  patch_action=any(re.match(r'^(?:git\s+apply|patch\b)',z) for z in segmentlist)
+  inspection=bool(re.search(r'--(?:check|dry-run|stat|numstat|summary|directory|reverse|cached)|(?:^|\s)-R(?:\s|$)',command))
+  changes=g2.patch_changes(command,source) if patch_action else {}
+  if patch_action and not inspection:edited|={p for p in changes if p in source}
+  if edited and firstanyedit is None:firstanyedit=i
+  # Literal successful applying action; classify's path guesses do not establish
+  # diff paths. Inspection-only commands and no-op numeric sed stay unlocalized.
+  verified_paths=verified_patch_paths(command,source) if patch_action and not inspection and s.get('exit')==0 else set()
+  for p,change in changes.items():
+   if p in stale or p not in verified_paths:continue
+   for line in change['old_lines']:
+    hit=locate(p,line)
+    if hit:verifiededit.add((p,hit['start']))
+  all_verified_edits|=verifiededit
+  if firstedit is None and verifiededit&target:firstedit=i
   if reached is None and (vf|verifiededit)&target:reached=i
   if broad_reached is None and (vf|verifiededit)&target:broad_reached=i
   if broad_reached is None and s.get('exit') in [None,0]:
