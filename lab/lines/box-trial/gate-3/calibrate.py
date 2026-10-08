@@ -1,6 +1,6 @@
 """Authored known-answer tool fixture, not an agent or benchmark repair run."""
 import ast,json,pathlib,subprocess
-from run import HERE,ROOT,command,create,dispatch,execute,idle,write,production_patch,passed_names
+from run import HERE,ROOT,command,create,dispatch,execute,idle,write,production_patch,passed_names,capture
 from prepare import make
 fixture='def called():\n    marker = "NEEDLE"\n    return marker\n\ndef unused():\n    marker = "NEEDLE"\n    return marker\n\nsetup = "NEEDLE"\n'
 ident='astropy__astropy-13033'
@@ -15,6 +15,8 @@ try:
         idle();r=command(['docker','pull',image]);(directory/'pull.log').write_bytes(r.stdout+r.stderr)
         if r.returncode:raise RuntimeError('Prepared image pull failed')
     name,args=create(image,task,directory);record['create_argv']=args
+    assert capture(name,directory)==''
+    record['checks'].append('unchanged prepared-worktree checkpoint exports an empty candidate despite dirty image files')
     src=directory/'fixture.py';src.write_bytes(fixture.encode());r=command(['docker','cp',str(src),name+':/testbed/lab_gate3_fixture.py'])
     if r.returncode:raise RuntimeError('Fixture copy failed')
     fixture_scope={'lab_gate3_fixture.py':[[1,3]]}

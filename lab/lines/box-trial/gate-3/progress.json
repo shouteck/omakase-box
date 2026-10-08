@@ -1,0 +1,225 @@
+{
+  "stats": {
+    "attempts": 2,
+    "scored_pairs": 0,
+    "unknown_or_unstarted_pairs": 12,
+    "control_solved": 0,
+    "box_solved": 0,
+    "gains": 0,
+    "losses": 0,
+    "success_exact_p": 1.0,
+    "both_solved_comparable": 0,
+    "median_token_reduction": null,
+    "token_wins": 0,
+    "token_losses": 0,
+    "token_exact_p": 1.0,
+    "box_calls": 0,
+    "artifact_hash_errors": [],
+    "success_signal": false,
+    "cost_signal": false,
+    "median_step_delta": null,
+    "median_seconds_delta": null
+  },
+  "repeat_decision": "incomplete",
+  "pairs": [
+    {
+      "instance_id": "astropy__astropy-13033",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "completed",
+          "solved": null,
+          "evaluation_status": "unknown",
+          "steps": 13,
+          "tokens": 207328,
+          "input_tokens": 203338,
+          "cached_input_tokens": 153344,
+          "output_tokens_including_reasoning": 3990,
+          "agent_seconds": 108.31300000008196,
+          "box_calls": 0,
+          "box_match_lines": 0,
+          "box_error_or_empty_calls": 0,
+          "error": "Candidate production patch does not apply",
+          "box_calls_after_first_edit": 0
+        },
+        "box": {
+          "status": "completed",
+          "solved": null,
+          "evaluation_status": "unknown",
+          "steps": 12,
+          "tokens": 168662,
+          "input_tokens": 166521,
+          "cached_input_tokens": 136448,
+          "output_tokens_including_reasoning": 2141,
+          "agent_seconds": 51.53200000000652,
+          "box_calls": 0,
+          "box_match_lines": 0,
+          "box_error_or_empty_calls": 0,
+          "error": "Candidate production patch does not apply",
+          "box_calls_after_first_edit": 0
+        }
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "stratum": "long published run",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "django__django-12193",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "django__django-14752",
+      "stratum": "quick published solve",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "django__django-15467",
+      "stratum": "quick published solve",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "stratum": "quick published solve",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "stratum": "quick published solve",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "stratum": "published failure",
+      "arms": {
+        "control": {
+          "status": "not_started",
+          "solved": null
+        },
+        "box": {
+          "status": "not_started",
+          "solved": null
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Twelve selected tasks, one initial pair each; small effects cannot be distinguished",
+    "Unknown/missing tests are not successes or ordinary task failures",
+    "Agent receives failing tests unlike published Gate 2 setting",
+    "Total tokens include cached input and output reasoning, not an API invoice",
+    "Reading classifier proxies are not cognition; spans and search errors matter"
+  ]
+}

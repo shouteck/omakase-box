@@ -1,0 +1,9 @@
+{
+  "rule": "remove only byte-identical chunks already present before agent in pinned image plus test overlay",
+  "removed_headers": [
+    "diff --git a/pyproject.toml b/pyproject.toml"
+  ],
+  "original_sha256": "1c8da7a1adb0c8b22a8cd19987d5413055d4b49d2c7dcd911024ddd9f4c226ad",
+  "corrected_sha256": "cfc9393f3fa686af367bb70b3182146eb7f133a7285ee5b08af0719633d3e625",
+  "agent_rerun": false
+}

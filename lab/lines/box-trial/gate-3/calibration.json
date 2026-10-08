@@ -1,8 +1,9 @@
 {
   "purpose": "authored fixture; no agent",
   "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
-  "image_absent_before": true,
+  "image_absent_before": false,
   "checks": [
+    "unchanged prepared-worktree checkpoint exports an empty candidate despite dirty image files",
     "ordinary grep matching restricted to called function; unused body and setup absent",
     "literal/case-insensitive/no-match/error/path-filter responses",
     "control command unavailable",
@@ -14,7 +15,7 @@
     "docker",
     "create",
     "--name",
-    "lab-gate-3-6e91be2f-d373-4c4b-bb56-f84f7bfc7f86",
+    "lab-gate-3-33685e43-e8e1-4a82-a655-61405a621dee",
     "--network",
     "none",
     "--cap-drop",

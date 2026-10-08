@@ -1,0 +1,40 @@
+[
+  {
+    "arm": "control",
+    "patch_bytes": 1824,
+    "diff_headers": [
+      "diff --git a/astropy/timeseries/core.py b/astropy/timeseries/core.py",
+      "index c279f35f87..9bf81a96c3 100644",
+      "--- a/astropy/timeseries/core.py",
+      "+++ b/astropy/timeseries/core.py",
+      "@@ -55,6 +55,13 @@ class BaseTimeSeries(QTable):",
+      "@@ -76,9 +83,10 @@ class BaseTimeSeries(QTable):",
+      "diff --git a/pyproject.toml b/pyproject.toml",
+      "index 32ebe645ce..6ebe80c7a6 100644",
+      "--- a/pyproject.toml",
+      "+++ b/pyproject.toml",
+      "@@ -1,5 +1,5 @@"
+    ],
+    "check_exit": 1,
+    "stderr": "error: patch failed: pyproject.toml:1\nerror: pyproject.toml: patch does not apply\n"
+  },
+  {
+    "arm": "box",
+    "patch_bytes": 1824,
+    "diff_headers": [
+      "diff --git a/astropy/timeseries/core.py b/astropy/timeseries/core.py",
+      "index c279f35f87..9bf81a96c3 100644",
+      "--- a/astropy/timeseries/core.py",
+      "+++ b/astropy/timeseries/core.py",
+      "@@ -55,6 +55,13 @@ class BaseTimeSeries(QTable):",
+      "@@ -76,9 +83,10 @@ class BaseTimeSeries(QTable):",
+      "diff --git a/pyproject.toml b/pyproject.toml",
+      "index 32ebe645ce..6ebe80c7a6 100644",
+      "--- a/pyproject.toml",
+      "+++ b/pyproject.toml",
+      "@@ -1,5 +1,5 @@"
+    ],
+    "check_exit": 1,
+    "stderr": "error: patch failed: pyproject.toml:1\nerror: pyproject.toml: patch does not apply\n"
+  }
+]

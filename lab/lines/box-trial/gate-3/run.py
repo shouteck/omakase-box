@@ -29,6 +29,11 @@ def create(image,task,directory):
         if r.returncode:raise RuntimeError('Test overlay copy failed')
         r=command(['docker','exec',name,'git','apply','/tmp/lab-test.patch'],timeout=60)
         if r.returncode:raise RuntimeError('Test overlay refused')
+        r=command(['docker','exec',name,'/bin/bash','-c','git add -A && git write-tree && git reset -q'],timeout=60)
+        if r.returncode:raise RuntimeError('Prepared-worktree checkpoint failed')
+        tree=r.stdout.decode().strip()
+        if not re.fullmatch('[0-9a-f]{40}',tree):raise RuntimeError('Invalid worktree checkpoint')
+        write(directory/'baseline-tree.json',{'tree':tree,'meaning':'prepared image worktree plus immutable test overlay; before agent'})
         return name,args
     except Exception:
         command(['docker','rm','-f',name],timeout=60);raise
@@ -74,8 +79,9 @@ def production_patch(text):
         out.append(block)
     return ''.join(out)
 def capture(name,directory):
-    execute(name,{'mode':'command','command':'git add -N -- . && git diff --binary HEAD -- .'})
-    r=command(['docker','exec',name,'git','diff','--binary','HEAD','--','.'],timeout=60)
+    tree=json.loads((directory/'baseline-tree.json').read_text())['tree']
+    execute(name,{'mode':'command','command':'git add -N -- .'})
+    r=command(['docker','exec',name,'git','diff','--binary',tree,'--','.'],timeout=60)
     if r.returncode:raise RuntimeError('Candidate diff unavailable')
     allpatch=r.stdout.decode('utf-8');patch=production_patch(allpatch)
     (directory/'all.patch').write_bytes(r.stdout);(directory/'candidate.patch').write_bytes(patch.encode())
@@ -109,7 +115,9 @@ def evaluate(image,task,patch,directory):
         if r.returncode:raise RuntimeError('Candidate copy failed')
         if patch:
             r=command(['docker','exec',name,'git','apply','/tmp/lab-candidate.patch'],timeout=60)
-            if r.returncode:raise RuntimeError('Candidate production patch does not apply')
+            if r.returncode:
+                (directory/'apply-error.log').write_bytes(r.stderr)
+                raise RuntimeError('Candidate production patch does not apply')
         for phase,key in [('failing','fail_names'),('guards','guard_names')]:
             names=task[key]
             if not names:result['phases'][phase]={'vacuous':True,'all_pass':True};continue
