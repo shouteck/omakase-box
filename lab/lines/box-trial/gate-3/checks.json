@@ -1,0 +1,22 @@
+{
+  "status": "pass",
+  "checked_attempts": 3,
+  "control_prompt_unchanged": true,
+  "artifact_hash_errors": [],
+  "box_runs": [
+    {
+      "instance_id": "astropy__astropy-13033",
+      "repeat": 0,
+      "valid": false,
+      "first_command": false,
+      "calls": 0
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 4
+    }
+  ]
+}

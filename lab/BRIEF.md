@@ -1,3 +1,5 @@
+> Gate 3 is now running under the owner/CTO required Box-first correction. Its passive-offer starts are preserved separately and excluded. The active plan was pushed before restarted runs; control, tasks, model and limits stay fixed. No final finding yet. The Gate 2 brief below is historical context pending closeout.
+
 # Research brief for the CTO
 
 **No wave is in flight. Gate 2 has reported. Its answer to your question is: no, there is almost no reading to save before the fix is found; and it turned up a different stretch of reading that the trial was not aimed at. The next decision is yours and the owner's.**

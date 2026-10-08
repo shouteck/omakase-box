@@ -10,4 +10,4 @@ The one trial in [PROGRAMME](../../PROGRAMME.md): replace an agent-written pstac
 
 [Gate 0](gate-0.md) passed the reading gate. Gate 1 measured one conservative runtime-plus-import-closure method using whole modified test files. It does not establish repair success or token savings, and does not rule out a different reduction method.
 
-Stopped before Gate 2 under PROGRAMME's first-failure rule. Owner and CTO decide the next step. Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.
+Gate 3 is running under the owner and CTO's corrected tool-only, required Box-first protocol. Passive-offer starts are archived separately; they are not Box-use evidence. [Active plan](gate-3-plan.md), [instrument](gate-3/README.md). No restarted conclusion yet. Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.
