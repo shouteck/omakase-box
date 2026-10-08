@@ -1,0 +1,380 @@
+{
+  "status": "pass",
+  "actions": [
+    {
+      "agent": "control",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\002.json"
+    },
+    {
+      "agent": "control",
+      "step": 4,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check-final\\control\\004.json"
+    },
+    {
+      "agent": "control",
+      "step": 6,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\006.json"
+    },
+    {
+      "agent": "control",
+      "step": 8,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\008.json"
+    },
+    {
+      "agent": "control",
+      "step": 9,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\009.json"
+    },
+    {
+      "agent": "control",
+      "step": 10,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\010.json"
+    },
+    {
+      "agent": "control",
+      "step": 11,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 2,
+      "receipt": "raw\\native-check-final\\control\\011.json"
+    },
+    {
+      "agent": "control",
+      "step": 13,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\013.json"
+    },
+    {
+      "agent": "control",
+      "step": 14,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\control\\014.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 1,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\001.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\002.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 3,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\003.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 4,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\004.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 5,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\005.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 6,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\006.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 7,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\007.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 8,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\008.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 9,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\009.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 13,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\013.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 15,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\015.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 27,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\027.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 29,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\029.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 30,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\030.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 31,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\031.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 32,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\032.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 41,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\041.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 42,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gemini-3-5-flash\\042.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 0,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gpt-5-2-codex\\002.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 3,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check-final\\gpt-5-2-codex\\003.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 6,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check-final\\gpt-5-2-codex\\006.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 30,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check-final\\gpt-5-2-codex\\030.json"
+    }
+  ],
+  "count": 31,
+  "searches": 34,
+  "reordered": 6
+}

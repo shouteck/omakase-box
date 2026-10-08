@@ -1,0 +1,7 @@
+{
+  "task": "sphinx-doc__sphinx-10614",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sphinx-doc__sphinx-10614@sha256:e343d48acbbb8f0052e3c10d196d2bf7b10d90d951bdd4217cfc40e602359b37",
+  "stages": [],
+  "status": "started",
+  "image_preexisted": true
+}

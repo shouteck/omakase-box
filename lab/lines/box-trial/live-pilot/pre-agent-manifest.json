@@ -1,0 +1,980 @@
+{
+  "files": {
+    "raw\\harness-before-context-guard\\pull.log": {
+      "sha256": "b38d1cc82745bb0f036682291a084487ab31420bc91feb182919c78740ae7bd6",
+      "bytes": 1800
+    },
+    "raw\\box-check\\control\\002.json": {
+      "sha256": "30c90ce26d87b7ec6c403b515df1d4d15b3ff596ca02b36a96e655949ae0b50c",
+      "bytes": 88452
+    },
+    "raw\\box-check\\control\\004.json": {
+      "sha256": "c501bdfc06868bb7267dd681bbdc924c0be900def3cc28c77431b686bf8fa9a0",
+      "bytes": 120600
+    },
+    "raw\\box-check\\control\\006.json": {
+      "sha256": "476375e8f4d9f28b2edc24d3418daac6be5b4652af71963afbd54dcfb87c275a",
+      "bytes": 37936
+    },
+    "raw\\box-check\\control\\008.json": {
+      "sha256": "2a978c93399c32e18a20dfe06976b65d4dd30c49041afe106eeafafa18aed65f",
+      "bytes": 5555
+    },
+    "raw\\box-check\\control\\009.json": {
+      "sha256": "279e574ed4ad1cc1ae45353f145f99b18300ccf047a2696014e2658d887f8dde",
+      "bytes": 5408
+    },
+    "raw\\box-check\\control\\010.json": {
+      "sha256": "80f74b4d84551a715a3c6e673250337fbc34976baad608afe929e8621ffe0aa4",
+      "bytes": 3023
+    },
+    "raw\\box-check\\control\\011.json": {
+      "sha256": "0c7ea091b543105ec7bd8b164be5abd3b3061c939b6cf8cdc80d4c401c06de5e",
+      "bytes": 69721
+    },
+    "raw\\box-check\\control\\013.json": {
+      "sha256": "026002ae69f7e1d47e102c73583d66bcf87a7abc691eca69ac8c3187f3937bca",
+      "bytes": 3054
+    },
+    "raw\\box-check\\control\\014.json": {
+      "sha256": "13a8db999231166526423a7bb90d9851828624feae35f595d047d76579a09002",
+      "bytes": 3064
+    },
+    "raw\\box-check\\control\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check\\control\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check\\gemini-3-5-flash\\001.json": {
+      "sha256": "eeb38802f78f82a4481e892d65c0b7b280fffc8fffe398b8e61739fe00cec49a",
+      "bytes": 2801
+    },
+    "raw\\box-check\\gemini-3-5-flash\\002.json": {
+      "sha256": "1bdeb6d50d9f0eb411d8156b05a0bab6a7b8bd81556dc993e3282d8a6c2b4c0c",
+      "bytes": 2037
+    },
+    "raw\\box-check\\gemini-3-5-flash\\003.json": {
+      "sha256": "7ba2fb824cfa39c292e59593ea88fb480b3a973650404e0acdf6161dae276d2b",
+      "bytes": 193617
+    },
+    "raw\\box-check\\gemini-3-5-flash\\004.json": {
+      "sha256": "ffd360e2b7dc5b33bbc05941fffd14e15bdfe0ea0013caa5c73e4e9c53d7c53c",
+      "bytes": 51382
+    },
+    "raw\\box-check\\gemini-3-5-flash\\005.json": {
+      "sha256": "e26315e25ab782a27fff1067567d309050535d413660a1d1904e7bb80fc03e95",
+      "bytes": 142529
+    },
+    "raw\\box-check\\gemini-3-5-flash\\006.json": {
+      "sha256": "048b2151b7a2fc96dc1f22d50c8cb94cf901924f2773663c8cb1703333b7b4e2",
+      "bytes": 7743
+    },
+    "raw\\box-check\\gemini-3-5-flash\\007.json": {
+      "sha256": "59249e7e2b52d0046be53fd3d79ee10a0438fde18eb7d28d40e5b2c44facd945",
+      "bytes": 5559
+    },
+    "raw\\box-check\\gemini-3-5-flash\\008.json": {
+      "sha256": "b19994b11d86c2b87c3e3cc5ddc8162a0fae2d7e74df99d539cb2800eebb41bb",
+      "bytes": 38337
+    },
+    "raw\\box-check\\gemini-3-5-flash\\009.json": {
+      "sha256": "c82ba6d506b8bed0b927c297e38b24e791154c2697bfc8763bbefe4cd9b415f8",
+      "bytes": 4509
+    },
+    "raw\\box-check\\gemini-3-5-flash\\013.json": {
+      "sha256": "05e15878377f3aee4bb7dc748c0e8e6e82fb7c11a0f5b0c9b6498216ef81a415",
+      "bytes": 7643
+    },
+    "raw\\box-check\\gemini-3-5-flash\\015.json": {
+      "sha256": "8b255f740754e61771bfb590d80d1cdc237e7df1e1b294c34aeb83f984279f00",
+      "bytes": 19434
+    },
+    "raw\\box-check\\gemini-3-5-flash\\027.json": {
+      "sha256": "39eab223f3aa0f043f4631c216a3ea340dbdf5264329a13060f85c3606f386a7",
+      "bytes": 27124
+    },
+    "raw\\box-check\\gemini-3-5-flash\\029.json": {
+      "sha256": "54f0644b6d8888c8aeb769c9efe122d584b5cda86c95e9d3caf555790f744c50",
+      "bytes": 2365
+    },
+    "raw\\box-check\\gemini-3-5-flash\\030.json": {
+      "sha256": "82ab7f25456064c0e32ac9af6df22caac1dc1a0287232137009dcbccc8b71a1b",
+      "bytes": 2474
+    },
+    "raw\\box-check\\gemini-3-5-flash\\031.json": {
+      "sha256": "66f45ea35653a2eaca1bedcf29ed2b6f27963cb71d47367029a5e911c6a6164d",
+      "bytes": 2492
+    },
+    "raw\\box-check\\gemini-3-5-flash\\032.json": {
+      "sha256": "56e61f4c269b30d42804d4e7dc4c3eab6f0cebf3444681638353914ff77fc5a3",
+      "bytes": 4994
+    },
+    "raw\\box-check\\gemini-3-5-flash\\041.json": {
+      "sha256": "86c97a70d15934b076072ca9ed9fdee257176d3cefdc339e37d3bc16ada70ac6",
+      "bytes": 2525
+    },
+    "raw\\box-check\\gemini-3-5-flash\\042.json": {
+      "sha256": "251a1b786b4820f2aea39091e9c6adef1cd3d24edd7e84d288e4f887c4a48d25",
+      "bytes": 2562
+    },
+    "raw\\box-check\\gemini-3-5-flash\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check\\gemini-3-5-flash\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check\\gpt-5-2-codex\\002.json": {
+      "sha256": "1e8c9b3c3ffffa9247c6d303ec736d7ba59430fe78a3e6d684fa3566b1481f50",
+      "bytes": 2156
+    },
+    "raw\\box-check\\gpt-5-2-codex\\003.json": {
+      "sha256": "eea0138b25b5b0ff2b8b2d6b11ce4a9dde04e12b67e6692b7dc4784874d04df2",
+      "bytes": 28616
+    },
+    "raw\\box-check\\gpt-5-2-codex\\006.json": {
+      "sha256": "6fe5e26deca482353bc29f9ac68dd01f9b9ff3d6120ddb1ba5c953bad001db73",
+      "bytes": 5742
+    },
+    "raw\\box-check\\gpt-5-2-codex\\030.json": {
+      "sha256": "bf575013338f0b3f400445e3250c19cfe763243862165a3845f2c0699f1c8a0a",
+      "bytes": 11036
+    },
+    "raw\\box-check\\gpt-5-2-codex\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check\\gpt-5-2-codex\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check\\trace\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check\\trace\\failing.trace.json": {
+      "sha256": "ff61c966b9a694f8689cede9a0c3fcdc28d671f85f23d47b8b3c0f9716a33ed0",
+      "bytes": 96007
+    },
+    "raw\\box-check\\trace\\result.json": {
+      "sha256": "e5072144350fa6cbaf744ea20013ecd3957280d6085d69df78152dfe49f3d486",
+      "bytes": 11819
+    },
+    "raw\\box-check\\trace\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check-v2\\control\\002.json": {
+      "sha256": "6112ceec3836c6b128e50b33eb3266111e9016f58b14ec5105e7aa9b957a00ad",
+      "bytes": 88452
+    },
+    "raw\\box-check-v2\\control\\004.json": {
+      "sha256": "341db118eb7cc12fdb3be13437f90b56708626db1ffe278f87fb0f084cd231f0",
+      "bytes": 120598
+    },
+    "raw\\box-check-v2\\control\\006.json": {
+      "sha256": "e0842168dd6276371577c44d43133f7f2d7d7bf6fc791770a10deed7946e3332",
+      "bytes": 37936
+    },
+    "raw\\box-check-v2\\control\\008.json": {
+      "sha256": "f2150bdcfe1cac80cbcad6633d326dc43fd001b4d2c1ac173a4c69e052e6621c",
+      "bytes": 5399
+    },
+    "raw\\box-check-v2\\control\\009.json": {
+      "sha256": "9b9a257395b43d39a04511a650cb09083886ee19ca135721405879e493711e21",
+      "bytes": 5275
+    },
+    "raw\\box-check-v2\\control\\010.json": {
+      "sha256": "901b31ad4102ea02ce55924524920efd6638e7395467360a0963b093290b95b8",
+      "bytes": 2957
+    },
+    "raw\\box-check-v2\\control\\011.json": {
+      "sha256": "408be87dc24c1a5ed37c6e6b502f9ef37dfe75e6c1799ea89824ce59ffa8a365",
+      "bytes": 69721
+    },
+    "raw\\box-check-v2\\control\\013.json": {
+      "sha256": "c2ddcc3e782630eed0edc58285d37ca7e79770a6c95a464bee54e56b9075004d",
+      "bytes": 2988
+    },
+    "raw\\box-check-v2\\control\\014.json": {
+      "sha256": "de2ff779f5f9c030000da3887e3dcb25af280b036ba9be70d96b2b430a642ffc",
+      "bytes": 2998
+    },
+    "raw\\box-check-v2\\control\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check-v2\\control\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\001.json": {
+      "sha256": "06ba2af2fbec654c0e7f4b067e641fd46a618306ab15a32b71e684d2e98ffacf",
+      "bytes": 2800
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\002.json": {
+      "sha256": "ae10d823df41cc8d940e5b729f40d755a4124da6e76b8c7b58469a45ca33ab87",
+      "bytes": 2037
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\003.json": {
+      "sha256": "efa91ffc8535c3c9b9ec9876beb73504fda85f99f22bd93007d1e3b2d18f0e61",
+      "bytes": 193617
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\004.json": {
+      "sha256": "f09c0b615ef3701b9875d10ac3eaa93d56dc237b8cde53d95c1d9d362733bdf3",
+      "bytes": 51382
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\005.json": {
+      "sha256": "bc4fad03a1a1761ec9da2c3dc9bb2735f210f568ea2311e02a5e52f5eb425761",
+      "bytes": 142528
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\006.json": {
+      "sha256": "d340e4d33a645963b76c6be9eb2e4f0d14cf8685dd5c0ad9aa95dfd15d6d9ba8",
+      "bytes": 7743
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\007.json": {
+      "sha256": "032f5a385d51df255936c13a80fdeefa06c32684e806d975085cc67469d7ac44",
+      "bytes": 5559
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\008.json": {
+      "sha256": "e5abc2a54645bfdcd3974f407d3c2777a5d1ae7508c7140f7f5a60c5ae896116",
+      "bytes": 38337
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\009.json": {
+      "sha256": "614950f876cccf1db460c7272850abbfdd15f62bd4b634e3a1165e754bc24bab",
+      "bytes": 4509
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\013.json": {
+      "sha256": "5d6385eca2b9ba836a5823d415d1bbafee2e0d2bd63a51a763d221c6076066cd",
+      "bytes": 7643
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\015.json": {
+      "sha256": "2e82faa5db3ed6e8b9e2ca61817b23872a25ff24f7932aef4bc2bae6dd3189a8",
+      "bytes": 19432
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\027.json": {
+      "sha256": "3e6fd33cbb51180b95c9bc735ea07514390a7ab18952f517e0d7769f08cc4d19",
+      "bytes": 27124
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\029.json": {
+      "sha256": "d77f1d6b0af21a16df78fdf4ce25f01600c818d03d9c7d38ec0296c98e12c90e",
+      "bytes": 2259
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\030.json": {
+      "sha256": "2994e8abd89c4a55d9a2c9afd69abb2f329d758783e7628a416629cda4c007d6",
+      "bytes": 2406
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\031.json": {
+      "sha256": "3c32a430ec46f7fcbd64e83b3005574f04ef291c04be3213f0194808d8d63625",
+      "bytes": 2426
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\032.json": {
+      "sha256": "f96d07c9d81b179c829a68f7b99f4299b07955491e1b991463f6437f38f8e93c",
+      "bytes": 4994
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\041.json": {
+      "sha256": "a7c089daf91ba018694a66bd5e78cadddb22a4abeb7a2b631e56476cb7d1703e",
+      "bytes": 2435
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\042.json": {
+      "sha256": "64adeb8ad08aa9e479e55d838c9cd2dc03843ffee3bdc7994c40ad25ab10a45e",
+      "bytes": 2495
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check-v2\\gemini-3-5-flash\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check-v2\\gpt-5-2-codex\\002.json": {
+      "sha256": "c6116d2392acff721b1bf78fcc20ebf52ca4e5a33a38e9a108a345a4e42d0291",
+      "bytes": 2156
+    },
+    "raw\\box-check-v2\\gpt-5-2-codex\\003.json": {
+      "sha256": "96131ed229466d5ac26514e4a596b7312fdff73acba4bf3806ee4ef8af37174d",
+      "bytes": 28615
+    },
+    "raw\\box-check-v2\\gpt-5-2-codex\\006.json": {
+      "sha256": "08b421b4d0f4ac0509c9ee117d8ce271a51b495e358ed4f9a0088946ee5cdd06",
+      "bytes": 5742
+    },
+    "raw\\box-check-v2\\gpt-5-2-codex\\030.json": {
+      "sha256": "02b0f0287a3fd6763669af564f9393ab569e999972b6c2ba16a1fa6c027df226",
+      "bytes": 11036
+    },
+    "raw\\box-check-v2\\gpt-5-2-codex\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check-v2\\gpt-5-2-codex\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\box-check-v2\\trace\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\box-check-v2\\trace\\failing.trace.json": {
+      "sha256": "ff61c966b9a694f8689cede9a0c3fcdc28d671f85f23d47b8b3c0f9716a33ed0",
+      "bytes": 96007
+    },
+    "raw\\box-check-v2\\trace\\result.json": {
+      "sha256": "eaef732625cc8c819733a84fad4258d80f0c4063730a98cfc3287307dab44fff",
+      "bytes": 11820
+    },
+    "raw\\box-check-v2\\trace\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness\\broken-guard\\all.patch": {
+      "sha256": "ac89b7c44920edfa4f8a32e7b6001c093fee092ef0da11266fb81dbd458a5b79",
+      "bytes": 1547
+    },
+    "raw\\harness\\broken-guard\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness\\broken-guard\\candidate.patch": {
+      "sha256": "ac89b7c44920edfa4f8a32e7b6001c093fee092ef0da11266fb81dbd458a5b79",
+      "bytes": 1547
+    },
+    "raw\\harness\\broken-guard\\evaluation.json": {
+      "sha256": "546fc8ccb5cb264553b6afaae01c906a5961d006c7d1a5576bfd47ff12f65812",
+      "bytes": 74905
+    },
+    "raw\\harness\\broken-guard\\failing.log": {
+      "sha256": "6e1108cb46ab4a67019040a04bfd98c582c72bd53a93cd9b9b4cbb0a2e02dd1a",
+      "bytes": 5154
+    },
+    "raw\\harness\\broken-guard\\gold-input.patch": {
+      "sha256": "1128c4768da30ad17958def8839dcdf3921c820a3328b28d75d2e21c53e8d5f8",
+      "bytes": 1276
+    },
+    "raw\\harness\\broken-guard\\guards.log": {
+      "sha256": "f7e69eb9bdc36cb9f3e76b64995dac09040082104d214524ee550c8ca90a9b86",
+      "bytes": 19445
+    },
+    "raw\\harness\\broken-guard\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness\\empty\\all.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness\\empty\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness\\empty\\candidate.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness\\empty\\evaluation.json": {
+      "sha256": "9b82eb0edfa812dfb54aff99a02e8ac91b7281305024db3f93bd85fe5bcd9893",
+      "bytes": 36620
+    },
+    "raw\\harness\\empty\\failing.log": {
+      "sha256": "234c41771451d97e484753fb0a7ab9df8f7fc6acf82e90d2f955d212b535c570",
+      "bytes": 2926
+    },
+    "raw\\harness\\empty\\guards.log": {
+      "sha256": "0b260e48cd27622795032ba3bf9ec5f156fabae8dc4f6429a004955529b05d82",
+      "bytes": 8446
+    },
+    "raw\\harness\\empty\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness\\real-fix\\all.patch": {
+      "sha256": "d96940f7bb7383ac6ff61de40507b0398cac7cd67de1667d92b3a5b204609728",
+      "bytes": 1310
+    },
+    "raw\\harness\\real-fix\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness\\real-fix\\candidate.patch": {
+      "sha256": "d96940f7bb7383ac6ff61de40507b0398cac7cd67de1667d92b3a5b204609728",
+      "bytes": 1310
+    },
+    "raw\\harness\\real-fix\\evaluation.json": {
+      "sha256": "c3cc277d75db8882de12304df14d67afe798149ecfeda6a897f557230e704066",
+      "bytes": 34991
+    },
+    "raw\\harness\\real-fix\\failing.log": {
+      "sha256": "0df94f2691c9d72e591d884be35a712eab7197be6bdf160fedafdb938613382d",
+      "bytes": 2387
+    },
+    "raw\\harness\\real-fix\\gold-input.patch": {
+      "sha256": "1128c4768da30ad17958def8839dcdf3921c820a3328b28d75d2e21c53e8d5f8",
+      "bytes": 1276
+    },
+    "raw\\harness\\real-fix\\guards.log": {
+      "sha256": "0d043010026d7a7855ba15aa245584978e3ad2ac3049f499a9ec7b22daba0ac0",
+      "bytes": 8446
+    },
+    "raw\\harness\\real-fix\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\all.patch": {
+      "sha256": "ac89b7c44920edfa4f8a32e7b6001c093fee092ef0da11266fb81dbd458a5b79",
+      "bytes": 1547
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\candidate.patch": {
+      "sha256": "ac89b7c44920edfa4f8a32e7b6001c093fee092ef0da11266fb81dbd458a5b79",
+      "bytes": 1547
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\evaluation.json": {
+      "sha256": "b190b70487da4e99f5f19d49d9adf19d8ac9d5bca8150f9d8964f37361867373",
+      "bytes": 74906
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\failing.log": {
+      "sha256": "b86037664949f1e2cae4217816b4ea4d5e7e4bef5cd53e579a4e252795629477",
+      "bytes": 5154
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\gold-input.patch": {
+      "sha256": "1128c4768da30ad17958def8839dcdf3921c820a3328b28d75d2e21c53e8d5f8",
+      "bytes": 1276
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\guards.log": {
+      "sha256": "bfe40b716a4d4fb8f94a493324b013df69ff635a79a74f754a2ba5e8b35c46af",
+      "bytes": 19445
+    },
+    "raw\\harness-before-context-guard\\broken-guard\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness-before-context-guard\\empty\\all.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-before-context-guard\\empty\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness-before-context-guard\\empty\\candidate.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-before-context-guard\\empty\\evaluation.json": {
+      "sha256": "c6693129e70766855349d528f8d64f3e2fea8f84fe5f03945ed1728d76a4e214",
+      "bytes": 36619
+    },
+    "raw\\harness-before-context-guard\\empty\\failing.log": {
+      "sha256": "9324c4b9aa9bdb3f648a9d08cac55623b0ffbd44ac385e8ad3402b054a7b3146",
+      "bytes": 2926
+    },
+    "raw\\harness-before-context-guard\\empty\\guards.log": {
+      "sha256": "2d9206123dd953ef0de151ce49d59e4b1a41b9c1e433428c29bdfa20d2bea7b6",
+      "bytes": 8446
+    },
+    "raw\\harness-before-context-guard\\empty\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness-before-context-guard\\real-fix\\all.patch": {
+      "sha256": "d96940f7bb7383ac6ff61de40507b0398cac7cd67de1667d92b3a5b204609728",
+      "bytes": 1310
+    },
+    "raw\\harness-before-context-guard\\real-fix\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness-before-context-guard\\real-fix\\candidate.patch": {
+      "sha256": "d96940f7bb7383ac6ff61de40507b0398cac7cd67de1667d92b3a5b204609728",
+      "bytes": 1310
+    },
+    "raw\\harness-before-context-guard\\real-fix\\evaluation.json": {
+      "sha256": "11bd4a2e30bf49df72dada800b293b19c69ed0bfa4f48c4f9bf904d1a349fc02",
+      "bytes": 34991
+    },
+    "raw\\harness-before-context-guard\\real-fix\\failing.log": {
+      "sha256": "98ac6a1b285e6121299745a474a947e125599a66283a62705c0701d1c0c4e6be",
+      "bytes": 2387
+    },
+    "raw\\harness-before-context-guard\\real-fix\\gold-input.patch": {
+      "sha256": "1128c4768da30ad17958def8839dcdf3921c820a3328b28d75d2e21c53e8d5f8",
+      "bytes": 1276
+    },
+    "raw\\harness-before-context-guard\\real-fix\\guards.log": {
+      "sha256": "a53cfbba43f74129478e0d20c26dca2d64d2bea05bd74772bc0eb770170619c0",
+      "bytes": 8446
+    },
+    "raw\\harness-before-context-guard\\real-fix\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness-v2\\broken-guard\\all.patch": {
+      "sha256": "ac89b7c44920edfa4f8a32e7b6001c093fee092ef0da11266fb81dbd458a5b79",
+      "bytes": 1547
+    },
+    "raw\\harness-v2\\broken-guard\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness-v2\\broken-guard\\candidate.patch": {
+      "sha256": "ac89b7c44920edfa4f8a32e7b6001c093fee092ef0da11266fb81dbd458a5b79",
+      "bytes": 1547
+    },
+    "raw\\harness-v2\\broken-guard\\evaluation.json": {
+      "sha256": "03620838a40dd4b8ff89cb8b7f8dde945d8cdf7dff16c18aba8e257ad5da2af4",
+      "bytes": 74905
+    },
+    "raw\\harness-v2\\broken-guard\\failing.log": {
+      "sha256": "1be5563395901870ad99ac0efb477389b15160cf9d5133995a8c9d9758d1aa81",
+      "bytes": 5154
+    },
+    "raw\\harness-v2\\broken-guard\\gold-input.patch": {
+      "sha256": "1128c4768da30ad17958def8839dcdf3921c820a3328b28d75d2e21c53e8d5f8",
+      "bytes": 1276
+    },
+    "raw\\harness-v2\\broken-guard\\guards.log": {
+      "sha256": "9bc996b7408094d174dfe4261dffa713e6a6c417b810eace0a132aeb93c3e692",
+      "bytes": 19445
+    },
+    "raw\\harness-v2\\broken-guard\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness-v2\\empty\\all.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-v2\\empty\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness-v2\\empty\\candidate.patch": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "raw\\harness-v2\\empty\\evaluation.json": {
+      "sha256": "42d3908e74c0e56d8b23b33ba50389d709e0de6d75e4a19409c3d85443f6784b",
+      "bytes": 36618
+    },
+    "raw\\harness-v2\\empty\\failing.log": {
+      "sha256": "5349d433dfc2f6c52b9f8f8678b935a6314a006056fdaf34dec8dfc6a8f16ebd",
+      "bytes": 2926
+    },
+    "raw\\harness-v2\\empty\\guards.log": {
+      "sha256": "0b9519dad916d4adf4e2a35023a378301293c6cc93ea161a680bbcadcd886b22",
+      "bytes": 8446
+    },
+    "raw\\harness-v2\\empty\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\harness-v2\\real-fix\\all.patch": {
+      "sha256": "d96940f7bb7383ac6ff61de40507b0398cac7cd67de1667d92b3a5b204609728",
+      "bytes": 1310
+    },
+    "raw\\harness-v2\\real-fix\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\harness-v2\\real-fix\\candidate.patch": {
+      "sha256": "d96940f7bb7383ac6ff61de40507b0398cac7cd67de1667d92b3a5b204609728",
+      "bytes": 1310
+    },
+    "raw\\harness-v2\\real-fix\\evaluation.json": {
+      "sha256": "c14bceacf0ea3670c7f93a62f416baf72ca18289d4ad05d43deed5d04087ff3a",
+      "bytes": 34991
+    },
+    "raw\\harness-v2\\real-fix\\failing.log": {
+      "sha256": "7453c056a82c39bc7ac1a57aa9ba7178a6f146608145f46f29c3ff4f43c1f5ac",
+      "bytes": 2387
+    },
+    "raw\\harness-v2\\real-fix\\gold-input.patch": {
+      "sha256": "1128c4768da30ad17958def8839dcdf3921c820a3328b28d75d2e21c53e8d5f8",
+      "bytes": 1276
+    },
+    "raw\\harness-v2\\real-fix\\guards.log": {
+      "sha256": "f699374a64df76f562d515f8f6e961c9083a9cd54980b376b1e70bda8c6742b1",
+      "bytes": 8446
+    },
+    "raw\\harness-v2\\real-fix\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check\\control\\002.json": {
+      "sha256": "550670d51cc6458b5b8e0d2def6f6f840f23d715d90dcb30ce518aabc3883cc6",
+      "bytes": 58322
+    },
+    "raw\\native-check\\control\\004.json": {
+      "sha256": "f6c8d8ec3d49081b08dcbd2b8660b542d7fc6dfde4adba02bdf1db2e60f0e931",
+      "bytes": 79714
+    },
+    "raw\\native-check\\control\\006.json": {
+      "sha256": "116649d315b89f06b7f315936ddf3bb53ec360da58985a1abe6c0000f19abbb4",
+      "bytes": 23005
+    },
+    "raw\\native-check\\control\\008.json": {
+      "sha256": "f8e2ddbce8694ef9c3824b7a9e3b5f2d1a372ae0ddb2088e8883d37bc222273d",
+      "bytes": 3458
+    },
+    "raw\\native-check\\control\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check\\control\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check\\control\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check\\control\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-final\\control\\002.json": {
+      "sha256": "648f385e5f8c5b4705b09fb9c424c5e191c411f545848893228af0af7d0c3eed",
+      "bytes": 58592
+    },
+    "raw\\native-check-final\\control\\004.json": {
+      "sha256": "a24bb33780be6accb6f7d4b0352723a028e50ad7cfd721d84f52bc044cc2708f",
+      "bytes": 80426
+    },
+    "raw\\native-check-final\\control\\006.json": {
+      "sha256": "839b463c798416b74c58bd35987b2522c131f7d1808bbd6538a82388f1e00f6e",
+      "bytes": 23275
+    },
+    "raw\\native-check-final\\control\\008.json": {
+      "sha256": "4e9eddc91a40a2a14246085c149ba4a1a9aa5805c6181357b5a6a67aea273df5",
+      "bytes": 3649
+    },
+    "raw\\native-check-final\\control\\009.json": {
+      "sha256": "22efd762ee18fd3931d43e99139484e3bf116622285a2b2787d8d61071d4e153",
+      "bytes": 3554
+    },
+    "raw\\native-check-final\\control\\010.json": {
+      "sha256": "c62d2bdabee570ef19405bad9b547315ced559692237d1764f4f7bc6ed901e1b",
+      "bytes": 2141
+    },
+    "raw\\native-check-final\\control\\011.json": {
+      "sha256": "4eba4e2aa698a529bc09bad0974d7d2ecbfa8ab8bc2ce7f50ee1a4d2b66519d8",
+      "bytes": 43126
+    },
+    "raw\\native-check-final\\control\\013.json": {
+      "sha256": "9758a9e774fa47bf3d415ef6d147aa90f2478946a31caeb0cbbe0290560d770f",
+      "bytes": 2156
+    },
+    "raw\\native-check-final\\control\\014.json": {
+      "sha256": "f30b8fc9fd22da85fcb19e3008815dacd087174dd92777140cfd6e817ab36053",
+      "bytes": 2158
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\001.json": {
+      "sha256": "8d641b76dbf1b8764d6abaa6b0fc651b7b558ef34c440f029f84f2ff99425d1f",
+      "bytes": 1977
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\002.json": {
+      "sha256": "59daffc80be6015e7f3436943ec6c1139ddfec0c7f3776722f3c0d01652fff15",
+      "bytes": 1499
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\003.json": {
+      "sha256": "88ff68f1a01f9682fb9ac42b15ed9bac0cb04535b28a65f08479615770f71ae5",
+      "bytes": 106192
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\004.json": {
+      "sha256": "3f0ecf71305434bd6f54bd01c57e859a58be91c727204bc188021b664525dc09",
+      "bytes": 28849
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\005.json": {
+      "sha256": "37ff29ca122bfb0420c1fcadc63e9a8ea8b89c4a1703b607574f351dee43ac38",
+      "bytes": 78873
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\006.json": {
+      "sha256": "9b698d95a1530b0e508f2118e33009d689b0693a916ce4a1f20b817d0e2afec2",
+      "bytes": 4729
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\007.json": {
+      "sha256": "25cb25842b57f9137e8e6e557df04f7681d6ba1ebd4bbb1b728d6352c6d61a7c",
+      "bytes": 3485
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\008.json": {
+      "sha256": "bd233da85fc7958d1d3a5637cdc0b3512ad663b678552f580742cbeca35c070e",
+      "bytes": 21158
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\009.json": {
+      "sha256": "fa502108f0791a175cc9f1d765753626cd48175ee28a1541ce63b9e7052f365f",
+      "bytes": 3024
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\013.json": {
+      "sha256": "9f3a9c5a8629794d0d47ab748fb4bdf85c3ca736ba3344dfecd4f5ee2b526c0c",
+      "bytes": 4997
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\015.json": {
+      "sha256": "e3cb7a1375c4d2e920737dc7b9f96a94bb6ae93adcc2279989847e8a98ba6f83",
+      "bytes": 12339
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\027.json": {
+      "sha256": "925346d3963cbd57e524e4e41dca4244c05e73890bef4bbced8bfcf41bee44e1",
+      "bytes": 15409
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\029.json": {
+      "sha256": "a2fd654bec3d959966eb1ff1a75ca9a3703b2b0ef41526be443441d70b36520a",
+      "bytes": 1668
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\030.json": {
+      "sha256": "5f6602e005607ffc143f42fcc95ab585f09ca6155cb2fbd3de4576cb511af3ae",
+      "bytes": 1768
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\031.json": {
+      "sha256": "e7f38cec5a519f5566a0849f666decbfd3fe6b9fd647d57faba48c6ec4586744",
+      "bytes": 1780
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\032.json": {
+      "sha256": "45eb6d78c8930b100707d5c582d6f4004cd24cb688d2534836bde4908716ba3c",
+      "bytes": 3347
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\041.json": {
+      "sha256": "3fe9fc7403db2ea6f3e032130fbacf02194dafe6cb5d407cd5f1bd94ed6dc89f",
+      "bytes": 1788
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\042.json": {
+      "sha256": "ca3112430f1f5c59a31a3b9493d4aee59c0947cc87438bac0058e61ff2f3ea23",
+      "bytes": 1828
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\002.json": {
+      "sha256": "0174e3349d131d65e33af177f645e21d8aa6cd6045066abd9d975dc72607415d",
+      "bytes": 1086
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\003.json": {
+      "sha256": "bdab81508d6f3359a4964f8fbc889799e5f3806cf3777ed80590a6e590fec2d7",
+      "bytes": 16881
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\006.json": {
+      "sha256": "13a7f8b946428898dd5dffac64880ca435f0525c65e4321a18412684ff2c91cf",
+      "bytes": 3594
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\030.json": {
+      "sha256": "17de187ec0b88f49df8a2d28899a3bd96204b1ec868a804a0fc1e7ab33289b8b",
+      "bytes": 7229
+    },
+    "raw\\native-check-final\\control\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-final\\control\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-final\\control\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-final\\control\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-final\\gemini-3-5-flash\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-final\\gpt-5-2-codex\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-v2\\control\\002.json": {
+      "sha256": "9dca8fa3f97054145b8f18789b9241ffb841fe5f6eb6a9f334dbd4f9a3c19b31",
+      "bytes": 58592
+    },
+    "raw\\native-check-v2\\control\\004.json": {
+      "sha256": "cb8c223500e700aaf8f28c52be661dc06985a401a17772f8c56c4fc18da24794",
+      "bytes": 80426
+    },
+    "raw\\native-check-v2\\control\\006.json": {
+      "sha256": "6e660a124f37bbcd824ad04253c4d257f51b88b57c6bda937f55f0ae980a14c4",
+      "bytes": 23275
+    },
+    "raw\\native-check-v2\\control\\008.json": {
+      "sha256": "c972f631e757cc54025e0aca16ccceae19a04609d6ccf989af70e11fdcb4a819",
+      "bytes": 3649
+    },
+    "raw\\native-check-v2\\control\\009.json": {
+      "sha256": "5a7fe25e50cd30618155984e2a8df81a721c35a0e00e6b6fae9f399a8a060a10",
+      "bytes": 3554
+    },
+    "raw\\native-check-v2\\control\\010.json": {
+      "sha256": "b5633c475b54fa765084c0972a302e27570d2d85c095dafe1acf183f2d353d4b",
+      "bytes": 2141
+    },
+    "raw\\native-check-v2\\control\\011.json": {
+      "sha256": "45768ca9c7d79e248d76ad34443814206b60362658f6a1dd77bf6837c916a399",
+      "bytes": 43126
+    },
+    "raw\\native-check-v2\\control\\013.json": {
+      "sha256": "5f4c2e7e9555c39c89147039bdeaaad2d7709807a254857641066722d513b44f",
+      "bytes": 2156
+    },
+    "raw\\native-check-v2\\control\\014.json": {
+      "sha256": "cc840e4f89faf35243ee6e04b0dbdb895610d61fbe7b523391ced3068a0a9cf2",
+      "bytes": 2158
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\001.json": {
+      "sha256": "2142c19ca1a80d551111338448abe3e4b66f2b58755a000d75e71e0a7642091b",
+      "bytes": 1977
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\002.json": {
+      "sha256": "5443025dc8851c91cfe07b9dff1995e75aebe627706a68af7abcb89c6ee5dd16",
+      "bytes": 1499
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\003.json": {
+      "sha256": "02b88f770315446753fe337986a67ed72e030069788a4bca0265b0fe1c67e10c",
+      "bytes": 106192
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\004.json": {
+      "sha256": "679b02873625b7fed6269527978711e619fe72962ae6c3fdf05c4fa478866862",
+      "bytes": 28849
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\005.json": {
+      "sha256": "31cd7569be1487ac56702ec10fbab8faa42b36aaa1b03cb23a32529754d92421",
+      "bytes": 78873
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\006.json": {
+      "sha256": "bf57dbb0bfaad02c0bc5998e36f6dee498f13afb89078faa35877f1fc24e272c",
+      "bytes": 4728
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\007.json": {
+      "sha256": "5e0b25928216cd3a3e19a45385c55812fe41aa3c86044cba81285e5000aabb92",
+      "bytes": 3485
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\008.json": {
+      "sha256": "56a90a5bbb508672a8fa526d6f28b9f11d996801592166f55fb485dadd87e3fd",
+      "bytes": 21158
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\009.json": {
+      "sha256": "47fb09130313a2377171d7534dbc0ea5aa873493f275dcf304d0c814fc3d8090",
+      "bytes": 3024
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\013.json": {
+      "sha256": "4588ae3704a0e6811f89f43d743dac51ab31a92fe56ffebeea9cd97c11ff0b44",
+      "bytes": 4997
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\015.json": {
+      "sha256": "c5cc19e33af21794f2610cdfe7e6ab002b32652b3f685a6b73d504a926673eba",
+      "bytes": 12340
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\027.json": {
+      "sha256": "5596e1d3e9e1e4d9f9f78b4e17acb738be58805cc284ea3c88c2ca02273dc02d",
+      "bytes": 15409
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\029.json": {
+      "sha256": "72e5d26eff643f74f35725d08c22bf4fcfccb38d384b83d7fa3c04c20cef453d",
+      "bytes": 1668
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\030.json": {
+      "sha256": "6be6ac7f2ff9556a3415b1eaf406864615ec24c614534ce0b2f7218804f86c8e",
+      "bytes": 1768
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\031.json": {
+      "sha256": "0f28e9ae1474e9abfdb28f6f458fbe9873ed896b0f3fea0bbb121fc7625ece89",
+      "bytes": 1779
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\032.json": {
+      "sha256": "523be2e02d2c42c16f951dbaaf949b8d842b0fc5b1b0dc334eb435892f65fdab",
+      "bytes": 3347
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\041.json": {
+      "sha256": "c1f0db82b88f4c4c5df0dcf113bea26baceffd64e9057da6b65ef0731aa8a7af",
+      "bytes": 1787
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\042.json": {
+      "sha256": "6572e3caecd98e692bfa2947d68f676583d4b0f3403b3c9bbc74014886dae0c9",
+      "bytes": 1828
+    },
+    "raw\\native-check-v2\\gpt-5-2-codex\\002.json": {
+      "sha256": "270c0ec4072c21cbb3f482bd35a4174d0cd2924368c970fc18202e73419f55ac",
+      "bytes": 1616
+    },
+    "raw\\native-check-v2\\control\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-v2\\control\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-v2\\control\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-v2\\control\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-v2\\gemini-3-5-flash\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-v2\\gpt-5-2-codex\\native\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-v2\\gpt-5-2-codex\\native\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    },
+    "raw\\native-check-v2\\gpt-5-2-codex\\recorded\\baseline-tree.json": {
+      "sha256": "ef81dea9a9df148a3e5727eafd7d64b854a401257d0ce054ab572442d5113379",
+      "bytes": 138
+    },
+    "raw\\native-check-v2\\gpt-5-2-codex\\recorded\\test.patch": {
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94",
+      "bytes": 8127
+    }
+  },
+  "evidence_sha256": "71b7f171c0821034686033f9a9fa4fffd1cda011353cbd0dc3460b0f584dac5e",
+  "native_check_sha256": "3b18b8b774e9b73caa6908541463b39cc80eca809284ffc2fcb230b92aebe995",
+  "harness_sha256": "c40e2d04923a54c978a17ddf1d3c9f5b8a562525b266881c2a248aaebb831a10",
+  "repair_starts": 0
+}

@@ -1,0 +1,12 @@
+{
+  "correction": "Whole final command stays ordinary if any captured search uses context or unsupported/multiline/machine format, avoiding cross-command byte aliasing that might otherwise split an unsupported match. No agent started. Earlier harness receipts retained; rerun known-answer stage after this guard.",
+  "source_before": "execute-before-context-guard.py",
+  "native_meaning_correction": {
+    "failed_receipt": "raw/native-check/control/008.json",
+    "cause": "Native argv[0] became an absolute executable; bridge Python coerced LC_CTYPE before GNU commands. Preserve native argv[0], prevent locale coercion only in bridge interpreters and remove bridge-only environment option before native programs. Expectations unchanged; all earlier scientific raw remain."
+  },
+  "availability_correction": {
+    "failed_receipt": "raw/native-check-v2/gpt-5-2-codex/002.json",
+    "cause": "The prepared image has no rg executable. Defining an rg function introduced a different missing-command error. Define capture functions only for commands the native shell resolves. Preserve the native missing-command path, not a replacement search or fake match."
+  }
+}
