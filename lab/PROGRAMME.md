@@ -42,6 +42,33 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
+## Next session: design a more definitive experiment. Design only. No agent runs.
+
+Asked for by the owner on 9 October 2026. The three live pairs (one for the Box, two against, no outcome changed, and a recorder fault found) settled nothing, and could not have: whole-run token counts vary too much from run to run for a handful of pairs to see anything but a very large effect. The owner holds that a silent, open Box cannot in theory make an agent worse and wants an experiment that can actually answer whether it makes it better. The owner cannot spend many tokens. So the task is the lab's own kind of problem: **get the most certainty per token.** Do not run it. Design it, cost it, have it attacked, and bring it back.
+
+**What "definitive" has to mean here.** Say in advance what result would count as "the Box helps", what would count as "it does not, to within X", and what would be left undecided. An experiment that can only ever return "no difference shown" is not acceptable; neither is one that claims more than its size supports. For each design give the smallest effect it could reliably detect and what it costs.
+
+**The reason the pairs were weak, and so where to look.** Two full runs of the same task differ in a hundred ways unrelated to the Box, and the Box acts at only a few moments in a run: when a search comes back. Designs that isolate those moments should need far fewer tokens than designs that compare whole runs. Consider at least these, and others the lab knows; say for each whether it is feasible with the access the lab has, at zero cost:
+
+1. **Fork at the search.** Take an agent's run up to the moment a search returns. From that identical state, continue twice: once with the ordinary result, once with the Box's ordering. Measure what the agent does next (does it open the function that needed fixing; how many steps and how much text before it first does). Everything before the fork is the same, so most of the noise is gone, and each fork costs one continuation of a few steps, not a whole run. The recorded runs already held (gate 2's published records, gate 3's controls, the pilot and the two new pairs) contain hundreds of such moments. Whether a run can be resumed from a recorded state with the tools the lab has, and how faithfully, is the first thing to find out.
+2. **Repeat the same run to measure the noise first.** Nobody has yet run one arm twice. Without that, no difference between arms can be read. A design must include it or borrow it from recorded data, and say how.
+3. **A measure nearer the mechanism than whole-run tokens:** steps and text read up to the first opening of the right function; whether the agent opens something the Box moved up, and whether that was on the way to the fix or a detour. These vary less than a whole run and say why, not only whether.
+4. **Shorter, cheaper tasks and a cheaper model,** so that more pairs fit in the same tokens, weighed against having less room to improve.
+5. **Stopping rules that end the experiment as soon as the answer is clear** in either direction, with the chance of a wrong stop stated.
+6. **Tasks where the Box has something to do.** On well-known public code, capable agents already find the place in a few steps. If a definitive answer on those tasks would be "no room", say so, and say what a set with room would be: code the model has not seen (this repository; issues fixed after the model's cut-off), or a weaker agent.
+
+**Fix the instrument first, in the design.** The recorder changed what a piped search returns (it ran the whole search before passing output on, adding about 18,000 characters of warnings in one live case). The design must state how the tool will be shown, with no agent, to behave exactly like the native commands on the commands agents actually type, including pipes, and must not rely on replaying old commands alone, since that is what missed the fault.
+
+**What to bring back. One page for the owner, and the working behind it.**
+
+- Two or three candidate designs, each in a paragraph a non-specialist can follow.
+- For each: what it measures; how many tokens, as a range; the smallest effect it could detect at that cost; what could still fool it; and whether it needs anything the lab does not have.
+- One recommendation, with the reason.
+- What the owner would be able to say at the end of it, in a sentence, for each possible outcome.
+- Costs worked out from the recorded runs' own variation, not from rules of thumb; show the calculation or the simulation.
+
+**Rules for this session.** No repair agent and no model tokens beyond the lab's own reading and writing. If a small no-agent probe is needed to learn whether forking from a recorded state is possible at all, say what it is and ask; do not run it. One sceptic pass whose job is to find the cheapest way the recommended design could give a confident wrong answer.
+
 ## Completed on 9 October 2026: continuation stopped after two new pairs (authorization/protocol retained)
 
 Both new Box runs used more reported tokens with the same successful repair outcomes as control. The frozen two-against rule stopped the session before a third task was prepared. New usage 380,096, within caps. Fresh review independently rescored all six patches including pilot; all scores match. It also found a live recorder/native stderr fault, which prevents a clean ordinary-native comparison. [Result](lines/box-trial/live-three/result.md), [review](lines/box-trial/live-three/sceptic.md). Further comparisons are stopped; a no-agent streaming/native safeguard correction is required first, and no additional repair run is authorized here.
@@ -108,4 +135,4 @@ The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/proto
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** reading, prototype, pilot and owner-authorized continuation closed and reviewed. Continuation stopped after two new pairs under the two-against rule; third never prepared. Review found a buffering/native-stderr instrument fault. No further comparison or product work; owner/CTO decides next, with a no-agent instrument correction required before any new native comparison.
+- **Sync state, 9 October 2026:** reading, prototype, pilot and the three-pair continuation closed and reviewed. Next session: design a more definitive experiment, design only, no agent runs.
