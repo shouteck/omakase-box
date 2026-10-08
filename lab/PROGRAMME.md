@@ -12,6 +12,22 @@ No deadlines. The CTO decides which problem and in what order; the lab lead deci
 
 **What the trial did settle, to build on and not to redo.** A program makes a Box from one failing test in about two seconds, a median of 5% of a large project's source, holding the real fix on 28 of 29 tasks; the error trace names the fix on 6 of 29 (gate 1b). Strong agents on well-known public projects reach the right function in two to four steps of about thirty-five, and their own searches already put the fix at or near the top (gates 2 and 3b): so a Box that only says *where to look* has little to add for them. After finding the place they read hundreds of other functions before editing, about two fifths of all they read, and eight of nine failed runs had found the place (gate 2): the effort and the failures are in *understanding and fixing*. A tool that is only mentioned is not called; one that can return nothing costs real steps (gate 3).
 
+### Narrowed by the owner and CTO later the same day: this is the lab's only job, and it is smaller than the sections below make it
+
+The sections below ("The question", "The work, in order") were written before this and are too broad. Where they differ from this, this wins.
+
+- **Scope is fixed: the Box for a failing test.** Nothing else.
+- **What is in the Box is settled:** every function the failing test ran, traced in about two seconds. No more research on that. The agent never reads the Box; it sits behind a tool. So the Box's size is not the question and "leaner" is not the goal.
+- **What is left to finalise is the tool: what an agent can ask it, and what comes back.** Candidates, each a fact the tool knows and the agent does not, each costing the agent a few lines:
+  1. *"Search for this."* Every match in the repository, with matches inside what the test ran first and marked. Built in gate 3b; one marking fault to fix (a function that did not run was marked because it shared a name with one that did: identify by file and starting line, not by name).
+  2. *"What did the failing test run in this file?"*
+  3. *"How did the test get to the failure?"* The route in order from the test to where it failed.
+  4. *"Did this run when the test failed?"*
+  The lab may add a candidate if the trial's records show agents repeatedly going to find something the trace already knows. It does not add ranking schemes, slicing or other layers unless one of these questions cannot be answered well without it.
+- **Session 1, then, is short:** build 2, 3 and 4 as a lab prototype on top of gate 3b's wrapper, fix the fault in 1, and check each by script on the thirty tasks for correctness (the answer matches the trace, and nothing an ordinary command returns is lost) and for usefulness by one scripted measure each, stated with what it can and cannot stand for. Then one page for the owner: the questions, a real answer to each on one task, and which the lab would put in the first version. No catalogue of the literature is needed for this.
+- **Then one fair test, on the owner's word.** The owner's position: a capable agent given a tool that only adds facts can only gain, so the test is there to show how much and to prove the tool works when an agent uses it, not to decide whether to go on. Rules already learned: one pilot pair first and stop to read it; a token ceiling fixed in advance; tasks where the plain agent does not already solve everything; if possible code the model has not memorised; the tool built into what the agent does so it cannot be missed.
+- **After that the kitchen builds it.**
+
 ### The question
 
 **What should the ideal Box contain, and how should an agent meet it, so that it helps with what agents actually find hard?** The answer the lab owes the owner is a design they can read and agree to, backed by a prototype scored by script. Not a product.
