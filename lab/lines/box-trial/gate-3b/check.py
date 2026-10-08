@@ -34,6 +34,21 @@ def check():
         # Keep a newly pulled image for immediate corpus replay; replay closeout
         # records its ownership explicitly before removal.
         report['retained_owned_image']=image if not existed else None
-        write(HERE/('fixture-check-'+ident+'.json' if len(sys.argv)>1 else 'fixture-check.json'),report)
+        raw=HERE/'raw'/('fixture-'+ident+'-full.json');write(raw,report)
+        compact={k:v for k,v in report.items() if k!='cases'}
+        compact['raw_receipt']={'path':str(raw.relative_to(HERE)),'sha256':sha(raw.read_bytes()),'bytes':raw.stat().st_size}
+        compact['cases']=[]
+        for case in report['cases']:
+            entry={k:v for k,v in case.items() if k not in ('ordinary','box','queries')}
+            for mode in ('ordinary','box'):entry[mode]={k:v for k,v in case[mode].items() if not k.endswith('_b64')}
+            entry['queries']=[]
+            for q in case['queries']:
+                small={k:v for k,v in q.items() if k not in ('stdout_b64','stderr_b64','locations','proof')}
+                small['same_records']=q['proof']['same_records'];small['ordering_error']=q['proof'].get('ordering_error')
+                small['marked_count']=len(q['proof'].get('marked',[]));small['location_count']=len(q['locations'])
+                small['proof_sha256']=sha(json.dumps(q['proof'],sort_keys=True).encode());small['locations_sha256']=sha(json.dumps(q['locations'],sort_keys=True).encode())
+                entry['queries'].append(small)
+            compact['cases'].append(entry)
+        write(HERE/('fixture-check-'+ident+'.json' if len(sys.argv)>1 else 'fixture-check.json'),compact)
     return report
 if __name__=='__main__':r=check();print(json.dumps({'status':r.get('status'),'cases':len(r['cases']),'retained_owned_image':r.get('retained_owned_image')}))
