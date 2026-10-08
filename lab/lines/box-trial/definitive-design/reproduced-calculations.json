@@ -1,0 +1,117 @@
+{
+  "hashes": {
+    "live-pilot\\raw\\runs\\control\\steps.json": "831daec7b259036f307a3e5462e631917349a046ff9a30731063d18bf3475824",
+    "live-pilot\\raw\\runs\\box\\steps.json": "ba3a440da481a90fc4fd2ece351aaed721ee3cda1ecbd64aba424bc7e856b2cd",
+    "live-three-sympy__sympy-16597\\raw\\runs\\control\\steps.json": "cbaa2f8cd35e323add38342faa952fcd9b91c1ad6b19d8c77f5819c6e81a18d2",
+    "live-three-sympy__sympy-16597\\raw\\runs\\box\\steps.json": "98ca204f01033db936eb9fca4bb48d3b971736e23eaf1d26ab8497ff3a3fd478",
+    "live-three-matplotlib__matplotlib-21568\\raw\\runs\\control\\steps.json": "eba0233179853b26209175fd163d1af1216b2b13b380bed229c6a5d84852c78a",
+    "live-three-matplotlib__matplotlib-21568\\raw\\runs\\box\\steps.json": "eef7230620e6713533316fa30e006b69c89ffe289abc0fde1b464d9a5db2019c"
+  },
+  "runs": [
+    {
+      "task": "live-pilot",
+      "arm": "control",
+      "tokens": 200832,
+      "commands": 14
+    },
+    {
+      "task": "live-pilot",
+      "arm": "box",
+      "tokens": 182429,
+      "commands": 10
+    },
+    {
+      "task": "live-three-sympy__sympy-16597",
+      "arm": "control",
+      "tokens": 124686,
+      "commands": 11
+    },
+    {
+      "task": "live-three-sympy__sympy-16597",
+      "arm": "box",
+      "tokens": 131614,
+      "commands": 10
+    },
+    {
+      "task": "live-three-matplotlib__matplotlib-21568",
+      "arm": "control",
+      "tokens": 52956,
+      "commands": 5
+    },
+    {
+      "task": "live-three-matplotlib__matplotlib-21568",
+      "arm": "box",
+      "tokens": 70840,
+      "commands": 5
+    }
+  ],
+  "boundary_intervals": {
+    "n": 55,
+    "min": 4206,
+    "p10": 4894,
+    "median": 12305,
+    "p90": 29004,
+    "max": 39239
+  },
+  "three_boundary_windows": {
+    "n": 27,
+    "min": 15018,
+    "median": 35990,
+    "max": 74064
+  },
+  "repeat_tokens": [
+    207328,
+    95176
+  ],
+  "log_sd_scenarios": [
+    0.1951468670639553,
+    0.5505351467474613
+  ],
+  "looks": [
+    {
+      "pairs": 64,
+      "calls": 160,
+      "radius": 0.38679337760869037,
+      "guaranteed_80pct_effect": 0.611058699857953,
+      "cost_p10_p90": [
+        783040,
+        4640640
+      ],
+      "cost_median": 1968800,
+      "cost_max_envelope": 6278240
+    },
+    {
+      "pairs": 128,
+      "calls": 288,
+      "radius": 0.27350422022515386,
+      "guaranteed_80pct_effect": 0.43208375037259383,
+      "cost_p10_p90": [
+        1409472,
+        8353152
+      ],
+      "cost_median": 3543840,
+      "cost_max_envelope": 11300832
+    },
+    {
+      "pairs": 256,
+      "calls": 544,
+      "radius": 0.19339668880434518,
+      "guaranteed_80pct_effect": 0.3055293499289765,
+      "cost_p10_p90": [
+        2662336,
+        15778176
+      ],
+      "cost_median": 6693920,
+      "cost_max_envelope": 21346016
+    }
+  ],
+  "whole_32_mde": [
+    0.10141175560618876,
+    0.3132447654362869
+  ],
+  "whole_5percent_pairs": [
+    126,
+    999
+  ],
+  "navigation_5point_pairs": 9559
+}
