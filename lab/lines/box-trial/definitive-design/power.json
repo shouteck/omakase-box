@@ -1,0 +1,264 @@
+{
+  "trials_per_scenario": 4000,
+  "seed_rule": "9102026 + scenario index",
+  "tail": 0.0020833333333333333,
+  "looks": [
+    64,
+    128,
+    256
+  ],
+  "equivalence_margin": 0.05,
+  "noise_is_assumed_not_estimated": true,
+  "rows": [
+    {
+      "discordance": 0.0,
+      "delta": 0.0,
+      "outcome_rates": {
+        "helps": 0.0,
+        "harms": 0.0,
+        "equivalent": 1.0,
+        "undecided": 0.0
+      },
+      "mean_pairs": 128.0,
+      "median_cost_scenario": 3543840.0
+    },
+    {
+      "discordance": 0.005,
+      "delta": 0.0,
+      "outcome_rates": {
+        "helps": 0.0,
+        "harms": 0.0,
+        "equivalent": 0.99175,
+        "undecided": 0.00825
+      },
+      "mean_pairs": 187.072,
+      "median_cost_scenario": 4997601.92
+    },
+    {
+      "discordance": 0.02,
+      "delta": 0.0,
+      "outcome_rates": {
+        "helps": 0.0,
+        "harms": 0.0,
+        "equivalent": 0.54325,
+        "undecided": 0.45675
+      },
+      "mean_pairs": 246.592,
+      "median_cost_scenario": 6462389.119999999
+    },
+    {
+      "discordance": 0.05,
+      "delta": 0.0,
+      "outcome_rates": {
+        "helps": 0.0,
+        "harms": 0.0,
+        "equivalent": 0.013,
+        "undecided": 0.987
+      },
+      "mean_pairs": 255.872,
+      "median_cost_scenario": 6690769.92
+    },
+    {
+      "discordance": 0.2,
+      "delta": 0.0,
+      "outcome_rates": {
+        "helps": 0.0,
+        "harms": 0.00025,
+        "equivalent": 0.0,
+        "undecided": 0.99975
+      },
+      "mean_pairs": 255.968,
+      "median_cost_scenario": 6693132.479999999
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.0,
+      "outcome_rates": {
+        "helps": 0.0005,
+        "harms": 0.00025,
+        "equivalent": 0.0,
+        "undecided": 0.99925
+      },
+      "mean_pairs": 255.872,
+      "median_cost_scenario": 6690769.92
+    },
+    {
+      "discordance": 0.05,
+      "delta": 0.05,
+      "outcome_rates": {
+        "helps": 0.3035,
+        "harms": 0.0,
+        "equivalent": 0.0015,
+        "undecided": 0.695
+      },
+      "mean_pairs": 255.712,
+      "median_cost_scenario": 6686832.319999999
+    },
+    {
+      "discordance": 0.1,
+      "delta": 0.05,
+      "outcome_rates": {
+        "helps": 0.04875,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.95125
+      },
+      "mean_pairs": 255.536,
+      "median_cost_scenario": 6682500.96
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.05,
+      "outcome_rates": {
+        "helps": 0.007,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.993
+      },
+      "mean_pairs": 255.808,
+      "median_cost_scenario": 6689194.88
+    },
+    {
+      "discordance": 0.1,
+      "delta": 0.1,
+      "outcome_rates": {
+        "helps": 0.99275,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.00725
+      },
+      "mean_pairs": 216.672,
+      "median_cost_scenario": 5726057.92
+    },
+    {
+      "discordance": 0.2,
+      "delta": 0.1,
+      "outcome_rates": {
+        "helps": 0.37925,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.62075
+      },
+      "mean_pairs": 248.288,
+      "median_cost_scenario": 6504127.680000001
+    },
+    {
+      "discordance": 0.2,
+      "delta": 0.12,
+      "outcome_rates": {
+        "helps": 0.69275,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.30725
+      },
+      "mean_pairs": 232.832,
+      "median_cost_scenario": 6123755.52
+    },
+    {
+      "discordance": 0.2,
+      "delta": 0.14,
+      "outcome_rates": {
+        "helps": 0.916,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.084
+      },
+      "mean_pairs": 206.912,
+      "median_cost_scenario": 5485864.32
+    },
+    {
+      "discordance": 0.2,
+      "delta": 0.16,
+      "outcome_rates": {
+        "helps": 0.99275,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.00725
+      },
+      "mean_pairs": 168.88,
+      "median_cost_scenario": 4549896.8
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.1,
+      "outcome_rates": {
+        "helps": 0.08825,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.91175
+      },
+      "mean_pairs": 252.896,
+      "median_cost_scenario": 6617530.559999999
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.16,
+      "outcome_rates": {
+        "helps": 0.538,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.462
+      },
+      "mean_pairs": 235.136,
+      "median_cost_scenario": 6180456.96
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.18,
+      "outcome_rates": {
+        "helps": 0.71575,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.28425
+      },
+      "mean_pairs": 223.36,
+      "median_cost_scenario": 5890649.600000001
+    },
+    {
+      "discordance": 0.2,
+      "delta": 0.2,
+      "outcome_rates": {
+        "helps": 1.0,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.0
+      },
+      "mean_pairs": 102.736,
+      "median_cost_scenario": 2922092.96
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.2,
+      "outcome_rates": {
+        "helps": 0.85025,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.14975
+      },
+      "mean_pairs": 206.352,
+      "median_cost_scenario": 5472082.72
+    },
+    {
+      "discordance": 0.5,
+      "delta": 0.33,
+      "outcome_rates": {
+        "helps": 1.0,
+        "harms": 0.0,
+        "equivalent": 0.0,
+        "undecided": 0.0
+      },
+      "mean_pairs": 92.784,
+      "median_cost_scenario": 2677174.24
+    }
+  ],
+  "zero_discordance_limits": {
+    "64": 0.09195869186370442,
+    "128": 0.04708798510235179,
+    "256": 0.023827876397994996
+  },
+  "worst_case_80pct_terminal_effect": {
+    "64": 0.6573328689710455,
+    "128": 0.4648045291462346,
+    "256": 0.32866643448552274
+  }
+}
