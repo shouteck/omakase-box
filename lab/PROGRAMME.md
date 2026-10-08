@@ -30,7 +30,7 @@ A coverage report, a trace or a test-impact map is raw material a Box may be mad
 
 Detail: `lab/lines/box-trial/` (each gate's result and sceptic review) and `lab/lines/box-trial/ideal-box/`.
 
-## The work now: a lab prototype of the Box, checked by script, and one design page
+## Done on 9 October 2026 (kept for the record): a lab prototype of the Box, checked by script, and one design page
 
 One session. No live agent. Few tokens: scripts and a summary file; the lab lead reads the summary, not the logs.
 
@@ -42,9 +42,34 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
-## After that, only on the owner's word: one fair live test
+## Next session: the live pilot. Authorised by the owner on 9 October 2026, on one condition: the mistakes of gate 3 do not happen again.
 
-The owner's position is that the test shows how much the Box helps and proves it works when used; it is not there to decide whether to go on. Rules learned the hard way: one pilot pair first, then stop and read it; a token ceiling fixed in advance; tasks where the plain agent does not already solve everything (a cheaper model in both arms); if possible code the model has not memorised; the Box in the path of what the agent does, so it cannot be missed. "Better" is fixed beforehand: more solved with none lost, or the same for clearly fewer tokens and steps, beyond what repeating a task shows as noise.
+The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/prototype/`). The owner has read the design and wants a live run, because nothing so far shows an agent doing better and only a live run can. What is tested is **the Box as the lab recommended it: silent ordering of ordinary search, no instruction, no marks.** Facts on request are not part of this run.
+
+**What went wrong in gate 3, and the safeguard for each. Every safeguard is a step that must be passed and recorded before the next one starts.**
+
+| Gate 3's mistake | Safeguard this time |
+|---|---|
+| The tool returned nothing on all fifteen calls, and nobody knew until twenty-four runs were done | The Box is the agent's ordinary search, so it cannot come back empty where ordinary search would not. And step 2 below proves it on the pilot task before any agent starts. |
+| All pairs were run before anyone looked at one | One pair only. Then stop, read it, report. Nothing further without the owner's word. |
+| The tool rejected commands agents actually type (combined commands, absolute paths) | Step 2 replays real recorded agent commands for that task through the exact wrapper the agent will get, inside the exact container. |
+| The scoring could not apply the agents' patches, found after the first pair | Step 1 checks the harness with no agent: the real fix must score as solved and an empty change as not solved, through the same export and scoring path the agents' work will take. |
+| The plain agent solved every task, so nothing could show | Choose the task and model so that the plain agent is not expected to walk it: a task published agents failed or laboured on, and a cheaper or lower-effort model, the same in both arms. Say what evidence the choice rests on. |
+| 5.8 million tokens went before the fault was seen | A ceiling fixed before the first run: 400,000 tokens per run, 800,000 for the pilot in all, counted as gate 3 counted them. A run that reaches its cap is stopped and recorded as capped. |
+| A Box-arm run was counted even though the Box had done nothing | A Box-arm run is valid only if the record shows at least one search whose order the Box actually changed. Record, per run: searches made, searches reordered, and whether the agent opened something the Box had moved up. |
+| The agent was told to use a tool, and the instruction itself cost steps | No instruction about the Box in either arm. The two prompts are identical, word for word. |
+
+**The steps.**
+
+1. **Harness check. No agent, no tokens.** On the chosen task, in the exact container: the real fix scores as solved; an empty change scores as not solved; a change that breaks a guard test scores as not solved. Through the same export and scoring the agents' work will use.
+2. **Box check on that task. No agent, no tokens.** Build the Box for the task's failing test. Run the task's recorded agent searches from gates 2 and 3 through the wrapper as the agent will meet it. Confirm by script: every ordinary result is returned; at least one of those searches is reordered; no command is rejected or altered in meaning; the wrapper adds no text. If none of the recorded searches is reordered on this task, choose another task by the same rule and say so.
+3. **Fix the plan and push it** before the first run: the task and why, the model and settings, the two identical prompts, the limits, the token ceiling, what will be recorded, and what counts as a valid Box-arm run.
+4. **The pair.** One run without the Box, one with, fresh sessions, same model, same limits. Their code only in containers with the network off for the agent's work.
+5. **Stop. Read both records before anything else.** Report to the CTO: did the Box-arm agent's searches come back reordered; did it open something the Box moved up; did anything error or get rejected; were both runs scored cleanly; what each solved, and its tokens and steps. Say plainly whether the tool worked as intended with a live agent. One pair shows that, and cannot show which arm is better; do not claim it does.
+
+**Then wait.** If the pilot is clean, the CTO brings the owner a plan for the comparison proper: how many pairs, on which tasks, with what ceiling, and how large a difference that could and could not see. The lab does not start it.
+
+**Rules.** No product code. Zero cost: an allowance the owner already has, explicitly authorised as before, no new purchase or key. Nothing sent to any project. Every run recorded, including a failed start. One sceptic pass that rereads both records and reruns the scoring, not the agents.
 
 ## For later, not now
 
@@ -57,4 +82,4 @@ The owner's position is that the test shows how much the Box helps and proves it
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** prescribed prototype and owner design page complete, independently reviewed after mandatory multiline/path fixes. Thirty frozen task snapshots and all 243 retained native streams checked. Recommend silent ordering alone; optional facts stay separate. Navigation proxies do not establish repair or actual token savings. [Owner page](lines/box-trial/ideal-box/prototype/owner-design.md), [result](lines/box-trial/ideal-box/prototype/result.md), [review](lines/box-trial/ideal-box/prototype/sceptic-followup.md). Await owner design agreement and explicit request before a live pair; no next session or product work started.
+- **Sync state, 9 October 2026:** reading and prototype sessions closed and reviewed. The owner has authorised the live pilot. Next session: the pilot above, one pair, then stop.
