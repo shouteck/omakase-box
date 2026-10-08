@@ -1,0 +1,21 @@
+{
+  "retained_owned_images": [
+    {
+      "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+      "ownership": "downloaded by first calibration this session; calibration image_absent_before true recorded at a1a5b7e",
+      "cleanup_exit": 0,
+      "output": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214\nDeleted: sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+      "error": ""
+    },
+    {
+      "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-14539@sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71",
+      "ownership": "downloaded by stopped passive driver this session; owner stop interrupted driver cleanup; owned container captured and removed",
+      "cleanup_exit": 0,
+      "output": "Untagged: ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-14539@sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71\nDeleted: sha256:057fa218066fc3a4e4c4e0c0128be077cbf7d2284a97f47227093a6410840e71",
+      "error": ""
+    }
+  ],
+  "selected_image_refs_remaining": [],
+  "gate_container_names_remaining": [],
+  "method": "only exact session-owned image refs; non-force removal; no global prune"
+}

@@ -129,7 +129,7 @@ def evaluate(image,task,patch,directory):
         truncated=[n for n in task['guard_names']+task['fail_names'] if '[' in n and not n.endswith(']')]
         if truncated:
             selectors=sorted({n.split('[',1)[0] for n in truncated})
-            code='import pytest,json\nclass Collector:\n def pytest_collection_finish(self,session): print("LAB_NODE_IDS="+json.dumps([i.nodeid for i in session.items]))\nraise SystemExit(pytest.main('+repr(['--collect-only','-q','-p','no:cacheprovider']+selectors)+',plugins=[Collector()]))'
+            code='import pytest,json\nclass Collector:\n def pytest_collection_finish(self,session): print("LAB_NODE_IDS="+json.dumps([i.nodeid for i in session.items]))\nraise SystemExit(pytest.main('+repr(['--collect-only','-q','-s','-p','no:cacheprovider']+selectors)+',plugins=[Collector()]))'
             output=execute(name,{'mode':'command','command':shlex.join(['python','-c',code])})
             (directory/'guard-collection.log').write_bytes((output['stdout']+output['stderr']).encode())
             marker=next((line[len('LAB_NODE_IDS='):] for line in output['stdout'].splitlines() if line.startswith('LAB_NODE_IDS=')),None)

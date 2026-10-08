@@ -1,0 +1,4 @@
+{
+  "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta0-1997-Jan-01": "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta0-1997-Jan-01 00:00]",
+  "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta1-1997-Jan-01": "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta1-1997-Jan-01 00:01]"
+}

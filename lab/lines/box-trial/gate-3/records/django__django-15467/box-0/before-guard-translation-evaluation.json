@@ -1,0 +1,50 @@
+{
+  "status": "unknown",
+  "solved": null,
+  "phases": {
+    "failing": {
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 0.8073894310000469,
+      "requested": 1,
+      "matched_passes": 1,
+      "missing_names": [],
+      "all_pass": true
+    }
+  },
+  "create_argv": [
+    "docker",
+    "create",
+    "--name",
+    "lab-gate-3-be92ab44-63e1-426d-8179-9cc22551dd16",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "--pids-limit",
+    "128",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "--env",
+    "MPLBACKEND=Agg",
+    "--workdir",
+    "/testbed",
+    "--entrypoint",
+    "/bin/bash",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3\\execute.py,dst=/lab/execute.py,readonly",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-1b\\container.py,dst=/lab/container.py,readonly",
+    "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-15467@sha256:523a56bac7a6eff33039d398056583824fc6d38e70b69750fd9a22378ad08f18",
+    "-lc",
+    "sleep infinity"
+  ],
+  "error": "Unparseable benchmark guard name: formfield_overrides works for a custom field class.",
+  "cleanup_exit": 0
+}

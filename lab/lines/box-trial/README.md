@@ -1,6 +1,8 @@
 # Box trial
 
-The one trial in [PROGRAMME](../../PROGRAMME.md): replace an agent-written pstack scope with context computed from a failing test; same helper, whole repository available, at least as many fixes and no more than half the total tokens.
+The current trial in [PROGRAMME](../../PROGRAMME.md) asks whether a cheap agent repairs more or spends fewer tokens with a tool that searches functions the failing test ran. The whole repository remains available. Earlier packaging and brief-comparison gates remain historical evidence.
+
+**Gate 3, 8 October 2026: no improvement demonstrated in this protocol.** Ten valid pairs solved in both arms; the paired median token increase was 41.6%. Two zero-call Box attempts remain invalid. All fifteen Box calls returned no matches or usage errors, so useful Box matches were not tested. The passive-offer finding is preserved separately. [Result](gate-3-result.md), [plan](gate-3-plan.md), [independent review](gate-3-sceptic.md). The reviewer reproduced every measurement and confirmed this bounded conclusion.
 
 **Gate 1 failed on 8 October 2026:** zero confirmed successes, 23 confirmed failures and seven unknown among 30 fixed tasks. Even seven unknown successes cannot reach the required fifteen. Lean packaging was 27.8%–55.6% of production Python source on admitted tasks, against a 10% limit. [Result and limits](gate-1-result.md), [fixed plan](gate-1-plan.md), [instrument](gate-1/README.md). [Independent review](gate-1-sceptic.md) confirmed the narrow failure: three prescribed packaging reruns and one fresh native test matched exactly except elapsed time.
 
@@ -10,4 +12,4 @@ The one trial in [PROGRAMME](../../PROGRAMME.md): replace an agent-written pstac
 
 [Gate 0](gate-0.md) passed the reading gate. Gate 1 measured one conservative runtime-plus-import-closure method using whole modified test files. It does not establish repair success or token savings, and does not rule out a different reduction method.
 
-Gate 3 is running under the owner and CTO's corrected tool-only, required Box-first protocol. Passive-offer starts are archived separately; they are not Box-use evidence. [Active plan](gate-3-plan.md), [instrument](gate-3/README.md). No restarted conclusion yet. Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.
+Stopped after Gate 3 under its fixed rule, without repeats. Owner and CTO decide any future interface/query change or new experiment. [Instrument](gate-3/README.md). Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.

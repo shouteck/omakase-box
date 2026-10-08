@@ -1,0 +1,58 @@
+{
+  "status": "scored",
+  "solved": true,
+  "phases": {
+    "failing": {
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 1.3102467589997104,
+      "requested": 2,
+      "matched_passes": 2,
+      "missing_names": [],
+      "all_pass": true
+    },
+    "guards": {
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 1.1017157810001663,
+      "requested": 8,
+      "matched_passes": 8,
+      "missing_names": [],
+      "all_pass": true
+    }
+  },
+  "create_argv": [
+    "docker",
+    "create",
+    "--name",
+    "lab-gate-3-4ddcbb82-fdeb-4062-b857-0ff5c10d67f8",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "--pids-limit",
+    "128",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "--env",
+    "MPLBACKEND=Agg",
+    "--workdir",
+    "/testbed",
+    "--entrypoint",
+    "/bin/bash",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3\\execute.py,dst=/lab/execute.py,readonly",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-1b\\container.py,dst=/lab/container.py,readonly",
+    "ghcr.io/epoch-research/swe-bench.eval.x86_64.sphinx-doc__sphinx-11445@sha256:d167b528f69597a61821b619972f251c4a6e4b2821b2c28a4df23c969f8b717e",
+    "-lc",
+    "sleep infinity"
+  ],
+  "cleanup_exit": 0
+}

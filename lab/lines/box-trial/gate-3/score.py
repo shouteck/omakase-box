@@ -1,5 +1,5 @@
 """Score saved receipts, never rerun or repair an agent. Gold consulted only here."""
-import gzip, hashlib, importlib.util, json, math, pathlib, statistics, sys
+import functools, gzip, hashlib, importlib.util, json, math, pathlib, statistics, sys
 from run import visible
 HERE=pathlib.Path(__file__).resolve().parent
 ROOT=HERE.parent
@@ -10,7 +10,8 @@ def exact_p(wins,losses):
     n=wins+losses
     return min(1.0,2*sum(math.comb(n,i) for i in range(min(wins,losses)+1))/(2**n)) if n else 1.0
 
-def readings(ident,steps):
+@functools.lru_cache(maxsize=12)
+def reading_inputs(ident):
     source=json.loads(gzip.decompress((ROOT/'gate-1/records'/ident/'sources.json.gz').read_bytes()))
     task=next(t for t in json.loads((ROOT/'gate-1/tasks.json').read_text(encoding='utf-8')) if t['instance_id']==ident)
     trees={}
@@ -18,6 +19,10 @@ def readings(ident,steps):
         try:trees[path]=g2.g1b.functions(text)
         except (SyntaxError,ValueError,RecursionError):pass
     targets,target_files=g2.g1b.targets(task,source,trees)
+    return source,trees,targets,target_files
+
+def readings(ident,steps):
+    source,trees,targets,target_files=reading_inputs(ident)
     first=None;edit=None;rows=[]
     for step in steps:
         cmd=step['command'];output=visible(step['result']);spans=[];hits=[];edits=[];classes=set()
@@ -55,7 +60,10 @@ def collect(with_readings=True):
             total=(raw.get('token_usage') or {}).get('total',{})
             steps=json.loads((directory/'steps.json').read_text(encoding='utf-8')) if (directory/'steps.json').exists() else []
             entry={'status':raw['status'],'solved':raw.get('evaluation',{}).get('solved'),'evaluation_status':raw.get('evaluation',{}).get('status'),'steps':raw.get('steps',len(steps)),'tokens':total.get('totalTokens'),'input_tokens':total.get('inputTokens'),'cached_input_tokens':total.get('cachedInputTokens'),'output_tokens_including_reasoning':total.get('outputTokens'),'agent_seconds':raw.get('agent_seconds'),'box_calls':sum(bool(s['box_call']) for s in steps),'box_match_lines':sum(len(s['result']['stdout'].splitlines()) for s in steps if s['box_call']),'box_error_or_empty_calls':sum(s['result']['exit']!=0 for s in steps if s['box_call']),'error':raw.get('error') or raw.get('evaluation',{}).get('error')}
+            entry['token_cap_excess']=max(0,(entry['tokens'] or 0)-1000000)
             entry['evaluated_solved']=entry['solved']
+            if any(phase.get('exit') in [2,4,5] for phase in raw.get('evaluation',{}).get('phases',{}).values()):
+                entry['solved']=None;entry['error']='Native invocation/collection failure; saved scorer replay needed'
             baseline=HERE/'baselines'/ident/'guards.json'
             if baseline.exists():
                 before=json.loads(baseline.read_text(encoding='utf-8'))
@@ -89,7 +97,7 @@ def collect(with_readings=True):
     elif loss and not gain:decision='stop without repeats'
     elif not gain and not cost and (stats['median_token_reduction'] or 0)<.2 and stats['token_exact_p']>=.05:decision='stop without repeats'
     else:decision='fixed repeats needed before any superiority claim'
-    return {'stats':stats,'repeat_decision':decision,'pairs':pairs,'limitations':['Twelve selected tasks, one initial pair each; small effects cannot be distinguished','Unknown/missing tests are not successes or ordinary task failures','Agent receives failing tests unlike published Gate 2 setting','Total tokens include cached input and output reasoning, not an API invoice','Reading classifier proxies are not cognition; spans and search errors matter']}
+    return {'stats':stats,'repeat_decision':decision,'pairs':pairs,'limitations':['Twelve selected tasks, one initial pair each; small effects cannot be distinguished','Unknown/missing tests are not successes or ordinary task failures','Agent receives failing tests unlike published Gate 2 setting','Agent seconds include prepared-container setup and protocol overhead; timings are noisy','Standalone broker rejects combined Box commands; retry costs are included' ,'Total tokens include cached input and output reasoning, not an API invoice','Reading classifier proxies are not cognition; spans and search errors matter']}
 if __name__=='__main__':
     result=collect('--quick' not in sys.argv)
     output=HERE/('progress.json' if '--quick' in sys.argv else 'summary.json');output.write_bytes(json.dumps(result,indent=2).encode('utf-8'))

@@ -88,15 +88,66 @@
   "patch_sha256": "4ac29f1f49c7e558fac5b9f6af4800a6b21256d4092f1658c094f0e782f03455",
   "patch_bytes": 1018,
   "evaluation": {
-    "status": "unknown",
-    "solved": null,
+    "status": "scored",
+    "solved": true,
     "phases": {
       "failing": {
         "exit": 0,
         "timed_out": false,
-        "seconds": 1.9121936060000735,
+        "seconds": 2.2083900090001407,
+        "argv": [
+          "python",
+          "/lab/container.py",
+          "--child",
+          "plain",
+          "/tmp/lab-unused.trace.json",
+          "tests/runtests.py",
+          "--verbosity",
+          "2",
+          "--settings=test_sqlite",
+          "--parallel",
+          "1",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_serialize_result"
+        ],
         "requested": 1,
         "matched_passes": 1,
+        "missing_names": [],
+        "all_pass": true
+      },
+      "guards": {
+        "exit": 0,
+        "timed_out": false,
+        "seconds": 2.5548528000008446,
+        "argv": [
+          "python",
+          "/lab/container.py",
+          "--child",
+          "plain",
+          "/tmp/lab-unused.trace.json",
+          "tests/runtests.py",
+          "--verbosity",
+          "2",
+          "--settings=test_sqlite",
+          "--parallel",
+          "1",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_custom_to_field",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_custom_to_field_custom_pk",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_custom_to_field_permission_denied",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_field_does_not_allowed",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_field_does_not_exist",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_field_no_related_field",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_get_paginator",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_has_view_or_change_permission_required",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_limit_choices_to",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_missing_search_fields",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_must_be_logged_in",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_search_use_distinct",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_success",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_to_field_resolution_with_fk_pk",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_to_field_resolution_with_mti"
+        ],
+        "requested": 15,
+        "matched_passes": 15,
         "missing_names": [],
         "all_pass": true
       }
@@ -105,7 +156,7 @@
       "docker",
       "create",
       "--name",
-      "lab-gate-3-c191be34-3f8c-4193-9fe0-aed6e45d1fe5",
+      "lab-gate-3-84ee7991-0d0b-474c-9832-0af1b78c9ab9",
       "--network",
       "none",
       "--cap-drop",
@@ -134,7 +185,6 @@
       "-lc",
       "sleep infinity"
     ],
-    "error": "Unparseable benchmark guard name: Search results are paginated.",
     "cleanup_exit": 0
   },
   "box_arm_valid": true,
@@ -188,12 +238,23 @@
   "artifacts": {
     "all.patch": "4ac29f1f49c7e558fac5b9f6af4800a6b21256d4092f1658c094f0e782f03455",
     "baseline-tree.json": "39a501f4050c27dd7c338e4b54d6d54c0d33b9bcca9d31bef0d965d41960532b",
+    "before-guard-translation-attempt.json": "25a2ab753fbe38af967a9801e3b9a5bf35e21d4a77b150e006223118319bd3c2",
+    "before-guard-translation-baseline-tree.json": "39a501f4050c27dd7c338e4b54d6d54c0d33b9bcca9d31bef0d965d41960532b",
+    "before-guard-translation-evaluation.json": "cc8fad50ca472f762fc8f2ce0da788e19b10c574bced70395738608163ff6d39",
+    "before-guard-translation-failing.log": "864848bd9eb20723bfd689d9260eca07219b8b3b5fe45d952dc818714836afdd",
     "candidate.patch": "4ac29f1f49c7e558fac5b9f6af4800a6b21256d4092f1658c094f0e782f03455",
-    "evaluation.json": "cc8fad50ca472f762fc8f2ce0da788e19b10c574bced70395738608163ff6d39",
-    "failing.log": "864848bd9eb20723bfd689d9260eca07219b8b3b5fe45d952dc818714836afdd",
+    "evaluation.json": "9c6fcc7552b77d1566e4c6f38288d99073d838b45cfa7215d2dda5e5bec64bed",
+    "failing.log": "3f67f018297f677ed2ee61d04534b40108854ba9610e55d9ffe817c07059de27",
+    "guards.log": "ea6898b507135ba4318ba1114dee8d1a436415b02c7c149ef42b2335326633da",
     "model-events.json": "462427c5d1a0a6b38d97bbb0b88f0dc6e9955f9e9c4a6d7ef23b2553b0a07fae",
     "prompt.txt": "dc76e514d970000c2d1e9f7b3a2377fd118a63f073254f5ad1260f5dbf960494",
     "steps.json": "0548ba42da6471870216794e2f64283a38b06783aa8f14af4ee324c7cd0ee692",
     "test.patch": "89926ad9e99080c51b256b6ff55850d97d2430ff9218772376ec1783b90994e5"
+  },
+  "scorer_correction": {
+    "kind": "exact native benchmark guard ID translation",
+    "agent_rerun": false,
+    "patch_unchanged": true,
+    "original": "before-guard-translation-evaluation.json"
   }
 }

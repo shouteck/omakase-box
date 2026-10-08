@@ -1,0 +1,47 @@
+{
+  "status": "pass",
+  "checks": [
+    {
+      "instance_id": "django__django-14752",
+      "arm": "box",
+      "candidate_hash_unchanged": true,
+      "agent_usage_and_steps_unchanged": true,
+      "all_requested_native_tests_pass": true
+    },
+    {
+      "instance_id": "django__django-14752",
+      "arm": "control",
+      "candidate_hash_unchanged": true,
+      "agent_usage_and_steps_unchanged": true,
+      "all_requested_native_tests_pass": true
+    },
+    {
+      "instance_id": "django__django-15467",
+      "arm": "box",
+      "candidate_hash_unchanged": true,
+      "agent_usage_and_steps_unchanged": true,
+      "all_requested_native_tests_pass": true
+    },
+    {
+      "instance_id": "django__django-15467",
+      "arm": "control",
+      "candidate_hash_unchanged": true,
+      "agent_usage_and_steps_unchanged": true,
+      "all_requested_native_tests_pass": true
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "arm": "box",
+      "candidate_hash_unchanged": true,
+      "agent_usage_and_steps_unchanged": true,
+      "all_requested_native_tests_pass": true
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "arm": "control",
+      "candidate_hash_unchanged": true,
+      "agent_usage_and_steps_unchanged": true,
+      "all_requested_native_tests_pass": true
+    }
+  ]
+}

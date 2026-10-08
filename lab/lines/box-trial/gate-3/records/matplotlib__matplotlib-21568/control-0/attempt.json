@@ -89,24 +89,50 @@
   "patch_bytes": 779,
   "evaluation": {
     "status": "scored",
-    "solved": false,
+    "solved": true,
     "phases": {
       "failing": {
         "exit": 0,
         "timed_out": false,
-        "seconds": 4.269510224999976,
+        "seconds": 1.705899219999992,
+        "argv": [
+          "python",
+          "/lab/container.py",
+          "--child",
+          "plain",
+          "/tmp/lab-unused.trace.json",
+          "pytest",
+          "-rA",
+          "-vv",
+          "--tb=short",
+          "-p",
+          "no:cacheprovider",
+          "lib/matplotlib/tests/test_dates.py::test_date_formatter_usetex[delta2-expected2]",
+          "lib/matplotlib/tests/test_dates.py::test_date_formatter_usetex[delta3-expected3]",
+          "lib/matplotlib/tests/test_dates.py::test_concise_formatter_usetex[t_delta2-expected2]",
+          "lib/matplotlib/tests/test_dates.py::test_concise_formatter_usetex[t_delta3-expected3]"
+        ],
         "requested": 4,
         "matched_passes": 4,
         "missing_names": [],
         "all_pass": true
       },
       "guards": {
-        "exit": 4,
+        "exit": 0,
         "timed_out": false,
-        "seconds": 1.9757354919997852,
-        "requested": 73,
-        "matched_passes": 0,
-        "missing_names": [
+        "seconds": 5.9390132489997995,
+        "argv": [
+          "python",
+          "/lab/container.py",
+          "--child",
+          "plain",
+          "/tmp/lab-unused.trace.json",
+          "pytest",
+          "-rA",
+          "-vv",
+          "--tb=short",
+          "-p",
+          "no:cacheprovider",
           "lib/matplotlib/tests/test_dates.py::test_date_numpyx",
           "lib/matplotlib/tests/test_dates.py::test_date_date2num_numpy[datetime64[s]-t00]",
           "lib/matplotlib/tests/test_dates.py::test_date_date2num_numpy[datetime64[s]-t01]",
@@ -149,8 +175,8 @@
           "lib/matplotlib/tests/test_dates.py::test_auto_date_locator_intmult",
           "lib/matplotlib/tests/test_dates.py::test_concise_formatter_subsecond",
           "lib/matplotlib/tests/test_dates.py::test_concise_formatter",
-          "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta0-1997-Jan-01",
-          "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta1-1997-Jan-01",
+          "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta0-1997-Jan-01 00:00]",
+          "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta1-1997-Jan-01 00:01]",
           "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta2-1997-Jan-01]",
           "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta3-1997-Jan-02]",
           "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta4-1997-Jan]",
@@ -181,14 +207,17 @@
           "lib/matplotlib/tests/test_dates.py::test_epoch2num",
           "lib/matplotlib/tests/test_dates.py::test_julian2num"
         ],
-        "all_pass": false
+        "requested": 73,
+        "matched_passes": 73,
+        "missing_names": [],
+        "all_pass": true
       }
     },
     "create_argv": [
       "docker",
       "create",
       "--name",
-      "lab-gate-3-55f11e57-9b76-4fc0-85d9-8399dff7af90",
+      "lab-gate-3-0708f5bc-37bd-437c-8cd8-929955d54562",
       "--network",
       "none",
       "--cap-drop",
@@ -226,13 +255,26 @@
   "artifacts": {
     "all.patch": "30d75532ac85422c36a1f2eedc29adc6dab65171c7668a436f501e3ef2af0fb4",
     "baseline-tree.json": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+    "before-guard-translation-attempt.json": "922a6d5b44d0e25d10d412df741951e2d5a99abafeca5a8a82a8b4055eb4b458",
+    "before-guard-translation-baseline-tree.json": "fe9d78e668e47c54371d4a862b7c841de932a2361c5bcc32d460b4f7ec5b16f4",
+    "before-guard-translation-evaluation.json": "14833ed78af4309dd0d4170e6d4ad87e1feba809a970800c8e0d348613f57eb2",
+    "before-guard-translation-failing.log": "a57e1d2330482f68d2a355fd10807ac7262a4c32b703502d852964ae3f122140",
+    "before-guard-translation-guards.log": "fb17b410b02cf5336bc6239c87c980a7dcfc9115221ec4a8a5a7b3d1fe0544c4",
     "candidate.patch": "30d75532ac85422c36a1f2eedc29adc6dab65171c7668a436f501e3ef2af0fb4",
-    "evaluation.json": "14833ed78af4309dd0d4170e6d4ad87e1feba809a970800c8e0d348613f57eb2",
-    "failing.log": "a57e1d2330482f68d2a355fd10807ac7262a4c32b703502d852964ae3f122140",
-    "guards.log": "fb17b410b02cf5336bc6239c87c980a7dcfc9115221ec4a8a5a7b3d1fe0544c4",
+    "evaluation.json": "49aca2a6f20e28fb1f94ffe9ee227effc5381e96f8ff7228f3b424fd513527f4",
+    "failing.log": "412b834436da1de379d171baad3f92b645cfb9b08f7ca714980e0d2e2d3a155a",
+    "guard-collection.log": "8b1082f37df931d2fb30b6d9b92025a920bd91c3054f893a76a1a6f80b88b307",
+    "guard-node-map.json": "7b9ffcc0f19e1934e82ab8a9616981dbe1138d4f7bcc01384ebecbeae43dad51",
+    "guards.log": "7b498e1de8c1fa082db52aeb8618136aae1b8063aa16eb85670cea36dc0ca0d0",
     "model-events.json": "61714d038bc615297b98ed61d9695fdd1c19266d905f83bdd3037daa25eb45bb",
     "prompt.txt": "99c1265d75f81ccc181a3f836f0b7c260669e27172ff9ee25a1080274afe1060",
     "steps.json": "0f767f81d574d6bc4a175454a28ce7c01c3efd1794261a61b03e29d058c9a3d3",
     "test.patch": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6"
+  },
+  "scorer_correction": {
+    "kind": "exact native benchmark guard ID translation",
+    "agent_rerun": false,
+    "patch_unchanged": true,
+    "original": "before-guard-translation-evaluation.json"
   }
 }

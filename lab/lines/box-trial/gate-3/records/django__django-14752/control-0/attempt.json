@@ -88,15 +88,66 @@
   "patch_sha256": "3451a0b766654fe78572885ff1349e272476250acc703c65a484efba9d89c7c9",
   "patch_bytes": 984,
   "evaluation": {
-    "status": "unknown",
-    "solved": null,
+    "status": "scored",
+    "solved": true,
     "phases": {
       "failing": {
         "exit": 0,
         "timed_out": false,
-        "seconds": 1.8698403799999141,
+        "seconds": 3.000198941000235,
+        "argv": [
+          "python",
+          "/lab/container.py",
+          "--child",
+          "plain",
+          "/tmp/lab-unused.trace.json",
+          "tests/runtests.py",
+          "--verbosity",
+          "2",
+          "--settings=test_sqlite",
+          "--parallel",
+          "1",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_serialize_result"
+        ],
         "requested": 1,
         "matched_passes": 1,
+        "missing_names": [],
+        "all_pass": true
+      },
+      "guards": {
+        "exit": 0,
+        "timed_out": false,
+        "seconds": 4.04424365199975,
+        "argv": [
+          "python",
+          "/lab/container.py",
+          "--child",
+          "plain",
+          "/tmp/lab-unused.trace.json",
+          "tests/runtests.py",
+          "--verbosity",
+          "2",
+          "--settings=test_sqlite",
+          "--parallel",
+          "1",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_custom_to_field",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_custom_to_field_custom_pk",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_custom_to_field_permission_denied",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_field_does_not_allowed",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_field_does_not_exist",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_field_no_related_field",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_get_paginator",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_has_view_or_change_permission_required",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_limit_choices_to",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_missing_search_fields",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_must_be_logged_in",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_search_use_distinct",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_success",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_to_field_resolution_with_fk_pk",
+          "admin_views.test_autocomplete_view.AutocompleteJsonViewTests.test_to_field_resolution_with_mti"
+        ],
+        "requested": 15,
+        "matched_passes": 15,
         "missing_names": [],
         "all_pass": true
       }
@@ -105,7 +156,7 @@
       "docker",
       "create",
       "--name",
-      "lab-gate-3-4f57b6e3-e62a-4398-9f35-83454b143081",
+      "lab-gate-3-31f71ba6-6c37-4e93-aaec-ad53bd2b7f83",
       "--network",
       "none",
       "--cap-drop",
@@ -134,7 +185,6 @@
       "-lc",
       "sleep infinity"
     ],
-    "error": "Unparseable benchmark guard name: Search results are paginated.",
     "cleanup_exit": 0
   },
   "box_arm_valid": true,
@@ -144,12 +194,23 @@
   "artifacts": {
     "all.patch": "3451a0b766654fe78572885ff1349e272476250acc703c65a484efba9d89c7c9",
     "baseline-tree.json": "39a501f4050c27dd7c338e4b54d6d54c0d33b9bcca9d31bef0d965d41960532b",
+    "before-guard-translation-attempt.json": "58a8b03eb39962a277a889cc44dcb16e5aea091514573911e652951640c36afc",
+    "before-guard-translation-baseline-tree.json": "39a501f4050c27dd7c338e4b54d6d54c0d33b9bcca9d31bef0d965d41960532b",
+    "before-guard-translation-evaluation.json": "4b40f373c73622e58f337fcbbda97d9038687c1be4bd9231482c41c0f7fe448c",
+    "before-guard-translation-failing.log": "551f53c56785fd7147c7230558b40f8c554e09a307854df70ed34c3f3cbeb57b",
     "candidate.patch": "3451a0b766654fe78572885ff1349e272476250acc703c65a484efba9d89c7c9",
-    "evaluation.json": "4b40f373c73622e58f337fcbbda97d9038687c1be4bd9231482c41c0f7fe448c",
-    "failing.log": "551f53c56785fd7147c7230558b40f8c554e09a307854df70ed34c3f3cbeb57b",
+    "evaluation.json": "33106026fbd221f68f429ba84026b4db0ab23819ce78b960c0aa4c43f44bd082",
+    "failing.log": "671767a6a9b5893bfd59d978512fa5dbeb3fdb531a4fa99a8c78af64221ece7f",
+    "guards.log": "c678d30d5b250bba613417619766a3dbbfa4139c1b324a9115e95758f4f84bf3",
     "model-events.json": "75f39f8cf1193cfd7f4454c575d153739ca2f024ba8b7023cfe224aa361dd5e1",
     "prompt.txt": "48310f74b6321325f9ccb2e731218e4c4d0f7b82bd769058f9dbf279d1a510e1",
     "steps.json": "fec22af575e4109116d75a91fef01de90f028565a79048b910a591e62588ebfb",
     "test.patch": "89926ad9e99080c51b256b6ff55850d97d2430ff9218772376ec1783b90994e5"
+  },
+  "scorer_correction": {
+    "kind": "exact native benchmark guard ID translation",
+    "agent_rerun": false,
+    "patch_unchanged": true,
+    "original": "before-guard-translation-evaluation.json"
   }
 }

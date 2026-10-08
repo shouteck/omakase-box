@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "checked_attempts": 3,
+  "checked_attempts": 24,
   "control_prompt_unchanged": true,
   "artifact_hash_errors": [],
   "box_runs": [
@@ -17,6 +17,76 @@
       "valid": true,
       "first_command": false,
       "calls": 4
+    },
+    {
+      "instance_id": "django__django-12193",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "django__django-14752",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "django__django-15467",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 3
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "repeat": 0,
+      "valid": true,
+      "first_command": false,
+      "calls": 1
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repeat": 0,
+      "valid": false,
+      "first_command": false,
+      "calls": 0
     }
   ]
 }

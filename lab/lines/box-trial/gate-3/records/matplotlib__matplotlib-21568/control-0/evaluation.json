@@ -1,23 +1,49 @@
 {
   "status": "scored",
-  "solved": false,
+  "solved": true,
   "phases": {
     "failing": {
       "exit": 0,
       "timed_out": false,
-      "seconds": 4.269510224999976,
+      "seconds": 1.705899219999992,
+      "argv": [
+        "python",
+        "/lab/container.py",
+        "--child",
+        "plain",
+        "/tmp/lab-unused.trace.json",
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "lib/matplotlib/tests/test_dates.py::test_date_formatter_usetex[delta2-expected2]",
+        "lib/matplotlib/tests/test_dates.py::test_date_formatter_usetex[delta3-expected3]",
+        "lib/matplotlib/tests/test_dates.py::test_concise_formatter_usetex[t_delta2-expected2]",
+        "lib/matplotlib/tests/test_dates.py::test_concise_formatter_usetex[t_delta3-expected3]"
+      ],
       "requested": 4,
       "matched_passes": 4,
       "missing_names": [],
       "all_pass": true
     },
     "guards": {
-      "exit": 4,
+      "exit": 0,
       "timed_out": false,
-      "seconds": 1.9757354919997852,
-      "requested": 73,
-      "matched_passes": 0,
-      "missing_names": [
+      "seconds": 5.9390132489997995,
+      "argv": [
+        "python",
+        "/lab/container.py",
+        "--child",
+        "plain",
+        "/tmp/lab-unused.trace.json",
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
         "lib/matplotlib/tests/test_dates.py::test_date_numpyx",
         "lib/matplotlib/tests/test_dates.py::test_date_date2num_numpy[datetime64[s]-t00]",
         "lib/matplotlib/tests/test_dates.py::test_date_date2num_numpy[datetime64[s]-t01]",
@@ -60,8 +86,8 @@
         "lib/matplotlib/tests/test_dates.py::test_auto_date_locator_intmult",
         "lib/matplotlib/tests/test_dates.py::test_concise_formatter_subsecond",
         "lib/matplotlib/tests/test_dates.py::test_concise_formatter",
-        "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta0-1997-Jan-01",
-        "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta1-1997-Jan-01",
+        "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta0-1997-Jan-01 00:00]",
+        "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta1-1997-Jan-01 00:01]",
         "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta2-1997-Jan-01]",
         "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta3-1997-Jan-02]",
         "lib/matplotlib/tests/test_dates.py::test_concise_formatter_show_offset[t_delta4-1997-Jan]",
@@ -92,14 +118,17 @@
         "lib/matplotlib/tests/test_dates.py::test_epoch2num",
         "lib/matplotlib/tests/test_dates.py::test_julian2num"
       ],
-      "all_pass": false
+      "requested": 73,
+      "matched_passes": 73,
+      "missing_names": [],
+      "all_pass": true
     }
   },
   "create_argv": [
     "docker",
     "create",
     "--name",
-    "lab-gate-3-55f11e57-9b76-4fc0-85d9-8399dff7af90",
+    "lab-gate-3-0708f5bc-37bd-437c-8cd8-929955d54562",
     "--network",
     "none",
     "--cap-drop",

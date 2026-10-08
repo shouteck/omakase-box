@@ -1,0 +1,406 @@
+{
+  "selection_exact_match": true,
+  "complete_summary_exact_match": true,
+  "control_prompt_expression_match": true,
+  "artifact_hash_errors": [],
+  "attempts": [
+    {
+      "instance_id": "astropy__astropy-13033",
+      "arm": "box",
+      "steps": 9,
+      "tokens": 107527,
+      "agent_seconds": 43.921999999904074,
+      "valid": false
+    },
+    {
+      "instance_id": "astropy__astropy-13033",
+      "arm": "control",
+      "steps": 8,
+      "tokens": 95176,
+      "agent_seconds": 61.53100000007544,
+      "valid": true
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "arm": "box",
+      "steps": 19,
+      "tokens": 365584,
+      "agent_seconds": 97.21799999999348,
+      "valid": true
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "arm": "control",
+      "steps": 11,
+      "tokens": 207894,
+      "agent_seconds": 76.04700000002049,
+      "valid": true
+    },
+    {
+      "instance_id": "django__django-12193",
+      "arm": "box",
+      "steps": 10,
+      "tokens": 91940,
+      "agent_seconds": 46.06299999996554,
+      "valid": true
+    },
+    {
+      "instance_id": "django__django-12193",
+      "arm": "control",
+      "steps": 9,
+      "tokens": 73067,
+      "agent_seconds": 42.46899999992456,
+      "valid": true
+    },
+    {
+      "instance_id": "django__django-14752",
+      "arm": "box",
+      "steps": 8,
+      "tokens": 64453,
+      "agent_seconds": 41.03100000007544,
+      "valid": true
+    },
+    {
+      "instance_id": "django__django-14752",
+      "arm": "control",
+      "steps": 5,
+      "tokens": 53081,
+      "agent_seconds": 40.875,
+      "valid": true
+    },
+    {
+      "instance_id": "django__django-15467",
+      "arm": "box",
+      "steps": 14,
+      "tokens": 108138,
+      "agent_seconds": 94.01599999994505,
+      "valid": true
+    },
+    {
+      "instance_id": "django__django-15467",
+      "arm": "control",
+      "steps": 5,
+      "tokens": 39032,
+      "agent_seconds": 40.65700000000652,
+      "valid": true
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "arm": "box",
+      "steps": 15,
+      "tokens": 257523,
+      "agent_seconds": 95.82799999997951,
+      "valid": true
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "arm": "control",
+      "steps": 11,
+      "tokens": 260275,
+      "agent_seconds": 67.98399999993853,
+      "valid": true
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "arm": "box",
+      "steps": 9,
+      "tokens": 67583,
+      "agent_seconds": 46.64099999994505,
+      "valid": true
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "arm": "control",
+      "steps": 5,
+      "tokens": 42195,
+      "agent_seconds": 29.969000000040978,
+      "valid": true
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "arm": "box",
+      "steps": 14,
+      "tokens": 250388,
+      "agent_seconds": 69.78200000000652,
+      "valid": true
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "arm": "control",
+      "steps": 10,
+      "tokens": 159052,
+      "agent_seconds": 48.375,
+      "valid": true
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "arm": "box",
+      "steps": 18,
+      "tokens": 308813,
+      "agent_seconds": 113.70299999997951,
+      "valid": true
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "arm": "control",
+      "steps": 12,
+      "tokens": 179950,
+      "agent_seconds": 68.39000000001397,
+      "valid": true
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "arm": "box",
+      "steps": 15,
+      "tokens": 312333,
+      "agent_seconds": 82.95299999997951,
+      "valid": true
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "arm": "control",
+      "steps": 26,
+      "tokens": 719483,
+      "agent_seconds": 90.46900000004098,
+      "valid": true
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "arm": "box",
+      "steps": 13,
+      "tokens": 173516,
+      "agent_seconds": 55.18700000003446,
+      "valid": true
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "arm": "control",
+      "steps": 16,
+      "tokens": 257579,
+      "agent_seconds": 82.04700000002049,
+      "valid": true
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "arm": "box",
+      "steps": 28,
+      "tokens": 1028692,
+      "agent_seconds": 248.68699999991804,
+      "valid": false
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "arm": "control",
+      "steps": 21,
+      "tokens": 620565,
+      "agent_seconds": 93.64099999994505,
+      "valid": true
+    }
+  ],
+  "box_calls": [
+    {
+      "instance_id": "astropy__astropy-14539",
+      "step": 3,
+      "command": "box-search",
+      "result": {
+        "stdout": "",
+        "stderr": "Usage: box-search [-F] [-i] PATTERN [PATH...]. Call as a standalone command.",
+        "exit": 2,
+        "timed_out": false,
+        "seconds": 0
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "step": 4,
+      "command": "box-search -n \"test_identical_tables\" /testbed",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 4.260200012140558e-05
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "step": 5,
+      "command": "box-search \"test_identical_tables\"",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.004010482000012416
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "step": 6,
+      "command": "box-search FITSDiff",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.004881226999941646
+      }
+    },
+    {
+      "instance_id": "django__django-12193",
+      "step": 2,
+      "command": "box-search \"test_get_context_does_not_mutate_attrs\"",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.004139407999900868
+      }
+    },
+    {
+      "instance_id": "django__django-14752",
+      "step": 2,
+      "command": "box-search AutocompleteJsonView",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.005263548999664636
+      }
+    },
+    {
+      "instance_id": "django__django-15467",
+      "step": 3,
+      "command": "box-search",
+      "result": {
+        "stdout": "",
+        "stderr": "Usage: box-search [-F] [-i] PATTERN [PATH...]. Call as a standalone command.",
+        "exit": 2,
+        "timed_out": false,
+        "seconds": 0
+      }
+    },
+    {
+      "instance_id": "django__django-15467",
+      "step": 4,
+      "command": "box-search test_radio_fields_foreignkey_formfield_overrides_empty_label",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.0039641540001866815
+      }
+    },
+    {
+      "instance_id": "django__django-15467",
+      "step": 5,
+      "command": "box-search test_radio_fields_foreignkey_formfield_overrides_empty_label /testbed",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 7.201799962786026e-05
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "step": 2,
+      "command": "box-search \"date_formatter_usetex\"",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.011103644999820972
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "step": 2,
+      "command": "box-search test_clone_estimator_types",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.0026129699999728473
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "step": 2,
+      "command": "box-search test_shuffle_stratifiedkfold",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.0023543880001852813
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "step": 3,
+      "command": "box-search \"LogisticRegressionCV_no_refit\"",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.0036853820001852
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "step": 2,
+      "command": "box-search inheritance_diagram_svg_html",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.004318853999848216
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "step": 2,
+      "command": "box-search test_prepend_prolog_with_roles_in_sections_with_newline",
+      "result": {
+        "stdout": "",
+        "stderr": "",
+        "exit": 1,
+        "timed_out": false,
+        "seconds": 0.0034446909999132913
+      }
+    }
+  ],
+  "stats": {
+    "attempts": 24,
+    "scored_pairs": 10,
+    "unknown_or_unstarted_pairs": 2,
+    "control_solved": 11,
+    "box_solved": 10,
+    "gains": 0,
+    "losses": 0,
+    "success_exact_p": 1.0,
+    "both_solved_comparable": 10,
+    "median_token_reduction": -0.4162748125211023,
+    "token_wins": 3,
+    "token_losses": 7,
+    "token_exact_p": 0.34375,
+    "valid_box_attempts": 10,
+    "invalid_box_attempts": 2,
+    "box_calls": 15,
+    "artifact_hash_errors": [],
+    "success_signal": false,
+    "cost_signal": false,
+    "median_step_delta": 4.0,
+    "median_seconds_delta": 18.921499999938533
+  },
+  "repeat_decision": "stop without repeats"
+}
