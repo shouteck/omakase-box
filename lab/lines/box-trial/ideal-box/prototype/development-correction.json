@@ -10,5 +10,14 @@
   "measurement_timing": "measurement started after fixture failed; treated as preliminary until checks pass",
   "ordered_collector_surprise": "initial plain 1.359s, ordered 14.953s; cache path resolution and request local events only within selected test; retain original helper/receipts/raw before rerun",
   "original_facts_raw_retained_path": "raw/facts-before-path-cache/ordered.json",
-  "trace_equivalence_finding": "Full calls mapping differs in 271 first-seen ordinals across fresh processes; key/name set and 17 selected-test event sequence agree. Original strict dictionary comparison and raw records preserved. Footprint report now separates these observed outcomes."
+  "trace_equivalence_finding": "Full calls mapping differs in 271 first-seen ordinals across fresh processes; key/name set and 17 selected-test event sequence agree. Original strict dictionary comparison and raw records preserved. Footprint report now separates these observed outcomes.",
+  "sceptic_mandatory_fixes": [
+    "Unsupported multiline and heading/pretty formats pass through intact.",
+    "Explicit native filename must agree with captured relative identity; number-only forms require one explicit file argument."
+  ],
+  "targeted_fixture_author_correction": {
+    "preserved": "check-fixes-initial.py",
+    "failure": "Numeric-only synthetic location lacked kind=line, so no mark was expected by the adapter. Added the native wrapper location type; assertions unchanged. No corpus expected outcome changed."
+  },
+  "recheck_protocol_note": "The post-review frozen-stream recheck began before a fresh kitchen-busy probe. The in-run probe printed idle; no kitchen wave was in flight. The final completion timing sample had its own idle probe before execution."
 }

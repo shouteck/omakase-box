@@ -1,0 +1,42 @@
+{
+  "all_literal_raw_receipts_checked": 587,
+  "facts": {
+    "calls": 2066,
+    "events": 17,
+    "selected": 9,
+    "omitted": 8,
+    "q2_bytes": 670,
+    "q3_bytes": 598,
+    "ordinals_differ": 271,
+    "parent_stack_valid": true
+  },
+  "multiline_attack": {
+    "args": [
+      "-n",
+      "--with-filename",
+      "--multiline",
+      "needle = 1[\\s\\S]*needle = 2",
+      "sample.py"
+    ],
+    "native": "sample.py:2:    needle = 1\nsample.py:3:\nsample.py:4:def called():\nsample.py:5:    needle = 2\n",
+    "shown": "[ran]sample.py:4:def called():\n[ran]sample.py:5:    needle = 2\nsample.py:2:    needle = 1\nsample.py:3:\n",
+    "order": [
+      2,
+      3,
+      0,
+      1
+    ],
+    "marked": [
+      2,
+      3
+    ],
+    "pass_through": false
+  },
+  "contradictory_captured_path": {
+    "native": "a.py:5:    needle = 2\n",
+    "shown": "[ran]a.py:5:    needle = 2\n",
+    "marked": [
+      0
+    ]
+  }
+}

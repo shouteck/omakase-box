@@ -108,7 +108,7 @@ def main():
                 ev=e
                 if q['source_state_unknown'] or q['environment_state_unknown']:
                     ev=Evidence({}, {},False)
-                shown,proof=present(raw,q['tool'],q['args'],ev,q['locations'])
+                shown,proof=present(raw,q['tool'],q['args'],ev,q['locations'],root='/testbed',cwd=q['cwd'])
                 m=metrics(raw,shown,proof,ev,keys)
                 report['native_invocations'].append({'task':ident,'agent':q['agent'],'step':q['step'],'invocation':q['invocation'],'tool':q['tool'],'args':q['args'],
                     'native_sha256':sha(raw),'shown_sha256':sha(shown),'metrics':m,'source_state_unknown':q['source_state_unknown'],'environment_state_unknown':q['environment_state_unknown'],

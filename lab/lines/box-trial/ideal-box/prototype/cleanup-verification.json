@@ -1,0 +1,37 @@
+{
+  "exact_owned_refs": [
+    {
+      "receipt": "facts-closeout.json",
+      "kind": "image",
+      "value": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+      "inspect_exit": 1,
+      "absent": true,
+      "stderr": "Error response from daemon: No such image: ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645\n"
+    },
+    {
+      "receipt": "facts-closeout-before-path-cache.json",
+      "kind": "image",
+      "value": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+      "inspect_exit": 1,
+      "absent": true,
+      "stderr": "Error response from daemon: No such image: ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645\n"
+    },
+    {
+      "receipt": "facts-closeout.json",
+      "kind": "container",
+      "value": "lab-ideal-box-a866cd90-0dc9-4f09-b250-00b88feaba74",
+      "inspect_exit": 1,
+      "absent": true,
+      "stderr": "Error response from daemon: No such container: lab-ideal-box-a866cd90-0dc9-4f09-b250-00b88feaba74\n"
+    },
+    {
+      "receipt": "facts-closeout-before-path-cache.json",
+      "kind": "container",
+      "value": "lab-ideal-box-95f848d0-5809-40ec-8e13-d8b2bce85f09",
+      "inspect_exit": 1,
+      "absent": true,
+      "stderr": "Error response from daemon: No such container: lab-ideal-box-95f848d0-5809-40ec-8e13-d8b2bce85f09\n"
+    }
+  ],
+  "scratch_cleanup_pending": true
+}

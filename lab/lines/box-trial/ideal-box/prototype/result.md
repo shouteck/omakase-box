@@ -23,7 +23,7 @@ Literal-search improvement is not a realistic agent baseline: mechanical words r
 
 ## Correctness and integration hook
 
-17 owned checks pass: 13 identity/native/context/error/filter fixtures and four completion checks. Runtime getter/setter and nested-function attacks leave uncalled definitions unmarked. Matching body text after an unrelated file change also stays unmarked: the hook checks current file hashes.
+28 owned checks pass: 13 identity/native/context/error/filter fixtures, four completion checks and eleven mandatory-review regression checks. Runtime getter/setter and nested-function attacks leave uncalled definitions unmarked. Matching body text after an unrelated file change also stays unmarked: the hook checks current file hashes.
 
 The adapter acts **after** native command/pipeline computation. Filters finish before marks/reordering. Native stderr/exit pass through. No new agent command, instruction or report is required for silent delivery. An exercised completion hook, not a live-agent integration or universal production shell adapter.
 
@@ -33,7 +33,7 @@ Pinned Django 12193, known failing test, test patch only: plain and ordered phas
 
 Initial plain/ordered: 1.359s / 14.953s. Cache paths and request local events only under the selected test: 1.203s / 1.703s. One example, not project-wide timing spread. Identical call key/name set and 17 selected-test event sequence; **271 global first-seen ordinals differ** across fresh processes. First-seen order is not a path. Original helper/raw/receipts remain.
 
-Three later timings: index 0.899–1.006s; native-plus-display 0.403–0.715s. Native hashes varied, so no fixed traversal order or rank-noise estimate is asserted. One task only, not all production costs/model tokens. Facts stay optional and enter context only when asked.
+Three later timings: index 0.833–0.898s; native-plus-display 0.353–0.610s. Native hashes varied, so no fixed traversal order or rank-noise estimate is asserted. One task only, not all production costs/model tokens. Facts stay optional and enter context only when asked.
 
 ## Task table
 
@@ -76,4 +76,4 @@ Net is potential prefix saving minus all badge bytes, summed across each task’
 
 Two fixture-author mistakes surfaced in native output: the word also matches return lines, and a matching filter exits zero. Failed scripts/correction receipts remain. Full trace-dictionary equality failed on first-seen ordinals; the report separates that from the identical call set/selected-test sequence. Measurement began after a fixture failure and stayed preliminary until the corrected check passed. No runtime expected bug/test outcome changed.
 
-[Fresh sceptic review](sceptic.md) is required before closeout. [Owner page](owner-design.md), [summary](summary.json), [footprint](footprint.json), [facts](facts.json). No live test is authorized by this result.
+Fresh sceptic reviewed exact candidate d18fca2: sample 22 fresh literal searches, 70 retained invocations, all 587 receipt hashes/conservation and facts/footprint arithmetic. It found two real faults: multiline matches could be split, and a captured path could contradict the native filename. Both are corrected: multiline output passes through intact, explicit native filenames must agree with source identity, and number-only formats require one explicit source file. Eleven targeted checks include the actual native crossing-definition match. Re-presented all 587 + 243 frozen streams after validating input hashes; aggregates remain identical. Original receipts, summary, adapter and footprint remain named before-sceptic; native queries were not re-executed and timings remain original. Corrected candidate awaits the same sceptic's targeted verification. [Review](sceptic.md). [Owner page](owner-design.md), [summary](summary.json), [footprint](footprint.json), [facts](facts.json). No live test is authorized by this result.

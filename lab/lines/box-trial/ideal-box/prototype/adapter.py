@@ -1,5 +1,5 @@
 """Research final-display adapter. Never execute repository code on the host."""
-import ast, base64, collections, hashlib, json, pathlib, re, subprocess, sys
+import ast, base64, collections, hashlib, json, pathlib, posixpath, re, subprocess, sys
 MARK=b'[ran]'
 sha=lambda b:hashlib.sha256(b).hexdigest()
 
@@ -51,15 +51,27 @@ class Evidence:
         rows=[r for r in self.tree(p) if (p,r['start']) in self.called]
         return ''.join('%s:%s %s\n'%(p,r['start'],r['name']) for r in rows) or 'No verified called definition in this file.\n'
 
-def parse_locations(raw,evidence):
+
+def relative_path(value,root=None,cwd=None):
+    value=value.replace('\\','/')
+    if root:
+        base=posixpath.normpath(str(root).replace('\\','/'))
+        current=posixpath.normpath(str(cwd or root).replace('\\','/'))
+        full=posixpath.normpath(value if value.startswith('/') or re.match(r'^[A-Za-z]:/',value) else posixpath.join(current,value))
+        return full[len(base)+1:] if full.startswith(base+'/') else None
+    value=posixpath.normpath(value)
+    if value.startswith('/testbed/'):return value[len('/testbed/'):]
+    if value.startswith('/') or re.match(r'^[A-Za-z]:/',value) or value=='..' or value.startswith('../'):return None
+    return value
+
+def parse_locations(raw,evidence,root=None,cwd=None):
     locations=[]
     for i,line in enumerate(raw.splitlines(keepends=True)):
         try:text=line.decode('utf-8').rstrip('\r\n')
         except UnicodeError:continue
         m=re.match(r'^(.*?)([:\-])(\d+)([:\-])(.*)$',text)
         if not m:continue
-        p=m.group(1).replace('\\','/')
-        while p.startswith('./'):p=p[2:]
+        p=relative_path(m.group(1),root,cwd)
         if p not in evidence.sources:continue
         n=int(m.group(3));content=m.group(5)
         source=evidence.sources[p].splitlines()
@@ -67,15 +79,15 @@ def parse_locations(raw,evidence):
         locations.append({'ordinal':i,'path':p,'line':n,'is_match':m.group(2)==':' and m.group(4)==':','source_sha256':evidence.digests[p],'kind':'line'})
     return locations
 
-def present(raw,tool,args,evidence,locations=None):
+def present(raw,tool,args,evidence,locations=None,root=None,cwd=None):
     """Native command/pipeline has already completed; only display changes."""
     lines=raw.splitlines(keepends=True)
     base={'same_records':True,'order':list(range(len(lines))),'marked':[],'locations':[],'format':'pass-through'}
-    machine=tool=='find' or b'\0' in raw or any(a in ('--json','--null','--null-data','--count','--count-matches','--only-matching','--quiet','--files-without-match','--files-with-matches') or
-       (a.startswith('-') and not a.startswith('--') and any(c in a[1:] for c in 'zZqclLo')) for a in args)
+    machine=tool=='find' or b'\0' in raw or any(a in ('--json','--null','--null-data','--count','--count-matches','--only-matching','--quiet','--heading','--pretty','--multiline','--multiline-dotall','--files-without-match','--files-with-matches') or
+       (a.startswith('-') and not a.startswith('--') and any(c in a[1:] for c in 'zZqclLoU')) for a in args)
     if machine or not evidence.valid:return raw,base
     # Saved locations may come from a changed file; source hash rejects them.
-    locations=parse_locations(raw,evidence) if locations is None else locations
+    locations=parse_locations(raw,evidence,root,cwd) if locations is None else locations
     located=[]
     seen=collections.Counter(r['ordinal'] for r in locations)
     for old in locations:
@@ -89,6 +101,12 @@ def present(raw,tool,args,evidence,locations=None):
             short=re.match(r'^(\d+)([:\-])(.*)$',record) if not m else None
             n=int(m.group(3)) if m else int(short.group(1)) if short else None
             content=m.group(5) if m else short.group(3) if short else None
+            if m:
+                if relative_path(m.group(1),root,cwd)!=r['path'] or m.group(2)!=':' or m.group(4)!=':':continue
+            elif short:
+                supplied={relative_path(a,root,cwd) for a in args if not a.startswith('-')}
+                explicit={a for a in supplied if a in evidence.sources}
+                if explicit!={r['path']} or short.group(2)!=':':continue
             src=evidence.sources.get(r['path'],'').splitlines()
             if n!=r['line'] or not n or not 1<=n<=len(src) or src[n-1]!=content: continue
             hit=evidence.locate(r['path'],r['line'],r.get('source_sha256'))

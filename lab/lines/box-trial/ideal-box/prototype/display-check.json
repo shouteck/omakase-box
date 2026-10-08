@@ -5,6 +5,6 @@
   "optional_badge_bytes_added": 10,
   "stale_pass_through": true,
   "pipeline_filter_exit": 1,
-  "display_sha256": "f5edc12c6c732fbc2aa5a03115ae19a9b858074b7c5d1cf321247a57d09b557b",
-  "adapter_sha256": "b06da2c758363b1b413792a0510afebb427ee5bfb59babac6328ba0828fca420"
+  "display_sha256": "eadd212705800d776ed51953c111a3aca2920bc25e888e11685e1e3667fef5c8",
+  "adapter_sha256": "7718edd93ce6e9fc16e0ef372ad21e73e68b41df62353cb843fac1affb4f38af"
 }

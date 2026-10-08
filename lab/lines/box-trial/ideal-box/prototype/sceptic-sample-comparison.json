@@ -1,0 +1,6 @@
+{
+  "fresh_queries": 22,
+  "retained_invocations_exact_equal": 70,
+  "native_order_changed": 12,
+  "all_match_multiplicities_identity_marks_equal": true
+}

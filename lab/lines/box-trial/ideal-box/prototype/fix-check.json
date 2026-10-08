@@ -1,0 +1,18 @@
+{
+  "status": "pass",
+  "count": 11,
+  "cases": [
+    "--multiline",
+    "-U",
+    "--multiline-dotall",
+    "contradictory-native-filename",
+    "number-only-['-n', 'a.py']",
+    "number-only-['-n']",
+    "number-only-['-n', 'a.py', 'b.py']",
+    "valid-prefix-a.py",
+    "valid-prefix-/testbed/a.py",
+    "valid-prefix-../a.py",
+    "actual-native-cross-definition-multiline"
+  ],
+  "adapter_sha256": "7718edd93ce6e9fc16e0ef372ad21e73e68b41df62353cb843fac1affb4f38af"
+}

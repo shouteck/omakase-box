@@ -270,26 +270,26 @@
   "latency_sample": [
     {
       "repeat": 1,
-      "index_seconds": 1.0062192999757826,
-      "native_plus_display_seconds": 0.5204922000411898,
-      "native_sha256": "9153fdf3029effb688fb360df108e0c5244ab93d1343e1669f2c542a9455825a",
-      "shown_sha256": "ec89adfdb7175cb5bfdb34ba27dc97bf02779730946930d4b253b2ee1da3fbba",
+      "index_seconds": 0.8980108000105247,
+      "native_plus_display_seconds": 0.6102188999066129,
+      "native_sha256": "8c6da92c8bbd2503938d041044f7014f46f52d98b25a1d3d275beb6d041ff20b",
+      "shown_sha256": "5ea722633049c6b351df61158a79a1ee329db3d476e8fb4120387644cb940a07",
       "bytes": 12680
     },
     {
       "repeat": 2,
-      "index_seconds": 0.899034500005655,
-      "native_plus_display_seconds": 0.4029344000155106,
-      "native_sha256": "cff387cf55b3f0faa8318f898ac10b670ed6d4d5128521978e67a286ccd1848a",
-      "shown_sha256": "80e1d80aaa1816fca5b2baee8800f0c7a3d83c5d73f0da1c42e3d85b324b6579",
+      "index_seconds": 0.8327305000275373,
+      "native_plus_display_seconds": 0.39683940005488694,
+      "native_sha256": "6a06d57d0af6382fda285f3517f557457d278897a7e07e3a963dda007246d689",
+      "shown_sha256": "988c1b817461521bcc0cade80cfc4a07b7427f920992df7f8b6718a84dabef02",
       "bytes": 12680
     },
     {
       "repeat": 3,
-      "index_seconds": 0.9612604998983443,
-      "native_plus_display_seconds": 0.7146418000338599,
-      "native_sha256": "341aea7d2a2c21f5f6170076ddf7145a53af3252991254ff7679e8804902b524",
-      "shown_sha256": "7e88ed79b82180c57bb1bb2173731cbf337aa6132da6b17b6b80fb13af97caf5",
+      "index_seconds": 0.8460883999941871,
+      "native_plus_display_seconds": 0.3526152999838814,
+      "native_sha256": "e5a41c50b55703d3b868ea0099813039d97e85f26f386151d040f81c3613a19d",
+      "shown_sha256": "75182d82d3f8702febbe6e9f39be7d65d7ddabaf01d8e19450ba78a605089406",
       "bytes": 12680
     }
   ],
@@ -339,5 +339,5 @@
     "Old unique-call first-seen data cannot recover a path; route comes from a fresh selected-test collector.",
     "Python-only helper prototype; other-language collectors not built."
   ],
-  "summary_sha256": "3a98f007b70a9e4736c93612f8ee32d1e7a80448c7ad8cdb116b9b884c615f86"
+  "summary_sha256": "8c4424110b28c419081338912b1c2fa775a1e7d2511bb74fcedd26172993d7c4"
 }

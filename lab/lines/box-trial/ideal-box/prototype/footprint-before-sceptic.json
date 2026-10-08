@@ -1,0 +1,343 @@
+{
+  "literal": {
+    "queries": 587,
+    "reaching": 118,
+    "ordinary_rank_median": 96.0,
+    "box_rank_median": 4.5,
+    "reaching_prefix_saved_median_bytes": 7231.5,
+    "all_query_net_median_bytes": 0,
+    "positive_net_queries": 102,
+    "negative_net_queries": 200,
+    "badge_added_bytes": 84555,
+    "order_only_added_bytes": 0,
+    "instruction_bytes": 0
+  },
+  "retained_native": {
+    "queries": 243,
+    "reaching": 48,
+    "ordinary_rank_median": 3.0,
+    "box_rank_median": 1.0,
+    "reaching_prefix_saved_median_bytes": 0.0,
+    "all_query_net_median_bytes": 0,
+    "positive_net_queries": 22,
+    "negative_net_queries": 53,
+    "badge_added_bytes": 1875,
+    "order_only_added_bytes": 0,
+    "instruction_bytes": 0
+  },
+  "tasks": [
+    {
+      "task": "astropy__astropy-14539",
+      "valid_trace": true,
+      "literal_queries": 20,
+      "literal_net_potential_bytes": 898609,
+      "retained_queries": 24,
+      "retained_net_potential_bytes": 281
+    },
+    {
+      "task": "astropy__astropy-7166",
+      "valid_trace": true,
+      "literal_queries": 13,
+      "literal_net_potential_bytes": -385,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "astropy__astropy-14182",
+      "valid_trace": true,
+      "literal_queries": 31,
+      "literal_net_potential_bytes": 46373,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "valid_trace": true,
+      "literal_queries": 18,
+      "literal_net_potential_bytes": 126465,
+      "retained_queries": 17,
+      "retained_net_potential_bytes": 654
+    },
+    {
+      "task": "astropy__astropy-14508",
+      "valid_trace": true,
+      "literal_queries": 23,
+      "literal_net_potential_bytes": 646637,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "django__django-13786",
+      "valid_trace": true,
+      "literal_queries": 13,
+      "literal_net_potential_bytes": 8609,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "django__django-15467",
+      "valid_trace": true,
+      "literal_queries": 16,
+      "literal_net_potential_bytes": 2620181,
+      "retained_queries": 15,
+      "retained_net_potential_bytes": 2791
+    },
+    {
+      "task": "django__django-12193",
+      "valid_trace": true,
+      "literal_queries": 12,
+      "literal_net_potential_bytes": 321,
+      "retained_queries": 22,
+      "retained_net_potential_bytes": 3237
+    },
+    {
+      "task": "django__django-16116",
+      "valid_trace": false,
+      "literal_queries": 3,
+      "literal_net_potential_bytes": 0,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "django__django-14752",
+      "valid_trace": true,
+      "literal_queries": 36,
+      "literal_net_potential_bytes": 477090,
+      "retained_queries": 9,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "matplotlib__matplotlib-24570",
+      "valid_trace": true,
+      "literal_queries": 23,
+      "literal_net_potential_bytes": 82427,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "valid_trace": true,
+      "literal_queries": 25,
+      "literal_net_potential_bytes": -1360,
+      "retained_queries": 21,
+      "retained_net_potential_bytes": -155
+    },
+    {
+      "task": "matplotlib__matplotlib-23412",
+      "valid_trace": true,
+      "literal_queries": 22,
+      "literal_net_potential_bytes": -4220,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "matplotlib__matplotlib-26113",
+      "valid_trace": true,
+      "literal_queries": 22,
+      "literal_net_potential_bytes": 60703,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "matplotlib__matplotlib-13989",
+      "valid_trace": true,
+      "literal_queries": 19,
+      "literal_net_potential_bytes": 79843,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "scikit-learn__scikit-learn-11578",
+      "valid_trace": true,
+      "literal_queries": 54,
+      "literal_net_potential_bytes": 2245416,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14087",
+      "valid_trace": true,
+      "literal_queries": 26,
+      "literal_net_potential_bytes": 694536,
+      "retained_queries": 15,
+      "retained_net_potential_bytes": 702
+    },
+    {
+      "task": "scikit-learn__scikit-learn-12585",
+      "valid_trace": true,
+      "literal_queries": 10,
+      "literal_net_potential_bytes": 404,
+      "retained_queries": 13,
+      "retained_net_potential_bytes": 6179
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14894",
+      "valid_trace": true,
+      "literal_queries": 24,
+      "literal_net_potential_bytes": 1317201,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "scikit-learn__scikit-learn-13124",
+      "valid_trace": true,
+      "literal_queries": 28,
+      "literal_net_potential_bytes": 141467,
+      "retained_queries": 15,
+      "retained_net_potential_bytes": -30
+    },
+    {
+      "task": "sphinx-doc__sphinx-7454",
+      "valid_trace": true,
+      "literal_queries": 29,
+      "literal_net_potential_bytes": 5075,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "sphinx-doc__sphinx-9320",
+      "valid_trace": true,
+      "literal_queries": 21,
+      "literal_net_potential_bytes": 68091,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "sphinx-doc__sphinx-10614",
+      "valid_trace": true,
+      "literal_queries": 22,
+      "literal_net_potential_bytes": 16251,
+      "retained_queries": 35,
+      "retained_net_potential_bytes": 2889
+    },
+    {
+      "task": "sphinx-doc__sphinx-8595",
+      "valid_trace": true,
+      "literal_queries": 23,
+      "literal_net_potential_bytes": 1449,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "sphinx-doc__sphinx-11445",
+      "valid_trace": true,
+      "literal_queries": 15,
+      "literal_net_potential_bytes": -426,
+      "retained_queries": 9,
+      "retained_net_potential_bytes": 3797
+    },
+    {
+      "task": "sympy__sympy-12481",
+      "valid_trace": true,
+      "literal_queries": 1,
+      "literal_net_potential_bytes": 93871,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "sympy__sympy-12096",
+      "valid_trace": true,
+      "literal_queries": 6,
+      "literal_net_potential_bytes": 83450,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "valid_trace": true,
+      "literal_queries": 10,
+      "literal_net_potential_bytes": -5370,
+      "retained_queries": 48,
+      "retained_net_potential_bytes": -698
+    },
+    {
+      "task": "sympy__sympy-22914",
+      "valid_trace": true,
+      "literal_queries": 11,
+      "literal_net_potential_bytes": -6145,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    },
+    {
+      "task": "sympy__sympy-16766",
+      "valid_trace": true,
+      "literal_queries": 11,
+      "literal_net_potential_bytes": -4190,
+      "retained_queries": 0,
+      "retained_net_potential_bytes": 0
+    }
+  ],
+  "latency_sample": [
+    {
+      "repeat": 1,
+      "index_seconds": 1.0062192999757826,
+      "native_plus_display_seconds": 0.5204922000411898,
+      "native_sha256": "9153fdf3029effb688fb360df108e0c5244ab93d1343e1669f2c542a9455825a",
+      "shown_sha256": "ec89adfdb7175cb5bfdb34ba27dc97bf02779730946930d4b253b2ee1da3fbba",
+      "bytes": 12680
+    },
+    {
+      "repeat": 2,
+      "index_seconds": 0.899034500005655,
+      "native_plus_display_seconds": 0.4029344000155106,
+      "native_sha256": "cff387cf55b3f0faa8318f898ac10b670ed6d4d5128521978e67a286ccd1848a",
+      "shown_sha256": "80e1d80aaa1816fca5b2baee8800f0c7a3d83c5d73f0da1c42e3d85b324b6579",
+      "bytes": 12680
+    },
+    {
+      "repeat": 3,
+      "index_seconds": 0.9612604998983443,
+      "native_plus_display_seconds": 0.7146418000338599,
+      "native_sha256": "341aea7d2a2c21f5f6170076ddf7145a53af3252991254ff7679e8804902b524",
+      "shown_sha256": "7e88ed79b82180c57bb1bb2173731cbf337aa6132da6b17b6b80fb13af97caf5",
+      "bytes": 12680
+    }
+  ],
+  "ordered_collector": {
+    "initial_phases": [
+      {
+        "mode": "plain",
+        "exit": 1,
+        "seconds": 1.3589999999385327,
+        "stdout_sha256": "323fc9f4969fad0ab3e665c5f18666d9717cfb3722f0beaa8c95279cf7848967",
+        "stderr_sha256": "42943cf57f77fcada029a6346f38cd45dd9d71f74281e782eebfb37b67a97965"
+      },
+      {
+        "mode": "ordered",
+        "exit": 1,
+        "seconds": 14.952999999979511,
+        "stdout_sha256": "323fc9f4969fad0ab3e665c5f18666d9717cfb3722f0beaa8c95279cf7848967",
+        "stderr_sha256": "7ff4453435b685f1b414d65f7b96ec43de818436f5a4e90e02c277ea794ef81b"
+      }
+    ],
+    "final_phases": [
+      {
+        "mode": "plain",
+        "exit": 1,
+        "seconds": 1.2030000000959262,
+        "stdout_sha256": "323fc9f4969fad0ab3e665c5f18666d9717cfb3722f0beaa8c95279cf7848967",
+        "stderr_sha256": "42943cf57f77fcada029a6346f38cd45dd9d71f74281e782eebfb37b67a97965"
+      },
+      {
+        "mode": "ordered",
+        "exit": 1,
+        "seconds": 1.702999999979511,
+        "stdout_sha256": "323fc9f4969fad0ab3e665c5f18666d9717cfb3722f0beaa8c95279cf7848967",
+        "stderr_sha256": "50023b195a988aef9a83bad972ea0f756d5438b85bd06821fb3e4fc8b025c94b"
+      }
+    ],
+    "same_call_key_name_set_and_selected_test_events": true,
+    "global_first_seen_ordinal_differences": 271,
+    "file_answer_bytes": 670,
+    "route_answer_bytes": 598,
+    "omitted_route_events": 8
+  },
+  "limits": [
+    "Net potential counts bytes before a historical patch target, not actual saved model input.",
+    "No-target searches have zero measured prefix saving and retain their badge cost; needed non-target reading is not measured.",
+    "One cold index and one completion repeated three times on one task, not thirty-task runtime performance.",
+    "Old unique-call first-seen data cannot recover a path; route comes from a fresh selected-test collector.",
+    "Python-only helper prototype; other-language collectors not built."
+  ],
+  "summary_sha256": "3a98f007b70a9e4736c93612f8ee32d1e7a80448c7ad8cdb116b9b884c615f86"
+}
