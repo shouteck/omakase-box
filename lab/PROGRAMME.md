@@ -42,6 +42,38 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
+## Next session: a serious study at almost no token cost. Records and scripts only. No agent runs.
+
+Asked for by the owner on 9 October 2026: test the Box seriously, the way the published work that found benefits did, but without spending many tokens. The design session showed that every experiment with live or replayed model calls costs millions of tokens and still would not show a saving. So this study gets its size the other way: **from records other people have already paid for.** Public benchmark leaderboards hold complete run records for many agents and models, strong and weak, on hundreds of tasks. Reading them costs machine time and nothing else.
+
+**What we know, and the question it leaves.** On thirty tasks and two capable agents, the agent's own search already does about as well as the Box: it reaches the right function in two to four steps and its searches put the fix near the top (gates 2 and 3b). So for a strong agent on famous code the Box matches and does not beat. The owner's question is whether that is true in general or only where conditions favour the agent. **The study asks: does the room for a Box grow as the agent gets weaker, as the code gets less familiar, or as the task gets harder?** If it does, there is a real case and a place to test it cheaply. If it does not, across a wide range, that is as definitive a no as records can give.
+
+**Scale it up in three directions, by rules fixed and pushed before any record is read.**
+
+1. **More tasks.** From thirty to as many as machine time allows, aiming at one hundred and fifty or more Python tasks from the same public benchmark, sampled by a stated rule across its projects. For each: build the narrow Box from the failing test, exactly as gate 1b did (about two seconds a task once the image is there; one container at a time).
+2. **More agents, chosen to span strength.** Prefer one scaffold with many models, so that only the model differs: the benchmark's bash-only listing with the minimal agent is the obvious source. Take at least six, by rule, from the strongest to the weakest that still has full records, including small and older models. Record each one's published solve rate.
+3. **Less familiar code, if records exist at no cost.** A benchmark of recent or private-style tasks with published run records (issues fixed after the models' cut-off, or a newer benchmark built to avoid memorised projects). If none can be had free, say so and leave this direction open.
+
+**Measure, by script, for every task and agent:**
+
+- *Finding:* did the run ever open or edit a function the real fix changed; how many steps and how much text before it first did; what share of the run that was.
+- *Searching:* for every search the agent made, where the first result inside a fixed function sits, ordinary order against the Box's order; and whether the Box would have changed the order at all. This is the count of real opportunities: searches where the order changes and the fix is among the results.
+- *Missing:* runs that never reached the fix. For each: was the fix in the Box; did the agent make any search whose Box order would have put a fixed function in the first three results.
+- *After finding:* text read between first reaching the fix and first editing, inside and outside the Box.
+- *Familiarity:* did the agent name the right file before anything had shown it.
+
+**Report the gradient, not one number.** One table and one chart: agents ordered by published strength, and for each the median steps to find the fix, the share of runs that never found it, the share of searches where the Box had a real opportunity, and how far the Box would have moved the fix. Then the same split by project, and by familiar against less familiar code if that direction was possible. One sentence: the room for a Box does or does not grow as agents weaken, with the size of the difference between the strongest and weakest and how sure the data make it (intervals from resampling tasks, not from counting searches as independent).
+
+**What each outcome would mean, fixed now.**
+
+- *Room grows clearly for weaker agents or less familiar code:* the Box has a case, and it is "a cheap agent with the Box against an expensive one without". The lab then proposes one small live test in exactly that corner, where the expected effect is larger and a cheap model makes each run cheap. The owner decides on it separately.
+- *No room anywhere in the range:* agents of every strength find the place quickly and their searches already rank the fix. The Box as a locating aid is closed, on evidence far wider than three pairs.
+- *Room only in runs that failed for other reasons:* say so; a Box would not have saved them.
+
+**Limits to state.** Records show what agents did without a Box, so this measures room and opportunity, never what an agent would do with one. Published records are from runs without the failing test given. Models may know these projects. The Box is built from the benchmark's failing test, which a real user would have to have.
+
+**Rules.** No agent and no model calls: scripts over public records, a summary file, the lab lead reads the summary. Third-party code only in containers, network off. Reuse gate 1b's and gate 2's instruments; the recorder fault does not affect them, since nothing is delivered to an agent, but the ordering code must be the corrected file-and-starting-line identity from the prototype. Keep disk and time in hand: one image at a time, removed after use; if the full sample cannot finish in a session, finish a balanced part and say what remains. One sceptic pass: re-derive the table from the saved records on a sample, and look for a reason other than agent strength for any gradient (task mix, record format, run length caps).
+
 ## Completed on 9 October 2026: definitive experiment design (authorization retained below)
 
 Design-only session complete. [Owner page](lines/box-trial/definitive-design/owner-page.md) compares next-decision replay, three-command continuations and repeated repairs. Recommend conditional next-decision replay, preceded by no-agent native-equivalence safeguards and an opportunity census. Exact search-time resume is unestablished; no RPC probe or repair agent ran. Own-record costs and 20 offline noise/effect scenarios are retained. Fresh sceptic required sharper sparse-disagreement intervals and correct terminal power; targeted verification of 9a8e2e0 accepted both fixes. A ±5 point navigation equivalence answer is possible with stable outcomes; noisy cases remain undecided. This is no promise of small repair savings.
@@ -141,4 +173,4 @@ The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/proto
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** reading, prototype, pilot and the three-pair continuation closed and reviewed. Next session: design a more definitive experiment, design only, no agent runs.
+- **Sync state, 9 October 2026:** reading, prototype, pilot, three-pair continuation and experiment design closed and reviewed. Next session: the serious study from public records, no agent runs.
