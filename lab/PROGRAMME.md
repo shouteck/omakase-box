@@ -42,7 +42,13 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
-## Next session: design a more definitive experiment. Design only. No agent runs.
+## Completed on 9 October 2026: definitive experiment design (authorization retained below)
+
+Design-only session complete. [Owner page](lines/box-trial/definitive-design/owner-page.md) compares next-decision replay, three-command continuations and repeated repairs. Recommend conditional next-decision replay, preceded by no-agent native-equivalence safeguards and an opportunity census. Exact search-time resume is unestablished; no RPC probe or repair agent ran. Own-record costs and 20 offline noise/effect scenarios are retained. Fresh sceptic required sharper sparse-disagreement intervals and correct terminal power; targeted verification of 9a8e2e0 accepted both fixes. A ±5 point navigation equivalence answer is possible with stable outcomes; noisy cases remain undecided. This is no promise of small repair savings.
+
+**Next scope is for owner/CTO.** Design is delivered; no instrument fix, capability probe or model experiment authorized by this completed session. Other lines remain paused.
+
+### Original design-only instruction
 
 Asked for by the owner on 9 October 2026. The three live pairs (one for the Box, two against, no outcome changed, and a recorder fault found) settled nothing, and could not have: whole-run token counts vary too much from run to run for a handful of pairs to see anything but a very large effect. The owner holds that a silent, open Box cannot in theory make an agent worse and wants an experiment that can actually answer whether it makes it better. The owner cannot spend many tokens. So the task is the lab's own kind of problem: **get the most certainty per token.** Do not run it. Design it, cost it, have it attacked, and bring it back.
 
