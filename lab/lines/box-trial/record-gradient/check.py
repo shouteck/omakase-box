@@ -33,3 +33,11 @@ patch="diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1,2 +1,2 @@\n def f
 assert verified_patch_paths(patch,{'a.py':text})=={'a.py'}
 assert not verified_patch_paths(patch.replace('first result is unique','does not exist'),{'a.py':text})
 print('base-matching patch and mismatched patch checks passed')
+
+from views import literal_patch
+cmd="git apply <<'PATCH'\n"+patch+"PATCH"
+assert literal_patch(cmd)==patch.rstrip('\n')
+assert literal_patch(cmd.replace('git apply','git apply --check')) is None
+assert literal_patch(cmd.replace('git apply','git apply unrelated.diff')) is None
+assert literal_patch(cmd+"\necho done") is None
+print('stdin patch consumption / inspection / operand / extra-command checks passed')

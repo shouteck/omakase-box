@@ -59,3 +59,9 @@ def verified_patch_paths(text,sources):
     old+=1
    if line[0] in '-+':changed.add(current)
  return {p for p in changed if good.get(p)}
+
+def literal_patch(command):
+ # Exact single applying command, no file operand and no command after the
+ # delimiter. Unknown shell forms stay unverified rather than simulated.
+ m=re.fullmatch(r"(?:git\s+apply(?:\s+-)?|patch\s+-p\s*1)\s*<<\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1[ \t]*\n(.*?)\n\2[ \t\n]*",command.strip(),re.S)
+ return m[3] if m else None

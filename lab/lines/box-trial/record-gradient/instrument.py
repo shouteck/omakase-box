@@ -1,6 +1,6 @@
 """Offline only: normalized old/new mini-agent records, source provenance and corrected ordering."""
 import pathlib,json,gzip,importlib.util,re,hashlib,collections
-from views import visible_lines,tally,verified_patch_paths
+from views import visible_lines,tally,verified_patch_paths,literal_patch
 HERE=pathlib.Path(__file__).resolve().parent;ROOT=HERE.parent;REPO=HERE.parents[3]
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
@@ -87,14 +87,14 @@ def measure(row,agent):
   vf={(p,hit['start']) for p,n in verifiedlines if (hit:=locate(p,n)) is not None}
   readfunctions |= vf
   verifiededit=set()
-  patch_action=any(re.match(r'^(?:git\s+apply|patch\b)',z) for z in segmentlist)
+  patch_body=literal_patch(command);patch_action=patch_body is not None
   inspection=bool(re.search(r'--(?:check|dry-run|stat|numstat|summary|directory|reverse|cached)|(?:^|\s)-R(?:\s|$)',command))
-  changes=g2.patch_changes(command,source) if patch_action else {}
+  changes=g2.patch_changes(patch_body,source) if patch_action else {}
   if patch_action and not inspection:edited|={p for p in changes if p in source}
   if edited and firstanyedit is None:firstanyedit=i
   # Literal successful applying action; classify's path guesses do not establish
   # diff paths. Inspection-only commands and no-op numeric sed stay unlocalized.
-  verified_paths=verified_patch_paths(command,source) if patch_action and not inspection and s.get('exit')==0 else set()
+  verified_paths=verified_patch_paths(patch_body,source) if patch_action and not inspection and s.get('exit')==0 else set()
   for p,change in changes.items():
    if p in stale or p not in verified_paths:continue
    for line in change['old_lines']:
