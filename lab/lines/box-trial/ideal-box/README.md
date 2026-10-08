@@ -1,6 +1,6 @@
 # Ideal Box: checked lab prototype
 
-9 October 2026. Prescribed prototype session complete; [owner design](prototype/owner-design.md), [result](prototype/result.md), [fresh review follow-up](prototype/sceptic-followup.md). Exact source/code-start identity, whole-answer retention and footprint checked on thirty frozen Python snapshots plus all 243 retained native invocations. Order-only recommended; facts on request separate. No live repair run or product transfer.
+9 October 2026. The prescribed prototype and one subsequently authorized silent live pair are complete and independently reviewed. [Pilot result](../live-pilot/result.md), [pilot review](../live-pilot/sceptic.md), [owner design](prototype/owner-design.md), [prototype result](prototype/result.md), [prototype review](prototype/sceptic-followup.md). One ordinary search was reordered and the agent then opened promoted code; both actual repairs failed the named test and passed all five guards. No comparative benefit established. Stop awaiting the owner's word before any broader comparison; no product transfer.
 
 The 8 October reading prerequisite below remains the basis.
 
@@ -8,4 +8,4 @@ Runtime information for agents is established work. The inspected tools deliver 
 
 Read [the comparison](related-work.md), [the case map](case-map.md), [the coverage design](language-design.md), and [the reading record](reading-log.md). Public sources do not establish which wider case is most common, so the map cannot justify moving to a supposedly common empty cell.
 
-Prototype checks and mandatory review fixes are complete. Current implementation is a bounded Python research helper, not universal language or shell integration. No live comparison before the owner agrees the design and explicitly asks for it. Historical Gate 3b remains a stopped experiment; its original false-mark instrument is unchanged. [Initial prototype review](prototype/sceptic.md), [corrected follow-up](prototype/sceptic-followup.md), [earlier survey review](sceptic.md).
+Prototype checks and mandatory review fixes are complete. Current implementation is a bounded Python research helper, not universal language or shell integration. The owner authorized only the completed pilot; any broader comparison needs a separate owner decision. Historical Gate 3b remains a stopped experiment; its original false-mark instrument is unchanged. [Initial prototype review](prototype/sceptic.md), [corrected follow-up](prototype/sceptic-followup.md), [earlier survey review](sceptic.md).

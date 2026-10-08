@@ -1,6 +1,6 @@
 # Silent Box live pilot
 
-One authorized pair, 9 October 2026; no agent reruns. [Plan](plan.md), [preflight](preflight.md), [result](result.md), [summary](summary.json).
+One authorized pair, 9 October 2026; no agent reruns. [Plan](plan.md), [preflight](preflight.md), [result](result.md), [summary](summary.json), [independent review](sceptic.md). Both saved actual patches independently failed the named test and passed all five guards. Narrow integration claim stands; session closed, awaiting the owner's word before any broader comparison.
 
 Scripts are research instruments. common.py reuses Gate 3's prepared-worktree checkpoint, production-only export and immutable native scoring. execute.py runs the whole ordinary command/pipeline first; capture.py emits native search bytes unchanged, then final display orders only surviving source-backed priority records. The same recorder is present in control; display ordering alone differs. adapter.py is the reviewed prototype copy. Unsupported/context formats fall back; shell functions are defined only where native executables exist.
 

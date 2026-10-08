@@ -21,9 +21,9 @@
 
 ## The actual effect
 
-Box step 5's ordinary grep for `def get_relative_uri` finds two definitions. The called `sphinx/builders/__init__.py:144` moves from second to first. Step 6 explicitly reads lines 135–165 of that file. Its complete source hash and unique code start match fresh failing-test evidence. This is an observed subsequent open, not proof that ordering caused it or that the helper is the fix. The bug was not solved.
+Box step 5's ordinary grep for `def get_relative_uri` finds four definitions. The called `sphinx/builders/__init__.py:144` moves from second to first. Step 6 explicitly reads lines 135–165 of that file. Its complete source hash and unique code start match fresh failing-test evidence. This is an observed subsequent open, not proof that ordering caused it or that the helper is the fix. The bug was not solved.
 
-Every native stdout record survives before the common 16 KB returned-text limit; the wrapper adds zero bytes. Raw native/shown streams, all commands, model events, prompts, usage and actual candidate patches are retained with hashes. Ordering metadata and traces are never sent in the tool response. The captured available shell commands are supported; explicit executable bypasses/arbitrary Python searches are not intercepted, and context/unsupported formats fall back.
+Every native stdout record survives before the common 16 KB returned-text limit; the wrapper adds zero bytes. Box step 2 was truncated by that shared limit; the promoted search at step 5 was not. Raw native/shown streams, all commands, model events, prompts, usage and actual candidate patches are retained with hashes. Ordering metadata and traces are never sent in the tool response. The captured available shell commands are supported; explicit executable bypasses/arbitrary Python searches are not intercepted, and context/unsupported formats fall back.
 
 ## Safeguards actually passed
 
@@ -35,6 +35,8 @@ The live scope was selected before checks because both published agents failed i
 
 ## Review and stop
 
-A fresh sceptic must reread both records and independently rerun native scoring of both saved patches, never the agents. Await its exact-commit verdict before closeout. [Summary](summary.json), [fixed plan](plan.md), [launch lock](launch-lock.json).
+A fresh sceptic reread both complete saved records and independently rescored both actual patches: both fail the named test and pass all five guards. It verified actual reordered delivery, subsequent open, source identity, complete-stream conservation, launch receipts and accounting. The narrow integration claim stands. Its only mandatory correction was two definitions to four above; the original reviewed result remains at aeb977e. [Independent review](sceptic.md). [Summary](summary.json), [fixed plan](plan.md), [launch lock](launch-lock.json).
 
 No more pairs. If this integration result stands, the CTO can bring the owner a separately capped comparison plan. No product work or broader trial is started by this pilot.
+
+Closeout: only the exact newly pulled image and two verified empty owned scratch directories were removed. Initial absent-to-pull ownership is preserved in harness-before-context-guard.json; the later cached/preexisted receipt is unchanged. All scientific raw and review records remain locally with hashes. [Cleanup receipt](closeout-cleanup.json). No further run is authorized by this completed session.

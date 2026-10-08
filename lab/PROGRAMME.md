@@ -24,7 +24,7 @@ A coverage report, a trace or a test-impact map is raw material a Box may be mad
 
 - **Making the Box (gates 1 and 1b).** From one failing test, about two seconds: every function that test ran, a median 4.7% of a large project's source, holding the real fix on 28 of 29 tasks. The error trace names the fix on 6 of 29. Removing what passing tests also ran throws the fix away two times in three.
 - **What agents do without it (gates 2 and 3b).** Strong agents on well-known public projects reach the right function in two to four steps of about thirty-five, and their own searches already put the fix within a few results of the top; reordering by the Box moves it from about second to first. After finding the place they read hundreds of other functions before editing, about two fifths of all they read, mostly outside the Box; eight of nine failed runs had found the place.
-- **Offering a tool (gate 3).** One that is only mentioned is not called. One that can return nothing costs real steps: fifteen empty or failed calls, 42% more tokens at the median, same tasks solved. No working Box has yet been used by a live agent.
+- **Offering a tool (gate 3).** One that is only mentioned is not called. One that can return nothing costs real steps: fifteen empty or failed calls, 42% more tokens at the median, same tasks solved. This describes the historical explicit-tool trial. The separately authorized silent pilot below delivered one reordered search to a live agent, followed by an explicit open, with both repairs failing.
 - **What others have (reading, 8 October; authors' own numbers, not replicated).** Nothing inspected is a Box in the sense above. Runtime information for agents exists and raises tasks solved, usually at higher cost: ADI 55.0% to 63.8% at $1.02 to $1.28 a task; DAIRA 65.4% to 74.2% at $0.73 to $0.81; SWE-Doctor about two points over its baselines at about double the cost. Coverage connectors for agents exist in several languages (Wallaby, Coco, coverctl, Supercov). Ranked search for agents with no runtime evidence exists (Entire: mean cost down 8.2% on one repository). AutoCodeRover injects a runtime-derived list of suspicious methods as a hint. "Not found" in a bounded reading is not "does not exist".
 - **Language-agnostic route.** Standard coverage reports plus a multi-language parser can supply "what ran" as covered regions in Python, JavaScript and Go, but a line hit is not always a function call (a definition line runs on import), order is never recorded, and child processes need configuration. Unknown or stale evidence must stay unmarked.
 
@@ -42,7 +42,7 @@ One session. No live agent. Few tokens: scripts and a summary file; the lab lead
 
 One sceptic pass: rerun a sample of the script checks and attack the marks.
 
-## Next session: the live pilot. Authorised by the owner on 9 October 2026, on one condition: the mistakes of gate 3 do not happen again.
+## Completed on 9 October 2026: the live pilot (authorization and protocol retained below)
 
 The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/prototype/`). The owner has read the design and wants a live run, because nothing so far shows an agent doing better and only a live run can. What is tested is **the Box as the lab recommended it: silent ordering of ordinary search, no instruction, no marks.** Facts on request are not part of this run.
 
@@ -82,4 +82,4 @@ The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/proto
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** reading and prototype sessions closed and reviewed. The owner has authorised the live pilot. Next session: the pilot above, one pair, then stop.
+- **Sync state, 9 October 2026:** reading, prototype and authorized one-pair silent live pilot closed and independently reviewed. Box reordered one search and the next command opened promoted code. Both actual patches fail the named test and pass all five guards; 383,261 total reported tokens, within caps. [Result](lines/box-trial/live-pilot/result.md), [review](lines/box-trial/live-pilot/sceptic.md). No superiority established. No more pairs or product work; await the owner's word before a separately planned broader comparison.
