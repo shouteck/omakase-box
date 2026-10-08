@@ -1,0 +1,30 @@
+{
+  "commit": "62aced1f456a4565becfcd77896c84130d1f7183",
+  "pushed": true,
+  "repair_starts_before_lock": 0,
+  "files": {
+    "run.py": "eee5e9f29c8c971b0bc0eb6f84ddcac9f7d199385cbd54c3256177a044b20f07",
+    "common.py": "fcd1a255e1093492d8f0d54e85ce36d8401428f51f9b69dbf257ea50e76d91e9",
+    "execute.py": "e971047b794440313a30a63afa48842e064e22c3d94065fda0c2a8bf3165a96b",
+    "capture.py": "665816e341451927d8b4f11c24f617528fe9326ff90d1b2498039cca220d69e6",
+    "shell.sh": "ab08bca25b120c5aa34ac7824c2f5c7c9ca80d39c8e3190d5b58f9cd752f0d3c",
+    "adapter.py": "7718edd93ce6e9fc16e0ef372ad21e73e68b41df62353cb843fac1affb4f38af",
+    "evidence.json": "fdc5ca620f8de1a00b121b6c341a699a405a36f5559856e65bd036e2d5001b6d",
+    "prompt.txt": "c690e72e175dd380daebef7150f12688aebea7c0a8cd53350bf499a19d910abf",
+    "base-instructions.txt": "c116ee29881b878c29c7b784f2911dfde259a05f1d08302b661fe6a036f22bab",
+    "settings.json": "eb1ce8452584b59ba85af2356ab180aa011c77eca63ebd9ee1d3a411e69c7dd1",
+    "plan.md": "b65f1b3b9adb451b580b8e1b3188258e4b1d51706f91a7b7c20866ad644dfe69",
+    "harness.json": "a18149b045e251f2aedf238ce3045f0c2d2280467b95e6cc83b5feec91ad30f4",
+    "box-check.json": "34565bdfbf88e83eb869f1ba2c70be6ad238f497bf32a536df0dab9d2102d824",
+    "native-check.json": "63eec484527f039ce10813a6892cbf208d3679a968329c93cd379e20bd60a4b4",
+    "../gate-3/preflight.py": "35f4cb1e7b06f07f05080cbc0f11b1bfe1a795200761a5b1a84c82febbe7bab3",
+    "../gate-3/prepare.py": "549050e69f6da7ede6e77a9c76df17a23efff53558b01fe92c3b84f1cb254232",
+    "../gate-1b/container.py": "91f18dcdcd5ba51fa6f8090519a5a311c9af2424e4f6f552b2b8bf45d3a4ba4f",
+    "../gate-1/measure.py": "0cc071edfa81727504725cb33c92ea92bfd09a6e0775ae775597da9e8036c4a6",
+    "config.json": "5172157a350a5eaff4f864410600a54662357db1b862895608d45ef7fd5e00d7",
+    "../live-three/plan.md": "84e82e60a42e5733cbb0ba394e8c816513c11065f923fa9764ba8f5fb54f5e0b",
+    "../live-three/selection.json": "a95cec45f3daf29ee32a672dcdd9f747edca6bb73289d0947081e09a24cd43c7",
+    "../live-three/prepare-task.py": "ed8d9d76883a657dbc5212e866b108362487e40921c6d5eb61f13f9ce124775c",
+    "../live-three/harness-template.py": "3246b9a71c104fe8ab688655b573a56fc8647f8ac0125a656d866aa349b27635"
+  }
+}

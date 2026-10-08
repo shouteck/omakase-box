@@ -1,0 +1,30 @@
+{
+  "task": "matplotlib__matplotlib-21568",
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "first_arm": "control",
+  "token_cap": 400000,
+  "pair_cap": 800000,
+  "steps": 60,
+  "seconds": 900,
+  "command_seconds": 300,
+  "returned_bytes": 16000,
+  "prompt_sha256": "99c1265d75f81ccc181a3f836f0b7c260669e27172ff9ee25a1080274afe1060",
+  "base_sha256": "c116ee29881b878c29c7b784f2911dfde259a05f1d08302b661fe6a036f22bab",
+  "tool": {
+    "name": "run_command",
+    "description": "Run one shell command in the prepared Linux task repository. Command output is returned with its exit status.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

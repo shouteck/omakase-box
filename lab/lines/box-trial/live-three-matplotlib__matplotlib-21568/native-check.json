@@ -1,0 +1,248 @@
+{
+  "status": "pass",
+  "actions": [
+    {
+      "agent": "control",
+      "step": 1,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\control\\001.json"
+    },
+    {
+      "agent": "control",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\control\\002.json"
+    },
+    {
+      "agent": "control",
+      "step": 3,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 2,
+      "receipt": "raw\\native-check\\control\\003.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 6,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\006.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 9,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 0,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\009.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 10,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\010.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 12,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\012.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 15,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\015.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 18,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\018.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 19,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\019.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 21,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\021.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 22,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\022.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 23,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\023.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 25,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\025.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 28,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\028.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 30,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\030.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 32,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\032.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 35,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\035.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 41,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\041.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 63,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\063.json"
+    }
+  ],
+  "count": 20,
+  "searches": 20,
+  "reordered": 4
+}

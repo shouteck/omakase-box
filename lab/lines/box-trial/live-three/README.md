@@ -1,0 +1,9 @@
+# Three further silent Box pairs
+
+Owner-authorized continuation, 9 October 2026. [Frozen protocol](plan.md), [selection](selection.json), [sequential decisions](decisions.json), [exclusions](exclusions.json). Run at most three new pairs, one at a time; stop at two against or any protocol/scoring fault. No rerolls or additional pairs.
+
+Each task has a sibling live-three-<task> directory with the exact copied pilot recorder/display implementation, task-specific identical prompt/settings, passed scoring/native replay receipts, launch source lock and preserved raw. prepare-task.py scopes the reviewed pilot instruments; freeze-launch.py requires clean pushed code and passed safeguards before agent launch. aggregate.py only reads saved results and records the next-pair decision. Model/effort and command/usage ceilings remain the pilot's.
+
+Raw and evidence.json are ignored scientific records retained locally with committed hashes. Gold and guard mutations exist only in pre-agent scoring work, never agent containers or prompts. Original syntax and import-time guard-selection faults are preserved. Astropy's real fix failed one unchanged stale-data guard and was excluded with zero repair starts. The later guard selection filters first-seen calls by passing-test entry; it changes the safeguard, not the Box or agent information.
+
+Current results are in the per-task summary.json and records; final consolidated result and fresh sceptic review are required before session closeout. No product transfer or population savings claim.

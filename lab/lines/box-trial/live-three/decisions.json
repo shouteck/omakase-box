@@ -1,0 +1,301 @@
+{
+  "pairs": [
+    {
+      "ordinal": 0,
+      "kind": "pilot",
+      "task": "sphinx-doc__sphinx-10614",
+      "first_arm": "control",
+      "runs": {
+        "control": {
+          "arm": "control",
+          "status": "completed",
+          "model": "gpt-5.6-luna",
+          "effort": "low",
+          "tokens": {
+            "totalTokens": 200832,
+            "inputTokens": 196580,
+            "cachedInputTokens": 148992,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 4252,
+            "reasoningOutputTokens": 2014
+          },
+          "steps": 14,
+          "search_actions": 8,
+          "searches": 8,
+          "searches_reordered": 0,
+          "promotions": [],
+          "subsequent_explicit_opens": [],
+          "command_errors": [],
+          "nonzero_command_steps": [
+            6,
+            8,
+            10,
+            13
+          ],
+          "native_search_errors": [],
+          "native_no_match_searches": 1,
+          "box_valid": true,
+          "solved": false,
+          "evaluation_status": "scored",
+          "phases": {
+            "failing": {
+              "exit": 1,
+              "timed_out": false,
+              "requested": 1,
+              "matched_passes": 0,
+              "all_pass": false
+            },
+            "guards": {
+              "exit": 0,
+              "timed_out": false,
+              "requested": 5,
+              "matched_passes": 5,
+              "all_pass": true
+            }
+          },
+          "agent_seconds": 79.375,
+          "token_cap_excess": 0,
+          "candidate_sha256": "84a260cfe32b92104d42d6cd2bb09bff2a3a5b60cd7be2151cdf691cd952328c",
+          "attempt_sha256": "c129d2a156fc3fe14e2dc69a54c1e93b821fd376d3f2bd50667a1069722abb9b",
+          "steps_sha256": "831daec7b259036f307a3e5462e631917349a046ff9a30731063d18bf3475824",
+          "events_sha256": "103db6f427cab98987c14e2cb9ed0a4272b046da1988dd48e872f4c1ef8d3bfc"
+        },
+        "box": {
+          "arm": "box",
+          "status": "completed",
+          "model": "gpt-5.6-luna",
+          "effort": "low",
+          "tokens": {
+            "totalTokens": 182429,
+            "inputTokens": 179157,
+            "cachedInputTokens": 151296,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 3272,
+            "reasoningOutputTokens": 1695
+          },
+          "steps": 10,
+          "search_actions": 4,
+          "searches": 5,
+          "searches_reordered": 1,
+          "promotions": [
+            {
+              "step": 5,
+              "path": "sphinx/builders/__init__.py",
+              "line": 144,
+              "function_start": 144,
+              "ordinary_ordinal": 1,
+              "shown_ordinal": 0
+            }
+          ],
+          "subsequent_explicit_opens": [
+            {
+              "search_step": 5,
+              "open_step": 6,
+              "path": "sphinx/builders/__init__.py",
+              "function_start": 144,
+              "read_start": 135,
+              "read_end": 165
+            }
+          ],
+          "command_errors": [],
+          "nonzero_command_steps": [
+            8,
+            9
+          ],
+          "native_search_errors": [],
+          "native_no_match_searches": 1,
+          "box_valid": true,
+          "solved": false,
+          "evaluation_status": "scored",
+          "phases": {
+            "failing": {
+              "exit": 1,
+              "timed_out": false,
+              "requested": 1,
+              "matched_passes": 0,
+              "all_pass": false
+            },
+            "guards": {
+              "exit": 0,
+              "timed_out": false,
+              "requested": 5,
+              "matched_passes": 5,
+              "all_pass": true
+            }
+          },
+          "agent_seconds": 56.07799999997951,
+          "token_cap_excess": 0,
+          "candidate_sha256": "dbc88db89a3694be80b3dc23c0aa3be7d55f15bbda9f299f2f1509b809b60f61",
+          "attempt_sha256": "ee550eb5c9b6c1509cde615dc68d1a4aa0c20870ad791d294887125e2058b303",
+          "steps_sha256": "ba3a440da481a90fc4fd2ece351aaed721ee3cda1ecbd64aba424bc7e856b2cd",
+          "events_sha256": "bb79e5cbeb60422d611a7074cc58a270a508c8576d8ad145d84aa58dadd6582c"
+        }
+      },
+      "pair_tokens": 383261,
+      "valid_uncapped_pair": true,
+      "for": true,
+      "against": false,
+      "tie": false,
+      "direction": "for"
+    },
+    {
+      "ordinal": 1,
+      "kind": "new",
+      "task": "sympy__sympy-16597",
+      "first_arm": "box",
+      "runs": {
+        "control": {
+          "arm": "control",
+          "status": "completed",
+          "model": "gpt-5.6-luna",
+          "effort": "low",
+          "tokens": {
+            "totalTokens": 124686,
+            "inputTokens": 122549,
+            "cachedInputTokens": 87552,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 2137,
+            "reasoningOutputTokens": 875
+          },
+          "steps": 11,
+          "search_actions": 7,
+          "searches": 8,
+          "searches_reordered": 0,
+          "promotions": [],
+          "subsequent_explicit_opens": [],
+          "command_errors": [],
+          "nonzero_command_steps": [
+            6,
+            7
+          ],
+          "native_search_errors": [],
+          "native_no_match_searches": 0,
+          "box_valid": true,
+          "solved": true,
+          "evaluation_status": "scored",
+          "phases": {
+            "failing": {
+              "exit": 0,
+              "timed_out": false,
+              "requested": 3,
+              "matched_passes": 3,
+              "all_pass": true
+            },
+            "guards": {
+              "exit": 0,
+              "timed_out": false,
+              "requested": 74,
+              "matched_passes": 74,
+              "all_pass": true
+            }
+          },
+          "agent_seconds": 59.70299999997951,
+          "token_cap_excess": 0,
+          "candidate_sha256": "1cc4654a4a642386ca581712c13058ddb33bd8852d6f887883926cdb21aa80c7",
+          "attempt_sha256": "cfb21b7d621c14d123a473c0f84ab31660134513ee976d308daa227befdf3008",
+          "steps_sha256": "cbaa2f8cd35e323add38342faa952fcd9b91c1ad6b19d8c77f5819c6e81a18d2",
+          "events_sha256": "65f8580243431beff62608207724af5ea018a1decdcfb597e8070310fa907c9e"
+        },
+        "box": {
+          "arm": "box",
+          "status": "completed",
+          "model": "gpt-5.6-luna",
+          "effort": "low",
+          "tokens": {
+            "totalTokens": 131614,
+            "inputTokens": 128978,
+            "cachedInputTokens": 94976,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 2636,
+            "reasoningOutputTokens": 1194
+          },
+          "steps": 10,
+          "search_actions": 5,
+          "searches": 6,
+          "searches_reordered": 2,
+          "promotions": [
+            {
+              "step": 1,
+              "path": "sympy/core/assumptions.py",
+              "line": 347,
+              "function_start": 315,
+              "ordinary_ordinal": 3,
+              "shown_ordinal": 0
+            },
+            {
+              "step": 1,
+              "path": "sympy/core/power.py",
+              "line": 262,
+              "function_start": 244,
+              "ordinary_ordinal": 7,
+              "shown_ordinal": 1
+            },
+            {
+              "step": 3,
+              "path": "sympy/core/assumptions.py",
+              "line": 347,
+              "function_start": 315,
+              "ordinary_ordinal": 117,
+              "shown_ordinal": 0
+            }
+          ],
+          "subsequent_explicit_opens": [
+            {
+              "search_step": 1,
+              "open_step": 3,
+              "path": "sympy/core/assumptions.py",
+              "function_start": 315,
+              "read_start": 250,
+              "read_end": 390
+            }
+          ],
+          "command_errors": [],
+          "nonzero_command_steps": [
+            6,
+            7,
+            8,
+            9
+          ],
+          "native_search_errors": [],
+          "native_no_match_searches": 1,
+          "box_valid": true,
+          "solved": true,
+          "evaluation_status": "scored",
+          "phases": {
+            "failing": {
+              "exit": 0,
+              "timed_out": false,
+              "requested": 3,
+              "matched_passes": 3,
+              "all_pass": true
+            },
+            "guards": {
+              "exit": 0,
+              "timed_out": false,
+              "requested": 74,
+              "matched_passes": 74,
+              "all_pass": true
+            }
+          },
+          "agent_seconds": 63.89100000006147,
+          "token_cap_excess": 0,
+          "candidate_sha256": "d1c318f39837c189559a9381e6eefddf724fb3b33d6ebb81d6cbcc344e111c0b",
+          "attempt_sha256": "547fc5c338352b95b9593bc597effd1023c80c5a67be1ce907b99d639dccc4ab",
+          "steps_sha256": "98ca204f01033db936eb9fca4bb48d3b971736e23eaf1d26ab8497ff3a3fd478",
+          "events_sha256": "1bb2601ee643553e9b3b7270875e37821249a21154c5563eaa23f38318b46a27"
+        }
+      },
+      "pair_tokens": 256300,
+      "valid_uncapped_pair": true,
+      "for": false,
+      "against": true,
+      "tie": false,
+      "direction": "against"
+    }
+  ],
+  "new_repair_tokens": 256300,
+  "against_count": 1,
+  "stop": false,
+  "faults": [],
+  "stop_reason": "next authorized pair may proceed after its safeguards"
+}

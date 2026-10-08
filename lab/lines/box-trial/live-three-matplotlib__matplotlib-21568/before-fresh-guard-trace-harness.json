@@ -1,0 +1,51 @@
+{
+  "task": "matplotlib__matplotlib-21568",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.matplotlib__matplotlib-21568@sha256:e561c8616c27450b082544829e6558210087ced3806a2dbddff3d73890951a0f",
+  "stages": [
+    {
+      "label": "real-fix",
+      "status": "scored",
+      "solved": true,
+      "phases": {
+        "failing": {
+          "all_pass": true,
+          "requested": 4,
+          "matched_passes": 4,
+          "exit": 0
+        },
+        "guards": {
+          "all_pass": true,
+          "requested": 73,
+          "matched_passes": 73,
+          "exit": 0
+        }
+      },
+      "error": null,
+      "exported_patch_bytes": 779
+    },
+    {
+      "label": "empty",
+      "status": "scored",
+      "solved": false,
+      "phases": {
+        "failing": {
+          "all_pass": false,
+          "requested": 4,
+          "matched_passes": 0,
+          "exit": 1
+        },
+        "guards": {
+          "all_pass": true,
+          "requested": 73,
+          "matched_passes": 73,
+          "exit": 0
+        }
+      },
+      "error": null,
+      "exported_patch_bytes": 0
+    }
+  ],
+  "status": "failed",
+  "image_preexisted": false,
+  "error": "min() iterable argument is empty"
+}

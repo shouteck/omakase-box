@@ -1,0 +1,159 @@
+{
+  "task": "sympy__sympy-16597",
+  "frozen_pushed_commit": "62aced1f456a4565becfcd77896c84130d1f7183",
+  "runs": [
+    {
+      "arm": "control",
+      "status": "completed",
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "tokens": {
+        "totalTokens": 124686,
+        "inputTokens": 122549,
+        "cachedInputTokens": 87552,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 2137,
+        "reasoningOutputTokens": 875
+      },
+      "steps": 11,
+      "search_actions": 7,
+      "searches": 8,
+      "searches_reordered": 0,
+      "promotions": [],
+      "subsequent_explicit_opens": [],
+      "command_errors": [],
+      "nonzero_command_steps": [
+        6,
+        7
+      ],
+      "native_search_errors": [],
+      "native_no_match_searches": 0,
+      "box_valid": true,
+      "solved": true,
+      "evaluation_status": "scored",
+      "phases": {
+        "failing": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 3,
+          "matched_passes": 3,
+          "all_pass": true
+        },
+        "guards": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 74,
+          "matched_passes": 74,
+          "all_pass": true
+        }
+      },
+      "agent_seconds": 59.70299999997951,
+      "token_cap_excess": 0,
+      "candidate_sha256": "1cc4654a4a642386ca581712c13058ddb33bd8852d6f887883926cdb21aa80c7",
+      "attempt_sha256": "cfb21b7d621c14d123a473c0f84ab31660134513ee976d308daa227befdf3008",
+      "steps_sha256": "cbaa2f8cd35e323add38342faa952fcd9b91c1ad6b19d8c77f5819c6e81a18d2",
+      "events_sha256": "65f8580243431beff62608207724af5ea018a1decdcfb597e8070310fa907c9e"
+    },
+    {
+      "arm": "box",
+      "status": "completed",
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "tokens": {
+        "totalTokens": 131614,
+        "inputTokens": 128978,
+        "cachedInputTokens": 94976,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 2636,
+        "reasoningOutputTokens": 1194
+      },
+      "steps": 10,
+      "search_actions": 5,
+      "searches": 6,
+      "searches_reordered": 2,
+      "promotions": [
+        {
+          "step": 1,
+          "path": "sympy/core/assumptions.py",
+          "line": 347,
+          "function_start": 315,
+          "ordinary_ordinal": 3,
+          "shown_ordinal": 0
+        },
+        {
+          "step": 1,
+          "path": "sympy/core/power.py",
+          "line": 262,
+          "function_start": 244,
+          "ordinary_ordinal": 7,
+          "shown_ordinal": 1
+        },
+        {
+          "step": 3,
+          "path": "sympy/core/assumptions.py",
+          "line": 347,
+          "function_start": 315,
+          "ordinary_ordinal": 117,
+          "shown_ordinal": 0
+        }
+      ],
+      "subsequent_explicit_opens": [
+        {
+          "search_step": 1,
+          "open_step": 3,
+          "path": "sympy/core/assumptions.py",
+          "function_start": 315,
+          "read_start": 250,
+          "read_end": 390
+        }
+      ],
+      "command_errors": [],
+      "nonzero_command_steps": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "native_search_errors": [],
+      "native_no_match_searches": 1,
+      "box_valid": true,
+      "solved": true,
+      "evaluation_status": "scored",
+      "phases": {
+        "failing": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 3,
+          "matched_passes": 3,
+          "all_pass": true
+        },
+        "guards": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 74,
+          "matched_passes": 74,
+          "all_pass": true
+        }
+      },
+      "agent_seconds": 63.89100000006147,
+      "token_cap_excess": 0,
+      "candidate_sha256": "d1c318f39837c189559a9381e6eefddf724fb3b33d6ebb81d6cbcc344e111c0b",
+      "attempt_sha256": "547fc5c338352b95b9593bc597effd1023c80c5a67be1ce907b99d639dccc4ab",
+      "steps_sha256": "98ca204f01033db936eb9fca4bb48d3b971736e23eaf1d26ab8497ff3a3fd478",
+      "events_sha256": "1bb2601ee643553e9b3b7270875e37821249a21154c5563eaa23f38318b46a27"
+    }
+  ],
+  "pair_tokens": 256300,
+  "pair_cap_excess": 0,
+  "repair_starts": 2,
+  "repeated": false,
+  "standing": "Silent ordering reached the live agent and promoted source was subsequently opened. Both repairs failed. One pair establishes no superiority.",
+  "limits": [
+    "One task and one pair; no repeat or counterfactual attribution",
+    "Promoted function was a helper, not necessarily the bug location",
+    "Whole native command output conserved before the common 16 KB return cap",
+    "Recorder covers available shell search commands; explicit executable bypasses and arbitrary Python searches are not intercepted",
+    "Context/unsupported formats fall back; no universal shell-support claim",
+    "Token totals include cached input and reasoning output, not an invoice or lead/reviewer usage"
+  ]
+}
