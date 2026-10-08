@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Order from here, each when named: A6 (the tool starts cleanly off our machine), R3c (a stricter replay on two projects with an isolated solver), P1 (draft the agreement from the repository), R4 (a live attempt; owner approval first). D4 is retired into those. The lab runs alongside. See \"Where we are and what comes next\" in PLAN.md.",
+    "sequence": "The kitchen is idle. The lab is defining the ideal Box; milestone B (B1 to B7) is a draft on hold and will be rewritten from the agreed design. The outsider-delegation order A6, R3c, P1, R4 is retired. See PLAN.md and STATUS.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -921,7 +921,8 @@
         "security: the container run follows the R3b rules",
         "user experience: read box.json as a solver would"
       ],
-      "handoff": "waves/A6.md"
+      "handoff": "waves/A6.md",
+      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
     },
     {
       "id": "R3c",
@@ -954,7 +955,8 @@
         "security",
         "measurement fairness"
       ],
-      "handoff": "waves/R3c-1.md"
+      "handoff": "waves/R3c-1.md",
+      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
     },
     {
       "id": "P1",
@@ -965,7 +967,8 @@
       ],
       "why": "In R3b the agreement was 186 hand-written lines, with 27 test files typed three times. Preparation has to be cheap for a person who has not read the format.",
       "proposal": "A command that drafts an agreement for the owner to edit: files by a stated rule, the setup and check commands it can find, editable paths left for the owner to choose. It proposes; it never exports on its own. Scope and rule to be set after R3c, using what two projects showed and the lab reading on slice sufficiency.",
-      "handoff": "waves/P1.md"
+      "handoff": "waves/P1.md",
+      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
     },
     {
       "id": "R4",
@@ -976,7 +979,83 @@
       ],
       "ownerApproval": "Required before anything starts: it involves contact with an outside party. Not an overnight wave.",
       "proposal": "The useful milestone itself. Not designed yet.",
-      "handoff": "waves/R4.md"
+      "handoff": "waves/R4.md",
+      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
+    },
+    {
+      "id": "B1",
+      "milestone": "B",
+      "title": "The Box core: one command records what a failing test ran",
+      "dependencies": [],
+      "handoff": "waves/B1.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+    },
+    {
+      "id": "B2",
+      "milestone": "B",
+      "title": "Box search: ordinary search, whole repository, Box matches first and marked",
+      "dependencies": [
+        "B1"
+      ],
+      "proposal": "Wraps the usual search commands; returns exactly the matches an ordinary search returns, reordered; never fewer. Lessons from the lab gate 3 and 3b records apply.",
+      "handoff": "waves/B2.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+    },
+    {
+      "id": "B3",
+      "milestone": "B",
+      "title": "The path to the failure: the route from the test to where it failed, in order",
+      "dependencies": [
+        "B1"
+      ],
+      "proposal": "A runtime fact for understanding, not only locating. Not designed yet.",
+      "handoff": "waves/B3.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+    },
+    {
+      "id": "B4",
+      "milestone": "B",
+      "title": "One-step use on every host the kitchen runs on",
+      "dependencies": [
+        "B2",
+        "B3"
+      ],
+      "proposal": "No setup, nothing to remember. Not designed yet.",
+      "handoff": "waves/B4.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+    },
+    {
+      "id": "B5",
+      "milestone": "B",
+      "title": "The kitchen uses the Box on its own failing tests",
+      "dependencies": [
+        "B4"
+      ],
+      "proposal": "Kitchen wave; records whether cooks used it and what it changed.",
+      "handoff": "waves/B5.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+    },
+    {
+      "id": "B6",
+      "milestone": "B",
+      "title": "The fair test: a working Box with a live agent",
+      "dependencies": [
+        "B4"
+      ],
+      "proposal": "Tasks with room to improve, code the model has not memorised, the agent actually using the Box, same agent with and without.",
+      "handoff": "waves/B6.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+    },
+    {
+      "id": "B7",
+      "milestone": "B",
+      "title": "A second language: JavaScript and TypeScript",
+      "dependencies": [
+        "B6"
+      ],
+      "proposal": "Same Box format. After the first language has shown whether widening is worth it.",
+      "handoff": "waves/B7.md",
+      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
     }
   ],
   "sequenceRevision": "package-proof-first-2026-10-05"
