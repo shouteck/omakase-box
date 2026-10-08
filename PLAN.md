@@ -11,6 +11,8 @@
 
 Details are in [DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md) and [VALIDATION-PLAN.md](docs/box-v4/delegation/VALIDATION-PLAN.md). Tasks are in [the delegation graph](tasks/box-delegation-task-graph.json). Current state is in [STATUS.md](STATUS.md).
 
+> **Direction since 8 October 2026:** the product is the Box as a tool for coding agents, built in milestone B (see "Where we are and what comes next"). The "useful" milestone and milestone A below describe the earlier direction, handing work to outsiders without the repository. They are kept as the record of how the Box format and its checks came to exist.
+
 ## The milestone we steer by: useful
 
 Agreed with the owner on 6 October 2026. The product is useful when all of this is true at once:
@@ -46,38 +48,45 @@ Known limits, stated up front: the product's own command-line tool still needs N
 
 The next attempt on an outside repository (R3b, a replay of recently fixed issues) followed milestone A; its result is below.
 
-## Where we are and what comes next
+## Where we are and what comes next: milestone B, the Box as a tool for agents
 
-Written by the CTO on 7 October 2026, after R3b and the paired-check fix.
+Written by the CTO on 8 October 2026 and approved by the owner the same day. It replaces the order A6, R3c, P1, R4, which is retired. The earlier text of this section is in Git history.
 
-**What R3b showed.** One closed issue from `tj/commander.js` went through the product end to end. The hand-over and the acceptance worked: a Box of 39 files went out, a solver working from that folder changed one line, and the owner-side check accepted it and rejected a do-nothing submission. Preparing the Box did not work cleanly: export refused five times, twice because the "does the Box behave like the repository" check could not cope with a test tool that prints run times. That check has since been fixed (`waves/fix-paired-check.md`).
+**What changed.** Three days of research (the `lab` branch, `lab/lines/`) tested the Box from several sides. What it settled:
 
-**Against the four things to prove:**
+- A program can make a Box from one failing test in about two seconds: the functions that test ran, a median of 5% of a large project's source, containing the real fix on 28 of 29 replayed bugs. The plain error trace names the fix on only 6 of 29.
+- Handing work to outsiders without the repository, the product this plan was written for, has no customer anyone could show from public evidence. That direction is set aside, not abandoned: a sealed Box remains possible later for an owner who needs a boundary.
+- Strong agents on well-known public projects already find the right place in a few steps. So a Box that only says where to look adds little there. That is a fact about those agents and that code; it is not a test of a working Box with a live agent, which has not yet been run once.
 
-| What must be proven | State |
-|---|---|
-| A Box runs with the rest of the repository absent | Shown on our own code, small fixtures and one outside project |
-| A stranger can finish from the Box alone | Shown once on outside code, with a solver that was not properly isolated and was shown the test |
-| It costs the owner less than ordinary delegation | Not shown. Preparation is the weak point: the agreement was 186 hand-written lines |
-| Someone chooses it again and will pay | Untested. No kitchen wave can test it; only the owner's conversations can |
+**The owner's decision.** Build the Box as a tool an agent uses, make it as good as the state of the art allows, and then test it properly. The reasoning: an open tool that gives an agent a small, relevant place to start and takes nothing away cannot make it worse; even a small gain is large across everyone's usage; and research cannot say more until the real thing exists. The CTO's reservation, on record: the gain may be too small to notice for strong agents on familiar code. The milestone is shaped to find out where it is not small.
 
-**The order from here.** Each step depends on the one before it. There are no dates.
+**What the Box is now.** A plain program, with no model inside it:
 
-| Step | Outcome | Why here |
+- *Open.* It never confines the agent. The whole repository stays reachable.
+- *Made from evidence.* What ran when the test failed, and later how it ran: order, path to the failure, what differs from passing runs.
+- *Built into what the agent already does.* Its ordinary search, with what the failing test ran listed first. Nothing new to learn and nothing to ignore.
+- *Light.* Seconds to make, almost nothing to carry.
+- *Honest about itself.* It marks only what it observed and says what it could not see.
+
+**Where it is aimed,** because that is where the research left room: cheaper and weaker agents; code a model has never seen, which includes every private repository; and understanding what the code did when it failed, not only finding where.
+
+| Wave | Outcome | Why here |
 |---|---|---|
-| A6 | The tool starts cleanly on a machine that is not ours: the three first-run failures from R3b are gone, and what the Box tells a solver is correct (which commands are theirs to run, how to submit). | The next replay runs the product in a clean container. Without this, every run begins with the same workarounds. |
-| R3c | A stricter replay: several fixed issues across two public projects, one of them not commander.js. The solver runs in a container with nothing but the Box. Some cases hide the acceptance test from the solver. Each case includes one answer that is wrong in substance but well-formed, to see whether it is accepted. | Turns one anecdote into a count, and tests the two things R3b could not: real isolation, and whether wrong work gets through. |
-| P1 | Preparing a Box is cheap for a person: a command drafts the agreement from the repository (files by a stated rule, the setup and test commands it can find), and the owner edits it. | "Prepared in minutes" has to be true for a requester, not for an agent that has read the format. After R3c, so two projects inform it. |
-| R4 | A live attempt: an open issue, with a project owner who has agreed. | The useful milestone itself. **Owner's decision** when we get there, since it means contact with an outside party. |
+| B1 | **The Box core.** One command takes a failing test and writes the Box: every function that test ran, identified exactly, in the order first called. Python first. | Everything else reads this. The lab's tracer proved the method and had one identity fault to fix. |
+| B2 | **Box search.** The ordinary search commands, whole repository, same matches, with matches inside the Box first and marked. | The form that cannot return less than a normal search and cannot be ignored. |
+| B3 | **The path to the failure.** One command shows the route from the test to where it failed, in order. | A runtime fact an agent cannot get by reading. Aimed at understanding, where agents spend most of their reading and where they fail. |
+| B4 | **One-step use.** Packaged so an agent picks it up with no setup, on any host the kitchen runs on. | A small gain only counts if nobody has to remember to use it. |
+| B5 | **The kitchen uses it.** Cooks get the Box on this repository's own failing tests. | Real use on private code, at no extra cost, before any outside claim. |
+| B6 | **The fair test.** A working Box, a live agent, tasks with room to improve, code the model has not memorised, one pilot pair first, a token ceiling fixed in advance. | The test the research never ran. The owner approves it separately because it spends tokens. |
+| B7 | **A second language.** JavaScript and TypeScript, same Box format. | After the first language has shown whether it is worth widening. |
 
-**Held back, on purpose:**
+**How each wave is checked without spending agent tokens.** The lab's replay scripts and its thirty public tasks score a Box by script (is the fix in it, where does it rank, how long it took). The kitchen may run them; it does not change them.
 
-- *The web journey (D3.2) and a GitHub integration* wait until R4 has worked.
-- *Leaner slicing* (steps 2 and 3 of the ladder below) waits for the lab's third line to say it is worth it. R3b shipped 36% of the repository's bytes, which is acceptable for public code.
-- *Kitchen improvements* (K9, the leftovers of K7) only when they block a step above.
-- *D4* is retired as a separate step. Its questions are answered inside the steps above: counterexamples in R3c, effort against ordinary delegation in P1 and R4.
+**What is kept from before.** The Box folder format, export, submit and owner-side verify from milestones D and A stay as they are, tested and unused by this milestone. Nothing is deleted.
 
-**The lab, alongside.** It runs beside the kitchen and does not wait for it. Its next work feeds two steps directly: how often a request and its check disagree, and whether that can be seen before hand-off (shapes how R3c hides the test); and what the field knows about whether a slice contains what a change needs (shapes P1's file rule).
+**Held back, on purpose:** a sealed Box; a trained model that makes Boxes; ranking by a learned ranker; any marketplace; conversations with possible customers. Each needs its own decision.
+
+**The lab.** Its Box trial is closed as a research question. It keeps its scoring instruments available to the kitchen and stays otherwise paused until the owner reopens a line.
 
 ## Sequence
 
