@@ -1,0 +1,14 @@
+{
+  "kind": "fixture author error",
+  "failed_case": "native-direct",
+  "initial_assumption": "three marks for needle",
+  "native_observation": "eight matches, four inside getter/outer; search also matches return lines",
+  "correction": "use explicitly named source lines 4,5,12,16; setter 8,9 and inner 14,15 must stay unmarked",
+  "initial_script_sha256": "04c2404c92c1b73b27ac7f22b11be45b5add99556b5c8a8cd568ac624b83998e",
+  "second_fixture_error": "matching :4: filter was incorrectly expected to exit 1; actual match must exit 0",
+  "before_filter_script_sha256": "7918de263326a9285ae6d0b80e9f722d3c1843c02bc2b55e598fa6024921e6cc",
+  "measurement_timing": "measurement started after fixture failed; treated as preliminary until checks pass",
+  "ordered_collector_surprise": "initial plain 1.359s, ordered 14.953s; cache path resolution and request local events only within selected test; retain original helper/receipts/raw before rerun",
+  "original_facts_raw_retained_path": "raw/facts-before-path-cache/ordered.json",
+  "trace_equivalence_finding": "Full calls mapping differs in 271 first-seen ordinals across fresh processes; key/name set and 17 selected-test event sequence agree. Original strict dictionary comparison and raw records preserved. Footprint report now separates these observed outcomes."
+}

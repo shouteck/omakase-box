@@ -1,0 +1,68 @@
+{
+  "task": "django__django-12193",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+  "image_preexisted": false,
+  "collector_sha256": "c59c881de787d84283bc85a72630f3f61a7d41a34b0262e54151041f0f205711",
+  "phases": [
+    {
+      "mode": "plain",
+      "exit": 1,
+      "seconds": 1.2030000000959262,
+      "stdout_sha256": "323fc9f4969fad0ab3e665c5f18666d9717cfb3722f0beaa8c95279cf7848967",
+      "stderr_sha256": "42943cf57f77fcada029a6346f38cd45dd9d71f74281e782eebfb37b67a97965"
+    },
+    {
+      "mode": "ordered",
+      "exit": 1,
+      "seconds": 1.702999999979511,
+      "stdout_sha256": "323fc9f4969fad0ab3e665c5f18666d9717cfb3722f0beaa8c95279cf7848967",
+      "stderr_sha256": "50023b195a988aef9a83bad972ea0f756d5438b85bd06821fb3e4fc8b025c94b"
+    }
+  ],
+  "pull_exit": 0,
+  "create_argv": [
+    "docker",
+    "create",
+    "--name",
+    "lab-ideal-box-a866cd90-0dc9-4f09-b250-00b88feaba74",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "--pids-limit",
+    "128",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\ideal-box\\prototype\\collector.py,dst=/lab/collector.py,readonly",
+    "--workdir",
+    "/testbed",
+    "--entrypoint",
+    "/bin/bash",
+    "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+    "-lc",
+    "sleep infinity"
+  ],
+  "base_head": "3fb7c12158a2402f0f80824f6778112071235803",
+  "raw": {
+    "path": "raw\\facts\\ordered.json",
+    "sha256": "a29d690c460ad7fc299a338fd75832b5a5006b82f9506d7ece606cde72b1c03c",
+    "bytes": 169958
+  },
+  "events": 17,
+  "calls": 2066,
+  "target": "test_get_context_does_not_mutate_attrs",
+  "file_answer": "django/forms/widgets.py:155 media_property\ndjango/forms/widgets.py:185 MediaDefiningClass.__new__\ndjango/forms/widgets.py:200 Widget.__init__\ndjango/forms/widgets.py:203 Widget.__deepcopy__\ndjango/forms/widgets.py:209 Widget.is_hidden\ndjango/forms/widgets.py:227 Widget.get_context\ndjango/forms/widgets.py:249 Widget.build_attrs\ndjango/forms/widgets.py:286 Input.__init__\ndjango/forms/widgets.py:292 Input.get_context\ndjango/forms/widgets.py:503 boolean_check\ndjango/forms/widgets.py:511 CheckboxInput.__init__\ndjango/forms/widgets.py:517 CheckboxInput.format_value\ndjango/forms/widgets.py:523 CheckboxInput.get_context\ndjango/forms/widgets.py:557 ChoiceWidget.__init__\n",
+  "file_answer_bytes": 670,
+  "route_answer": "call tests/forms_tests/widget_tests/test_checkboxinput.py:93 test_get_context_does_not_mutate_attrs\ncall django/forms/widgets.py:523 get_context\ncall django/forms/widgets.py:292 get_context\ncall django/forms/widgets.py:227 get_context\nreturn django/forms/widgets.py:237 get_context\nreturn django/forms/widgets.py:295 get_context\nreturn django/forms/widgets.py:528 get_context\nexception tests/forms_tests/widget_tests/test_checkboxinput.py:96 test_get_context_does_not_mutate_attrs AssertionError\nreturn tests/forms_tests/widget_tests/test_checkboxinput.py:96 test_get_context_does_not_mutate_attrs\n",
+  "route_answer_bytes": 598,
+  "omitted_events": 8,
+  "facts_instruction_bytes": 0,
+  "status": "pass"
+}

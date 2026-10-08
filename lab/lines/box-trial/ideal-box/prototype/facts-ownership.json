@@ -1,0 +1,8 @@
+{
+  "task": "django__django-12193",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+  "image_preexisted": false,
+  "collector_sha256": "c59c881de787d84283bc85a72630f3f61a7d41a34b0262e54151041f0f205711",
+  "phases": [],
+  "container": "lab-ideal-box-a866cd90-0dc9-4f09-b250-00b88feaba74"
+}
