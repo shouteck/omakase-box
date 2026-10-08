@@ -7,5 +7,6 @@
   "ranking_rule_unchanged": true,
   "repair_agent_runs": 0,
   "legacy_python_fault": "Preliminary Django 12193 image has Python without AST end_lineno. Added token-based function-end fallback and fail-open native output on ordering faults.",
-  "sources_corrected_before_final_corpus_replay": true
+  "sources_corrected_before_final_corpus_replay": true,
+  "decorated_legacy_function_fault": "On Python 3.6 function lineno starts at its decorator. Real-source queries passed through unmodified after StopIteration; excluded and replayed after correcting token lookup."
 }

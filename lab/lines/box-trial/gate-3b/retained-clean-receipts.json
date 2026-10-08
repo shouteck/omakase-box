@@ -1,0 +1,32 @@
+[
+  {
+    "task": "astropy__astropy-13033",
+    "raw_sha256": "137af252d52c8c7487aa07b313c5f2f47deecd3023d420e077664aef3551d05e",
+    "wrapper_version": "5a246a8",
+    "basis": "Only legacy missing-end AST lookup changed. This complete receipt has no ordering fault; native streams and method unchanged."
+  },
+  {
+    "task": "astropy__astropy-14539",
+    "raw_sha256": "4792f9dc9234ead2e47b095dd821f3ba04fdd1dd49c1d6dfdbc46ed827575592",
+    "wrapper_version": "5a246a8",
+    "basis": "Only legacy missing-end AST lookup changed. This complete receipt has no ordering fault; native streams and method unchanged."
+  },
+  {
+    "task": "django__django-14752",
+    "raw_sha256": "5d214f11c76eff8f2690062de583e455ac4e368379c564638254ddc5629ac71d",
+    "wrapper_version": "5a246a8",
+    "basis": "Only legacy missing-end AST lookup changed. This complete receipt has no ordering fault; native streams and method unchanged."
+  },
+  {
+    "task": "django__django-15467",
+    "raw_sha256": "8d9575c18e0891c539490b6f432831e140114835aca2c4ad499fa3aa1468de0e",
+    "wrapper_version": "5a246a8",
+    "basis": "Only legacy missing-end AST lookup changed. This complete receipt has no ordering fault; native streams and method unchanged."
+  },
+  {
+    "task": "matplotlib__matplotlib-21568",
+    "raw_sha256": "daa24268ec38548f10cb6dc4546054ad35855be4416b1891a77841b3a752db09",
+    "wrapper_version": "5a246a8",
+    "basis": "Only legacy missing-end AST lookup changed. This complete receipt has no ordering fault; native streams and method unchanged."
+  }
+]

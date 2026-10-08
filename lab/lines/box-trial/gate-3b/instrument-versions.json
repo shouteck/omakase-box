@@ -1,0 +1,12 @@
+{
+  "sources": {
+    "check.py": "538e063523e7565481c1bbcf9066ec86d90ef0a1be82488068b79ec609171845",
+    "corpus.py": "e8494bc2b88b6b3d0f73932c6cfb58ba162d98a31d00e0dc44320d048ae00884",
+    "replay.py": "023f6dc8f06cda6708b6acb23cc3fa2a0f69cbec99d02dd84f1f8ae973495be9",
+    "score.py": "3673dba370dcd07768ac5e2177416c3c45bb125bc68f63d7b4677c81ed62d3b5",
+    "search.py": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
+    "shell.sh": "d674a1c7838733b52534e2738cc28b539bdc80b8d0db860b1ae81c85b5261c5d"
+  },
+  "retained_prior_version": "5a246a8",
+  "correction": "Legacy decorator position lookup and source-version receipts only; ranking rule unchanged."
+}

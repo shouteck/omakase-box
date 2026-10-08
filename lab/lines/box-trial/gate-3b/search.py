@@ -9,9 +9,9 @@ def function_rows(text):
         known=getattr(node,'end_lineno',None)
         if known is not None:return known
         if tokens is None:tokens=list(tokenize.generate_tokens(io.StringIO(text).readline))
-        index=next(i for i,t in enumerate(tokens) if t.start==(node.lineno,node.col_offset) and t.string in ('def','async'))
+        index=next(i for i,t in enumerate(tokens) if t.start[0]>=node.lineno and t.start[1]==node.col_offset and t.string in ('def','async'))
         header_end=next(i for i in range(index,len(tokens)) if tokens[i].type==tokenize.NEWLINE)
-        if node.body[0].lineno==node.lineno:return tokens[header_end].start[0]
+        if node.body[0].lineno==tokens[index].start[0]:return tokens[header_end].start[0]
         first_indent=next(i for i in range(header_end+1,len(tokens)) if tokens[i].type==tokenize.INDENT)
         depth=1;last=node.lineno
         for token in tokens[first_indent+1:]:
@@ -123,7 +123,7 @@ def main():
     # marks only to source records actually displayed after downstream filters.
     source_lines=out.splitlines(keepends=True)
     visible=b''.join(source_lines[i] for i in proof.get('order',range(len(source_lines)))) if mode=='box' else out
-    row={'tool':tool,'interpreter':sys.version,'args':args,'cwd':str(cwd),'exit':code,'stderr_sha256':sha(err),'native_sha256':sha(out),'ordered_sha256':sha(ordered),'native_bytes':len(out),'locations':locations,'proof':proof,'mode':mode,'emitted_sha256':sha(visible),'stdout_b64':base64.b64encode(out).decode(),'stderr_b64':base64.b64encode(err).decode()}
+    row={'tool':tool,'wrapper_sha256':sha(pathlib.Path(__file__).read_bytes()),'interpreter':sys.version,'args':args,'cwd':str(cwd),'exit':code,'stderr_sha256':sha(err),'native_sha256':sha(out),'ordered_sha256':sha(ordered),'native_bytes':len(out),'locations':locations,'proof':proof,'mode':mode,'emitted_sha256':sha(visible),'stdout_b64':base64.b64encode(out).decode(),'stderr_b64':base64.b64encode(err).decode()}
     with open(os.environ['LAB_BOX_LOG'],'a',encoding='utf-8') as stream:stream.write(json.dumps(row,ensure_ascii=True)+'\n')
     sys.stderr.buffer.write(err)
     try:sys.stdout.buffer.write(visible);sys.stdout.buffer.flush()

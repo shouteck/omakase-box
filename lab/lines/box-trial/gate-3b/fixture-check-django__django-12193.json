@@ -1,7 +1,7 @@
 {
   "task_image": "django__django-12193",
   "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
-  "preexisted": false,
+  "preexisted": true,
   "cases": [
     {
       "label": "single",
@@ -26,6 +26,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -134,6 +135,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-Rn",
@@ -242,6 +244,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -350,6 +353,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "needle",
@@ -457,6 +461,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -603,6 +608,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -688,6 +694,7 @@
         },
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -739,6 +746,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -847,6 +855,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -932,6 +941,7 @@
         },
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "^2:"
@@ -983,6 +993,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1068,6 +1079,7 @@
         },
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-F",
@@ -1118,6 +1130,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1170,6 +1183,7 @@
       "queries": [
         {
           "tool": "git",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1279,6 +1293,7 @@
       "queries": [
         {
           "tool": "find",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "lab-gate-3b-fixture",
@@ -1345,6 +1360,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-c",
@@ -1392,6 +1408,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-l",
@@ -1439,6 +1456,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1490,6 +1508,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1541,6 +1560,7 @@
       "queries": [
         {
           "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1592,6 +1612,7 @@
       "queries": [
         {
           "tool": "rg",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
           "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
           "args": [
             "-n",
@@ -1619,13 +1640,204 @@
           "stderr_b64": "cmc6IGNvbW1hbmQgbm90IGZvdW5kCg=="
         }
       ]
+    },
+    {
+      "label": "real-decorated-source",
+      "command": "grep -n -e \"def get_context\" -e \"def formfield\" django/forms/widgets.py",
+      "status": "pass",
+      "ordinary": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "bed530bd8d36aace7ac487d1580797c34a2fcb1d292ea871c4942d6a399e3c55",
+        "stdout_b64": "MjI3OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMjkyOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMzI2OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMzQ0OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNDI2OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNTIzOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNjM5OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNjc5OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKODExOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKOTcyOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToK",
+        "stderr_b64": "",
+        "stdout_sha256": "bed530bd8d36aace7ac487d1580797c34a2fcb1d292ea871c4942d6a399e3c55",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "box": {
+        "exit": 0,
+        "unmarked_stdout_sha256": "4f47ab243108a636aa94fa3627ef1ac0a51a5fa0284aad17c1217e802b59308d",
+        "stdout_b64": "W0JPWF0gMjI3OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKW0JPWF0gMjkyOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKW0JPWF0gNTIzOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMzI2OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMzQ0OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNDI2OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNjM5OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNjc5OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKODExOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKOTcyOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToK",
+        "stderr_b64": "",
+        "stdout_sha256": "1a2a1e24278245768c23da9ce49c1122dcc7e6a443ca178e14609553016d7000",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "queries": [
+        {
+          "tool": "grep",
+          "wrapper_sha256": "93fbe9c2c00b114da3e78f718025fd68d96300e49e1db32e1780d62929370f1d",
+          "interpreter": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+          "args": [
+            "-n",
+            "-e",
+            "def get_context",
+            "-e",
+            "def formfield",
+            "django/forms/widgets.py"
+          ],
+          "cwd": "/testbed",
+          "exit": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "native_sha256": "bed530bd8d36aace7ac487d1580797c34a2fcb1d292ea871c4942d6a399e3c55",
+          "ordered_sha256": "1a2a1e24278245768c23da9ce49c1122dcc7e6a443ca178e14609553016d7000",
+          "native_bytes": 510,
+          "locations": [
+            {
+              "ordinal": 0,
+              "path": "django/forms/widgets.py",
+              "line": 227,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "Widget.get_context"
+              ]
+            },
+            {
+              "ordinal": 1,
+              "path": "django/forms/widgets.py",
+              "line": 292,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "Input.get_context"
+              ]
+            },
+            {
+              "ordinal": 2,
+              "path": "django/forms/widgets.py",
+              "line": 326,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "PasswordInput.get_context"
+              ]
+            },
+            {
+              "ordinal": 3,
+              "path": "django/forms/widgets.py",
+              "line": 344,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "MultipleHiddenInput.get_context"
+              ]
+            },
+            {
+              "ordinal": 4,
+              "path": "django/forms/widgets.py",
+              "line": 426,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "ClearableFileInput.get_context"
+              ]
+            },
+            {
+              "ordinal": 5,
+              "path": "django/forms/widgets.py",
+              "line": 523,
+              "kind": "line",
+              "is_match": true,
+              "priority": true,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "CheckboxInput.get_context"
+              ]
+            },
+            {
+              "ordinal": 6,
+              "path": "django/forms/widgets.py",
+              "line": 639,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "ChoiceWidget.get_context"
+              ]
+            },
+            {
+              "ordinal": 7,
+              "path": "django/forms/widgets.py",
+              "line": 679,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "Select.get_context"
+              ]
+            },
+            {
+              "ordinal": 8,
+              "path": "django/forms/widgets.py",
+              "line": 811,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "MultiWidget.get_context"
+              ]
+            },
+            {
+              "ordinal": 9,
+              "path": "django/forms/widgets.py",
+              "line": 972,
+              "kind": "line",
+              "is_match": true,
+              "priority": false,
+              "source_sha256": "87533f33aad54161239238e914b7222553166b64ddd6163fe4428e023fec3ab4",
+              "function_names": [
+                "SelectDateWidget.get_context"
+              ]
+            }
+          ],
+          "proof": {
+            "format": "human",
+            "same_records": true,
+            "order": [
+              0,
+              1,
+              5,
+              2,
+              3,
+              4,
+              6,
+              7,
+              8,
+              9
+            ],
+            "marked": [
+              0,
+              1,
+              5
+            ],
+            "context_groups": 10,
+            "context": false
+          },
+          "mode": "box",
+          "emitted_sha256": "4f47ab243108a636aa94fa3627ef1ac0a51a5fa0284aad17c1217e802b59308d",
+          "stdout_b64": "MjI3OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMjkyOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMzI2OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKMzQ0OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNDI2OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNTIzOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNjM5OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKNjc5OiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKODExOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToKOTcyOiAgICBkZWYgZ2V0X2NvbnRleHQoc2VsZiwgbmFtZSwgdmFsdWUsIGF0dHJzKToK",
+          "stderr_b64": ""
+        }
+      ]
     }
   ],
   "create_argv": [
     "docker",
     "create",
     "--name",
-    "lab-gate-3b-ec4b464c-44d4-4be7-8f0b-d05179f691af",
+    "lab-gate-3b-0b76542d-4b43-40d3-8a10-53278c91f825",
     "--network",
     "none",
     "--cap-drop",
@@ -1657,8 +1869,8 @@
     "sleep infinity"
   ],
   "base_head": "3fb7c12158a2402f0f80824f6778112071235803",
-  "scope_sha256": "b3cb8d342b87a08eed02681d7aa12f3f9bb9fa79ebb1191ad469ecda62ff4ad7",
+  "scope_sha256": "e53807f89669dc8a75d2e97be0e0dd580b003c68850a3dd62355e676799df2e8",
   "status": "pass",
   "container_cleanup_exit": 0,
-  "retained_owned_image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645"
+  "retained_owned_image": null
 }
