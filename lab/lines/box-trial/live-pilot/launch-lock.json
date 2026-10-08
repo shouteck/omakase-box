@@ -1,0 +1,25 @@
+{
+  "commit": "95083b16578bbf1bc31125bd2b50ac73028fefd5",
+  "pushed": true,
+  "files": {
+    "run.py": "6e37fe526352bbfd94ef46c8d65dea5856cd72fa4a6ca7ed06834dfc837d7a18",
+    "common.py": "fcd1a255e1093492d8f0d54e85ce36d8401428f51f9b69dbf257ea50e76d91e9",
+    "execute.py": "e971047b794440313a30a63afa48842e064e22c3d94065fda0c2a8bf3165a96b",
+    "capture.py": "665816e341451927d8b4f11c24f617528fe9326ff90d1b2498039cca220d69e6",
+    "shell.sh": "ab08bca25b120c5aa34ac7824c2f5c7c9ca80d39c8e3190d5b58f9cd752f0d3c",
+    "adapter.py": "7718edd93ce6e9fc16e0ef372ad21e73e68b41df62353cb843fac1affb4f38af",
+    "evidence.json": "71b7f171c0821034686033f9a9fa4fffd1cda011353cbd0dc3460b0f584dac5e",
+    "prompt.txt": "603e5b2c62473112eb733d6f200d0dc03b48bca5960b3b168562d7222d87b923",
+    "base-instructions.txt": "c116ee29881b878c29c7b784f2911dfde259a05f1d08302b661fe6a036f22bab",
+    "settings.json": "0dd31fb9870aba8711811d72b2945d4f30c8ef6cf460ab941c460f6c3c543aea",
+    "plan.md": "bc2edba4f14cfcc626f3c0dcee455ce65afcb851c5757e69d1b07678dd040e6c",
+    "harness.json": "c40e2d04923a54c978a17ddf1d3c9f5b8a562525b266881c2a248aaebb831a10",
+    "box-check.json": "755458877cc102311361fcda5ff2d888d0a893dc786b7c820d24b38551370fd2",
+    "native-check.json": "3b18b8b774e9b73caa6908541463b39cc80eca809284ffc2fcb230b92aebe995",
+    "../gate-3/preflight.py": "35f4cb1e7b06f07f05080cbc0f11b1bfe1a795200761a5b1a84c82febbe7bab3",
+    "../gate-3/prepare.py": "549050e69f6da7ede6e77a9c76df17a23efff53558b01fe92c3b84f1cb254232",
+    "../gate-1b/container.py": "91f18dcdcd5ba51fa6f8090519a5a311c9af2424e4f6f552b2b8bf45d3a4ba4f",
+    "../gate-1/measure.py": "0cc071edfa81727504725cb33c92ea92bfd09a6e0775ae775597da9e8036c4a6"
+  },
+  "repair_starts_before_lock": 0
+}

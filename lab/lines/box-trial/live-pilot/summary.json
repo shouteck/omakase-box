@@ -1,0 +1,143 @@
+{
+  "task": "sphinx-doc__sphinx-10614",
+  "frozen_pushed_commit": "95083b16578bbf1bc31125bd2b50ac73028fefd5",
+  "runs": [
+    {
+      "arm": "control",
+      "status": "completed",
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "tokens": {
+        "totalTokens": 200832,
+        "inputTokens": 196580,
+        "cachedInputTokens": 148992,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 4252,
+        "reasoningOutputTokens": 2014
+      },
+      "steps": 14,
+      "search_actions": 8,
+      "searches": 8,
+      "searches_reordered": 0,
+      "promotions": [],
+      "subsequent_explicit_opens": [],
+      "command_errors": [],
+      "nonzero_command_steps": [
+        6,
+        8,
+        10,
+        13
+      ],
+      "native_search_errors": [],
+      "native_no_match_searches": 1,
+      "box_valid": true,
+      "solved": false,
+      "evaluation_status": "scored",
+      "phases": {
+        "failing": {
+          "exit": 1,
+          "timed_out": false,
+          "requested": 1,
+          "matched_passes": 0,
+          "all_pass": false
+        },
+        "guards": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 5,
+          "matched_passes": 5,
+          "all_pass": true
+        }
+      },
+      "agent_seconds": 79.375,
+      "token_cap_excess": 0,
+      "candidate_sha256": "84a260cfe32b92104d42d6cd2bb09bff2a3a5b60cd7be2151cdf691cd952328c",
+      "attempt_sha256": "c129d2a156fc3fe14e2dc69a54c1e93b821fd376d3f2bd50667a1069722abb9b",
+      "steps_sha256": "831daec7b259036f307a3e5462e631917349a046ff9a30731063d18bf3475824",
+      "events_sha256": "103db6f427cab98987c14e2cb9ed0a4272b046da1988dd48e872f4c1ef8d3bfc"
+    },
+    {
+      "arm": "box",
+      "status": "completed",
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "tokens": {
+        "totalTokens": 182429,
+        "inputTokens": 179157,
+        "cachedInputTokens": 151296,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 3272,
+        "reasoningOutputTokens": 1695
+      },
+      "steps": 10,
+      "search_actions": 4,
+      "searches": 5,
+      "searches_reordered": 1,
+      "promotions": [
+        {
+          "step": 5,
+          "path": "sphinx/builders/__init__.py",
+          "line": 144,
+          "function_start": 144,
+          "ordinary_ordinal": 1,
+          "shown_ordinal": 0
+        }
+      ],
+      "subsequent_explicit_opens": [
+        {
+          "search_step": 5,
+          "open_step": 6,
+          "path": "sphinx/builders/__init__.py",
+          "function_start": 144,
+          "read_start": 135,
+          "read_end": 165
+        }
+      ],
+      "command_errors": [],
+      "nonzero_command_steps": [
+        8,
+        9
+      ],
+      "native_search_errors": [],
+      "native_no_match_searches": 1,
+      "box_valid": true,
+      "solved": false,
+      "evaluation_status": "scored",
+      "phases": {
+        "failing": {
+          "exit": 1,
+          "timed_out": false,
+          "requested": 1,
+          "matched_passes": 0,
+          "all_pass": false
+        },
+        "guards": {
+          "exit": 0,
+          "timed_out": false,
+          "requested": 5,
+          "matched_passes": 5,
+          "all_pass": true
+        }
+      },
+      "agent_seconds": 56.07799999997951,
+      "token_cap_excess": 0,
+      "candidate_sha256": "dbc88db89a3694be80b3dc23c0aa3be7d55f15bbda9f299f2f1509b809b60f61",
+      "attempt_sha256": "ee550eb5c9b6c1509cde615dc68d1a4aa0c20870ad791d294887125e2058b303",
+      "steps_sha256": "ba3a440da481a90fc4fd2ece351aaed721ee3cda1ecbd64aba424bc7e856b2cd",
+      "events_sha256": "bb79e5cbeb60422d611a7074cc58a270a508c8576d8ad145d84aa58dadd6582c"
+    }
+  ],
+  "pair_tokens": 383261,
+  "pair_cap_excess": 0,
+  "repair_starts": 2,
+  "repeated": false,
+  "standing": "Silent ordering reached the live agent and promoted source was subsequently opened. Both repairs failed. One pair establishes no superiority.",
+  "limits": [
+    "One task and one pair; no repeat or counterfactual attribution",
+    "Promoted function was a helper, not necessarily the bug location",
+    "Whole native command output conserved before the common 16 KB return cap",
+    "Recorder covers available shell search commands; explicit executable bypasses and arbitrary Python searches are not intercepted",
+    "Context/unsupported formats fall back; no universal shell-support claim",
+    "Token totals include cached input and reasoning output, not an invoice or lead/reviewer usage"
+  ]
+}
