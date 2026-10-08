@@ -1,0 +1,271 @@
+{
+  "url": "https://gist.githubusercontent.com/IgorWarzocha/8f15ab8cd8a942cc764ea9a076b301bc/raw/01653bb44f0a9642e1923b2d1b236d6e08bc8bb7/results.jsonl",
+  "sha256": "83cb39099a53e24e56a2a499faef134ff506c235267537fe707c5dd2571c59bd",
+  "bytes": 206178,
+  "rows": 300,
+  "sample_overlap": [
+    {
+      "instance_id": "astropy__astropy-14182",
+      "run_id": "luna-high-rest-01",
+      "resolved": true,
+      "patch_exists": true,
+      "patch_successfully_applied": true,
+      "infra_failure": false,
+      "evaluation_reason": null,
+      "test_counts": {
+        "FAIL_TO_PASS": {
+          "success": 1,
+          "failure": 0
+        },
+        "PASS_TO_PASS": {
+          "success": 9,
+          "failure": 0
+        },
+        "FAIL_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        },
+        "PASS_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        }
+      },
+      "assistant_responses": 21,
+      "tokens": {
+        "input": 51394,
+        "output": 5742,
+        "cacheRead": 460800,
+        "cacheWrite": 0,
+        "totalTokens": 517936,
+        "reasoning": 3286
+      },
+      "estimated_cost_usd": 0.0263852,
+      "max_request_input_including_cache": 37212,
+      "rg_command_not_found": true,
+      "patch_sha256": "0125072a864940fc04eb4f18e0a3ee7c34431cff9cbbc441d87fa9f48ab81084"
+    },
+    {
+      "instance_id": "django__django-14752",
+      "run_id": "luna-high-rest-01",
+      "resolved": true,
+      "patch_exists": true,
+      "patch_successfully_applied": true,
+      "infra_failure": false,
+      "evaluation_reason": null,
+      "test_counts": {
+        "FAIL_TO_PASS": {
+          "success": 1,
+          "failure": 0
+        },
+        "PASS_TO_PASS": {
+          "success": 15,
+          "failure": 0
+        },
+        "FAIL_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        },
+        "PASS_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        }
+      },
+      "assistant_responses": 10,
+      "tokens": {
+        "input": 24357,
+        "output": 1149,
+        "cacheRead": 43008,
+        "cacheWrite": 0,
+        "totalTokens": 68514,
+        "reasoning": 278
+      },
+      "estimated_cost_usd": 0.00711036,
+      "max_request_input_including_cache": 11019,
+      "rg_command_not_found": true,
+      "patch_sha256": "008fdc009d8f148879ee6fd7fcacaf9114f85fe362eba36ab18c84a916386d56"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "run_id": "luna-high-rest-01",
+      "resolved": true,
+      "patch_exists": true,
+      "patch_successfully_applied": true,
+      "infra_failure": false,
+      "evaluation_reason": null,
+      "test_counts": {
+        "FAIL_TO_PASS": {
+          "success": 3,
+          "failure": 0
+        },
+        "PASS_TO_PASS": {
+          "success": 172,
+          "failure": 0
+        },
+        "FAIL_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        },
+        "PASS_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        }
+      },
+      "assistant_responses": 26,
+      "tokens": {
+        "input": 58362,
+        "output": 6548,
+        "cacheRead": 497408,
+        "cacheWrite": 0,
+        "totalTokens": 562318,
+        "reasoning": 3417
+      },
+      "estimated_cost_usd": 0.02947816,
+      "max_request_input_including_cache": 33303,
+      "rg_command_not_found": true,
+      "patch_sha256": "037a7339697abc6ef0e7a1f5f75af034144bd717255aa7c1eebba5acbbd2ede2"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14894",
+      "run_id": "luna-high-rest-01",
+      "resolved": true,
+      "patch_exists": true,
+      "patch_successfully_applied": true,
+      "infra_failure": false,
+      "evaluation_reason": null,
+      "test_counts": {
+        "FAIL_TO_PASS": {
+          "success": 1,
+          "failure": 0
+        },
+        "PASS_TO_PASS": {
+          "success": 85,
+          "failure": 0
+        },
+        "FAIL_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        },
+        "PASS_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        }
+      },
+      "assistant_responses": 13,
+      "tokens": {
+        "input": 41161,
+        "output": 3686,
+        "cacheRead": 122880,
+        "cacheWrite": 0,
+        "totalTokens": 167727,
+        "reasoning": 2051
+      },
+      "estimated_cost_usd": 0.015113,
+      "max_request_input_including_cache": 18961,
+      "rg_command_not_found": true,
+      "patch_sha256": "904aa29bca01f2bbc96cdcf47fbadc1391940881a3d36fdd9cad527b811592f8"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "run_id": "luna-high-rest-01",
+      "resolved": true,
+      "patch_exists": true,
+      "patch_successfully_applied": true,
+      "infra_failure": false,
+      "evaluation_reason": null,
+      "test_counts": {
+        "FAIL_TO_PASS": {
+          "success": 2,
+          "failure": 0
+        },
+        "PASS_TO_PASS": {
+          "success": 8,
+          "failure": 0
+        },
+        "FAIL_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        },
+        "PASS_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        }
+      },
+      "assistant_responses": 40,
+      "tokens": {
+        "input": 95601,
+        "output": 10009,
+        "cacheRead": 1579264,
+        "cacheWrite": 0,
+        "totalTokens": 1684874,
+        "reasoning": 4304
+      },
+      "estimated_cost_usd": 0.06271628,
+      "max_request_input_including_cache": 71187,
+      "rg_command_not_found": true,
+      "patch_sha256": "0ad1ee16c046607e7975598f1c367cebdd4f0de426bbb7254921a84933a60830"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8595",
+      "run_id": "luna-high-rest-01",
+      "resolved": false,
+      "patch_exists": true,
+      "patch_successfully_applied": false,
+      "infra_failure": false,
+      "evaluation_reason": "no_tests_collected",
+      "test_counts": {},
+      "assistant_responses": 22,
+      "tokens": {
+        "input": 73935,
+        "output": 4549,
+        "cacheRead": 573440,
+        "cacheWrite": 0,
+        "totalTokens": 651924,
+        "reasoning": 2124
+      },
+      "estimated_cost_usd": 0.0317146,
+      "max_request_input_including_cache": 51521,
+      "rg_command_not_found": true,
+      "patch_sha256": "030b81adb2df10ae3d4be74ca94a8edb8e475849868e2d4d94f0f116542aa09d"
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "run_id": "luna-high-rest-01",
+      "resolved": true,
+      "patch_exists": true,
+      "patch_successfully_applied": true,
+      "infra_failure": false,
+      "evaluation_reason": null,
+      "test_counts": {
+        "FAIL_TO_PASS": {
+          "success": 1,
+          "failure": 0
+        },
+        "PASS_TO_PASS": {
+          "success": 7,
+          "failure": 0
+        },
+        "FAIL_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        },
+        "PASS_TO_FAIL": {
+          "success": 0,
+          "failure": 0
+        }
+      },
+      "assistant_responses": 19,
+      "tokens": {
+        "input": 46042,
+        "output": 4889,
+        "cacheRead": 355840,
+        "cacheWrite": 0,
+        "totalTokens": 406771,
+        "reasoning": 2703
+      },
+      "estimated_cost_usd": 0.022192,
+      "max_request_input_including_cache": 32131,
+      "rg_command_not_found": true,
+      "patch_sha256": "08abad3f137dcffa9398ac56cc9ec4071f9d0057883b3babc16bdb0625aea825"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "source": "gate-2/summary.json",
+  "source_sha256": "b2f4e07d41cf00f85beb2a218c3a541765d42c7e55867af14070ff6ab25c22d7",
+  "excluded": [
+    {
+      "instance_id": "django__django-16116",
+      "reason": "no admitted Gate 1b narrow Box"
+    }
+  ],
+  "tasks": [
+    {
+      "instance_id": "astropy__astropy-13033",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 35,
+      "first_arm": "control",
+      "repeat": true
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "stratum": "long published run",
+      "published_resolved": true,
+      "published_steps": 59,
+      "first_arm": "box",
+      "repeat": true
+    },
+    {
+      "instance_id": "django__django-12193",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 31,
+      "first_arm": "box",
+      "repeat": false
+    },
+    {
+      "instance_id": "django__django-14752",
+      "stratum": "quick published solve",
+      "published_resolved": true,
+      "published_steps": 20,
+      "first_arm": "box",
+      "repeat": true
+    },
+    {
+      "instance_id": "django__django-15467",
+      "stratum": "quick published solve",
+      "published_resolved": true,
+      "published_steps": 21,
+      "first_arm": "control",
+      "repeat": false
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 68,
+      "first_arm": "box",
+      "repeat": false
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "stratum": "quick published solve",
+      "published_resolved": true,
+      "published_steps": 20,
+      "first_arm": "control",
+      "repeat": false
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "stratum": "quick published solve",
+      "published_resolved": true,
+      "published_steps": 26,
+      "first_arm": "box",
+      "repeat": false
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 18,
+      "first_arm": "box",
+      "repeat": false
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 54,
+      "first_arm": "box",
+      "repeat": false
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 25,
+      "first_arm": "box",
+      "repeat": false
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "stratum": "published failure",
+      "published_resolved": false,
+      "published_steps": 71,
+      "first_arm": "control",
+      "repeat": false
+    }
+  ],
+  "repeat_ids": [
+    "astropy__astropy-13033",
+    "astropy__astropy-14539",
+    "django__django-14752"
+  ]
+}
