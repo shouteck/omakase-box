@@ -1,0 +1,7 @@
+__pycache__/
+records/*/*/model-events.json
+records/*/*/steps.json
+records/*/*/*.log
+records/*/*/*.patch
+records/*/*/prompt.txt
+calibration/

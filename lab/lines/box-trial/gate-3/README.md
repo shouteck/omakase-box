@@ -1,0 +1,20 @@
+# Gate 3 instrument
+
+Authority: [fixed plan](../gate-3-plan.md), committed and pushed at `70d19bc` before any repair run. The owner's tool-only correction replaces the older programme listing. Both arms have one identical `run_command` interface. Box arm gets one extra instruction line and a brokered `box-search` command; no Box listing, source, paths or scope index enters initial context. The index stays in the host adapter and is supplied privately to the container helper only on a Box call. The agent cannot open a listing file. Every attempted Box command, including no match and usage errors, is recorded.
+
+```
+python lab/lines/box-trial/gate-3/select.py       # deterministic selection, no outcomes changed
+python lab/lines/box-trial/gate-3/preflight.py    # tiny selected-model capability smoke, not a repair
+python lab/lines/box-trial/gate-3/calibrate.py    # known-answer fixture in an owned container
+python lab/lines/box-trial/gate-3/run.py [IDs]    # once per arm, refuses to overwrite a start
+```
+
+The installed Codex app-server supplies inference through the existing ChatGPT login. Its host shell, apps, plugins, hooks, browser and other execution features are disabled per invocation, its local sandbox is read-only, its conversation is ephemeral and its working directory empty. The one dynamic command callback executes only in a newly owned network-off Docker container. Model calls consume the already authorized account allowance; no paid API, new account or purchases. Official protocol and authentication references: https://learn.chatgpt.com/docs/app-server and https://learn.chatgpt.com/docs/auth. Preflight records the selected model, dynamic-call chain and actual usage; a model catalog alone would not establish access.
+
+`box-search [-F] [-i] PATTERN [PATH...]` is a brokered standalone command, not a separate extra tool schema. Both arms therefore have exactly the same command schema. It uses the container's ordinary grep implementation, then restricts path/line matches to the frozen base executed-function spans. No oracle ordering or imports. Pipes/compound Box commands are declined with ordinary usage errors and counted; ordinary shell commands can use pipes. Base spans may be stale after an edit, and returned output is capped identically for either arm. These are product/instrument limits, not assumed savings. Tool fixture calibration compares executed body versus unused body/setup, literal/case/no-match/error/path restrictions and control unavailability.
+
+Prepared images are pinned to the earlier digest receipts, with 4 GB/2 CPUs/128 pids, no network, no capabilities and no-new-privileges. Only trusted helper files are read-only mounted; no host credential, repository or gold production patch is mounted. Task issue/test names and test overlay are public benchmark inputs. `prepare.py` accesses only the issue/test fields of the frozen dataset; it never uses the production patch to construct commands or scope. It reuses the Gate 1b AST call-identity heuristic, with its known aliases.
+
+Every command/output, model protocol event, initial prompt and patch remains in local ignored records with committed SHA256 receipts. Fresh scoring containers apply only candidate production changes over base plus the immutable benchmark test overlay. Changes to test paths are excluded from candidate production patches; a candidate's full diff remains recorded. Skipped tests cannot establish a pass. All requested failing and passing test names must be observed passed for success. A parser or environment gap is unknown, not a success; preserve raw evaluator logs when correcting parser faults. Evaluation time is separate from agent wall time.
+
+The initial 12 pairs are the only starts scheduled by `run.py`; repeats require the fixed decision from the summary and use the three IDs frozen in selection. No rerolls, no agent-written briefs, no live research techniques. Calibration's retained image is separately owned in `calibration.json` and must be removed only at closeout; runner removes only task images absent before it pulled them. No global Docker pruning.
