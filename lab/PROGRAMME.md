@@ -4,6 +4,18 @@ Set by the CTO. Rewritten short on 8 October 2026: the earlier page had grown to
 
 No deadlines. The CTO decides which problem and in what order; the lab lead decides how. The owner is not a research scientist and is not asked to steer method.
 
+## The lab is paused: the Box goes to the kitchen (8 October 2026)
+
+**Read this first; it overrides everything below, which is kept as the record of the trial.** The owner has decided to build the Box as a tool for coding agents and to make it as good as it can be before any more research. The kitchen builds it as milestone B (`PLAN.md` on master, "Where we are and what comes next"). The Box trial is closed as a research question. No gate below is to be run or rerun.
+
+What the trial established, as the CTO reads it: a program makes a Box from one failing test in about two seconds, a median of 5% of a large project's source, holding the real fix on 28 of 29 tasks, while the error trace names the fix on 6 of 29 (gate 1b). Strong agents on well-known public projects reach the right function in two to four steps of about thirty-five and their own searches already put the fix at or near the top (gates 2 and 3b), so a Box that only says where to look has little to add there. No working Box has yet been tried with a live agent: gate 3's tool returned nothing on all fifteen calls. Two findings about offering a tool: one that is only mentioned is not called, and one that can return nothing costs real steps.
+
+What the lab does now:
+
+- **Nothing, unless the owner sends `LAB.md` with a line named.** Lines A, B, C and E stay paused.
+- **Keep the instruments usable.** The kitchen may run the scoring scripts in `lab/lines/box-trial/` (gates 1b and 3b) to check a Box by script. It reads them from this branch and does not change them. If the kitchen reports that one is wrong, fixing it is lab work.
+- **Milestone B's fair live test (wave B6) is the kitchen's,** with the owner's separate approval. The lab's gate 3 and 3b records are its starting point: pilot one pair first, fix a token ceiling, use tasks where the plain agent does not already solve everything, and prefer code the model has not memorised.
+
 ## Where things stand
 
 - The product idea is a **Box**: a small, runnable piece of a repository, made for one task, with its check attached, that a person or agent can work in without the rest.
