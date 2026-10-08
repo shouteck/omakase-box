@@ -1,0 +1,101 @@
+[
+  {
+    "id": "adi",
+    "url": "https://arxiv.org/html/2604.24212",
+    "html_sha256": "0158ce2990332c8c2a3401c8481d651a17113e6bd827fabb7f407374a42aa70b",
+    "text_sha256": "637353a0d60a848fd2f187a5fc5de0f02b763c70433bcf790b0529142f7ac3a3",
+    "lines": 992
+  },
+  {
+    "id": "daira",
+    "url": "https://arxiv.org/html/2603.22048",
+    "html_sha256": "141604012f0f3f52ffa3cae35cbb26f48b48d8a9f80ccdacc9ec544d2aa5c007",
+    "text_sha256": "51dc70b7627de758fcf6678df8c530bb1fd96e373842dacbba9b1563d7f7d58c",
+    "lines": 676
+  },
+  {
+    "id": "doctor",
+    "url": "https://arxiv.org/html/2607.00990",
+    "html_sha256": "e5e619cd31e9b20f9432578738336fbf9390a8fbe01eb5f15b5f2a951026ef3b",
+    "text_sha256": "3a39c1ccde1af4c60362caa96f960501b25dd851aa194718257c803f6b5e6065",
+    "lines": 740
+  },
+  {
+    "id": "wallaby",
+    "url": "https://wallabyjs.com/docs/features/mcp/",
+    "html_sha256": "f18e050fd3d7ac28822dd03d6c20ed85f40425ec52c358b8880d51b3845b6f39",
+    "text_sha256": "496a6d09016af4334b2c924d4c3fae413cc8a0f25b785800dcad042f3e4a49b6",
+    "lines": 472
+  },
+  {
+    "id": "coco",
+    "url": "https://www.qt.io/coco-mcp",
+    "html_sha256": "2cc4d939f64427d96d30e99c80bf9649ae9757f2551b349cda193cffc8d238df",
+    "text_sha256": "3c3c100d117e542919e0ec8e13c3400b8067632ebc5e2df47456d7f98d990983",
+    "lines": 319
+  },
+  {
+    "id": "GhabiX/ADI",
+    "url": "https://api.github.com/repos/GhabiX/ADI/git/trees/HEAD?recursive=1",
+    "sha256": "8103270718c3dd057eb5c9dc3f7417f3fb3030f8423239b894252ff39e1c401f",
+    "tree_commit": "0e452af3607aba289fd150a34a1218429271afed",
+    "licence_paths": [
+      {
+        "path": "FSE26-Artifact/variants/AutoCodeRover/auto-code-rover/LICENSE",
+        "mode": "100755",
+        "type": "blob",
+        "sha": "814e3a540d133572034ba81a9bb1549cd40b1ba7",
+        "size": 9675,
+        "url": "https://api.github.com/repos/GhabiX/ADI/git/blobs/814e3a540d133572034ba81a9bb1549cd40b1ba7"
+      },
+      {
+        "path": "FSE26-Artifact/variants/mini-swe-agent/LICENSE.md",
+        "mode": "100755",
+        "type": "blob",
+        "sha": "503821c9dbe06f13a48e54088eb6cd203adb407f",
+        "size": 1094,
+        "url": "https://api.github.com/repos/GhabiX/ADI/git/blobs/503821c9dbe06f13a48e54088eb6cd203adb407f"
+      },
+      {
+        "path": "FSE26-Artifact/variants/mini-swe-agent/mini-swe-agent/LICENSE.md",
+        "mode": "100755",
+        "type": "blob",
+        "sha": "503821c9dbe06f13a48e54088eb6cd203adb407f",
+        "size": 1094,
+        "url": "https://api.github.com/repos/GhabiX/ADI/git/blobs/503821c9dbe06f13a48e54088eb6cd203adb407f"
+      }
+    ]
+  },
+  {
+    "id": "SWE-Doctor/SWE-Doctor",
+    "url": "https://api.github.com/repos/SWE-Doctor/SWE-Doctor/git/trees/HEAD?recursive=1",
+    "sha256": "28a02b4cf983c083a4416d422d281ed227bc1631f9fe98e8f37ee8716e2e8975",
+    "tree_commit": "90ed1d949cae8345b6571394454dd59ec12dc7b2",
+    "licence_paths": [
+      {
+        "path": "LICENSE.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "8d6eb458c579028d5e714a270c95d20d6336a76f",
+        "size": 1165,
+        "url": "https://api.github.com/repos/SWE-Doctor/SWE-Doctor/git/blobs/8d6eb458c579028d5e714a270c95d20d6336a76f"
+      }
+    ]
+  },
+  {
+    "id": "entireio/pgr",
+    "url": "https://api.github.com/repos/entireio/pgr/git/trees/HEAD?recursive=1",
+    "sha256": "38e44c83afbe83933fed360fb08f698271df3f848993d335ad8e21c210d7408c",
+    "tree_commit": "2e702e6521ef26fe1f4a104ce56dca4531e1d6e4",
+    "licence_paths": [
+      {
+        "path": "LICENSE",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "8be2a5cabcfe3661cdf9f84a4d239b865fd776d4",
+        "size": 1068,
+        "url": "https://api.github.com/repos/entireio/pgr/git/blobs/8be2a5cabcfe3661cdf9f84a4d239b865fd776d4"
+      }
+    ]
+  }
+]
