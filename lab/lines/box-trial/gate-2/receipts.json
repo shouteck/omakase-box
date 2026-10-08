@@ -1,0 +1,424 @@
+{
+ "agents": {
+  "gemini-3-5-flash": "20260901_mini-v2.4.2_gemini-3-5-flash",
+  "gpt-5-2-codex": "20260219_mini-v2.0.0_gpt-5-2-codex"
+ },
+ "records": {
+  "gemini-3-5-flash": {
+   "astropy__astropy-14539": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/astropy__astropy-14539.traj.json",
+    "present": true,
+    "bytes": 259060,
+    "sha256": "d3ebbcc89bcccbc770b4829ea789e736680a9d5e4238aa693c696c83e2124433",
+    "resolved": true
+   },
+   "astropy__astropy-7166": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/astropy__astropy-7166.traj.json",
+    "present": true,
+    "bytes": 343771,
+    "sha256": "8a0669bb49872e728f759329d2e607917525626e5a82ac4e116d478ce9b4d7fa",
+    "resolved": true
+   },
+   "astropy__astropy-14182": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/astropy__astropy-14182.traj.json",
+    "present": true,
+    "bytes": 332437,
+    "sha256": "d1886da8f7618e8020c066294b3c3c7e43ef90cbc08d48781edd94ebd3649660",
+    "resolved": true
+   },
+   "astropy__astropy-13033": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/astropy__astropy-13033.traj.json",
+    "present": true,
+    "bytes": 393956,
+    "sha256": "f62f0083473b0aaa596bbcf913da9379cea099bbd6139f59e300e96159adaf2f",
+    "resolved": false
+   },
+   "astropy__astropy-14508": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/astropy__astropy-14508.traj.json",
+    "present": true,
+    "bytes": 375519,
+    "sha256": "73c2674637591fd1ede728a99f425af95ddf1cd9a003e3e83458bbae07248463",
+    "resolved": true
+   },
+   "django__django-13786": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/django__django-13786.traj.json",
+    "present": true,
+    "bytes": 245656,
+    "sha256": "9e8972c78c8589f6eb73c1cfd0722d507862fe7322edf7d02483c4f9db3afd40",
+    "resolved": true
+   },
+   "django__django-15467": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/django__django-15467.traj.json",
+    "present": true,
+    "bytes": 303793,
+    "sha256": "f06c7fd694eb1c0a084ba868c5a3561605a5f5d2f5a5fa69a789069d4e8f3ac9",
+    "resolved": true
+   },
+   "django__django-12193": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/django__django-12193.traj.json",
+    "present": true,
+    "bytes": 390798,
+    "sha256": "dd362de57e033c1b47d6396e159ce32c4e8f025a8e80f61eea64669fa5ba6c73",
+    "resolved": true
+   },
+   "django__django-16116": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/django__django-16116.traj.json",
+    "present": true,
+    "bytes": 377831,
+    "sha256": "381abe85ad5ac4e86ac7e2e855665bc61c48cdd40e698e1b53ea2342edf3a2ec",
+    "resolved": true
+   },
+   "django__django-14752": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/django__django-14752.traj.json",
+    "present": true,
+    "bytes": 130950,
+    "sha256": "3c124dc46bc20dbd73d47c1a9034d0be35cde5413e3e815eb40560ecae072209",
+    "resolved": true
+   },
+   "matplotlib__matplotlib-24570": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/matplotlib__matplotlib-24570.traj.json",
+    "present": false,
+    "resolved": null
+   },
+   "matplotlib__matplotlib-21568": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/matplotlib__matplotlib-21568.traj.json",
+    "present": false,
+    "resolved": null
+   },
+   "matplotlib__matplotlib-23412": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/matplotlib__matplotlib-23412.traj.json",
+    "present": false,
+    "resolved": null
+   },
+   "matplotlib__matplotlib-26113": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/matplotlib__matplotlib-26113.traj.json",
+    "present": false,
+    "resolved": null
+   },
+   "matplotlib__matplotlib-13989": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/matplotlib__matplotlib-13989.traj.json",
+    "present": true,
+    "bytes": 412562,
+    "sha256": "49d585edfefaef14c5a0b3b567b99449a7afcf0c44a5d6b09c16babe20e16a2f",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-11578": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/scikit-learn__scikit-learn-11578.traj.json",
+    "present": true,
+    "bytes": 311577,
+    "sha256": "f1181ca0f51521d49957955e9ade207aefa9c333d1305229de2bd42c0f356a47",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-14087": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/scikit-learn__scikit-learn-14087.traj.json",
+    "present": true,
+    "bytes": 273682,
+    "sha256": "8f5af922dc159c10b6e275c3a384fa50a31477955a4018d6ce7772b7f72cbf83",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-12585": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/scikit-learn__scikit-learn-12585.traj.json",
+    "present": true,
+    "bytes": 255854,
+    "sha256": "3f04b5eaafdedd652c9d4ac8853df7121864f9303fac4ef7f4f9d6a502b3b64a",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-14894": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/scikit-learn__scikit-learn-14894.traj.json",
+    "present": true,
+    "bytes": 234455,
+    "sha256": "a15f27887708e5ab0d087c3f603553e50fde64b5865021ac7e5ddfee258d2c21",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-13124": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/scikit-learn__scikit-learn-13124.traj.json",
+    "present": true,
+    "bytes": 244863,
+    "sha256": "67f1f67e7eab0c65abae3e45a1c9daf8edcb522ea8ad8ad6cca18c3a11a974f1",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-7454": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sphinx-doc__sphinx-7454.traj.json",
+    "present": true,
+    "bytes": 591415,
+    "sha256": "aca8848cdd960c32b5a80498f744cf9f69f0de0ccdf6e58833381fb4e8047c45",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-9320": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sphinx-doc__sphinx-9320.traj.json",
+    "present": true,
+    "bytes": 212826,
+    "sha256": "a68d033adf75554b35adc021d85103beb62ca9a462d2fd254547c335e95cc50b",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-10614": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sphinx-doc__sphinx-10614.traj.json",
+    "present": true,
+    "bytes": 502481,
+    "sha256": "81b1c10ca326f6ec8c179607f502f94ce9c7492c1510b0d4b49a9436c5a47df2",
+    "resolved": false
+   },
+   "sphinx-doc__sphinx-8595": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sphinx-doc__sphinx-8595.traj.json",
+    "present": true,
+    "bytes": 364464,
+    "sha256": "a8e669da4de0561b8c35b4281682a8d0e2dd96e725abf29489358f9425563fe9",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-11445": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sphinx-doc__sphinx-11445.traj.json",
+    "present": true,
+    "bytes": 355859,
+    "sha256": "cd52fd64eac4ac5735e5cfee429d145cb66cf400c02c97a77325068aba5f852d",
+    "resolved": true
+   },
+   "sympy__sympy-12481": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sympy__sympy-12481.traj.json",
+    "present": true,
+    "bytes": 324861,
+    "sha256": "5925728f4fc5e5634ece17f8a18dbd1b3c15fac59a0928e5863992e6ae2134dd",
+    "resolved": true
+   },
+   "sympy__sympy-12096": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sympy__sympy-12096.traj.json",
+    "present": true,
+    "bytes": 546533,
+    "sha256": "b0734de9a0de3051c0c452d46e61207961dbd94d4758e3b3dddddbc6d8803406",
+    "resolved": true
+   },
+   "sympy__sympy-16597": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sympy__sympy-16597.traj.json",
+    "present": true,
+    "bytes": 683411,
+    "sha256": "7a47dd25477f3d107561add9a8a4cb5a2af6bce7341b6d4ee36114d6c8d0306a",
+    "resolved": true
+   },
+   "sympy__sympy-22914": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sympy__sympy-22914.traj.json",
+    "present": true,
+    "bytes": 322776,
+    "sha256": "96812ee012c8dcaeb7d2384ce1037e98de0e9ebd8992c4dbc09fa74e2644932e",
+    "resolved": true
+   },
+   "sympy__sympy-16766": {
+    "url": "https://raw.githubusercontent.com/john-b-yang/20260901_mini-v2.4.2_gemini-3-5-flash/main/trajs/sympy__sympy-16766.traj.json",
+    "present": true,
+    "bytes": 354109,
+    "sha256": "372c8037f5b3feab88839a61e640a9e595e54b929da57d012e8a065a63374097",
+    "resolved": true
+   }
+  },
+  "gpt-5-2-codex": {
+   "astropy__astropy-14539": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/astropy__astropy-14539/astropy__astropy-14539.traj.json",
+    "present": true,
+    "bytes": 368383,
+    "sha256": "0be11d5d05c2fa842ad1b17c1544fae9b0c238533631889db3060d22ee494057",
+    "resolved": true
+   },
+   "astropy__astropy-7166": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/astropy__astropy-7166/astropy__astropy-7166.traj.json",
+    "present": true,
+    "bytes": 331503,
+    "sha256": "60b9c4b10eb81a5edeaed602e5805c6cba81415416025c7e43b92a1d19724d78",
+    "resolved": true
+   },
+   "astropy__astropy-14182": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/astropy__astropy-14182/astropy__astropy-14182.traj.json",
+    "present": true,
+    "bytes": 220436,
+    "sha256": "5f255b15f7473a10cc6244979955eadff75d4a669e3d61bed4b6b4341d1a4021",
+    "resolved": true
+   },
+   "astropy__astropy-13033": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/astropy__astropy-13033/astropy__astropy-13033.traj.json",
+    "present": true,
+    "bytes": 1492888,
+    "sha256": "6a1f9b9bf31ba851d47863c778d14cb026da9acfe6236184a413e1f32790144d",
+    "resolved": false
+   },
+   "astropy__astropy-14508": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/astropy__astropy-14508/astropy__astropy-14508.traj.json",
+    "present": true,
+    "bytes": 273479,
+    "sha256": "4f4b50fdef61d1fd21c115090d1e4b0d20ae0bc8c67366dfe355212cab438664",
+    "resolved": true
+   },
+   "django__django-13786": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/django__django-13786/django__django-13786.traj.json",
+    "present": true,
+    "bytes": 229655,
+    "sha256": "fda93a3ba9ee6162ef77d0a6a78cd0caf88e833319da032b2437b5ecf77911ee",
+    "resolved": true
+   },
+   "django__django-15467": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/django__django-15467/django__django-15467.traj.json",
+    "present": true,
+    "bytes": 130244,
+    "sha256": "d6fde58e50be2363c189b632de1c73bcf44f5cd083f631d4cec1df920d473791",
+    "resolved": true
+   },
+   "django__django-12193": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/django__django-12193/django__django-12193.traj.json",
+    "present": true,
+    "bytes": 155624,
+    "sha256": "d1d36dd0b13feebfd05910c0211caa94531005a6f0a1fb143b0a4675530ddc94",
+    "resolved": false
+   },
+   "django__django-16116": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/django__django-16116/django__django-16116.traj.json",
+    "present": true,
+    "bytes": 242635,
+    "sha256": "8d16beb9dd8676c6f8314e026fbf9f31eb3f939e193392e80d695da08d35de55",
+    "resolved": true
+   },
+   "django__django-14752": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/django__django-14752/django__django-14752.traj.json",
+    "present": true,
+    "bytes": 158403,
+    "sha256": "3a74682e22d5c17077d7bd244eab0c4c1cd852d35ec23a23b93a59a79064c447",
+    "resolved": true
+   },
+   "matplotlib__matplotlib-24570": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/matplotlib__matplotlib-24570/matplotlib__matplotlib-24570.traj.json",
+    "present": true,
+    "bytes": 179053,
+    "sha256": "eedec4740f3ccbce3f330ca857ff6ca8d5f4905733d2b93b1b4eb65cab639a90",
+    "resolved": true
+   },
+   "matplotlib__matplotlib-21568": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/matplotlib__matplotlib-21568/matplotlib__matplotlib-21568.traj.json",
+    "present": true,
+    "bytes": 457605,
+    "sha256": "2f30952c137be86c08201bed65e9cc283fe1c1eaded01ce1d10ebe3b0ee87631",
+    "resolved": false
+   },
+   "matplotlib__matplotlib-23412": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/matplotlib__matplotlib-23412/matplotlib__matplotlib-23412.traj.json",
+    "present": true,
+    "bytes": 212039,
+    "sha256": "c0af4960f83904774d91510c7b5ec66fc3d7bc8f0ef4e40fb429292a70087725",
+    "resolved": true
+   },
+   "matplotlib__matplotlib-26113": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/matplotlib__matplotlib-26113/matplotlib__matplotlib-26113.traj.json",
+    "present": true,
+    "bytes": 198670,
+    "sha256": "29e4c6244dd00ce3b20b5f82fe72d6bfeb57164191d1428735785184d3c66277",
+    "resolved": true
+   },
+   "matplotlib__matplotlib-13989": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/matplotlib__matplotlib-13989/matplotlib__matplotlib-13989.traj.json",
+    "present": true,
+    "bytes": 260363,
+    "sha256": "ea921c61399242e0128d72c3342f948ce8ce54a33fbc938097331c3ed20e23a1",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-11578": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/scikit-learn__scikit-learn-11578/scikit-learn__scikit-learn-11578.traj.json",
+    "present": true,
+    "bytes": 407945,
+    "sha256": "e80e2d0b07813af7c0b234396ce7a94117aaa17a621b3f615079b75628c2813a",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-14087": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/scikit-learn__scikit-learn-14087/scikit-learn__scikit-learn-14087.traj.json",
+    "present": true,
+    "bytes": 169423,
+    "sha256": "7cbd8e0a9b7ccd80f6db8982e07b5da6d67143b616c40cfc3edeca8f2e1f3220",
+    "resolved": false
+   },
+   "scikit-learn__scikit-learn-12585": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/scikit-learn__scikit-learn-12585/scikit-learn__scikit-learn-12585.traj.json",
+    "present": true,
+    "bytes": 128765,
+    "sha256": "1e595cd9de4b03ca38295b605b9233274d35de1b7a780ca05fb990548bcf2d33",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-14894": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/scikit-learn__scikit-learn-14894/scikit-learn__scikit-learn-14894.traj.json",
+    "present": true,
+    "bytes": 353432,
+    "sha256": "9602d438c73c611b7b78f932eafde4d43c505163d832771d3191a4b2181e7be0",
+    "resolved": true
+   },
+   "scikit-learn__scikit-learn-13124": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/scikit-learn__scikit-learn-13124/scikit-learn__scikit-learn-13124.traj.json",
+    "present": true,
+    "bytes": 196062,
+    "sha256": "476c9a545a8b9a8aff12f6b5f7a08f8c6bf9afd0434686848af82ccbd6f51625",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-7454": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sphinx-doc__sphinx-7454/sphinx-doc__sphinx-7454.traj.json",
+    "present": true,
+    "bytes": 266166,
+    "sha256": "d37c8d50dcbeab7ac5847929249221136f11b63b1e7c89465619cba82413f38d",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-9320": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sphinx-doc__sphinx-9320/sphinx-doc__sphinx-9320.traj.json",
+    "present": true,
+    "bytes": 172693,
+    "sha256": "9082ba52f47cdc26f560c018910e85a9fe1180ba7ba7cc03953a6d7f7013877e",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-10614": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sphinx-doc__sphinx-10614/sphinx-doc__sphinx-10614.traj.json",
+    "present": true,
+    "bytes": 424097,
+    "sha256": "2dbc2198b0da94e931fbf2ed267c90b1e7fe4cbbdd2e69982cf5531c37c30419",
+    "resolved": false
+   },
+   "sphinx-doc__sphinx-8595": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sphinx-doc__sphinx-8595/sphinx-doc__sphinx-8595.traj.json",
+    "present": true,
+    "bytes": 287525,
+    "sha256": "294527eb1876ddbffa170c0f6e98f1a01baacaa75b615a17aaccd917e9af75b8",
+    "resolved": true
+   },
+   "sphinx-doc__sphinx-11445": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sphinx-doc__sphinx-11445/sphinx-doc__sphinx-11445.traj.json",
+    "present": true,
+    "bytes": 132167,
+    "sha256": "47797a01ea76715f48839def8ff76d333ecbd12c54c4ab2db874d5d938b3397f",
+    "resolved": false
+   },
+   "sympy__sympy-12481": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sympy__sympy-12481/sympy__sympy-12481.traj.json",
+    "present": true,
+    "bytes": 205633,
+    "sha256": "9e3e46333b596560a251d7094aa3e24d59e8781cb3caacc05e197c4092b1bfae",
+    "resolved": true
+   },
+   "sympy__sympy-12096": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sympy__sympy-12096/sympy__sympy-12096.traj.json",
+    "present": true,
+    "bytes": 287356,
+    "sha256": "25b30af3816595c876a7c0447bcbd482ebe0e97042119af48749461d0e2f1a06",
+    "resolved": true
+   },
+   "sympy__sympy-16597": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sympy__sympy-16597/sympy__sympy-16597.traj.json",
+    "present": true,
+    "bytes": 420885,
+    "sha256": "d430b62984304aa5d19c62fdfee9aed83f06e46a9ea3b8032d6bb5147fc59049",
+    "resolved": false
+   },
+   "sympy__sympy-22914": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sympy__sympy-22914/sympy__sympy-22914.traj.json",
+    "present": true,
+    "bytes": 241239,
+    "sha256": "169b8b2c817b55de19e29810e6dbe3b441eb004d82f2e5979c4247f6051e6919",
+    "resolved": true
+   },
+   "sympy__sympy-16766": {
+    "url": "https://swe-bench-submissions.s3.amazonaws.com/bash-only/20260219_mini-v2.0.0_gpt-5-2-codex/trajs/sympy__sympy-16766/sympy__sympy-16766.traj.json",
+    "present": true,
+    "bytes": 258577,
+    "sha256": "01f635d2dac2c3fcd831e0ee02c5bede850ce8802747cf8c63f067f29a507625",
+    "resolved": true
+   }
+  }
+ }
+}

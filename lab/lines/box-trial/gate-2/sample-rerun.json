@@ -1,0 +1,600 @@
+{
+ "agents": {
+  "gemini-3-5-flash": {
+   "records": 3,
+   "missing": 0,
+   "resolved": 3,
+   "reached_fix": 3,
+   "never_reached": [],
+   "steps_whole_median": 34,
+   "steps_before_median": 1,
+   "share_steps_before_median": 0.03125,
+   "share_chars_before_median": 0.011442147519047489,
+   "share_input_tokens_before_median": 0.0017053999565850926,
+   "searches_before_median": 1,
+   "files_before_median": 0,
+   "functions_before_median": 0,
+   "chars_before_median": 838,
+   "functions_before_not_target_total": 0,
+   "functions_before_outside_box_total": 0,
+   "share_functions_outside_box_median": null,
+   "tasks_reading_any_function_before": 0,
+   "production_files_before_total": 0,
+   "files_before_outside_box_total": 0,
+   "files_before_outside_rival_total": 0,
+   "own_patch_outside_box_files": {
+    "django__django-12193": [
+     "django/contrib/postgres/forms/array.py"
+    ]
+   },
+   "own_patch_outside_box_functions": 1,
+   "unresolved": [],
+   "strict": {
+    "reached": 3,
+    "steps_before_median": 2,
+    "share_steps_median": 0.058823529411764705,
+    "share_chars_median": 0.05789032110441614,
+    "share_input_tokens_median": 0.008200108913394403,
+    "share_steps_max": 0.46875,
+    "functions_before_median": 0,
+    "functions_not_target_total": 21,
+    "functions_outside_box_total": 21,
+    "tasks_reading_any_function_before": 1,
+    "production_files_total": 3,
+    "files_outside_box_total": 1,
+    "files_outside_rival_total": 1,
+    "chars_before_median": 1518
+   },
+   "only_other_steps_share": 0.14414414414414414,
+   "class_counts": {
+    "view": 20,
+    "search": 30,
+    "edit": 7,
+    "run": 42,
+    "other": 42
+   }
+  },
+  "gpt-5-2-codex": {
+   "records": 3,
+   "missing": 0,
+   "resolved": 2,
+   "reached_fix": 3,
+   "never_reached": [],
+   "steps_whole_median": 53,
+   "steps_before_median": 18,
+   "share_steps_before_median": 0.33962264150943394,
+   "share_chars_before_median": 0.22166831893499506,
+   "share_input_tokens_before_median": 0.09431567484105823,
+   "searches_before_median": 7,
+   "files_before_median": 9,
+   "functions_before_median": 1,
+   "chars_before_median": 7826,
+   "functions_before_not_target_total": 18,
+   "functions_before_outside_box_total": 13,
+   "share_functions_outside_box_median": 0.38235294117647056,
+   "tasks_reading_any_function_before": 2,
+   "production_files_before_total": 46,
+   "files_before_outside_box_total": 31,
+   "files_before_outside_rival_total": 10,
+   "own_patch_outside_box_files": {
+    "sympy__sympy-12096": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/plotting/plot.py"
+    ]
+   },
+   "own_patch_outside_box_functions": 0,
+   "unresolved": [
+    {
+     "instance_id": "django__django-12193",
+     "target_in_box": true,
+     "reached": true
+    }
+   ],
+   "strict": {
+    "reached": 3,
+    "steps_before_median": 19,
+    "share_steps_median": 0.3870967741935484,
+    "share_chars_median": 0.5746767358470064,
+    "share_input_tokens_median": 0.10214836610162559,
+    "share_steps_max": 0.5084745762711864,
+    "functions_before_median": 17,
+    "functions_not_target_total": 47,
+    "functions_outside_box_total": 40,
+    "tasks_reading_any_function_before": 3,
+    "production_files_total": 50,
+    "files_outside_box_total": 32,
+    "files_outside_rival_total": 11,
+    "chars_before_median": 15573
+   },
+   "only_other_steps_share": 0.15384615384615385,
+   "class_counts": {
+    "view": 27,
+    "search": 32,
+    "edit": 16,
+    "run": 47,
+    "other": 42
+   }
+  }
+ },
+ "rows": [
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "astropy__astropy-14539",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 34,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 8,
+    "search": 11,
+    "edit": 2,
+    "run": 9,
+    "other": 12
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 34,
+    "searches": 11,
+    "files": 6,
+    "production_files": 4,
+    "functions": 11,
+    "chars": 26222,
+    "input_tokens": 411336,
+    "functions_outside_box": 3,
+    "functions_not_target": 10,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1518,
+    "input_tokens": 3373,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.058823529411764705,
+    "chars": 0.05789032110441614,
+    "input_tokens": 0.008200108913394403
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1518,
+    "input_tokens": 3373,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.058823529411764705,
+    "chars": 0.05789032110441614,
+    "input_tokens": 0.008200108913394403
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/fits/diff.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "django__django-12193",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 32,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 4,
+    "search": 7,
+    "edit": 3,
+    "run": 14,
+    "other": 11
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 32,
+    "searches": 7,
+    "files": 5,
+    "production_files": 2,
+    "functions": 25,
+    "chars": 73238,
+    "input_tokens": 744141,
+    "functions_outside_box": 22,
+    "functions_not_target": 24,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 838,
+    "input_tokens": 1262,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.03125,
+    "chars": 0.011442147519047489,
+    "input_tokens": 0.0016959151558642784
+   },
+   "strict_reached_step": 16,
+   "strict_before": {
+    "steps": 15,
+    "searches": 7,
+    "files": 5,
+    "production_files": 2,
+    "functions": 21,
+    "chars": 57817,
+    "input_tokens": 212554,
+    "functions_outside_box": 21,
+    "functions_not_target": 21,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.46875,
+    "chars": 0.7894399082443541,
+    "input_tokens": 0.2856367274481583
+   },
+   "own_patch": {
+    "production_files": [
+     "django/contrib/postgres/forms/array.py",
+     "django/forms/widgets.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": false,
+    "files_outside_box": [
+     "django/contrib/postgres/forms/array.py"
+    ],
+    "functions_outside_box": [
+     "django/contrib/postgres/forms/array.py:SplitArrayWidget.get_context"
+    ]
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sympy__sympy-12096",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 45,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 8,
+    "search": 12,
+    "edit": 2,
+    "run": 19,
+    "other": 19
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 45,
+    "searches": 12,
+    "files": 31,
+    "production_files": 20,
+    "functions": 8,
+    "chars": 186788,
+    "input_tokens": 769321,
+    "functions_outside_box": 5,
+    "functions_not_target": 7,
+    "files_outside_box": 12,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 665,
+    "input_tokens": 1312,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.022222222222222223,
+    "chars": 0.003560185879178534,
+    "input_tokens": 0.0017053999565850926
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 702,
+    "input_tokens": 2961,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.044444444444444446,
+    "chars": 0.0037582714092982417,
+    "input_tokens": 0.003848848530067423
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/core/function.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "astropy__astropy-14539",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 59,
+   "only_other_steps": 10,
+   "class_counts": {
+    "view": 9,
+    "search": 9,
+    "edit": 6,
+    "run": 26,
+    "other": 21
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 31,
+   "whole": {
+    "steps": 59,
+    "searches": 9,
+    "files": 9,
+    "production_files": 7,
+    "functions": 20,
+    "chars": 73624,
+    "input_tokens": 1104716,
+    "functions_outside_box": 14,
+    "functions_not_target": 19,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 30,
+    "searches": 8,
+    "files": 9,
+    "production_files": 7,
+    "functions": 17,
+    "chars": 42310,
+    "input_tokens": 154317,
+    "functions_outside_box": 13,
+    "functions_not_target": 17,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "share_before": {
+    "steps": 0.5084745762711864,
+    "chars": 0.5746767358470064,
+    "input_tokens": 0.13968929571039074
+   },
+   "strict_reached_step": 31,
+   "strict_before": {
+    "steps": 30,
+    "searches": 8,
+    "files": 9,
+    "production_files": 7,
+    "functions": 17,
+    "chars": 42310,
+    "input_tokens": 154317,
+    "functions_outside_box": 13,
+    "functions_not_target": 17,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "strict_share_before": {
+    "steps": 0.5084745762711864,
+    "chars": 0.5746767358470064,
+    "input_tokens": 0.13968929571039074
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/fits/diff.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "django__django-12193",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 31,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 4,
+    "search": 8,
+    "edit": 3,
+    "run": 9,
+    "other": 12
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 8,
+   "whole": {
+    "steps": 31,
+    "searches": 8,
+    "files": 3,
+    "production_files": 3,
+    "functions": 38,
+    "chars": 22362,
+    "input_tokens": 241096,
+    "functions_outside_box": 31,
+    "functions_not_target": 37,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 7,
+    "searches": 6,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 2031,
+    "input_tokens": 3710,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.22580645161290322,
+    "chars": 0.09082371880869332,
+    "input_tokens": 0.015388061187244916
+   },
+   "strict_reached_step": 13,
+   "strict_before": {
+    "steps": 12,
+    "searches": 8,
+    "files": 3,
+    "production_files": 3,
+    "functions": 29,
+    "chars": 15573,
+    "input_tokens": 24562,
+    "functions_outside_box": 27,
+    "functions_not_target": 29,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.3870967741935484,
+    "chars": 0.6964046149718272,
+    "input_tokens": 0.10187643096525865
+   },
+   "own_patch": {
+    "production_files": [
+     "django/forms/widgets.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sympy__sympy-12096",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 53,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 14,
+    "search": 15,
+    "edit": 7,
+    "run": 12,
+    "other": 9
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 19,
+   "whole": {
+    "steps": 53,
+    "searches": 15,
+    "files": 45,
+    "production_files": 43,
+    "functions": 18,
+    "chars": 35305,
+    "input_tokens": 782362,
+    "functions_outside_box": 11,
+    "functions_not_target": 17,
+    "files_outside_box": 27,
+    "files_outside_rival": 8
+   },
+   "before": {
+    "steps": 18,
+    "searches": 7,
+    "files": 41,
+    "production_files": 39,
+    "functions": 1,
+    "chars": 7826,
+    "input_tokens": 73789,
+    "functions_outside_box": 0,
+    "functions_not_target": 1,
+    "files_outside_box": 27,
+    "files_outside_rival": 8
+   },
+   "share_before": {
+    "steps": 0.33962264150943394,
+    "chars": 0.22166831893499506,
+    "input_tokens": 0.09431567484105823
+   },
+   "strict_reached_step": 20,
+   "strict_before": {
+    "steps": 19,
+    "searches": 8,
+    "files": 42,
+    "production_files": 40,
+    "functions": 1,
+    "chars": 7863,
+    "input_tokens": 79917,
+    "functions_outside_box": 0,
+    "functions_not_target": 1,
+    "files_outside_box": 27,
+    "files_outside_rival": 8
+   },
+   "strict_share_before": {
+    "steps": 0.3584905660377358,
+    "chars": 0.22271632913185102,
+    "input_tokens": 0.10214836610162559
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/core/basic.py",
+     "sympy/core/function.py",
+     "sympy/plotting/plot.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": false,
+    "files_outside_box": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/plotting/plot.py"
+    ],
+    "functions_outside_box": []
+   }
+  }
+ ]
+}

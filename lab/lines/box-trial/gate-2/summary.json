@@ -1,0 +1,4540 @@
+{
+ "agents": {
+  "gemini-3-5-flash": {
+   "records": 26,
+   "missing": 4,
+   "resolved": 24,
+   "reached_fix": 26,
+   "never_reached": [],
+   "steps_whole_median": 36.5,
+   "steps_before_median": 1.0,
+   "share_steps_before_median": 0.030776515151515152,
+   "share_chars_before_median": 0.012374299142575354,
+   "share_input_tokens_before_median": 0.003665214324701789,
+   "searches_before_median": 1.0,
+   "files_before_median": 0.0,
+   "functions_before_median": 0.0,
+   "chars_before_median": 436.0,
+   "functions_before_not_target_total": 5,
+   "functions_before_outside_box_total": 5,
+   "share_functions_outside_box_median": 1.0,
+   "tasks_reading_any_function_before": 1,
+   "production_files_before_total": 32,
+   "files_before_outside_box_total": 22,
+   "files_before_outside_rival_total": 18,
+   "own_patch_outside_box_files": {
+    "django__django-12193": [
+     "django/contrib/postgres/forms/array.py"
+    ],
+    "sympy__sympy-16597": [
+     "sympy/assumptions/ask_generated.py"
+    ]
+   },
+   "own_patch_outside_box_functions": 4,
+   "unresolved": [
+    {
+     "instance_id": "astropy__astropy-13033",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "sphinx-doc__sphinx-10614",
+     "target_in_box": true,
+     "reached": true
+    }
+   ],
+   "strict": {
+    "reached": 26,
+    "steps_before_median": 2.0,
+    "share_steps_median": 0.06634897360703812,
+    "share_chars_median": 0.04760293477751312,
+    "share_input_tokens_median": 0.01036676292300125,
+    "share_steps_max": 0.6060606060606061,
+    "functions_before_median": 0.0,
+    "functions_not_target_total": 37,
+    "functions_outside_box_total": 35,
+    "tasks_reading_any_function_before": 5,
+    "production_files_total": 72,
+    "files_outside_box_total": 36,
+    "files_outside_rival_total": 22,
+    "chars_before_median": 1622.5
+   },
+   "only_other_steps_share": 0.17119838872104734,
+   "class_counts": {
+    "view": 210,
+    "search": 247,
+    "edit": 101,
+    "run": 320,
+    "other": 374
+   }
+  },
+  "gpt-5-2-codex": {
+   "records": 30,
+   "missing": 0,
+   "resolved": 23,
+   "reached_fix": 29,
+   "never_reached": [
+    "sympy__sympy-16597"
+   ],
+   "steps_whole_median": 34.5,
+   "steps_before_median": 4,
+   "share_steps_before_median": 0.10869565217391304,
+   "share_chars_before_median": 0.06152104859615174,
+   "share_input_tokens_before_median": 0.015628104552773116,
+   "searches_before_median": 1,
+   "files_before_median": 0,
+   "functions_before_median": 0,
+   "chars_before_median": 2051,
+   "functions_before_not_target_total": 107,
+   "functions_before_outside_box_total": 92,
+   "share_functions_outside_box_median": 0.7142857142857143,
+   "tasks_reading_any_function_before": 7,
+   "production_files_before_total": 79,
+   "files_before_outside_box_total": 46,
+   "files_before_outside_rival_total": 19,
+   "own_patch_outside_box_files": {
+    "sympy__sympy-12481": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/plotting/plot.py"
+    ],
+    "sympy__sympy-12096": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/plotting/plot.py"
+    ]
+   },
+   "own_patch_outside_box_functions": 3,
+   "unresolved": [
+    {
+     "instance_id": "astropy__astropy-13033",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "django__django-12193",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "matplotlib__matplotlib-21568",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "scikit-learn__scikit-learn-14087",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "sphinx-doc__sphinx-10614",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "sphinx-doc__sphinx-11445",
+     "target_in_box": true,
+     "reached": true
+    },
+    {
+     "instance_id": "sympy__sympy-16597",
+     "target_in_box": false,
+     "reached": false
+    }
+   ],
+   "strict": {
+    "reached": 29,
+    "steps_before_median": 4,
+    "share_steps_median": 0.15,
+    "share_chars_median": 0.09580772607550483,
+    "share_input_tokens_median": 0.022520660514873395,
+    "share_steps_max": 0.5147058823529411,
+    "functions_before_median": 0,
+    "functions_not_target_total": 144,
+    "functions_outside_box_total": 119,
+    "tasks_reading_any_function_before": 9,
+    "production_files_total": 101,
+    "files_outside_box_total": 51,
+    "files_outside_rival_total": 23,
+    "chars_before_median": 2620
+   },
+   "only_other_steps_share": 0.14625550660792952,
+   "class_counts": {
+    "view": 228,
+    "search": 239,
+    "edit": 157,
+    "run": 357,
+    "other": 283
+   }
+  }
+ },
+ "rows": [
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "astropy__astropy-14539",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 34,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 8,
+    "search": 11,
+    "edit": 2,
+    "run": 9,
+    "other": 12
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 34,
+    "searches": 11,
+    "files": 6,
+    "production_files": 4,
+    "functions": 11,
+    "chars": 26222,
+    "input_tokens": 411336,
+    "functions_outside_box": 3,
+    "functions_not_target": 10,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1518,
+    "input_tokens": 3373,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.058823529411764705,
+    "chars": 0.05789032110441614,
+    "input_tokens": 0.008200108913394403
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1518,
+    "input_tokens": 3373,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.058823529411764705,
+    "chars": 0.05789032110441614,
+    "input_tokens": 0.008200108913394403
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/fits/diff.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "astropy__astropy-7166",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 42,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 10,
+    "search": 2,
+    "edit": 7,
+    "run": 21,
+    "other": 23
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 42,
+    "searches": 2,
+    "files": 14,
+    "production_files": 13,
+    "functions": 12,
+    "chars": 27546,
+    "input_tokens": 562108,
+    "functions_outside_box": 9,
+    "functions_not_target": 11,
+    "files_outside_box": 10,
+    "files_outside_rival": 10
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 12,
+    "production_files": 11,
+    "functions": 0,
+    "chars": 2872,
+    "input_tokens": 1126,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 9,
+    "files_outside_rival": 9
+   },
+   "share_before": {
+    "steps": 0.023809523809523808,
+    "chars": 0.10426196180933711,
+    "input_tokens": 0.002003173767318736
+   },
+   "strict_reached_step": 2,
+   "strict_before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 12,
+    "production_files": 11,
+    "functions": 0,
+    "chars": 2872,
+    "input_tokens": 1126,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 9,
+    "files_outside_rival": 9
+   },
+   "strict_share_before": {
+    "steps": 0.023809523809523808,
+    "chars": 0.10426196180933711,
+    "input_tokens": 0.002003173767318736
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/utils/misc.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "astropy__astropy-14182",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 29,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 7,
+    "search": 5,
+    "edit": 7,
+    "run": 11,
+    "other": 13
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 29,
+    "searches": 5,
+    "files": 12,
+    "production_files": 9,
+    "functions": 7,
+    "chars": 52117,
+    "input_tokens": 561930,
+    "functions_outside_box": 2,
+    "functions_not_target": 5,
+    "files_outside_box": 5,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 50,
+    "input_tokens": 1701,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.034482758620689655,
+    "chars": 0.0009593798568605254,
+    "input_tokens": 0.003027067428327372
+   },
+   "strict_reached_step": 2,
+   "strict_before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 50,
+    "input_tokens": 1701,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.034482758620689655,
+    "chars": 0.0009593798568605254,
+    "input_tokens": 0.003027067428327372
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/ascii/rst.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": [
+     "astropy/io/ascii/rst.py:RST.write"
+    ]
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "astropy__astropy-13033",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 30,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 6,
+    "search": 9,
+    "edit": 2,
+    "run": 8,
+    "other": 10
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 4,
+   "whole": {
+    "steps": 30,
+    "searches": 9,
+    "files": 11,
+    "production_files": 6,
+    "functions": 12,
+    "chars": 66172,
+    "input_tokens": 574942,
+    "functions_outside_box": 7,
+    "functions_not_target": 11,
+    "files_outside_box": 4,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 3,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1695,
+    "input_tokens": 6289,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.1,
+    "chars": 0.02561506377319712,
+    "input_tokens": 0.010938494665548873
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 4,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 3004,
+    "input_tokens": 9185,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.13333333333333333,
+    "chars": 0.04539684458683431,
+    "input_tokens": 0.015975524487687454
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/timeseries/core.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "astropy__astropy-14508",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 33,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 2,
+    "search": 8,
+    "edit": 3,
+    "run": 15,
+    "other": 13
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 33,
+    "searches": 8,
+    "files": 2,
+    "production_files": 1,
+    "functions": 2,
+    "chars": 53870,
+    "input_tokens": 582278,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 26,
+    "input_tokens": 2010,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.030303030303030304,
+    "chars": 0.00048264340077965474,
+    "input_tokens": 0.0034519593733577433
+   },
+   "strict_reached_step": 21,
+   "strict_before": {
+    "steps": 20,
+    "searches": 8,
+    "files": 2,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 12355,
+    "input_tokens": 192516,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.6060606060606061,
+    "chars": 0.22934843140894748,
+    "input_tokens": 0.3306255774733031
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/fits/card.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "django__django-13786",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 31,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 11,
+    "search": 9,
+    "edit": 3,
+    "run": 3,
+    "other": 7
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 31,
+    "searches": 9,
+    "files": 2,
+    "production_files": 1,
+    "functions": 31,
+    "chars": 21664,
+    "input_tokens": 290148,
+    "functions_outside_box": 27,
+    "functions_not_target": 30,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 720,
+    "input_tokens": 1260,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.03225806451612903,
+    "chars": 0.03323485967503693,
+    "input_tokens": 0.004342611356962654
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 911,
+    "input_tokens": 3036,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.06451612903225806,
+    "chars": 0.042051329394387,
+    "input_tokens": 0.010463625460110013
+   },
+   "own_patch": {
+    "production_files": [
+     "django/db/migrations/operations/models.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "django__django-15467",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 32,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 8,
+    "search": 10,
+    "edit": 3,
+    "run": 7,
+    "other": 8
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 32,
+    "searches": 10,
+    "files": 3,
+    "production_files": 1,
+    "functions": 4,
+    "chars": 43308,
+    "input_tokens": 486765,
+    "functions_outside_box": 2,
+    "functions_not_target": 3,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 102,
+    "input_tokens": 1314,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.03125,
+    "chars": 0.0023552230534774174,
+    "input_tokens": 0.0026994545622631046
+   },
+   "strict_reached_step": 8,
+   "strict_before": {
+    "steps": 7,
+    "searches": 4,
+    "files": 1,
+    "production_files": 1,
+    "functions": 2,
+    "chars": 18055,
+    "input_tokens": 29911,
+    "functions_outside_box": 1,
+    "functions_not_target": 2,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.21875,
+    "chars": 0.4168975708875958,
+    "input_tokens": 0.061448542931394
+   },
+   "own_patch": {
+    "production_files": [
+     "django/contrib/admin/options.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "django__django-12193",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 32,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 4,
+    "search": 7,
+    "edit": 3,
+    "run": 14,
+    "other": 11
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 32,
+    "searches": 7,
+    "files": 5,
+    "production_files": 2,
+    "functions": 25,
+    "chars": 73238,
+    "input_tokens": 744141,
+    "functions_outside_box": 22,
+    "functions_not_target": 24,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 838,
+    "input_tokens": 1262,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.03125,
+    "chars": 0.011442147519047489,
+    "input_tokens": 0.0016959151558642784
+   },
+   "strict_reached_step": 16,
+   "strict_before": {
+    "steps": 15,
+    "searches": 7,
+    "files": 5,
+    "production_files": 2,
+    "functions": 21,
+    "chars": 57817,
+    "input_tokens": 212554,
+    "functions_outside_box": 21,
+    "functions_not_target": 21,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.46875,
+    "chars": 0.7894399082443541,
+    "input_tokens": 0.2856367274481583
+   },
+   "own_patch": {
+    "production_files": [
+     "django/contrib/postgres/forms/array.py",
+     "django/forms/widgets.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": false,
+    "files_outside_box": [
+     "django/contrib/postgres/forms/array.py"
+    ],
+    "functions_outside_box": [
+     "django/contrib/postgres/forms/array.py:SplitArrayWidget.get_context"
+    ]
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "django__django-16116",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 43,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 18,
+    "search": 15,
+    "edit": 2,
+    "run": 4,
+    "other": 7
+   },
+   "has_box": false,
+   "target_in_box": null,
+   "reached_step": 2,
+   "whole": {
+    "steps": 43,
+    "searches": 15,
+    "files": 5,
+    "production_files": 3,
+    "functions": 7,
+    "chars": 54138,
+    "input_tokens": 623123
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 52,
+    "input_tokens": 1268
+   },
+   "share_before": {
+    "steps": 0.023255813953488372,
+    "chars": 0.0009605083305626362,
+    "input_tokens": 0.0020349112454523424
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 754,
+    "input_tokens": 2778
+   },
+   "strict_share_before": {
+    "steps": 0.046511627906976744,
+    "chars": 0.013927370793158225,
+    "input_tokens": 0.0044581888327023715
+   },
+   "own_patch": {
+    "production_files": [
+     "django/core/management/commands/makemigrations.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": null,
+    "functions_outside_box": null
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "django__django-14752",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 14,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 2,
+    "search": 2,
+    "edit": 4,
+    "run": 3,
+    "other": 5
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 14,
+    "searches": 2,
+    "files": 4,
+    "production_files": 3,
+    "functions": 5,
+    "chars": 12556,
+    "input_tokens": 87000,
+    "functions_outside_box": 0,
+    "functions_not_target": 3,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 2,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 195,
+    "input_tokens": 1836,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.07142857142857142,
+    "chars": 0.015530423701815866,
+    "input_tokens": 0.02110344827586207
+   },
+   "strict_reached_step": 2,
+   "strict_before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 2,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 195,
+    "input_tokens": 1836,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.07142857142857142,
+    "chars": 0.015530423701815866,
+    "input_tokens": 0.02110344827586207
+   },
+   "own_patch": {
+    "production_files": [
+     "django/contrib/admin/views/autocomplete.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "matplotlib__matplotlib-24570",
+   "resolved": null,
+   "status": "record missing"
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "matplotlib__matplotlib-21568",
+   "resolved": null,
+   "status": "record missing"
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "matplotlib__matplotlib-23412",
+   "resolved": null,
+   "status": "record missing"
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "matplotlib__matplotlib-26113",
+   "resolved": null,
+   "status": "record missing"
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "matplotlib__matplotlib-13989",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 44,
+   "only_other_steps": 16,
+   "class_counts": {
+    "view": 5,
+    "search": 8,
+    "edit": 2,
+    "run": 13,
+    "other": 21
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 44,
+    "searches": 8,
+    "files": 3,
+    "production_files": 2,
+    "functions": 1,
+    "chars": 123629,
+    "input_tokens": 749618,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 31699,
+    "input_tokens": 1596,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.022727272727272728,
+    "chars": 0.2564042417232203,
+    "input_tokens": 0.002129084413661358
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 3,
+    "files": 2,
+    "production_files": 2,
+    "functions": 0,
+    "chars": 33634,
+    "input_tokens": 12953,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.06818181818181818,
+    "chars": 0.2720559092122398,
+    "input_tokens": 0.017279467675536075
+   },
+   "own_patch": {
+    "production_files": [
+     "lib/matplotlib/axes/_axes.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "scikit-learn__scikit-learn-11578",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 34,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 10,
+    "search": 13,
+    "edit": 3,
+    "run": 4,
+    "other": 6
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 34,
+    "searches": 13,
+    "files": 10,
+    "production_files": 7,
+    "functions": 9,
+    "chars": 42321,
+    "input_tokens": 548349,
+    "functions_outside_box": 4,
+    "functions_not_target": 8,
+    "files_outside_box": 5,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 793,
+    "input_tokens": 3205,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.029411764705882353,
+    "chars": 0.01873774249190709,
+    "input_tokens": 0.005844817807637107
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 921,
+    "input_tokens": 6883,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.058823529411764705,
+    "chars": 0.021762245693627277,
+    "input_tokens": 0.012552224951627522
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/linear_model/logistic.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "scikit-learn__scikit-learn-14087",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 34,
+   "only_other_steps": 8,
+   "class_counts": {
+    "view": 5,
+    "search": 8,
+    "edit": 5,
+    "run": 10,
+    "other": 14
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 34,
+    "searches": 8,
+    "files": 1,
+    "production_files": 1,
+    "functions": 2,
+    "chars": 31649,
+    "input_tokens": 483799,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 523,
+    "input_tokens": 1891,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.029411764705882353,
+    "chars": 0.016525008689058106,
+    "input_tokens": 0.003908648012914454
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1778,
+    "input_tokens": 4171,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.058823529411764705,
+    "chars": 0.056178710227811304,
+    "input_tokens": 0.008621348948633627
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/linear_model/logistic.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "scikit-learn__scikit-learn-12585",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 37,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 9,
+    "search": 7,
+    "edit": 3,
+    "run": 12,
+    "other": 15
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 37,
+    "searches": 7,
+    "files": 3,
+    "production_files": 2,
+    "functions": 9,
+    "chars": 22959,
+    "input_tokens": 373601,
+    "functions_outside_box": 7,
+    "functions_not_target": 8,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 305,
+    "input_tokens": 1449,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.02702702702702703,
+    "chars": 0.013284550720850212,
+    "input_tokens": 0.003878469276045835
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 341,
+    "input_tokens": 3137,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.05405405405405406,
+    "chars": 0.014852563264950564,
+    "input_tokens": 0.008396658467188256
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/base.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "scikit-learn__scikit-learn-14894",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 37,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 5,
+    "search": 7,
+    "edit": 2,
+    "run": 19,
+    "other": 21
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 37,
+    "searches": 7,
+    "files": 1,
+    "production_files": 1,
+    "functions": 8,
+    "chars": 16642,
+    "input_tokens": 356576,
+    "functions_outside_box": 5,
+    "functions_not_target": 7,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 22,
+    "input_tokens": 1777,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.02702702702702703,
+    "chars": 0.001321956495613508,
+    "input_tokens": 0.004983509826797092
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 166,
+    "input_tokens": 3662,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.05405405405405406,
+    "chars": 0.009974762648720105,
+    "input_tokens": 0.010269900385892488
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/svm/base.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "scikit-learn__scikit-learn-13124",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 26,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 6,
+    "search": 7,
+    "edit": 2,
+    "run": 8,
+    "other": 9
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 26,
+    "searches": 7,
+    "files": 2,
+    "production_files": 1,
+    "functions": 8,
+    "chars": 25208,
+    "input_tokens": 392946,
+    "functions_outside_box": 0,
+    "functions_not_target": 7,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1727,
+    "input_tokens": 8470,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.07692307692307693,
+    "chars": 0.06850999682640431,
+    "input_tokens": 0.021555124622721696
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1727,
+    "input_tokens": 8470,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.07692307692307693,
+    "chars": 0.06850999682640431,
+    "input_tokens": 0.021555124622721696
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/model_selection/_split.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sphinx-doc__sphinx-7454",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 51,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 12,
+    "search": 13,
+    "edit": 10,
+    "run": 17,
+    "other": 19
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 5,
+   "whole": {
+    "steps": 51,
+    "searches": 13,
+    "files": 17,
+    "production_files": 17,
+    "functions": 30,
+    "chars": 124408,
+    "input_tokens": 1400017,
+    "functions_outside_box": 25,
+    "functions_not_target": 29,
+    "files_outside_box": 13,
+    "files_outside_rival": 9
+   },
+   "before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 14,
+    "production_files": 14,
+    "functions": 5,
+    "chars": 29498,
+    "input_tokens": 21891,
+    "functions_outside_box": 5,
+    "functions_not_target": 5,
+    "files_outside_box": 12,
+    "files_outside_rival": 8
+   },
+   "share_before": {
+    "steps": 0.0784313725490196,
+    "chars": 0.23710693846054917,
+    "input_tokens": 0.01563623870281575
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 14,
+    "production_files": 14,
+    "functions": 5,
+    "chars": 29498,
+    "input_tokens": 21891,
+    "functions_outside_box": 5,
+    "functions_not_target": 5,
+    "files_outside_box": 12,
+    "files_outside_rival": 8
+   },
+   "strict_share_before": {
+    "steps": 0.0784313725490196,
+    "chars": 0.23710693846054917,
+    "input_tokens": 0.01563623870281575
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/domains/python.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sphinx-doc__sphinx-9320",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 24,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 7,
+    "search": 6,
+    "edit": 3,
+    "run": 3,
+    "other": 7
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 4,
+   "whole": {
+    "steps": 24,
+    "searches": 6,
+    "files": 2,
+    "production_files": 1,
+    "functions": 14,
+    "chars": 30443,
+    "input_tokens": 238309,
+    "functions_outside_box": 10,
+    "functions_not_target": 12,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 3,
+    "searches": 3,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 349,
+    "input_tokens": 4726,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.125,
+    "chars": 0.011464047564300497,
+    "input_tokens": 0.01983139537323391
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 3,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 349,
+    "input_tokens": 4726,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.125,
+    "chars": 0.011464047564300497,
+    "input_tokens": 0.01983139537323391
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/cmd/quickstart.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": [
+     "sphinx/cmd/quickstart.py:allow_empty"
+    ]
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sphinx-doc__sphinx-10614",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 49,
+   "only_other_steps": 12,
+   "class_counts": {
+    "view": 8,
+    "search": 18,
+    "edit": 7,
+    "run": 6,
+    "other": 14
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 49,
+    "searches": 18,
+    "files": 7,
+    "production_files": 5,
+    "functions": 4,
+    "chars": 47081,
+    "input_tokens": 1493556,
+    "functions_outside_box": 1,
+    "functions_not_target": 3,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 76,
+    "input_tokens": 4344,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.04081632653061224,
+    "chars": 0.0016142392897347125,
+    "input_tokens": 0.002908494894064903
+   },
+   "strict_reached_step": 19,
+   "strict_before": {
+    "steps": 18,
+    "searches": 11,
+    "files": 6,
+    "production_files": 5,
+    "functions": 0,
+    "chars": 31503,
+    "input_tokens": 249687,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.3673469387755102,
+    "chars": 0.6691234255856927,
+    "input_tokens": 0.16717618890754682
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/ext/graphviz.py",
+     "sphinx/ext/inheritance_diagram.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": false,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sphinx-doc__sphinx-8595",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 43,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 14,
+    "search": 14,
+    "edit": 6,
+    "run": 5,
+    "other": 6
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 43,
+    "searches": 14,
+    "files": 8,
+    "production_files": 4,
+    "functions": 17,
+    "chars": 52002,
+    "input_tokens": 704351,
+    "functions_outside_box": 1,
+    "functions_not_target": 16,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 977,
+    "input_tokens": 3072,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.046511627906976744,
+    "chars": 0.018787738933117956,
+    "input_tokens": 0.0043614618279806516
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 3,
+    "files": 2,
+    "production_files": 2,
+    "functions": 0,
+    "chars": 2523,
+    "input_tokens": 5016,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.06976744186046512,
+    "chars": 0.048517364716741666,
+    "input_tokens": 0.007121449390999658
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/ext/autodoc/__init__.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sphinx-doc__sphinx-11445",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 41,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 6,
+    "search": 5,
+    "edit": 6,
+    "run": 24,
+    "other": 25
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 1,
+   "whole": {
+    "steps": 41,
+    "searches": 5,
+    "files": 9,
+    "production_files": 4,
+    "functions": 10,
+    "chars": 26559,
+    "input_tokens": 722374,
+    "functions_outside_box": 8,
+    "functions_not_target": 9,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 0,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 0,
+    "input_tokens": 0,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.0,
+    "chars": 0.0,
+    "input_tokens": 0.0
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 4,
+    "production_files": 4,
+    "functions": 3,
+    "chars": 1240,
+    "input_tokens": 3666,
+    "functions_outside_box": 2,
+    "functions_not_target": 3,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.04878048780487805,
+    "chars": 0.04668850483828457,
+    "input_tokens": 0.005074933483209528
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/util/rst.py"
+    ],
+    "functions": 0,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sympy__sympy-12481",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 36,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 6,
+    "search": 7,
+    "edit": 3,
+    "run": 15,
+    "other": 17
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 36,
+    "searches": 7,
+    "files": 4,
+    "production_files": 3,
+    "functions": 13,
+    "chars": 30689,
+    "input_tokens": 524937,
+    "functions_outside_box": 5,
+    "functions_not_target": 12,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 3,
+    "production_files": 3,
+    "functions": 0,
+    "chars": 208,
+    "input_tokens": 1185,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "share_before": {
+    "steps": 0.027777777777777776,
+    "chars": 0.006777672781778488,
+    "input_tokens": 0.0022574137467924723
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 3,
+    "production_files": 3,
+    "functions": 0,
+    "chars": 251,
+    "input_tokens": 2634,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.05555555555555555,
+    "chars": 0.008178826289550002,
+    "input_tokens": 0.005017744986541242
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/combinatorics/permutations.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sympy__sympy-12096",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 45,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 8,
+    "search": 12,
+    "edit": 2,
+    "run": 19,
+    "other": 19
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 45,
+    "searches": 12,
+    "files": 31,
+    "production_files": 20,
+    "functions": 8,
+    "chars": 186788,
+    "input_tokens": 769321,
+    "functions_outside_box": 5,
+    "functions_not_target": 7,
+    "files_outside_box": 12,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 665,
+    "input_tokens": 1312,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.022222222222222223,
+    "chars": 0.003560185879178534,
+    "input_tokens": 0.0017053999565850926
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 702,
+    "input_tokens": 2961,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.044444444444444446,
+    "chars": 0.0037582714092982417,
+    "input_tokens": 0.003848848530067423
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/core/function.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sympy__sympy-16597",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 68,
+   "only_other_steps": 13,
+   "class_counts": {
+    "view": 4,
+    "search": 13,
+    "edit": 7,
+    "run": 37,
+    "other": 40
+   },
+   "has_box": true,
+   "target_in_box": false,
+   "reached_step": 7,
+   "whole": {
+    "steps": 68,
+    "searches": 13,
+    "files": 13,
+    "production_files": 8,
+    "functions": 2,
+    "chars": 81684,
+    "input_tokens": 2314904,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 6,
+    "files_outside_rival": 3
+   },
+   "before": {
+    "steps": 6,
+    "searches": 4,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 23166,
+    "input_tokens": 38381,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.08823529411764706,
+    "chars": 0.28360511238431024,
+    "input_tokens": 0.01657995320756282
+   },
+   "strict_reached_step": 13,
+   "strict_before": {
+    "steps": 12,
+    "searches": 7,
+    "files": 5,
+    "production_files": 4,
+    "functions": 0,
+    "chars": 35095,
+    "input_tokens": 121807,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 2,
+    "files_outside_rival": 2
+   },
+   "strict_share_before": {
+    "steps": 0.17647058823529413,
+    "chars": 0.42964350423583564,
+    "input_tokens": 0.05261859671070593
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/assumptions/ask.py",
+     "sympy/assumptions/ask_generated.py",
+     "sympy/core/assumptions.py"
+    ],
+    "functions": 3,
+    "same_files_as_fix": false,
+    "files_outside_box": [
+     "sympy/assumptions/ask_generated.py"
+    ],
+    "functions_outside_box": [
+     "sympy/assumptions/ask.py:get_known_facts",
+     "sympy/assumptions/ask_generated.py:get_known_facts_cnf",
+     "sympy/assumptions/ask_generated.py:get_known_facts_dict"
+    ]
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sympy__sympy-22914",
+   "resolved": true,
+   "status": "measured",
+   "file_target": true,
+   "steps": 49,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 15,
+    "search": 13,
+    "edit": 2,
+    "run": 15,
+    "other": 14
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 1,
+   "whole": {
+    "steps": 49,
+    "searches": 13,
+    "files": 31,
+    "production_files": 26,
+    "functions": 49,
+    "chars": 39024,
+    "input_tokens": 695876,
+    "functions_outside_box": 34,
+    "functions_not_target": 49,
+    "files_outside_box": 22,
+    "files_outside_rival": 7
+   },
+   "before": {
+    "steps": 0,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 0,
+    "input_tokens": 0,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.0,
+    "chars": 0.0,
+    "input_tokens": 0.0
+   },
+   "strict_reached_step": 2,
+   "strict_before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 81,
+    "input_tokens": 1286,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.02040816326530612,
+    "chars": 0.0020756457564575647,
+    "input_tokens": 0.0018480303962200163
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/printing/pycode.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gemini-3-5-flash",
+   "instance_id": "sympy__sympy-16766",
+   "resolved": true,
+   "status": "measured",
+   "file_target": true,
+   "steps": 55,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 14,
+    "search": 18,
+    "edit": 2,
+    "run": 18,
+    "other": 18
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 55,
+    "searches": 18,
+    "files": 23,
+    "production_files": 16,
+    "functions": 40,
+    "chars": 34826,
+    "input_tokens": 710679,
+    "functions_outside_box": 34,
+    "functions_not_target": 40,
+    "files_outside_box": 13,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 1,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 65,
+    "input_tokens": 1255,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.01818181818181818,
+    "chars": 0.0018664216390053409,
+    "input_tokens": 0.0017659168203928918
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 17,
+    "production_files": 12,
+    "functions": 6,
+    "chars": 3419,
+    "input_tokens": 6788,
+    "functions_outside_box": 6,
+    "functions_not_target": 6,
+    "files_outside_box": 10,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.07272727272727272,
+    "chars": 0.09817377821168093,
+    "input_tokens": 0.009551428985519483
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/printing/pycode.py"
+    ],
+    "functions": 0,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "astropy__astropy-14539",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 59,
+   "only_other_steps": 10,
+   "class_counts": {
+    "view": 9,
+    "search": 9,
+    "edit": 6,
+    "run": 26,
+    "other": 21
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 31,
+   "whole": {
+    "steps": 59,
+    "searches": 9,
+    "files": 9,
+    "production_files": 7,
+    "functions": 20,
+    "chars": 73624,
+    "input_tokens": 1104716,
+    "functions_outside_box": 14,
+    "functions_not_target": 19,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 30,
+    "searches": 8,
+    "files": 9,
+    "production_files": 7,
+    "functions": 17,
+    "chars": 42310,
+    "input_tokens": 154317,
+    "functions_outside_box": 13,
+    "functions_not_target": 17,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "share_before": {
+    "steps": 0.5084745762711864,
+    "chars": 0.5746767358470064,
+    "input_tokens": 0.13968929571039074
+   },
+   "strict_reached_step": 31,
+   "strict_before": {
+    "steps": 30,
+    "searches": 8,
+    "files": 9,
+    "production_files": 7,
+    "functions": 17,
+    "chars": 42310,
+    "input_tokens": 154317,
+    "functions_outside_box": 13,
+    "functions_not_target": 17,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "strict_share_before": {
+    "steps": 0.5084745762711864,
+    "chars": 0.5746767358470064,
+    "input_tokens": 0.13968929571039074
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/fits/diff.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "astropy__astropy-7166",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 42,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 12,
+    "search": 4,
+    "edit": 8,
+    "run": 11,
+    "other": 7
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 42,
+    "searches": 4,
+    "files": 8,
+    "production_files": 8,
+    "functions": 39,
+    "chars": 50708,
+    "input_tokens": 798886,
+    "functions_outside_box": 35,
+    "functions_not_target": 38,
+    "files_outside_box": 5,
+    "files_outside_rival": 5
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 2188,
+    "input_tokens": 3280,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.047619047619047616,
+    "chars": 0.04314901001814309,
+    "input_tokens": 0.004105717211216619
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 2188,
+    "input_tokens": 3280,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.047619047619047616,
+    "chars": 0.04314901001814309,
+    "input_tokens": 0.004105717211216619
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/utils/misc.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "astropy__astropy-14182",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 28,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 7,
+    "search": 5,
+    "edit": 5,
+    "run": 8,
+    "other": 7
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 4,
+   "whole": {
+    "steps": 28,
+    "searches": 5,
+    "files": 14,
+    "production_files": 6,
+    "functions": 17,
+    "chars": 43060,
+    "input_tokens": 437865,
+    "functions_outside_box": 7,
+    "functions_not_target": 15,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 2051,
+    "input_tokens": 6843,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.10714285714285714,
+    "chars": 0.04763121226196006,
+    "input_tokens": 0.015628104552773116
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 2051,
+    "input_tokens": 6843,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.10714285714285714,
+    "chars": 0.04763121226196006,
+    "input_tokens": 0.015628104552773116
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/ascii/rst.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": [
+     "astropy/io/ascii/rst.py:RST.write"
+    ]
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "astropy__astropy-13033",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 35,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 5,
+    "search": 5,
+    "edit": 5,
+    "run": 15,
+    "other": 15
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 5,
+   "whole": {
+    "steps": 35,
+    "searches": 5,
+    "files": 3,
+    "production_files": 3,
+    "functions": 11,
+    "chars": 299752,
+    "input_tokens": 547138,
+    "functions_outside_box": 3,
+    "functions_not_target": 10,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 4,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 3,
+    "chars": 11894,
+    "input_tokens": 10530,
+    "functions_outside_box": 2,
+    "functions_not_target": 3,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.11428571428571428,
+    "chars": 0.03967946836051136,
+    "input_tokens": 0.019245601658082603
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 3,
+    "chars": 11894,
+    "input_tokens": 10530,
+    "functions_outside_box": 2,
+    "functions_not_target": 3,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.11428571428571428,
+    "chars": 0.03967946836051136,
+    "input_tokens": 0.019245601658082603
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/timeseries/core.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "astropy__astropy-14508",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 43,
+   "only_other_steps": 13,
+   "class_counts": {
+    "view": 4,
+    "search": 5,
+    "edit": 7,
+    "run": 14,
+    "other": 20
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 4,
+   "whole": {
+    "steps": 43,
+    "searches": 5,
+    "files": 2,
+    "production_files": 2,
+    "functions": 18,
+    "chars": 48353,
+    "input_tokens": 714230,
+    "functions_outside_box": 8,
+    "functions_not_target": 17,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 3,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 2999,
+    "input_tokens": 1793,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.06976744186046512,
+    "chars": 0.06202303890141253,
+    "input_tokens": 0.0025103958108732482
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 2999,
+    "input_tokens": 1793,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.06976744186046512,
+    "chars": 0.06202303890141253,
+    "input_tokens": 0.0025103958108732482
+   },
+   "own_patch": {
+    "production_files": [
+     "astropy/io/fits/card.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "django__django-13786",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 33,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 9,
+    "search": 3,
+    "edit": 6,
+    "run": 11,
+    "other": 5
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 33,
+    "searches": 3,
+    "files": 2,
+    "production_files": 2,
+    "functions": 69,
+    "chars": 43598,
+    "input_tokens": 391975,
+    "functions_outside_box": 62,
+    "functions_not_target": 68,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 1,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 190,
+    "input_tokens": 1190,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.030303030303030304,
+    "chars": 0.004357998073306115,
+    "input_tokens": 0.003035907902289687
+   },
+   "strict_reached_step": 2,
+   "strict_before": {
+    "steps": 1,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 190,
+    "input_tokens": 1190,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.030303030303030304,
+    "chars": 0.004357998073306115,
+    "input_tokens": 0.003035907902289687
+   },
+   "own_patch": {
+    "production_files": [
+     "django/db/migrations/operations/models.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "django__django-15467",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 21,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 1,
+    "search": 4,
+    "edit": 3,
+    "run": 9,
+    "other": 4
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 21,
+    "searches": 4,
+    "files": 1,
+    "production_files": 1,
+    "functions": 4,
+    "chars": 12114,
+    "input_tokens": 137910,
+    "functions_outside_box": 2,
+    "functions_not_target": 3,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1853,
+    "input_tokens": 3477,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.09523809523809523,
+    "chars": 0.1529635132904078,
+    "input_tokens": 0.02521209484446378
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1935,
+    "input_tokens": 5801,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.14285714285714285,
+    "chars": 0.15973254086181277,
+    "input_tokens": 0.042063664708868104
+   },
+   "own_patch": {
+    "production_files": [
+     "django/contrib/admin/options.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "django__django-12193",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 31,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 4,
+    "search": 8,
+    "edit": 3,
+    "run": 9,
+    "other": 12
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 8,
+   "whole": {
+    "steps": 31,
+    "searches": 8,
+    "files": 3,
+    "production_files": 3,
+    "functions": 38,
+    "chars": 22362,
+    "input_tokens": 241096,
+    "functions_outside_box": 31,
+    "functions_not_target": 37,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 7,
+    "searches": 6,
+    "files": 3,
+    "production_files": 3,
+    "functions": 0,
+    "chars": 3337,
+    "input_tokens": 3710,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "share_before": {
+    "steps": 0.22580645161290322,
+    "chars": 0.14922636615687326,
+    "input_tokens": 0.015388061187244916
+   },
+   "strict_reached_step": 13,
+   "strict_before": {
+    "steps": 12,
+    "searches": 8,
+    "files": 3,
+    "production_files": 3,
+    "functions": 29,
+    "chars": 15573,
+    "input_tokens": 24562,
+    "functions_outside_box": 27,
+    "functions_not_target": 29,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.3870967741935484,
+    "chars": 0.6964046149718272,
+    "input_tokens": 0.10187643096525865
+   },
+   "own_patch": {
+    "production_files": [
+     "django/forms/widgets.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "django__django-16116",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 29,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 10,
+    "search": 7,
+    "edit": 6,
+    "run": 2,
+    "other": 5
+   },
+   "has_box": false,
+   "target_in_box": null,
+   "reached_step": 4,
+   "whole": {
+    "steps": 29,
+    "searches": 7,
+    "files": 6,
+    "production_files": 6,
+    "functions": 36,
+    "chars": 52303,
+    "input_tokens": 350505
+   },
+   "before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1972,
+    "input_tokens": 5909
+   },
+   "share_before": {
+    "steps": 0.10344827586206896,
+    "chars": 0.0377033822151693,
+    "input_tokens": 0.01685853268854938
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 4,
+    "production_files": 4,
+    "functions": 0,
+    "chars": 2291,
+    "input_tokens": 8481
+   },
+   "strict_share_before": {
+    "steps": 0.13793103448275862,
+    "chars": 0.0438024587499761,
+    "input_tokens": 0.02419651645482946
+   },
+   "own_patch": {
+    "production_files": [
+     "django/core/management/commands/makemigrations.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": null,
+    "functions_outside_box": null
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "django__django-14752",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 20,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 4,
+    "search": 4,
+    "edit": 3,
+    "run": 5,
+    "other": 5
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 5,
+   "whole": {
+    "steps": 20,
+    "searches": 4,
+    "files": 4,
+    "production_files": 3,
+    "functions": 5,
+    "chars": 33522,
+    "input_tokens": 162923,
+    "functions_outside_box": 0,
+    "functions_not_target": 3,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 4,
+    "production_files": 3,
+    "functions": 0,
+    "chars": 2620,
+    "input_tokens": 1659,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.2,
+    "chars": 0.078157627826502,
+    "input_tokens": 0.010182724354449647
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 3,
+    "files": 4,
+    "production_files": 3,
+    "functions": 0,
+    "chars": 2620,
+    "input_tokens": 1659,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.2,
+    "chars": 0.078157627826502,
+    "input_tokens": 0.010182724354449647
+   },
+   "own_patch": {
+    "production_files": [
+     "django/contrib/admin/views/autocomplete.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "matplotlib__matplotlib-24570",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 30,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 6,
+    "search": 8,
+    "edit": 3,
+    "run": 8,
+    "other": 10
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 6,
+   "whole": {
+    "steps": 30,
+    "searches": 8,
+    "files": 2,
+    "production_files": 2,
+    "functions": 26,
+    "chars": 30986,
+    "input_tokens": 321749,
+    "functions_outside_box": 18,
+    "functions_not_target": 25,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 5,
+    "searches": 2,
+    "files": 2,
+    "production_files": 2,
+    "functions": 7,
+    "chars": 7278,
+    "input_tokens": 3557,
+    "functions_outside_box": 5,
+    "functions_not_target": 7,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.16666666666666666,
+    "chars": 0.2348802685083586,
+    "input_tokens": 0.011055201414767412
+   },
+   "strict_reached_step": 7,
+   "strict_before": {
+    "steps": 6,
+    "searches": 3,
+    "files": 2,
+    "production_files": 2,
+    "functions": 7,
+    "chars": 7343,
+    "input_tokens": 7246,
+    "functions_outside_box": 5,
+    "functions_not_target": 7,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.2,
+    "chars": 0.23697799006002712,
+    "input_tokens": 0.022520660514873395
+   },
+   "own_patch": {
+    "production_files": [
+     "lib/matplotlib/offsetbox.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "matplotlib__matplotlib-21568",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 68,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 17,
+    "search": 17,
+    "edit": 3,
+    "run": 24,
+    "other": 15
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 35,
+   "whole": {
+    "steps": 68,
+    "searches": 17,
+    "files": 10,
+    "production_files": 10,
+    "functions": 80,
+    "chars": 94760,
+    "input_tokens": 2308714,
+    "functions_outside_box": 72,
+    "functions_not_target": 79,
+    "files_outside_box": 7,
+    "files_outside_rival": 5
+   },
+   "before": {
+    "steps": 34,
+    "searches": 14,
+    "files": 10,
+    "production_files": 10,
+    "functions": 75,
+    "chars": 72808,
+    "input_tokens": 501221,
+    "functions_outside_box": 70,
+    "functions_not_target": 75,
+    "files_outside_box": 7,
+    "files_outside_rival": 5
+   },
+   "share_before": {
+    "steps": 0.5,
+    "chars": 0.7683410721823555,
+    "input_tokens": 0.21709964941521556
+   },
+   "strict_reached_step": 36,
+   "strict_before": {
+    "steps": 35,
+    "searches": 15,
+    "files": 10,
+    "production_files": 10,
+    "functions": 75,
+    "chars": 72836,
+    "input_tokens": 533845,
+    "functions_outside_box": 70,
+    "functions_not_target": 75,
+    "files_outside_box": 7,
+    "files_outside_rival": 5
+   },
+   "strict_share_before": {
+    "steps": 0.5147058823529411,
+    "chars": 0.7686365555086534,
+    "input_tokens": 0.23123045990105315
+   },
+   "own_patch": {
+    "production_files": [
+     "lib/matplotlib/dates.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "matplotlib__matplotlib-23412",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 38,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 5,
+    "search": 8,
+    "edit": 6,
+    "run": 15,
+    "other": 11
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 19,
+   "whole": {
+    "steps": 38,
+    "searches": 8,
+    "files": 7,
+    "production_files": 6,
+    "functions": 27,
+    "chars": 26257,
+    "input_tokens": 303043,
+    "functions_outside_box": 20,
+    "functions_not_target": 26,
+    "files_outside_box": 3,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 18,
+    "searches": 2,
+    "files": 7,
+    "production_files": 6,
+    "functions": 0,
+    "chars": 5623,
+    "input_tokens": 67755,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 3,
+    "files_outside_rival": 2
+   },
+   "share_before": {
+    "steps": 0.47368421052631576,
+    "chars": 0.21415241649845757,
+    "input_tokens": 0.22358213190867302
+   },
+   "strict_reached_step": 19,
+   "strict_before": {
+    "steps": 18,
+    "searches": 2,
+    "files": 7,
+    "production_files": 6,
+    "functions": 0,
+    "chars": 5623,
+    "input_tokens": 67755,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 3,
+    "files_outside_rival": 2
+   },
+   "strict_share_before": {
+    "steps": 0.47368421052631576,
+    "chars": 0.21415241649845757,
+    "input_tokens": 0.22358213190867302
+   },
+   "own_patch": {
+    "production_files": [
+     "lib/matplotlib/patches.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "matplotlib__matplotlib-26113",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 37,
+   "only_other_steps": 8,
+   "class_counts": {
+    "view": 5,
+    "search": 5,
+    "edit": 5,
+    "run": 14,
+    "other": 10
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 37,
+    "searches": 5,
+    "files": 4,
+    "production_files": 4,
+    "functions": 2,
+    "chars": 27336,
+    "input_tokens": 412757,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 2,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 64,
+    "input_tokens": 3700,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.05405405405405406,
+    "chars": 0.002341235001463272,
+    "input_tokens": 0.008964112056246169
+   },
+   "strict_reached_step": 6,
+   "strict_before": {
+    "steps": 5,
+    "searches": 1,
+    "files": 3,
+    "production_files": 3,
+    "functions": 0,
+    "chars": 2619,
+    "input_tokens": 7955,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.13513513513513514,
+    "chars": 0.09580772607550483,
+    "input_tokens": 0.019272840920929263
+   },
+   "own_patch": {
+    "production_files": [
+     "lib/matplotlib/axes/_axes.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "matplotlib__matplotlib-13989",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 30,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 4,
+    "search": 5,
+    "edit": 3,
+    "run": 11,
+    "other": 9
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 15,
+   "whole": {
+    "steps": 30,
+    "searches": 5,
+    "files": 1,
+    "production_files": 1,
+    "functions": 1,
+    "chars": 92094,
+    "input_tokens": 301467,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 14,
+    "searches": 3,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 71747,
+    "input_tokens": 66261,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.4666666666666667,
+    "chars": 0.7790626968097814,
+    "input_tokens": 0.21979520146483694
+   },
+   "strict_reached_step": 16,
+   "strict_before": {
+    "steps": 15,
+    "searches": 4,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 71825,
+    "input_tokens": 75658,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.5,
+    "chars": 0.7799096575238343,
+    "input_tokens": 0.2509661090600298
+   },
+   "own_patch": {
+    "production_files": [
+     "lib/matplotlib/axes/_axes.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "scikit-learn__scikit-learn-11578",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 42,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 11,
+    "search": 8,
+    "edit": 5,
+    "run": 12,
+    "other": 11
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 42,
+    "searches": 8,
+    "files": 5,
+    "production_files": 5,
+    "functions": 9,
+    "chars": 158622,
+    "input_tokens": 851866,
+    "functions_outside_box": 7,
+    "functions_not_target": 8,
+    "files_outside_box": 4,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1722,
+    "input_tokens": 6612,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.047619047619047616,
+    "chars": 0.010855997276544238,
+    "input_tokens": 0.007761784130367922
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1794,
+    "input_tokens": 10523,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.07142857142857142,
+    "chars": 0.011309906570337027,
+    "input_tokens": 0.012352881791267641
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/linear_model/logistic.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "scikit-learn__scikit-learn-14087",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 18,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 3,
+    "search": 4,
+    "edit": 3,
+    "run": 4,
+    "other": 6
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 5,
+   "whole": {
+    "steps": 18,
+    "searches": 4,
+    "files": 1,
+    "production_files": 1,
+    "functions": 2,
+    "chars": 47486,
+    "input_tokens": 190981,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 4,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 29490,
+    "input_tokens": 11127,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.2222222222222222,
+    "chars": 0.621025144253043,
+    "input_tokens": 0.05826234023279803
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 29490,
+    "input_tokens": 11127,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.2222222222222222,
+    "chars": 0.621025144253043,
+    "input_tokens": 0.05826234023279803
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/linear_model/logistic.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "scikit-learn__scikit-learn-12585",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 20,
+   "only_other_steps": 3,
+   "class_counts": {
+    "view": 3,
+    "search": 4,
+    "edit": 2,
+    "run": 8,
+    "other": 5
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 20,
+    "searches": 4,
+    "files": 13,
+    "production_files": 3,
+    "functions": 4,
+    "chars": 18263,
+    "input_tokens": 154423,
+    "functions_outside_box": 3,
+    "functions_not_target": 3,
+    "files_outside_box": 2,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1717,
+    "input_tokens": 3897,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.1,
+    "chars": 0.0940152220336199,
+    "input_tokens": 0.0252358780751572
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 2,
+    "production_files": 2,
+    "functions": 0,
+    "chars": 1848,
+    "input_tokens": 6508,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.15,
+    "chars": 0.10118819471061709,
+    "input_tokens": 0.04214398114270543
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/base.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "scikit-learn__scikit-learn-14894",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 31,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 6,
+    "search": 4,
+    "edit": 4,
+    "run": 12,
+    "other": 9
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 5,
+   "whole": {
+    "steps": 31,
+    "searches": 4,
+    "files": 2,
+    "production_files": 2,
+    "functions": 18,
+    "chars": 183168,
+    "input_tokens": 348719,
+    "functions_outside_box": 13,
+    "functions_not_target": 17,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 4,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1808,
+    "input_tokens": 8348,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.12903225806451613,
+    "chars": 0.009870719776380153,
+    "input_tokens": 0.023939045477877605
+   },
+   "strict_reached_step": 6,
+   "strict_before": {
+    "steps": 5,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1900,
+    "input_tokens": 11062,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.16129032258064516,
+    "chars": 0.010372990915443745,
+    "input_tokens": 0.031721816132760185
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/svm/base.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "scikit-learn__scikit-learn-13124",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 26,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 9,
+    "search": 3,
+    "edit": 3,
+    "run": 6,
+    "other": 7
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 6,
+   "whole": {
+    "steps": 26,
+    "searches": 3,
+    "files": 6,
+    "production_files": 6,
+    "functions": 17,
+    "chars": 34998,
+    "input_tokens": 398502,
+    "functions_outside_box": 8,
+    "functions_not_target": 16,
+    "files_outside_box": 3,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 5,
+    "searches": 1,
+    "files": 2,
+    "production_files": 2,
+    "functions": 1,
+    "chars": 3583,
+    "input_tokens": 22695,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.19230769230769232,
+    "chars": 0.1023772787016401,
+    "input_tokens": 0.05695078067362272
+   },
+   "strict_reached_step": 6,
+   "strict_before": {
+    "steps": 5,
+    "searches": 1,
+    "files": 2,
+    "production_files": 2,
+    "functions": 1,
+    "chars": 3583,
+    "input_tokens": 22695,
+    "functions_outside_box": 1,
+    "functions_not_target": 1,
+    "files_outside_box": 1,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.19230769230769232,
+    "chars": 0.1023772787016401,
+    "input_tokens": 0.05695078067362272
+   },
+   "own_patch": {
+    "production_files": [
+     "sklearn/model_selection/_split.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sphinx-doc__sphinx-7454",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 48,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 7,
+    "search": 10,
+    "edit": 7,
+    "run": 22,
+    "other": 8
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 4,
+   "whole": {
+    "steps": 48,
+    "searches": 10,
+    "files": 1,
+    "production_files": 1,
+    "functions": 23,
+    "chars": 38266,
+    "input_tokens": 679537,
+    "functions_outside_box": 20,
+    "functions_not_target": 22,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1856,
+    "input_tokens": 7940,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.0625,
+    "chars": 0.04850258715308629,
+    "input_tokens": 0.011684426307912594
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1856,
+    "input_tokens": 7940,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.0625,
+    "chars": 0.04850258715308629,
+    "input_tokens": 0.011684426307912594
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/domains/python.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sphinx-doc__sphinx-9320",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 28,
+   "only_other_steps": 7,
+   "class_counts": {
+    "view": 7,
+    "search": 6,
+    "edit": 5,
+    "run": 3,
+    "other": 10
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 2,
+   "whole": {
+    "steps": 28,
+    "searches": 6,
+    "files": 1,
+    "production_files": 1,
+    "functions": 18,
+    "chars": 27389,
+    "input_tokens": 269282,
+    "functions_outside_box": 14,
+    "functions_not_target": 16,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 1,
+    "searches": 0,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1685,
+    "input_tokens": 1330,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.03571428571428571,
+    "chars": 0.06152104859615174,
+    "input_tokens": 0.004939060167408145
+   },
+   "strict_reached_step": 3,
+   "strict_before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 2861,
+    "input_tokens": 3639,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.07142857142857142,
+    "chars": 0.1044579940852167,
+    "input_tokens": 0.013513714247517473
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/cmd/quickstart.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": [
+     "sphinx/cmd/quickstart.py:allow_empty"
+    ]
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sphinx-doc__sphinx-10614",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 54,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 17,
+    "search": 4,
+    "edit": 14,
+    "run": 14,
+    "other": 5
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 54,
+    "searches": 4,
+    "files": 3,
+    "production_files": 3,
+    "functions": 44,
+    "chars": 79577,
+    "input_tokens": 1562048,
+    "functions_outside_box": 16,
+    "functions_not_target": 43,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 224,
+    "input_tokens": 4048,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.037037037037037035,
+    "chars": 0.0028148836975508,
+    "input_tokens": 0.002591469660343344
+   },
+   "strict_reached_step": 5,
+   "strict_before": {
+    "steps": 4,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 8,
+    "chars": 9953,
+    "input_tokens": 9065,
+    "functions_outside_box": 0,
+    "functions_not_target": 8,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.07407407407407407,
+    "chars": 0.1250738278648353,
+    "input_tokens": 0.005803278772483304
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/ext/graphviz.py",
+     "sphinx/ext/inheritance_diagram.py"
+    ],
+    "functions": 2,
+    "same_files_as_fix": false,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sphinx-doc__sphinx-8595",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 53,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 7,
+    "search": 12,
+    "edit": 4,
+    "run": 26,
+    "other": 15
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 53,
+    "searches": 12,
+    "files": 6,
+    "production_files": 6,
+    "functions": 36,
+    "chars": 43092,
+    "input_tokens": 668606,
+    "functions_outside_box": 13,
+    "functions_not_target": 35,
+    "files_outside_box": 3,
+    "files_outside_rival": 3
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 278,
+    "input_tokens": 2728,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.03773584905660377,
+    "chars": 0.006451313468857328,
+    "input_tokens": 0.004080130899214186
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1236,
+    "input_tokens": 4332,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.05660377358490566,
+    "chars": 0.028682818156502365,
+    "input_tokens": 0.006479152146406104
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/ext/autodoc/__init__.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sphinx-doc__sphinx-11445",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 25,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 1,
+    "search": 8,
+    "edit": 7,
+    "run": 11,
+    "other": 10
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 3,
+   "whole": {
+    "steps": 25,
+    "searches": 8,
+    "files": 4,
+    "production_files": 4,
+    "functions": 7,
+    "chars": 9655,
+    "input_tokens": 221448,
+    "functions_outside_box": 6,
+    "functions_not_target": 6,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "before": {
+    "steps": 2,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 224,
+    "input_tokens": 4217,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.08,
+    "chars": 0.023200414293112377,
+    "input_tokens": 0.019042845272930892
+   },
+   "strict_reached_step": 4,
+   "strict_before": {
+    "steps": 3,
+    "searches": 2,
+    "files": 4,
+    "production_files": 4,
+    "functions": 0,
+    "chars": 785,
+    "input_tokens": 6984,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.12,
+    "chars": 0.08130502330398758,
+    "input_tokens": 0.03153787796683646
+   },
+   "own_patch": {
+    "production_files": [
+     "sphinx/util/rst.py"
+    ],
+    "functions": 0,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sympy__sympy-12481",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 34,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 5,
+    "search": 8,
+    "edit": 5,
+    "run": 12,
+    "other": 12
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 6,
+   "whole": {
+    "steps": 34,
+    "searches": 8,
+    "files": 6,
+    "production_files": 6,
+    "functions": 9,
+    "chars": 28017,
+    "input_tokens": 393747,
+    "functions_outside_box": 3,
+    "functions_not_target": 8,
+    "files_outside_box": 3,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 5,
+    "searches": 2,
+    "files": 3,
+    "production_files": 3,
+    "functions": 3,
+    "chars": 11706,
+    "input_tokens": 10472,
+    "functions_outside_box": 1,
+    "functions_not_target": 3,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "share_before": {
+    "steps": 0.14705882352941177,
+    "chars": 0.41781775350679945,
+    "input_tokens": 0.02659575818990367
+   },
+   "strict_reached_step": 7,
+   "strict_before": {
+    "steps": 6,
+    "searches": 3,
+    "files": 3,
+    "production_files": 3,
+    "functions": 3,
+    "chars": 11749,
+    "input_tokens": 15738,
+    "functions_outside_box": 1,
+    "functions_not_target": 3,
+    "files_outside_box": 1,
+    "files_outside_rival": 1
+   },
+   "strict_share_before": {
+    "steps": 0.17647058823529413,
+    "chars": 0.4193525359603098,
+    "input_tokens": 0.03996982834154927
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/combinatorics/permutations.py",
+     "sympy/core/basic.py",
+     "sympy/plotting/plot.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": false,
+    "files_outside_box": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/plotting/plot.py"
+    ],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sympy__sympy-12096",
+   "resolved": true,
+   "status": "measured",
+   "file_target": false,
+   "steps": 53,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 14,
+    "search": 15,
+    "edit": 7,
+    "run": 12,
+    "other": 9
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 19,
+   "whole": {
+    "steps": 53,
+    "searches": 15,
+    "files": 45,
+    "production_files": 43,
+    "functions": 18,
+    "chars": 35305,
+    "input_tokens": 782362,
+    "functions_outside_box": 11,
+    "functions_not_target": 17,
+    "files_outside_box": 27,
+    "files_outside_rival": 8
+   },
+   "before": {
+    "steps": 18,
+    "searches": 7,
+    "files": 41,
+    "production_files": 39,
+    "functions": 1,
+    "chars": 7826,
+    "input_tokens": 73789,
+    "functions_outside_box": 0,
+    "functions_not_target": 1,
+    "files_outside_box": 27,
+    "files_outside_rival": 8
+   },
+   "share_before": {
+    "steps": 0.33962264150943394,
+    "chars": 0.22166831893499506,
+    "input_tokens": 0.09431567484105823
+   },
+   "strict_reached_step": 20,
+   "strict_before": {
+    "steps": 19,
+    "searches": 8,
+    "files": 42,
+    "production_files": 40,
+    "functions": 1,
+    "chars": 7863,
+    "input_tokens": 79917,
+    "functions_outside_box": 0,
+    "functions_not_target": 1,
+    "files_outside_box": 27,
+    "files_outside_rival": 8
+   },
+   "strict_share_before": {
+    "steps": 0.3584905660377358,
+    "chars": 0.22271632913185102,
+    "input_tokens": 0.10214836610162559
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/core/basic.py",
+     "sympy/core/function.py",
+     "sympy/plotting/plot.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": false,
+    "files_outside_box": [
+     "sympy/assumptions/sathandlers.py",
+     "sympy/plotting/plot.py"
+    ],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sympy__sympy-16597",
+   "resolved": false,
+   "status": "measured",
+   "file_target": false,
+   "steps": 71,
+   "only_other_steps": 5,
+   "class_counts": {
+    "view": 16,
+    "search": 23,
+    "edit": 8,
+    "run": 19,
+    "other": 8
+   },
+   "has_box": true,
+   "target_in_box": false,
+   "reached_step": null,
+   "whole": {
+    "steps": 71,
+    "searches": 23,
+    "files": 14,
+    "production_files": 8,
+    "functions": 54,
+    "chars": 70211,
+    "input_tokens": 2027710,
+    "functions_outside_box": 22,
+    "functions_not_target": 54,
+    "files_outside_box": 3,
+    "files_outside_rival": 2
+   },
+   "strict_reached_step": null,
+   "own_patch": {
+    "production_files": [
+     "sympy/core/assumptions.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": false,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sympy__sympy-22914",
+   "resolved": true,
+   "status": "measured",
+   "file_target": true,
+   "steps": 46,
+   "only_other_steps": 6,
+   "class_counts": {
+    "view": 9,
+    "search": 16,
+    "edit": 6,
+    "run": 9,
+    "other": 7
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 6,
+   "whole": {
+    "steps": 46,
+    "searches": 16,
+    "files": 18,
+    "production_files": 9,
+    "functions": 65,
+    "chars": 39966,
+    "input_tokens": 488603,
+    "functions_outside_box": 44,
+    "functions_not_target": 65,
+    "files_outside_box": 7,
+    "files_outside_rival": 2
+   },
+   "before": {
+    "steps": 5,
+    "searches": 1,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1741,
+    "input_tokens": 3222,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.10869565217391304,
+    "chars": 0.04356202772356503,
+    "input_tokens": 0.006594310718517897
+   },
+   "strict_reached_step": 9,
+   "strict_before": {
+    "steps": 8,
+    "searches": 3,
+    "files": 4,
+    "production_files": 4,
+    "functions": 0,
+    "chars": 2344,
+    "input_tokens": 8000,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 3,
+    "files_outside_rival": 2
+   },
+   "strict_share_before": {
+    "steps": 0.17391304347826086,
+    "chars": 0.05864985237451834,
+    "input_tokens": 0.016373210970870012
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/printing/pycode.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": []
+   }
+  },
+  {
+   "agent": "gpt-5-2-codex",
+   "instance_id": "sympy__sympy-16766",
+   "resolved": true,
+   "status": "measured",
+   "file_target": true,
+   "steps": 42,
+   "only_other_steps": 4,
+   "class_counts": {
+    "view": 11,
+    "search": 17,
+    "edit": 5,
+    "run": 5,
+    "other": 5
+   },
+   "has_box": true,
+   "target_in_box": true,
+   "reached_step": 6,
+   "whole": {
+    "steps": 42,
+    "searches": 17,
+    "files": 18,
+    "production_files": 13,
+    "functions": 153,
+    "chars": 65087,
+    "input_tokens": 426225,
+    "functions_outside_box": 133,
+    "functions_not_target": 153,
+    "files_outside_box": 10,
+    "files_outside_rival": 1
+   },
+   "before": {
+    "steps": 5,
+    "searches": 2,
+    "files": 0,
+    "production_files": 0,
+    "functions": 0,
+    "chars": 1142,
+    "input_tokens": 3087,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "share_before": {
+    "steps": 0.11904761904761904,
+    "chars": 0.017545746462427212,
+    "input_tokens": 0.007242653528066162
+   },
+   "strict_reached_step": 9,
+   "strict_before": {
+    "steps": 8,
+    "searches": 5,
+    "files": 1,
+    "production_files": 1,
+    "functions": 0,
+    "chars": 1567,
+    "input_tokens": 3087,
+    "functions_outside_box": 0,
+    "functions_not_target": 0,
+    "files_outside_box": 0,
+    "files_outside_rival": 0
+   },
+   "strict_share_before": {
+    "steps": 0.19047619047619047,
+    "chars": 0.024075468219460106,
+    "input_tokens": 0.007242653528066162
+   },
+   "own_patch": {
+    "production_files": [
+     "sympy/printing/pycode.py"
+    ],
+    "functions": 1,
+    "same_files_as_fix": true,
+    "files_outside_box": [],
+    "functions_outside_box": [
+     "sympy/printing/pycode.py:AbstractPythonCodePrinter._print_MatrixBase"
+    ]
+   }
+  }
+ ]
+}

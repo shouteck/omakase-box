@@ -53,3 +53,25 @@ Closeout: removed only the five gate-owned retained image tags, with successful 
 **Principles that changed a decision.** *Sequence verifiable units*: plan pushed before runs, and the decision rule written as code with its own checks. *Build the lever*: a Box is any set of function keys to the scorer, so another technique can be scored without rewriting. *Explain the number*: the sceptic's best-word sensitivity is what turned a pass into "suggests".
 
 **Next.** The CTO reads the result. Gate 1c (the catalogue) is the programme's next gate if this counts as go on; the lab does not start it in this session.
+
+## 8 October 2026: Gate 2, what real agents read before reaching the fix
+
+**Set out to do.** Gate 2 as the CTO reset it after Gate 1b: from published run records, how much agents read before first reaching the fix, how that sits against the Box and the file filter, and where the tokens went. Report only.
+
+**Before any sample record.** Lab level with master and origin. Confirmed the records are free: one submission in a public GitHub repository, one in the benchmark's public bucket. Looked at the record format on one task outside the sample. Wrote `gate-2-plan.md` with the agent-selection rule, the command classes, the definition of reaching and four predictions, and pushed it (`4f98f3f`).
+
+**Did.** `gate-2/`: fetch with receipts, a command classifier with known-answer checks, measurement against Gate 1's snapshots and Gate 1b's traces, a report. 56 records measured (26 and 30). No container, no agent.
+
+**Result.** Both agents reach the fix almost at once: median 2 and 4 steps of about 35. Little is read before that. Eight of nine failed runs had found the place.
+
+**What the sceptic changed, which is most of the result.** It reproduced every number, then measured what the plan had not asked for: between first opening the fix and first editing, a median of 18 and 10 steps, 220 and 438 other functions read, 65% and 78% outside the Box, about two fifths of all text read. The draft's "little reading to save" became "little locating to save"; prediction 4's inference was withdrawn; the input-token share was dropped as misleading. It also found a real fault: outputs of several actions in one call were credited to the last action. Fixed, with a check; the earlier summary is kept.
+
+**Surprise.** How early. The lead expected early; not the second step.
+
+**Mistakes.** The lead's draft drew "small ceiling" from "found early" without looking at what the run did next. The stricter reaching rows were added after seeing numbers and are marked so.
+
+**Cost.** Nothing paid; about 60 MB of public records downloaded; no heavy job.
+
+**Principles that changed a decision.** *Explain the number*: asking what the other nine tenths of a run is made of is what found the stretch between finding and fixing. *Sequence verifiable units*: plan pushed before the sample was read. *Laziness, existing method first*: published records instead of live runs.
+
+**Next.** The CTO reads the result. The lab starts nothing further in this session.
