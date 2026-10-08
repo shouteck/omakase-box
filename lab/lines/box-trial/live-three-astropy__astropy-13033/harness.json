@@ -1,0 +1,30 @@
+{
+  "task": "astropy__astropy-13033",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+  "stages": [
+    {
+      "label": "real-fix",
+      "status": "scored",
+      "solved": false,
+      "phases": {
+        "failing": {
+          "all_pass": true,
+          "requested": 1,
+          "matched_passes": 1,
+          "exit": 0
+        },
+        "guards": {
+          "all_pass": false,
+          "requested": 20,
+          "matched_passes": 19,
+          "exit": 1
+        }
+      },
+      "error": null,
+      "exported_patch_bytes": 1517
+    }
+  ],
+  "status": "failed",
+  "image_preexisted": false,
+  "error": "{'label': 'real-fix', 'status': 'scored', 'solved': False, 'phases': {'failing': {'all_pass': True, 'requested': 1, 'matched_passes': 1, 'exit': 0}, 'guards': {'all_pass': False, 'requested': 20, 'matched_passes': 19, 'exit': 1}}, 'error': None, 'exported_patch_bytes': 1517}"
+}

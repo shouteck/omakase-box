@@ -1,0 +1,7 @@
+{
+  "task": "sympy__sympy-16597",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sympy__sympy-16597@sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860",
+  "stages": [],
+  "status": "started",
+  "image_preexisted": false
+}

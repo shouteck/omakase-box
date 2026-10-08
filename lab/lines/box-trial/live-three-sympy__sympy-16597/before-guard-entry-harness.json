@@ -1,0 +1,72 @@
+{
+  "task": "sympy__sympy-16597",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.sympy__sympy-16597@sha256:6741d508917b1d8cb67e819a58c65614f1788783311fabcc3782a669053ac860",
+  "stages": [
+    {
+      "label": "real-fix",
+      "status": "scored",
+      "solved": true,
+      "phases": {
+        "failing": {
+          "all_pass": true,
+          "requested": 3,
+          "matched_passes": 3,
+          "exit": 0
+        },
+        "guards": {
+          "all_pass": true,
+          "requested": 74,
+          "matched_passes": 74,
+          "exit": 0
+        }
+      },
+      "error": null,
+      "exported_patch_bytes": 10426
+    },
+    {
+      "label": "empty",
+      "status": "scored",
+      "solved": false,
+      "phases": {
+        "failing": {
+          "all_pass": false,
+          "requested": 3,
+          "matched_passes": 0,
+          "exit": 1
+        },
+        "guards": {
+          "all_pass": true,
+          "requested": 74,
+          "matched_passes": 74,
+          "exit": 0
+        }
+      },
+      "error": null,
+      "exported_patch_bytes": 0
+    },
+    {
+      "label": "broken-guard",
+      "status": "unknown",
+      "solved": null,
+      "phases": {
+        "failing": {
+          "all_pass": false,
+          "requested": 3,
+          "matched_passes": 0,
+          "exit": 1
+        },
+        "guards": {
+          "all_pass": false,
+          "requested": 74,
+          "matched_passes": 0,
+          "exit": 1
+        }
+      },
+      "error": "Incomplete result names or setup failure; cannot score",
+      "exported_patch_bytes": 10663
+    }
+  ],
+  "status": "failed",
+  "image_preexisted": false,
+  "error": "{'label': 'broken-guard', 'status': 'unknown', 'solved': None, 'phases': {'failing': {'all_pass': False, 'requested': 3, 'matched_passes': 0, 'exit': 1}, 'guards': {'all_pass': False, 'requested': 74, 'matched_passes': 0, 'exit': 1}}, 'error': 'Incomplete result names or setup failure; cannot score', 'exported_patch_bytes': 10663}"
+}

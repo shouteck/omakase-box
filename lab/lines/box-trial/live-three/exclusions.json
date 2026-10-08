@@ -1,0 +1,7 @@
+[
+  {
+    "task": "astropy__astropy-13033",
+    "reason": "Real production fix fails scoring prerequisite: named fail passes 1/1 but guards 19/20. No repair start; no test/date changes.",
+    "receipt": "../live-three-astropy__astropy-13033/harness.json"
+  }
+]

@@ -1,0 +1,1 @@
+Task astropy__astropy-13033; prospective pair 1, box first. Full protocol: ../live-three/plan.md. Inputs/settings and safeguards frozen here before launch.

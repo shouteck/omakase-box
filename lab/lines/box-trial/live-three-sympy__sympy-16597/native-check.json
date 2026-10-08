@@ -1,0 +1,524 @@
+{
+  "status": "pass",
+  "actions": [
+    {
+      "agent": "control",
+      "step": 1,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\control\\001.json"
+    },
+    {
+      "agent": "control",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\control\\002.json"
+    },
+    {
+      "agent": "control",
+      "step": 3,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\control\\003.json"
+    },
+    {
+      "agent": "control",
+      "step": 4,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\control\\004.json"
+    },
+    {
+      "agent": "control",
+      "step": 12,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\control\\012.json"
+    },
+    {
+      "agent": "control",
+      "step": 13,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\control\\013.json"
+    },
+    {
+      "agent": "control",
+      "step": 19,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 3,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\control\\019.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 1,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\001.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\002.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 3,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\003.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 4,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\004.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 7,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\007.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 8,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\008.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 10,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\010.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 19,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\019.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 20,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\020.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 41,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\041.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 42,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\042.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 43,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\043.json"
+    },
+    {
+      "agent": "gemini-3-5-flash",
+      "step": 44,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gemini-3-5-flash\\044.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 2,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 0,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\002.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 3,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\003.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 5,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\005.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 11,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\011.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 14,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\014.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 15,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\015.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 16,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\016.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 18,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\018.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 20,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\020.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 23,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\023.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 24,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\024.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 25,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\025.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 26,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 2,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\026.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 33,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\033.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 34,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\034.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 43,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\043.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 45,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\045.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 46,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\046.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 52,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\052.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 53,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\053.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 55,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\055.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 59,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 0,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\059.json"
+    },
+    {
+      "agent": "gpt-5-2-codex",
+      "step": 67,
+      "same": {
+        "exit": true,
+        "stdout": true,
+        "stderr": true
+      },
+      "searches": 1,
+      "reordered": 1,
+      "receipt": "raw\\native-check\\gpt-5-2-codex\\067.json"
+    }
+  ],
+  "count": 43,
+  "searches": 47,
+  "reordered": 7
+}

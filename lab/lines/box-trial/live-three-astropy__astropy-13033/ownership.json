@@ -1,0 +1,7 @@
+{
+  "task": "astropy__astropy-13033",
+  "image": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+  "stages": [],
+  "status": "started",
+  "image_preexisted": false
+}
