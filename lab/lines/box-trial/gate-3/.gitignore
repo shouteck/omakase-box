@@ -5,3 +5,10 @@ records/*/*/*.log
 records/*/*/*.patch
 records/*/*/prompt.txt
 calibration/
+passive/records/*/*/model-events.json
+passive/records/*/*/steps.json
+passive/records/*/*/*.log
+passive/records/*/*/*.patch
+passive/records/*/*/prompt.txt
+baselines/*/*.log
+baselines/*/*.patch

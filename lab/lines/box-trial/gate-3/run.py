@@ -61,7 +61,7 @@ def dispatch(name,arm,scope,text):
         request['pattern']=words[i];request['paths']=words[i+1:]
         return execute(name,request),True
     if re.search(r'(?<![A-Za-z0-9_-])box-search(?![A-Za-z0-9_-])',text):
-        return {'stdout':'','stderr':'Use box-search as one standalone command.','exit':2,'timed_out':False,'seconds':0},arm=='box'
+        return {'stdout':'','stderr':'Use box-search as one standalone command.','exit':2,'timed_out':False,'seconds':0},False
     return execute(name,{'mode':'command','command':text}),False
 
 def visible(result):
@@ -149,7 +149,7 @@ def arm_run(image,task,scope,arm,repeat):
     try:
         name,args=create(image,task,directory);record['create_argv']=args
         prompt='Fix the issue in the full repository at /testbed. Use run_command to inspect, edit and test there. Commands run in a prepared Linux container with no network. Do not install packages, browse for answers, alter benchmark tests, or use tools other than run_command. Ordinary searches such as grep are available. Finish with a concise description; your actual production patch will be evaluated independently.\n\nIssue:\n'+task['issue']+'\n\nFailing tests:\n'+'\n'.join(task['fail_names'])+'\n\nRun them with:\n'+shlex.join(['python','/lab/container.py','--child','plain','/tmp/lab-unused.trace.json']+task['failing_argv'])+'\n'
-        if arm=='box':prompt+='The box-search command searches within the functions the failing test ran; ordinary search is still available.\n'
+        if arm=='box':prompt+='Begin by searching with box-search, which searches within the functions the failing test ran; use ordinary search whenever that is not enough, and the full repository remains available.\n'
         (directory/'prompt.txt').write_bytes(prompt.encode());record['prompt_sha256']=hashlib.sha256(prompt.encode()).hexdigest()
         rpc=RPC()
         rpc.ask('initialize',{'clientInfo':{'name':'lab_gate_3','title':'Lab Gate 3','version':'1.0'},'capabilities':{'experimentalApi':True}});rpc.send({'method':'initialized'})
@@ -198,6 +198,9 @@ def arm_run(image,task,scope,arm,repeat):
             write(directory/'model-events.json',rpc.events);rpc.close()
         try:scratch.rmdir()
         except OSError:record['unexpected_host_files']=True
+        record['box_arm_valid']=arm!='box' or record['box_calls']>=1
+        record['box_first_command']=bool(steps and steps[0]['box_call']) if arm=='box' else None
+        record['box_call_followups']=[{'box_step':s['step'],'command':s['command'],'result':s['result'],'following_steps':[{'step':n['step'],'command':n['command'],'exit':n['result']['exit']} for n in steps[i+1:next((j for j in range(i+1,len(steps)) if steps[j]['box_call']),len(steps))]]} for i,s in enumerate(steps) if s['box_call']]
         record['seconds']=time.monotonic()-started
         record['artifacts']={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in directory.iterdir() if p.is_file()}
         write(directory/'attempt.json',record)

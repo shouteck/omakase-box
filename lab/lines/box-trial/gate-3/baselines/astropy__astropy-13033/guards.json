@@ -1,0 +1,9 @@
+{
+  "exit": 1,
+  "requested": 20,
+  "matched_passes": 19,
+  "missing_names": [
+    "astropy/timeseries/tests/test_sampled.py::test_fold"
+  ],
+  "log_sha256": "1a2d4cf4555e11abd23498e78a05541eeb8be9002cd0e7a2eac4aecf5cbd0cf6"
+}

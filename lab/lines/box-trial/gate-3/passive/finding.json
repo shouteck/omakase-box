@@ -1,0 +1,116 @@
+{
+  "finding": "A passively offered tool was not called in either of the two completed Box-arm attempts. This is not a comparison of Box use with ordinary search.",
+  "stopped_by": "Owner and CTO design correction",
+  "stopped_utc": "2026-10-08T08:43:25Z",
+  "historical_harness_commit": "fe40500",
+  "starts": [
+    {
+      "instance_id": "astropy__astropy-13033",
+      "arm": "box",
+      "status": "completed",
+      "steps": 12,
+      "box_calls": 0,
+      "token_usage": {
+        "total": {
+          "totalTokens": 168662,
+          "inputTokens": 166521,
+          "cachedInputTokens": 136448,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 2141,
+          "reasoningOutputTokens": 1180
+        },
+        "last": {
+          "totalTokens": 19314,
+          "inputTokens": 19178,
+          "cachedInputTokens": 18176,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 136,
+          "reasoningOutputTokens": 68
+        },
+        "modelContextWindow": 258400
+      },
+      "usage_is_partial_lower_bound": null
+    },
+    {
+      "instance_id": "astropy__astropy-13033",
+      "arm": "control",
+      "status": "completed",
+      "steps": 13,
+      "box_calls": 0,
+      "token_usage": {
+        "total": {
+          "totalTokens": 207328,
+          "inputTokens": 203338,
+          "cachedInputTokens": 153344,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 3990,
+          "reasoningOutputTokens": 1973
+        },
+        "last": {
+          "totalTokens": 21127,
+          "inputTokens": 20997,
+          "cachedInputTokens": 19200,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 130,
+          "reasoningOutputTokens": 75
+        },
+        "modelContextWindow": 258400
+      },
+      "usage_is_partial_lower_bound": null
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "arm": "box",
+      "status": "completed",
+      "steps": 14,
+      "box_calls": 0,
+      "token_usage": {
+        "total": {
+          "totalTokens": 408195,
+          "inputTokens": 405452,
+          "cachedInputTokens": 358400,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 2743,
+          "reasoningOutputTokens": 1132
+        },
+        "last": {
+          "totalTokens": 37118,
+          "inputTokens": 36858,
+          "cachedInputTokens": 35584,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 260,
+          "reasoningOutputTokens": 196
+        },
+        "modelContextWindow": 258400
+      },
+      "usage_is_partial_lower_bound": null
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "arm": "control",
+      "status": "interrupted_by_owner",
+      "steps": 6,
+      "box_calls": 0,
+      "token_usage": {
+        "total": {
+          "totalTokens": 48303,
+          "inputTokens": 47815,
+          "cachedInputTokens": 19712,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 488,
+          "reasoningOutputTokens": 75
+        },
+        "last": {
+          "totalTokens": 16596,
+          "inputTokens": 16486,
+          "cachedInputTokens": 12032,
+          "cacheWriteInputTokens": 0,
+          "outputTokens": 110,
+          "reasoningOutputTokens": 0
+        },
+        "modelContextWindow": 258400
+      },
+      "usage_is_partial_lower_bound": true
+    }
+  ]
+}

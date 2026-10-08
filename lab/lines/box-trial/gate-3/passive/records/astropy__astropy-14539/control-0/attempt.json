@@ -1,0 +1,45 @@
+{
+  "instance_id": "astropy__astropy-14539",
+  "arm": "control",
+  "repeat": 0,
+  "model": "gpt-5.6-luna",
+  "effort": "high",
+  "status": "interrupted_by_owner",
+  "reason": "Stop passive-tool design and restart with required Box search",
+  "steps": 6,
+  "box_calls": 0,
+  "token_usage": {
+    "total": {
+      "totalTokens": 48303,
+      "inputTokens": 47815,
+      "cachedInputTokens": 19712,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 488,
+      "reasoningOutputTokens": 75
+    },
+    "last": {
+      "totalTokens": 16596,
+      "inputTokens": 16486,
+      "cachedInputTokens": 12032,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 110,
+      "reasoningOutputTokens": 0
+    },
+    "modelContextWindow": 258400
+  },
+  "usage_is_partial_lower_bound": true,
+  "evaluation": {
+    "status": "not_evaluated",
+    "solved": null
+  },
+  "stopped_utc": "2026-10-08T08:38:15Z",
+  "partial_patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "artifacts": {
+    "all.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "baseline-tree.json": "a6d87790b411f239a737b41775697659aa2b7cd3f80e657d40b9fe9e78db9ad3",
+    "candidate.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "prompt.txt": "6d44a1906dae9dffed1a88358bd5f91c34f2226154b33d95105dfa74c5c30227",
+    "steps.json": "963a73c4b299b197b72ac9d61f13400ce8a303cfe191bb2530db9535c4b77a99",
+    "test.patch": "1e6bf14ee6274a207269ed53d5869cec552d83c1300b82bd450392f87322d586"
+  }
+}

@@ -55,6 +55,17 @@ def collect(with_readings=True):
             total=(raw.get('token_usage') or {}).get('total',{})
             steps=json.loads((directory/'steps.json').read_text(encoding='utf-8')) if (directory/'steps.json').exists() else []
             entry={'status':raw['status'],'solved':raw.get('evaluation',{}).get('solved'),'evaluation_status':raw.get('evaluation',{}).get('status'),'steps':raw.get('steps',len(steps)),'tokens':total.get('totalTokens'),'input_tokens':total.get('inputTokens'),'cached_input_tokens':total.get('cachedInputTokens'),'output_tokens_including_reasoning':total.get('outputTokens'),'agent_seconds':raw.get('agent_seconds'),'box_calls':sum(bool(s['box_call']) for s in steps),'box_match_lines':sum(len(s['result']['stdout'].splitlines()) for s in steps if s['box_call']),'box_error_or_empty_calls':sum(s['result']['exit']!=0 for s in steps if s['box_call']),'error':raw.get('error') or raw.get('evaluation',{}).get('error')}
+            entry['evaluated_solved']=entry['solved']
+            baseline=HERE/'baselines'/ident/'guards.json'
+            if baseline.exists():
+                before=json.loads(baseline.read_text(encoding='utf-8'))
+                if before['exit']!=0 or before['matched_passes']!=before['requested']:
+                    entry['solved']=None;entry['error']='Pristine guard failure; candidate result cannot establish repair/regression'
+                    entry['baseline_guard_receipt']=str(baseline.relative_to(HERE))
+            entry['box_arm_valid']=arm!='box' or entry['box_calls']>=1
+            entry['box_first_command']=raw.get('box_first_command')
+            entry['box_call_followups']=raw.get('box_call_followups',[])
+            if not entry['box_arm_valid']:entry['solved']=None;entry['error']='Invalid Box arm: no recorded Box call'
             if with_readings and steps:entry['reading']=readings(ident,steps)
             edit_step=next((s['step'] for s in steps if g2.EDIT.search(s['command'])),None)
             entry['box_calls_after_first_edit']=sum(s['box_call'] and edit_step is not None and s['step']>edit_step for s in steps)
@@ -68,10 +79,10 @@ def collect(with_readings=True):
     reductions=[1-p['arms']['box']['tokens']/p['arms']['control']['tokens'] for p in comparable if p['arms']['control']['tokens']]
     wins=sum(p['arms']['box']['tokens']<p['arms']['control']['tokens'] for p in comparable);losses=sum(p['arms']['box']['tokens']>p['arms']['control']['tokens'] for p in comparable)
     stats={'attempts':len(runs),'scored_pairs':len(complete),'unknown_or_unstarted_pairs':12-len(complete),'control_solved':sum(r['arms']['control']['solved'] is True for r in pairs),'box_solved':sum(r['arms']['box']['solved'] is True for r in pairs),'gains':gain,'losses':loss,'success_exact_p':exact_p(gain,loss),'both_solved_comparable':len(comparable),'median_token_reduction':median(reductions),'token_wins':wins,'token_losses':losses,'token_exact_p':exact_p(wins,losses),'box_calls':sum(r['box_calls'] for r in runs),'artifact_hash_errors':errors}
-    primary=loss==0 and gain>0 and stats['success_exact_p']<.05
+    primary=len(complete)==12 and loss==0 and gain>0 and stats['success_exact_p']<.05
     steps_ok=median([p['arms']['box']['steps']-p['arms']['control']['steps'] for p in comparable]) if comparable else None
     time_ok=median([p['arms']['box']['agent_seconds']-p['arms']['control']['agent_seconds'] for p in comparable if all(p['arms'][a]['agent_seconds'] is not None for a in ['control','box'])]) if comparable else None
-    cost=len(comparable)>=6 and (stats['median_token_reduction'] or 0)>=.2 and stats['token_exact_p']<.05 and (steps_ok or 0)<=0 and (time_ok or 0)<=0
+    cost=len(complete)==12 and len(comparable)>=6 and (stats['median_token_reduction'] or 0)>=.2 and stats['token_exact_p']<.05 and (steps_ok or 0)<=0 and (time_ok or 0)<=0
     stats.update(success_signal=primary,cost_signal=cost,median_step_delta=steps_ok,median_seconds_delta=time_ok)
     # The plan's repeat decision is separate from a superiority verdict.
     if len(runs)<24:decision='incomplete'

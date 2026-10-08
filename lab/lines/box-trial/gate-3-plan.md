@@ -1,3 +1,5 @@
+> Active protocol: the owner-required Box-first restart amendment below supersedes the historical passive-offer wording. No restarted agent runs preceded this amendment.
+
 # Gate 3: optional Box search command, live paired trial
 
 Fixed 8 October 2026 before any repair-agent run. Latest owner correction wins PROGRAMME's listing wording: **the Box is a tool, not a file to read**. No listing or Box source is injected into either initial prompt. Box arm alone gets one extra optional command, `box-search`, and one instruction line: "The box-search command searches within the functions the failing test ran; ordinary search is still available." Its matches enter context only on a call; every call, arguments, returned output and timing are recorded. Control has no Box command or Box data. Full repository remains available in both arms.
@@ -31,3 +33,15 @@ One fresh sceptic reruns selection, tool fixture checks and scoring from saved r
 ## Exporter correction, after the first pair (no agent reruns)
 
 The prepared image has a pre-existing pyproject.toml change relative to HEAD. Exporting against HEAD incorrectly included that unchanged environment chunk and fresh evaluation refused it as already applied. Both original attempts, patches and unknown evaluations are preserved. Rescoring removes only chunks byte-identical to a fresh pre-agent prepared image plus test overlay; candidate source code is untouched. Future starts checkpoint that exact pre-agent worktree with a private Git tree and export against it, even if the agent commits. Authored calibration requires an unchanged image to export an empty candidate. This is an exporter correction, not a change to the model, sample, Box scope, search or decision thresholds. Both first agents made identical production changes and never called Box; neither solved the benchmark after corrected scoring.
+
+## Owner and CTO stop and restart amendment (before restarted runs)
+
+The owner stopped the passive-tool trial because optional use does not establish a comparison of Box use. Preserve all four starts separately in `gate-3/passive/`: two completed Box attempts made zero calls, one completed control and one owner-interrupted control. The finding is limited to those attempts: a passively offered tool was not called. No passive result enters the restarted comparison.
+
+Restart all twelve fixed pairs in fresh sessions and containers. The sole arm-treatment change is the Box instruction line: "Begin by searching with box-search, which searches within the functions the failing test ran; use ordinary search whenever that is not enough, and the full repository remains available." Control wording, task IDs, model, limits, scope, command behavior, information, scoring thresholds and repeat selection remain unchanged. No Box listing is injected; results appear only when called.
+
+Every Box invocation retains its arguments, returned matches/errors, timing and the subsequent commands through the next Box call or completion. Record whether the first command was Box. A Box attempt is valid for comparison only when at least one actual standalone box-search invocation was recorded. A mere mention of the command in another command does not count. An attempt with zero calls remains recorded as invalid, never a Box success or ordinary task failure; no automatic reattempt. A no-match or search-error response is still a call. Unknown/invalid pairs preclude a complete no-harm or superiority claim.
+
+Prepared-image guard failures will be documented separately from candidate repair outcomes; the fixed task sample is not replaced. The earlier test_fold failure needs a pristine guard check before interpreting it as a candidate regression.
+
+Pristine check confirmed Astropy 13033 guard test_fold fails before any candidate (19/20 guards pass): bundled leap-second data is expired at the host date. Keep the same task and unaltered evaluator; expose its raw candidate test result but classify its paired repair outcome unknown. Do not suppress warnings, change dates, replace tasks or claim candidate regression. Receipt: gate-3/baselines/astropy__astropy-13033/guards.json.
