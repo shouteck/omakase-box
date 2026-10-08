@@ -92,13 +92,27 @@ def test_argv(task,names):
         labels=[]
         for name in names:
             m=re.match(r'^(\S+) \((\S+)\)$',name)
-            if not m:raise RuntimeError('Unparseable benchmark guard name: '+name)
+            if not m:
+                import ast,gzip
+                source=json.loads(gzip.decompress((ROOT/'gate-1/records'/task['instance_id']/'sources.json.gz').read_bytes()))
+                modules={match.group(2).rsplit('.',1)[0] for n in names if (match:=re.match(r'^(\S+) \((\S+)\)$',n))}
+                found=[]
+                for module in sorted(modules):
+                    path='tests/'+module.replace('.','/')+'.py'
+                    for cls in ast.walk(ast.parse(source[path])):
+                        if isinstance(cls,ast.ClassDef):
+                            for fn in cls.body:
+                                if isinstance(fn,(ast.FunctionDef,ast.AsyncFunctionDef)):
+                                    doc=ast.get_docstring(fn)
+                                    if doc and doc.splitlines()[0]==name:found.append(module+'.'+cls.name+'.'+fn.name)
+                if len(found)!=1:raise RuntimeError('Ambiguous/unmapped benchmark guard description: '+name)
+                labels.append(found[0]);continue
             method,path=m.groups();labels.append(path if path.endswith('.'+method) else path+'.'+method)
         return ['tests/runtests.py','--verbosity','2','--settings=test_sqlite','--parallel','1']+labels
     if task['repo']=='sympy/sympy':
         files=re.findall(r'^\+\+\+ b/(.+\.py)$',task['test_patch'],re.M)
         return ['sympy',json.dumps({'files':files,'names':names})]
-    return ['pytest','-rA','-vv','--tb=short','-p','no:cacheprovider']+names
+    return ['pytest','-rA','-vv','--tb=short','-p','no:cacheprovider']+[task.get('_native_test_ids',{}).get(n,n) for n in names]
 
 def passed_names(task,names,log):
     log=re.sub(r'\x1b\[[0-9;]*[A-Za-z]','',log)
@@ -108,9 +122,24 @@ def passed_names(task,names,log):
     return [n for n in names if re.search(r'^'+re.escape(n)+r' (PASSED)( |$)',log,re.M) or re.search(r'^(PASSED) '+re.escape(n)+r'( |$)',log,re.M)]
 
 def evaluate(image,task,patch,directory):
+    task=dict(task)
     name=None;result={'status':'unknown','solved':None,'phases':{}}
     try:
         name,args=create(image,task,directory);result['create_argv']=args
+        truncated=[n for n in task['guard_names']+task['fail_names'] if '[' in n and not n.endswith(']')]
+        if truncated:
+            selectors=sorted({n.split('[',1)[0] for n in truncated})
+            code='import pytest,json\nclass Collector:\n def pytest_collection_finish(self,session): print("LAB_NODE_IDS="+json.dumps([i.nodeid for i in session.items]))\nraise SystemExit(pytest.main('+repr(['--collect-only','-q','-p','no:cacheprovider']+selectors)+',plugins=[Collector()]))'
+            output=execute(name,{'mode':'command','command':shlex.join(['python','-c',code])})
+            (directory/'guard-collection.log').write_bytes((output['stdout']+output['stderr']).encode())
+            marker=next((line[len('LAB_NODE_IDS='):] for line in output['stdout'].splitlines() if line.startswith('LAB_NODE_IDS=')),None)
+            if output['exit']!=0 or marker is None:raise RuntimeError('Lossless native test collection failed')
+            nodes=json.loads(marker);mapping={}
+            for n in truncated:
+                matches=[node for node in nodes if node.startswith(n)]
+                if len(matches)!=1:raise RuntimeError('Ambiguous truncated benchmark identifier: '+n)
+                mapping[n]=matches[0]
+            task['_native_test_ids']=mapping;write(directory/'guard-node-map.json',mapping)
         r=command(['docker','cp',str(directory/'candidate.patch'),name+':/tmp/lab-candidate.patch'],timeout=60)
         if r.returncode:raise RuntimeError('Candidate copy failed')
         if patch:
@@ -126,14 +155,16 @@ def evaluate(image,task,patch,directory):
             (directory/(phase+'.log')).write_bytes((output['stdout']+output['stderr']).encode('utf-8'))
             matched=passed_names(task,names,output['stdout']+output['stderr'])
             result['phases'][phase]={k:v for k,v in output.items() if k not in ['stdout','stderr']}
-            result['phases'][phase].update(requested=len(names),matched_passes=len(matched),missing_names=[n for n in names if n not in matched],all_pass=output['exit']==0 and not output['timed_out'] and len(matched)==len(names))
+            result['phases'][phase].update(argv=argv,requested=len(names),matched_passes=len(matched),missing_names=[n for n in names if n not in matched],all_pass=output['exit']==0 and not output['timed_out'] and len(matched)==len(names))
         phases=list(result['phases'].values())
         if any(p.get('timed_out') for p in phases):raise RuntimeError('Benchmark evaluation timed out')
         # Nonzero can mean a legitimate test miss or an environment/setup failure. Preserve unknown unless normal named failure is seen.
         if all(p['all_pass'] for p in phases):result.update(status='scored',solved=True)
         else:
             logs='\n'.join((directory/(phase+'.log')).read_text(encoding='utf-8') for phase in ['failing','guards'] if (directory/(phase+'.log')).exists())
-            if re.search(r'(^FAILED | FAILED(?: |$)|^FAIL: |^ERROR: |^test_\S+ (F|E)\b)',logs,re.M):result.update(status='scored',solved=False)
+            requested=task['fail_names']+task['guard_names']
+            named_failure=any(re.search(r'(^FAILED '+re.escape(n)+r'( |$)|^'+re.escape(n)+r' FAILED( |$)|^FAIL: '+re.escape(n)+r'( |$)|^ERROR: '+re.escape(n)+r'( |$)|^'+re.escape(n)+r' (F|E)\b)',logs,re.M) for n in requested)
+            if named_failure:result.update(status='scored',solved=False)
             else:raise RuntimeError('Incomplete result names or setup failure; cannot score')
     except Exception as error:result['error']=str(error)
     finally:
