@@ -1,0 +1,284 @@
+{
+  "instance_id": "sphinx-doc__sphinx-10614",
+  "repo": "sphinx-doc/sphinx",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.64,
+    "failing": 2.18,
+    "neighbours": 3.49
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 1.67,
+  "host_box_seconds": 0.024,
+  "file_target": false,
+  "production_bytes": 2514766,
+  "target": [
+    [
+      "sphinx/ext/inheritance_diagram.py",
+      "html_visit_inheritance_diagram"
+    ]
+  ],
+  "narrow": {
+    "functions": 758,
+    "bytes": 488388,
+    "ratio": 0.19420812910624685,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 3,
+    "bytes": 3049,
+    "ratio": 0.0012124388511694528,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 22,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "inheritance_diagram",
+      "from": "issue+failure",
+      "ordinary_matches": 23,
+      "ordinary_first": 9,
+      "narrow_matches": 7,
+      "narrow_first": 6,
+      "narrow_cost": 6,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 9
+    },
+    {
+      "word": "sphix_svg_bug",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "docs_source",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "docs_build",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "issue+failure",
+      "ordinary_matches": 1102,
+      "ordinary_first": null,
+      "narrow_matches": 110,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "my_package",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "my_class_1",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "my_class_2",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "MyClass1",
+      "from": "issue",
+      "ordinary_matches": 16,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "MyClass2",
+      "from": "issue",
+      "ordinary_matches": 16,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "response_",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "autodoc",
+      "from": "issue",
+      "ordinary_matches": 379,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "graphviz",
+      "from": "issue",
+      "ordinary_matches": 72,
+      "ordinary_first": null,
+      "narrow_matches": 19,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "______________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_inheritance_diagram_svg_html",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_______________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_ext_inheritance_diagram",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "abs_uri",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "exists",
+      "from": "+failure",
+      "ordinary_matches": 192,
+      "ordinary_first": null,
+      "narrow_matches": 15,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "PosixPath",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_build",
+      "from": "+failure",
+      "ordinary_matches": 61,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_inheritance_diagram_svg_h0",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 9,
+    "narrow": 6,
+    "subtracted": 9,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "inheritance_diagram",
+    "ordinary_first": 9,
+    "narrow_cost": 6,
+    "subtracted_cost": 9
+  }
+}

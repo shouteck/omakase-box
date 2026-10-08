@@ -1,0 +1,284 @@
+{
+  "instance_id": "sphinx-doc__sphinx-9320",
+  "repo": "sphinx-doc/sphinx",
+  "scoreable": true,
+  "seconds": {
+    "plain": 0.65,
+    "failing": 1.35,
+    "neighbours": 2.84
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 1.42,
+  "host_box_seconds": 0.006,
+  "file_target": false,
+  "production_bytes": 2527982,
+  "target": [
+    [
+      "sphinx/cmd/quickstart.py",
+      "allow_empty"
+    ],
+    [
+      "sphinx/cmd/quickstart.py",
+      "ask_user"
+    ]
+  ],
+  "narrow": {
+    "functions": 31,
+    "bytes": 17810,
+    "ratio": 0.007045145099925553,
+    "fix_any": true,
+    "fix_all": false
+  },
+  "subtracted": {
+    "functions": 1,
+    "bytes": 75,
+    "ratio": 2.966793276217948e-05,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 2,
+    "names_fix": true,
+    "fix_position_from_innermost": 2
+  },
+  "word_count": 21,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "githubusercontent",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_______________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_exits_when_existing_confpy",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_quickstart",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "ask_user",
+      "from": "+failure",
+      "ordinary_matches": 7,
+      "ordinary_first": 1,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "do_prompt",
+      "from": "+failure",
+      "ordinary_matches": 27,
+      "ordinary_first": 2,
+      "narrow_matches": 16,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2
+    },
+    {
+      "word": "term_input",
+      "from": "+failure",
+      "ordinary_matches": 11,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "strip",
+      "from": "+failure",
+      "ordinary_matches": 189,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "input_",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "version",
+      "from": "+failure",
+      "ordinary_matches": 661,
+      "ordinary_first": 58,
+      "narrow_matches": 7,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 58
+    },
+    {
+      "word": "__version_info__",
+      "from": "+failure",
+      "ordinary_matches": 20,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "LooseVersion",
+      "from": "+failure",
+      "ordinary_matches": 7,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__version__",
+      "from": "+failure",
+      "ordinary_matches": 22,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pkg_resources",
+      "from": "+failure",
+      "ordinary_matches": 4,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pypa",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "+failure",
+      "ordinary_matches": 981,
+      "ordinary_first": 178,
+      "narrow_matches": 3,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 178
+    },
+    {
+      "word": "iter_entry_points",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__init__",
+      "from": "+failure",
+      "ordinary_matches": 605,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "declare_namespace",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pytest",
+      "from": "+failure",
+      "ordinary_matches": 1079,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 4,
+  "median": {
+    "ordinary": 30.0,
+    "narrow": 1.0,
+    "subtracted": 30.0,
+    "narrow_hits": 4
+  },
+  "best_word": {
+    "word": "ask_user",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

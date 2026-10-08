@@ -1,0 +1,34 @@
+{
+  "base_commit": "b19bce971e82f2497d67fdacdeca8db08ae0ba56",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_ext_autodoc_automodule.py::test_empty_all"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.3252265769999951
+    },
+    "failing": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_ext_autodoc_automodule.py::test_empty_all"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 2.641050440000015
+    }
+  }
+}

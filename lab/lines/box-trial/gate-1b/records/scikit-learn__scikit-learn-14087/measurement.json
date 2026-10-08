@@ -1,0 +1,342 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-14087",
+  "repo": "scikit-learn/scikit-learn",
+  "scoreable": true,
+  "seconds": {
+    "plain": 2.0,
+    "failing": 2.31,
+    "neighbours": 24.64
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 2.98,
+  "host_box_seconds": 0.004,
+  "file_target": false,
+  "production_bytes": 4312565,
+  "target": [
+    [
+      "sklearn/linear_model/logistic.py",
+      "LogisticRegressionCV.fit"
+    ]
+  ],
+  "narrow": {
+    "functions": 78,
+    "bytes": 145456,
+    "ratio": 0.033728419165856054,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 1,
+    "names_fix": true,
+    "fix_position_from_innermost": 1
+  },
+  "word_count": 26,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "LogisticRegressionCV",
+      "from": "issue",
+      "ordinary_matches": 56,
+      "ordinary_first": 8,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 8
+    },
+    {
+      "word": "linear_model",
+      "from": "issue+failure",
+      "ordinary_matches": 409,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "random",
+      "from": "issue",
+      "ordinary_matches": 2092,
+      "ordinary_first": null,
+      "narrow_matches": 45,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "seed",
+      "from": "issue",
+      "ordinary_matches": 431,
+      "ordinary_first": null,
+      "narrow_matches": 27,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "normal",
+      "from": "issue",
+      "ordinary_matches": 269,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "sign",
+      "from": "issue",
+      "ordinary_matches": 102,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pyenv",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "sample_weight",
+      "from": "issue",
+      "ordinary_matches": 1569,
+      "ordinary_first": 754,
+      "narrow_matches": 47,
+      "narrow_first": 31,
+      "narrow_cost": 31,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 754
+    },
+    {
+      "word": "mean",
+      "from": "issue+failure",
+      "ordinary_matches": 977,
+      "ordinary_first": 569,
+      "narrow_matches": 8,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 569
+    },
+    {
+      "word": "coefs_paths",
+      "from": "issue",
+      "ordinary_matches": 25,
+      "ordinary_first": 2,
+      "narrow_matches": 16,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2
+    },
+    {
+      "word": "best_indices",
+      "from": "issue",
+      "ordinary_matches": 5,
+      "ordinary_first": 1,
+      "narrow_matches": 5,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "best_indices_C",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": 1,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "x86_64",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "NO_ATLAS_INFO",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "HAVE_CBLAS",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "lib_dirs",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "cblas_libs",
+      "from": "issue",
+      "ordinary_matches": 5,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_LogisticRegressionCV_no_refit",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_logistic",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "l1_ratio_",
+      "from": "+failure",
+      "ordinary_matches": 21,
+      "ordinary_first": 7,
+      "narrow_matches": 7,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 7
+    },
+    {
+      "word": "append",
+      "from": "+failure",
+      "ordinary_matches": 562,
+      "ordinary_first": 383,
+      "narrow_matches": 14,
+      "narrow_first": 5,
+      "narrow_cost": 5,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 383
+    },
+    {
+      "word": "l1_ratios_",
+      "from": "+failure",
+      "ordinary_matches": 14,
+      "ordinary_first": 2,
+      "narrow_matches": 13,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2
+    },
+    {
+      "word": "best_indices_l1",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": 1,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "______________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 10,
+  "median": {
+    "ordinary": 4.5,
+    "narrow": 1.0,
+    "subtracted": 4.5,
+    "narrow_hits": 10
+  },
+  "best_word": {
+    "word": "best_indices",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

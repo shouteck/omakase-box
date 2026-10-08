@@ -29,3 +29,27 @@ The package-plus-installed-dependency envelope yields 2.0–8.8%, but is inflate
 Principles applied: Model the Domain separated naming, body retention, execution completeness and denominator; Sequence Verifiable Units froze selection then calibrated construction before scoring; Prove It Works requires the fresh sceptic sample; Guard the Context Window kept the handoff to one table. Three independent packaging reruns match exactly; fresh native Astropy 14539 reproduction also matches all measurement fields and presentation hashes except elapsed time. The fresh sceptic confirms the narrow failure; expanded call-alias sensitivity leaves minima 27.7985% production and 11.1095% all Python. A sample name-multiplicity check found no added same-name setters, while identifying that scoring limitation for future use. Reviewer removed its own disposable copy/container. Final review is in gate-1-sceptic.md. Stop before Gate 2; owner and CTO decide, other lines paused.
 
 Closeout: removed only the five gate-owned retained image tags, with successful Docker receipts in gate-1/cleanup.json and no gate containers remaining. Original raw benchmark artifacts stay locally available under ignored records; committed hashes, scripts and pinned public image digests support reproduction. Calibration and whitespace checks passed.
+
+## 8 October 2026: Gate 1b, the Box as the first place to search
+
+**Set out to do.** Gate 1b as the programme sets it: on Gate 1's thirty tasks, by script, the narrow Box, the same minus passing neighbours, the error trace as baseline, a search three ways, and the time to make a Box.
+
+**Before any run.** Lab level with master and origin; kitchen idle. Wrote `gate-1b-plan.md` with definitions, the word rule, the decision thresholds and five predictions, and pushed it (`ba544f5`) before the first container started.
+
+**Did.** New bridge and runner in `gate-1b/` (call events only, three phases, one image held at a time). Thirty tasks run in pinned images with the network off. Host measurement, known-answer checks, a report script. The run was interrupted by the host after 16 tasks; one half-finished attempt set aside, its container removed, the rest resumed.
+
+**Result.** 29 of 30 scoreable. Narrow Box median 4.7% of production source, 433 functions. A changed function in the Box on 26, the patched file represented on 2 more. Error trace names the fix on 6. Subtraction keeps the fix on 9 of 27 and was left out. Box-first clearly fewer places on 14 of 20, costly on none: "worth going on" by the fixed rule. Test run 1.6 seconds plain and 2.2 traced at the median.
+
+**Predictions.** Four held. The first (under 5% on most) held by one task.
+
+**Surprise.** Calling SymPy's runner in-process recovered all five tasks Gate 1 lost, and dropping line events removed both of Gate 1's timeouts. The other surprise is the size of the start-up noise: hundreds of functions run before a one-line test does anything.
+
+**The sceptic.** Reran three tasks and one fresh container run: identical. Its sensitivities are the important part: the pass survives test-free ordinary search and issue-only words, but with each task's best word only 8 or 9 of 20 show a clear gain, and a file-level filter does nearly as well. The result page now says "suggests", not "shows". It also corrected "28 of 29" to 26 plus 2, and the pull-time sentence.
+
+**Mistakes.** The admission parser missed an older pytest format; found because a task that plainly failed was listed unknown, fixed, with the earlier summary kept. One edit put a control character into a regular expression through a shell here-document; caught by the same symptom. The lead measured the first task before the rest had run.
+
+**Cost.** Nothing paid. About 48 minutes of image pulls and a few minutes of test runs. All gate-pulled images removed at the end; no container left.
+
+**Principles that changed a decision.** *Sequence verifiable units*: plan pushed before runs, and the decision rule written as code with its own checks. *Build the lever*: a Box is any set of function keys to the scorer, so another technique can be scored without rewriting. *Explain the number*: the sceptic's best-word sensitivity is what turned a pass into "suggests".
+
+**Next.** The CTO reads the result. Gate 1c (the catalogue) is the programme's next gate if this counts as go on; the lab does not start it in this session.

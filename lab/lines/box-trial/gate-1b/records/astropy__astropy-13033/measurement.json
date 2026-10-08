@@ -1,0 +1,246 @@
+{
+  "instance_id": "astropy__astropy-13033",
+  "repo": "astropy/astropy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.98,
+    "failing": 3.48,
+    "neighbours": 4.19
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 5.73,
+  "host_box_seconds": 0.018,
+  "file_target": false,
+  "production_bytes": 7114118,
+  "target": [
+    [
+      "astropy/timeseries/core.py",
+      "BaseTimeSeries._check_required_columns"
+    ]
+  ],
+  "narrow": {
+    "functions": 528,
+    "bytes": 534925,
+    "ratio": 0.07519203364352404,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 7,
+    "bytes": 7895,
+    "ratio": 0.001109765117755989,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 18,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "TimeSeries",
+      "from": "issue+failure",
+      "ordinary_matches": 91,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "CODE_OF_CONDUCT",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "GitHub",
+      "from": "issue",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "time",
+      "from": "issue",
+      "ordinary_matches": 1814,
+      "ordinary_first": 1246,
+      "narrow_matches": 79,
+      "narrow_first": 49,
+      "narrow_cost": 49,
+      "subtracted_matches": 2,
+      "subtracted_first": null,
+      "subtracted_cost": 1248
+    },
+    {
+      "word": "timeseries",
+      "from": "issue",
+      "ordinary_matches": 131,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Time",
+      "from": "issue",
+      "ordinary_matches": 1638,
+      "ordinary_first": null,
+      "narrow_matches": 27,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "arange",
+      "from": "issue",
+      "ordinary_matches": 850,
+      "ordinary_first": null,
+      "narrow_matches": 4,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_required_columns",
+      "from": "issue",
+      "ordinary_matches": 8,
+      "ordinary_first": 4,
+      "narrow_matches": 5,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 4
+    },
+    {
+      "word": "remove_column",
+      "from": "issue",
+      "ordinary_matches": 30,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "platform",
+      "from": "issue",
+      "ordinary_matches": 74,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "version",
+      "from": "issue",
+      "ordinary_matches": 626,
+      "ordinary_first": null,
+      "narrow_matches": 34,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__version__",
+      "from": "issue",
+      "ordinary_matches": 77,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_required_columns",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_____________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_sampled",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "value",
+      "from": "+failure",
+      "ordinary_matches": 6774,
+      "ordinary_first": null,
+      "narrow_matches": 423,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "args",
+      "from": "+failure",
+      "ordinary_matches": 1773,
+      "ordinary_first": null,
+      "narrow_matches": 65,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 2,
+  "median": {
+    "ordinary": 625.0,
+    "narrow": 25.5,
+    "subtracted": 626.0,
+    "narrow_hits": 2
+  },
+  "best_word": {
+    "word": "_required_columns",
+    "ordinary_first": 4,
+    "narrow_cost": 2,
+    "subtracted_cost": 4
+  }
+}

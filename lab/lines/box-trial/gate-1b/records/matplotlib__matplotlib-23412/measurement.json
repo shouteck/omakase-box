@@ -1,0 +1,270 @@
+{
+  "instance_id": "matplotlib__matplotlib-23412",
+  "repo": "matplotlib/matplotlib",
+  "scoreable": true,
+  "seconds": {
+    "plain": 10.7,
+    "failing": 3.64,
+    "neighbours": 2.82
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.23,
+  "host_box_seconds": 0.026,
+  "file_target": false,
+  "production_bytes": 5506227,
+  "target": [
+    [
+      "lib/matplotlib/patches.py",
+      "Patch.draw"
+    ]
+  ],
+  "narrow": {
+    "functions": 889,
+    "bytes": 637060,
+    "ratio": 0.11569809962429808,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 693,
+    "bytes": 472060,
+    "ratio": 0.08573202666726236,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 1,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 22,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "pyplot",
+      "from": "issue",
+      "ordinary_matches": 1230,
+      "ordinary_first": null,
+      "narrow_matches": 26,
+      "narrow_first": null,
+      "subtracted_matches": 14,
+      "subtracted_first": null
+    },
+    {
+      "word": "figure",
+      "from": "issue",
+      "ordinary_matches": 2893,
+      "ordinary_first": null,
+      "narrow_matches": 291,
+      "narrow_first": null,
+      "subtracted_matches": 286,
+      "subtracted_first": null
+    },
+    {
+      "word": "add_patch",
+      "from": "issue",
+      "ordinary_matches": 225,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "patches",
+      "from": "issue",
+      "ordinary_matches": 533,
+      "ordinary_first": null,
+      "narrow_matches": 13,
+      "narrow_first": null,
+      "subtracted_matches": 13,
+      "subtracted_first": null
+    },
+    {
+      "word": "Rectangle",
+      "from": "issue",
+      "ordinary_matches": 178,
+      "ordinary_first": null,
+      "narrow_matches": 8,
+      "narrow_first": null,
+      "subtracted_matches": 8,
+      "subtracted_first": null
+    },
+    {
+      "word": "ylim",
+      "from": "issue",
+      "ordinary_matches": 183,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "xlim",
+      "from": "issue",
+      "ordinary_matches": 188,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "show",
+      "from": "issue",
+      "ordinary_matches": 942,
+      "ordinary_first": null,
+      "narrow_matches": 13,
+      "narrow_first": null,
+      "subtracted_matches": 9,
+      "subtracted_first": null
+    },
+    {
+      "word": "githubusercontent",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "ax_g",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "linspace",
+      "from": "issue",
+      "ordinary_matches": 491,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "plot",
+      "from": "issue",
+      "ordinary_matches": 2390,
+      "ordinary_first": null,
+      "narrow_matches": 19,
+      "narrow_first": null,
+      "subtracted_matches": 16,
+      "subtracted_first": null
+    },
+    {
+      "word": "MacOSX",
+      "from": "issue",
+      "ordinary_matches": 4,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "response_",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_______________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_dash_offset_patch_draw",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_raise_on_image_difference",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "testing",
+      "from": "+failure",
+      "ordinary_matches": 356,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 4,
+      "subtracted_first": null
+    },
+    {
+      "word": "exceptions",
+      "from": "+failure",
+      "ordinary_matches": 11,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "ImageComparisonFailure",
+      "from": "+failure",
+      "ordinary_matches": 13,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 3,
+      "subtracted_first": null
+    },
+    {
+      "word": "result_images",
+      "from": "+failure",
+      "ordinary_matches": 15,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_patches",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 0
+}

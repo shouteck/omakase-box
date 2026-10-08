@@ -1,0 +1,57 @@
+{
+  "base_commit": "71db08c05197545944949d5aa76cd340e7143627",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_with_newline",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_without_newline"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.0321965359999865
+    },
+    "failing": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_with_newline",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_without_newline"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.686081659999985
+    },
+    "neighbours": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_util_rst.py::test_escape",
+        "tests/test_util_rst.py::test_append_epilog",
+        "tests/test_util_rst.py::test_prepend_prolog",
+        "tests/test_util_rst.py::test_prepend_prolog_with_CR",
+        "tests/test_util_rst.py::test_prepend_prolog_without_CR",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections",
+        "tests/test_util_rst.py::test_textwidth",
+        "tests/test_util_rst.py::test_heading"
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 1.7206784979999838
+    }
+  }
+}

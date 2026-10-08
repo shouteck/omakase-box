@@ -1,0 +1,194 @@
+{
+  "instance_id": "astropy__astropy-7166",
+  "repo": "astropy/astropy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.17,
+    "failing": 1.69,
+    "neighbours": 2.24
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.83,
+  "host_box_seconds": 0.004,
+  "file_target": false,
+  "production_bytes": 5479836,
+  "target": [
+    [
+      "astropy/utils/misc.py",
+      "InheritDocstrings.__init__"
+    ]
+  ],
+  "narrow": {
+    "functions": 53,
+    "bytes": 76178,
+    "ratio": 0.013901510921129756,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 13,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "InheritDocstrings",
+      "from": "issue",
+      "ordinary_matches": 27,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "isfunction",
+      "from": "issue",
+      "ordinary_matches": 5,
+      "ordinary_first": 5,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 5
+    },
+    {
+      "word": "___________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_inherit_docstrings",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_misc",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "utils",
+      "from": "+failure",
+      "ordinary_matches": 719,
+      "ordinary_first": null,
+      "narrow_matches": 12,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "tests",
+      "from": "+failure",
+      "ordinary_matches": 495,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Subclass",
+      "from": "+failure",
+      "ordinary_matches": 7,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "plugins",
+      "from": "+failure",
+      "ordinary_matches": 23,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "display",
+      "from": "+failure",
+      "ordinary_matches": 88,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pytest",
+      "from": "+failure",
+      "ordinary_matches": 2745,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "+failure",
+      "ordinary_matches": 375,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 5,
+    "narrow": 1,
+    "subtracted": 5,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "isfunction",
+    "ordinary_first": 5,
+    "narrow_cost": 1,
+    "subtracted_cost": 5
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12585",
+  "repo": "scikit-learn/scikit-learn",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.12,
+    "failing": 1.63,
+    "neighbours": 1.51
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 2.87,
+  "host_box_seconds": 0.005,
+  "file_target": false,
+  "production_bytes": 4618706,
+  "target": [
+    [
+      "sklearn/base.py",
+      "clone"
+    ]
+  ],
+  "narrow": {
+    "functions": 45,
+    "bytes": 27560,
+    "ratio": 0.0059670392529855764,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 1,
+    "names_fix": true,
+    "fix_position_from_innermost": 1
+  },
+  "word_count": 10,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "preprocessing",
+      "from": "issue",
+      "ordinary_matches": 276,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "StandardScaler",
+      "from": "issue",
+      "ordinary_matches": 174,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "base",
+      "from": "issue",
+      "ordinary_matches": 436,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "clone",
+      "from": "issue+failure",
+      "ordinary_matches": 228,
+      "ordinary_first": 8,
+      "narrow_matches": 7,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 8
+    },
+    {
+      "word": "with_mean",
+      "from": "issue",
+      "ordinary_matches": 64,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_object_params",
+      "from": "issue+failure",
+      "ordinary_matches": 6,
+      "ordinary_first": 1,
+      "narrow_matches": 6,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "get_params",
+      "from": "issue+failure",
+      "ordinary_matches": 126,
+      "ordinary_first": 5,
+      "narrow_matches": 7,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 5
+    },
+    {
+      "word": "__________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_clone_estimator_types",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_base",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 3,
+  "median": {
+    "ordinary": 5,
+    "narrow": 1,
+    "subtracted": 5,
+    "narrow_hits": 3
+  },
+  "best_word": {
+    "word": "new_object_params",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "instance_id": "sympy__sympy-12096",
+  "repo": "sympy/sympy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.16,
+    "failing": 1.47,
+    "neighbours": 1.97
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [
+    "SymPy runner called in-process; test names match by substring"
+  ],
+  "host_parse_seconds": 12.76,
+  "host_box_seconds": 0.017,
+  "file_target": false,
+  "production_bytes": 9649981,
+  "target": [
+    [
+      "sympy/core/function.py",
+      "Function._eval_evalf"
+    ]
+  ],
+  "narrow": {
+    "functions": 326,
+    "bytes": 251008,
+    "ratio": 0.026011242923690732,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 2,
+    "bytes": 490,
+    "ratio": 5.077730204857398e-05,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 6,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "_imp_",
+      "from": "issue",
+      "ordinary_matches": 15,
+      "ordinary_first": 1,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "utilities",
+      "from": "issue",
+      "ordinary_matches": 765,
+      "ordinary_first": 98,
+      "narrow_matches": 11,
+      "narrow_first": 6,
+      "narrow_cost": 6,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 98
+    },
+    {
+      "word": "lambdify",
+      "from": "issue",
+      "ordinary_matches": 267,
+      "ordinary_first": 13,
+      "narrow_matches": 4,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 13
+    },
+    {
+      "word": "implemented_function",
+      "from": "issue",
+      "ordinary_matches": 57,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "evalf",
+      "from": "issue",
+      "ordinary_matches": 569,
+      "ordinary_first": 117,
+      "narrow_matches": 15,
+      "narrow_first": 12,
+      "narrow_cost": 12,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 117
+    },
+    {
+      "word": "_eval_evalf",
+      "from": "issue",
+      "ordinary_matches": 74,
+      "ordinary_first": 10,
+      "narrow_matches": 3,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 10
+    }
+  ],
+  "words_reaching_fix": 5,
+  "median": {
+    "ordinary": 13,
+    "narrow": 3,
+    "subtracted": 13,
+    "narrow_hits": 5
+  },
+  "best_word": {
+    "word": "_imp_",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

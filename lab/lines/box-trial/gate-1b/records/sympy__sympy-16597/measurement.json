@@ -1,0 +1,188 @@
+{
+  "instance_id": "sympy__sympy-16597",
+  "repo": "sympy/sympy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.38,
+    "failing": 2.14,
+    "neighbours": 10.6
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [
+    "SymPy runner called in-process; test names match by substring"
+  ],
+  "host_parse_seconds": 32.14,
+  "host_box_seconds": 0.029,
+  "file_target": false,
+  "production_bytes": 16482634,
+  "target": [
+    [
+      "sympy/assumptions/ask.py",
+      "get_known_facts"
+    ],
+    [
+      "sympy/assumptions/ask_generated.py",
+      "get_known_facts_cnf"
+    ],
+    [
+      "sympy/assumptions/ask_generated.py",
+      "get_known_facts_dict"
+    ],
+    [
+      "sympy/core/power.py",
+      "Pow._eval_is_rational"
+    ],
+    [
+      "sympy/printing/tree.py",
+      "print_tree"
+    ],
+    [
+      "sympy/tensor/indexed.py",
+      "Idx.__new__"
+    ]
+  ],
+  "narrow": {
+    "functions": 382,
+    "bytes": 308419,
+    "ratio": 0.018711754444101593,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "subtracted": {
+    "functions": 2,
+    "bytes": 390,
+    "ratio": 2.366126676112568e-05,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 10,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "is_even",
+      "from": "issue",
+      "ordinary_matches": 152,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "is_finite",
+      "from": "issue+failure",
+      "ordinary_matches": 167,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Symbol",
+      "from": "issue",
+      "ordinary_matches": 4622,
+      "ordinary_first": 3589,
+      "narrow_matches": 23,
+      "narrow_first": null,
+      "narrow_cost": 3612,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 3589
+    },
+    {
+      "word": "test_assumptions",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_infinity",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "is_integer",
+      "from": "+failure",
+      "ordinary_matches": 419,
+      "ordinary_first": 53,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "narrow_cost": 59,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 53
+    },
+    {
+      "word": "________________________________________________________________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____________",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_neg_infinity",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_other_symbol",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 2,
+  "median": {
+    "ordinary": 1821.0,
+    "narrow": 1835.5,
+    "subtracted": 1821.0,
+    "narrow_hits": 0
+  },
+  "best_word": {
+    "word": "is_integer",
+    "ordinary_first": 53,
+    "narrow_cost": 59,
+    "subtracted_cost": 53
+  }
+}

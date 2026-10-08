@@ -1,0 +1,354 @@
+{
+  "instance_id": "sphinx-doc__sphinx-7454",
+  "repo": "sphinx-doc/sphinx",
+  "scoreable": true,
+  "seconds": {
+    "plain": 0.75,
+    "failing": 1.34,
+    "neighbours": 3.97
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 1.27,
+  "host_box_seconds": 0.006,
+  "file_target": false,
+  "production_bytes": 2665328,
+  "target": [
+    [
+      "sphinx/domains/python.py",
+      "_parse_annotation.make_xref"
+    ]
+  ],
+  "narrow": {
+    "functions": 33,
+    "bytes": 15651,
+    "ratio": 0.0058720727805358286,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 1,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 29,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "autodoc_typehints",
+      "from": "issue",
+      "ordinary_matches": 8,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "python",
+      "from": "issue",
+      "ordinary_matches": 206,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "issue+failure",
+      "ordinary_matches": 800,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "sphinx_type_hint_links",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "type_hint_test",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "autodoc",
+      "from": "issue",
+      "ordinary_matches": 241,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "intersphinx",
+      "from": "issue",
+      "ordinary_matches": 26,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "intersphinx_mapping",
+      "from": "issue",
+      "ordinary_matches": 19,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "dev20200408",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_parse_annotation",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_____________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_domain_py",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assert_node",
+      "from": "+failure",
+      "ordinary_matches": 340,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pending_xref",
+      "from": "+failure",
+      "ordinary_matches": 119,
+      "ordinary_first": 47,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 47
+    },
+    {
+      "word": "version",
+      "from": "+failure",
+      "ordinary_matches": 641,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__version_info__",
+      "from": "+failure",
+      "ordinary_matches": 29,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "LooseVersion",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__version__",
+      "from": "+failure",
+      "ordinary_matches": 19,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pkg_resources",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pypa",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "iter_entry_points",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__init__",
+      "from": "+failure",
+      "ordinary_matches": 532,
+      "ordinary_first": null,
+      "narrow_matches": 14,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "declare_namespace",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "parsers",
+      "from": "+failure",
+      "ordinary_matches": 80,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "directive",
+      "from": "+failure",
+      "ordinary_matches": 310,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "directives",
+      "from": "+failure",
+      "ordinary_matches": 260,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "misc",
+      "from": "+failure",
+      "ordinary_matches": 5,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pytest",
+      "from": "+failure",
+      "ordinary_matches": 909,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 47,
+    "narrow": 1,
+    "subtracted": 47,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "pending_xref",
+    "ordinary_first": 47,
+    "narrow_cost": 1,
+    "subtracted_cost": 47
+  }
+}

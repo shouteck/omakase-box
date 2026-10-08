@@ -1,0 +1,56 @@
+{
+  "base_commit": "a5917978be39d13cd90b517e1de4e7a539ffaa48",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "astropy/io/ascii/tests/test_rst.py::test_rst_with_header_rows"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 2.0949617519999606
+    },
+    "failing": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "astropy/io/ascii/tests/test_rst.py::test_rst_with_header_rows"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 3.373990563999996
+    },
+    "neighbours": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "astropy/io/ascii/tests/test_rst.py::test_read_normal",
+        "astropy/io/ascii/tests/test_rst.py::test_read_normal_names",
+        "astropy/io/ascii/tests/test_rst.py::test_read_normal_names_include",
+        "astropy/io/ascii/tests/test_rst.py::test_read_normal_exclude",
+        "astropy/io/ascii/tests/test_rst.py::test_read_unbounded_right_column",
+        "astropy/io/ascii/tests/test_rst.py::test_read_unbounded_right_column_header",
+        "astropy/io/ascii/tests/test_rst.py::test_read_right_indented_table",
+        "astropy/io/ascii/tests/test_rst.py::test_trailing_spaces_in_row_definition",
+        "astropy/io/ascii/tests/test_rst.py::test_write_normal"
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 3.2524467720000416
+    }
+  }
+}

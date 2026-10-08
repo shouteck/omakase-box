@@ -1,0 +1,254 @@
+{
+  "instance_id": "matplotlib__matplotlib-13989",
+  "repo": "matplotlib/matplotlib",
+  "scoreable": true,
+  "seconds": {
+    "plain": 5.81,
+    "failing": 3.85,
+    "neighbours": 2.95
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.04,
+  "host_box_seconds": 0.021,
+  "file_target": false,
+  "production_bytes": 5379823,
+  "target": [
+    [
+      "lib/matplotlib/axes/_axes.py",
+      "Axes.hist"
+    ]
+  ],
+  "narrow": {
+    "functions": 655,
+    "bytes": 490322,
+    "ratio": 0.09114091671789203,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 446,
+    "bytes": 324252,
+    "ratio": 0.06027187139799953,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 19,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "hist",
+      "from": "issue",
+      "ordinary_matches": 121,
+      "ordinary_first": 39,
+      "narrow_matches": 9,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 8,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "random",
+      "from": "issue",
+      "ordinary_matches": 763,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "rand",
+      "from": "issue",
+      "ordinary_matches": 167,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "get_backend",
+      "from": "issue",
+      "ordinary_matches": 16,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 4,
+      "subtracted_first": null
+    },
+    {
+      "word": "_________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_hist_range_and_density",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_axes",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__init__",
+      "from": "+failure",
+      "ordinary_matches": 1228,
+      "ordinary_first": null,
+      "narrow_matches": 123,
+      "narrow_first": null,
+      "subtracted_matches": 74,
+      "subtracted_first": null
+    },
+    {
+      "word": "version",
+      "from": "+failure",
+      "ordinary_matches": 310,
+      "ordinary_first": null,
+      "narrow_matches": 57,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "LooseVersion",
+      "from": "+failure",
+      "ordinary_matches": 12,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__version__",
+      "from": "+failure",
+      "ordinary_matches": 49,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_distutils",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "group",
+      "from": "+failure",
+      "ordinary_matches": 145,
+      "ordinary_first": null,
+      "narrow_matches": 11,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "PytestUnknownMarkWarning",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "mark",
+      "from": "+failure",
+      "ordinary_matches": 276,
+      "ordinary_first": null,
+      "narrow_matches": 11,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "baseline_images",
+      "from": "+failure",
+      "ordinary_matches": 548,
+      "ordinary_first": null,
+      "narrow_matches": 16,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pytest",
+      "from": "+failure",
+      "ordinary_matches": 715,
+      "ordinary_first": null,
+      "narrow_matches": 24,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "+failure",
+      "ordinary_matches": 187,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 39,
+    "narrow": 1,
+    "subtracted": 1,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "hist",
+    "ordinary_first": 39,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

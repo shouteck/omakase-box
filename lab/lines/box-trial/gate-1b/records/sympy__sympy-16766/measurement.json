@@ -1,0 +1,186 @@
+{
+  "instance_id": "sympy__sympy-16766",
+  "repo": "sympy/sympy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.3,
+    "failing": 2.07,
+    "neighbours": 2.24
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [
+    "SymPy runner called in-process; test names match by substring"
+  ],
+  "host_parse_seconds": 34.17,
+  "host_box_seconds": 0.025,
+  "file_target": true,
+  "production_bytes": 16518911,
+  "target": [
+    [
+      "sympy/printing/pycode.py",
+      null
+    ]
+  ],
+  "narrow": {
+    "functions": 662,
+    "bytes": 522141,
+    "ratio": 0.03160868171031371,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 233,
+    "bytes": 174361,
+    "ratio": 0.010555235753737036,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 11,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "PythonCodePrinter",
+      "from": "issue",
+      "ordinary_matches": 17,
+      "ordinary_first": 5,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "narrow_cost": 5,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 5
+    },
+    {
+      "word": "lambdify",
+      "from": "issue",
+      "ordinary_matches": 376,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "IndexedBase",
+      "from": "issue",
+      "ordinary_matches": 470,
+      "ordinary_first": null,
+      "narrow_matches": 18,
+      "narrow_first": null,
+      "subtracted_matches": 18,
+      "subtracted_first": null
+    },
+    {
+      "word": "pycode",
+      "from": "issue",
+      "ordinary_matches": 30,
+      "ordinary_first": 16,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "narrow_cost": 16,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 16
+    },
+    {
+      "word": "_print_Indexed",
+      "from": "issue",
+      "ordinary_matches": 24,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "args",
+      "from": "issue",
+      "ordinary_matches": 8842,
+      "ordinary_first": 6786,
+      "narrow_matches": 558,
+      "narrow_first": 488,
+      "narrow_cost": 488,
+      "subtracted_matches": 221,
+      "subtracted_first": 205,
+      "subtracted_cost": 205
+    },
+    {
+      "word": "join",
+      "from": "issue",
+      "ordinary_matches": 833,
+      "ordinary_first": 575,
+      "narrow_matches": 25,
+      "narrow_first": 15,
+      "narrow_cost": 15,
+      "subtracted_matches": 8,
+      "subtracted_first": 6,
+      "subtracted_cost": 6
+    },
+    {
+      "word": "_print",
+      "from": "issue",
+      "ordinary_matches": 1460,
+      "ordinary_first": 1076,
+      "narrow_matches": 22,
+      "narrow_first": 12,
+      "narrow_cost": 12,
+      "subtracted_matches": 16,
+      "subtracted_first": 7,
+      "subtracted_cost": 7
+    },
+    {
+      "word": "test_pycode",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_PythonCodePrinter",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "doprint",
+      "from": "+failure",
+      "ordinary_matches": 404,
+      "ordinary_first": 87,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "narrow_cost": 93,
+      "subtracted_matches": 3,
+      "subtracted_first": null,
+      "subtracted_cost": 90
+    }
+  ],
+  "words_reaching_fix": 6,
+  "median": {
+    "ordinary": 331.0,
+    "narrow": 15.5,
+    "subtracted": 11.5,
+    "narrow_hits": 3
+  },
+  "best_word": {
+    "word": "PythonCodePrinter",
+    "ordinary_first": 5,
+    "narrow_cost": 5,
+    "subtracted_cost": 5
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "instance_id": "sphinx-doc__sphinx-8595",
+  "repo": "sphinx-doc/sphinx",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.33,
+    "failing": 2.64
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false
+  },
+  "notes": [],
+  "host_parse_seconds": 1.37,
+  "host_box_seconds": 0.02,
+  "file_target": false,
+  "production_bytes": 2825019,
+  "target": [
+    [
+      "sphinx/ext/autodoc/__init__.py",
+      "ModuleDocumenter.get_object_members"
+    ]
+  ],
+  "narrow": {
+    "functions": 433,
+    "bytes": 259441,
+    "ratio": 0.09183690445975762,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": null,
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 23,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "__all__",
+      "from": "issue",
+      "ordinary_matches": 37,
+      "ordinary_first": 13,
+      "narrow_matches": 25,
+      "narrow_first": 9,
+      "narrow_cost": 9
+    },
+    {
+      "word": "autodoc",
+      "from": "issue",
+      "ordinary_matches": 345,
+      "ordinary_first": 54,
+      "narrow_matches": 56,
+      "narrow_first": 34,
+      "narrow_cost": 34
+    },
+    {
+      "word": "________________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "test_empty_all",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "test_ext_autodoc_automodule",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "empty_all",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "_build",
+      "from": "+failure",
+      "ordinary_matches": 55,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null
+    },
+    {
+      "word": "addnodes",
+      "from": "+failure",
+      "ordinary_matches": 551,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "version",
+      "from": "+failure",
+      "ordinary_matches": 660,
+      "ordinary_first": null,
+      "narrow_matches": 73,
+      "narrow_first": null
+    },
+    {
+      "word": "__version_info__",
+      "from": "+failure",
+      "ordinary_matches": 33,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null
+    },
+    {
+      "word": "LooseVersion",
+      "from": "+failure",
+      "ordinary_matches": 4,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "__version__",
+      "from": "+failure",
+      "ordinary_matches": 20,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "pkg_resources",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "pypa",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "html",
+      "from": "+failure",
+      "ordinary_matches": 886,
+      "ordinary_first": null,
+      "narrow_matches": 72,
+      "narrow_first": null
+    },
+    {
+      "word": "iter_entry_points",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null
+    },
+    {
+      "word": "__init__",
+      "from": "+failure",
+      "ordinary_matches": 576,
+      "ordinary_first": null,
+      "narrow_matches": 79,
+      "narrow_first": null
+    },
+    {
+      "word": "declare_namespace",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "parsers",
+      "from": "+failure",
+      "ordinary_matches": 82,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null
+    },
+    {
+      "word": "directive",
+      "from": "+failure",
+      "ordinary_matches": 324,
+      "ordinary_first": null,
+      "narrow_matches": 43,
+      "narrow_first": null
+    },
+    {
+      "word": "directives",
+      "from": "+failure",
+      "ordinary_matches": 301,
+      "ordinary_first": null,
+      "narrow_matches": 45,
+      "narrow_first": null
+    },
+    {
+      "word": "misc",
+      "from": "+failure",
+      "ordinary_matches": 5,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null
+    },
+    {
+      "word": "pytest",
+      "from": "+failure",
+      "ordinary_matches": 1034,
+      "ordinary_first": null,
+      "narrow_matches": 15,
+      "narrow_first": null
+    }
+  ],
+  "words_reaching_fix": 2,
+  "median": {
+    "ordinary": 33.5,
+    "narrow": 21.5,
+    "subtracted": null,
+    "narrow_hits": 2
+  },
+  "best_word": {
+    "word": "__all__",
+    "ordinary_first": 13,
+    "narrow_cost": 9,
+    "subtracted_cost": null
+  }
+}

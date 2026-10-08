@@ -1,0 +1,268 @@
+{
+  "instance_id": "astropy__astropy-14539",
+  "repo": "astropy/astropy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 3.9,
+    "failing": 4.29,
+    "neighbours": 4.54
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 6.18,
+  "host_box_seconds": 0.019,
+  "file_target": false,
+  "production_bytes": 7343054,
+  "target": [
+    [
+      "astropy/io/fits/diff.py",
+      "TableDataDiff._diff"
+    ]
+  ],
+  "narrow": {
+    "functions": 578,
+    "bytes": 632991,
+    "ratio": 0.08620268896293014,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 6,
+    "bytes": 6614,
+    "ratio": 0.0009007151520334727,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 3,
+    "names_fix": true,
+    "fix_position_from_innermost": 1
+  },
+  "word_count": 20,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "fits",
+      "from": "issue",
+      "ordinary_matches": 3231,
+      "ordinary_first": null,
+      "narrow_matches": 9,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "FITSDiff",
+      "from": "issue",
+      "ordinary_matches": 41,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Column",
+      "from": "issue",
+      "ordinary_matches": 1214,
+      "ordinary_first": null,
+      "narrow_matches": 88,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "BinTableHDU",
+      "from": "issue",
+      "ordinary_matches": 201,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "from_columns",
+      "from": "issue",
+      "ordinary_matches": 128,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "writeto",
+      "from": "issue",
+      "ordinary_matches": 431,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "identical",
+      "from": "issue",
+      "ordinary_matches": 180,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "printdiff",
+      "from": "issue",
+      "ordinary_matches": 23,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "element",
+      "from": "issue",
+      "ordinary_matches": 441,
+      "ordinary_first": null,
+      "narrow_matches": 28,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "TestDiff",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_identical_tables",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_diff",
+      "from": "+failure",
+      "ordinary_matches": 5,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "TableDataDiff",
+      "from": "+failure",
+      "ordinary_matches": 16,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "data",
+      "from": "+failure",
+      "ordinary_matches": 8362,
+      "ordinary_first": 1689,
+      "narrow_matches": 370,
+      "narrow_first": 43,
+      "narrow_cost": 43,
+      "subtracted_matches": 3,
+      "subtracted_first": null,
+      "subtracted_cost": 1692
+    },
+    {
+      "word": "__init__",
+      "from": "+failure",
+      "ordinary_matches": 981,
+      "ordinary_first": null,
+      "narrow_matches": 100,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_diff",
+      "from": "+failure",
+      "ordinary_matches": 10,
+      "ordinary_first": 10,
+      "narrow_matches": 3,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 10
+    },
+    {
+      "word": "where",
+      "from": "+failure",
+      "ordinary_matches": 883,
+      "ordinary_first": 194,
+      "narrow_matches": 44,
+      "narrow_first": 11,
+      "narrow_cost": 11,
+      "subtracted_matches": 2,
+      "subtracted_first": null,
+      "subtracted_cost": 196
+    },
+    {
+      "word": "______________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_different_table_data",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 3,
+  "median": {
+    "ordinary": 194,
+    "narrow": 11,
+    "subtracted": 196,
+    "narrow_hits": 3
+  },
+  "best_word": {
+    "word": "_diff",
+    "ordinary_first": 10,
+    "narrow_cost": 3,
+    "subtracted_cost": 10
+  }
+}

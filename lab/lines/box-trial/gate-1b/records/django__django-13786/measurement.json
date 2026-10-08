@@ -1,0 +1,200 @@
+{
+  "instance_id": "django__django-13786",
+  "repo": "django/django",
+  "scoreable": true,
+  "seconds": {
+    "plain": 0.91,
+    "failing": 1.17,
+    "neighbours": 1.26
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 6.1,
+  "host_box_seconds": 0.025,
+  "file_target": false,
+  "production_bytes": 4734918,
+  "target": [
+    [
+      "django/db/migrations/operations/models.py",
+      "CreateModel.reduce"
+    ]
+  ],
+  "narrow": {
+    "functions": 545,
+    "bytes": 386519,
+    "ratio": 0.08163161431729124,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 13,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "CreateModel",
+      "from": "issue+failure",
+      "ordinary_matches": 428,
+      "ordinary_first": 24,
+      "narrow_matches": 9,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 24
+    },
+    {
+      "word": "AlterModelOptions",
+      "from": "issue",
+      "ordinary_matches": 24,
+      "ordinary_first": 8,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 8
+    },
+    {
+      "word": "test_model",
+      "from": "issue",
+      "ordinary_matches": 4,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "reduce",
+      "from": "issue",
+      "ordinary_matches": 41,
+      "ordinary_first": 21,
+      "narrow_matches": 5,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 21
+    },
+    {
+      "word": "options",
+      "from": "issue",
+      "ordinary_matches": 1095,
+      "ordinary_first": 498,
+      "narrow_matches": 73,
+      "narrow_first": 36,
+      "narrow_cost": 36,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 498
+    },
+    {
+      "word": "state_forwards",
+      "from": "issue",
+      "ordinary_matches": 137,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_create_model_and_remove_model_options",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_optimizer",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "OptimizerTests",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "MyModel",
+      "from": "+failure",
+      "ordinary_matches": 42,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assertOptimizesTo",
+      "from": "+failure",
+      "ordinary_matches": 37,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assertEqual",
+      "from": "+failure",
+      "ordinary_matches": 15079,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "verbose_name",
+      "from": "+failure",
+      "ordinary_matches": 352,
+      "ordinary_first": null,
+      "narrow_matches": 23,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 4,
+  "median": {
+    "ordinary": 22.5,
+    "narrow": 1.5,
+    "subtracted": 22.5,
+    "narrow_hits": 4
+  },
+  "best_word": {
+    "word": "AlterModelOptions",
+    "ordinary_first": 8,
+    "narrow_cost": 1,
+    "subtracted_cost": 8
+  }
+}

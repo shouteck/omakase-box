@@ -1,0 +1,300 @@
+{
+  "instance_id": "matplotlib__matplotlib-21568",
+  "repo": "matplotlib/matplotlib",
+  "scoreable": true,
+  "seconds": {
+    "plain": 5.43,
+    "failing": 3.89,
+    "neighbours": 3.75
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.23,
+  "host_box_seconds": 0.014,
+  "file_target": false,
+  "production_bytes": 5465385,
+  "target": [
+    [
+      "lib/matplotlib/dates.py",
+      "_wrap_in_tex"
+    ]
+  ],
+  "narrow": {
+    "functions": 263,
+    "bytes": 214039,
+    "ratio": 0.03916265734252939,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 66,
+    "bytes": 45698,
+    "ratio": 0.008361350572740987,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 25,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "pyplot",
+      "from": "issue",
+      "ordinary_matches": 1241,
+      "ordinary_first": null,
+      "narrow_matches": 14,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "random",
+      "from": "issue",
+      "ordinary_matches": 859,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "seed",
+      "from": "issue",
+      "ordinary_matches": 240,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "rcParams",
+      "from": "issue",
+      "ordinary_matches": 1086,
+      "ordinary_first": null,
+      "narrow_matches": 46,
+      "narrow_first": null,
+      "subtracted_matches": 33,
+      "subtracted_first": null
+    },
+    {
+      "word": "usetex",
+      "from": "issue",
+      "ordinary_matches": 175,
+      "ordinary_first": null,
+      "narrow_matches": 12,
+      "narrow_first": null,
+      "subtracted_matches": 12,
+      "subtracted_first": null
+    },
+    {
+      "word": "date_range",
+      "from": "issue",
+      "ordinary_matches": 10,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "rand",
+      "from": "issue",
+      "ordinary_matches": 165,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "subplots",
+      "from": "issue",
+      "ordinary_matches": 2008,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "constrained_layout",
+      "from": "issue",
+      "ordinary_matches": 260,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "plot",
+      "from": "issue",
+      "ordinary_matches": 2325,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "savefig",
+      "from": "issue",
+      "ordinary_matches": 303,
+      "ordinary_first": null,
+      "narrow_matches": 8,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "__version__",
+      "from": "issue",
+      "ordinary_matches": 48,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "githubusercontent",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "response_",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_date_formatter_usetex",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_dates",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "formatter",
+      "from": "+failure",
+      "ordinary_matches": 283,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "locator",
+      "from": "+failure",
+      "ordinary_matches": 377,
+      "ordinary_first": null,
+      "narrow_matches": 15,
+      "narrow_first": null,
+      "subtracted_matches": 15,
+      "subtracted_first": null
+    },
+    {
+      "word": "______________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_concise_formatter_usetex",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "t_delta2",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_______________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "format_ticks",
+      "from": "+failure",
+      "ordinary_matches": 21,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "t_delta3",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 0
+}

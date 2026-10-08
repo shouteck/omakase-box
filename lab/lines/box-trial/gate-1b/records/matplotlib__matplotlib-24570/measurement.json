@@ -1,0 +1,280 @@
+{
+  "instance_id": "matplotlib__matplotlib-24570",
+  "repo": "matplotlib/matplotlib",
+  "scoreable": true,
+  "seconds": {
+    "plain": 4.53,
+    "failing": 2.38,
+    "neighbours": 2.23
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.58,
+  "host_box_seconds": 0.015,
+  "file_target": false,
+  "production_bytes": 5565016,
+  "target": [
+    [
+      "lib/matplotlib/offsetbox.py",
+      "_get_aligned_offsets"
+    ]
+  ],
+  "narrow": {
+    "functions": 327,
+    "bytes": 260747,
+    "ratio": 0.046854672115947196,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 138,
+    "bytes": 104190,
+    "ratio": 0.01872231813888765,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 23,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "pyplot",
+      "from": "issue",
+      "ordinary_matches": 1241,
+      "ordinary_first": null,
+      "narrow_matches": 25,
+      "narrow_first": null,
+      "subtracted_matches": 11,
+      "subtracted_first": null
+    },
+    {
+      "word": "offsetbox",
+      "from": "issue",
+      "ordinary_matches": 74,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "DrawingArea",
+      "from": "issue",
+      "ordinary_matches": 50,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "AnchoredOffsetbox",
+      "from": "issue",
+      "ordinary_matches": 44,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "TextArea",
+      "from": "issue",
+      "ordinary_matches": 27,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "patches",
+      "from": "issue",
+      "ordinary_matches": 550,
+      "ordinary_first": null,
+      "narrow_matches": 4,
+      "narrow_first": null,
+      "subtracted_matches": 4,
+      "subtracted_first": null
+    },
+    {
+      "word": "Rectangle",
+      "from": "issue",
+      "ordinary_matches": 193,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 3,
+      "subtracted_first": null
+    },
+    {
+      "word": "add_artist",
+      "from": "issue",
+      "ordinary_matches": 180,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "HPacker",
+      "from": "issue",
+      "ordinary_matches": 13,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "VPacker",
+      "from": "issue",
+      "ordinary_matches": 13,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "subplots",
+      "from": "issue",
+      "ordinary_matches": 2225,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 7,
+      "subtracted_first": null
+    },
+    {
+      "word": "githubusercontent",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "response_",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_____________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_packers",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_offsetbox",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assert_allclose",
+      "from": "+failure",
+      "ordinary_matches": 213,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "y_height",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "offset_pairs",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "func",
+      "from": "+failure",
+      "ordinary_matches": 448,
+      "ordinary_first": null,
+      "narrow_matches": 125,
+      "narrow_first": null,
+      "subtracted_matches": 34,
+      "subtracted_first": null
+    },
+    {
+      "word": "array",
+      "from": "+failure",
+      "ordinary_matches": 1828,
+      "ordinary_first": null,
+      "narrow_matches": 38,
+      "narrow_first": null,
+      "subtracted_matches": 8,
+      "subtracted_first": null
+    },
+    {
+      "word": "______________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_______________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 0
+}

@@ -1,0 +1,214 @@
+{
+  "instance_id": "sphinx-doc__sphinx-11445",
+  "repo": "sphinx-doc/sphinx",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.03,
+    "failing": 1.69,
+    "neighbours": 1.72
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 1.47,
+  "host_box_seconds": 0.022,
+  "file_target": false,
+  "production_bytes": 2474995,
+  "target": [
+    [
+      "sphinx/util/rst.py",
+      "prepend_prolog"
+    ]
+  ],
+  "narrow": {
+    "functions": 317,
+    "bytes": 185060,
+    "ratio": 0.07477186822599642,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 1,
+    "bytes": 324,
+    "ratio": 0.0001309093553724351,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 15,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "rst_prolog",
+      "from": "issue+failure",
+      "ordinary_matches": 26,
+      "ordinary_first": 7,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 7
+    },
+    {
+      "word": "nContent",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "nSubheading",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_build",
+      "from": "issue+failure",
+      "ordinary_matches": 60,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "issue",
+      "ordinary_matches": 1096,
+      "ordinary_first": null,
+      "narrow_matches": 83,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "x86_64",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "response_",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "___________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_prepend_prolog_with_roles_in_sections_with_newline",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_util_rst",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "xitems",
+      "from": "+failure",
+      "ordinary_matches": 8,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "reST",
+      "from": "+failure",
+      "ordinary_matches": 68,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_prepend_prolog_with_roles_in_sections_without_newline",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 7,
+    "narrow": 1,
+    "subtracted": 7,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "rst_prolog",
+    "ordinary_first": 7,
+    "narrow_cost": 1,
+    "subtracted_cost": 7
+  }
+}

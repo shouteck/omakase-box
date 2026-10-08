@@ -1,0 +1,298 @@
+{
+  "instance_id": "astropy__astropy-14508",
+  "repo": "astropy/astropy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 2.49,
+    "failing": 4.72,
+    "neighbours": 4.92
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 7.4,
+  "host_box_seconds": 0.018,
+  "file_target": false,
+  "production_bytes": 7342677,
+  "target": [
+    [
+      "astropy/io/fits/card.py",
+      "_format_float"
+    ]
+  ],
+  "narrow": {
+    "functions": 545,
+    "bytes": 640766,
+    "ratio": 0.08726599304313672,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 1,
+    "bytes": 1013,
+    "ratio": 0.00013796058304076293,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 3,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 23,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "fits",
+      "from": "issue+failure",
+      "ordinary_matches": 3225,
+      "ordinary_first": null,
+      "narrow_matches": 18,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Card",
+      "from": "issue",
+      "ordinary_matches": 211,
+      "ordinary_first": null,
+      "narrow_matches": 28,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "getheader",
+      "from": "issue",
+      "ordinary_matches": 24,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "cards",
+      "from": "issue",
+      "ordinary_matches": 353,
+      "ordinary_first": null,
+      "narrow_matches": 88,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_c",
+      "from": "issue",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "keyword",
+      "from": "issue",
+      "ordinary_matches": 1526,
+      "ordinary_first": null,
+      "narrow_matches": 288,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "value",
+      "from": "issue",
+      "ordinary_matches": 6535,
+      "ordinary_first": 2039,
+      "narrow_matches": 615,
+      "narrow_first": 280,
+      "narrow_cost": 280,
+      "subtracted_matches": 3,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "comment",
+      "from": "issue",
+      "ordinary_matches": 508,
+      "ordinary_first": null,
+      "narrow_matches": 81,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "VerifyWarning",
+      "from": "issue+failure",
+      "ordinary_matches": 56,
+      "ordinary_first": null,
+      "narrow_matches": 4,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "card",
+      "from": "issue",
+      "ordinary_matches": 542,
+      "ordinary_first": null,
+      "narrow_matches": 144,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_format_float",
+      "from": "issue",
+      "ordinary_matches": 3,
+      "ordinary_first": 3,
+      "narrow_matches": 3,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "value_str",
+      "from": "issue",
+      "ordinary_matches": 11,
+      "ordinary_first": 1,
+      "narrow_matches": 11,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 11,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "______",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "TestHeaderFunctions",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_floating_point_string_representation_card",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_header",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "expected_str",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__str__",
+      "from": "+failure",
+      "ordinary_matches": 67,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "image",
+      "from": "+failure",
+      "ordinary_matches": 640,
+      "ordinary_first": null,
+      "narrow_matches": 93,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_image",
+      "from": "+failure",
+      "ordinary_matches": 31,
+      "ordinary_first": null,
+      "narrow_matches": 9,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_format_image",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "warn",
+      "from": "+failure",
+      "ordinary_matches": 449,
+      "ordinary_first": null,
+      "narrow_matches": 31,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "verify",
+      "from": "+failure",
+      "ordinary_matches": 209,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 3,
+  "median": {
+    "ordinary": 3,
+    "narrow": 3,
+    "subtracted": 1,
+    "narrow_hits": 3
+  },
+  "best_word": {
+    "word": "value_str",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

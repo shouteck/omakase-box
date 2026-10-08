@@ -1,0 +1,352 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13124",
+  "repo": "scikit-learn/scikit-learn",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.15,
+    "failing": 1.96,
+    "neighbours": 5.43
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.02,
+  "host_box_seconds": 0.005,
+  "file_target": false,
+  "production_bytes": 4633875,
+  "target": [
+    [
+      "sklearn/model_selection/_split.py",
+      "StratifiedKFold._make_test_folds"
+    ]
+  ],
+  "narrow": {
+    "functions": 58,
+    "bytes": 56020,
+    "ratio": 0.012089234172264034,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 28,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "model_selection",
+      "from": "issue+failure",
+      "ordinary_matches": 251,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "StratifiedKFold",
+      "from": "issue",
+      "ordinary_matches": 84,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "StackOverflow",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "python",
+      "from": "issue",
+      "ordinary_matches": 141,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "html",
+      "from": "issue",
+      "ordinary_matches": 57,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "random_state",
+      "from": "issue",
+      "ordinary_matches": 3467,
+      "ordinary_first": 2558,
+      "narrow_matches": 10,
+      "narrow_first": 8,
+      "narrow_cost": 8,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2558
+    },
+    {
+      "word": "RANDOM_SEED",
+      "from": "issue",
+      "ordinary_matches": 5,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "samples_per_class",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "linspace",
+      "from": "issue",
+      "ordinary_matches": 216,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "concatenate",
+      "from": "issue",
+      "ordinary_matches": 106,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "ones",
+      "from": "issue",
+      "ordinary_matches": 422,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "zeros",
+      "from": "issue",
+      "ordinary_matches": 656,
+      "ordinary_first": 468,
+      "narrow_matches": 4,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 468
+    },
+    {
+      "word": "k_fold",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "n_splits",
+      "from": "issue",
+      "ordinary_matches": 264,
+      "ordinary_first": 102,
+      "narrow_matches": 35,
+      "narrow_first": 25,
+      "narrow_cost": 25,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 102
+    },
+    {
+      "word": "fold_n",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "train_idx",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_idx",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "split",
+      "from": "issue",
+      "ordinary_matches": 635,
+      "ordinary_first": 274,
+      "narrow_matches": 20,
+      "narrow_first": 11,
+      "narrow_cost": 11,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 274
+    },
+    {
+      "word": "x86_64",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "NO_ATLAS_INFO",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "HAVE_CBLAS",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "lib_dirs",
+      "from": "issue",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "cblas_libs",
+      "from": "issue",
+      "ordinary_matches": 21,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_shuffle_stratifiedkfold",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_split",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": 1,
+      "narrow_matches": 3,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "test_set1",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_set2",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 5,
+  "median": {
+    "ordinary": 274,
+    "narrow": 8,
+    "subtracted": 274,
+    "narrow_hits": 5
+  },
+  "best_word": {
+    "word": "test_split",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

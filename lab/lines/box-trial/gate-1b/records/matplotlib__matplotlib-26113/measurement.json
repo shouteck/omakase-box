@@ -1,0 +1,292 @@
+{
+  "instance_id": "matplotlib__matplotlib-26113",
+  "repo": "matplotlib/matplotlib",
+  "scoreable": true,
+  "seconds": {
+    "plain": 10.98,
+    "failing": 7.9,
+    "neighbours": 4.52
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 4.12,
+  "host_box_seconds": 0.026,
+  "file_target": false,
+  "production_bytes": 5909237,
+  "target": [
+    [
+      "lib/matplotlib/axes/_axes.py",
+      "Axes.hexbin"
+    ]
+  ],
+  "narrow": {
+    "functions": 959,
+    "bytes": 736556,
+    "ratio": 0.12464485685715432,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 757,
+    "bytes": 563235,
+    "ratio": 0.09531433584403537,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 1,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 22,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "random",
+      "from": "issue",
+      "ordinary_matches": 895,
+      "ordinary_first": 580,
+      "narrow_matches": 3,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 3,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "seed",
+      "from": "issue",
+      "ordinary_matches": 246,
+      "ordinary_first": 145,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "multivariate_normal",
+      "from": "issue",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "ones_like",
+      "from": "issue",
+      "ordinary_matches": 18,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "subplots",
+      "from": "issue",
+      "ordinary_matches": 2327,
+      "ordinary_first": 891,
+      "narrow_matches": 47,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 45,
+      "subtracted_first": 2,
+      "subtracted_cost": 2
+    },
+    {
+      "word": "hexbin",
+      "from": "issue",
+      "ordinary_matches": 30,
+      "ordinary_first": 9,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 2,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "set_facecolor",
+      "from": "issue",
+      "ordinary_matches": 92,
+      "ordinary_first": null,
+      "narrow_matches": 11,
+      "narrow_first": null,
+      "subtracted_matches": 11,
+      "subtracted_first": null
+    },
+    {
+      "word": "reduce_C_function",
+      "from": "issue",
+      "ordinary_matches": 12,
+      "ordinary_first": 1,
+      "narrow_matches": 7,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 7,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "shown",
+      "from": "issue",
+      "ordinary_matches": 272,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_axes",
+      "from": "issue",
+      "ordinary_matches": 54,
+      "ordinary_first": null,
+      "narrow_matches": 13,
+      "narrow_first": null,
+      "subtracted_matches": 13,
+      "subtracted_first": null
+    },
+    {
+      "word": "get_backend",
+      "from": "issue",
+      "ordinary_matches": 17,
+      "ordinary_first": null,
+      "narrow_matches": 4,
+      "narrow_first": null,
+      "subtracted_matches": 3,
+      "subtracted_first": null
+    },
+    {
+      "word": "pylab",
+      "from": "issue",
+      "ordinary_matches": 18,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "backend_inline",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "______________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_hexbin_mincnt_behavior_upon_C_parameter",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_______________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_raise_on_image_difference",
+      "from": "+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "testing",
+      "from": "+failure",
+      "ordinary_matches": 391,
+      "ordinary_first": null,
+      "narrow_matches": 8,
+      "narrow_first": null,
+      "subtracted_matches": 5,
+      "subtracted_first": null
+    },
+    {
+      "word": "exceptions",
+      "from": "+failure",
+      "ordinary_matches": 12,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "ImageComparisonFailure",
+      "from": "+failure",
+      "ordinary_matches": 13,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 3,
+      "subtracted_first": null
+    },
+    {
+      "word": "result_images",
+      "from": "+failure",
+      "ordinary_matches": 15,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_axes",
+      "from": "+failure",
+      "ordinary_matches": 16,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 5,
+  "median": {
+    "ordinary": 145,
+    "narrow": 1,
+    "subtracted": 1,
+    "narrow_hits": 5
+  },
+  "best_word": {
+    "word": "reduce_C_function",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

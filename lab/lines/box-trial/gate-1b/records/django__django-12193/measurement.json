@@ -1,0 +1,184 @@
+{
+  "instance_id": "django__django-12193",
+  "repo": "django/django",
+  "scoreable": true,
+  "seconds": {
+    "plain": 0.88,
+    "failing": 1.59,
+    "neighbours": 1.1
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 6.33,
+  "host_box_seconds": 0.021,
+  "file_target": false,
+  "production_bytes": 4547498,
+  "target": [
+    [
+      "django/forms/widgets.py",
+      "CheckboxInput.get_context"
+    ]
+  ],
+  "narrow": {
+    "functions": 501,
+    "bytes": 336697,
+    "ratio": 0.07404005455307512,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 12,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "SplitArrayField",
+      "from": "issue",
+      "ordinary_matches": 13,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "BooleanField",
+      "from": "issue",
+      "ordinary_matches": 264,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "final_attrs",
+      "from": "issue",
+      "ordinary_matches": 11,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "CheckboxInput",
+      "from": "issue",
+      "ordinary_matches": 15,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "get_context",
+      "from": "issue",
+      "ordinary_matches": 55,
+      "ordinary_first": 32,
+      "narrow_matches": 5,
+      "narrow_first": 4,
+      "narrow_cost": 4,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 32
+    },
+    {
+      "word": "test_get_context_does_not_mutate_attrs",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "forms_tests",
+      "from": "+failure",
+      "ordinary_matches": 9,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "widget_tests",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_checkboxinput",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "CheckboxInputTest",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assertIs",
+      "from": "+failure",
+      "ordinary_matches": 761,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "database",
+      "from": "+failure",
+      "ordinary_matches": 1079,
+      "ordinary_first": null,
+      "narrow_matches": 17,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 32,
+    "narrow": 4,
+    "subtracted": 32,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "get_context",
+    "ordinary_first": 32,
+    "narrow_cost": 4,
+    "subtracted_cost": 32
+  }
+}

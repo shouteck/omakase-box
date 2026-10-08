@@ -1,0 +1,56 @@
+{
+  "base_commit": "e05cef574b8f23ab1b57f57e7da6dee509a4e230",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_quickstart.py::test_exits_when_existing_confpy"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 0.6508955420000007
+    },
+    "failing": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_quickstart.py::test_exits_when_existing_confpy"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.3527094629999965
+    },
+    "neighbours": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_quickstart.py::test_do_prompt",
+        "tests/test_quickstart.py::test_do_prompt_inputstrip",
+        "tests/test_quickstart.py::test_do_prompt_with_nonascii",
+        "tests/test_quickstart.py::test_quickstart_defaults",
+        "tests/test_quickstart.py::test_quickstart_all_answers",
+        "tests/test_quickstart.py::test_generated_files_eol",
+        "tests/test_quickstart.py::test_quickstart_and_build",
+        "tests/test_quickstart.py::test_default_filename",
+        "tests/test_quickstart.py::test_extensions"
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 2.838915797000027
+    }
+  }
+}

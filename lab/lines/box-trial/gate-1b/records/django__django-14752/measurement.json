@@ -1,0 +1,456 @@
+{
+  "instance_id": "django__django-14752",
+  "repo": "django/django",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.98,
+    "failing": 3.99,
+    "neighbours": 4.17
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [
+    "4 passing names unparseable, not usable as neighbours"
+  ],
+  "host_parse_seconds": 8.92,
+  "host_box_seconds": 0.036,
+  "file_target": false,
+  "production_bytes": 4791919,
+  "target": [
+    [
+      "django/contrib/admin/views/autocomplete.py",
+      "AutocompleteJsonView.get"
+    ],
+    [
+      "django/contrib/admin/views/autocomplete.py",
+      "AutocompleteJsonView.get_paginator"
+    ]
+  ],
+  "narrow": {
+    "functions": 1515,
+    "bytes": 1017767,
+    "ratio": 0.21239236305955922,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 36,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "AutocompleteJsonView",
+      "from": "issue",
+      "ordinary_matches": 21,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "widgets",
+      "from": "issue",
+      "ordinary_matches": 276,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Select",
+      "from": "issue",
+      "ordinary_matches": 126,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "admin",
+      "from": "issue",
+      "ordinary_matches": 2237,
+      "ordinary_first": null,
+      "narrow_matches": 142,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "views",
+      "from": "issue",
+      "ordinary_matches": 887,
+      "ordinary_first": null,
+      "narrow_matches": 11,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "autocomplete",
+      "from": "issue",
+      "ordinary_matches": 57,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "MyModelAdmin",
+      "from": "issue",
+      "ordinary_matches": 9,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "ModelAdmin",
+      "from": "issue",
+      "ordinary_matches": 567,
+      "ordinary_first": 34,
+      "narrow_matches": 20,
+      "narrow_first": 19,
+      "narrow_cost": 19,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 34
+    },
+    {
+      "word": "get_urls",
+      "from": "issue",
+      "ordinary_matches": 33,
+      "ordinary_first": null,
+      "narrow_matches": 9,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "path",
+      "from": "issue",
+      "ordinary_matches": 3380,
+      "ordinary_first": null,
+      "narrow_matches": 184,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "CustomAutocompleteJsonView",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "as_view",
+      "from": "issue",
+      "ordinary_matches": 349,
+      "ordinary_first": null,
+      "narrow_matches": 4,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "admin_site",
+      "from": "issue",
+      "ordinary_matches": 117,
+      "ordinary_first": null,
+      "narrow_matches": 18,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "pattern",
+      "from": "issue",
+      "ordinary_matches": 290,
+      "ordinary_first": null,
+      "narrow_matches": 59,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "match",
+      "from": "issue",
+      "ordinary_matches": 472,
+      "ordinary_first": null,
+      "narrow_matches": 32,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "term",
+      "from": "issue",
+      "ordinary_matches": 26,
+      "ordinary_first": 1,
+      "narrow_matches": 5,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "model_admin",
+      "from": "issue",
+      "ordinary_matches": 154,
+      "ordinary_first": 77,
+      "narrow_matches": 13,
+      "narrow_first": 4,
+      "narrow_cost": 4,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 77
+    },
+    {
+      "word": "source_field",
+      "from": "issue",
+      "ordinary_matches": 12,
+      "ordinary_first": 1,
+      "narrow_matches": 6,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "to_field_name",
+      "from": "issue",
+      "ordinary_matches": 28,
+      "ordinary_first": 1,
+      "narrow_matches": 12,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "process_request",
+      "from": "issue",
+      "ordinary_matches": 103,
+      "ordinary_first": 1,
+      "narrow_matches": 4,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "has_perm",
+      "from": "issue",
+      "ordinary_matches": 70,
+      "ordinary_first": 7,
+      "narrow_matches": 5,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 7
+    },
+    {
+      "word": "PermissionDenied",
+      "from": "issue",
+      "ordinary_matches": 81,
+      "ordinary_first": 13,
+      "narrow_matches": 8,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 13
+    },
+    {
+      "word": "object_list",
+      "from": "issue",
+      "ordinary_matches": 105,
+      "ordinary_first": 1,
+      "narrow_matches": 23,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "get_queryset",
+      "from": "issue",
+      "ordinary_matches": 225,
+      "ordinary_first": 13,
+      "narrow_matches": 8,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 13
+    },
+    {
+      "word": "get_context_data",
+      "from": "issue",
+      "ordinary_matches": 62,
+      "ordinary_first": 1,
+      "narrow_matches": 4,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "JsonResponse",
+      "from": "issue",
+      "ordinary_matches": 30,
+      "ordinary_first": 2,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2
+    },
+    {
+      "word": "notes",
+      "from": "issue",
+      "ordinary_matches": 51,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "page_obj",
+      "from": "issue",
+      "ordinary_matches": 16,
+      "ordinary_first": 1,
+      "narrow_matches": 3,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "has_next",
+      "from": "issue",
+      "ordinary_matches": 6,
+      "ordinary_first": 1,
+      "narrow_matches": 3,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "serialize_result",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_serialize_result",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "admin_views",
+      "from": "+failure",
+      "ordinary_matches": 99,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_autocomplete_view",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "AutocompleteJsonViewTests",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assertEqual",
+      "from": "+failure",
+      "ordinary_matches": 15377,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "memorydb_default",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 14,
+  "median": {
+    "ordinary": 1.0,
+    "narrow": 1.0,
+    "subtracted": 1.0,
+    "narrow_hits": 14
+  },
+  "best_word": {
+    "word": "term",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

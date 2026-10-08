@@ -1,0 +1,326 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-14894",
+  "repo": "scikit-learn/scikit-learn",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.19,
+    "failing": 1.6,
+    "neighbours": 5.82
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.18,
+  "host_box_seconds": 0.004,
+  "file_target": false,
+  "production_bytes": 4596688,
+  "target": [
+    [
+      "sklearn/svm/base.py",
+      "BaseLibSVM._sparse_fit"
+    ]
+  ],
+  "narrow": {
+    "functions": 48,
+    "bytes": 57654,
+    "ratio": 0.012542508867253988,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 1,
+    "bytes": 1452,
+    "ratio": 0.00031587960723024924,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "error_trace": {
+    "production_functions": 2,
+    "names_fix": true,
+    "fix_position_from_innermost": 1
+  },
+  "word_count": 24,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "_sparse_fit",
+      "from": "issue+failure",
+      "ordinary_matches": 6,
+      "ordinary_first": 6,
+      "narrow_matches": 2,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "support_vectors_",
+      "from": "issue",
+      "ordinary_matches": 45,
+      "ordinary_first": 8,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 2,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "_fit_sparse",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "x_train",
+      "from": "issue",
+      "ordinary_matches": 4,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "array",
+      "from": "issue",
+      "ordinary_matches": 6015,
+      "ordinary_first": null,
+      "narrow_matches": 103,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "y_train",
+      "from": "issue+failure",
+      "ordinary_matches": 642,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "cache_size",
+      "from": "issue",
+      "ordinary_matches": 32,
+      "ordinary_first": 6,
+      "narrow_matches": 13,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "max_iter",
+      "from": "issue",
+      "ordinary_matches": 1174,
+      "ordinary_first": 1076,
+      "narrow_matches": 15,
+      "narrow_first": 5,
+      "narrow_cost": 5,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "sparse",
+      "from": "issue",
+      "ordinary_matches": 2157,
+      "ordinary_first": null,
+      "narrow_matches": 35,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "csr_matrix",
+      "from": "issue",
+      "ordinary_matches": 481,
+      "ordinary_first": 362,
+      "narrow_matches": 2,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "dual_coef_",
+      "from": "issue",
+      "ordinary_matches": 46,
+      "ordinary_first": 15,
+      "narrow_matches": 3,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 1,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "sample_weight",
+      "from": "issue+failure",
+      "ordinary_matches": 1674,
+      "ordinary_first": 1362,
+      "narrow_matches": 11,
+      "narrow_first": 10,
+      "narrow_cost": 10,
+      "subtracted_matches": 2,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "solver_type",
+      "from": "issue+failure",
+      "ordinary_matches": 9,
+      "ordinary_first": 6,
+      "narrow_matches": 5,
+      "narrow_first": 4,
+      "narrow_cost": 4,
+      "subtracted_matches": 2,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "random_seed",
+      "from": "issue+failure",
+      "ordinary_matches": 24,
+      "ordinary_first": 19,
+      "narrow_matches": 3,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 2,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "dual_coef_indices",
+      "from": "issue+failure",
+      "ordinary_matches": 4,
+      "ordinary_first": 1,
+      "narrow_matches": 4,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 4,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "size",
+      "from": "issue+failure",
+      "ordinary_matches": 1145,
+      "ordinary_first": 992,
+      "narrow_matches": 2,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 2,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "n_class",
+      "from": "issue+failure",
+      "ordinary_matches": 40,
+      "ordinary_first": 21,
+      "narrow_matches": 5,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 5,
+      "subtracted_first": 1,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "show_versions",
+      "from": "issue",
+      "ordinary_matches": 6,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "x86_64",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_sparse_fit_support_vectors_empty",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_____________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_svm",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "X_train",
+      "from": "+failure",
+      "ordinary_matches": 770,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 12,
+  "median": {
+    "ordinary": 17.0,
+    "narrow": 2.0,
+    "subtracted": 1.0,
+    "narrow_hits": 12
+  },
+  "best_word": {
+    "word": "dual_coef_indices",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

@@ -1,0 +1,5 @@
+records/*/*
+!records/*/attempt.json
+!records/*/execution.json
+!records/*/measurement.json
+__pycache__/

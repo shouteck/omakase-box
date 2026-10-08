@@ -1,0 +1,52 @@
+{
+  "base_commit": "ac2b7599d212af7d04649959ce6926c63c3133fa",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram_svg_html"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.6352849390000017
+    },
+    "failing": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram_svg_html"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 2.1796415809999985
+    },
+    "neighbours": {
+      "argv": [
+        "pytest",
+        "-rA",
+        "-vv",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram",
+        "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram_png_html",
+        "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram_latex",
+        "tests/test_ext_inheritance_diagram.py::test_inheritance_diagram_latex_alias",
+        "tests/test_ext_inheritance_diagram.py::test_import_classes"
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 3.490465374999985
+    }
+  }
+}

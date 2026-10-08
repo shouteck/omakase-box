@@ -1,0 +1,33 @@
+{
+  "base_commit": "c4e836cdf73fc6aa7bab6a86719a0f08861ffb1d",
+  "python": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "sympy",
+        "{\"files\": [\"sympy/printing/tests/test_pycode.py\"], \"names\": [\"test_PythonCodePrinter\"]}"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.602478122999969
+    },
+    "failing": {
+      "argv": [
+        "sympy",
+        "{\"files\": [\"sympy/printing/tests/test_pycode.py\"], \"names\": [\"test_PythonCodePrinter\"]}"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 2.429416064999998
+    },
+    "neighbours": {
+      "argv": [
+        "sympy",
+        "{\"files\": [\"sympy/printing/tests/test_pycode.py\"], \"names\": [\"test_PythonCodePrinter_standard\", \"test_MpmathPrinter\", \"test_NumPyPrinter\", \"test_SciPyPrinter\", \"test_pycode_reserved_words\", \"test_sqrt\", \"test_frac\", \"test_printmethod\", \"test_codegen_ast_nodes\", \"test_issue_14283\", \"test_NumPyPrinter_print_seq\", \"test_issue_16535_16536\", \"test_Integral\", \"test_fresnel_integrals\", \"test_beta\", \"test_airy\", \"test_airy_prime\"]}"
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 1.920504268000002
+    }
+  }
+}

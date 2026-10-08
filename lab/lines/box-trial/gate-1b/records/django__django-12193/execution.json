@@ -1,0 +1,58 @@
+{
+  "base_commit": "3fb7c12158a2402f0f80824f6778112071235803",
+  "python": "3.6.13 |Anaconda, Inc.| (default, Jun  4 2021, 14:25:59) \n[GCC 7.5.0]",
+  "phases": {
+    "plain": {
+      "argv": [
+        "tests/runtests.py",
+        "--verbosity",
+        "2",
+        "--settings=test_sqlite",
+        "--parallel",
+        "1",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_get_context_does_not_mutate_attrs"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 0.8785615470000039
+    },
+    "failing": {
+      "argv": [
+        "tests/runtests.py",
+        "--verbosity",
+        "2",
+        "--settings=test_sqlite",
+        "--parallel",
+        "1",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_get_context_does_not_mutate_attrs"
+      ],
+      "exit": 1,
+      "timed_out": false,
+      "seconds": 1.589794201000018
+    },
+    "neighbours": {
+      "argv": [
+        "tests/runtests.py",
+        "--verbosity",
+        "2",
+        "--settings=test_sqlite",
+        "--parallel",
+        "1",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_check_exception",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_check_test",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_empty",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_false",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_int",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_none",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_true",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_render_value",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_value_from_datadict",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_value_from_datadict_string_int",
+        "forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest.test_value_omitted_from_data"
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 1.0967089239999268
+    }
+  }
+}

@@ -1,0 +1,1725 @@
+{
+  "verdict": "worth-going-on",
+  "counts": {
+    "tasks": 30,
+    "scoreable": 28,
+    "unknown": 2,
+    "trace_names_fix": 6,
+    "fix_in_narrow_box": 27,
+    "subtraction_measured": 26,
+    "subtraction_keeps_fix": 9,
+    "subtracted_box_admitted": false,
+    "T_trace_does_not_name": 22,
+    "W_with_reaching_word": 19,
+    "box_first_clearly_fewer": 13,
+    "box_first_costly": 0
+  },
+  "tasks": [
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 3.9,
+        "failing": 4.29,
+        "neighbours": 4.54
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 6.8,
+      "host_box_seconds": 0.019,
+      "file_target": false,
+      "production_bytes": 7343054,
+      "target": [
+        [
+          "astropy/io/fits/diff.py",
+          "TableDataDiff._diff"
+        ]
+      ],
+      "narrow": {
+        "functions": 578,
+        "bytes": 632991,
+        "ratio": 0.08620268896293014,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 6,
+        "bytes": 6614,
+        "ratio": 0.0009007151520334727,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 3,
+        "names_fix": true,
+        "fix_position_from_innermost": 1
+      },
+      "word_count": 20,
+      "word_cap_hit": false,
+      "words_reaching_fix": 3,
+      "median": {
+        "ordinary": 194,
+        "narrow": 11,
+        "subtracted": 196,
+        "narrow_hits": 3
+      },
+      "best_word": {
+        "word": "_diff",
+        "ordinary_first": 10,
+        "narrow_cost": 3,
+        "subtracted_cost": 10
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "scoreable": false,
+      "seconds": {
+        "plain": 1.17,
+        "failing": 1.69,
+        "neighbours": 2.24
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 4.68,
+      "unknown_reason": "plain run timed out or did not report a named failing test as failed"
+    },
+    {
+      "instance_id": "astropy__astropy-14182",
+      "repo": "astropy/astropy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 2.09,
+        "failing": 3.37,
+        "neighbours": 3.25
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 7.59,
+      "host_box_seconds": 0.02,
+      "file_target": false,
+      "production_bytes": 7258141,
+      "target": [
+        [
+          "astropy/io/ascii/rst.py",
+          "RST.__init__"
+        ],
+        [
+          "astropy/io/ascii/rst.py",
+          "RST.write"
+        ]
+      ],
+      "narrow": {
+        "functions": 482,
+        "bytes": 544645,
+        "ratio": 0.07503918703150021,
+        "fix_any": true,
+        "fix_all": false
+      },
+      "subtracted": {
+        "functions": 6,
+        "bytes": 5443,
+        "ratio": 0.0007499165419905731,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 6,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 31,
+      "word_cap_hit": false,
+      "words_reaching_fix": 2,
+      "median": {
+        "ordinary": 280.0,
+        "narrow": 168.0,
+        "subtracted": 280.0,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "write",
+        "ordinary_first": 268,
+        "narrow_cost": 306,
+        "subtracted_cost": 268
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.98,
+        "failing": 3.48,
+        "neighbours": 4.19
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 6.43,
+      "host_box_seconds": 0.02,
+      "file_target": false,
+      "production_bytes": 7114118,
+      "target": [
+        [
+          "astropy/timeseries/core.py",
+          "BaseTimeSeries._check_required_columns"
+        ]
+      ],
+      "narrow": {
+        "functions": 528,
+        "bytes": 534925,
+        "ratio": 0.07519203364352404,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 7,
+        "bytes": 7895,
+        "ratio": 0.001109765117755989,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 18,
+      "word_cap_hit": false,
+      "words_reaching_fix": 2,
+      "median": {
+        "ordinary": 625.0,
+        "narrow": 25.5,
+        "subtracted": 626.0,
+        "narrow_hits": 2
+      },
+      "best_word": {
+        "word": "_required_columns",
+        "ordinary_first": 4,
+        "narrow_cost": 2,
+        "subtracted_cost": 4
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14508",
+      "repo": "astropy/astropy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 2.49,
+        "failing": 4.72,
+        "neighbours": 4.92
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 7.21,
+      "host_box_seconds": 0.018,
+      "file_target": false,
+      "production_bytes": 7342677,
+      "target": [
+        [
+          "astropy/io/fits/card.py",
+          "_format_float"
+        ]
+      ],
+      "narrow": {
+        "functions": 545,
+        "bytes": 640766,
+        "ratio": 0.08726599304313672,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 1,
+        "bytes": 1013,
+        "ratio": 0.00013796058304076293,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 3,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 23,
+      "word_cap_hit": false,
+      "words_reaching_fix": 3,
+      "median": {
+        "ordinary": 3,
+        "narrow": 3,
+        "subtracted": 1,
+        "narrow_hits": 3
+      },
+      "best_word": {
+        "word": "value_str",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "django__django-13786",
+      "repo": "django/django",
+      "scoreable": true,
+      "seconds": {
+        "plain": 0.91,
+        "failing": 1.17,
+        "neighbours": 1.26
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 6.53,
+      "host_box_seconds": 0.031,
+      "file_target": false,
+      "production_bytes": 4734918,
+      "target": [
+        [
+          "django/db/migrations/operations/models.py",
+          "CreateModel.reduce"
+        ]
+      ],
+      "narrow": {
+        "functions": 545,
+        "bytes": 386519,
+        "ratio": 0.08163161431729124,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 13,
+      "word_cap_hit": false,
+      "words_reaching_fix": 4,
+      "median": {
+        "ordinary": 22.5,
+        "narrow": 1.5,
+        "subtracted": 22.5,
+        "narrow_hits": 4
+      },
+      "best_word": {
+        "word": "AlterModelOptions",
+        "ordinary_first": 8,
+        "narrow_cost": 1,
+        "subtracted_cost": 8
+      }
+    },
+    {
+      "instance_id": "django__django-15467",
+      "repo": "django/django",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.39,
+        "failing": 1.12,
+        "neighbours": 4.74
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "8 passing names unparseable, not usable as neighbours"
+      ],
+      "host_parse_seconds": 7.38,
+      "host_box_seconds": 0.022,
+      "file_target": false,
+      "production_bytes": 5023396,
+      "target": [
+        [
+          "django/contrib/admin/options.py",
+          "BaseModelAdmin.formfield_for_foreignkey"
+        ]
+      ],
+      "narrow": {
+        "functions": 639,
+        "bytes": 451967,
+        "ratio": 0.08997240114058298,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 16,
+      "word_cap_hit": false,
+      "words_reaching_fix": 6,
+      "median": {
+        "ordinary": 10.0,
+        "narrow": 4.5,
+        "subtracted": 10.0,
+        "narrow_hits": 6
+      },
+      "best_word": {
+        "word": "empty_label",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "django__django-12193",
+      "repo": "django/django",
+      "scoreable": true,
+      "seconds": {
+        "plain": 0.88,
+        "failing": 1.59,
+        "neighbours": 1.1
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 6.94,
+      "host_box_seconds": 0.023,
+      "file_target": false,
+      "production_bytes": 4547498,
+      "target": [
+        [
+          "django/forms/widgets.py",
+          "CheckboxInput.get_context"
+        ]
+      ],
+      "narrow": {
+        "functions": 501,
+        "bytes": 336697,
+        "ratio": 0.07404005455307512,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 12,
+      "word_cap_hit": false,
+      "words_reaching_fix": 1,
+      "median": {
+        "ordinary": 32,
+        "narrow": 4,
+        "subtracted": 32,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "get_context",
+        "ordinary_first": 32,
+        "narrow_cost": 4,
+        "subtracted_cost": 32
+      }
+    },
+    {
+      "instance_id": "django__django-16116",
+      "repo": "django/django",
+      "scoreable": false,
+      "unknown_reason": "no execution record"
+    },
+    {
+      "instance_id": "django__django-14752",
+      "repo": "django/django",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.98,
+        "failing": 3.99,
+        "neighbours": 4.17
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "4 passing names unparseable, not usable as neighbours"
+      ],
+      "host_parse_seconds": 7.72,
+      "host_box_seconds": 0.05,
+      "file_target": false,
+      "production_bytes": 4791919,
+      "target": [
+        [
+          "django/contrib/admin/views/autocomplete.py",
+          "AutocompleteJsonView.get"
+        ],
+        [
+          "django/contrib/admin/views/autocomplete.py",
+          "AutocompleteJsonView.get_paginator"
+        ]
+      ],
+      "narrow": {
+        "functions": 1515,
+        "bytes": 1017767,
+        "ratio": 0.21239236305955922,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 36,
+      "word_cap_hit": false,
+      "words_reaching_fix": 14,
+      "median": {
+        "ordinary": 1.0,
+        "narrow": 1.0,
+        "subtracted": 1.0,
+        "narrow_hits": 14
+      },
+      "best_word": {
+        "word": "term",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24570",
+      "repo": "matplotlib/matplotlib",
+      "scoreable": true,
+      "seconds": {
+        "plain": 4.53,
+        "failing": 2.38,
+        "neighbours": 2.23
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.37,
+      "host_box_seconds": 0.015,
+      "file_target": false,
+      "production_bytes": 5565016,
+      "target": [
+        [
+          "lib/matplotlib/offsetbox.py",
+          "_get_aligned_offsets"
+        ]
+      ],
+      "narrow": {
+        "functions": 327,
+        "bytes": 260747,
+        "ratio": 0.046854672115947196,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 138,
+        "bytes": 104190,
+        "ratio": 0.01872231813888765,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 23,
+      "word_cap_hit": false,
+      "words_reaching_fix": 0
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-21568",
+      "repo": "matplotlib/matplotlib",
+      "scoreable": true,
+      "seconds": {
+        "plain": 5.43,
+        "failing": 3.89,
+        "neighbours": 3.75
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.47,
+      "host_box_seconds": 0.014,
+      "file_target": false,
+      "production_bytes": 5465385,
+      "target": [
+        [
+          "lib/matplotlib/dates.py",
+          "_wrap_in_tex"
+        ]
+      ],
+      "narrow": {
+        "functions": 263,
+        "bytes": 214039,
+        "ratio": 0.03916265734252939,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 66,
+        "bytes": 45698,
+        "ratio": 0.008361350572740987,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 25,
+      "word_cap_hit": false,
+      "words_reaching_fix": 0
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-23412",
+      "repo": "matplotlib/matplotlib",
+      "scoreable": true,
+      "seconds": {
+        "plain": 10.7,
+        "failing": 3.64,
+        "neighbours": 2.82
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.26,
+      "host_box_seconds": 0.026,
+      "file_target": false,
+      "production_bytes": 5506227,
+      "target": [
+        [
+          "lib/matplotlib/patches.py",
+          "Patch.draw"
+        ]
+      ],
+      "narrow": {
+        "functions": 889,
+        "bytes": 637060,
+        "ratio": 0.11569809962429808,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 693,
+        "bytes": 472060,
+        "ratio": 0.08573202666726236,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 22,
+      "word_cap_hit": false,
+      "words_reaching_fix": 0
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-26113",
+      "repo": "matplotlib/matplotlib",
+      "scoreable": true,
+      "seconds": {
+        "plain": 10.98,
+        "failing": 7.9,
+        "neighbours": 4.52
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.71,
+      "host_box_seconds": 0.034,
+      "file_target": false,
+      "production_bytes": 5909237,
+      "target": [
+        [
+          "lib/matplotlib/axes/_axes.py",
+          "Axes.hexbin"
+        ]
+      ],
+      "narrow": {
+        "functions": 959,
+        "bytes": 736556,
+        "ratio": 0.12464485685715432,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 757,
+        "bytes": 563235,
+        "ratio": 0.09531433584403537,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 22,
+      "word_cap_hit": false,
+      "words_reaching_fix": 5,
+      "median": {
+        "ordinary": 145,
+        "narrow": 1,
+        "subtracted": 1,
+        "narrow_hits": 5
+      },
+      "best_word": {
+        "word": "reduce_C_function",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-13989",
+      "repo": "matplotlib/matplotlib",
+      "scoreable": true,
+      "seconds": {
+        "plain": 5.81,
+        "failing": 3.85,
+        "neighbours": 2.95
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.31,
+      "host_box_seconds": 0.024,
+      "file_target": false,
+      "production_bytes": 5379823,
+      "target": [
+        [
+          "lib/matplotlib/axes/_axes.py",
+          "Axes.hist"
+        ]
+      ],
+      "narrow": {
+        "functions": 655,
+        "bytes": 490322,
+        "ratio": 0.09114091671789203,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 446,
+        "bytes": 324252,
+        "ratio": 0.06027187139799953,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 19,
+      "word_cap_hit": false,
+      "words_reaching_fix": 1,
+      "median": {
+        "ordinary": 39,
+        "narrow": 1,
+        "subtracted": 1,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "hist",
+        "ordinary_first": 39,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.98,
+        "failing": 1.91,
+        "neighbours": 10.48
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 4.31,
+      "host_box_seconds": 0.008,
+      "file_target": false,
+      "production_bytes": 4202238,
+      "target": [
+        [
+          "sklearn/linear_model/logistic.py",
+          "_log_reg_scoring_path"
+        ]
+      ],
+      "narrow": {
+        "functions": 108,
+        "bytes": 142176,
+        "ratio": 0.033833400202463546,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 1,
+        "bytes": 1255,
+        "ratio": 0.00029865038581822353,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 54,
+      "word_cap_hit": false,
+      "words_reaching_fix": 18,
+      "median": {
+        "ordinary": 185.5,
+        "narrow": 3.5,
+        "subtracted": 185.5,
+        "narrow_hits": 18
+      },
+      "best_word": {
+        "word": "_log_reg_scoring_path",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "scoreable": true,
+      "seconds": {
+        "plain": 2.0,
+        "failing": 2.31,
+        "neighbours": 24.64
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.15,
+      "host_box_seconds": 0.004,
+      "file_target": false,
+      "production_bytes": 4312565,
+      "target": [
+        [
+          "sklearn/linear_model/logistic.py",
+          "LogisticRegressionCV.fit"
+        ]
+      ],
+      "narrow": {
+        "functions": 78,
+        "bytes": 145456,
+        "ratio": 0.033728419165856054,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": true,
+        "fix_position_from_innermost": 1
+      },
+      "word_count": 26,
+      "word_cap_hit": false,
+      "words_reaching_fix": 10,
+      "median": {
+        "ordinary": 4.5,
+        "narrow": 1.0,
+        "subtracted": 4.5,
+        "narrow_hits": 10
+      },
+      "best_word": {
+        "word": "best_indices",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12585",
+      "repo": "scikit-learn/scikit-learn",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.12,
+        "failing": 1.63,
+        "neighbours": 1.51
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.26,
+      "host_box_seconds": 0.006,
+      "file_target": false,
+      "production_bytes": 4618706,
+      "target": [
+        [
+          "sklearn/base.py",
+          "clone"
+        ]
+      ],
+      "narrow": {
+        "functions": 45,
+        "bytes": 27560,
+        "ratio": 0.0059670392529855764,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": true,
+        "fix_position_from_innermost": 1
+      },
+      "word_count": 10,
+      "word_cap_hit": false,
+      "words_reaching_fix": 3,
+      "median": {
+        "ordinary": 5,
+        "narrow": 1,
+        "subtracted": 5,
+        "narrow_hits": 3
+      },
+      "best_word": {
+        "word": "new_object_params",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-14894",
+      "repo": "scikit-learn/scikit-learn",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.19,
+        "failing": 1.6,
+        "neighbours": 5.82
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 3.19,
+      "host_box_seconds": 0.004,
+      "file_target": false,
+      "production_bytes": 4596688,
+      "target": [
+        [
+          "sklearn/svm/base.py",
+          "BaseLibSVM._sparse_fit"
+        ]
+      ],
+      "narrow": {
+        "functions": 48,
+        "bytes": 57654,
+        "ratio": 0.012542508867253988,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 1,
+        "bytes": 1452,
+        "ratio": 0.00031587960723024924,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 2,
+        "names_fix": true,
+        "fix_position_from_innermost": 1
+      },
+      "word_count": 24,
+      "word_cap_hit": false,
+      "words_reaching_fix": 12,
+      "median": {
+        "ordinary": 17.0,
+        "narrow": 2.0,
+        "subtracted": 1.0,
+        "narrow_hits": 12
+      },
+      "best_word": {
+        "word": "dual_coef_indices",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "repo": "scikit-learn/scikit-learn",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.15,
+        "failing": 1.96,
+        "neighbours": 5.43
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 2.88,
+      "host_box_seconds": 0.006,
+      "file_target": false,
+      "production_bytes": 4633875,
+      "target": [
+        [
+          "sklearn/model_selection/_split.py",
+          "StratifiedKFold._make_test_folds"
+        ]
+      ],
+      "narrow": {
+        "functions": 58,
+        "bytes": 56020,
+        "ratio": 0.012089234172264034,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 28,
+      "word_cap_hit": false,
+      "words_reaching_fix": 5,
+      "median": {
+        "ordinary": 274,
+        "narrow": 8,
+        "subtracted": 274,
+        "narrow_hits": 5
+      },
+      "best_word": {
+        "word": "test_split",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7454",
+      "repo": "sphinx-doc/sphinx",
+      "scoreable": true,
+      "seconds": {
+        "plain": 0.75,
+        "failing": 1.34,
+        "neighbours": 3.97
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 1.61,
+      "host_box_seconds": 0.005,
+      "file_target": false,
+      "production_bytes": 2665328,
+      "target": [
+        [
+          "sphinx/domains/python.py",
+          "_parse_annotation.make_xref"
+        ]
+      ],
+      "narrow": {
+        "functions": 33,
+        "bytes": 15651,
+        "ratio": 0.0058720727805358286,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 29,
+      "word_cap_hit": false,
+      "words_reaching_fix": 1,
+      "median": {
+        "ordinary": 47,
+        "narrow": 1,
+        "subtracted": 47,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "pending_xref",
+        "ordinary_first": 47,
+        "narrow_cost": 1,
+        "subtracted_cost": 47
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "scoreable": true,
+      "seconds": {
+        "plain": 0.65,
+        "failing": 1.35,
+        "neighbours": 2.84
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 2.01,
+      "host_box_seconds": 0.006,
+      "file_target": false,
+      "production_bytes": 2527982,
+      "target": [
+        [
+          "sphinx/cmd/quickstart.py",
+          "allow_empty"
+        ],
+        [
+          "sphinx/cmd/quickstart.py",
+          "ask_user"
+        ]
+      ],
+      "narrow": {
+        "functions": 31,
+        "bytes": 17810,
+        "ratio": 0.007045145099925553,
+        "fix_any": true,
+        "fix_all": false
+      },
+      "subtracted": {
+        "functions": 1,
+        "bytes": 75,
+        "ratio": 2.966793276217948e-05,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 2,
+        "names_fix": true,
+        "fix_position_from_innermost": 2
+      },
+      "word_count": 21,
+      "word_cap_hit": false,
+      "words_reaching_fix": 4,
+      "median": {
+        "ordinary": 30.0,
+        "narrow": 1.0,
+        "subtracted": 30.0,
+        "narrow_hits": 4
+      },
+      "best_word": {
+        "word": "ask_user",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.64,
+        "failing": 2.18,
+        "neighbours": 3.49
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 1.66,
+      "host_box_seconds": 0.023,
+      "file_target": false,
+      "production_bytes": 2514766,
+      "target": [
+        [
+          "sphinx/ext/inheritance_diagram.py",
+          "html_visit_inheritance_diagram"
+        ]
+      ],
+      "narrow": {
+        "functions": 758,
+        "bytes": 488388,
+        "ratio": 0.19420812910624685,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 3,
+        "bytes": 3049,
+        "ratio": 0.0012124388511694528,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 22,
+      "word_cap_hit": false,
+      "words_reaching_fix": 1,
+      "median": {
+        "ordinary": 9,
+        "narrow": 6,
+        "subtracted": 9,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "inheritance_diagram",
+        "ordinary_first": 9,
+        "narrow_cost": 6,
+        "subtracted_cost": 9
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8595",
+      "repo": "sphinx-doc/sphinx",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.33,
+        "failing": 2.64
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false
+      },
+      "notes": [],
+      "host_parse_seconds": 1.97,
+      "host_box_seconds": 0.025,
+      "file_target": false,
+      "production_bytes": 2825019,
+      "target": [
+        [
+          "sphinx/ext/autodoc/__init__.py",
+          "ModuleDocumenter.get_object_members"
+        ]
+      ],
+      "narrow": {
+        "functions": 433,
+        "bytes": 259441,
+        "ratio": 0.09183690445975762,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": null,
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 23,
+      "word_cap_hit": false,
+      "words_reaching_fix": 2,
+      "median": {
+        "ordinary": 33.5,
+        "narrow": 21.5,
+        "subtracted": null,
+        "narrow_hits": 2
+      },
+      "best_word": {
+        "word": "__all__",
+        "ordinary_first": 13,
+        "narrow_cost": 9,
+        "subtracted_cost": null
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "repo": "sphinx-doc/sphinx",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.03,
+        "failing": 1.69,
+        "neighbours": 1.72
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 2.7,
+      "host_box_seconds": 0.026,
+      "file_target": false,
+      "production_bytes": 2474995,
+      "target": [
+        [
+          "sphinx/util/rst.py",
+          "prepend_prolog"
+        ]
+      ],
+      "narrow": {
+        "functions": 317,
+        "bytes": 185060,
+        "ratio": 0.07477186822599642,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 1,
+        "bytes": 324,
+        "ratio": 0.0001309093553724351,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 15,
+      "word_cap_hit": false,
+      "words_reaching_fix": 1,
+      "median": {
+        "ordinary": 7,
+        "narrow": 1,
+        "subtracted": 7,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "rst_prolog",
+        "ordinary_first": 7,
+        "narrow_cost": 1,
+        "subtracted_cost": 7
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.68,
+        "failing": 2.65,
+        "neighbours": 1.89
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "SymPy runner called in-process; test names match by substring"
+      ],
+      "host_parse_seconds": 13.29,
+      "host_box_seconds": 0.018,
+      "file_target": false,
+      "production_bytes": 9688318,
+      "target": [
+        [
+          "sympy/combinatorics/permutations.py",
+          "Permutation.__new__"
+        ]
+      ],
+      "narrow": {
+        "functions": 332,
+        "bytes": 277329,
+        "ratio": 0.02862509261153484,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 2,
+        "bytes": 499,
+        "ratio": 5.150532837588527e-05,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": true,
+        "fix_position_from_innermost": 1
+      },
+      "word_count": 1,
+      "word_cap_hit": false,
+      "words_reaching_fix": 1,
+      "median": {
+        "ordinary": 262,
+        "narrow": 10,
+        "subtracted": 262,
+        "narrow_hits": 1
+      },
+      "best_word": {
+        "word": "Permutation",
+        "ordinary_first": 262,
+        "narrow_cost": 10,
+        "subtracted_cost": 262
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-12096",
+      "repo": "sympy/sympy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.16,
+        "failing": 1.47,
+        "neighbours": 1.97
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "SymPy runner called in-process; test names match by substring"
+      ],
+      "host_parse_seconds": 13.07,
+      "host_box_seconds": 0.024,
+      "file_target": false,
+      "production_bytes": 9649981,
+      "target": [
+        [
+          "sympy/core/function.py",
+          "Function._eval_evalf"
+        ]
+      ],
+      "narrow": {
+        "functions": 326,
+        "bytes": 251008,
+        "ratio": 0.026011242923690732,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 2,
+        "bytes": 490,
+        "ratio": 5.077730204857398e-05,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 6,
+      "word_cap_hit": false,
+      "words_reaching_fix": 5,
+      "median": {
+        "ordinary": 13,
+        "narrow": 3,
+        "subtracted": 13,
+        "narrow_hits": 5
+      },
+      "best_word": {
+        "word": "_imp_",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.38,
+        "failing": 2.14,
+        "neighbours": 10.6
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "SymPy runner called in-process; test names match by substring"
+      ],
+      "host_parse_seconds": 35.6,
+      "host_box_seconds": 0.041,
+      "file_target": false,
+      "production_bytes": 16482634,
+      "target": [
+        [
+          "sympy/assumptions/ask.py",
+          "get_known_facts"
+        ],
+        [
+          "sympy/assumptions/ask_generated.py",
+          "get_known_facts_cnf"
+        ],
+        [
+          "sympy/assumptions/ask_generated.py",
+          "get_known_facts_dict"
+        ],
+        [
+          "sympy/core/power.py",
+          "Pow._eval_is_rational"
+        ],
+        [
+          "sympy/printing/tree.py",
+          "print_tree"
+        ],
+        [
+          "sympy/tensor/indexed.py",
+          "Idx.__new__"
+        ]
+      ],
+      "narrow": {
+        "functions": 382,
+        "bytes": 308419,
+        "ratio": 0.018711754444101593,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "subtracted": {
+        "functions": 2,
+        "bytes": 390,
+        "ratio": 2.366126676112568e-05,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 10,
+      "word_cap_hit": false,
+      "words_reaching_fix": 2,
+      "median": {
+        "ordinary": 1821.0,
+        "narrow": 1835.5,
+        "subtracted": 1821.0,
+        "narrow_hits": 0
+      },
+      "best_word": {
+        "word": "is_integer",
+        "ordinary_first": 53,
+        "narrow_cost": 59,
+        "subtracted_cost": 53
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-22914",
+      "repo": "sympy/sympy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.6,
+        "failing": 2.43,
+        "neighbours": 1.92
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "SymPy runner called in-process; test names match by substring"
+      ],
+      "host_parse_seconds": 35.87,
+      "host_box_seconds": 0.029,
+      "file_target": true,
+      "production_bytes": 18869084,
+      "target": [
+        [
+          "sympy/printing/pycode.py",
+          null
+        ]
+      ],
+      "narrow": {
+        "functions": 768,
+        "bytes": 634694,
+        "ratio": 0.03363671495659249,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 153,
+        "bytes": 124191,
+        "ratio": 0.0065817185402322655,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 11,
+      "word_cap_hit": false,
+      "words_reaching_fix": 6,
+      "median": {
+        "ordinary": 406.0,
+        "narrow": 15.5,
+        "subtracted": 19.5,
+        "narrow_hits": 5
+      },
+      "best_word": {
+        "word": "PythonCodePrinter",
+        "ordinary_first": 14,
+        "narrow_cost": 1,
+        "subtracted_cost": 14
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.3,
+        "failing": 2.07,
+        "neighbours": 2.24
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "SymPy runner called in-process; test names match by substring"
+      ],
+      "host_parse_seconds": 32.47,
+      "host_box_seconds": 0.026,
+      "file_target": true,
+      "production_bytes": 16518911,
+      "target": [
+        [
+          "sympy/printing/pycode.py",
+          null
+        ]
+      ],
+      "narrow": {
+        "functions": 662,
+        "bytes": 522141,
+        "ratio": 0.03160868171031371,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 233,
+        "bytes": 174361,
+        "ratio": 0.010555235753737036,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 11,
+      "word_cap_hit": false,
+      "words_reaching_fix": 6,
+      "median": {
+        "ordinary": 331.0,
+        "narrow": 15.5,
+        "subtracted": 11.5,
+        "narrow_hits": 3
+      },
+      "best_word": {
+        "word": "PythonCodePrinter",
+        "ordinary_first": 5,
+        "narrow_cost": 5,
+        "subtracted_cost": 5
+      }
+    }
+  ]
+}

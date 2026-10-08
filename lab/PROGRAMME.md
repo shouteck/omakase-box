@@ -156,4 +156,6 @@ Listed in the archive page. The one this trial uses: the runtime instrument in `
 
 - **Open-packaging Gate 1 instrument:** `lab/lines/box-trial/gate-1/`; frozen public sample, native test tracing, AST import closure, three text detail levels and historical-patch scoring. Research instrument only, no product transfer.
 
-- **Sync state, 8 October 2026:** Gate 0 passed; Gate 1 failed: zero confirmed successes, 23 confirmed misses, seven unknown on 30 fixed tasks; at most seven successes against fifteen required. [Result and limits](lines/box-trial/gate-1-result.md). Trial stopped before Gate 2; owner and CTO decide from the numbers. Other lines remain paused. The original gate wording above is retained as history and is superseded where it conflicts with the owner's open-packaging decision.
+- **Gate 1b instrument:** `lab/lines/box-trial/gate-1b/`; per-test call tracing in the pinned images, narrow Box, error-trace baseline, mechanical search words, place counts and a pre-fixed decision. Any Box given as a set of function keys can be scored. Research instrument only.
+
+- **Sync state, 8 October 2026:** Gate 0 passed; Gate 1 failed; **Gate 1b: worth going on by the letter of its pre-fixed rule, weakened to "suggests" by the sceptic** (14 of 20 tasks clearly fewer places with the Box first; 8 or 9 of 20 with each task's best word). [Result and limits](lines/box-trial/gate-1b-result.md). The lab stopped after Gate 1b as the programme requires; Gate 1c not started. Other lines remain paused.

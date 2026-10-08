@@ -1,0 +1,76 @@
+{
+  "instance_id": "sympy__sympy-12481",
+  "repo": "sympy/sympy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.68,
+    "failing": 2.65,
+    "neighbours": 1.89
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [
+    "SymPy runner called in-process; test names match by substring"
+  ],
+  "host_parse_seconds": 13.5,
+  "host_box_seconds": 0.017,
+  "file_target": false,
+  "production_bytes": 9688318,
+  "target": [
+    [
+      "sympy/combinatorics/permutations.py",
+      "Permutation.__new__"
+    ]
+  ],
+  "narrow": {
+    "functions": 332,
+    "bytes": 277329,
+    "ratio": 0.02862509261153484,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 2,
+    "bytes": 499,
+    "ratio": 5.150532837588527e-05,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 1,
+    "names_fix": true,
+    "fix_position_from_innermost": 1
+  },
+  "word_count": 1,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "Permutation",
+      "from": "issue",
+      "ordinary_matches": 1141,
+      "ordinary_first": 262,
+      "narrow_matches": 90,
+      "narrow_first": 10,
+      "narrow_cost": 10,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 262
+    }
+  ],
+  "words_reaching_fix": 1,
+  "median": {
+    "ordinary": 262,
+    "narrow": 10,
+    "subtracted": 262,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "Permutation",
+    "ordinary_first": 262,
+    "narrow_cost": 10,
+    "subtracted_cost": 262
+  }
+}

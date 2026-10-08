@@ -1,0 +1,380 @@
+{
+  "instance_id": "astropy__astropy-14182",
+  "repo": "astropy/astropy",
+  "scoreable": true,
+  "seconds": {
+    "plain": 2.09,
+    "failing": 3.37,
+    "neighbours": 3.25
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 6.04,
+  "host_box_seconds": 0.018,
+  "file_target": false,
+  "production_bytes": 7258141,
+  "target": [
+    [
+      "astropy/io/ascii/rst.py",
+      "RST.__init__"
+    ],
+    [
+      "astropy/io/ascii/rst.py",
+      "RST.write"
+    ]
+  ],
+  "narrow": {
+    "functions": 482,
+    "bytes": 544645,
+    "ratio": 0.07503918703150021,
+    "fix_any": true,
+    "fix_all": false
+  },
+  "subtracted": {
+    "functions": 6,
+    "bytes": 5443,
+    "ratio": 0.0007499165419905731,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 6,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 31,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "RestructuredText",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "table",
+      "from": "issue",
+      "ordinary_matches": 4329,
+      "ordinary_first": null,
+      "narrow_matches": 243,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "units",
+      "from": "issue",
+      "ordinary_matches": 2944,
+      "ordinary_first": null,
+      "narrow_matches": 194,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "QTable",
+      "from": "issue",
+      "ordinary_matches": 292,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "count",
+      "from": "issue",
+      "ordinary_matches": 186,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "write",
+      "from": "issue",
+      "ordinary_matches": 1190,
+      "ordinary_first": 268,
+      "narrow_matches": 38,
+      "narrow_first": null,
+      "narrow_cost": 306,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 268
+    },
+    {
+      "word": "stdout",
+      "from": "issue",
+      "ordinary_matches": 99,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "fixed_width",
+      "from": "issue",
+      "ordinary_matches": 9,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "header_rows",
+      "from": "issue+failure",
+      "ordinary_matches": 23,
+      "ordinary_first": null,
+      "narrow_matches": 9,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__call__",
+      "from": "issue+failure",
+      "ordinary_matches": 156,
+      "ordinary_first": null,
+      "narrow_matches": 18,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "registry",
+      "from": "issue+failure",
+      "ordinary_matches": 569,
+      "ordinary_first": null,
+      "narrow_matches": 49,
+      "narrow_first": null,
+      "subtracted_matches": 4,
+      "subtracted_first": null
+    },
+    {
+      "word": "writer",
+      "from": "issue",
+      "ordinary_matches": 174,
+      "ordinary_first": null,
+      "narrow_matches": 9,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "io_write",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "get_writer",
+      "from": "issue",
+      "ordinary_matches": 19,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "fast_writer",
+      "from": "issue",
+      "ordinary_matches": 79,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_get_writer",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Writer",
+      "from": "issue",
+      "ordinary_matches": 75,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "writer_kwargs",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "__init__",
+      "from": "issue+failure",
+      "ordinary_matches": 969,
+      "ordinary_first": 292,
+      "narrow_matches": 92,
+      "narrow_first": 30,
+      "narrow_cost": 30,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 292
+    },
+    {
+      "word": "__________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_rst_with_header_rows",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "___________________________",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_rst",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "read",
+      "from": "+failure",
+      "ordinary_matches": 1607,
+      "ordinary_first": null,
+      "narrow_matches": 79,
+      "narrow_first": null,
+      "subtracted_matches": 8,
+      "subtracted_first": null
+    },
+    {
+      "word": "reader",
+      "from": "+failure",
+      "ordinary_matches": 330,
+      "ordinary_first": null,
+      "narrow_matches": 97,
+      "narrow_first": null,
+      "subtracted_matches": 9,
+      "subtracted_first": null
+    },
+    {
+      "word": "io_read",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 1,
+      "subtracted_first": null
+    },
+    {
+      "word": "get_reader",
+      "from": "+failure",
+      "ordinary_matches": 56,
+      "ordinary_first": null,
+      "narrow_matches": 11,
+      "narrow_first": null,
+      "subtracted_matches": 2,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_kwargs",
+      "from": "+failure",
+      "ordinary_matches": 41,
+      "ordinary_first": null,
+      "narrow_matches": 15,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_get_reader",
+      "from": "+failure",
+      "ordinary_matches": 4,
+      "ordinary_first": null,
+      "narrow_matches": 3,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "Reader",
+      "from": "+failure",
+      "ordinary_matches": 169,
+      "ordinary_first": null,
+      "narrow_matches": 43,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "reader_kwargs",
+      "from": "+failure",
+      "ordinary_matches": 2,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 2,
+  "median": {
+    "ordinary": 280.0,
+    "narrow": 168.0,
+    "subtracted": 280.0,
+    "narrow_hits": 1
+  },
+  "best_word": {
+    "word": "write",
+    "ordinary_first": 268,
+    "narrow_cost": 306,
+    "subtracted_cost": 268
+  }
+}

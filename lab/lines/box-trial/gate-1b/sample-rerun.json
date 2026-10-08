@@ -1,0 +1,221 @@
+{
+  "verdict": "partial",
+  "counts": {
+    "tasks": 3,
+    "scoreable": 3,
+    "unknown": 0,
+    "trace_names_fix": 0,
+    "fix_in_narrow_box": 2,
+    "subtraction_measured": 2,
+    "subtraction_keeps_fix": 1,
+    "subtracted_box_admitted": false,
+    "T_trace_does_not_name": 3,
+    "W_with_reaching_word": 3,
+    "box_first_clearly_fewer": 2,
+    "box_first_costly": 0
+  },
+  "tasks": [
+    {
+      "instance_id": "django__django-13786",
+      "repo": "django/django",
+      "scoreable": true,
+      "seconds": {
+        "plain": 0.91,
+        "failing": 1.17,
+        "neighbours": 1.26
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 6.1,
+      "host_box_seconds": 0.025,
+      "file_target": false,
+      "production_bytes": 4734918,
+      "target": [
+        [
+          "django/db/migrations/operations/models.py",
+          "CreateModel.reduce"
+        ]
+      ],
+      "narrow": {
+        "functions": 545,
+        "bytes": 386519,
+        "ratio": 0.08163161431729124,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 0,
+        "bytes": 0,
+        "ratio": 0.0,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 13,
+      "word_cap_hit": false,
+      "words_reaching_fix": 4,
+      "median": {
+        "ordinary": 22.5,
+        "narrow": 1.5,
+        "subtracted": 22.5,
+        "narrow_hits": 4
+      },
+      "best_word": {
+        "word": "AlterModelOptions",
+        "ordinary_first": 8,
+        "narrow_cost": 1,
+        "subtracted_cost": 8
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-26113",
+      "repo": "matplotlib/matplotlib",
+      "scoreable": true,
+      "seconds": {
+        "plain": 10.98,
+        "failing": 7.9,
+        "neighbours": 4.52
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [],
+      "host_parse_seconds": 4.12,
+      "host_box_seconds": 0.026,
+      "file_target": false,
+      "production_bytes": 5909237,
+      "target": [
+        [
+          "lib/matplotlib/axes/_axes.py",
+          "Axes.hexbin"
+        ]
+      ],
+      "narrow": {
+        "functions": 959,
+        "bytes": 736556,
+        "ratio": 0.12464485685715432,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "subtracted": {
+        "functions": 757,
+        "bytes": 563235,
+        "ratio": 0.09531433584403537,
+        "fix_any": true,
+        "fix_all": true
+      },
+      "error_trace": {
+        "production_functions": 1,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 22,
+      "word_cap_hit": false,
+      "words_reaching_fix": 5,
+      "median": {
+        "ordinary": 145,
+        "narrow": 1,
+        "subtracted": 1,
+        "narrow_hits": 5
+      },
+      "best_word": {
+        "word": "reduce_C_function",
+        "ordinary_first": 1,
+        "narrow_cost": 1,
+        "subtracted_cost": 1
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "scoreable": true,
+      "seconds": {
+        "plain": 1.38,
+        "failing": 2.14,
+        "neighbours": 10.6
+      },
+      "timed_out": {
+        "plain": false,
+        "failing": false,
+        "neighbours": false
+      },
+      "notes": [
+        "SymPy runner called in-process; test names match by substring"
+      ],
+      "host_parse_seconds": 32.14,
+      "host_box_seconds": 0.029,
+      "file_target": false,
+      "production_bytes": 16482634,
+      "target": [
+        [
+          "sympy/assumptions/ask.py",
+          "get_known_facts"
+        ],
+        [
+          "sympy/assumptions/ask_generated.py",
+          "get_known_facts_cnf"
+        ],
+        [
+          "sympy/assumptions/ask_generated.py",
+          "get_known_facts_dict"
+        ],
+        [
+          "sympy/core/power.py",
+          "Pow._eval_is_rational"
+        ],
+        [
+          "sympy/printing/tree.py",
+          "print_tree"
+        ],
+        [
+          "sympy/tensor/indexed.py",
+          "Idx.__new__"
+        ]
+      ],
+      "narrow": {
+        "functions": 382,
+        "bytes": 308419,
+        "ratio": 0.018711754444101593,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "subtracted": {
+        "functions": 2,
+        "bytes": 390,
+        "ratio": 2.366126676112568e-05,
+        "fix_any": false,
+        "fix_all": false
+      },
+      "error_trace": {
+        "production_functions": 0,
+        "names_fix": false,
+        "fix_position_from_innermost": null
+      },
+      "word_count": 10,
+      "word_cap_hit": false,
+      "words_reaching_fix": 2,
+      "median": {
+        "ordinary": 1821.0,
+        "narrow": 1835.5,
+        "subtracted": 1821.0,
+        "narrow_hits": 0
+      },
+      "best_word": {
+        "word": "is_integer",
+        "ordinary_first": 53,
+        "narrow_cost": 59,
+        "subtracted_cost": 53
+      }
+    }
+  ]
+}

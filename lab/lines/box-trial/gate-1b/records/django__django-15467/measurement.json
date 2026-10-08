@@ -1,0 +1,236 @@
+{
+  "instance_id": "django__django-15467",
+  "repo": "django/django",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.39,
+    "failing": 1.12,
+    "neighbours": 4.74
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [
+    "8 passing names unparseable, not usable as neighbours"
+  ],
+  "host_parse_seconds": 6.98,
+  "host_box_seconds": 0.023,
+  "file_target": false,
+  "production_bytes": 5023396,
+  "target": [
+    [
+      "django/contrib/admin/options.py",
+      "BaseModelAdmin.formfield_for_foreignkey"
+    ]
+  ],
+  "narrow": {
+    "functions": 639,
+    "bytes": 451967,
+    "ratio": 0.08997240114058298,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 0,
+    "bytes": 0,
+    "ratio": 0.0,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 16,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "ModelAdmin",
+      "from": "issue",
+      "ordinary_matches": 580,
+      "ordinary_first": null,
+      "narrow_matches": 13,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "radio_fields",
+      "from": "issue",
+      "ordinary_matches": 30,
+      "ordinary_first": 12,
+      "narrow_matches": 8,
+      "narrow_first": 7,
+      "narrow_cost": 7,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 12
+    },
+    {
+      "word": "empty_label",
+      "from": "issue+failure",
+      "ordinary_matches": 29,
+      "ordinary_first": 1,
+      "narrow_matches": 4,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "default_empty_label",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "MyModelAdmin",
+      "from": "issue",
+      "ordinary_matches": 9,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "formfield_for_foreignkey",
+      "from": "issue",
+      "ordinary_matches": 8,
+      "ordinary_first": 2,
+      "narrow_matches": 2,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2
+    },
+    {
+      "word": "db_field",
+      "from": "issue",
+      "ordinary_matches": 96,
+      "ordinary_first": 26,
+      "narrow_matches": 29,
+      "narrow_first": 20,
+      "narrow_cost": 20,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 26
+    },
+    {
+      "word": "name",
+      "from": "issue",
+      "ordinary_matches": 13421,
+      "ordinary_first": 216,
+      "narrow_matches": 404,
+      "narrow_first": 45,
+      "narrow_cost": 45,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 216
+    },
+    {
+      "word": "blank",
+      "from": "issue",
+      "ordinary_matches": 515,
+      "ordinary_first": 8,
+      "narrow_matches": 11,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 8
+    },
+    {
+      "word": "test_radio_fields_foreignkey_formfield_overrides_empty_label",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "admin_widgets",
+      "from": "+failure",
+      "ordinary_matches": 22,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "tests",
+      "from": "+failure",
+      "ordinary_matches": 1229,
+      "ordinary_first": null,
+      "narrow_matches": 2,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "AdminFormfieldForDBFieldTests",
+      "from": "+failure",
+      "ordinary_matches": 1,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "assertEqual",
+      "from": "+failure",
+      "ordinary_matches": 15655,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test",
+      "from": "+failure",
+      "ordinary_matches": 3344,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "database",
+      "from": "+failure",
+      "ordinary_matches": 1175,
+      "ordinary_first": null,
+      "narrow_matches": 22,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    }
+  ],
+  "words_reaching_fix": 6,
+  "median": {
+    "ordinary": 10.0,
+    "narrow": 4.5,
+    "subtracted": 10.0,
+    "narrow_hits": 6
+  },
+  "best_word": {
+    "word": "empty_label",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}

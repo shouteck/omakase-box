@@ -1,0 +1,638 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11578",
+  "repo": "scikit-learn/scikit-learn",
+  "scoreable": true,
+  "seconds": {
+    "plain": 1.98,
+    "failing": 1.91,
+    "neighbours": 10.48
+  },
+  "timed_out": {
+    "plain": false,
+    "failing": false,
+    "neighbours": false
+  },
+  "notes": [],
+  "host_parse_seconds": 3.73,
+  "host_box_seconds": 0.006,
+  "file_target": false,
+  "production_bytes": 4202238,
+  "target": [
+    [
+      "sklearn/linear_model/logistic.py",
+      "_log_reg_scoring_path"
+    ]
+  ],
+  "narrow": {
+    "functions": 108,
+    "bytes": 142176,
+    "ratio": 0.033833400202463546,
+    "fix_any": true,
+    "fix_all": true
+  },
+  "subtracted": {
+    "functions": 1,
+    "bytes": 1255,
+    "ratio": 0.00029865038581822353,
+    "fix_any": false,
+    "fix_all": false
+  },
+  "error_trace": {
+    "production_functions": 0,
+    "names_fix": false,
+    "fix_position_from_innermost": null
+  },
+  "word_count": 54,
+  "word_cap_hit": false,
+  "words": [
+    {
+      "word": "LogisticRegressionCV",
+      "from": "issue",
+      "ordinary_matches": 35,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "multi_class",
+      "from": "issue",
+      "ordinary_matches": 143,
+      "ordinary_first": 34,
+      "narrow_matches": 33,
+      "narrow_first": 16,
+      "narrow_cost": 16,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 34
+    },
+    {
+      "word": "neg_log_loss",
+      "from": "issue+failure",
+      "ordinary_matches": 3,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "predict_proba",
+      "from": "issue",
+      "ordinary_matches": 443,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 3,
+      "subtracted_first": null
+    },
+    {
+      "word": "LogisticRegression",
+      "from": "issue",
+      "ordinary_matches": 263,
+      "ordinary_first": 95,
+      "narrow_matches": 4,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 95
+    },
+    {
+      "word": "_log_reg_scoring_path",
+      "from": "issue",
+      "ordinary_matches": 2,
+      "ordinary_first": 1,
+      "narrow_matches": 1,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "linear_model",
+      "from": "issue+failure",
+      "ordinary_matches": 367,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "append",
+      "from": "issue",
+      "ordinary_matches": 584,
+      "ordinary_first": 396,
+      "narrow_matches": 11,
+      "narrow_first": 5,
+      "narrow_cost": 5,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 396
+    },
+    {
+      "word": "scoring",
+      "from": "issue",
+      "ordinary_matches": 290,
+      "ordinary_first": 44,
+      "narrow_matches": 20,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 1,
+      "subtracted_first": null,
+      "subtracted_cost": 45
+    },
+    {
+      "word": "log_reg",
+      "from": "issue",
+      "ordinary_matches": 9,
+      "ordinary_first": 1,
+      "narrow_matches": 9,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1
+    },
+    {
+      "word": "X_test",
+      "from": "issue",
+      "ordinary_matches": 725,
+      "ordinary_first": 419,
+      "narrow_matches": 3,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 419
+    },
+    {
+      "word": "y_test",
+      "from": "issue",
+      "ordinary_matches": 437,
+      "ordinary_first": 261,
+      "narrow_matches": 6,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 261
+    },
+    {
+      "word": "fit_intercept",
+      "from": "issue",
+      "ordinary_matches": 648,
+      "ordinary_first": 192,
+      "narrow_matches": 27,
+      "narrow_first": 14,
+      "narrow_cost": 14,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 192
+    },
+    {
+      "word": "ovr_approach",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "decision_function",
+      "from": "issue",
+      "ordinary_matches": 291,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "reshape",
+      "from": "issue",
+      "ordinary_matches": 447,
+      "ordinary_first": null,
+      "narrow_matches": 12,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "shape",
+      "from": "issue",
+      "ordinary_matches": 5345,
+      "ordinary_first": 2733,
+      "narrow_matches": 117,
+      "narrow_first": 50,
+      "narrow_cost": 50,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 2733
+    },
+    {
+      "word": "score_from_probs",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "y_bin",
+      "from": "issue",
+      "ordinary_matches": 34,
+      "ordinary_first": null,
+      "narrow_matches": 5,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "mean",
+      "from": "issue",
+      "ordinary_matches": 921,
+      "ordinary_first": null,
+      "narrow_matches": 1,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "random",
+      "from": "issue",
+      "ordinary_matches": 1982,
+      "ordinary_first": 1059,
+      "narrow_matches": 38,
+      "narrow_first": 15,
+      "narrow_cost": 15,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 1059
+    },
+    {
+      "word": "seed",
+      "from": "issue",
+      "ordinary_matches": 376,
+      "ordinary_first": 179,
+      "narrow_matches": 21,
+      "narrow_first": 3,
+      "narrow_cost": 3,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 179
+    },
+    {
+      "word": "choice",
+      "from": "issue",
+      "ordinary_matches": 58,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "label",
+      "from": "issue",
+      "ordinary_matches": 938,
+      "ordinary_first": 586,
+      "narrow_matches": 27,
+      "narrow_first": 2,
+      "narrow_cost": 2,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 586
+    },
+    {
+      "word": "LabelBinarizer",
+      "from": "issue",
+      "ordinary_matches": 78,
+      "ordinary_first": null,
+      "narrow_matches": 7,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "transform",
+      "from": "issue",
+      "ordinary_matches": 1091,
+      "ordinary_first": null,
+      "narrow_matches": 9,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "logistic",
+      "from": "issue",
+      "ordinary_matches": 111,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "c_index",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "existing_log_reg",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "coef_",
+      "from": "issue",
+      "ordinary_matches": 764,
+      "ordinary_first": 247,
+      "narrow_matches": 19,
+      "narrow_first": 7,
+      "narrow_cost": 7,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 247
+    },
+    {
+      "word": "intercept_",
+      "from": "issue",
+      "ordinary_matches": 286,
+      "ordinary_first": 53,
+      "narrow_matches": 9,
+      "narrow_first": 4,
+      "narrow_cost": 4,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 53
+    },
+    {
+      "word": "existing_dec_fn",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "existing_probs_builtin",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "existing_probs_ovr",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "existing_probs_multi",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "extmath",
+      "from": "issue",
+      "ordinary_matches": 86,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "softmax",
+      "from": "issue",
+      "ordinary_matches": 20,
+      "ordinary_first": null,
+      "narrow_matches": 6,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_log_reg",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_dec_fn",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_probs_builtin",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_probs_ovr",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "new_probs_multi",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "x86_64",
+      "from": "issue",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "NumPy",
+      "from": "issue",
+      "ordinary_matches": 19,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "SciPy",
+      "from": "issue",
+      "ordinary_matches": 20,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "intercept_scaling",
+      "from": "issue",
+      "ordinary_matches": 92,
+      "ordinary_first": 11,
+      "narrow_matches": 17,
+      "narrow_first": 8,
+      "narrow_cost": 8,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 11
+    },
+    {
+      "word": "html",
+      "from": "issue",
+      "ordinary_matches": 53,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "____",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_logistic_cv_multinomial_score",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "multiclass_agg_list3",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "_____",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "test_logistic",
+      "from": "+failure",
+      "ordinary_matches": 0,
+      "ordinary_first": null,
+      "narrow_matches": 0,
+      "narrow_first": null,
+      "subtracted_matches": 0,
+      "subtracted_first": null
+    },
+    {
+      "word": "scorer",
+      "from": "+failure",
+      "ordinary_matches": 200,
+      "ordinary_first": 23,
+      "narrow_matches": 11,
+      "narrow_first": 1,
+      "narrow_cost": 1,
+      "subtracted_matches": 0,
+      "subtracted_first": null,
+      "subtracted_cost": 23
+    },
+    {
+      "word": "array",
+      "from": "+failure",
+      "ordinary_matches": 5207,
+      "ordinary_first": 2130,
+      "narrow_matches": 191,
+      "narrow_first": 29,
+      "narrow_cost": 29,
+      "subtracted_matches": 3,
+      "subtracted_first": null,
+      "subtracted_cost": 2133
+    }
+  ],
+  "words_reaching_fix": 18,
+  "median": {
+    "ordinary": 185.5,
+    "narrow": 3.5,
+    "subtracted": 185.5,
+    "narrow_hits": 18
+  },
+  "best_word": {
+    "word": "_log_reg_scoring_path",
+    "ordinary_first": 1,
+    "narrow_cost": 1,
+    "subtracted_cost": 1
+  }
+}
