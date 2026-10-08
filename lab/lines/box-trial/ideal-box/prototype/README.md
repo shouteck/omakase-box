@@ -1,6 +1,6 @@
 # Failing-test Box lab prototype
 
-9 October 2026. Research-only final-display hook; no live-agent integration. [Plan](plan.md), [result](result.md), [owner page](owner-design.md).
+9 October 2026. Research-only final-display hook; no live-agent integration. [Plan](plan.md), [result](result.md), [owner page](owner-design.md). Corrected candidate 9baf469 independently verified; [review follow-up](sceptic-followup.md).
 
 From the lab checkout, Python 3.11+ and installed native ripgrep:
 

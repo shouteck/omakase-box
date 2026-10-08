@@ -1,0 +1,10 @@
+{
+  "status": "pass",
+  "cases": 4,
+  "order_only_bytes_added": 0,
+  "optional_badge_bytes_added": 10,
+  "stale_pass_through": true,
+  "pipeline_filter_exit": 1,
+  "display_sha256": "eadd212705800d776ed51953c111a3aca2920bc25e888e11685e1e3667fef5c8",
+  "adapter_sha256": "7718edd93ce6e9fc16e0ef372ad21e73e68b41df62353cb843fac1affb4f38af"
+}
