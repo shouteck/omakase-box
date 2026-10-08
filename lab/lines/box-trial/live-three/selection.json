@@ -1,0 +1,76 @@
+{
+  "rule": "Measured Gate 2 tasks: any published failure OR maximum >=40 commands; exclude Sphinx; descending published failures then maximum commands then lexicographic task ID. Scan in this order, skip already admitted projects; no repair start until gold/empty/broken-guard and native search replay pass. Failed prerequisites excluded without repair reroll.",
+  "candidates": [
+    {
+      "task": "astropy__astropy-13033",
+      "published_failures": 2,
+      "max_published_commands": 35
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "published_failures": 1,
+      "max_published_commands": 71
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "published_failures": 1,
+      "max_published_commands": 68
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14087",
+      "published_failures": 1,
+      "max_published_commands": 34
+    },
+    {
+      "task": "django__django-12193",
+      "published_failures": 1,
+      "max_published_commands": 32
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "published_failures": 0,
+      "max_published_commands": 59
+    },
+    {
+      "task": "sympy__sympy-16766",
+      "published_failures": 0,
+      "max_published_commands": 55
+    },
+    {
+      "task": "sympy__sympy-12096",
+      "published_failures": 0,
+      "max_published_commands": 53
+    },
+    {
+      "task": "sympy__sympy-22914",
+      "published_failures": 0,
+      "max_published_commands": 49
+    },
+    {
+      "task": "matplotlib__matplotlib-13989",
+      "published_failures": 0,
+      "max_published_commands": 44
+    },
+    {
+      "task": "astropy__astropy-14508",
+      "published_failures": 0,
+      "max_published_commands": 43
+    },
+    {
+      "task": "django__django-16116",
+      "published_failures": 0,
+      "max_published_commands": 43
+    },
+    {
+      "task": "astropy__astropy-7166",
+      "published_failures": 0,
+      "max_published_commands": 42
+    },
+    {
+      "task": "scikit-learn__scikit-learn-11578",
+      "published_failures": 0,
+      "max_published_commands": 42
+    }
+  ],
+  "gate2_sha256": "b2f4e07d41cf00f85beb2a218c3a541765d42c7e55867af14070ff6ab25c22d7"
+}
