@@ -58,6 +58,12 @@ The pilot was clean: the silent Box reordered a search for a live agent, the age
 
 **Report.** One table with all four pairs, the pilot included and marked as such: task, which arm ran first, solved or not in each arm, commands, tokens, searches made and reordered, whether the agent opened something the Box moved up. Then, in plain words: on how many of the four the Box arm used fewer tokens, and on how many it solved what the control did not or the reverse. State what four pairs can and cannot support. If all four go the same way, say that this would happen by chance about one time in eight for a tool that does nothing, so it is a sign and not a proof; if they split, say that this is what no effect and a small effect both look like. Say nothing about percentages saved as if they were a measurement. One sceptic pass rereads the records and reruns the scoring, not the agents.
 
+**Spend as little as the answer allows: run the pairs one at a time and stop early** (the owner, same day: tokens cannot be wasted on experiments). The only result a handful of pairs can establish is a consistent one, so stop as soon as consistency is gone. Count a pair "for the Box" if the Box arm used fewer tokens, or solved the task when the control did not; "against" if the reverse; a difference under 5% of tokens with the same outcome is a tie and counts as neither. The pilot counts as the first pair, for the Box.
+
+- After each pair, if **two pairs so far are against**, stop and do not run the rest: a consistent effect is ruled out and a small one cannot be shown at this size.
+- If all three new pairs are for the Box, that is four of four. Stop and report; do not go on. The CTO will ask the owner whether to run two more, since six of six would happen by chance about one time in sixty-four for a tool that does nothing, and that is the cheapest result that would not be luck.
+- Otherwise run all three and report.
+
 **Then stop.** The owner and CTO decide from the table.
 
 ## Completed on 9 October 2026: the live pilot (authorization and protocol retained below)
