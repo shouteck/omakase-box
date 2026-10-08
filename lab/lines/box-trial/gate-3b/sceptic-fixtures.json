@@ -1,0 +1,188 @@
+[
+  {
+    "task": "astropy__astropy-13033",
+    "status": "pass",
+    "cases": 18,
+    "cleanup": 0,
+    "compact_receipt": {
+      "path": "sceptic-replay\\fixture-check-astropy__astropy-13033.json",
+      "sha256": "d484330a130a1a61d390672164102901b812ee1bb06e605bfda2a8cb2983e830"
+    },
+    "raw_receipt": {
+      "path": "sceptic-replay\\raw\\fixture-astropy__astropy-13033-full.json",
+      "sha256": "794b10b8c7e982f077265655aec15983991623897cdd314ba46b763b194a5b90",
+      "bytes": 65343
+    },
+    "native_case_statuses": [
+      {
+        "label": "single",
+        "status": "pass"
+      },
+      {
+        "label": "recursive",
+        "status": "pass"
+      },
+      {
+        "label": "absolute",
+        "status": "pass"
+      },
+      {
+        "label": "plain",
+        "status": "pass"
+      },
+      {
+        "label": "context",
+        "status": "pass"
+      },
+      {
+        "label": "compound",
+        "status": "pass"
+      },
+      {
+        "label": "head",
+        "status": "pass"
+      },
+      {
+        "label": "filter-semantic",
+        "status": "pass"
+      },
+      {
+        "label": "no-marker-input",
+        "status": "pass"
+      },
+      {
+        "label": "stdin",
+        "status": "pass"
+      },
+      {
+        "label": "git",
+        "status": "pass"
+      },
+      {
+        "label": "find",
+        "status": "pass"
+      },
+      {
+        "label": "count",
+        "status": "pass"
+      },
+      {
+        "label": "file-list",
+        "status": "pass"
+      },
+      {
+        "label": "no-match",
+        "status": "pass"
+      },
+      {
+        "label": "bad-regex",
+        "status": "pass"
+      },
+      {
+        "label": "bad-path",
+        "status": "pass"
+      },
+      {
+        "label": "native-missing",
+        "status": "pass"
+      }
+    ]
+  },
+  {
+    "task": "django__django-12193",
+    "status": "pass",
+    "cases": 20,
+    "cleanup": 0,
+    "compact_receipt": {
+      "path": "sceptic-replay\\fixture-check-django__django-12193.json",
+      "sha256": "1171751de83bbeca12ec0fd84b563616f0ec57c2d0f250dcbd017490c6d45906"
+    },
+    "raw_receipt": {
+      "path": "sceptic-replay\\raw\\fixture-django__django-12193-full.json",
+      "sha256": "0b5b82516ac483057dcd7a741933409e8fabb6425ffdd6875fcd02a4384a608a",
+      "bytes": 1096849
+    },
+    "native_case_statuses": [
+      {
+        "label": "single",
+        "status": "pass"
+      },
+      {
+        "label": "recursive",
+        "status": "pass"
+      },
+      {
+        "label": "absolute",
+        "status": "pass"
+      },
+      {
+        "label": "plain",
+        "status": "pass"
+      },
+      {
+        "label": "context",
+        "status": "pass"
+      },
+      {
+        "label": "compound",
+        "status": "pass"
+      },
+      {
+        "label": "head",
+        "status": "pass"
+      },
+      {
+        "label": "filter-semantic",
+        "status": "pass"
+      },
+      {
+        "label": "no-marker-input",
+        "status": "pass"
+      },
+      {
+        "label": "stdin",
+        "status": "pass"
+      },
+      {
+        "label": "git",
+        "status": "pass"
+      },
+      {
+        "label": "find",
+        "status": "pass"
+      },
+      {
+        "label": "count",
+        "status": "pass"
+      },
+      {
+        "label": "file-list",
+        "status": "pass"
+      },
+      {
+        "label": "no-match",
+        "status": "pass"
+      },
+      {
+        "label": "bad-regex",
+        "status": "pass"
+      },
+      {
+        "label": "bad-path",
+        "status": "pass"
+      },
+      {
+        "label": "native-missing",
+        "status": "pass"
+      },
+      {
+        "label": "real-find-pipeline",
+        "status": "pass"
+      },
+      {
+        "label": "real-decorated-source",
+        "status": "pass"
+      }
+    ]
+  }
+]

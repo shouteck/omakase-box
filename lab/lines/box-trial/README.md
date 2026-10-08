@@ -1,6 +1,8 @@
 # Box trial
 
-The current trial in [PROGRAMME](../../PROGRAMME.md) asks whether a cheap agent repairs more or spends fewer tokens with a tool that searches functions the failing test ran. The whole repository remains available. Earlier packaging and brief-comparison gates remain historical evidence.
+The current Gate 3b in [PROGRAMME](../../PROGRAMME.md) tests ordinary whole-repository search with traced-function matches prioritized before any live repair pair. The whole repository remains available. Earlier packaging and brief-comparison gates remain historical evidence.
+
+**Gate 3b, 8 October 2026: free gate failed; no live pair.** All 226 actual search actions were attempted: 243 native invocations, 220 covered actions and six generated-environment unknowns. Five of eleven eligible tasks met the fixed improvement rule; three recreated-native SymPy ranks regressed. Fresh review reproduced the aggregate and 87 native sample invocations. Original published SymPy ordering projects 3 to 3, unlike recreated 1 to 3. A native attack also found false execution marks from ambiguous qualified names (48 across seven tasks). This historical-function ranking proxy is not repair quality, and the instrument is not cleared for agent use. [Result](gate-3b-result.md), [fixed plan](gate-3b-plan.md), [review](gate-3b-sceptic.md), [instrument](gate-3b/README.md).
 
 **Gate 3, 8 October 2026: no improvement demonstrated in this protocol.** Ten valid pairs solved in both arms; the paired median token increase was 41.6%. Two zero-call Box attempts remain invalid. All fifteen Box calls returned no matches or usage errors, so useful Box matches were not tested. The passive-offer finding is preserved separately. [Result](gate-3-result.md), [plan](gate-3-plan.md), [independent review](gate-3-sceptic.md). The reviewer reproduced every measurement and confirmed this bounded conclusion.
 
@@ -12,4 +14,4 @@ The current trial in [PROGRAMME](../../PROGRAMME.md) asks whether a cheap agent 
 
 [Gate 0](gate-0.md) passed the reading gate. Gate 1 measured one conservative runtime-plus-import-closure method using whole modified test files. It does not establish repair success or token savings, and does not rule out a different reduction method.
 
-Stopped after Gate 3 under its fixed rule, without repeats. Owner and CTO decide any future interface/query change or new experiment. [Instrument](gate-3/README.md). Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.
+Stopped after Gate 3b free checks under its fixed rule, without a live pair. Owner and CTO decide any future interface/query change or new experiment. [Instrument](gate-3/README.md). Lines B, C and E stay paused; the earlier Line A runtime replay remains stopped at development. No product transfer.

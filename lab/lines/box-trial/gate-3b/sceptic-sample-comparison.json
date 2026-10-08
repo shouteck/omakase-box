@@ -1,0 +1,66 @@
+{
+  "astropy__astropy-13033": {
+    "saved_count": 17,
+    "fresh_count": 17,
+    "differences": [
+      [
+        2,
+        "proof"
+      ],
+      [
+        16,
+        "locations"
+      ],
+      [
+        16,
+        "proof"
+      ]
+    ],
+    "raw_sha256": "3c482e5f6ac2c14c3dac186e80f463b0e1d4f6f472bcc2d7679df004a9015b8d",
+    "cleanup_exits": [
+      0,
+      0,
+      0
+    ],
+    "image_preexisted": true,
+    "image_cleanup_exit": null,
+    "all_content_order_score_and_state_equal": true
+  },
+  "django__django-12193": {
+    "saved_count": 22,
+    "fresh_count": 22,
+    "differences": [],
+    "raw_sha256": "2f1284de5ffec065c47b062b841bc864d50d7c1f6434c9da2d9e10f19f0c43d6",
+    "cleanup_exits": [
+      0,
+      0,
+      0
+    ],
+    "image_preexisted": true,
+    "image_cleanup_exit": null,
+    "all_content_order_score_and_state_equal": true
+  },
+  "sympy__sympy-16597": {
+    "saved_count": 48,
+    "fresh_count": 48,
+    "differences": [
+      [
+        10,
+        "locations"
+      ],
+      [
+        10,
+        "proof"
+      ]
+    ],
+    "raw_sha256": "2e505499aa77b9023247847da174d928f7a3f1ae99726a5570149f66dcfebe6c",
+    "cleanup_exits": [
+      0,
+      0,
+      0
+    ],
+    "image_preexisted": false,
+    "image_cleanup_exit": 0,
+    "all_content_order_score_and_state_equal": true
+  }
+}

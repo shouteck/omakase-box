@@ -1,0 +1,240 @@
+{
+  "create_argv": [
+    "docker",
+    "create",
+    "--name",
+    "lab-gate-3b-c7397c70-2007-4ccd-9aad-0c594e13ef76",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "--pids-limit",
+    "128",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "--env",
+    "MPLBACKEND=Agg",
+    "--workdir",
+    "/testbed",
+    "--entrypoint",
+    "/bin/bash",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3b\\search.py,dst=/lab/search.py,readonly",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3b\\shell.sh,dst=/lab/shell.sh,readonly",
+    "--mount",
+    "type=bind,src=C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp-lab\\lab\\lines\\box-trial\\gate-3b\\sceptic-replay\\scratch\\identity\\scope.json,dst=/lab/scope.json,readonly",
+    "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+    "-lc",
+    "sleep infinity"
+  ],
+  "base_head": "298ccb478e6bf092953bca67a3d29dc6c35f6752",
+  "scope_sha256": "6bda8dd37c141aea329b862bb8e80f8cf1b2f5315bbfa039a2d813f1c2facc09",
+  "actual_trace_stdout": "[[\"x\", 2]]\n",
+  "actual_trace_exit": 0,
+  "ordinary": {
+    "exit": 0,
+    "unmarked_stdout_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+    "stdout_b64": "NDogICAgICAgIG5lZWRsZSA9IDENCjU6ICAgICAgICByZXR1cm4gbmVlZGxlDQo5OiAgICAgICAgbmVlZGxlID0gdmFsdWUNCjEwOiAgICAgICAgc2VsZi5feCA9IG5lZWRsZQ0K",
+    "stderr_b64": "",
+    "stdout_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "box": {
+    "exit": 0,
+    "unmarked_stdout_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+    "stdout_b64": "W0JPWF0gNDogICAgICAgIG5lZWRsZSA9IDENCltCT1hdIDU6ICAgICAgICByZXR1cm4gbmVlZGxlDQpbQk9YXSA5OiAgICAgICAgbmVlZGxlID0gdmFsdWUNCltCT1hdIDEwOiAgICAgICAgc2VsZi5feCA9IG5lZWRsZQ0K",
+    "stderr_b64": "",
+    "stdout_sha256": "ca89327008d5362af3d94514edafe2131c410a3499e11875d9b58275259dbbd0",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "queries": [
+    {
+      "tool": "grep",
+      "wrapper_sha256": "3737e3b9fc47721a279b0158d651a18ff6c75594772a143091fdfe61d7af0020",
+      "interpreter": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+      "args": [
+        "-n",
+        "needle",
+        "lab-sceptic-identity.py"
+      ],
+      "cwd": "/testbed",
+      "exit": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+      "ordered_sha256": "ca89327008d5362af3d94514edafe2131c410a3499e11875d9b58275259dbbd0",
+      "native_bytes": 102,
+      "locations": [
+        {
+          "ordinal": 0,
+          "path": "lab-sceptic-identity.py",
+          "line": 4,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        },
+        {
+          "ordinal": 1,
+          "path": "lab-sceptic-identity.py",
+          "line": 5,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        },
+        {
+          "ordinal": 2,
+          "path": "lab-sceptic-identity.py",
+          "line": 9,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        },
+        {
+          "ordinal": 3,
+          "path": "lab-sceptic-identity.py",
+          "line": 10,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        }
+      ],
+      "proof": {
+        "format": "human",
+        "same_records": true,
+        "order": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "marked": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "context_groups": 4,
+        "context": false
+      },
+      "mode": "ordinary",
+      "emitted_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+      "stdout_b64": "NDogICAgICAgIG5lZWRsZSA9IDENCjU6ICAgICAgICByZXR1cm4gbmVlZGxlDQo5OiAgICAgICAgbmVlZGxlID0gdmFsdWUNCjEwOiAgICAgICAgc2VsZi5feCA9IG5lZWRsZQ0K",
+      "stderr_b64": ""
+    },
+    {
+      "tool": "grep",
+      "wrapper_sha256": "3737e3b9fc47721a279b0158d651a18ff6c75594772a143091fdfe61d7af0020",
+      "interpreter": "3.9.20 (main, Oct  3 2024, 07:27:41) \n[GCC 11.2.0]",
+      "args": [
+        "-n",
+        "needle",
+        "lab-sceptic-identity.py"
+      ],
+      "cwd": "/testbed",
+      "exit": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "native_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+      "ordered_sha256": "ca89327008d5362af3d94514edafe2131c410a3499e11875d9b58275259dbbd0",
+      "native_bytes": 102,
+      "locations": [
+        {
+          "ordinal": 0,
+          "path": "lab-sceptic-identity.py",
+          "line": 4,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        },
+        {
+          "ordinal": 1,
+          "path": "lab-sceptic-identity.py",
+          "line": 5,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        },
+        {
+          "ordinal": 2,
+          "path": "lab-sceptic-identity.py",
+          "line": 9,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        },
+        {
+          "ordinal": 3,
+          "path": "lab-sceptic-identity.py",
+          "line": 10,
+          "kind": "line",
+          "is_match": true,
+          "priority": true,
+          "source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6",
+          "function_names": [
+            "C.x"
+          ]
+        }
+      ],
+      "proof": {
+        "format": "human",
+        "same_records": true,
+        "order": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "marked": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "context_groups": 4,
+        "context": false
+      },
+      "mode": "box",
+      "emitted_sha256": "6d0f6f86fba6ecabf2c8aef20dca0be1d3953dfb32079646ded01cb31ce972fc",
+      "stdout_b64": "NDogICAgICAgIG5lZWRsZSA9IDENCjU6ICAgICAgICByZXR1cm4gbmVlZGxlDQo5OiAgICAgICAgbmVlZGxlID0gdmFsdWUNCjEwOiAgICAgICAgc2VsZi5feCA9IG5lZWRsZQ0K",
+      "stderr_b64": ""
+    }
+  ],
+  "box_visible": "[BOX] 4:        needle = 1\r\n[BOX] 5:        return needle\r\n[BOX] 9:        needle = value\r\n[BOX] 10:        self._x = needle\r\n",
+  "finding": "Only getter ran (firstlineno 2); uncalled setter lines 9/10 also marked because both definitions map to C.x.",
+  "cleanup_exit": 0,
+  "fixture_source": "class C:\n    @property\n    def x(self):\n        needle = 1\n        return needle\n\n    @x.setter\n    def x(self, value):\n        needle = value\n        self._x = needle\n",
+  "fixture_source_sha256": "cb3c20917fa9600a12695cdbe27af23b910774eb18be05d59eaf5f101de5a0b6"
+}

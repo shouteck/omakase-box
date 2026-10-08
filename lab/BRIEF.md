@@ -1,23 +1,21 @@
 # Research brief for the CTO
 
-**Gate 3 finished. No improvement was demonstrated in this protocol; stop without repeats. No product transfer.**
+**Gate 3b free checks failed under the fixed rule. No live pair or product transfer.**
 
-8 October 2026. The owner/CTO stopped the optional-tool design; its two completed Box attempts never called it, and all four starts remain archived. Required Box-first wording was pushed before 24 fresh starts. Same twelve tasks, GPT-5.6 Luna high reasoning, limits and control; whole repository available, no listing injected.
+8 October 2026. Rebuilt native whole-repository search to retain matches and prioritize traced-function identities. Plan pushed before measurements. Replayed all actual search actions from twelve Gate 3 controls and both Gate 2 published agents on the same tasks.
 
-| Required-search restart | Finding |
+| Free gate | Finding |
 |---|---|
-| Valid Box attempts / invalid zero-call attempts | 10 / 2 |
-| Repair outcomes on valid pairs | Both arms solve all ten; zero gains/losses |
-| Actual Box calls | 15: 13 no matches, 2 usage errors |
-| Median per-task token change | 41.6% more for Box; 3 cheaper / 7 dearer, p=.34375 |
-| Median paired steps / elapsed increase | 4 / 18.9 seconds; timing includes setup/protocol overhead |
-| Four easy pairs | All use more tokens: 21.4%, 177.0%, 60.2%, 57.4% |
-| Fresh review | Whole measurement/selection exactly reproduced; 316 hashes pass; real-scope positive query passes |
+| Corpus | 36 trajectories, 226 search actions |
+| Native invocations / covered actions / unknown actions | 243 / 220 / 6 |
+| Eligible tasks clearly nearer | 5/11; majority rule fails |
+| Recreated-native historical-target regressions | 3 on SymPy; direct query 1 to 3, all 28 matches retained |
+| Independent checks | Full aggregation and hashes; fresh samples 17/22/48 invocations; fixtures 18/20 |
+| Additional review fault | Unexecuted setter falsely marked; 48 ambiguous qualified names across seven tasks |
+| Repair agents / repair tokens / live pairs | 0 / 0 / 0 |
 
-**Sentence:** this required-search implementation produced the same repairs and more median tokens when the agent got only empty/error Box responses, so it does not establish that the Box helps.
+**Sentence:** this instrument brings the historical patch nearer on only five of eleven eligible tasks and sometimes later in recreated native order, so the written gate stops before a live pair.
 
-The decisive limit is the queries: most were failing-test identifiers outside the production-function index. Combined commands were rejected and absolute /testbed filters did not match relative keys. The index can return matches, independently verified, but useful matches never reached an agent. The control already solved every scored valid pair. This is no proof that useful Boxes cannot help or that population costs are higher. Two invalid pairs and adherence bias prevent a complete twelve-pair claim.
+The original published SymPy output has the same matches/source but different traversal order and projects 3 to 3; the recreated 1 to 3 is not a historical original-stream regression. Historical generated/collateral patch functions need not be necessary for every correct repair, and module-level fixes are excluded. Counts use qualified identities that can collide. Invocation ranks precede downstream filters; stdin stages can already inherit reordered input. Six generated Sphinx environment queries remain unknown. This is a bounded ranking result, not evidence that Box ordering harms repair quality. The false marks also leave the instrument uncleared for agent use.
 
-Astropy 13033 has a pristine expired-data guard failure; kept unknown. Django guard descriptions and Matplotlib truncated test IDs were corrected only in grading, with original scores and unchanged patches preserved. Last SymPy Box attempt hit the token cap and remained invalid; its usage is retained. Fresh repair agents reported 5,843,839 tokens, including invalid starts, using explicitly authorized existing ChatGPT allowance; no new paid service/API key/purchase. Tokens are not invoices.
-
-[Result and full pair table](lines/box-trial/gate-3-result.md), [independent review](lines/box-trial/gate-3-sceptic.md), [fixed plan](lines/box-trial/gate-3-plan.md). Recommendation: close this run with its bounded finding. Any interface/query revision is a new experiment requiring a newly frozen plan and owner/CTO decision. Gate 1c and product transfer unstarted; A/B/C/E remain paused. No wave is in flight.
+[Full task table](lines/box-trial/gate-3b-result.md), [fresh review](lines/box-trial/gate-3b-sceptic.md), [fixed plan](lines/box-trial/gate-3b-plan.md). Stop here for CTO review. Gate 3's passive non-use and empty/error required calls remain historical findings (about 5.8M reported repair tokens); this session ran no repair models or paid services. No wave in flight; other lines paused.

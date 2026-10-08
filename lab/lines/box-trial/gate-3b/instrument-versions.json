@@ -1,13 +1,15 @@
 {
   "sources": {
-    "check.py": "f6817b4488368cb769d61a375851fad3653913e4553b9d1decd3a3726a29a1a5",
+    "check.py": "78b0e5c0a51f34062f4ab8382abe26483d43b0a3c0ff4fc8a7c31336300043fb",
     "corpus.py": "e8494bc2b88b6b3d0f73932c6cfb58ba162d98a31d00e0dc44320d048ae00884",
     "replay.py": "315f0f2bcd2a50e8ed9a74537d7977cab3fe2615d5a80ff64f7305604e3bb9c7",
+    "report.py": "2a9feee332ddc92bd213f84c1a8dc687114e7a69755c0438ee2f38089669012c",
     "score.py": "3673dba370dcd07768ac5e2177416c3c45bb125bc68f63d7b4677c81ed62d3b5",
     "search.py": "3737e3b9fc47721a279b0158d651a18ff6c75594772a143091fdfe61d7af0020",
     "shell.sh": "d674a1c7838733b52534e2738cc28b539bdc80b8d0db860b1ae81c85b5261c5d"
   },
   "retained_prior_version": "5a246a8",
   "correction": "Legacy decorator position lookup and source-version receipts only; ranking rule unchanged.",
-  "final_changes": "File-name searches use traced file identities without reading binaries; annotation delays retain native output. Optional --output only redirects replay records for independent reproduction."
+  "final_changes": "File-name searches use traced file identities without reading binaries; annotation delays retain native output. Optional --output only redirects replay records for independent reproduction.",
+  "closeout_provenance": "Earlier manifest preserved separately. Research fixture executed before check.py compact-storage writer change; original full receipt retained and hash bound. Fresh sceptic fixtures executed current writer. report.py added and corrected after review; presentation only. Native search and scoring remain unchanged."
 }

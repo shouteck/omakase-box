@@ -1,0 +1,757 @@
+{
+  "trace_scoped_duplicate_qualified_names": [
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.format",
+      "definitions": [
+        [
+          634,
+          640
+        ],
+        [
+          642,
+          658
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.unit",
+      "definitions": [
+        [
+          821,
+          830
+        ],
+        [
+          832,
+          837
+        ],
+        [
+          839,
+          841
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.parent_table",
+      "definitions": [
+        [
+          457,
+          465
+        ],
+        [
+          467,
+          472
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.name",
+      "definitions": [
+        [
+          616,
+          621
+        ],
+        [
+          623,
+          632
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/table/table.py",
+      "qualified_name": "Table.masked",
+      "definitions": [
+        [
+          1982,
+          1984
+        ],
+        [
+          1986,
+          1989
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/core.py",
+      "qualified_name": "TimeBase.format",
+      "definitions": [
+        [
+          471,
+          486
+        ],
+        [
+          488,
+          505
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/core.py",
+      "qualified_name": "TimeBase.precision",
+      "definitions": [
+        [
+          598,
+          604
+        ],
+        [
+          606,
+          612
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/core.py",
+      "qualified_name": "TimeBase.in_subfmt",
+      "definitions": [
+        [
+          614,
+          620
+        ],
+        [
+          622,
+          625
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/core.py",
+      "qualified_name": "TimeBase.shape",
+      "definitions": [
+        [
+          640,
+          661
+        ],
+        [
+          663,
+          691
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/core.py",
+      "qualified_name": "TimeBase.out_subfmt",
+      "definitions": [
+        [
+          627,
+          632
+        ],
+        [
+          634,
+          638
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/formats.py",
+      "qualified_name": "TimeFormat.in_subfmt",
+      "definitions": [
+        [
+          157,
+          159
+        ],
+        [
+          161,
+          165
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/formats.py",
+      "qualified_name": "TimeFormat.scale",
+      "definitions": [
+        [
+          200,
+          204
+        ],
+        [
+          206,
+          208
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/formats.py",
+      "qualified_name": "TimeFormat.jd1",
+      "definitions": [
+        [
+          177,
+          179
+        ],
+        [
+          181,
+          185
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/formats.py",
+      "qualified_name": "TimeFormat.out_subfmt",
+      "definitions": [
+        [
+          167,
+          169
+        ],
+        [
+          171,
+          175
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/time/formats.py",
+      "qualified_name": "TimeFormat.jd2",
+      "definitions": [
+        [
+          187,
+          189
+        ],
+        [
+          191,
+          195
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/utils/data_info.py",
+      "qualified_name": "BaseColumnInfo.indices",
+      "definitions": [
+        [
+          573,
+          579
+        ],
+        [
+          581,
+          583
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/utils/data_info.py",
+      "qualified_name": "BaseColumnInfo.parent_table",
+      "definitions": [
+        [
+          526,
+          531
+        ],
+        [
+          533,
+          539
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-13033",
+      "path": "astropy/utils/data_info.py",
+      "qualified_name": "MixinInfo.name",
+      "definitions": [
+        [
+          740,
+          742
+        ],
+        [
+          744,
+          753
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/card.py",
+      "qualified_name": "Card.field_specifier",
+      "definitions": [
+        [
+          483,
+          494
+        ],
+        [
+          496,
+          512
+        ],
+        [
+          514,
+          519
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/card.py",
+      "qualified_name": "Card.value",
+      "definitions": [
+        [
+          284,
+          303
+        ],
+        [
+          305,
+          383
+        ],
+        [
+          385,
+          398
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/card.py",
+      "qualified_name": "Card.keyword",
+      "definitions": [
+        [
+          221,
+          231
+        ],
+        [
+          233,
+          282
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/card.py",
+      "qualified_name": "Card.comment",
+      "definitions": [
+        [
+          428,
+          438
+        ],
+        [
+          440,
+          471
+        ],
+        [
+          473,
+          481
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/column.py",
+      "qualified_name": "Column.array",
+      "definitions": [
+        [
+          754,
+          828
+        ],
+        [
+          830,
+          858
+        ],
+        [
+          860,
+          867
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/fitsrec.py",
+      "qualified_name": "FITS_rec._coldefs",
+      "definitions": [
+        [
+          604,
+          622
+        ],
+        [
+          624,
+          629
+        ],
+        [
+          631,
+          636
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/hdu/table.py",
+      "qualified_name": "_TableBaseHDU.data",
+      "definitions": [
+        [
+          440,
+          447
+        ],
+        [
+          449,
+          506
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/io/fits/header.py",
+      "qualified_name": "Header._modified",
+      "definitions": [
+        [
+          332,
+          345
+        ],
+        [
+          347,
+          349
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.format",
+      "definitions": [
+        [
+          764,
+          769
+        ],
+        [
+          771,
+          786
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.unit",
+      "definitions": [
+        [
+          965,
+          974
+        ],
+        [
+          976,
+          981
+        ],
+        [
+          983,
+          985
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.parent_table",
+      "definitions": [
+        [
+          581,
+          589
+        ],
+        [
+          591,
+          596
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/table/column.py",
+      "qualified_name": "BaseColumn.name",
+      "definitions": [
+        [
+          746,
+          751
+        ],
+        [
+          753,
+          762
+        ]
+      ]
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "path": "astropy/table/table.py",
+      "qualified_name": "Table.masked",
+      "definitions": [
+        [
+          2170,
+          2172
+        ],
+        [
+          2174,
+          2179
+        ]
+      ]
+    },
+    {
+      "task": "django__django-12193",
+      "path": "django/core/management/base.py",
+      "qualified_name": "OutputWrapper.style_func",
+      "definitions": [
+        [
+          118,
+          120
+        ],
+        [
+          122,
+          127
+        ]
+      ]
+    },
+    {
+      "task": "django__django-12193",
+      "path": "django/template/library.py",
+      "qualified_name": "Library.filter.dec",
+      "definitions": [
+        [
+          64,
+          65
+        ],
+        [
+          73,
+          74
+        ]
+      ]
+    },
+    {
+      "task": "django__django-14752",
+      "path": "django/core/management/base.py",
+      "qualified_name": "OutputWrapper.style_func",
+      "definitions": [
+        [
+          124,
+          126
+        ],
+        [
+          128,
+          133
+        ]
+      ]
+    },
+    {
+      "task": "django__django-14752",
+      "path": "django/db/models/query.py",
+      "qualified_name": "QuerySet.query",
+      "definitions": [
+        [
+          194,
+          200
+        ],
+        [
+          202,
+          206
+        ]
+      ]
+    },
+    {
+      "task": "django__django-14752",
+      "path": "django/http/request.py",
+      "qualified_name": "QueryDict.encoding",
+      "definitions": [
+        [
+          464,
+          468
+        ],
+        [
+          470,
+          472
+        ]
+      ]
+    },
+    {
+      "task": "django__django-14752",
+      "path": "django/http/response.py",
+      "qualified_name": "HttpResponseBase.charset",
+      "definitions": [
+        [
+          139,
+          148
+        ],
+        [
+          150,
+          152
+        ]
+      ]
+    },
+    {
+      "task": "django__django-14752",
+      "path": "django/http/response.py",
+      "qualified_name": "HttpResponse.content",
+      "definitions": [
+        [
+          342,
+          344
+        ],
+        [
+          346,
+          362
+        ]
+      ]
+    },
+    {
+      "task": "django__django-14752",
+      "path": "django/template/library.py",
+      "qualified_name": "Library.filter.dec",
+      "definitions": [
+        [
+          64,
+          65
+        ],
+        [
+          73,
+          74
+        ]
+      ]
+    },
+    {
+      "task": "django__django-15467",
+      "path": "django/core/management/base.py",
+      "qualified_name": "OutputWrapper.style_func",
+      "definitions": [
+        [
+          139,
+          141
+        ],
+        [
+          143,
+          148
+        ]
+      ]
+    },
+    {
+      "task": "django__django-15467",
+      "path": "django/db/models/query.py",
+      "qualified_name": "QuerySet.query",
+      "definitions": [
+        [
+          233,
+          239
+        ],
+        [
+          241,
+          245
+        ]
+      ]
+    },
+    {
+      "task": "django__django-15467",
+      "path": "django/template/library.py",
+      "qualified_name": "Library.filter.dec",
+      "definitions": [
+        [
+          66,
+          67
+        ],
+        [
+          76,
+          77
+        ]
+      ]
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "path": "lib/matplotlib/_api/deprecation.py",
+      "qualified_name": "deprecated.deprecate.finalize",
+      "definitions": [
+        [
+          144,
+          150
+        ],
+        [
+          181,
+          183
+        ],
+        [
+          192,
+          195
+        ]
+      ]
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "path": "lib/matplotlib/dates.py",
+      "qualified_name": "rrulewrapper._aware_return_wrapper.inner_func",
+      "definitions": [
+        [
+          1053,
+          1056
+        ],
+        [
+          1058,
+          1061
+        ]
+      ]
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "path": "lib/matplotlib/transforms.py",
+      "qualified_name": "Bbox.__init__",
+      "definitions": [
+        [
+          767,
+          785
+        ],
+        [
+          789,
+          791
+        ]
+      ]
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "path": "sympy/core/cache.py",
+      "qualified_name": "__cacheit",
+      "definitions": [
+        [
+          66,
+          113
+        ],
+        [
+          116,
+          143
+        ]
+      ]
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "path": "sympy/core/cache.py",
+      "qualified_name": "__cacheit.func_wrapper",
+      "definitions": [
+        [
+          87,
+          111
+        ],
+        [
+          137,
+          141
+        ]
+      ]
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "path": "sympy/core/decorators.py",
+      "qualified_name": "__sympifyit.__sympifyit_wrapper",
+      "definitions": [
+        [
+          79,
+          81
+        ],
+        [
+          84,
+          93
+        ]
+      ]
+    }
+  ],
+  "note": "Remapping uses qualified-name equality, not decorator role/definition identity; multiple definitions are credited."
+}

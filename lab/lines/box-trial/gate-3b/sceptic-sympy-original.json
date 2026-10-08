@@ -1,0 +1,15 @@
+{
+  "original_text_match_multiset_equals_replay": true,
+  "original_first_historical_function_rank": 3,
+  "original_projected_box_rank": 3,
+  "original_first_target": "sympy/assumptions/ask.py:1493:        Equivalent(Q.irrational | Q.rational, Q.real),",
+  "replay_first_target": "sympy/assumptions/ask_generated.py:76:        Q.irrational | Q.rational | ~Q.real,",
+  "replay_native_rank": 1,
+  "replay_box_rank": 3,
+  "source_digests_equal_saved_base": true,
+  "original_output_sha256": "229f1e4707b32fabf4915c8d9febcba131ca80c6b8f22190a52df062663f2e7e",
+  "priorities": [
+    "sympy/assumptions/ask.py:97:          ``Q.rational``, and ``Q.irrational`` all imply ``Q.real``, as do all",
+    "sympy/assumptions/ask.py:304:        ``Q.irrational(x)`` is true iff ``x``  is any real number that"
+  ]
+}

@@ -1,0 +1,240 @@
+{
+  "commit": "96901cfc1d5def29fdf9e0beb09d3e61dd0551b9",
+  "summary_exactly_reproduced": true,
+  "independent_rows": [
+    {
+      "task": "astropy__astropy-13033",
+      "invocations": 17,
+      "eligible": 3,
+      "ordinary_median_before": 2,
+      "box_median_before": 0,
+      "clearly_nearer": true
+    },
+    {
+      "task": "astropy__astropy-14539",
+      "invocations": 24,
+      "eligible": 7,
+      "ordinary_median_before": 1,
+      "box_median_before": 0,
+      "clearly_nearer": true
+    },
+    {
+      "task": "django__django-12193",
+      "invocations": 22,
+      "eligible": 4,
+      "ordinary_median_before": 3.5,
+      "box_median_before": 1.0,
+      "clearly_nearer": true
+    },
+    {
+      "task": "django__django-14752",
+      "invocations": 9,
+      "eligible": 0,
+      "ordinary_median_before": null,
+      "box_median_before": null,
+      "clearly_nearer": false
+    },
+    {
+      "task": "django__django-15467",
+      "invocations": 15,
+      "eligible": 3,
+      "ordinary_median_before": 0,
+      "box_median_before": 0,
+      "clearly_nearer": false
+    },
+    {
+      "task": "matplotlib__matplotlib-21568",
+      "invocations": 21,
+      "eligible": 3,
+      "ordinary_median_before": 0,
+      "box_median_before": 0,
+      "clearly_nearer": false
+    },
+    {
+      "task": "scikit-learn__scikit-learn-12585",
+      "invocations": 13,
+      "eligible": 6,
+      "ordinary_median_before": 0.0,
+      "box_median_before": 0.0,
+      "clearly_nearer": false
+    },
+    {
+      "task": "scikit-learn__scikit-learn-13124",
+      "invocations": 15,
+      "eligible": 2,
+      "ordinary_median_before": 1.0,
+      "box_median_before": 1.0,
+      "clearly_nearer": false
+    },
+    {
+      "task": "scikit-learn__scikit-learn-14087",
+      "invocations": 15,
+      "eligible": 6,
+      "ordinary_median_before": 2.0,
+      "box_median_before": 0.0,
+      "clearly_nearer": true
+    },
+    {
+      "task": "sphinx-doc__sphinx-10614",
+      "invocations": 35,
+      "eligible": 2,
+      "ordinary_median_before": 3.5,
+      "box_median_before": 2.5,
+      "clearly_nearer": false
+    },
+    {
+      "task": "sphinx-doc__sphinx-11445",
+      "invocations": 9,
+      "eligible": 4,
+      "ordinary_median_before": 5.0,
+      "box_median_before": 0.0,
+      "clearly_nearer": true
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "invocations": 48,
+      "eligible": 5,
+      "ordinary_median_before": 48,
+      "box_median_before": 48,
+      "clearly_nearer": false
+    }
+  ],
+  "total_invocations": 243,
+  "covered_search_actions": 220,
+  "uncovered_search_actions": 6,
+  "eligible_tasks": 11,
+  "clearly_nearer_tasks": 5,
+  "regressions": [
+    {
+      "task": "sympy__sympy-16597",
+      "agent": "gemini-3-5-flash",
+      "step": 20,
+      "invocation": 1,
+      "tool": "grep",
+      "args": [
+        "-rn",
+        "rational.*real",
+        "sympy/"
+      ],
+      "ordinary_first": 1,
+      "box_first": 3,
+      "command": "grep -rn \"rational.*real\" sympy/",
+      "state_before": {
+        "head": "6fd65310fa3167b9626c38a5487e171ca407d988",
+        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": ""
+      }
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "agent": "gpt-5-2-codex",
+      "step": 25,
+      "invocation": 1,
+      "tool": "grep",
+      "args": [
+        "-R",
+        "integer=True",
+        "-n",
+        "sympy"
+      ],
+      "ordinary_first": 58,
+      "box_first": 59,
+      "command": "cd /testbed && grep -R \"integer=True\" -n sympy | grep is_finite | head -n 50",
+      "state_before": {
+        "head": "6fd65310fa3167b9626c38a5487e171ca407d988",
+        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": ""
+      }
+    },
+    {
+      "task": "sympy__sympy-16597",
+      "agent": "gpt-5-2-codex",
+      "step": 26,
+      "invocation": 1,
+      "tool": "grep",
+      "args": [
+        "-R",
+        "--exclude-dir=__pycache__",
+        "--exclude=*.pyc",
+        "integer=True",
+        "-n",
+        "sympy"
+      ],
+      "ordinary_first": 58,
+      "box_first": 59,
+      "command": "cd /testbed && grep -R --exclude-dir='__pycache__' --exclude='*.pyc' \"integer=True\" -n sympy | grep is_finite | head -n 50",
+      "state_before": {
+        "head": "6fd65310fa3167b9626c38a5487e171ca407d988",
+        "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": ""
+      }
+    }
+  ],
+  "all_native_multisets_and_stream_hashes_rechecked": true,
+  "corpus_exactly_recollected": true,
+  "source_sha256": {
+    "check.py": "78b0e5c0a51f34062f4ab8382abe26483d43b0a3c0ff4fc8a7c31336300043fb",
+    "corpus.py": "e8494bc2b88b6b3d0f73932c6cfb58ba162d98a31d00e0dc44320d048ae00884",
+    "replay.py": "315f0f2bcd2a50e8ed9a74537d7977cab3fe2615d5a80ff64f7305604e3bb9c7",
+    "report.py": "d9f76f3fe830c2840cff66c2b7e30214e27ca9b3d03a7978253202bdb70ec6ab",
+    "score.py": "3673dba370dcd07768ac5e2177416c3c45bb125bc68f63d7b4677c81ed62d3b5",
+    "search.py": "3737e3b9fc47721a279b0158d651a18ff6c75594772a143091fdfe61d7af0020",
+    "shell.sh": "d674a1c7838733b52534e2738cc28b539bdc80b8d0db860b1ae81c85b5261c5d"
+  },
+  "manifest_mismatches": {
+    "check.py": {
+      "declared": "f6817b4488368cb769d61a375851fad3653913e4553b9d1decd3a3726a29a1a5",
+      "actual": "78b0e5c0a51f34062f4ab8382abe26483d43b0a3c0ff4fc8a7c31336300043fb"
+    }
+  },
+  "raw_receipts": [
+    {
+      "path": "raw\\astropy__astropy-13033\\replay.json",
+      "sha256": "137af252d52c8c7487aa07b313c5f2f47deecd3023d420e077664aef3551d05e"
+    },
+    {
+      "path": "raw\\astropy__astropy-14539\\replay.json",
+      "sha256": "4792f9dc9234ead2e47b095dd821f3ba04fdd1dd49c1d6dfdbc46ed827575592"
+    },
+    {
+      "path": "raw\\django__django-12193\\replay.json",
+      "sha256": "770c4f2d53772adbe4e35584848c4068c1a0bf8725cfa5a115a6a4719dcf0297"
+    },
+    {
+      "path": "raw\\django__django-14752\\replay.json",
+      "sha256": "5d214f11c76eff8f2690062de583e455ac4e368379c564638254ddc5629ac71d"
+    },
+    {
+      "path": "raw\\django__django-15467\\replay.json",
+      "sha256": "8d9575c18e0891c539490b6f432831e140114835aca2c4ad499fa3aa1468de0e"
+    },
+    {
+      "path": "raw\\matplotlib__matplotlib-21568\\replay.json",
+      "sha256": "daa24268ec38548f10cb6dc4546054ad35855be4416b1891a77841b3a752db09"
+    },
+    {
+      "path": "raw\\scikit-learn__scikit-learn-12585\\replay.json",
+      "sha256": "cb2115a2f50919a6e0588a02204092f88e725004ea50d693164dc2b4eac0ea74"
+    },
+    {
+      "path": "raw\\scikit-learn__scikit-learn-13124\\replay.json",
+      "sha256": "85b266e289b4881440a3cf654c82164b5fbfa2639264a9b78c268765bdb7328b"
+    },
+    {
+      "path": "raw\\scikit-learn__scikit-learn-14087\\replay.json",
+      "sha256": "98be62e8a3407d6779d2ee205640f9034acb325dc7d96342e33b96965f2feda6"
+    },
+    {
+      "path": "raw\\sphinx-doc__sphinx-10614\\replay.json",
+      "sha256": "e886fe0e4a605eef853160c58438661fb47ca8e8b4ce8af1a9c8e94fcdbc16ff"
+    },
+    {
+      "path": "raw\\sphinx-doc__sphinx-11445\\replay.json",
+      "sha256": "3ea6e2cad4211d7e596a52ab8e93410aa09231d7e25421c540da0d272e0c437c"
+    },
+    {
+      "path": "raw\\sympy__sympy-16597\\replay.json",
+      "sha256": "221443da9b116ce5dd0b18460cc1aeac1219ac227960395488bc0c8428cf9bf3"
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "images": [
+    {
+      "task": "astropy__astropy-13033",
+      "reference": "ghcr.io/epoch-research/swe-bench.eval.x86_64.astropy__astropy-13033@sha256:9e7c1271c541952b2fbfad1210f945c3fe519d39bd9bd4e431ce8e4164dd2214",
+      "present_before": true,
+      "remove_exit": 0,
+      "absent_after": true
+    },
+    {
+      "task": "django__django-12193",
+      "reference": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-12193@sha256:5799b49403d81db5c3fbff7cfea8a46d446fb75fd6121cc12cd890edefed7645",
+      "present_before": true,
+      "remove_exit": 0,
+      "absent_after": true
+    },
+    {
+      "task": "django__django-14752",
+      "reference": "ghcr.io/epoch-research/swe-bench.eval.x86_64.django__django-14752@sha256:ca4906780eb33d9d327497f4b9d4d35da9ed3b32f2c88910214598dbcfa071e9",
+      "present_before": true,
+      "remove_exit": 0,
+      "absent_after": true
+    },
+    {
+      "task": "scikit-learn__scikit-learn-12585",
+      "reference": "ghcr.io/epoch-research/swe-bench.eval.x86_64.scikit-learn__scikit-learn-12585@sha256:22a6f6cef16b3787cc34f7c9069bb5facb136d1430973842c7df2ee6ef5c694a",
+      "present_before": true,
+      "remove_exit": 0,
+      "absent_after": true
+    }
+  ],
+  "containers_remaining": [],
+  "scratch_files": [
+    {
+      "path": "scratch\\astropy__astropy-13033\\scope.json",
+      "bytes": 18188,
+      "sha256": "2276416bb63a44b5a42ac9daa14a45c5234b27112a3e2e147b63082f054f942a"
+    },
+    {
+      "path": "scratch\\astropy__astropy-13033\\test.patch",
+      "bytes": 910,
+      "sha256": "d8d016d036e3f70137f8769246a57180e177ae2afc7e6ac41dfd80893d967b5d"
+    },
+    {
+      "path": "scratch\\astropy__astropy-14539\\scope.json",
+      "bytes": 19183,
+      "sha256": "b50485dd80add51f9e56f779801aaaee073537df527879c585ca9fd080c8f909"
+    },
+    {
+      "path": "scratch\\astropy__astropy-14539\\test.patch",
+      "bytes": 3599,
+      "sha256": "1e6bf14ee6274a207269ed53d5869cec552d83c1300b82bd450392f87322d586"
+    },
+    {
+      "path": "scratch\\django__django-12193\\scope.json",
+      "bytes": 19547,
+      "sha256": "a74580ecb8dd176a3eb0b386f71402ae959e8f2a0b9b87aa56dc9cb013d4f759"
+    },
+    {
+      "path": "scratch\\django__django-12193\\test.patch",
+      "bytes": 1521,
+      "sha256": "781058d7f8f286b614e122216ed9128a98217b184a108be29410005aa6ad07dc"
+    },
+    {
+      "path": "scratch\\django__django-14752\\scope.json",
+      "bytes": 56735,
+      "sha256": "fb90f5318ce5d390fd752225343ad1e7d67b88f2f965ee5809d15605feb80cb3"
+    },
+    {
+      "path": "scratch\\django__django-14752\\test.patch",
+      "bytes": 1637,
+      "sha256": "89926ad9e99080c51b256b6ff55850d97d2430ff9218772376ec1783b90994e5"
+    },
+    {
+      "path": "scratch\\django__django-15467\\scope.json",
+      "bytes": 25452,
+      "sha256": "9aef1d98a4790e654b3e663d8f6b055fc2932c75dcdda3573899a27d94a5d32a"
+    },
+    {
+      "path": "scratch\\django__django-15467\\test.patch",
+      "bytes": 1000,
+      "sha256": "adae1324b6d3c463204a31167f162ccea26cb80ed79bd72a69fcbbee42b73807"
+    },
+    {
+      "path": "scratch\\fixture\\sample.py",
+      "bytes": 96,
+      "sha256": "f0fb4cd5378740cb2a265323d0777240ada4b1f964f8da2e5d9e54f2ed9a416f"
+    },
+    {
+      "path": "scratch\\fixture\\scope.json",
+      "bytes": 19601,
+      "sha256": "e53807f89669dc8a75d2e97be0e0dd580b003c68850a3dd62355e676799df2e8"
+    },
+    {
+      "path": "scratch\\matplotlib__matplotlib-21568\\scope.json",
+      "bytes": 9212,
+      "sha256": "2a8e32d8f9ef41727f2d2ad22e9cec53773fe15a99d4aac56081c674f831364d"
+    },
+    {
+      "path": "scratch\\matplotlib__matplotlib-21568\\test.patch",
+      "bytes": 2599,
+      "sha256": "67c6dcc92e81d6741057bd8c7b0546045a8006ebe5c8d98745826aec5445f4e6"
+    },
+    {
+      "path": "scratch\\scikit-learn__scikit-learn-12585\\scope.json",
+      "bytes": 1940,
+      "sha256": "b3190af17a92f0d580f8f8022af303a264f3f272e3b829d2651d55368b8b77ac"
+    },
+    {
+      "path": "scratch\\scikit-learn__scikit-learn-12585\\test.patch",
+      "bytes": 604,
+      "sha256": "c3b00511dad324630485144f17ba3b3cef92c9f775c1d4d162a971f58bcc86ec"
+    },
+    {
+      "path": "scratch\\scikit-learn__scikit-learn-13124\\scope.json",
+      "bytes": 2469,
+      "sha256": "e6cb6f9d84e43f91d51cb27f935c1d5795d737229e1210e22920b9b99431d777"
+    },
+    {
+      "path": "scratch\\scikit-learn__scikit-learn-13124\\test.patch",
+      "bytes": 1043,
+      "sha256": "204570962c96a748849cebdc86a7dae89a0b2363aef0908c82a24c064c47af2e"
+    },
+    {
+      "path": "scratch\\scikit-learn__scikit-learn-14087\\scope.json",
+      "bytes": 2871,
+      "sha256": "46552d1ee8eb1d964c4f37022b3a56041d865ca36a3754321ed240c444a1cb0f"
+    },
+    {
+      "path": "scratch\\scikit-learn__scikit-learn-14087\\test.patch",
+      "bytes": 1386,
+      "sha256": "39eb64081faff20ec0893607c277ea0ccffc652a4abfa815b7b352e54ac23bf1"
+    },
+    {
+      "path": "scratch\\sphinx-doc__sphinx-10614\\scope.json",
+      "bytes": 27155,
+      "sha256": "8dbbb371fe1625d2ce5061db82327399f5808006d6b10711473215c8f13cf325"
+    },
+    {
+      "path": "scratch\\sphinx-doc__sphinx-10614\\test.patch",
+      "bytes": 8127,
+      "sha256": "67701d18fdee1c802c86f12bafbedc42250bec185a6db83e06f5a9162ec8aa94"
+    },
+    {
+      "path": "scratch\\sphinx-doc__sphinx-11445\\scope.json",
+      "bytes": 11839,
+      "sha256": "81bfdb869725db9b22ff043633ff56fff5f24400ebffdb658642db447940967f"
+    },
+    {
+      "path": "scratch\\sphinx-doc__sphinx-11445\\test.patch",
+      "bytes": 3220,
+      "sha256": "b8eeaa101b3c97e7a51666947c4456dafbbed133efb186d5f2550f5e48d53cf4"
+    },
+    {
+      "path": "scratch\\sympy__sympy-16597\\scope.json",
+      "bytes": 12620,
+      "sha256": "7bc1cfb66fe01d42ad20c191a0f579e1d7a6ed375cf3c7a8372afd87886a5d8a"
+    },
+    {
+      "path": "scratch\\sympy__sympy-16597\\test.patch",
+      "bytes": 5072,
+      "sha256": "aa1263270ae0b8e7befe02678ac8ace76ea44779054690595982de41a56956e9"
+    }
+  ],
+  "scratch_removed": true,
+  "raw_evidence_retained": true
+}
