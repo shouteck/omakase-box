@@ -31,6 +31,16 @@ def normalized(record):
    if code:steps[-1]['exit']=int(code.group(1))
  return steps,'bash-fences',unparsed
 
+def production(repo,path):
+ # django.test is a distributed framework API, not the benchmark's tests tree.
+ return g2.production(path) or (repo=='django/django' and path.startswith('django/test/'))
+
+def source_identity(trees,path,line):
+ containing=[r for r in trees.get(path,[]) if r['start']<=line<=r['end']]
+ if not containing:return None
+ width=min(r['end']-r['start'] for r in containing);unique=[r for r in containing if r['end']-r['start']==width]
+ return unique[0] if len(unique)==1 else None
+
 _cached_id=None
 _cached_bundle=None
 def inputs(row):
@@ -51,9 +61,21 @@ def inputs(row):
   tracelogpath=logpath.parent/'failing.log'
   tracelog=tracelogpath.read_bytes().decode(errors='replace') if tracelogpath.exists() else ''
   valid=g2.g1b.failed_named(task,row,g2.g1b.ANSI.sub('',tracelog)) and not plain.get('timed_out',True) and not traced.get('timed_out',True) and bool(trace) and g2.g1b.failed_named(task,row,g2.g1b.ANSI.sub('',log))
- evidence=adapter.Evidence(source,trace,valid=valid,excluded=[p for p in source if not g2.production(p)])
- trees={p:evidence.tree(p) for p in source if g2.production(p)}
- target,files=g2.g1b.targets(row,source,trees)
+ evidence=adapter.Evidence(source,trace,valid=valid,excluded=[p for p in source if not production(row['repo'],p)])
+ trees={p:evidence.tree(p) for p in source if production(row['repo'],p)}
+ target=set();files=set()
+ for p,change in g2.patch_changes(row['patch'],source).items():
+  if not p.endswith(('.py','.pyi')) or not production(row['repo'],p):continue
+  files.add(p)
+  for n in change['old_lines']:
+   hit=source_identity(trees,p,n)
+   if hit:target.add((p,hit['start']))
+ evidence.removed_target=set()
+ for p,numbers in verified_removed_lines(row['patch'],source).items():
+  if p not in trees:continue
+  for n in numbers:
+   hit=source_identity(trees,p,n)
+   if hit:evidence.removed_target.add((p,hit['start']))
  _cached_id=row["instance_id"];_cached_bundle=(source,evidence,trees,target,files,attempt)
  return _cached_bundle
 
@@ -66,14 +88,12 @@ def measure(row,agent):
  if not steps:return dict(out,status='unparsed record',format=fmt)
  details=HERE/'records'/agent['folder']/'published-results.json';published=json.loads(details.read_bytes()).get(ident,{}) if details.exists() else {}
  out.update(status='measured',format=fmt,unparsed_actions=unparsed,resolved=published.get('resolved'),exit_status=record.get('info',{}).get('exit_status'),steps=len(steps),has_box=ev.valid,target_in_box=bool(target&ev.called) if ev.valid and target else None,function_target=bool(target),target_files=sorted(files),target_functions=sorted(p+':'+str(n) for p,n in target),record_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+ out['gold_removed_target_functions']=sorted(p+':'+str(n) for p,n in ev.removed_target)
+ out['gold_anchor_only_target']=bool(target) and not ev.removed_target
+ out['function_target_reason']='base patch-function region' if target else 'no Python library gold path' if not files else 'no base-function patch anchor (module/class/new source or unavailable AST)'
  out['complete_record']=out['exit_status']=='Submitted' and unparsed==0
- def locate(p,line):
-  if p not in source:return None
-  containing=[r for r in trees.get(p,[]) if r['start']<=line<=r['end']]
-  if not containing:return None
-  width=min(r['end']-r['start'] for r in containing);unique=[r for r in containing if r['end']-r['start']==width]
-  return unique[0] if len(unique)==1 else None
- seen='\n'.join(content_of(m) for m in record.get('messages',[])[:2]);issue_given={p for p in files if p in seen};anticipation=None;reached=None;firstedit=None;firstanyedit=None;stale=set();actions=[];searches=[];readfunctions=set();unknownviews=0;broad_reached=None;signature_cache={};all_verified_edits=set()
+ def locate(p,line):return source_identity(trees,p,line)
+ seen='\n'.join(content_of(m) for m in record.get('messages',[])[:2]);issue_given={p for p in files if p in seen};anticipation=None;reached=None;firstedit=None;firstanyedit=None;stale=set();actions=[];searches=[];readfunctions=set();unknownviews=0;broad_reached=None;signature_cache={};all_verified_edits=set();removed_reached=None
  for i,s in enumerate(steps,1):
   command=s['command'];output=s['output'];returned=s.get('returned_text',output);chars=len(returned);bytecount=len(returned.encode());views=[];verifiedlines=set();lineclaims=collections.defaultdict(set);edited=set();kinds=set();segmentlist=g2.segments(command)
   if anticipation is None and any(p in command and p not in seen for p in files):anticipation=i
@@ -107,6 +127,7 @@ def measure(row,agent):
     if hit:verifiededit.add((p,hit['start']))
   all_verified_edits|=verifiededit
   if firstedit is None and verifiededit&target:firstedit=i
+  if removed_reached is None and (vf|verifiededit)&ev.removed_target:removed_reached=i
   if reached is None and (vf|verifiededit)&target:reached=i
   if broad_reached is None and (vf|verifiededit)&target:broad_reached=i
   if broad_reached is None and s.get('exit') in [None,0]:
@@ -140,8 +161,9 @@ def measure(row,agent):
     if not locations:sr['unknown_reason']='no verified numbered matches'
     else:
      shown,proof=adapter.present(output.encode(),'grep',words[1:],ev,locations=locations)
-     order=proof.get('order',list(range(len(lines))));old=[n for n,key in matched if key in target];ranks={n:j+1 for j,n in enumerate(order)}
+     order=proof.get('order',list(range(len(lines))));old=[n for n,key in matched if key in target];removed_old=[n for n,key in matched if key in ev.removed_target];ranks={n:j+1 for j,n in enumerate(order)}
      sr.update(measurable=True,matches=len(locations),order_changed=order!=list(range(len(lines))),ordinary_rank=min(old)+1 if old else None,box_rank=min(ranks[n] for n in old) if old else None,fix_present=bool(old),opportunity=order!=list(range(len(lines))) and bool(old),top3_rescue=bool(old) and min(old)+1>3 and min(ranks[n] for n in old)<=3,regression=bool(old) and min(ranks[n] for n in old)>min(old)+1)
+     sr['removed_ordinary_rank']=min(removed_old)+1 if removed_old else None;sr['removed_box_rank']=min(ranks[n] for n in removed_old) if removed_old else None;sr['removed_opportunity']=bool(removed_old) and sr['order_changed']
      sr['order']=order;sr['locations']=locations
    searches.append(sr)
   counts,outside_keys=tally(source,ev,verifiedlines,signature_cache)
@@ -149,6 +171,11 @@ def measure(row,agent):
   actions.append(dict(step=i,unknown_action=s.get('unknown_action',False),classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),native_output_bytes=len(output.encode()),ambiguous_view_lines=ambiguous_view_lines,view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
   stale|=edited;seen+='\n'+output
  out.update(reached_step=reached,broad_visible_step=broad_reached,first_verified_target_edit=firstedit,first_any_edit=firstanyedit,anticipation_step=anticipation,issue_supplied_target_files=sorted(issue_given),unknown_views=unknownviews,whole_bytes=sum(a['bytes'] for a in actions),before_bytes=sum(a['bytes'] for a in actions[:reached-1]) if reached else None,locating_step_share=(reached-1)/len(steps) if reached else None,pre_reach_opportunity=any(s.get('opportunity') and (not reached or s['step']<reached) for s in searches) if ev.valid and target else None,never_reach_top3=any(s.get('top3_rescue') for s in searches) if not reached and out['complete_record'] else None,searches=searches,actions=actions)
+ out['removed_reached_step']=removed_reached
+ out['pre_removed_opportunity']=any(z.get('removed_opportunity') and (not removed_reached or z['step']<removed_reached) for z in searches) if ev.valid and ev.removed_target else None
+ out['pre_reach_positive_advance']=any(z.get('ordinary_rank') is not None and z['box_rank']<z['ordinary_rank'] and (not reached or z['step']<reached) for z in searches) if ev.valid and target else None
+ out['first_observed_edit_action']=next((z['step'] for z in actions if 'edit' in z['classes']),None)
+ out['pre_any_edit_positive_advance']=any(z.get('ordinary_rank') is not None and z['box_rank']<z['ordinary_rank'] and (not out['first_observed_edit_action'] or z['step']<out['first_observed_edit_action']) for z in searches) if ev.valid and target else None
  out['before_text_share']=out['before_bytes']/out['whole_bytes'] if out['before_bytes'] is not None and out['whole_bytes'] else None
  after=[a for a in actions if reached and a['step']>reached and (not firstedit or a['step']<firstedit)]
  after_keys=set(k for a in after for k in a['view_functions']);called={p+':'+str(n) for p,n in ev.called};out['after_finding']=dict(censored=firstedit is None,returned_bytes=sum(a['bytes'] for a in after),source_bytes_inside=sum(a['view_source_bytes_inside'] or 0 for a in after) if ev.valid else None,source_bytes_outside=sum(a['view_source_bytes_outside'] or 0 for a in after) if ev.valid else None,inside_functions=len(after_keys&called) if ev.valid else None,outside_functions=len(after_keys-called) if ev.valid else None)

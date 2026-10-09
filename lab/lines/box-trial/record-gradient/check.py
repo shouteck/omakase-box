@@ -59,3 +59,11 @@ record={'messages':[{'role':'assistant','content':'No usable command'},{'role':'
 s,_,unknown=normalized(record)
 assert unknown==1 and s[0]['output']=='' and s[0]['returned_text']=='Please return exactly one bash command.'
 print('error feedback retained for text cost, never source attribution')
+
+from instrument import production,source_identity
+assert production('django/django','django/test/testcases.py') and not production('django/django','tests/test_helpers.py')
+assert not production('astropy/astropy','tests/test_helpers.py')
+new_method="diff --git a/a.py b/a.py\n@@ -5,0 +6,3 @@\n+\ndef additional_method():\n+    return 3\n"
+assert not verified_removed_lines(new_method,{'a.py':text})
+assert source_identity({'a.py':adapter.definitions('def outer():\n    def child():\n        return 1\n    return child()\n')},'a.py',3)['start']==2
+print('Django framework/test distinction and physical-gold/nested-identity checks passed')
