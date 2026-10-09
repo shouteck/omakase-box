@@ -13,7 +13,7 @@ One structure for every host: Claude Code, Devin, Codex, OpenCode, Cursor or any
 | The pass | Reviewer | Checks the cook's exact commit. Reports to the head chef, never to a station | [roles/reviewer.md](roles/reviewer.md) |
 | Blind taster | Recipient | Attempts a change from an exported Box alone | [roles/recipient.md](roles/recipient.md) |
 
-Beside the kitchen, not in it: the **research lab**, on branch `lab` in its own worktree, started with `LAB.md` there. Its lab lead is the head chef's research counterpart. The head chef sets the lab's problems; the lab briefs the head chef (`lab/BRIEF.md`) and the head chef answers in "For the lab" in [BACKLOG.md](../BACKLOG.md). The lab never writes master and never slows a wave.
+The **research lab** (branch `lab`, its own worktree) is paused by the owner as of 10 October 2026. The kitchen does not read, answer or sync it. Its prototypes are reference reading only; anything the product needs is rebuilt as a reviewed wave.
 
 ## Stations
 

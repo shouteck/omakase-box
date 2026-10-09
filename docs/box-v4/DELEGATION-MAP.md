@@ -1,5 +1,7 @@
 # Portable Boxes for delegation
 
+> **Read [PLAN.md](../../PLAN.md) first.** Since 10 October 2026 the product is the hand-off Box for coding agents (milestone C). This map was written for the earlier direction, handing work to contractors and other teams. What it says about what a Box contains, submission and acceptance still holds; its first users, delivery ladder and validation sections are history.
+
 Direction revision: delegation-focus-2026-10-05. The CEO requested this refocus on 5 October 2026 after discussing portable work packages, delegation and optional bounty distribution. This is product-planning authority, not approval of another implementation wave.
 
 ## Promise and first users

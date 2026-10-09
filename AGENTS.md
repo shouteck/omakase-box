@@ -4,7 +4,7 @@ This file is the stable rulebook. It does not carry status. For what is happenin
 
 ## Product
 
-Portable Boxes for delegation: package a bounded change with only the source it needs, let a chosen developer or agent implement it without the owner repository, then verify and integrate the patch in the original repository. The roadmap is [PLAN.md](PLAN.md); the product map is [docs/box-v4/DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md).
+Hand-off Boxes for coding agents: an agent that is stuck on a failing test packages that part with only the source it needs (a Box), the owner confirms, a solver who never sees the repository does the work, and the returned change is verified in the original repository. The plan, and the only roadmap, is [PLAN.md](PLAN.md). Two product rules bind every wave: nothing leaves the owner's machine without the owner's yes, and files on the never-ship list never enter a Box.
 
 ## Method
 

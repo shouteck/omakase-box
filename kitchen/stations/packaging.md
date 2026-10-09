@@ -10,6 +10,18 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 - Reuse before writing: `packages/box-contracts` (Box schemas and hashing), `packages/analyzer` (import scanning), `packages/evaluation/patch-validation`.
 - A2's `files` is the sole owner-source shipping authority. TypeScript `proposeSelection` supplies suggestions from entrypoints, never implicit export inputs. Owner-selected dependency files retain their bytes and provenance; optional generated helpers cannot overwrite them.
 
+## Milestone C: hand-off Boxes (from 10 October 2026)
+
+The station now also covers tracing a failing test, choosing a Box's files from the trace, and the hand-off and return. Two product rules apply to every wave here: nothing leaves the owner's machine without the owner's yes, and never-ship files never enter a Box.
+
+- **Identify a function by its file and the line its definition starts on, never by name.** The lab's first tracer marked a property setter as run because the getter of the same name had run.
+- **Follow the test into every process it starts.** Five public tasks produced no usable trace because their tests ran in child processes.
+- **Trace calls, not lines.** Line tracing of whole test files hit five-minute timeouts; call tracing of one test took about two seconds.
+- **A line that ran is not a function that was called.** A definition line runs when its file is loaded. If a later wave reads a standard coverage report in place of the tracer, treat hits as regions, and leave anything uncertain unmarked.
+- **A wrapper must behave exactly like the command it wraps.** The lab's search wrapper ran a search to completion before passing output on, which changed what a piped command returned and went unnoticed because the check replayed old commands. Test the commands an agent actually types, including pipes and early exits.
+- **Offered is not used, and empty costs.** A tool an agent is only told about was not called; a tool that could return nothing cost real steps. Put the hand-off in the path of what the agent already does, and pilot one real use before any batch.
+- The tracer prototype is on the `lab` branch (`lab/lines/box-trial/`). Read it with `git show origin/lab:<path>`; do not import from it.
+
 ## Traps
 
 - **Workspace links and frozen installs:** missing dependency declarations can work via siblings, so prove a package outside the checkout. Pinned pnpm also backfills absent empty workspace importers during --frozen-lockfile, dirtying Git; K7-ci's importer-parity regression guards new manifests. Adding workspace package.json files requires root lock parity even with no dependencies.

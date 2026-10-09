@@ -4,16 +4,16 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **Milestone C carries these forward from the lab's trial** (detail on branch `lab`, `lab/lines/box-trial/`): the tracer exists only as a prototype and has to be rebuilt (C1); choosing files from "what ran" held the real fix on 28 of 29 public Python bugs but misses a fix that needs a brand-new function or code the test never reached, so a solver may need to add files, which the editable rule in C2 must allow; standard coverage reports could replace the tracer for other languages, with weaker guarantees.
+- Whether an agent that is stuck is stuck on something another solver can do is unmeasured. The owner chose to build and learn from use (C4), not to study it first.
+- Items below about replays on public projects and the web console describe code that is kept but not exercised by milestone C.
+
 - Paired-check digest normalises `\d+ms` tokens, so a substantive output difference expressed as integer-milliseconds (`timeout=500ms` vs `900ms`) is masked; `1.5ms` keeps its integer part. Fractional coverage is narrow (`Time: 1.2 s`, lowercase `duration`, ISO timestamps unhandled), which errs toward refusal. Accepted scope of fix-paired-check; narrow it only if a real runner needs it. See `waves/fix-paired-check.md`.
 - R3b-2, first use of the product on Linux by hand: `cli.js` needs `typescript` beside it to start, `--out` needs an existing parent folder, and the scratch `git clone --local` fails when the temp folder is on another filesystem. Request text must be committed in the owner repository before it can ship. `box.json` tells the solver to run `node box/submit.mjs` and lists owner-context commands the solver cannot run.
-- R3b is a replay with one case, one solver and one run: the solver saw the acceptance test, blindness was by instruction and weaker than intended, and the control case was not run. It is not evidence about open issues or about a requester preparing a Box unaided.
-- R3 independently reproduced an owner-base install refusal on packageManager nub. A3 removes required pnpm orchestration from the neutral path; future R3b must still declare script-disabled dependency setup and prove checks run on actual selected source. The historical R3 failure is not a successful outside-issue replay.
-- R3 has no demonstrated test travel/readiness or useful issue delegation: five issue candidates lacked a selected existing defect-red check, Box export blocked, recipient/owner acceptance not tested. A green upstream suite is not Box readiness.
 - A2 pairing compares full UTF-8-decoded normalized text streams, not raw-byte identity or failure causality. Invalid UTF-8 bytes can decode equally; absent runnable recipient checks means export warns that selection is unproven. Optional generated/legacy helper checks are not neutral readiness evidence. See `waves/A2.md`.
 
 - R2 proved wrong work can pass when the editable file is also its guard: weakened assertions accepted owner-side. Commands pass, but preservation is not established; prefer immutable independent guards or explicitly report this limitation.
 - `boxJsonSha256` is self-declared unless owner verification supplies a pristine `--box`; owner execution authority is agreement-bound. R2 archives the actual hash chain, not a stronger authenticity claim.
-- R2 preparation/generic effort estimates lack measured stage clocks; R3 must record actual timestamps/manual steps and not infer a controlled R1/R2 saving.
 
 - `readContext` is declared in `box.json` but its files do not ship: the blind taster saw the names, not the content. Decide whether read context ships (it discloses more) or the contract stays as it is. From D2.2.
 - The in-folder seal (`box/submit.mjs`) does not hash generated members (evaluator, scaffolds, the tool itself), so a recipient could weaken its own evaluator and still seal. The owner-side verify catches it today. From D2.2 and D3.1.
@@ -57,14 +57,6 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - `doctor.mjs` reports the `databases` check as unverified since the synthetic stack was removed. Honest label, not a failure.
 - Cook and pass have been the same model family on every wave so far. Accepted; see "Review" in KITCHEN.md.
 
-## For the lab
+## The lab
 
-The head chef's answer to the research brief (`git show origin/lab:lab/BRIEF.md`), replaced at each kitchen kickoff. The lab lead reads it at every lab start.
-
-Answering the lab's sync brief at fix-paired-check close, 7 October 2026. One wave closed since the lab replaced its brief (fix-paired-check); the lab is 1 wave behind and no sync is owed.
-
-- **Paired-check advice: all three taken.** The fix shipped in `waves/fix-paired-check.md`: the digest normalises `\d+ms`, `\d+\.\d+s`, `Start at HH:MM:SS` and `Duration …s` before hashing — the comparison is not collapsed to exit codes (`outputSha256` still gates export); the refusal now says what was observed (identical exits, differing output, both tails quoted) and attributes no cause; raw `log` output is recorded untransformed in the paired record. `export-attempt-4`/`-5`-style cases can now be scored against a normalised-digest rule. Known limit for that scoring: `\d+ms` masks any integer-ms token, including substantive data.
-- **Harness dependency lifted on this point:** the paired check no longer refuses real runners for timing output alone, so "drive the product's own export and verify" is unblocked there. The three first-use Linux snags stand — see Product above.
-- **Programme recommendations: adopted.** "Same failure" stays on Line 1 as U4/experiment-03, its reading folded into the Line 3 survey; Line 3's survey runs after guide version 1; no line opens, closes or changes stage. PROGRAMME.md's stale sync-state paragraph is yours to fix at the next sync.
-- **Needed-from-kitchen items: adopted for the next waves.** Save issue comments alongside bodies in further screening; record the solver's report and start time at hand-off and start the solver outside every checkout; the next replay includes one submission wrong in substance but structurally clean, labelled by whoever wrote it. All three land in that wave's brief.
-- R3b limits still carry: replay, one case, one solver, one run, one model family; solver saw the acceptance test; blindness by instruction only, weaker than intended. Not evidence about open issues.
+Paused by the owner on 10 October 2026. Nothing is owed to it and nothing is read from it at kickoff or close. Its last brief is at `git show origin/lab:lab/BRIEF.md` for the record.

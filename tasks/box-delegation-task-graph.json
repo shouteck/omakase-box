@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "planVersion": "delegation-focus-2026-10-05.2",
+  "planVersion": "handoff-boxes-2026-10-10",
   "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
   "entrypoint": "START.md",
-  "target": "D4",
+  "target": "C4",
   "status": "milestone_approval_per_AGENTS_md",
-  "specification": "docs/box-v4/DELEGATION-MAP.md",
+  "specification": "PLAN.md",
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "The kitchen is idle. The lab is defining the ideal Box; milestone B (B1 to B7) is a draft on hold and will be rewritten from the agreed design. The outsider-delegation order A6, R3c, P1, R4 is retired. See PLAN.md and STATUS.md.",
+    "sequence": "Milestone C, hand-off Boxes for coding agents: C1 (trace a failing test), C2 (failing test to a ready Box, nothing written by hand), C3 (hand-off and return), C4 (the kitchen uses it), C5 (first Box outside; owner approval). Each cooks only when named. Earlier unfinished or retired tasks were removed from this list on 10 October 2026; they are in Git history at 9353307. The research lab is paused.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -18,7 +18,7 @@
     "AGENTS.md",
     "STATUS.md",
     "docs/box-v4/KITCHEN.md",
-    "docs/box-v4/DELEGATION-MAP.md"
+    "PLAN.md"
   ],
   "externalDependencyGraphs": {
     "B1.1": {
@@ -231,106 +231,6 @@
         "Reviewer runs a real patch through verify and merge on the fixture, plus stale-base, repeat-submission and local-pass-owner-fail negatives."
       ],
       "handoff": "waves/D3.1.md"
-    },
-    {
-      "id": "D3.2",
-      "milestone": "D3",
-      "title": "Expose the minimal prepare, delegate and accept journey on the web",
-      "dependencies": [
-        "D4.2"
-      ],
-      "writePaths": [
-        "apps/private-console/boxes/**",
-        "services/private-api/boxes/history/**",
-        "tests/box/delegation/journey/**"
-      ],
-      "reuse": [
-        "B4 list/detail and B6 truthful history designs",
-        "Existing auth, assignment and safe UI projections"
-      ],
-      "deliverables": [
-        "A requester prepares/approves a request, sees package readiness and assigns one trusted recipient; recipient opens/submits; owner sees independent evidence and permitted acceptance/integration action.",
-        "Show concise outcome, actual owner, status, preparation gaps and next action. Detail remains accessible; no raw hashes or dependency editing required for ordinary use.",
-        "Use existing web shell and adapters; avoid mandatory conversation, rich universal previews, marketplace or a general team scheduler.",
-        "Owner selects an authorised trusted contributor/adapter through existing identities and permissions; no provider-supplied workforce is required. Record owner review/integration effort without adding a metrics form to normal use."
-      ],
-      "acceptance": [
-        "A complete supported Box is navigable through the common API with honest proposed, ready, in-progress, review and accepted states.",
-        "Reload/resume preserves server authority, versions and evidence; unsupported/failed work is visible and never displayed as completed.",
-        "The simple UI does not conceal material scope/approval decisions or grant executor acceptance rights."
-      ],
-      "verification": [
-        "Independent browser/API walkthrough, role and stale-state cases, keyboard-readable actions and truthful preparation/acceptance gaps."
-      ],
-      "handoff": "waves/D3.2.md",
-      "deferred": "After the D4 decision. Build it only if D4 recommends continuing, and shape it around what D4 showed users actually needed."
-    },
-    {
-      "id": "D4.1",
-      "milestone": "D4",
-      "title": "Demonstrate independent package-only delegation and counterexamples",
-      "dependencies": [
-        "D3.1"
-      ],
-      "writePaths": [
-        "tests/box/package/**",
-        "research/box-delegation/**",
-        "docs/box-v4/delegation/validation.md"
-      ],
-      "reuse": [
-        "B8 full-journey and evidence methods",
-        "Existing supported synthetic repository fixture"
-      ],
-      "deliverables": [
-        "Run the two supported changes with a fresh approved recipient context using only the exported package; retain supplied-input and command evidence plus owner integration results.",
-        "Exercise missing dependency/obligation, unsupported coupling, local-pass/full-owner-fail, stale version and out-of-scope submission cases.",
-        "State whether the recipient already knew the fixture, which dependencies were cached, and which AI/human claims remain untested.",
-        "Run the predeclared ordinary delegation comparison when the approved wave authorises its runtime/inputs/resources; retain equivalent outcomes and acceptance, disclose access/learning differences and include failed attempts. Missing authority or comparability is an evidence gap, never an invented baseline.",
-        "Compare each agent recipient given the Box with the same agent given the full repository: success, tokens, elapsed time and owner interventions. Report the share of owner source disclosed for every Box."
-      ],
-      "acceptance": [
-        "At least two actual package-only contributions complete the full approved loop; full owner source cannot be supplied to manufacture portability.",
-        "At least one unsupported package fails readiness honestly and every required negative case retains its correct non-pass classification.",
-        "A separate-context agent is not called a recruited human or hostile isolation proof. Real participants/external messaging/payments need separate authorised pilots."
-      ],
-      "verification": [
-        "Reviewer audits inputs and artifacts end to end on the current commit and reruns at least one delegation from a clean directory."
-      ],
-      "handoff": "waves/D4.1.md",
-      "retired": "Retired as a separate step on 7 October 2026. Counterexamples move to R3c; effort against ordinary delegation moves to P1 and R4. See PLAN.md."
-    },
-    {
-      "id": "D4.2",
-      "milestone": "D4",
-      "title": "Assess delegation effort, repeat-use evidence and the next product decision",
-      "dependencies": [
-        "D4.1"
-      ],
-      "writePaths": [
-        "research/box-delegation/**",
-        "docs/box-v4/delegation/delivery.md",
-        "docs/box-v4/delegation/limitations.md"
-      ],
-      "reuse": [
-        "docs/box-v4/RESEARCH.md",
-        "Existing research report instruments"
-      ],
-      "deliverables": [
-        "Report owner preparation, recipient setup/investigation, clarification, omissions, source/dependency transfer, verification, integration and rework across successes and failures.",
-        "Compare with an explicitly documented ordinary delegation baseline where actual comparable data exists; absent baseline or paid/customer evidence remains unverified.",
-        "Report software capability, measured effort, actual repeat use and commercial commitment/payment as separate conclusions. Prepare a customer-pilot protocol and blank recording instruments for the initial buyer; no outreach, customer/private-data access or payments occur without a separately approved pilot.",
-        "Recommend extend supported classes, simplify preparation, conduct an authorised customer pilot, or stop/reframe. Bounties/payments, restricted disclosure and broad PM previews remain separate proposals."
-      ],
-      "acceptance": [
-        "Results distinguish portable software capability from utility, demand, novelty, confidentiality and universal task breadth.",
-        "Reported effort includes common onboarding, preparation, recipient work, verification/integration and failures at comparable quality. Interview interest cannot count as repeat use, a pricing answer as payment or synthetic success as customer adoption; absent pilot evidence stays unverified without fabricating a result.",
-        "D4 closure supplies one short evidence-backed CEO decision and reproducible known-supported runbook; it never starts the next stage automatically."
-      ],
-      "verification": [
-        "Independent metric/artifact reconciliation, all-attempt denominator and reproducible fresh-start instructions; empty customer-study data remains explicitly empty."
-      ],
-      "handoff": "waves/D4.2.md",
-      "retired": "Retired as a separate step on 7 October 2026. Counterexamples move to R3c; effort against ordinary delegation moves to P1 and R4. See PLAN.md."
     },
     {
       "id": "K2",
@@ -569,51 +469,6 @@
         "Reviewer reads the workflow for triggers, permissions and secrets, and checks one real run's log against a local verify on the same commit."
       ],
       "handoff": "waves/K8.md"
-    },
-    {
-      "id": "K9",
-      "milestone": "K",
-      "title": "Take the legacy weight out of master",
-      "dependencies": [
-        "K5"
-      ],
-      "ownerApproval": "6 October 2026: the owner approved removing legacy material from master after tagging. Git keeps all of it.",
-      "writePaths": [
-        ".execution/**",
-        "docs/legacy/**",
-        "milestones/**",
-        "tasks/task-graph.json",
-        "tasks/box-v4-task-graph.json",
-        "research/**",
-        "services/external-api/**",
-        "services/runner-controller/**",
-        "infra/**",
-        "apps/contributor-portal/**",
-        "packages/**",
-        "tests/**",
-        "scripts/**",
-        "package.json",
-        "pnpm-lock.yaml",
-        "tsconfig.json",
-        "AGENTS.md",
-        "README.md",
-        "PLAN.md"
-      ],
-      "deliverables": [
-        "Step 1, before anything is removed: an annotated tag legacy-2026-10-06 on master, pushed, and a one-page inventory in the wave file of what will go and what stays, with the reason for each group.",
-        "Step 2: remove from master what nothing on the D roadmap uses: the .execution history, docs/legacy, the M0-M9 and B-series milestone files and graphs, and legacy services, packages, suites and scripts that only the bounty, reservation, release and hostile-runner stages need. Anything the Box loop imports stays.",
-        "AGENTS.md rule 8 and the docs that point at removed paths are updated to name the tag instead."
-      ],
-      "acceptance": [
-        "node scripts/verify.mjs --full exits 0 after the removal, and every Box suite is unchanged.",
-        "git diff legacy-2026-10-06..HEAD --stat shows only deletions and the named doc edits.",
-        "The inventory was written and committed before the first deletion commit."
-      ],
-      "verification": [
-        "Reviewer checks the tag resolves on origin, builds the dependency picture independently to confirm nothing the Box loop imports was removed, and runs verify --full."
-      ],
-      "handoff": "waves/K9.md",
-      "needsNaming": "A large removal from master: runs only when the owner names K9 in a START message."
     },
     {
       "id": "R1",
@@ -889,174 +744,54 @@
       "handoff": "waves/fix-paired-check.md"
     },
     {
-      "id": "A6",
-      "milestone": "A",
-      "title": "The tool starts cleanly on a machine that is not ours",
-      "dependencies": [
-        "fix-paired-check"
-      ],
-      "why": "R3b-2 was the first hand use of the product on Linux and met three refusals before any real work. R3c runs the product in a clean container for every case.",
-      "writePaths": [
-        "packages/box-cli/**",
-        "packages/box-package/**",
-        "scripts/workspace.mjs",
-        "tests/box/package/**",
-        "docs/box-v4/delegation/SUBMISSION-CONTRACT.md"
-      ],
-      "deliverables": [
-        "The built command-line tool runs from a single copied folder with its runtime dependencies stated or bundled; it does not fail to start for a missing typescript package.",
-        "export creates the parent of --out, or refuses with a message that names it.",
-        "The scratch clone works when the temp folder is on a different filesystem from the repository.",
-        "What box.json tells the solver is correct: only the commands the solver can run are presented as theirs, and the submit instruction matches how a Box is actually sealed."
-      ],
-      "acceptance": [
-        "Each of the four has a test that fails before the change and passes after.",
-        "One executed run of export and verify inside the pinned Linux container on an existing fixture, with no workaround, recorded in the wave file.",
-        "No change to what a Box contains or to the agreement format beyond the solver-facing text."
-      ],
-      "verification": [
-        "Reviewer reruns the container run from the recorded command."
-      ],
-      "lenses": [
-        "security: the container run follows the R3b rules",
-        "user experience: read box.json as a solver would"
-      ],
-      "handoff": "waves/A6.md",
-      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
-    },
-    {
-      "id": "R3c",
-      "milestone": "R",
-      "title": "A stricter replay: several fixed issues, two public projects, an isolated solver",
-      "dependencies": [
-        "A6"
-      ],
-      "why": "R3b was one case with a solver that was not isolated and was shown the test. A count across projects, with real isolation and a wrong answer tried, is what tells us whether the product is ready for a live attempt.",
-      "writePaths": [
-        "waves/R3c-*.md",
-        "research/box-delegation/r3c/**"
-      ],
-      "deliverables": [
-        "Screening as in R3b-1, on commander.js cases already found and on one further project chosen by a rule committed first; issue comments saved with the bodies.",
-        "For each case: agreement, export with the default test output (no silent reporter), a solver that runs in a container holding only the Box, started outside every checkout, with its report and start time saved at hand-off.",
-        "Two conditions, assigned before any run: the solver sees the acceptance test; the solver does not (it travels owner-side only).",
-        "Per case, one submission that is wrong in substance but well-formed, written and labelled by the cook before verify, and a do-nothing submission.",
-        "A table of the four useful conditions per case, and the counts across cases."
-      ],
-      "acceptance": [
-        "Nothing is sent to either project; their code runs only in containers with install scripts disabled.",
-        "Every attempt is recorded, including export refusals and solver failures; no case is rerun for a better answer without the earlier attempt on record.",
-        "Results are labelled as a replay and state the limits: model family, number of cases, what the solver could see."
-      ],
-      "verification": [
-        "Reviewer rebuilds one case independently, as in R3b-2."
-      ],
-      "lenses": [
-        "security",
-        "measurement fairness"
-      ],
-      "handoff": "waves/R3c-1.md",
-      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
-    },
-    {
-      "id": "P1",
-      "milestone": "P",
-      "title": "Draft the agreement from the repository",
-      "dependencies": [
-        "R3c"
-      ],
-      "why": "In R3b the agreement was 186 hand-written lines, with 27 test files typed three times. Preparation has to be cheap for a person who has not read the format.",
-      "proposal": "A command that drafts an agreement for the owner to edit: files by a stated rule, the setup and check commands it can find, editable paths left for the owner to choose. It proposes; it never exports on its own. Scope and rule to be set after R3c, using what two projects showed and the lab reading on slice sufficiency.",
-      "handoff": "waves/P1.md",
-      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
-    },
-    {
-      "id": "R4",
-      "milestone": "R",
-      "title": "A live attempt on an open issue, with an owner who has agreed",
-      "dependencies": [
-        "P1"
-      ],
-      "ownerApproval": "Required before anything starts: it involves contact with an outside party. Not an overnight wave.",
-      "proposal": "The useful milestone itself. Not designed yet.",
-      "handoff": "waves/R4.md",
-      "retired": "Retired 8 October 2026 with the outsider-delegation order; see PLAN.md, milestone B."
-    },
-    {
-      "id": "B1",
-      "milestone": "B",
-      "title": "The Box core: one command records what a failing test ran",
+      "id": "C1",
+      "milestone": "C",
+      "title": "Record what a failing test ran",
       "dependencies": [],
-      "handoff": "waves/B1.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+      "ownerApproval": "Milestone C approved by the owner on 10 October 2026.",
+      "handoff": "waves/C1.md"
     },
     {
-      "id": "B2",
-      "milestone": "B",
-      "title": "Box search: ordinary search, whole repository, Box matches first and marked",
+      "id": "C2",
+      "milestone": "C",
+      "title": "From a failing test to a ready Box with nothing written by hand",
       "dependencies": [
-        "B1"
+        "C1"
       ],
-      "proposal": "Wraps the usual search commands; returns exactly the matches an ordinary search returns, reordered; never fewer. Lessons from the lab gate 3 and 3b records apply.",
-      "handoff": "waves/B2.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+      "proposal": "One command: trace, choose the files that ran plus what the project needs to install and run, apply the never-ship list on canonical paths, write the neutral agreement (outcome check is the failing test, editable is the traced non-test source, new files allowed where stated), export with the existing paired check, print the owner summary. Security lens: the never-ship list.",
+      "handoff": "waves/C2.md"
     },
     {
-      "id": "B3",
-      "milestone": "B",
-      "title": "The path to the failure: the route from the test to where it failed, in order",
+      "id": "C3",
+      "milestone": "C",
+      "title": "The hand-off and the return",
       "dependencies": [
-        "B1"
+        "C2"
       ],
-      "proposal": "A runtime fact for understanding, not only locating. Not designed yet.",
-      "handoff": "waves/B3.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+      "proposal": "A command an agent calls when stuck: prepare, show the summary, wait for the owner yes, place the Box in a local destination. A second command takes a returned submission, runs the existing verify in the real repository and applies it. Nothing goes outside in this wave. User-experience lens: an agent and an owner each use it cold.",
+      "handoff": "waves/C3.md"
     },
     {
-      "id": "B4",
-      "milestone": "B",
-      "title": "One-step use on every host the kitchen runs on",
+      "id": "C4",
+      "milestone": "C",
+      "title": "The kitchen uses it on its own failing test",
       "dependencies": [
-        "B2",
-        "B3"
+        "C3"
       ],
-      "proposal": "No setup, nothing to remember. Not designed yet.",
-      "handoff": "waves/B4.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+      "proposal": "A cook that is stuck hands a Box to a blind taster started outside every checkout; the result is verified and merged the normal way. Record every manual step and the solver report at hand-off.",
+      "handoff": "waves/C4.md"
     },
     {
-      "id": "B5",
-      "milestone": "B",
-      "title": "The kitchen uses the Box on its own failing tests",
+      "id": "C5",
+      "milestone": "C",
+      "title": "The first Box posted outside",
       "dependencies": [
-        "B4"
+        "C4"
       ],
-      "proposal": "Kitchen wave; records whether cooks used it and what it changed.",
-      "handoff": "waves/B5.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
-    },
-    {
-      "id": "B6",
-      "milestone": "B",
-      "title": "The fair test: a working Box with a live agent",
-      "dependencies": [
-        "B4"
-      ],
-      "proposal": "Tasks with room to improve, code the model has not memorised, the agent actually using the Box, same agent with and without.",
-      "handoff": "waves/B6.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
-    },
-    {
-      "id": "B7",
-      "milestone": "B",
-      "title": "A second language: JavaScript and TypeScript",
-      "dependencies": [
-        "B6"
-      ],
-      "proposal": "Same Box format. After the first language has shown whether widening is worth it.",
-      "handoff": "waves/B7.md",
-      "onHold": "Draft, not approved. The ideal Box is being designed in the lab first (owner, 8 October 2026). Do not cook."
+      "ownerApproval": "Required separately, with the destination. Sending anything outside is the owner's decision and never happens overnight.",
+      "proposal": "Not designed yet.",
+      "handoff": "waves/C5.md"
     }
   ],
-  "sequenceRevision": "package-proof-first-2026-10-05"
+  "sequenceRevision": "handoff-boxes-2026-10-10"
 }

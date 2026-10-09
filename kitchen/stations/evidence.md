@@ -1,6 +1,6 @@
 # Station: Evidence
 
-Measurements, comparisons and what the kitchen is allowed to claim. Runs through D2 and D3, and owns D4.
+Measurements, comparisons and what the kitchen is allowed to claim. Runs through every milestone. In milestone C it owns the record of each real hand-off (C4, C5): every manual step, what left the machine, and what the solver could see.
 
 ## What this station knows
 
