@@ -54,3 +54,8 @@ from views import verified_removed_lines
 assert verified_removed_lines(patch,{'a.py':text})=={'a.py':{2}}
 assert not verified_removed_lines("diff --git a/a.py b/a.py\n@@ -2,0 +2,1 @@\n+    extra()\n",{'a.py':text})
 print('submitted removed-line identity / pure-addition exclusion checks passed')
+
+record={'messages':[{'role':'assistant','content':'No usable command'},{'role':'user','content':'Please return exactly one bash command.'}]}
+s,_,unknown=normalized(record)
+assert unknown==1 and s[0]['output']=='' and s[0]['returned_text']=='Please return exactly one bash command.'
+print('error feedback retained for text cost, never source attribution')

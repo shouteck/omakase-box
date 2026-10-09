@@ -20,10 +20,11 @@ def normalized(record):
   if not isinstance(content,str):unparsed+=1;continue
   if m.get('role')=='assistant':
    calls=re.findall(r'```(?:bash|sh)\s*\n(.*?)```',content,re.S)
-   if len(calls)==1:steps.append(dict(command=calls[0].strip(),output='',input_tokens=None,exit=None))
+   if len(calls)==1:steps.append(dict(command=calls[0].strip(),output='',returned_text='',input_tokens=None,exit=None))
    else:
-    unparsed+=1;steps.append(dict(command='',output='',input_tokens=None,exit=None,unknown_action=True))
+    unparsed+=1;steps.append(dict(command='',output='',returned_text='',input_tokens=None,exit=None,unknown_action=True))
   elif m.get('role') in ['user','tool'] and steps:
+   steps[-1]['returned_text']+=content
    match=re.search(r'<output>\n?(.*?)</output>',content,re.S)
    code=re.search(r'<returncode>(-?\d+)</returncode>',content)
    if match:steps[-1]['output']+=match.group(1)
@@ -74,7 +75,7 @@ def measure(row,agent):
   return unique[0] if len(unique)==1 else None
  seen='\n'.join(content_of(m) for m in record.get('messages',[])[:2]);issue_given={p for p in files if p in seen};anticipation=None;reached=None;firstedit=None;firstanyedit=None;stale=set();actions=[];searches=[];readfunctions=set();unknownviews=0;broad_reached=None;signature_cache={};all_verified_edits=set()
  for i,s in enumerate(steps,1):
-  command=s['command'];output=s['output'];chars=len(output);bytecount=len(output.encode());views=[];verifiedlines=set();lineclaims=collections.defaultdict(set);edited=set();kinds=set();segmentlist=g2.segments(command)
+  command=s['command'];output=s['output'];returned=s.get('returned_text',output);chars=len(returned);bytecount=len(returned.encode());views=[];verifiedlines=set();lineclaims=collections.defaultdict(set);edited=set();kinds=set();segmentlist=g2.segments(command)
   if anticipation is None and any(p in command and p not in seen for p in files):anticipation=i
   for segment in segmentlist:
    cls,v,h,e=g2.classify(segment,output,source);kinds|=cls;edited|=set(e)
@@ -145,9 +146,10 @@ def measure(row,agent):
    searches.append(sr)
   counts,outside_keys=tally(source,ev,verifiedlines,signature_cache)
   inside_bytes=counts['inside'];outside_bytes=counts['outside'];module_bytes=counts['module']
-  actions.append(dict(step=i,unknown_action=s.get('unknown_action',False),classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),ambiguous_view_lines=ambiguous_view_lines,view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
+  actions.append(dict(step=i,unknown_action=s.get('unknown_action',False),classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),native_output_bytes=len(output.encode()),ambiguous_view_lines=ambiguous_view_lines,view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
   stale|=edited;seen+='\n'+output
  out.update(reached_step=reached,broad_visible_step=broad_reached,first_verified_target_edit=firstedit,first_any_edit=firstanyedit,anticipation_step=anticipation,issue_supplied_target_files=sorted(issue_given),unknown_views=unknownviews,whole_bytes=sum(a['bytes'] for a in actions),before_bytes=sum(a['bytes'] for a in actions[:reached-1]) if reached else None,locating_step_share=(reached-1)/len(steps) if reached else None,pre_reach_opportunity=any(s.get('opportunity') and (not reached or s['step']<reached) for s in searches) if ev.valid and target else None,never_reach_top3=any(s.get('top3_rescue') for s in searches) if not reached and out['complete_record'] else None,searches=searches,actions=actions)
+ out['before_text_share']=out['before_bytes']/out['whole_bytes'] if out['before_bytes'] is not None and out['whole_bytes'] else None
  after=[a for a in actions if reached and a['step']>reached and (not firstedit or a['step']<firstedit)]
  after_keys=set(k for a in after for k in a['view_functions']);called={p+':'+str(n) for p,n in ev.called};out['after_finding']=dict(censored=firstedit is None,returned_bytes=sum(a['bytes'] for a in after),source_bytes_inside=sum(a['view_source_bytes_inside'] or 0 for a in after) if ev.valid else None,source_bytes_outside=sum(a['view_source_bytes_outside'] or 0 for a in after) if ev.valid else None,inside_functions=len(after_keys&called) if ev.valid else None,outside_functions=len(after_keys-called) if ev.valid else None)
  # Final submitted patch supplies an additional observed-edit check, not a time
