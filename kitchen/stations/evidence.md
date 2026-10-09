@@ -25,3 +25,14 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 - Recount the denominator from the raw records, not from the summary.
 - Re-run at least one measured attempt from a clean directory and compare.
 - Read each claim in the report and find the record that supports it; strike any that has none.
+
+## Real hand-offs (milestone C)
+
+Learned the hard way in R3b and the lab's live runs. They apply to C4, C5 and any wave where a solver works from a Box.
+
+- **Start the solver in an empty folder outside every checkout.** In R3b the solver's session began inside this repository, where the real fix was one file away; its blindness was by instruction only and the result could not be trusted as blind.
+- **Save the solver's own report and its start and end times at hand-off,** before the cook writes any result. In R3b nothing was saved and every statement about what the solver did was unsupported.
+- **One real use before many.** A live run of twenty-four attempts found only afterwards that the tool under test had returned nothing on every call. Run one, stop, read the record, then decide.
+- **Check the scoring with no solver first:** the known-good change must score as accepted and a do-nothing change as rejected, through the same path the solver's work will take.
+- **A brief that says "stop if the product refuses" must say who may approve a workaround.** A cook once worked round a refusal before asking.
+- **Clean up by exact name, never by pattern,** when agents share a scratch folder.
