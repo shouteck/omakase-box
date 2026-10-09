@@ -20,6 +20,9 @@ def summary(items):
  complete=[r for r in items if r['complete_record']];nc=len(complete)
  n=len(items);nk=len(known);ns=len(searches);nm=len(measured)
  result=dict(records=n,box_records=nk,median_reach_steps=med([r['reached_step'] for r in items if r['reached_step']]),never_recognized_rate=sum(r['reached_step'] is None for r in complete)/nc if nc else None,no_observed_reach_rate=sum(r['reached_step'] is None for r in items)/n if n else None,complete_records=nc,broad_never_visible_rate=sum(r['broad_visible_step'] is None for r in complete)/nc if nc else None,median_broad_steps=med([r['broad_visible_step'] for r in items if r['broad_visible_step']]),restricted_10_steps=med([min(r['reached_step'] or 11,11) for r in complete]),median_whole_steps=med([r['steps'] for r in items]),median_before_bytes=med([r['before_bytes'] for r in items if r['before_bytes'] is not None]),median_locating_share=med([r['locating_step_share'] for r in items if r['locating_step_share'] is not None]),search_actions=ns,measurable_search_actions=nm,measurable_fraction=nm/ns if ns else None,opportunity_actions=sum(s.get('opportunity') is True for s in measured),opportunity_share_all=sum(s.get('opportunity') is True for s in measured)/ns if ns else None,opportunity_share_measurable=sum(s.get('opportunity') is True for s in measured)/nm if nm else None,pre_reach_opportunity_runs=sum(r['pre_reach_opportunity'] is True for r in known),pre_reach_opportunity_rate=sum(r['pre_reach_opportunity'] is True for r in known)/nk if nk else None,pre_reach_unknown_runs=sum(any((not s['measurable'] or s.get('partial_unknown_results')) and (not r['reached_step'] or s['step']<r['reached_step']) for s in r['searches']) for r in known),median_rank_shift=med([s['ordinary_rank']-s['box_rank'] for s in measured if s['fix_present']]),median_ordinary_rank=med([s['ordinary_rank'] for s in measured if s['fix_present']]),median_box_rank=med([s['box_rank'] for s in measured if s['fix_present']]),rank_regressions=sum(s.get('regression') is True for s in measured),top3_rescues=sum(s.get('top3_rescue') is True for s in measured),never_reach_top3_runs=sum(r.get('never_reach_top3') is True for r in known if not r['reached_step'] and r['complete_record']),never_reach_target_in_box=sum(r['target_in_box'] is True for r in known if not r['reached_step'] and r['complete_record']),anticipation_runs=sum(r['anticipation_step'] is not None for r in items),issue_named_target_runs=sum(bool(r['issue_supplied_target_files']) for r in items),resolved_without_recognized_reach=sum(r['resolved'] is True and r['reached_step'] is None for r in items),unknown_views=sum(r['unknown_views'] for r in items),unparsed_actions=sum(r['unparsed_actions'] for r in items),after_finding_censored=sum(r['after_finding']['censored'] for r in items),after_finding_bytes_median=med([r['after_finding']['returned_bytes'] for r in items if r['reached_step']]),after_inside_functions_median=med([r['after_finding']['inside_functions'] for r in known if r['reached_step']]),after_outside_functions_median=med([r['after_finding']['outside_functions'] for r in known if r['reached_step']]),after_source_bytes_inside_median=med([r['after_finding']['source_bytes_inside'] for r in known if r['reached_step']]),after_source_bytes_outside_median=med([r['after_finding']['source_bytes_outside'] for r in known if r['reached_step']]),exit_status=dict(collections.Counter(str(r['exit_status']) for r in items)))
+ result['neither_timed_nor_submitted_target_rate']=sum(not r['ever_timed_or_submitted_target'] for r in complete)/nc if nc else None
+ result['submitted_target_edit_runs']=sum(r['submitted_target_edit'] for r in items)
+ result['failed_despite_timed_or_endpoint_place']=sum(r['resolved'] is False and r['ever_timed_or_submitted_target'] for r in items)
  result['slice_box_records']=len(allreading)
  result['partial_unknown_search_actions']=sum(z.get('partial_unknown_results',False) for z in searches)
  result['pre_reach_ambiguous_action_runs']=sum(any(z.get('unknown_action') and (not r['reached_step'] or z['step']<r['reached_step']) for z in r['actions']) for r in known)
@@ -47,17 +50,18 @@ commonbox=[t for t in common if all(keyed[t['instance_id'],a['folder']]['has_box
 def differences(ts,field):
  vals=[]
  for t in ts:
-  if field in ['never','broad_never','restricted'] and not all(keyed[t['instance_id'],a['folder']]['complete_record'] for a in agents):continue
+  if field in ['never','endpoint_never','broad_never','restricted'] and not all(keyed[t['instance_id'],a['folder']]['complete_record'] for a in agents):continue
   w=keyed[t['instance_id'],weak];s=keyed[t['instance_id'],strong]
   if field=='opportunity':vals.append(float(w['pre_reach_opportunity'])-float(s['pre_reach_opportunity']))
   elif field=='slice':vals.append(w['slicing']['removable_source_bytes']/w['whole_bytes']-s['slicing']['removable_source_bytes']/s['whole_bytes'] if w['whole_bytes'] and s['whole_bytes'] else 0)
   elif field=='first10':vals.append(float(any(z.get('opportunity') and z['step']<=10 for z in w['searches']))-float(any(z.get('opportunity') and z['step']<=10 for z in s['searches'])))
+  elif field=='endpoint_never':vals.append(float(not w['ever_timed_or_submitted_target'])-float(not s['ever_timed_or_submitted_target']))
   elif field=='never':vals.append(float(w['reached_step'] is None)-float(s['reached_step'] is None))
   elif field=='broad_never':vals.append(float(w['broad_visible_step'] is None)-float(s['broad_visible_step'] is None))
   elif field=='restricted':vals.append(min(w['reached_step'] or 11,11)-min(s['reached_step'] or 11,11))
  return sum(vals)/len(vals) if vals else None
 def bootstrap(ts,field):
- if field in ['never','broad_never','restricted']:ts=[t for t in ts if all(keyed[t['instance_id'],a['folder']]['complete_record'] for a in agents)]
+ if field in ['never','endpoint_never','broad_never','restricted']:ts=[t for t in ts if all(keyed[t['instance_id'],a['folder']]['complete_record'] for a in agents)]
  if not ts:return None
  groups=collections.defaultdict(list)
  for t in ts:groups[t['repo']].append(t)
@@ -65,7 +69,7 @@ def bootstrap(ts,field):
  for _ in range(2000):values.append(differences([rng.choice(group) for group in groups.values() for i in range(len(group))],field))
  values.sort();return dict(tasks=len(ts),difference=differences(ts,field),interval=[values[50],values[1949]])
 original={r['instance_id'] for r in json.loads((HERE.parent/'gate-1/tasks.json').read_bytes())}
-result=dict(selected_tasks=150,records_available=len(json.loads((HERE/'record-receipts.json').read_bytes())),rows=len(rows),statuses=dict(collections.Counter(r['status'] for r in rows)),table=table,projects=projects,common_tasks=len(common),common_box_tasks=len(commonbox),gradient={field:bootstrap(commonbox if field in ['opportunity','first10','slice'] else common,field) for field in ['opportunity','first10','never','broad_never','restricted','slice']},original_overlap=[t['instance_id'] for t in common if t['instance_id'] in original],heldout_sensitivity={field:bootstrap([t for t in (commonbox if field in ['opportunity','first10','slice'] else common) if t['instance_id'] not in original],field) for field in ['opportunity','first10','never','broad_never','restricted','slice']},common_table=[dict(name=a['name'],**summary([keyed[t['instance_id'],a['folder']] for t in commonbox])) for a in agents],search_unknown_reasons=dict(collections.Counter(s['unknown_reason'] for r in rows if r['status']=='measured' for s in r['searches'] if not s['measurable'])))
+result=dict(selected_tasks=150,records_available=len(json.loads((HERE/'record-receipts.json').read_bytes())),rows=len(rows),statuses=dict(collections.Counter(r['status'] for r in rows)),table=table,projects=projects,common_tasks=len(common),common_box_tasks=len(commonbox),gradient={field:bootstrap(commonbox if field in ['opportunity','first10','slice'] else common,field) for field in ['opportunity','first10','never','endpoint_never','broad_never','restricted','slice']},original_overlap=[t['instance_id'] for t in common if t['instance_id'] in original],heldout_sensitivity={field:bootstrap([t for t in (commonbox if field in ['opportunity','first10','slice'] else common) if t['instance_id'] not in original],field) for field in ['opportunity','first10','never','endpoint_never','broad_never','restricted','slice']},common_table=[dict(name=a['name'],**summary([keyed[t['instance_id'],a['folder']] for t in commonbox])) for a in agents],search_unknown_reasons=dict(collections.Counter(s['unknown_reason'] for r in rows if r['status']=='measured' for s in r['searches'] if not s['measurable'])))
 
 
 
@@ -91,9 +95,9 @@ result['incomplete_or_ambiguous_rows']=sum(r['status']=='measured' and not r['co
 
 submitted=[t for t in commonbox if all(keyed[t['instance_id'],a['folder']]['complete_record'] for a in agents)]
 result['all_submitted_table']=[dict(name=a['name'],**summary([keyed[t['instance_id'],a['folder']] for t in submitted])) for a in agents]
-result['all_submitted_sensitivity']={field:bootstrap(submitted,field) for field in ['opportunity','first10','never','broad_never','restricted','slice']}
+result['all_submitted_sensitivity']={field:bootstrap(submitted,field) for field in ['opportunity','first10','never','endpoint_never','broad_never','restricted','slice']}
 result['same_prompt_qwen_sensitivity']={a['name']:summary([keyed[t['instance_id'],a['folder']] for t in commonbox]) for a in [agents[2],agents[5]]}
-result['project_gradients']={repo:{field:bootstrap([t for t in (commonbox if field in ['opportunity','first10','slice'] else common) if t['repo']==repo],field) for field in ['opportunity','first10','never','broad_never','restricted','slice']} for repo in projects}
+result['project_gradients']={repo:{field:bootstrap([t for t in (commonbox if field in ['opportunity','first10','slice'] else common) if t['repo']==repo],field) for field in ['opportunity','first10','never','endpoint_never','broad_never','restricted','slice']} for repo in projects}
 # Only published verdicts: never treat Submitted or patch presence as solved.
 all_six=[t for t in common if all(keyed[t['instance_id'],a['folder']]['resolved'] is not None for a in agents)]
 available=[t for t in common if sum(keyed[t['instance_id'],a['folder']]['resolved'] is not None for a in agents)>=5]

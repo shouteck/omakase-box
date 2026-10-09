@@ -1,6 +1,6 @@
 """Offline only: normalized old/new mini-agent records, source provenance and corrected ordering."""
 import pathlib,json,gzip,importlib.util,re,hashlib,collections
-from views import visible_lines,visible_locations,tally,verified_patch_paths,literal_patch
+from views import visible_lines,visible_locations,tally,verified_patch_paths,literal_patch,verified_removed_lines
 HERE=pathlib.Path(__file__).resolve().parent;ROOT=HERE.parent;REPO=HERE.parents[3]
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
@@ -158,7 +158,15 @@ def measure(row,agent):
   for n in change['old_lines']:
    hit=locate(p,n)
    if hit:finalkeys.add(p+':'+str(hit['start']))
+ final_removed_keys=set()
+ for p,numbers in verified_removed_lines(submission,source).items():
+  for number in numbers:
+   hit=locate(p,number)
+   if hit:final_removed_keys.add(p+':'+str(hit['start']))
  targetkeys={p+':'+str(n) for p,n in target}
+ out['submitted_target_edit']=bool(final_removed_keys&targetkeys)
+ out['submitted_verified_removed_functions']=sorted(final_removed_keys)
+ out['ever_timed_or_submitted_target']=bool(reached or out['submitted_target_edit'])
  seenoutside=set(k for a in actions for k in a['slice_outside_keys'])
  editedkeys=set(k for a in actions for k in a['verified_edit_functions'])|finalkeys
  repeat=set();seenkeys=set()

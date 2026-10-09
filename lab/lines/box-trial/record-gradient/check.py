@@ -49,3 +49,8 @@ for path in ['a.py','b.py']:
  for n,i in visible_locations(text,1,5,"cat: a.py: Permission denied\n"+text):claims[i].add((path,n))
 assert claims and not {next(iter(v)) for v in claims.values() if len(v)==1}
 print('competing cross-file view locations stay unknown')
+
+from views import verified_removed_lines
+assert verified_removed_lines(patch,{'a.py':text})=={'a.py':{2}}
+assert not verified_removed_lines("diff --git a/a.py b/a.py\n@@ -2,0 +2,1 @@\n+    extra()\n",{'a.py':text})
+print('submitted removed-line identity / pure-addition exclusion checks passed')

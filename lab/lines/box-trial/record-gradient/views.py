@@ -68,3 +68,14 @@ def literal_patch(command):
  # delimiter. Unknown shell forms stay unverified rather than simulated.
  m=re.fullmatch(r"(?:git\s+apply(?:\s+-)?|patch\s+-p\s*1)\s*<<\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1[ \t]*\n(.*?)\n\2[ \t\n]*",command.strip(),re.S)
  return m[3] if m else None
+
+def verified_removed_lines(patch,sources):
+ paths=verified_patch_paths(patch,sources);current=None;old=None;out=collections.defaultdict(set)
+ for line in patch.splitlines():
+  if line.startswith('diff --git '):current=line.split(' b/',1)[-1];old=None
+  elif line.startswith('@@ '):
+   m=re.match(r'@@ -(\d+)(?:,\d+)? \+\d+',line);old=int(m[1]) if m else None
+  elif current in paths and old is not None and line.startswith((' ','-')) and not line.startswith('---'):
+   if line.startswith('-'):out[current].add(old)
+   old+=1
+ return dict(out)
