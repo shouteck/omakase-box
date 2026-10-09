@@ -1,6 +1,6 @@
 """Offline only: normalized old/new mini-agent records, source provenance and corrected ordering."""
 import pathlib,json,gzip,importlib.util,re,hashlib,collections
-from views import visible_lines,tally,verified_patch_paths,literal_patch
+from views import visible_lines,visible_locations,tally,verified_patch_paths,literal_patch
 HERE=pathlib.Path(__file__).resolve().parent;ROOT=HERE.parent;REPO=HERE.parents[3]
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
@@ -74,16 +74,20 @@ def measure(row,agent):
   return unique[0] if len(unique)==1 else None
  seen='\n'.join(content_of(m) for m in record.get('messages',[])[:2]);issue_given={p for p in files if p in seen};anticipation=None;reached=None;firstedit=None;firstanyedit=None;stale=set();actions=[];searches=[];readfunctions=set();unknownviews=0;broad_reached=None;signature_cache={};all_verified_edits=set()
  for i,s in enumerate(steps,1):
-  command=s['command'];output=s['output'];chars=len(output);bytecount=len(output.encode());views=[];verifiedlines=set();edited=set();kinds=set();segmentlist=g2.segments(command)
+  command=s['command'];output=s['output'];chars=len(output);bytecount=len(output.encode());views=[];verifiedlines=set();lineclaims=collections.defaultdict(set);edited=set();kinds=set();segmentlist=g2.segments(command)
   if anticipation is None and any(p in command and p not in seen for p in files):anticipation=i
   for segment in segmentlist:
    cls,v,h,e=g2.classify(segment,output,source);kinds|=cls;edited|=set(e)
    if s.get('exit') not in [None,0]:continue
    for p,a,b in v:
     if p in stale or re.search(r'\|\s*(?:grep|rg|awk)',segment):unknownviews+=1;continue
-    numbers=visible_lines(source[p],a,b,output)
-    if not numbers:unknownviews+=1;continue
-    verifiedlines.update((p,n) for n in numbers);views.append((p,a,b))
+    locations=visible_locations(source[p],a,b,output)
+    if not locations:unknownviews+=1;continue
+    for n,position in locations:lineclaims[position].add((p,n))
+    views.append((p,a,b))
+  ambiguous_view_lines=sum(len(keys)>1 for keys in lineclaims.values())
+  if ambiguous_view_lines:unknownviews+=1
+  verifiedlines={next(iter(keys)) for keys in lineclaims.values() if len(keys)==1}
   vf={(p,hit['start']) for p,n in verifiedlines if (hit:=locate(p,n)) is not None}
   readfunctions |= vf
   verifiededit=set()
@@ -141,7 +145,7 @@ def measure(row,agent):
    searches.append(sr)
   counts,outside_keys=tally(source,ev,verifiedlines,signature_cache)
   inside_bytes=counts['inside'];outside_bytes=counts['outside'];module_bytes=counts['module']
-  actions.append(dict(step=i,unknown_action=s.get('unknown_action',False),classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
+  actions.append(dict(step=i,unknown_action=s.get('unknown_action',False),classes=sorted(kinds),chars=chars,bytes=bytecount,view_functions=sorted(p+':'+str(n) for p,n in vf),view_functions_inside=len(vf&ev.called) if ev.valid else None,view_functions_outside=len(vf-ev.called) if ev.valid else None,view_source_bytes_inside=inside_bytes if ev.valid else None,view_source_bytes_outside=outside_bytes if ev.valid else None,view_source_bytes_module=module_bytes,edited_files=sorted(edited),verified_target_edit=bool(verifiededit&target),ambiguous_view_lines=ambiguous_view_lines,view_source_lines=len(verifiedlines),slice_removable_source_bytes=counts['removable'] if ev.valid else None,slice_outside_keys=sorted(p+':'+str(n) for p,n in outside_keys),verified_edit_functions=sorted(p+':'+str(n) for p,n in verifiededit)))
   stale|=edited;seen+='\n'+output
  out.update(reached_step=reached,broad_visible_step=broad_reached,first_verified_target_edit=firstedit,first_any_edit=firstanyedit,anticipation_step=anticipation,issue_supplied_target_files=sorted(issue_given),unknown_views=unknownviews,whole_bytes=sum(a['bytes'] for a in actions),before_bytes=sum(a['bytes'] for a in actions[:reached-1]) if reached else None,locating_step_share=(reached-1)/len(steps) if reached else None,pre_reach_opportunity=any(s.get('opportunity') and (not reached or s['step']<reached) for s in searches) if ev.valid and target else None,never_reach_top3=any(s.get('top3_rescue') for s in searches) if not reached and out['complete_record'] else None,searches=searches,actions=actions)
  after=[a for a in actions if reached and a['step']>reached and (not firstedit or a['step']<firstedit)]

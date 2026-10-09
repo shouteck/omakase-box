@@ -1,7 +1,7 @@
 """Verify visible base lines and bound optional slicing; never run repository code."""
 import ast,collections,difflib,re
 
-def visible_lines(source,a,b,output):
+def visible_locations(source,a,b,output):
  base=source.splitlines();a=max(1,a);b=min(len(base),b)
  shown=output.splitlines()
  # nl/bat prefixes are stripped only when their numbered content equals base.
@@ -11,14 +11,17 @@ def visible_lines(source,a,b,output):
    expected=base[int(m[1])-1];rest=line[m.end():]
    prefix=rest[:-len(expected)] if expected else rest
    if rest.endswith(expected) and prefix and not prefix.strip():shown[i]=expected
- piece=base[a-1:b];counts=collections.Counter(base);found=set()
+ piece=base[a-1:b];counts=collections.Counter(base);found=[]
  for block in difflib.SequenceMatcher(None,piece,shown,autojunk=False).get_matching_blocks():
   segment=piece[block.a:block.a+block.size]
   # Generic one-liners alone do not establish a source view.
   anchored=any(len(x.strip())>=16 and counts[x]==1 for x in segment)
   if anchored:
-   found.update(range(a+block.a,a+block.a+block.size))
+   found.extend((a+block.a+j,block.b+j) for j in range(block.size))
  return found
+
+def visible_lines(source,a,b,output):
+ return {n for n,i in visible_locations(source,a,b,output)}
 
 def signature_ends(text):
  try:tree=ast.parse(text)

@@ -41,3 +41,11 @@ assert literal_patch(cmd.replace('git apply','git apply --check')) is None
 assert literal_patch(cmd.replace('git apply','git apply unrelated.diff')) is None
 assert literal_patch(cmd+"\necho done") is None
 print('stdin patch consumption / inspection / operand / extra-command checks passed')
+
+from views import visible_locations
+from collections import defaultdict
+claims=defaultdict(set)
+for path in ['a.py','b.py']:
+ for n,i in visible_locations(text,1,5,"cat: a.py: Permission denied\n"+text):claims[i].add((path,n))
+assert claims and not {next(iter(v)) for v in claims.values() if len(v)==1}
+print('competing cross-file view locations stay unknown')
