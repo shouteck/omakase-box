@@ -4,6 +4,15 @@ Set by the CTO. Rewritten short on 9 October 2026 because the page had grown to 
 
 No deadlines. The CTO decides which problem and in what order; the lab lead decides how. The owner is not a research scientist and is not asked to steer method. The kitchen is idle: no product work resumes until the owner has agreed what the Box is.
 
+## The lab is paused entirely (10 October 2026)
+
+**Read this first. Do nothing below it.** The owner has paused the lab. The product is now settled and is being built by the kitchen: a coding agent that is stuck on a failing test hands off that part as a Box, without handing over the repository (`PLAN.md` on master, milestone C). The owner's view is that the specification is clear and what remains is execution.
+
+- **No session is to run.** If you were started with `LAB.md`, tell the owner the lab is paused and stop. Do not continue, finish or tidy any study, including the record study under `lab/lines/box-trial/record-gradient/`, which was left unfinished and uncommitted in this folder.
+- **Nothing is owed to the kitchen and the kitchen owes nothing here.** No brief, no sync, no "For the lab".
+- **The instruments stay where they are.** The kitchen may read the tracer prototype on this branch as a reference and rebuilds what it needs as its own reviewed code.
+- **To reopen the lab** the owner says so and the CTO rewrites this page. Everything below is the record of the Box trial as it stood on 9 October 2026.
+
 ## What a Box is, and what it is not
 
 **A Box tells a coding agent where the relevant code is, by shaping where it looks. It is not information handed to the agent to think about.**
@@ -174,4 +183,4 @@ The prototype session is done and reviewed (`lab/lines/box-trial/ideal-box/proto
 
 Zero cost. Few tokens. No trained model inside the Box. Third-party code only in containers, network off, install scripts disabled; nothing sent to any project. No conversations with possible customers. Not a marketplace or bounty board. One session, one piece of work; the owner sends `LAB.md` for each. Every result is attacked by a sceptic before it reaches the CTO.
 
-- **Sync state, 9 October 2026:** reading, prototype, pilot, three-pair continuation and experiment design closed and reviewed. Next session: the serious study from public records, no agent runs.
+- **Sync state, 10 October 2026:** the lab is paused entirely by the owner. See the top of this page.
