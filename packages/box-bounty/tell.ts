@@ -27,7 +27,14 @@ export function renderDescribe(repoRoot: string | null): string {
   lines.push(`  cost: ${limits.cost ?? 'not stated — the owner sets "cost" in .box/limits.json'}`);
   lines.push(`  expected wait: ${limits.expectedAnswer ?? 'not stated — the owner sets "expectedAnswer" in .box/limits.json'}`);
   lines.push('  how an answer is judged: the level stated in the listing — mechanical: the check declared on it must exit 0; reviewed: a person reads it. The tool reports facts about an answer, never a verdict.');
-  lines.push(`  where post --to may deliver: ${limits.allowedDestinations === null ? 'any local folder — the owner can restrict it with "allowedDestinations"' : `only inside ${limits.allowedDestinations.join(', ')}`}`);
+  // An empty list still means what it means — no destination is allowed — so
+  // it says so plainly rather than dangling "only inside" with nothing after.
+  const destinations = limits.allowedDestinations === null
+    ? 'any local folder — the owner can restrict it with "allowedDestinations"'
+    : limits.allowedDestinations.length === 0
+      ? 'nowhere — the owner\'s "allowedDestinations" is an empty list, so no destination is allowed'
+      : `only inside ${limits.allowedDestinations.join(', ')}`;
+  lines.push(`  where post --to may deliver: ${destinations}`);
   lines.push(`  reminders at moments of difficulty: ${limits.reminders}`);
   lines.push(renderOpenLine(repoRoot));
   lines.push('');
