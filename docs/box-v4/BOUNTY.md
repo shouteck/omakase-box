@@ -5,6 +5,8 @@ node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>"
     [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] \
     [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]
 node packages/box-cli/dist/cli.js bounty help
+node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty remind [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
 node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
@@ -17,8 +19,8 @@ node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
 
 (If `dist/cli.js` is missing, build first with `node scripts/workspace.mjs build`.)
 
-Run inside a Git checkout (or pass `--repo`) — `help` alone works anywhere and
-prints the whole journey on one screen. `create` writes one folder and the
+Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
+anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
 bounty's record; nothing else leaves the machine until `confirm` + `post` —
 and `post` only ever copies to a local folder you name. Every outcome is a
 named state: success ends `stage 1 of 7: drafted`; refusals print
@@ -48,6 +50,71 @@ at: the nearest *existing* ancestor is realpath-resolved and the missing
 tail re-appended before the inside-the-repository check, so a nonexistent
 target under a junction pointing into the checkout is refused, not written
 inside it.
+
+## Telling the agent
+
+Three switchable pieces put the tool in front of an agent that has never seen
+it — and the owner's limits file supplies the facts it needs to choose.
+
+- **`describe`** prints the canonical description — what the tool does, when
+  it is worth using and when it is not — plus the facts for choosing, read
+  from `.box/limits.json` and the live records: cost, expected wait, where
+  `post --to` may deliver, whether reminders are on, how an answer is judged
+  (the level in the listing: `mechanical` — the declared check must exit 0;
+  `reviewed` — a person reads it; facts about an answer, never a verdict) and
+  the open-bounties line. It works outside a checkout too: outside one it
+  prints the description and says the live facts need a repository. A fact the
+  owner has not set says so — describe never prints nothing.
+- **`describe --rules`** prints the block an owner pastes into a project's
+  rules file — the rules lines and an `open bounties:` line between
+  `<!-- box-bounty -->` / `<!-- /box-bounty -->` markers.
+- **`remind`** prints the one line a harness can surface at a moment of
+  difficulty (a failed attempt, budget running low). It is **off by default**
+  — on only when the limits file sets `"reminders": "on"`. When off it says
+  so in one line; it never prints nothing. The trigger belongs to the harness;
+  `remind` only supplies the text and the switch.
+
+### The open-bounties line the tool keeps current
+
+`.box/bounties/OPEN` always mirrors the records —
+`open bounties: bt-… "title" (stage), …` or `open bounties: none` — rewritten
+on every record mutation. When the limits file names `rulesFile`, the marked
+block inside that file is rewritten too on every mutation: the tool owns
+everything between the markers (the rules lines plus the current
+open-bounties line) and never touches a byte outside them. A file without the
+markers — or one that does not exist — is left exactly as it was.
+
+### The owner's limits file — `.box/limits.json`
+
+Written once by the owner, read at the boundary (`.box` never ships):
+
+```json
+{
+  "reminders": "off",
+  "rulesFile": "AGENTS.md",
+  "cost": "each bounty costs real money against the owner's account",
+  "expectedAnswer": "usually a day; unknown is fine to say",
+  "allowedDestinations": ["../bounty-drops"]
+}
+```
+
+- `reminders` — `"off"` (default) or `"on"`; gates `remind`.
+- `rulesFile` — optional path, resolved relative to the repository root, of
+  the project rules file holding the marked block. It must land **inside**
+  the checkout, judged on the canonical path — a junction or `..` spelling
+  that resolves outside is refused (`rules-file-outside-repo`).
+- `cost` / `expectedAnswer` — one free-text line each, shown by `describe` so
+  an agent can weigh handing off against doing the work.
+- `allowedDestinations` — optional list of directories (repo-relative or
+  absolute) that `post --to` must land inside; absent means any local folder,
+  as before. Enforced on the canonical destination — a junction trick cannot
+  slip past — and the refusal is named `destination-not-allowed`. An empty
+  list means no destination is allowed.
+
+A missing file means defaults. Malformed JSON, a non-object document or a
+known field of the wrong shape is the named refusal `limits-malformed` —
+read before anything mutates or posts, so a broken file never leaves a
+half-written record. Unknown fields are ignored.
 
 ## The record — the bounty outlives the agent
 
