@@ -46,6 +46,23 @@ export function git(repo: string, args: readonly string[], env: GitEnv = {}): st
   return result.stdout.trim();
 }
 
+// Write literal bytes as a blob into the object store, returning its sha. stdin
+// hashing applies no filters, so the blob is exactly the bytes handed in — used
+// by the answer commit, which is built on a temporary index and never the
+// worktree.
+export function gitWriteBlob(repo: string, bytes: Buffer): string {
+  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, 'hash-object', '-t', 'blob', '-w', '--stdin'], {
+    input: bytes,
+    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) {
+    const detail = (result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`).trim();
+    throw new GitFailed(`git hash-object failed in ${repo}: ${detail}`);
+  }
+  return result.stdout.toString().trim();
+}
+
 // Raw blob bytes for a path inside the snapshot commit. cat-file reads the object
 // directly: no eol, attribute or filter transforms ever apply, so the bytes are
 // exactly what the identifier records. Returns null when the path is not a blob

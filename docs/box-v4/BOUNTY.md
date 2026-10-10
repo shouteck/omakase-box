@@ -2,11 +2,14 @@
 
 ```
 node packages/box-cli/dist/cli.js bounty create --title "<one line>" --task <file> \
-    [--note <file>] [--setup -- <command>] [--check -- <command>] --out <dir> \
-    [--repo <path>] [--preview]
+    [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] \
+    --out <dir> [--repo <path>] [--preview]
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
 node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty answer <id> --from <dir> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty apply <id> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
 node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
 ```
 
@@ -35,13 +38,18 @@ drafted → confirmed → posted → taken → answered → verified → applied
                 (ended early: rejected, withdrawn, expired)
 ```
 
-This wave's commands only ever reach `posted` or `withdrawn`. A later agent in
-a later session reads the record — not your conversation — to pick the bounty
-up.
+A later agent in a later session reads the record — not your conversation — to
+pick the bounty up. An optional `--job <file>` on `create` records the larger
+piece of work waiting on the bounty; its text lives only in the record — never
+in `bounty.json`, the listing or the shipped folder — and `status` names it
+once the bounty ends (`applied`/`rejected`).
 
 `create` also keeps a Git ref `refs/box-bounty/<id>` pointing at
 `snapshot.commit`, so `git gc --prune=now` cannot take the bytes the identifier
-names. `withdraw` removes the ref.
+names. When an answer lands, a second ref `refs/box-bounty/<id>-answer` pins
+the answer commit — the answer is parented on the snapshot's *base* commit, so
+it cannot keep the snapshot alive and both refs exist while the bounty is
+open. Every ended stage — `applied`, `rejected`, `withdrawn` — removes both.
 
 ## The commands after create
 
@@ -58,9 +66,70 @@ names. `withdraw` removes the ref.
   existing → `destination-exists`. On success it **copies** the bounty folder to
   `<dir>/<id>/` (the recorded folder stays) and marks the bounty `posted` with
   the destination recorded.
+- **`answer <id> --from <dir>`** takes the returned bounty folder — see *The
+  answer comes back* below.
+- **`apply <id>`** merges a recorded answer onto the current code — for a
+  `reviewed` bounty at `answered`, and to retry after a merge conflict. On any
+  other stage it is a named refusal (`wrong-stage`, `already-ended`).
+- **`reject <id> --reason "<text>"`** ends a `posted`/`taken`/`answered`/
+  `verified` bounty with the reason kept on the record — earlier stages end
+  through `withdraw` instead (`wrong-stage`).
 - **`withdraw <id>`** ends any open stage → `withdrawn`, removes the durability
   ref, and is safe to repeat: an already-withdrawn bounty is a named state, not
   an error. An unknown id is `unknown-bounty` everywhere.
+
+## The answer comes back
+
+The solver hands back the **whole bounty folder**: the original `bounty.json`
+plus a `repo/` they edited — nothing else to write, no diff format to learn.
+`answer` binds it before anything runs:
+
+- `bounty.json` must name this bounty's `id` and this `snapshot.commit` — a
+  folder returned for another bounty or another version is refused
+  (`answer-mismatch`, `snapshot-mismatch`). Its bytes must also be identical to
+  what `create` shipped (the record pins the manifest's sha256): a doctored
+  manifest is `manifest-tampered`. **Return the folder with `bounty.json`
+  untouched; edit `repo/` only.**
+- The answer lands only on a `posted` bounty (`not-posted`); an ended bounty
+  refuses every further transition (`already-ended`).
+
+The change is then extracted by comparing `repo/` against the manifest's
+recorded per-file sha256: changed, added and deleted paths — no diff text, no
+git inside the answer. A return that changes nothing is `answer-empty`. Paths
+the never-ship rules would strip (`.git`, `.box`, secrets, keys, and anything
+the owner's `.boxignore` names — the same table that applied at `create`) and
+links of any kind inside `repo/` are refused by name (`answer-never-ship`,
+`answer-unsafe-path`); everything else — including brand-new files — is the
+answer, and it is the merge commit that carries it into history.
+
+For a **`mechanical`** bounty the *shipped set* — exactly the manifest's file
+list, emitted as recorded blob bytes from `refs/box-bounty/<id>` — is recreated
+in a clean directory (a pruned ref is `snapshot-lost`), the change applied,
+and the declared setup+check run exactly as `create` ran them on the folder it
+shipped. Never-ship files and `.box` records inside the snapshot commit never
+materialise for the check — the solver is judged on what they were given. Pass
+→ `verified`, then `apply` runs automatically. A check that ran and failed ends
+the bounty `rejected` with `implementation-failure`, the exit and the output
+tail recorded; a setup or check that cannot run is `environment-failure` — a
+different state, same ending.
+
+For a **`reviewed`** bounty there is no check to run: the answer lands at
+`answered` and the next step names `box bounty apply <id>` or
+`box bounty reject <id> --reason` — nothing claims a verification that did not
+happen.
+
+**Applying is a real git merge, never a file write.** The change becomes a
+commit on the snapshot's base commit — the base tree plus the extracted delta
+(built on a temporary index — the worktree and real index are never touched),
+so the incoming side of the merge is the solver's change alone — and
+`git merge` brings it onto the current branch as a merge commit whose message
+names the bounty. A conflict aborts the merge — the worktree and index come
+back byte-identical — and the record keeps its stage with the conflicting
+paths as the next step; fix them, commit, and `apply` retries, or `reject`
+ends it. Work the merge would overwrite is refused by name
+(`apply-worktree-dirty`) before it can run — uncommitted content on a touched
+path, and any file that exists at a touched path but is not in the index (an
+ignored file the merge would silently clobber) — never damaged.
 
 ## What the folder contains
 
@@ -137,7 +206,8 @@ an answer against exactly these bytes. Note the corollary: removed files' bytes
 remain reachable to anyone with repository access through `snapshot.commit` —
 the folder ships only the trimmed set, the commit records the full state.
 The commit is pinned under `refs/box-bounty/<id>` (written by `create`, removed
-by `withdraw`), so garbage collection cannot prune it while the bounty is open.
+when the bounty ends), so garbage collection cannot prune it while the bounty
+is open.
 
 ## Never-ship
 

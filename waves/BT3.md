@@ -40,14 +40,22 @@ A solver hands back the bounty folder with an edited `repo/`, and `box bounty an
 
 ## Result
 
-<One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
+Round 1 (`f398f92`): FAIL — `.boxignore` bypass, verify ran on never-ship file set, autocrlf apply broken, ignored-file clobber.
+Round 2 (`4c30fce`): FAIL — three holes closed; `restoreBytes` crashed `EISDIR` on untracked `.box/` in the conflict path.
+Round 3 (`d71f6d8`): **PASS** — below.
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
+- Worker: box-cook (round 3) · Reviewer: the pass (fresh agent; host: Windows, Git Bash on Devin; model: Devin agent — not independently verified beyond that)
+- Commit: `d71f6d8` (reviewed `1998cdb...d71f6d8` fix delta on top of `4c30fce`)
+- Verify: `verify d71f6d8 PASS check=reused@2026-10-10T06-44-17-353Z-d71f6d8 build=reused@2026-10-10T06-44-17-353Z-d71f6d8 test:box-bounty=reused@2026-10-10T06-44-17-353Z-d71f6d8 db=embedded 6s` — my own foreground invocation exited 0 at run `2026-10-10T06-49-05-321Z-d71f6d8`, all steps reused recorded PASSes on this exact SHA
+- Verdict: **PASS** · Level: ui-verified (rebuilt `dist/cli.js`, re-drove the defect and the new `recursive` restore surface live on scratch repos under both `core.autocrlf` settings)
 - Lenses:
-- Method:
+  - **Security:** boundary holds end-to-end — owner `.boxignore` refused (`answer-never-ship`/`owner-list`), manifest sha binds the answer, shipped-set verify sha-checks each blob (`snapshot-corrupt`), merge is the only way foreign bytes land, and every pre-merge overwrite risk is a named refusal: porcelain-dirty touched paths, ignored-but-present files (`PRECIOUS` bytes intact), and a pre-existing **directory** at a delta path (`sub/keep.txt` refused-by-name, not deleted). The new `rmSync {force, recursive}` restore cannot be tricked into deleting pre-merge content — directories are now skipped at save time and anything at a touched path that is not a tracked file is refused before the merge runs.
+  - **User experience:** cold journey through `dist/cli.js` names state, next step and waiting job at every point. The conflict output names the paths, says the worktree is untouched, and names the retry — `record.conflicts` persists and `status` for `verified` names them; `answered`+conflicts shows the generic person-review next step instead (the paths are still recorded and printed on retry — minor wording gap, not a block).
+- Method: diffed `1998cdb...d71f6d8` (in scope: `answer.ts` + `answer.test.ts` only — `snapshotBytes` now skips non-files, `restoreBytes` `rmSync` gained `recursive`, plus a new untracked-`.box/` conflict regression test that would have caught round 2's crash); ran `node scripts/verify.mjs test:box-bounty` myself (exit 0, reused recorded PASSes on this SHA); rebuilt `dist/cli.js`; re-probed on fresh scratch repos under `%TEMP%\bt3r-*`.
 - Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - **Round-2 defect closed (proved):** conflict on autocrlf=false with `.box/`+`TASK.md` untracked — `conflict` outcome printed, HEAD/index/worktree byte-identical (the record file itself legitimately rewrites), `.box/` intact, `record.conflicts={paths:[app.py]}` persisted, retry re-conflicts, resolve→`apply` lands `applied`. Same on autocrlf=true: CRLF bytes (`moved on\r\n`) preserved through the abort — `snapshotBytes`/`restoreBytes` does the byte-identity the removed pin couldn't.
+  - **Recursive-restore probes (proved safe):** pre-existing dir at a delta path → `apply-worktree-dirty` naming it, contents intact; untracked file at a touched path → refused; ignored file → refused; `.box/` itself → skipped at save time, never deleted. `saved`/`restored` paths come from git-reported names (delta `-z` diff + porcelain `-z`) — repo-relative leaves, no traversal.
+  - Still standing (non-blocking, as before): stray junk in `repo/` lands as `added` (spec-conformant — the solver's folder is the answer); pre-BT3 records bind the manifest only on id+commit; `taken` crash-leftover refuses `not-posted`, recoverable via `reject`; a rejected mechanical answer exits 0 (verdict, not refusal); `answered`+conflicts `status` next-step doesn't echo the recorded conflict paths (noted above).
+  - New regression test is real: it commits only the conflicting file, leaves `.box/`/`TASK.md` untracked (the default state), and asserts conflict outcome, recorded paths, `status` naming, re-conflict and resolve→applied — it would have failed on `4c30fce`'s crash. Scope held: nothing outside `packages/box-bounty/answer.ts` and the test file moved.
+- Merged: pending CTO merge. Resources removed: scratch repos under `%TEMP%\bt3r-*` removed; no product code edited, no tests added or weakened.
+- Reflect: three rounds to get the merge boundary right, and the final shape is honest — the boundary is checked before the merge under the repo's own config, and byte-identity on abort is guaranteed by saved bytes rather than by pinning filters. The remaining wording gaps are cosmetic; the journey does what the brief says at every stage I could drive it through.

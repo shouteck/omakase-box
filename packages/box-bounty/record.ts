@@ -29,6 +29,17 @@ export interface StageEvent {
   readonly stage: BountyStage;
   readonly at: string;
   readonly destination?: string; // recorded on the `posted` event
+  readonly reason?: string; // recorded on `rejected`: the named failure class plus the check's exit and output tail
+}
+
+export interface AnswerSpec {
+  /** A commit parented on snapshot.baseCommit whose tree is the base plus the
+      solver's extracted change — built on a temporary index, merged by `apply`.
+      Pinned at refs/box-bounty/<id>-answer while the bounty is open. */
+  readonly commit: string;
+  readonly changed: readonly string[];
+  readonly added: readonly string[];
+  readonly deleted: readonly string[];
 }
 
 export interface BountyRecord {
@@ -37,12 +48,25 @@ export interface BountyRecord {
   readonly id: string; // bt-<12 hex>, the same id bounty.json carries
   readonly title: string;
   readonly level: 'mechanical' | 'reviewed';
+  /** Owner context from `create --job`: lives only in this record — never in
+      bounty.json, the listing or the shipped folder. */
+  readonly job?: { readonly file: string; readonly text: string } | null;
+  /** sha256 of the exact bounty.json bytes `create` wrote: the answer's manifest
+      must come back byte-identical, which is what binds it to this bounty. */
+  readonly manifestSha256?: string;
   stage: BountyStage; // the latest event's stage, denormalized for a one-glance read
   /** Absolute path of the bounty folder `create` wrote. The record lives on the
       machine that made the bounty, so an absolute path is honest. */
   readonly folder: string;
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly createdAt: string;
+  /** The extracted answer once one has landed (`answered`/`verified`/`applied`
+      stages). Null until then. */
+  answer?: AnswerSpec | null;
+  /** Set when a merge onto current code conflicted and was aborted clean; the
+      record stays `verified`/`answered` and these paths are the next step.
+      Cleared when a later apply lands. */
+  conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
   events: StageEvent[];
 }
 
@@ -60,13 +84,24 @@ export interface RecordSeed {
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly folder: string;
   readonly createdAt: string;
+  readonly job?: { readonly file: string; readonly text: string } | null;
+  readonly manifestSha256?: string;
 }
 
-const refName = (id: string): string => `refs/box-bounty/${id}`;
+export const refName = (id: string): string => `refs/box-bounty/${id}`;
+
+// An open bounty can pin two commits: the snapshot at <id> and, once an answer
+// has been built, the answer commit at <id>-answer (its parent is the base
+// commit, so it does not keep the snapshot alive on its own). Every end stage
+// deletes both. Best-effort: a missing ref is exactly the state left behind.
+export function dropDurabilityRefs(repoRoot: string, id: string): void {
+  gitOutcome(repoRoot, ['update-ref', '-d', refName(id)]);
+  gitOutcome(repoRoot, ['update-ref', '-d', `${refName(id)}-answer`]);
+}
 export const recordDir = (repoRoot: string): string => join(repoRoot, '.box', 'bounties');
 export const recordPath = (repoRoot: string, id: string): string => join(recordDir(repoRoot), `${id}.json`);
 
-const saveRecord = (repoRoot: string, record: BountyRecord): void => {
+export const persistRecord = (repoRoot: string, record: BountyRecord): void => {
   writeFileSync(recordPath(repoRoot, record.id), JSON.stringify(record, null, 2) + '\n');
 };
 
@@ -106,6 +141,8 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     id: seed.id,
     title: seed.title,
     level: seed.level,
+    ...(seed.job !== undefined ? { job: seed.job } : {}),
+    ...(seed.manifestSha256 !== undefined ? { manifestSha256: seed.manifestSha256 } : {}),
     stage: 'drafted',
     folder: seed.folder,
     snapshot: { ...seed.snapshot },
@@ -141,8 +178,13 @@ const nextStep = (record: BountyRecord): string => {
   switch (record.stage) {
     case 'drafted': return `the owner's yes comes first — run box bounty confirm ${record.id} once they approve the preview`;
     case 'confirmed': return `deliver it — run box bounty post ${record.id} --to <dir>`;
-    case 'posted': return 'wait for the solver — the answer comes back through this tool; check box bounty status again later';
-    case 'taken': case 'answered': case 'verified': return 'answer return arrives in wave BT3 — leave the record for a later session';
+    case 'posted': return `wait for the solver — when the bounty folder comes back, run box bounty answer ${record.id} --from <dir>`;
+    case 'taken': return 'an answer is being verified against the snapshot it was made for — run box bounty status again in a moment';
+    case 'answered': return `a person reads the answer — run box bounty apply ${record.id} to land it on the current code, or box bounty reject ${record.id} --reason "<why>"`;
+    case 'verified':
+      return record.conflicts !== null && record.conflicts !== undefined
+        ? `the merge onto current code conflicts in ${record.conflicts.paths.join(', ')} — it was aborted and nothing changed. Resolve those paths and commit, then box bounty apply ${record.id} retries; or end it with box bounty reject ${record.id} --reason "<why>"`
+        : `the check passed on the snapshot the answer was made for — run box bounty apply ${record.id} to merge it onto the current code`;
     default: return 'ended — nothing to do';
   }
 };
@@ -168,15 +210,29 @@ export function renderStatus(repoRoot: string): string {
     }
   }
   if (ended.length === 0) lines.push('ended: none');
-  else lines.push(`ended: ${ended.map(entry => `${entry.record!.id} ${entry.record!.stage}`).join(', ')}`);
+  else lines.push(`ended: ${ended.map(entry => {
+    const record = entry.record!;
+    // applied/rejected name the job the bounty came from, so the record alone
+    // says which piece of work is unblocked — falling back to the title.
+    if (record.stage === 'applied' || record.stage === 'rejected') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
+    return `${record.id} ${record.stage}`;
+  }).join(', ')}`);
   for (const entry of corrupt) lines.push(`  ! ${entry.file} — not a readable record`);
   return lines.join('\n');
 }
 
-const transition = (repoRoot: string, record: BountyRecord, stage: BountyStage, destination?: string): void => {
-  record.events.push({ stage, at: new Date().toISOString(), ...(destination !== undefined ? { destination } : {}) });
+// Appends one stage event and persists — history is appended, never rewritten.
+// `reason` records why a `rejected` transition happened (failure class plus the
+// check's exit and output tail); `destination` records where `posted` went.
+export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string }): void => {
+  record.events.push({
+    stage,
+    at: new Date().toISOString(),
+    ...(extra?.destination !== undefined ? { destination: extra.destination } : {}),
+    ...(extra?.reason !== undefined ? { reason: extra.reason } : {})
+  });
   record.stage = stage;
-  saveRecord(repoRoot, record);
+  persistRecord(repoRoot, record);
 };
 
 export function confirmBounty(repoRoot: string, id: string): BountyRecord {
@@ -184,7 +240,7 @@ export function confirmBounty(repoRoot: string, id: string): BountyRecord {
   if (record.stage !== 'drafted') {
     throw new BountyRefused('not-drafted', `bounty ${id} is ${record.stage}, not drafted — only a drafted bounty can be confirmed`);
   }
-  transition(repoRoot, record, 'confirmed');
+  transitionTo(repoRoot, record, 'confirmed');
   return record;
 }
 
@@ -228,7 +284,7 @@ export function postBounty(repoRoot: string, id: string, toDir: string): { recor
   }
   mkdirSync(dirname(destination), { recursive: true });
   cpSync(record.folder, destination, { recursive: true }); // copy, not move — the recorded folder stays
-  transition(repoRoot, record, 'posted', destination);
+  transitionTo(repoRoot, record, 'posted', { destination });
   return { record, destination };
 }
 
@@ -243,8 +299,28 @@ export function withdrawBounty(repoRoot: string, id: string): WithdrawOutcome {
   if (!isOpenStage(record.stage)) {
     throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — withdraw only ends an open bounty`);
   }
-  transition(repoRoot, record, 'withdrawn');
-  // Best-effort: a missing ref is exactly the state we want left behind.
-  gitOutcome(repoRoot, ['update-ref', '-d', refName(id)]);
+  transitionTo(repoRoot, record, 'withdrawn');
+  dropDurabilityRefs(repoRoot, id);
   return { record, outcome: 'withdrawn' };
+}
+
+// `reject` ends a bounty an answer can have reached — posted onward — with the
+// reason kept on the event. Earlier stages end through `withdraw` instead.
+const REJECTABLE: ReadonlySet<BountyStage> = new Set(['posted', 'taken', 'answered', 'verified']);
+
+export function rejectBounty(repoRoot: string, id: string, reason: string): BountyRecord {
+  const text = reason.trim();
+  if (text === '') {
+    throw new BountyRefused('missing-reason', `reject needs a reason — box bounty reject ${id} --reason "<why this answer did not land>"`);
+  }
+  const record = loadRecord(repoRoot, id);
+  if (!isOpenStage(record.stage)) {
+    throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — there is nothing left to reject`);
+  }
+  if (!REJECTABLE.has(record.stage)) {
+    throw new BountyRefused('wrong-stage', `bounty ${id} is ${record.stage} — reject ends a bounty once it is posted; to end it before that run box bounty withdraw ${id}`);
+  }
+  transitionTo(repoRoot, record, 'rejected', { reason: text });
+  dropDurabilityRefs(repoRoot, id);
+  return record;
 }

@@ -30,6 +30,10 @@ export interface CreateOptions {
   readonly title: string;
   readonly taskPath: string;
   readonly notePath?: string;
+  /** `--job <file>`: owner context — the larger piece of work waiting on this
+      bounty. Its text lives only in the record; never in bounty.json, the
+      listing or the shipped folder. */
+  readonly jobPath?: string;
   readonly setup?: readonly string[];
   readonly check?: readonly string[];
   readonly outDir: string;
@@ -43,6 +47,7 @@ export interface BountyPlan {
   readonly title: string;
   readonly task: { readonly file: string; readonly text: string };
   readonly note: { readonly file: string; readonly text: string } | null;
+  readonly job: { readonly file: string; readonly text: string } | null;
   readonly setup: readonly string[] | null;
   readonly check: readonly string[] | null;
   readonly level: 'mechanical' | 'reviewed';
@@ -110,6 +115,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
   const rules: NeverShipRule[] = ownerList === null ? [...BUILTIN_RULES] : [...BUILTIN_RULES, ownerList.rule];
   const task = readTextFile(options.taskPath, 'missing-task', repoRoot, rules);
   const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot, rules) : null;
+  const job = options.jobPath !== undefined ? readTextFile(options.jobPath, 'missing-job', repoRoot, rules) : null;
   const outDir = resolve(options.outDir);
   const rootKey = `${toPosixPath(repoRoot).toLowerCase()}/`;
   const outKey = `${toPosixPath(outDir).toLowerCase()}/`;
@@ -137,6 +143,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     title,
     task,
     note,
+    job,
     setup: options.setup !== undefined && options.setup.length > 0 ? [...options.setup] : null,
     check: options.check !== undefined && options.check.length > 0 ? [...options.check] : null,
     level: options.check !== undefined && options.check.length > 0 ? 'mechanical' : 'reviewed',
@@ -265,6 +272,7 @@ export function renderPreview(plan: BountyPlan): string {
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
+  if (plan.job !== null) lines.push(`  job: ${plan.job.file} (record only — never shipped)`);
   lines.push(`  setup: ${plan.setup !== null ? describeCommand(plan.setup) : 'none'}`);
   lines.push(`  check: ${plan.check !== null ? describeCommand(plan.check) : 'none'}`);
   lines.push(`  level: ${plan.level}${plan.level === 'mechanical' ? ' (the declared check must fail today — it will be run to prove it)' : ' (no check — a person reads the answer)'}`);
@@ -329,7 +337,8 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       neverShip: plan.ruleRemovals.map(entry => ({ rule: entry.rule, removed: entry.removed })),
       verification
     };
-    writeFileSync(join(staging, 'bounty.json'), JSON.stringify(manifest, null, 2) + '\n');
+    const manifestJson = JSON.stringify(manifest, null, 2) + '\n';
+    writeFileSync(join(staging, 'bounty.json'), manifestJson);
     writeFileSync(join(staging, 'README.md'), renderListing(manifest, plan.note));
     if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
     renameSync(staging, outDir);
@@ -342,7 +351,11 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       level: plan.level,
       snapshot: plan.snapshot,
       folder: outDir,
-      createdAt
+      createdAt,
+      job: plan.job,
+      // sha256 of the exact bounty.json bytes: the answer's manifest must come
+      // back byte-identical, which binds a returned folder to this bounty.
+      manifestSha256: sha256(manifestJson)
     });
     return { id, outDir, plan, recordPath: written.path };
   } catch (error) {
