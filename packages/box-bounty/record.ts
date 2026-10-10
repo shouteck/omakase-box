@@ -552,7 +552,11 @@ export function postBounty(repoRoot: string, id: string, toDir: string): { recor
       return destDirKey === key || destDirKey.startsWith(key);
     });
     if (!allowed) {
-      throw new BountyRefused('destination-not-allowed', `--to ${toDir} resolves to ${destReal}, which is not inside the owner's allowedDestinations (${limits.allowedDestinations.join(', ')}) — deliver inside one of them, or the owner widens the list in .box/limits.json`);
+      // An empty list refuses every --to; say so instead of printing the empty
+      // parens where the allowed directories would be named.
+      throw new BountyRefused('destination-not-allowed', limits.allowedDestinations.length === 0
+        ? `--to ${toDir} resolves to ${destReal} — the owner's allowedDestinations is an empty list, so no destination is allowed. The owner widens the list in .box/limits.json`
+        : `--to ${toDir} resolves to ${destReal}, which is not inside the owner's allowedDestinations (${limits.allowedDestinations.join(', ')}) — deliver inside one of them, or the owner widens the list in .box/limits.json`);
     }
   }
   if (existsSync(destination)) {
