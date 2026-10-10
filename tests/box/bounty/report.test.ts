@@ -285,6 +285,29 @@ describe('undo — reverses an applied merge as a new commit', () => {
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('uncommitted\n');
   });
 
+  it('an ignored file at a folded rename source is refused, never clobbered — the touched set names what the reversal writes', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const { id, delivered } = posted(repo);
+    // Identical bytes at a new path: git pairs the return as a rename, and a
+    // folded --name-only read of the merge then names only the target — but
+    // the reversal writes the source back.
+    const dir = returned(delivered, root => {
+      write(root, 'repo/src/renamed.py', 'x\n');
+      rmSync(join(root, 'repo', 'src', 'app.py'));
+    });
+    answerBounty(repo, id, dir);
+    expect(applyBounty(repo, id).outcome).toBe('applied');
+    // An ignored file at the folded-away source: invisible to porcelain, so
+    // only the touched set's own completeness can save it.
+    write(repo, '.gitignore', 'src/app.py\n');
+    write(repo, 'src/app.py', 'LOCAL-BUILD-ARTIFACT\n');
+    expect(git(repo, ['status', '--porcelain', '--ignored'])).toContain('!! src/app.py');
+    const refusal = expectRefusal(() => undoBounty(repo, id), 'undo-worktree-dirty');
+    expect(refusal.message).toContain('src/app.py');
+    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('LOCAL-BUILD-ARTIFACT\n'); // untouched
+    expect(readRecord(repo, id).stage).toBe('applied');
+  });
+
   it('refuses by name when the merge is no longer on this branch', () => {
     const { repo, id } = appliedRepo();
     git(repo, ['reset', '--hard', 'HEAD~1']); // drop the merge commit from history

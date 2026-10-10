@@ -332,6 +332,70 @@ describe('BT3b — fewer things to supply', () => {
     expect(text).not.toContain('only in files that do not ship');
   });
 
+  // Host-only (K10): junctions are invisible to git on Windows. Deleting a
+  // tracked file and planting a junction on its spelling must not redirect the
+  // deletion's judgement through the link — the note names the base spelling
+  // the owner deleted, never the live directory that now occupies it.
+  it.skipIf(process.platform !== 'win32')('names a tracked file deleted under a junction replacement — not the live directory the link resolves to', () => {
+    const repo = makeRepo({ '.gitignore': 'realdir/\n', 'a.py': 'a\n', 'TASK.md': 'the task\n' }, (repo) => {
+      rmSync(join(repo, 'a.py'));
+      write(repo, 'realdir/f.py', 'f\n');
+      symlinkSync(join(repo, 'realdir'), join(repo, 'a.py'), 'junction');
+    });
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).toContain('a.py (deleted)'); // the spelling the owner deleted
+    expect(text).not.toContain('realdir (deleted)'); // a live directory that was never deleted
+    expect(text).not.toContain('only in files that do not ship');
+  });
+
+  // Host-only (K10): the same replacement pointed at a never-ship target must
+  // still name the lost base file — a deletion resolved through the link reads
+  // as a non-shipping path and prints the exact false all-clear.
+  it.skipIf(process.platform !== 'win32')('a tracked file deleted under a junction to a never-ship dir is still named — never a false all-clear', () => {
+    const repo = makeRepo({ '.gitignore': 'secrets/\n', 'a.py': 'a\n', 'TASK.md': 'the task\n' }, (repo) => {
+      rmSync(join(repo, 'a.py'));
+      write(repo, 'secrets/f.py', 's\n');
+      symlinkSync(join(repo, 'secrets'), join(repo, 'a.py'), 'junction');
+    });
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).toContain('a.py (deleted)'); // a base-shipped file is gone — that fact must be said
+    expect(text).not.toContain('only in files that do not ship'); // the false all-clear
+    expect(text).not.toContain('secrets'); // the name behind the link still never ships
+  });
+
+  // Host-only (K10): a tracked dir swapped for a junction repopulates its
+  // paths through the link — add -A records identical bytes so the diff stays
+  // silent. The base path still ships under another name's spelling no more:
+  // it is absent and the note must say so — while the junction's new spelling
+  // of an unchanged file is not a change.
+  it.skipIf(process.platform !== 'win32')('a tracked dir replaced by a junction still names the file it lost — repopulation through the link hides no deletion', () => {
+    const repo = makeRepo({ 'dir/f.py': 'f\n', 'other/f.py': 'f\n', 'other/g.py': 'g\n', 'TASK.md': 'the task\n' }, (repo) => {
+      rmSync(join(repo, 'dir'), { recursive: true });
+      symlinkSync(join(repo, 'other'), join(repo, 'dir'), 'junction');
+    });
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).toContain('dir/f.py (deleted)'); // repopulated through the link — no diff line, still gone
+    expect(text).not.toContain('other/g.py'); // unchanged — the junction's new spelling is not a change
+  });
+
   it('labels a moved submodule HEAD as a submodule change, never a deleted file', () => {
     const sub = makeRepo({ 's.py': 's\n' });
     const repo = makeRepo({ 'TASK.md': 'the task\n' }, (repo) => {
