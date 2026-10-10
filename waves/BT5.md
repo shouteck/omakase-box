@@ -184,8 +184,14 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
   ship on this branch; the `open bounties:` line tracked the journey bounty
   live and returned to `none` on apply. The observation measure: future
   `create --why` lines will show whether agents hand off for real reasons.
-- Merged: · Resources removed: scratch repos are temp-dir and self-cleaning;
-  the fixture test build under %TEMP%\bt5-fixtures-test was removed.
-  Journey scratch under %TEMP%\bt5-journey, %TEMP%\bt5-collect and
-  %TEMP%\bt5-fixtures removed at close.
-- Reflect:
+- Merged: `751c480` into master, 10 October 2026 · Resources removed:
+  scratch repos are temp-dir and self-cleaning; the fixture test build
+  under %TEMP%\bt5-fixtures-test was removed. Journey scratch under
+  %TEMP%\bt5-journey, %TEMP%\bt5-collect and %TEMP%\bt5-fixtures removed
+  at close.
+- Reflect: the journey earned its keep twice — cold-copy setup (fixed
+  in-wave) and the unreturnable polluted hand-back (deferred). The rungs
+  exposed a subtler flaw: a "missing capability" the agent can download
+  never binds, and one agent derived that a missing *local* toolchain is
+  unbountyable — `answer` verifies where the capability is absent. Both
+  lessons are on the packaging card.
