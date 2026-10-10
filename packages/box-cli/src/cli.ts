@@ -11,6 +11,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BountyRefused, BountyUsage, finalizeBounty, parseCreateArgs, planBounty, renderPreview } from '../../box-bounty/index.js';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
 import { trace, TraceRefused } from '../../box-trace/index.js';
@@ -34,6 +35,7 @@ function usage(message?: string): never {
   console.error('       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]');
   console.error('       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]');
   console.error('       box trace --out <dir> -- <the test command, as it would normally be typed>');
+  console.error('       box bounty create --title "<one line>" --task <file> [--note <file>] [--setup -- <command>] [--check -- <command>] --out <dir> [--repo <path>] [--preview]');
   process.exit(2);
 }
 
@@ -45,7 +47,7 @@ const flag = (name: string): string | undefined => {
 const flags = ['--repo', '--out', '--pnpm', '--agreement', '--box', '--base'];
 const positional = rest.filter((arg, index) => !arg.startsWith('--') && !flags.includes(rest[index - 1] ?? ''));
 const [target, ...extra] = positional;
-if (command !== 'trace' && extra.length > 0) usage(`unexpected argument ${extra[0]}`);
+if (command !== 'trace' && command !== 'bounty' && extra.length > 0) usage(`unexpected argument ${extra[0]}`);
 
 if (command === 'export') {
   const repoPath = flag('--repo');
@@ -135,6 +137,41 @@ if (command === 'export') {
       process.exit(2);
     }
     console.error(`trace failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+} else if (command === 'bounty') {
+  const [subcommand, ...bountyArgs] = rest;
+  if (subcommand !== 'create') usage('expected: box bounty create …');
+  try {
+    const parsed = parseCreateArgs(bountyArgs);
+    if (parsed.title === undefined || parsed.task === undefined || parsed.out === undefined) {
+      usage('bounty create needs --title, --task and --out');
+    }
+    const plan = planBounty({
+      repoPath: parsed.repo !== undefined ? resolve(parsed.repo) : process.cwd(),
+      title: parsed.title,
+      taskPath: resolve(parsed.task),
+      ...(parsed.note !== undefined ? { notePath: resolve(parsed.note) } : {}),
+      ...(parsed.setup !== undefined ? { setup: parsed.setup } : {}),
+      ...(parsed.check !== undefined ? { check: parsed.check } : {}),
+      outDir: resolve(parsed.out)
+    });
+    console.log(renderPreview(plan));
+    if (parsed.preview) {
+      console.log('preview only — nothing was written. Run again without --preview to write the bounty folder.');
+      process.exitCode = 0;
+    } else {
+      const result = finalizeBounty(plan);
+      console.log(`${result.id} — stage 1 of 7: drafted — written to ${result.outDir}`);
+      console.log('next: the owner reviews the preview above and confirms. Nothing has been posted; nothing has left this machine.');
+    }
+  } catch (error) {
+    if (error instanceof BountyUsage) usage(error.message);
+    if (error instanceof BountyRefused) {
+      console.error(`bounty create refused (${error.reason}): ${error.message}`);
+      process.exit(3);
+    }
+    console.error(`bounty create failed: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 } else {
