@@ -225,9 +225,14 @@ failing on this snapshot, and the files the working state already changed
 relative to `snapshot.baseCommit` — named when they are part of the shipped
 set, a moved submodule is labelled `submodule changed`, and a file the working
 state deleted is named when no never-ship rule would have kept it out; a path
-a rule covers is never named inside the bounty. Every judgement runs on the
+a rule covers is never named inside the bounty. Live paths are judged on the
 canonical path — the one shipping was decided on — never the diff's spelling,
-and renames are unfolded so a rename's source is still classified.
+and renames are unfolded so a rename's source is still classified. A deletion
+is judged by the base tree's own spellings instead: what the owner committed,
+never what now occupies the path — a link planted where the file was cannot
+rename the loss after its target, and a base file that ships only as a link's
+view of another tracked path is named as gone even when the diff stays
+silent.
 When every differing path is one that does not ship, the note says the state
 differs only outside the shipped set — never that the tree matches the last
 commit when it does not.

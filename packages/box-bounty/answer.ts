@@ -428,7 +428,11 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
   if (gitOutcome(repoRoot, ['merge-base', '--is-ancestor', merge, 'HEAD']).status !== 0) {
     throw new BountyRefused('undo-not-on-branch', `the merge ${merge} is not on the current branch's history — undo only reverses an apply that is still part of HEAD; nothing was changed`);
   }
-  const touched = gitOutcome(repoRoot, ['diff', '--name-only', '-z', first, merge]).stdout
+  // --no-renames: the reversal writes the merge's PRE-images (rename
+  // sources), exactly the names rename detection folds away. An ignored file
+  // at a folded source is invisible to porcelain — without the source in the
+  // touched set the clobber boundary below cannot see it either.
+  const touched = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', first, merge]).stdout
     .split('\0').filter(name => name !== '');
   // The reversal commits from the real index, so staged-but-uncommitted work —
   // which the touched-path boundary cannot see as a threat — would be swept

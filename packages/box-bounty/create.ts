@@ -374,14 +374,16 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
     if (plan.snapshot.baseCommit === null) {
       lines.push('', 'the repository has no commits yet — every shipped file is new work.');
     } else {
-      // Classification speaks canonical paths: shipping and the never-ship
-      // rules were both decided on realpath-resolved names, so judging the
-      // diff's tree spellings answers the wrong question — a file tracked
-      // through a junction (jdir/f.py) ships as realdir/f.py and must be
-      // classified by what it resolves to. canonicalForNew plays the same
-      // trick it does for --out/--to: realpath the nearest EXISTING ancestor
-      // and re-append the missing tail, which is all a deleted path can
-      // resolve. A path that resolves outside the checkout keeps its spelling.
+      // Classification speaks canonical paths for what LIVES and base-tree
+      // spellings for what is GONE. Shipping and the never-ship rules were
+      // decided on realpath-resolved names, so a file tracked through a
+      // junction (jdir/f.py) ships as realdir/f.py and is classified by what
+      // it resolves to; canonicalForNew plays the same trick it does for
+      // --out/--to, realpathing the nearest EXISTING ancestor. But a deleted
+      // path can only resolve through whatever occupies the spelling NOW — a
+      // junction planted where the file was would redirect every fact about
+      // the deletion to the link's target — so deletions are judged by the
+      // base tree's own spellings, the names the owner knows.
       const realRoot = plan.repoRoot; // already canonical — resolveRepoRoot realpaths it
       const canonicalDiffPath = (name: string): string | null => {
         const offset = toPosixPath(relative(realRoot, canonicalForNew(join(realRoot, ...name.split('/')))));
@@ -395,26 +397,63 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
       // which would hide the shipped file the working state lost.
       const diff = gitOutcome(plan.repoRoot, ['diff', '--name-only', '-z', '--no-renames', plan.snapshot.baseCommit, plan.snapshot.commit]);
       if (diff.status !== 0) throw new Error(`git diff failed: ${diff.stderr.trim()}`);
-      // Fates, judged on the canonical path: shipped files are named; a path
-      // a never-ship rule covers — under EITHER the canonical or the raw
-      // spelling, so deleting `.env` under any name cannot make its name ship
-      // — or one still a blob in the snapshot tree is never named but proves
-      // the state differs; a gitlink still in the tree is a moved submodule,
-      // named as one rather than misread as a deletion; what remains is
-      // absent from the snapshot tree entirely, a file the working state
-      // deleted — a real change, named honestly.
+      // The base tree's blob spellings — the names the owner committed. -c
+      // core.quotepath=false keeps non-ASCII names unquoted, as in the
+      // snapshot's own ls-tree.
+      const baseBlobs = new Set<string>();
+      const baseListing = gitOutcome(plan.repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(path)', plan.snapshot.baseCommit]);
+      if (baseListing.status !== 0) throw new Error(`git ls-tree failed: ${baseListing.stderr.trim()}`);
+      for (const record of baseListing.stdout.split('\0')) {
+        if (record.startsWith('blob ')) baseBlobs.add(record.slice(5));
+      }
+      const baseBlobsLower = new Set([...baseBlobs].map(path => path.toLowerCase()));
+      // Fates: a gitlink still in the snapshot tree is a moved submodule,
+      // named as one; a base blob absent from the snapshot's blobs is a
+      // deletion — named by its base spelling, never resolved through live
+      // ancestors (a replacement junction would rename the loss after
+      // whatever now sits there), and judged for never-ship on that spelling;
+      // a live path — a modification or an addition — is canonicalised and
+      // named under what it ships as, unless it is a rule-covered name
+      // (unlisted) or a new spelling of a base-tracked file (a junction
+      // repopulating a tracked dir adds a diff line whose canonical is an
+      // unchanged real file — the file itself reports, or nothing changed).
       const named = new Set<string>();
       let unlisted = false;
+      const diffNames = new Set<string>();
       for (const name of diff.stdout.split('\0')) {
         if (name === '') continue;
+        diffNames.add(name);
+        if (plan.snapshotLinks.has(name)) { named.add(`${name} (submodule changed)`); continue; }
+        if (baseBlobs.has(name) && !plan.snapshotBlobs.has(name)) {
+          if (rules.some(rule => rule.match(name.toLowerCase()))) unlisted = true;
+          else named.add(`${name} (deleted)`);
+          continue;
+        }
         const canonical = canonicalDiffPath(name);
         const key = (canonical ?? name).toLowerCase();
         const shippedAs = canonical !== null ? shipped.get(key) : undefined;
-        if (shippedAs !== undefined) { named.add(shippedAs); continue; }
+        if (shippedAs !== undefined) {
+          if (key === name.toLowerCase() || !baseBlobsLower.has(key)) named.add(shippedAs);
+          continue;
+        }
         if (rules.some(rule => rule.match(key) || rule.match(name.toLowerCase()))) { unlisted = true; continue; }
-        if (plan.snapshotLinks.has(name)) { named.add(`${canonical ?? name} (submodule changed)`); continue; }
         if (plan.snapshotBlobs.has(name)) { unlisted = true; continue; }
         named.add(`${canonical ?? name} (deleted)`);
+      }
+      // A deletion the diff cannot show: `add -A` repopulates a spelling
+      // through a replacement junction (identical bytes, no line), so a base
+      // file that now resolves onto a DIFFERENT base-tracked file exists only
+      // as a link's view — the shipped set no longer carries its name. A live
+      // junction-tracked file resolves to a canonical that was never a base
+      // path, which is what tells the two apart.
+      for (const name of baseBlobs) {
+        if (diffNames.has(name) || shipped.has(name.toLowerCase()) || !plan.snapshotBlobs.has(name)) continue;
+        const canonical = canonicalDiffPath(name);
+        if (canonical === null || canonical.toLowerCase() === name.toLowerCase()) continue;
+        const key = canonical.toLowerCase();
+        if (!baseBlobsLower.has(key)) continue; // a stable junction — its canonical was never a base path
+        if (rules.some(rule => rule.match(name.toLowerCase()))) { unlisted = true; continue; }
+        named.add(`${name} (deleted)`);
       }
       if (named.size > 0) {
         lines.push('', `files already changed in the working state (against commit ${plan.snapshot.baseCommit.slice(0, 12)}):`);
