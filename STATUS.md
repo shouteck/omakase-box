@@ -1,31 +1,27 @@
 # Status
 
-Replaced by the CTO on 10 October 2026, at the close of wave BT3 (two fix rounds: the return path's boundary needed three passes — `.boxignore` bypass, wrong verify file set, autocrlf breaks, ignored-file clobber, a restore-crash on untracked `.box/` — all closed and regression-tested).
+Replaced by the CTO on 10 October 2026, at the close of wave BT3a.
 
 ## Now
 
-- **BT3 is done and merged** (`8c7d4e9`, PASS ui-verified): the full journey works end to end. `box bounty answer <id> --from <dir>` binds the returned folder (id + snapshot commit), extracts the change against recorded hashes, refuses owner-listed files (`answer-never-ship`), verifies a mechanical answer on the shipped file set through the declared check, and merges it onto current code with a real merge commit — or rejects it with a reason. `apply`/`reject` cover reviewed bounties and conflict retries; conflicts abort byte-identical and are recorded with named paths. `create --job <file>` keeps owner context in the record only.
-- **Known limits for later:** `status` next-step for `answered`+conflicts doesn't echo the recorded conflict paths; stray junk in a returned `repo/` lands as `added` (spec-conformant); pre-BT3 records bind the manifest on id+commit only; plus the BT1/BT2 set — `--to` nonexistent-under-junction residual, forgeable-record convention (events expose it), `secrets` basename over-removal, untracked-via-junction live bytes, git-lfs pointer stubs, wrong-verb message for `status` outside a checkout.
-- **The off-machine run now tests the product** (bounty, trace, package suites on pinned `ubuntu-24.04`). Whether to keep the 14 earlier-platform suites off-machine is the owner's open call.
-- **Milestone BT is approved** (BT1 to BT6); BT1–BT3 are merged. Each wave cooks only when the owner names it, and the kitchen stops after each. BT6 needs a separate approval and a choice of site.
-- **C1's `box trace` is kept but not used by milestone BT.** The smaller Box is a later decision.
-- **The lab is paused entirely.** Do not read its brief, answer it or run a sync.
-- **Left as they are, not merged and not deleted:** local branches `wave/A6` and `wave/K7`. Deleting an unmerged branch is the owner's call.
+- **BT3a is done and merged** (`5a6456c`, PASS ui-verified, all three lenses): `answer` now writes a report of facts — check result before and after, the optional `--guard`, the change with file and line counts, a `merge-tree` dry read naming conflict paths, eager flags, and always a "not checked" line plus the next command. A pass waits at `verified`; a failure is a recorded attempt and the bounty returns to `posted`. Several answers per bounty, `apply <id> [<n>]`, and `undo` reverses an applied merge as a new commit with named refusals. A test polices verdict words out of the report.
+- **BT1–BT3 + BT3a are merged.** The journey works end to end: create → record → confirm → post → answer (facts) → apply/reject/undo.
+- **Known limits for later:** solver-controlled check output can carry a banned word inside the quoted tail (the words rule covers the tool's own lines); post-abort `git status` stat-flag cosmetic under autocrlf; `status` on `answered`+conflicts doesn't echo paths; plus the standing set — `--to` junction residual, forgeable-record convention, `secrets` basename over-removal, untracked-via-junction bytes, git-lfs stubs, wrong-verb status message.
+- **The off-machine run tests the product** and is green on master (BT3 merge run 6m26s with the bounty suites). Whether to keep the 14 earlier-platform suites off-machine is the owner's open call.
+- **Milestone BT is approved** (BT1 to BT6). Each wave cooks only when the owner names it. BT6 needs a separate approval and a site.
+- **C1's `box trace` is kept but not used by milestone BT.** The lab is paused entirely.
+- **Left as they are:** unmerged local branches `wave/A6` and `wave/K7` (owner's call).
 - Master is clean and published. Nothing is running.
 
-## Off-machine checks (looked at by the CTO on 10 October 2026)
+## Roadmap (owner decisions of 10 October 2026, in PLAN.md)
 
-- K10 merge run green on master with the product suites (6m29s); the BT2 merge run was in progress at BT3 kickoff — read the latest before the next merge.
+- The tool does everything mechanical and reports facts about an answer, never a verdict; using it is always at the agent's discretion; every bounty records one line of why.
+- BT4 is accepted by constructed scenarios (PLAN.md, "How BT4 is accepted"); BT5 has three parts: the journey, judgement, and open observation.
 
-## Roadmap updated (CTO, 10 October 2026, after BT3)
+## Off-machine checks (looked at 10 October 2026)
 
-From the owner's decisions in discussion: the tool does everything mechanical and the agent supplies only judgement; it reports facts about an answer and never a verdict; using it is always at the agent's discretion; every bounty records one line of why. PLAN.md has all of it. Two small waves now come before BT4:
-
-- **BT3a, report, do not judge.** Changes two things BT3 shipped: a passing answer waits for a decision instead of being applied automatically, and a failing answer no longer ends the bounty. Adds the facts report, flags, an optional guard command, several answers, and `undo`.
-- **BT3b, fewer things to supply.** The one line of why, defaults, evidence gathered by the tool, `help`, and the known rough edges above.
-
-BT4 is now accepted by constructed scenarios (PLAN.md, "How BT4 is accepted"), and BT5 has three parts: the journey, judgement, and open observation.
+- Green on master: BT2 and BT3 merge runs both passed with the product suites (~6m25s). Latest before the BT3a merge — check `gh run list` before the next one.
 
 ## Next
 
-**BT3a: report, do not judge.** Brief at [waves/BT3a.md](waves/BT3a.md), station packaging. Send `START.md` (or `START.md: BT3a`). The kitchen cooks that wave and stops.
+**BT3b: fewer things to supply.** The one line of why, defaults, evidence gathered by the tool, `help`, and the known rough edges above. No brief yet — the CTO writes it when named. Send `START.md: BT3b`.
