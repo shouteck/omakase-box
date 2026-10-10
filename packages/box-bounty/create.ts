@@ -9,6 +9,7 @@ import { gitBlob, gitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
+import { writeNewRecord } from './record.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -60,6 +61,9 @@ export interface BountyResult {
   readonly id: string;
   readonly outDir: string;
   readonly plan: BountyPlan;
+  /** Absolute path of the `.box/bounties/<id>.json` record written into the
+      repository — the tool writes it; committing it is the agent's flow. */
+  readonly recordPath: string;
 }
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
@@ -89,7 +93,7 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   return { file: inside ? offset : basename(real), text };
 }
 
-function resolveRepoRoot(repoPath: string): string {
+export function resolveRepoRoot(repoPath: string): string {
   const repo = resolve(repoPath);
   const top = gitOutcome(repo, ['rev-parse', '--show-toplevel']);
   if (top.status !== 0 || top.stdout.trim() === '') {
@@ -329,7 +333,18 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     writeFileSync(join(staging, 'README.md'), renderListing(manifest, plan.note));
     if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
     renameSync(staging, outDir);
-    return { id, outDir, plan };
+    // With the folder in place, make it reachable later: pin the snapshot
+    // commit under refs/box-bounty/<id> (gc cannot prune it now) and write the
+    // record at stage `drafted` into .box/bounties/ inside the repository.
+    const written = writeNewRecord(plan.repoRoot, {
+      id,
+      title: plan.title,
+      level: plan.level,
+      snapshot: plan.snapshot,
+      folder: outDir,
+      createdAt
+    });
+    return { id, outDir, plan, recordPath: written.path };
   } catch (error) {
     rmSync(staging, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
     throw error;

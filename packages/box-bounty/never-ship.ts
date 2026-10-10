@@ -42,6 +42,11 @@ export const BUILTIN_RULES: readonly NeverShipRule[] = [
   // `secretariat/` do not match.
   { name: 'secrets-dir', match: path => segments(path).some(segment => segment.includes('secrets')) },
   { name: 'runtime-dir', match: path => segments(path).includes('.runtime') },
+  // The tool's own state: `.box/bounties/<id>.json` records live in the project
+  // but a bounty record must never ship inside a later bounty. Exact segment
+  // match — the `.boxignore` owner-list file is a different basename entirely
+  // and still matches nothing here.
+  { name: 'dot-box', match: path => segments(path).includes('.box') },
   {
     name: 'private-key',
     match: path => KEY_EXTENSIONS.has(extension(path)) || /^id_(?:rsa|dsa|ecdsa|ed25519)/.test(basename(path))
