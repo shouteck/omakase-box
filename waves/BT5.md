@@ -94,6 +94,37 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
   scaffold-proof.md). The same cold-copy caveat belongs in BOUNTY.md's
   solver-facing setup guidance — flagged for the pass; outside this wave's
   write paths so left unchanged.
+- **Part 1 — the journey ran end to end** (`kitchen/bt5/evidence/journey.md`):
+  `bt-e197a6998847` created/confirmed/posted in a cold clone; a blind
+  `box-recipient` fixed `tell.ts`+`record.ts` inside the delivered folder
+  only and returned check-green (11/11) with the 142-test suite green; a
+  different fresh session found the bounty from `.box/bounties/OPEN`, hit
+  finding #2, got a facts-only `verified` report, and judged apply — the
+  tool merged it as `e720caa`, fetched here as `7912e1a`. Check red before
+  (`scaffold-proof.md`), green after (`check-postfix.txt`); suite 142/142.
+- Journey finding #2 (recorded, unfixed — product decision): a solver that
+  follows the README cannot hand the folder back — its own setup leaves
+  junctions/build trees in `repo/` and `answer` refuses `answer-unsafe-path`.
+  The collector reconstructed the clean hand-back itself. Detail in
+  `journey-collect.md`.
+- Rough edges recorded: the task title's leading `#` carried into the slug;
+  the solver's one stray `grep` hit the host cwd and listed (never read)
+  origin-checkout paths — disclosed, substance-blindness held.
+- **Part 2 — judgement rungs** (`kitchen/bt5/evidence/rungs.md`): 3 fresh
+  agents, 2 fixtures. Doable rung 1: ignored the tool, did the work, quoted
+  the "not worth it" line — sensible, stopped. Needs-toolchain rungs 1+2:
+  both agents declined with correct cost/wait reasoning — rung 2 derived
+  that the bounty *cannot verify* a missing-local-toolchain fix — then
+  provisioned PHP and solved. No overuse, no underuse failure; the fixture's
+  "missing capability" premise did not bind (php is downloadable, n=2 —
+  recorded as a fixture flaw, not an agent failure).
+- **Part 3 — open install verified:** `.box/limits.json` (reminders off,
+  honest cost/wait, no allowedDestinations) and the marked AGENTS.md block
+  ship on this branch; the `open bounties:` line tracked the journey bounty
+  live and returned to `none` on apply. The observation measure: future
+  `create --why` lines will show whether agents hand off for real reasons.
 - Merged: · Resources removed: scratch repos are temp-dir and self-cleaning;
   the fixture test build under %TEMP%\bt5-fixtures-test was removed.
+  Journey scratch under %TEMP%\bt5-journey, %TEMP%\bt5-collect and
+  %TEMP%\bt5-fixtures removed at close.
 - Reflect:
