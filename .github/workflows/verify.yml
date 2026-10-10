@@ -5,7 +5,9 @@ name: verify
 on:
   push:
     # Master only — doc-only pushes are skipped by paths-ignore below.
-    branches: [master]
+    # wave/K10 rides along temporarily so this wave can exercise the new suite
+    # list on a real run; it is removed before the wave's final commit.
+    branches: [master, wave/K10]
     # paths-ignore mirrors the "no test reads these" set (INERT) in scripts/suite.mjs: a push
     # that only touches docs/process files costs nothing. Anything else still runs.
     paths-ignore:
@@ -32,17 +34,29 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Pinned to a named Ubuntu, not ubuntu-latest: the label moves to a new
+    # Ubuntu on 19 October 2026, and a migration must not change the result
+    # between two pushes. ubuntu-24.04 is the image the label resolves to
+    # today, so nothing under the run changes with this pin.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # fetch-depth: 0 — verify's merge-base and run-history reads need full git history.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
+
+      # `python` by name, at the host's 3.12: test:box-trace spawns `python` and
+      # test:box-bounty runs a declared `python -c` check against the snapshot.
+      # Ubuntu ships `python3` but no `python`; setup-python provides the
+      # command and the version (sys.monitoring needs >= 3.12) in one step.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
 
       # Same path as the host: repository-local pnpm 10.34.5 (scripts/tooling, lockfile-pinned).
       - name: Install repository-local pnpm
@@ -65,27 +79,29 @@ jobs:
       - name: Build service bundles for check's live tests
         run: node scripts/pnpm.mjs build
 
-      # Suite-list decision (K8, recorded in waves/K8.md) — never silently narrowed; each
-      # exclusion is named here:
+      # Suite-list decision (K8, revised K10 — recorded in waves/K8.md and
+      # waves/K10.md) — never silently narrowed; each exclusion is named here:
       #  * test:containers — needs a local Docker daemon plus the frozen M-series public
       #    image (public-task-toolchain:m4-v1, built locally, in no registry); unavailable.
-      #  * test:box-package — tests/box/package/review-security-r2.test.ts has one
-      #    platform-bound test: a case-alias entrypoint ('SRC/POLICY/LOADER.TS') must still
-      #    resolve, which only holds on a case-insensitive filesystem. On Linux it fails
-      #    closed (PreparationGap). Test content is outside this wave's scope, so the suite
-      #    is host-only until a per-file split exists. 58/59 pass; the rest stay green here.
       #  * test:security — tests/security/output-boundary/output-boundary.test.ts bakes an
       #    absolute Windows path to this checkout (file:///C:/Users/.../boundaries.mjs)
       #    into the probe it writes, so it can only run on this exact machine. 2 of its
       #    284 tests fail for that reason; test content is outside this wave's scope.
+      # K10 added the milestone-BT product suites and un-excluded test:box-package:
+      #  * test:box-trace, test:box-bounty — in the list since K10. They need the
+      #    `python` command (setup-python step above) and git; nothing else.
+      #  * test:box-package — in the list since K10. Its one platform-bound test
+      #    (a 'SRC/POLICY/LOADER.TS' case-alias entrypoint must still resolve,
+      #    which only holds on a case-insensitive filesystem) is marked host-only
+      #    in tests/box/package/review-security-r2.test.ts and skips on Linux.
       # `check --full` covers bootstrap/auth/contracts/planner; they are still named so the
       # list reads as the whole suite set (deduped inside one verify run).
       - name: verify
-        run: node scripts/verify.mjs --full test:bootstrap test:auth test:contracts test:planner test:box-contracts test:box-auth test:box-delegation test:analysis test:compiler test:runner test:portal test:acceptance test:e2e test:kitchen
+        run: node scripts/verify.mjs --full test:bootstrap test:auth test:contracts test:planner test:box-contracts test:box-auth test:box-delegation test:box-trace test:box-bounty test:box-package test:analysis test:compiler test:runner test:portal test:acceptance test:e2e test:kitchen
 
       - name: Upload verify run logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: kitchen-runs-${{ github.run_id }}
           path: .kitchen/runs/

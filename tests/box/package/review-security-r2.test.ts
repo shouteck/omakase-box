@@ -1,10 +1,27 @@
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { AgreementInvalid, ExportFailed, parseAgreement, PreparationGap, proposeSelection } from '../../../packages/box-package/index.js';
 import { agreementFile, fixtureCommit, materializeFixtureRepo, privateByteLeaks, requirePnpmTooling, runExport } from './support.js';
 
 requirePnpmTooling();
+
+// This host's filesystem folds case; the CI runner's Linux one does not. The
+// one test below that needs an alias spelling to *resolve* ('SRC/POLICY/LOADER.TS'
+// -> src/policy/loader.ts) only holds on a case-insensitive filesystem — on a
+// case-sensitive one the same spelling fails closed with a PreparationGap,
+// which is also correct behaviour, so nothing about the assertion is weakened.
+// Probe the real capability rather than naming a platform (K8/K10).
+const caseInsensitiveFs = (() => {
+  const probe = mkdtempSync(join(tmpdir(), 'box-caseprobe-'));
+  try {
+    writeFileSync(join(probe, 'Alias.TMP'), 'x');
+    return existsSync(join(probe, 'alias.tmp'));
+  } finally {
+    rmSync(probe, { recursive: true, force: true });
+  }
+})();
 
 // D2.1 pass, round 2: the fix decides containment and exclusion on the canonical real path.
 // These probes attack sites the round-1 review did not cover: a case-aliased *import
@@ -165,7 +182,8 @@ describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
     }
   });
 
-  it('still exports request A bytes when a non-excluded entrypoint is spelled under a case alias', () => {
+  // Host-only by the platform it needs: a case-insensitive filesystem.
+  it.skipIf(!caseInsensitiveFs)('still exports request A bytes when a non-excluded entrypoint is spelled under a case alias', () => {
     // Alias spellings are not rejected wholesale and cannot smuggle excluded bytes: the
     // real loader.ts/strict-json.ts ship, the share stays 3/15, and nothing private leaks.
     const agreement = agreementFile('request-a', { mutate: value => { value.files = [{ owner: 'SRC/POLICY/LOADER.TS' }, { owner: 'src/policy/strict-json.ts' }]; } });
