@@ -1,5 +1,11 @@
 # `box bounty` — a bounty, complete and safe, remembered in the project
 
+GitHub posting is public and free, only to the project's own repository when
+it is already public. Anyone can read the issue and the bounty branch. Nobody
+is known to be watching these issues yet; the wait is unknown and there is no
+reward. Private repositories and unreadable visibility are refused with no
+override. A local folder remains available on every repository.
+
 ```
 node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>" \
     [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] \
@@ -8,9 +14,9 @@ node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty remind [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
-node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty answer <id> --from <dir> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--preview] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
 node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
@@ -22,11 +28,83 @@ node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
 Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
 anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
 bounty's record; nothing else leaves the machine until `confirm` + `post` —
-and `post` only ever copies to a local folder you name. Every outcome is a
+and `post` copies to a local folder you name or publishes the confirmed GitHub
+listing and shipped source. Every outcome is a
 named state: success ends `stage 1 of 7: drafted`; refusals print
 `refused (<name>)` and exit 3; usage errors exit 2; operational failures
 exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
+
+## Post and collect on GitHub
+
+The tool uses Git and `gh` already signed in on the machine. Sign in through
+those programs, outside the tool. It never asks for, reads, stores or prints a
+token. `origin` must have one fetch destination and one push destination, both
+naming the same GitHub repository. Before any push, the tool reads that exact
+repository's visibility and refuses private or unreadable visibility.
+
+For a prepared bounty, show the exact listing before the owner approves it:
+
+```
+node packages/box-cli/dist/cli.js bounty confirm <id> --to github --preview
+```
+
+This changes nothing. It shows the repository, its public visibility, the exact
+issue title and body, and `box-bounty/<id>` as the branch. Once the owner approves
+that text, the owner's `.box/limits.json` must include `"github"` in
+`"allowedDestinations"`. An absent list permits local folders only. Then run:
+
+```
+node packages/box-cli/dist/cli.js bounty confirm <id> --to github
+node packages/box-cli/dist/cli.js bounty post <id> --to github
+```
+
+Confirmation records the listing and repository. Posting checks visibility
+again. The pushed branch has exactly the manifest's shipped files and one
+commit with no parent, so the owner's Git history and excluded files never
+leave. The issue names the task, the hand-off note, check and level, omissions,
+branch and answer instructions. The issue address, number and branch are kept
+in the local record and shown by `status` and the open-bounties line.
+
+The solver clones that branch alone, works at its root and opens a pull request
+against it in the same repository. Collect from the project's record:
+
+```
+node packages/box-cli/dist/cli.js bounty answer <id>
+node packages/box-cli/dist/cli.js bounty answer <id> --pr <number>
+```
+
+The first command lists open pull request numbers, authors and changed files.
+`status` also reads the current issue state and open pull requests, so a later
+session learns about a new answer from the record alone. It saves the observed
+outside state and its time; the open-bounties line carries those answer facts.
+If GitHub cannot be reached, `github-status-unavailable` names that outcome,
+shows the last recorded outside state and when, and names `status` as the retry.
+The second fetches the selected pull request without changing the working tree,
+index or current branch. Its target must be the recorded bounty branch. The
+existing answer boundary refuses never-ship additions and unsafe paths, extracts
+the change and records a numbered attempt and a facts report.
+
+**A stranger's code is never run on this host.** If the pull request's author is
+different from the account signed in to `gh`, no setup, check or guard executes.
+The report still names the change, flags and dry merge. The recorded outcome is
+`check-not-run`, with the reason `foreign-author`. It cannot be applied, even by
+naming the attempt explicitly. A contained run is needed and is a later wave;
+there is no execution override. A pull request made by the signed-in account
+uses the existing declared-check path. This proves that account's path, not
+that a stranger has answered.
+
+`apply`, `reject` and `withdraw` comment the recorded fact on the issue, close it
+and remove the bounty branch. `undo` comments the reversal. If an outside step
+fails, the local decision stands and the record names `github-decision-pending`
+and the command to retry. That retry resumes outside work without repeating the
+local merge or undo. `status` shows pending work even after a bounty has ended.
+
+If a push succeeds but the issue cannot be opened, the refusal is
+`github-post-incomplete`. The record states the known outside state. Repeat
+`post <id> --to github` to finish; it recovers an issue whose response was lost
+and never creates a second listing. To remove a partial post instead, run
+`withdraw <id>`. Nothing here sends money or posts to a bounty site.
 
 `create` asks only for judgement — a task and one line of why; everything
 mechanical has a default:
@@ -105,8 +183,9 @@ Written once by the owner, read at the boundary (`.box` never ships):
   that resolves outside is refused (`rules-file-outside-repo`).
 - `cost` / `expectedAnswer` — one free-text line each, shown by `describe` so
   an agent can weigh handing off against doing the work.
-- `allowedDestinations` — optional list of directories (repo-relative or
-  absolute) that `post --to` must land inside; absent means any local folder,
+- `allowedDestinations` — optional list of local directories (repo-relative or
+  absolute) that `post --to` must land inside, plus the literal `"github"` for
+  GitHub posting; absent means any local folder and no GitHub posting,
   as before. Enforced on the canonical destination — a junction trick cannot
   slip past — and the refusal is named `destination-not-allowed`. An empty
   list means no destination is allowed.

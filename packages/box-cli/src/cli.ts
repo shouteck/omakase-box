@@ -53,9 +53,9 @@ function usage(message?: string): never {
   console.error('       box bounty describe [--rules] [--repo <path>]');
   console.error('       box bounty remind [--repo <path>]');
   console.error('       box bounty status [--repo <path>]');
-  console.error('       box bounty confirm <id> [--repo <path>]');
-  console.error('       box bounty post <id> --to <dir> [--repo <path>]');
-  console.error('       box bounty answer <id> --from <dir> [--repo <path>]');
+  console.error('       box bounty confirm <id> [--to github] [--preview] [--repo <path>]');
+  console.error('       box bounty post <id> --to <dir|github> [--repo <path>]');
+  console.error('       box bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]');
   console.error('       box bounty apply <id> [<attempt>] [--repo <path>]');
   console.error('       box bounty undo <id> [--repo <path>]');
   console.error('       box bounty reject <id> --reason "<text>" [--repo <path>]');
@@ -234,12 +234,12 @@ if (command === 'export') {
       const repoRoot = resolveRepoRoot(bountyRepo(), 'confirm');
       const toIndex = bountyArgs.indexOf('--to');
       const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
-      if (to !== undefined && to !== 'github') usage('box bounty confirm <id> [--to github] [--preview]');
-      if (to === 'github') console.log(previewGitHub(repoRoot, id));
-      if (bountyArgs.includes('--preview')) process.exit(0);
+      if (toIndex >= 0 && to !== 'github' || bountyArgs.includes('--preview') && to !== 'github') usage('box bounty confirm <id> [--to github] [--preview]');
+      if (bountyArgs.includes('--preview')) { if (to === 'github') console.log(previewGitHub(repoRoot, id)); process.exit(0); }
       const record = confirmBounty(repoRoot, id, to);
+      if (record.githubApproval !== undefined) console.log(record.githubApproval.preview);
       console.log(`${record.id} — stage 2 of 7: confirmed — the owner's yes is recorded in ${recordPath(repoRoot, record.id)}`);
-      console.log(`next: deliver it — run box bounty post ${record.id} --to <dir>`);
+      console.log(`next: deliver it — run box bounty post ${record.id} --to ${to === 'github' ? 'github' : '<dir>'}`);
     } else if (subcommand === 'post') {
       const toIndex = bountyArgs.indexOf('--to');
       const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
@@ -247,7 +247,7 @@ if (command === 'export') {
       if (id === undefined || extraIds.length > 0 || to === undefined) usage('box bounty post <id> --to <dir> [--repo <path>]');
       const { record, destination } = postBounty(resolveRepoRoot(bountyRepo(), 'post'), id, to);
       console.log(`${record.id} — stage 3 of 7: posted — delivered to ${destination}`);
-      console.log(`next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty answer ${record.id} --from <dir>`);
+      console.log(record.github !== undefined ? `next: box bounty status reads open pull requests; box bounty answer ${record.id} --pr <number> collects one` : `next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty answer ${record.id} --from <dir>`);
     } else if (subcommand === 'answer') {
       const fromIndex = bountyArgs.indexOf('--from');
       const from = fromIndex >= 0 ? bountyArgs[fromIndex + 1] : undefined;
@@ -275,6 +275,7 @@ if (command === 'export') {
       const attempt = attemptText !== undefined && /^\d+$/.test(attemptText) ? Number.parseInt(attemptText, 10) : undefined;
       if (id === undefined || extraIds.length > 0 || (attemptText !== undefined && attempt === undefined)) usage('box bounty apply <id> [<attempt>] [--repo <path>]');
       const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, attempt);
+      if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
       if (result.outcome === 'applied') {
         console.log(`${result.record.id} — stage 7 of 7: applied — attempt ${result.attempt} merged as ${result.mergeCommit}, which is on this branch and names the bounty`);
         console.log(`ended — ${jobLine(result.record)}; the durability refs are removed. To reverse it: box bounty undo ${result.record.id}`);
@@ -287,6 +288,7 @@ if (command === 'export') {
       const [id, ...extraIds] = bountyIds();
       if (id === undefined || extraIds.length > 0) usage('box bounty undo <id> [--repo <path>]');
       const result = undoBounty(resolveRepoRoot(bountyRepo(), 'undo'), id);
+      if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
       console.log(`${result.record.id} — undone — commit ${result.undoCommit} on this branch reverses merge ${result.reverted}`);
       console.log(`ended — ${jobLine(result.record)}; the record keeps both events`);
     } else if (subcommand === 'reject') {
@@ -296,12 +298,14 @@ if (command === 'export') {
       if (id === undefined || extraIds.length > 0 || reason === undefined) usage('box bounty reject <id> --reason "<text>" [--repo <path>]');
       const repoRoot = resolveRepoRoot(bountyRepo(), 'reject');
       const record = rejectBounty(repoRoot, id, reason);
+      if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
       console.log(`${record.id} — rejected — the reason is recorded in ${recordPath(repoRoot, record.id)}`);
       console.log(`ended — ${jobLine(record)}; the durability ref is removed`);
     } else if (subcommand === 'withdraw') {
       const [id, ...extraIds] = bountyIds();
       if (id === undefined || extraIds.length > 0) usage('box bounty withdraw <id> [--repo <path>]');
       const { record, outcome } = withdrawBounty(resolveRepoRoot(bountyRepo(), 'withdraw'), id);
+      if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
       if (outcome === 'already-withdrawn') {
         console.log(`${record.id} — already withdrawn — nothing to do`);
         console.log(`ended — ${jobLine(record)}`);

@@ -17,7 +17,7 @@
 export const DESCRIBE_LINES: readonly string[] = [
   'box bounty hands a piece of work to an outside solver: this repository minus',
   'never-ship files, the task, what you tried and the check that decides —',
-  'posted where it will get solved; the project keeps the record; the answer',
+  'posted so an outside solver can see it; the project keeps the record; the answer',
   'comes back checked, as facts you judge.',
   'GitHub posting is public and free, only to this project\'s already-public',
   'repository. Nobody is known to be watching these issues yet. A local folder',

@@ -19,7 +19,7 @@ import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
-import { postGitHub, approveGitHub, syncGitHubDecision } from './github.js';
+import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision } from './github.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
@@ -256,8 +256,8 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
   verified: 'the check exits 0 on it',
   answered: 'a person reads it — no check was run',
   'check-failed': 'the check exits nonzero on it',
-  'check-unrunnable': 'the check could not run'
-  , 'check-not-run': 'the check was not run because the author is outside this account'
+  'check-unrunnable': 'the check could not run',
+  'check-not-run': 'the check was not run because the author is outside this account'
 };
 
 const nextStep = (record: BountyRecord): string => {
@@ -296,6 +296,9 @@ const nextStep = (record: BountyRecord): string => {
 // empty project says so and says what to do. Never prints nothing.
 export function renderStatus(repoRoot: string): string {
   const listed = listRecords(repoRoot);
+  for (const entry of listed) {
+    if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
+  }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
   const corrupt = listed.filter(entry => entry.record === null);
@@ -309,6 +312,12 @@ export function renderStatus(repoRoot: string): string {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
       if (record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
+      if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) lines.push(`      github-status-unavailable: could not refresh at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}; retry box bounty status`);
+      if (record.github?.outside !== undefined) {
+        lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
+        for (const line of record.github.outside.answers.split('\n')) lines.push(`      ${line}`);
+        lines.push(`      collect: box bounty answer ${record.id} --pr <number>`);
+      }
       const attempts = attemptsOf(record);
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
@@ -344,6 +353,9 @@ export function renderStatus(repoRoot: string): string {
     if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}`;
   }).join(', ')}`);
+  for (const entry of ended) {
+    if (entry.record?.github?.pending !== null && entry.record?.github?.pending !== undefined) lines.push(`  ${entry.record.id}: ${entry.record.github.pending}`);
+  }
   for (const entry of corrupt) lines.push(`  ! ${entry.file} — not a readable record`);
   return lines.join('\n');
 }
@@ -367,7 +379,7 @@ export function renderHelp(): string {
     '  undo      reverse an applied merge as a new commit → undone',
     '  reject    end it with --reason "<why>" kept on the record → rejected',
     '  withdraw  end any open stage → withdrawn',
-    '  status    every open bounty with its attempts and the exact next step (changes nothing)',
+    '  status    every open bounty, attempts and next step; GitHub outside state is refreshed and remembered',
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  remind    one line a harness can surface at a moment of difficulty — off unless .box/limits.json sets "reminders": "on"',
     '  help      this screen',
@@ -475,7 +487,7 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
 export function renderOpenLine(repoRoot: string): string {
   const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   if (open.length === 0) return 'open bounties: none';
-  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})${entry.record!.github !== undefined ? ` ${entry.record!.github!.issue?.url ?? 'github issue pending'} ${entry.record!.github!.branch}` : ''}`).join(', ')}`;
+  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})${entry.record!.github !== undefined ? ` ${entry.record!.github!.issue?.url ?? 'github issue pending'} ${entry.record!.github!.branch}${entry.record!.github!.outside !== undefined ? `; ${entry.record!.github!.outside!.answers.replaceAll('\n', ' ')}` : ''}` : ''}`).join(', ')}`;
 }
 
 // The maintained-block writer, deliberately boring: find the markers, replace
