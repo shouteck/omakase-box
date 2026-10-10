@@ -54,14 +54,20 @@ Read "The product in one line", "The journey of one bounty" and "What is settled
 
 ## Result
 
-<One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
-
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
+- Worker: box-cook · Reviewer: the pass (fresh agent; host: Windows, Git Bash + PowerShell; model: Claude/Anthropic)
+- Commit: `e473b07910c955c09962574af08c49240838060e` (re-review; first pass on `24a2822` returned FAIL, all blockers fixed and re-probed)
+- Verify: `verify e473b07 PASS check=0 build=0 test:box-bounty=0 db=embedded 109s` — recorded run `2026-10-10T01-27-22-413Z-e473b07` (clean tree, all steps 0, 39 tests); plus my own scoped `suite.mjs box --suite bounty` earlier: green, and an 11-test scratch probe file run scoped against the new code (then removed)
+- Verdict: **PASS** · Level: ui-verified (built CLI driven end-to-end again this round in Git Bash — unicode filename ships, secrets removed — plus in-process hostile probes)
 - Lenses:
-- Method:
-- Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - **Security:** every round-1 break re-attacked and now holds — `.boxignore` folds both ways (`SecretDir/` and `*.KEY2` remove their targets), `prod.env`/`id_rsa_backup`/`.yarnrc`/`*.cert/.p7b/.asc`/`secrets-backup/`/`mysecrets/` all removed, `--task .env` and a `--note` reached through a junction into an outside `secrets/` dir both refuse `never-ship-input`, and bytes swapped or junction-swapped after planning ship the *recorded* bytes (cat-file emission). Still shipping by design/owner-list catch-all: `.kube/config`, `credentials.json`, `wp-config.php`, `id_x25519`, `backup_id_rsa`, `.env2`, `env.local`.
+  - **User experience:** unchanged in shape — still one command, complete preview, named states; doc now covers the build step, a PowerShell recreate recipe, the `--out`-outside rule and the `.git/objects` retention note. A stranger handed the folder can still say what is wanted and that `check` exiting 0 means done.
+- Method: diffed `24a2822..e473b07` line by line (all claimed fixes present; nothing outside the same allowed paths slipped in); re-ran the round-1 attack set as a scoped scratch probe file plus new attacks on the new paths (secrets-substring over-block, junction-spelled `--out`, untracked-target-via-junction TOCTOU residual, clean-filter divergence, BOM in `.boxignore`); smoke-ran the built CLI on a repo with a unicode filename and fake secrets.
+- Findings and limits (all non-blocking; none leaks — over-removal or narrow windows only):
+  - **`secrets` substring matches basenames too:** `docs/secrets.md`, `SECRETS.md`, `docs/no-secrets-here.txt` are all removed (proved). Safe direction and preview-visible, but owner patterns can't re-include, so a legit doc named `*secrets*` is unshippable — consider limiting the substring match to directory segments.
+  - **TOCTOU residual:** an *untracked* file reachable only through a junction spelling (canonical path absent from the tree) still emits live bytes — proved `SWAPPED-AFTER-PLAN` ships under `hidden/f.txt`. Narrow: needs a gitignored target reached only via link plus a mid-run mutation.
+  - **`--out` junction residual:** `--out` is `resolve()`d, not realpath'd — a junction spelling outside the repo pointing inside it bypasses `out-inside-repo` and the bounty lands inside the checkout (proved).
+  - **Clean filters:** `repo/` now ships blob bytes — with a configured `filter.*.clean` (proved with `tr a-z A-Z`) shipped bytes differ from the worktree; git-lfs repos would ship pointer stubs. Consistent with the recorded identifier; worth a documented limit.
+  - **Doc-relevant limits:** `.boxignore` has no `[...]` classes (documented); a BOM before a pattern is fine (`trim()` eats it — probed); `ls-tree` listing call has no `maxBuffer` bump (1 MB default → loud ENOBUFS on ~20k+ file repos, no silent truncation); `.env.example`-style files stay excluded; no content scanning (documented).
+  - **Fixed and verified closed:** non-ASCII names (quotepath), `.boxignore` case-fold, wider spellings, `--task`/`--note` never-ship guard incl. junction target, emit-from-tree TOCTOU, autocrlf divergence, `out-inside-repo`, dangling-link `unreadable-path`, four named-state tests, README blank line, doc build step + PowerShell recipe + retention note.
+- Merged: awaiting merge decision by head chef. · Resources removed: scratch probe file deleted; all `%TEMP%\box-bt1-pass-*` dirs removed; suite-owned `box-bt1-*` dirs self-clean per test run.
+- Reflect: the fix round was clean — each claim verified, and the residual attacks are all narrower than what they replaced. Round 1 FAIL was the right call; this round passes.
