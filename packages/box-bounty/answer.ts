@@ -232,13 +232,20 @@ const covers = (dirty: string, touched: ReadonlySet<string>): boolean => {
 // byte-identical regardless of the host's eol filters. git's own `merge
 // --abort` restores index and merge state; it does not promise the worktree
 // bytes (a refused merge can smudge files through core.autocrlf mid-attempt),
-// which is why the bytes are saved here. null means the path did not exist
-// before the merge — it is removed on restore.
+// which is why the bytes are saved here.
+//
+// Only FILES are bytes: a `??` porcelain entry can be a directory (`.box/` in
+// the default state where no record has ever been committed) — git's --abort
+// does not remove untracked directories and the merge cannot smudge one, so
+// it is skipped here, not saved as "absent" (restoring that would try to
+// delete a live directory). null means the path was not a file before the
+// merge — anything the merge left there is removed on restore.
 function snapshotBytes(repoRoot: string, paths: ReadonlySet<string>): Map<string, Buffer | null> {
   const saved = new Map<string, Buffer | null>();
   for (const path of paths) {
     const target = join(repoRoot, ...path.split('/'));
     const stat = statSync(target, { throwIfNoEntry: false });
+    if (stat?.isDirectory()) continue;
     saved.set(path, stat?.isFile() === true ? readFileSync(target) : null);
   }
   return saved;
@@ -247,7 +254,7 @@ function snapshotBytes(repoRoot: string, paths: ReadonlySet<string>): Map<string
 function restoreBytes(repoRoot: string, saved: ReadonlyMap<string, Buffer | null>): void {
   for (const [path, bytes] of saved) {
     const target = join(repoRoot, ...path.split('/'));
-    if (bytes === null) rmSync(target, { force: true });
+    if (bytes === null) rmSync(target, { force: true, recursive: true }); // the merge may have created a directory tree here
     else { mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes); }
   }
 }

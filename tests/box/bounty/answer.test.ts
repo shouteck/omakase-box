@@ -144,6 +144,41 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     expect(readRecord(repo, id).stage).toBe('rejected');
     expect(refGone(repo, id)).toBe(true);
   });
+
+  it('a conflict aborts clean with .box/ untracked — the default state — and the conflict survives on the record', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const { id, delivered } = posted(repo, { check: FIX_CHECK });
+    // The repository moved on — commit only the conflicting file. `.box/` and
+    // TASK.md stay untracked, exactly as they are on a real checkout; an
+    // `git add -A` here would track the records and hide the untracked-dir
+    // porcelain entry from the boundary the bug lived in.
+    write(repo, 'src/app.py', 'moved on\n');
+    git(repo, ['add', 'src/app.py']);
+    git(repo, ['-c', 'user.name=bt3', '-c', 'user.email=bt3@test.invalid', 'commit', '-qm', 'moved on']);
+    expect(git(repo, ['status', '--porcelain'])).toContain('.box/');
+    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
+
+    const result = answerBounty(repo, id, dir);
+    expect(result.outcome).toBe('conflict'); // the untracked .box/ dir must not crash the abort
+    expect(result.conflicts).toEqual(['src/app.py']);
+    const record = readRecord(repo, id);
+    expect(record.stage).toBe('verified');
+    expect(record.conflicts?.paths).toEqual(['src/app.py']);
+    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('moved on\n'); // byte-identical
+    expect(git(repo, ['status', '--porcelain'])).toContain('.box/'); // and .box/ itself is still there
+
+    const status = renderStatus(resolveRepoRoot(repo));
+    expect(status).toContain('src/app.py');
+    expect(status).toContain(`box bounty apply ${id}`);
+
+    // Retry still conflicts; after the owner resolves the file by hand it lands.
+    expect(applyBounty(repo, id).outcome).toBe('conflict');
+    write(repo, 'src/app.py', 'fixed\n');
+    git(repo, ['add', 'src/app.py']);
+    git(repo, ['-c', 'user.name=bt3', '-c', 'user.email=bt3@test.invalid', 'commit', '-qm', 'resolved by hand']);
+    expect(applyBounty(repo, id).outcome).toBe('applied');
+    expect(readRecord(repo, id).stage).toBe('applied');
+  });
 });
 
 describe('answer — a reviewed bounty waits on a person', () => {
