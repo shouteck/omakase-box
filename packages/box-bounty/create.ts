@@ -36,6 +36,10 @@ export interface CreateOptions {
   readonly jobPath?: string;
   readonly setup?: readonly string[];
   readonly check?: readonly string[];
+  /** `--guard -- <command>`: a command that must keep passing — `create` runs
+      it on the shipped set and refuses if it does not pass today; `answer`
+      runs it after the check and reports the result as a fact. */
+  readonly guard?: readonly string[];
   readonly outDir: string;
 }
 
@@ -50,6 +54,7 @@ export interface BountyPlan {
   readonly job: { readonly file: string; readonly text: string } | null;
   readonly setup: readonly string[] | null;
   readonly check: readonly string[] | null;
+  readonly guard: readonly string[] | null;
   readonly level: 'mechanical' | 'reviewed';
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   /** Canonical paths that exist as blobs in the snapshot tree — their emitted
@@ -146,6 +151,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     job,
     setup: options.setup !== undefined && options.setup.length > 0 ? [...options.setup] : null,
     check: options.check !== undefined && options.check.length > 0 ? [...options.check] : null,
+    guard: options.guard !== undefined && options.guard.length > 0 ? [...options.guard] : null,
     level: options.check !== undefined && options.check.length > 0 ? 'mechanical' : 'reviewed',
     snapshot: { commit: snapshot.commit, tree: snapshot.tree, baseCommit: snapshot.baseCommit },
     snapshotBlobs: snapshot.blobs,
@@ -166,10 +172,13 @@ function runOne(argv: readonly string[], name: string, root: string): CheckRecor
 
 const runRecord = (record: CheckRecord, argv: readonly string[]) => ({ argv: [...argv], exit: record.exit, result: record.result, tail: tail(record.log) });
 
-// Runs setup then the check on a clean copy of the finished snapshot outside the
-// checkout, exactly as a solver would. The staged folder itself stays pristine.
+// Runs setup, the check and the guard on a clean copy of the finished snapshot
+// outside the checkout, exactly as a solver would. The staged folder itself
+// stays pristine. The check must FAIL today — that is what makes the bounty
+// mechanical — while the guard must PASS: it declares what must keep passing,
+// so a guard red today is its own named refusal, never the check's.
 function proveCheckFails(plan: BountyPlan, snapshotDir: string): BountyManifest['verification'] {
-  if (plan.check === null) return null;
+  if (plan.check === null && plan.guard === null) return null;
   const runRoot = mkdtempSync(join(tmpdir(), 'box-bt1-check-'));
   try {
     const work = join(runRoot, 'repo');
@@ -185,14 +194,31 @@ function proveCheckFails(plan: BountyPlan, snapshotDir: string): BountyManifest[
         throw new BountyRefused('setup-failed', `setup step '${describeCommand(plan.setup)}' exited ${record.exit}: ${tail(record.log)}`);
       }
     }
-    const check = runOne(plan.check, 'check', work);
-    if (check.result === 'error' || check.result === 'timeout') {
-      throw new BountyRefused('check-unrunnable', `check '${describeCommand(plan.check)}' cannot run here: ${tail(check.log)} — name a program that exists on PATH or inside the repository`);
+    let checkRun: CheckRecord | null = null;
+    if (plan.check !== null) {
+      checkRun = runOne(plan.check, 'check', work);
+      if (checkRun.result === 'error' || checkRun.result === 'timeout') {
+        throw new BountyRefused('check-unrunnable', `check '${describeCommand(plan.check)}' cannot run here: ${tail(checkRun.log)} — name a program that exists on PATH or inside the repository`);
+      }
+      if (checkRun.result === 'pass') {
+        throw new BountyRefused('check-already-passes', `check '${describeCommand(plan.check)}' exits 0 in the snapshot today — there is nothing to solve`);
+      }
     }
-    if (check.result === 'pass') {
-      throw new BountyRefused('check-already-passes', `check '${describeCommand(plan.check)}' exits 0 in the snapshot today — there is nothing to solve`);
+    let guardRun: CheckRecord | null = null;
+    if (plan.guard !== null) {
+      guardRun = runOne(plan.guard, 'guard', work);
+      if (guardRun.result === 'error' || guardRun.result === 'timeout') {
+        throw new BountyRefused('guard-unrunnable', `guard '${describeCommand(plan.guard)}' cannot run here: ${tail(guardRun.log)} — name a program that exists on PATH or inside the repository`);
+      }
+      if (guardRun.result !== 'pass') {
+        throw new BountyRefused('guard-failed', `guard '${describeCommand(plan.guard)}' exits ${guardRun.exit} on the shipped set today — a guard declares what must keep passing, so it must pass before the bounty exists`);
+      }
     }
-    return { setup: setupRuns.map(run => runRecord(run.record, run.argv)), check: runRecord(check, plan.check) };
+    return {
+      setup: setupRuns.map(run => runRecord(run.record, run.argv)),
+      check: checkRun !== null && plan.check !== null ? runRecord(checkRun, plan.check) : null,
+      guard: guardRun !== null && plan.guard !== null ? runRecord(guardRun, plan.guard) : null
+    };
   } finally {
     rmSync(runRoot, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
   }
@@ -228,7 +254,7 @@ export function renderListing(manifest: BountyManifest, note: { file: string; te
   lines.push('');
   lines.push('## How you know you are done');
   lines.push('');
-  if (manifest.check !== null && manifest.verification !== null) {
+  if (manifest.check !== null && manifest.verification !== null && manifest.verification.check !== null) {
     lines.push(`    ${describeCommand(manifest.check.argv)}`);
     lines.push('');
     lines.push(`Run it inside \`repo/\`. Today it exits ${manifest.verification.check.exit}; your answer`);
@@ -236,6 +262,12 @@ export function renderListing(manifest: BountyManifest, note: { file: string; te
   } else {
     lines.push('No automated check decides this bounty: a person will read your answer.');
     lines.push('Keep every existing test passing and the change small and readable.');
+  }
+  if (manifest.guard !== null && manifest.guard !== undefined) {
+    lines.push('');
+    lines.push('The owner also asked that this keeps passing in your answer:');
+    lines.push('');
+    lines.push(`    ${describeCommand(manifest.guard.argv)}`);
   }
   lines.push('');
   lines.push('## What was kept out');
@@ -275,6 +307,7 @@ export function renderPreview(plan: BountyPlan): string {
   if (plan.job !== null) lines.push(`  job: ${plan.job.file} (record only — never shipped)`);
   lines.push(`  setup: ${plan.setup !== null ? describeCommand(plan.setup) : 'none'}`);
   lines.push(`  check: ${plan.check !== null ? describeCommand(plan.check) : 'none'}`);
+  lines.push(`  guard: ${plan.guard !== null ? describeCommand(plan.guard) : 'none'}`);
   lines.push(`  level: ${plan.level}${plan.level === 'mechanical' ? ' (the declared check must fail today — it will be run to prove it)' : ' (no check — a person reads the answer)'}`);
   lines.push(`  out: ${plan.outDir}`);
   return lines.join('\n');
@@ -330,6 +363,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       note: plan.note,
       setup: plan.setup !== null ? { argv: [...plan.setup] } : null,
       check: plan.check !== null ? { argv: [...plan.check] } : null,
+      guard: plan.guard !== null ? { argv: [...plan.guard] } : null,
       level: plan.level,
       snapshot: plan.snapshot,
       files,

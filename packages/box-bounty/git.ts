@@ -63,6 +63,54 @@ export function gitWriteBlob(repo: string, bytes: Buffer): string {
   return result.stdout.toString().trim();
 }
 
+// A three-way merge computed in the object store alone: `merge-tree --write-tree`
+// writes the merged tree object but never touches the worktree, the index or
+// HEAD. With `-z --name-only` the stdout is the tree oid, the conflicted paths
+// (ending at an empty field) and the message section — exit 1 means conflicts.
+export type DryMerge =
+  | { readonly kind: 'clean' }
+  | { readonly kind: 'conflict'; readonly paths: readonly string[] }
+  | { readonly kind: 'untestable'; readonly detail: string };
+
+export function mergeTree(repo: string, base: string, ours: string, theirs: string): DryMerge {
+  const run = gitOutcome(repo, ['merge-tree', '--write-tree', '-z', '--name-only', `--merge-base=${base}`, ours, theirs]);
+  const oid = (run.stdout.split('\0')[0] ?? '').trim();
+  if (!/^[0-9a-f]{40}$/.test(oid)) {
+    return { kind: 'untestable', detail: `git merge-tree could not merge (exit ${run.status}): ${(run.stderr || run.stdout || run.error?.message || '').trim()}` };
+  }
+  if (run.status === 0) return { kind: 'clean' };
+  const paths: string[] = [];
+  for (const token of run.stdout.split('\0').slice(1)) {
+    if (token === '') break; // the conflicted-file section ends at the empty field
+    paths.push(token);
+  }
+  return { kind: 'conflict', paths: paths.sort() };
+}
+
+// The merge-base of two commits; null when they share no history or either name
+// cannot be resolved.
+export function mergeBase(repo: string, a: string, b: string): string | null {
+  const run = gitOutcome(repo, ['merge-base', a, b]);
+  const first = (run.stdout.split('\n')[0] ?? '').trim();
+  return run.status === 0 && /^[0-9a-f]{40}$/.test(first) ? first : null;
+}
+
+// Would `theirs` merge cleanly onto the current branch as it stands? The same
+// merge-base `git merge` would compute — the dry read mirrors the real merge.
+export function dryMergeOnto(repo: string, theirs: string): DryMerge {
+  if (gitOutcome(repo, ['rev-parse', '--verify', '-q', 'HEAD']).status !== 0) {
+    return { kind: 'untestable', detail: 'the branch has no commits yet' };
+  }
+  if (gitOutcome(repo, ['cat-file', '-e', theirs]).status !== 0) {
+    return { kind: 'untestable', detail: `commit ${theirs} is not in the object store` };
+  }
+  const base = mergeBase(repo, 'HEAD', theirs);
+  if (base === null) {
+    return { kind: 'untestable', detail: 'the answer shares no history with the current branch — git merge would refuse unrelated histories' };
+  }
+  return mergeTree(repo, base, 'HEAD', theirs);
+}
+
 // Raw blob bytes for a path inside the snapshot commit. cat-file reads the object
 // directly: no eol, attribute or filter transforms ever apply, so the bytes are
 // exactly what the identifier records. Returns null when the path is not a blob

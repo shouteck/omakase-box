@@ -3,14 +3,15 @@
 ```
 node packages/box-cli/dist/cli.js bounty create --title "<one line>" --task <file> \
     [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] \
-    --out <dir> [--repo <path>] [--preview]
+    [--guard -- <command>] --out <dir> [--repo <path>] [--preview]
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
 node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty answer <id> --from <dir> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty apply <id> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
 node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
 ```
 
 (If `dist/cli.js` is missing, build first with `node scripts/workspace.mjs build`.)
@@ -35,8 +36,18 @@ history — one event appended per transition, never rewritten:
 
 ```
 drafted → confirmed → posted → taken → answered → verified → applied
-                (ended early: rejected, withdrawn, expired)
+                (ended early: rejected, withdrawn, expired;
+                 an applied merge can be reversed by undo → undone)
 ```
+
+`verified` is a waiting stage, not an ending: a mechanical answer that passes
+its check stops there and nothing is merged until `apply` runs. A failing
+answer does not end the bounty either — it is kept as a numbered **attempt**
+and the record returns to `posted`, so another answer can come back. Every
+answer is kept: `record.attempts[]` holds each one's commit, change, outcome,
+conflict paths and report; `status` lists them, passing first. Records written
+before attempts existed — a single `answer` on the record — load as attempt
+number 1 and still apply.
 
 A later agent in a later session reads the record — not your conversation — to
 pick the bounty up. An optional `--job <file>` on `create` records the larger
@@ -46,10 +57,10 @@ once the bounty ends (`applied`/`rejected`).
 
 `create` also keeps a Git ref `refs/box-bounty/<id>` pointing at
 `snapshot.commit`, so `git gc --prune=now` cannot take the bytes the identifier
-names. When an answer lands, a second ref `refs/box-bounty/<id>-answer` pins
-the answer commit — the answer is parented on the snapshot's *base* commit, so
-it cannot keep the snapshot alive and both refs exist while the bounty is
-open. Every ended stage — `applied`, `rejected`, `withdrawn` — removes both.
+names. Each answer lands as `refs/box-bounty/<id>-answer-<n>` — the answer is
+parented on the snapshot's *base* commit, so it cannot keep the snapshot alive
+and all refs exist while the bounty is open. Every ended stage — `applied`,
+`rejected`, `withdrawn`, `undone` — removes them all.
 
 ## The commands after create
 
@@ -68,15 +79,18 @@ open. Every ended stage — `applied`, `rejected`, `withdrawn` — removes both.
   the destination recorded.
 - **`answer <id> --from <dir>`** takes the returned bounty folder — see *The
   answer comes back* below.
-- **`apply <id>`** merges a recorded answer onto the current code — for a
-  `reviewed` bounty at `answered`, and to retry after a merge conflict. On any
-  other stage it is a named refusal (`wrong-stage`, `already-ended`).
+- **`apply <id> [<attempt>]`** merges a recorded attempt onto the current
+  code. With one applicable attempt no number is needed; with more than one,
+  `apply` refuses by name (`apply-ambiguous`) and prints the attempt numbers —
+  pass one as `<attempt>` (`unknown-attempt` otherwise). On any other stage it
+  is a named refusal (`wrong-stage`, `already-ended`).
 - **`reject <id> --reason "<text>"`** ends a `posted`/`taken`/`answered`/
   `verified` bounty with the reason kept on the record — earlier stages end
   through `withdraw` instead (`wrong-stage`).
 - **`withdraw <id>`** ends any open stage → `withdrawn`, removes the durability
-  ref, and is safe to repeat: an already-withdrawn bounty is a named state, not
+  refs, and is safe to repeat: an already-withdrawn bounty is a named state, not
   an error. An unknown id is `unknown-bounty` everywhere.
+- **`undo <id>`** reverses an applied merge — see *Undo an apply* below.
 
 ## The answer comes back
 
@@ -107,29 +121,73 @@ list, emitted as recorded blob bytes from `refs/box-bounty/<id>` — is recreate
 in a clean directory (a pruned ref is `snapshot-lost`), the change applied,
 and the declared setup+check run exactly as `create` ran them on the folder it
 shipped. Never-ship files and `.box` records inside the snapshot commit never
-materialise for the check — the solver is judged on what they were given. Pass
-→ `verified`, then `apply` runs automatically. A check that ran and failed ends
-the bounty `rejected` with `implementation-failure`, the exit and the output
-tail recorded; a setup or check that cannot run is `environment-failure` — a
-different state, same ending.
+materialise for the check — the solver is judged on what they were given. The
+check is then re-run on the *untouched* shipped set too: if it passes there, a
+pass on the answer proves nothing, and the report flags it. When `--guard` was
+declared it runs once more, after the check, on the answered set.
 
 For a **`reviewed`** bounty there is no check to run: the answer lands at
-`answered` and the next step names `box bounty apply <id>` or
+`answered` and the report's next step names `box bounty apply <id>` or
 `box bounty reject <id> --reason` — nothing claims a verification that did not
 happen.
+
+**`answer` reports facts, never a verdict.** A wrong fact is a bug we can
+find; a wrong verdict misleads and cannot be traced — so the report is policed:
+no "correct", "safe", "good", "recommended", "should accept" or
+"should reject", in any outcome, and a test keeps it that way. Whatever the
+check did, the report states only what was observed:
+
+- `check:` — the declared command, its exit at `create` (it failed then — that
+  is why the bounty exists) and its exit on the answer, with an output tail
+  when there is any;
+- `guard:` — the declared guard's exit on the answer, or `none declared`;
+- `change:` — changed/added/deleted path counts and lines added/removed;
+- `current code:` — a dry merge read (`git merge-tree --write-tree`) of the
+  answer against the current branch, with the conflict paths when it would not
+  land — the worktree, index and `HEAD` never move for the read;
+- `flag:` lines — eager observations, never blocks: the answer edits a file the
+  check command's own text names or one the stated rule marks as a test; files
+  were added or deleted; the change is above the stated size; or the check
+  passes on the untouched snapshot;
+- `not checked:` — one always-present sentence saying the report is exits and a
+  merge read only, not a verdict on behaviour the commands do not cover;
+- `next:` — the exact next command.
+
+A pass on the answer lands the bounty at `verified` and **stops** — nothing is
+merged; `box bounty apply <id>` is the recorded decision. (The owner's limits,
+a later wave, may switch an automatic apply back on for clean mechanical
+passes.) A failing or
+unrunnable check is recorded on the attempt (`implementation-failure` or
+`environment-failure`, with exit and tail) and the bounty returns to `posted`,
+still open — more answers are attempts 2, 3, … and `status` lists them,
+applicable ones first. When several attempts could apply, `apply` names them
+(`apply-ambiguous`) and `apply <id> <n>` picks one.
 
 **Applying is a real git merge, never a file write.** The change becomes a
 commit on the snapshot's base commit — the base tree plus the extracted delta
 (built on a temporary index — the worktree and real index are never touched),
 so the incoming side of the merge is the solver's change alone — and
 `git merge` brings it onto the current branch as a merge commit whose message
-names the bounty. A conflict aborts the merge — the worktree and index come
-back byte-identical — and the record keeps its stage with the conflicting
-paths as the next step; fix them, commit, and `apply` retries, or `reject`
-ends it. Work the merge would overwrite is refused by name
+names the bounty and the attempt. A conflict aborts the merge — the worktree
+and index come back byte-identical — and the record keeps its stage with the
+conflicting paths as the next step; fix them, commit, and `apply` retries, or
+`reject` ends it. Work the merge would overwrite is refused by name
 (`apply-worktree-dirty`) before it can run — uncommitted content on a touched
 path, and any file that exists at a touched path but is not in the index (an
-ignored file the merge would silently clobber) — never damaged.
+ignored file the merge would silently clobber) — never damaged. Applying one
+attempt ends the bounty and removes every answer ref.
+
+## Undo an apply
+
+`box bounty undo <id>` reverses the merge `apply` made as a **new commit** on
+the current branch that names the bounty (`reverses merge <sha>`), then moves
+the record to `undone` — history is appended, never rewritten. Named refusals
+change nothing: the bounty was never applied (`not-applied`), the merge is not
+on this branch's history (`undo-not-on-branch`), staged changes sit in the
+index (`undo-index-staged`), uncommitted work covers a path the reversal would
+touch (`undo-worktree-dirty`), or a dry run of the reversal itself conflicts
+(`undo-conflict`, paths named). After `apply` then `undo`, the tree is equal
+to what it was before the apply.
 
 ## What the folder contains
 
@@ -164,6 +222,15 @@ command rule). If the check exits 0 there is nothing to solve — refused
 (`check-already-passes`), no folder. A check or setup that cannot run is refused
 with the program named (`check-unrunnable`, `setup-unrunnable`, `setup-failed`).
 The check's exit and output tail are recorded in `bounty.json`.
+
+`--guard -- <command>` declares a second command that must *keep* passing —
+think of it as the property the rest of the work must not break. It runs on the
+shipped set at `create` and must exit 0 there: a failing guard is
+`guard-failed`, one that cannot run is `guard-unrunnable`, both named
+distinctly from the check's refusals, and no folder is written either way. The
+guard is bound into `bounty.json`; `answer` reruns it after the check and
+reports its exit as a fact — a red guard does not flip a verdict, the report
+simply states it.
 
 ## Level
 

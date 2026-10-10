@@ -16,10 +16,10 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { git, gitOutcome } from './git.js';
+import { dryMergeOnto, git, gitOutcome } from './git.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
-export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired';
+export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
 export type BountyStage = OpenStage | EndedStage;
 
 const OPEN_STAGES: ReadonlySet<BountyStage> = new Set(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified']);
@@ -29,7 +29,30 @@ export interface StageEvent {
   readonly stage: BountyStage;
   readonly at: string;
   readonly destination?: string; // recorded on the `posted` event
-  readonly reason?: string; // recorded on `rejected`: the named failure class plus the check's exit and output tail
+  readonly reason?: string; // recorded on `rejected` and on a `posted` return: the named failure class plus the check's exit and output tail
+  readonly attempt?: number; // which attempt this transition was about
+  readonly command?: string; // the command that drove it — apply, reject, undo — so history says what ended the bounty
+  readonly merge?: string; // the commit the command made (the apply merge, or the undo reversal)
+}
+
+export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable';
+
+export interface Attempt {
+  /** 1-based, stable within the record — `box bounty apply <id> <n>` names it.
+      The answer commit is pinned at refs/box-bounty/<id>-answer-<n>. */
+  readonly n: number;
+  readonly at: string;
+  readonly commit: string;
+  readonly changed: readonly string[];
+  readonly added: readonly string[];
+  readonly deleted: readonly string[];
+  readonly outcome: AttemptOutcome;
+  /** Paths the dry merge flagged as conflicting when the answer arrived;
+      null when it would have merged cleanly or could not be tested. */
+  readonly conflicts: readonly string[] | null;
+  /** The fact report, rendered once when the answer came in — `answer` prints
+      it and `status` replays it. Facts only, never a verdict. */
+  readonly report: readonly string[];
 }
 
 export interface AnswerSpec {
@@ -60,8 +83,12 @@ export interface BountyRecord {
   readonly folder: string;
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly createdAt: string;
-  /** The extracted answer once one has landed (`answered`/`verified`/`applied`
-      stages). Null until then. */
+  /** Every answer handed back, oldest first — each with its extracted change,
+      its outcome and its fact report. `apply` names one by `n`. */
+  attempts?: Attempt[];
+  /** The extracted answer on records written before attempts existed — kept so
+      older records still load; attemptsOf reads it as attempt 1. New writes
+      only fill `attempts`. */
   answer?: AnswerSpec | null;
   /** Set when a merge onto current code conflicted and was aborted clean; the
       record stays `verified`/`answered` and these paths are the next step.
@@ -89,14 +116,48 @@ export interface RecordSeed {
 }
 
 export const refName = (id: string): string => `refs/box-bounty/${id}`;
+export const attemptRefName = (id: string, n: number): string => `refs/box-bounty/${id}-answer-${n}`;
 
-// An open bounty can pin two commits: the snapshot at <id> and, once an answer
-// has been built, the answer commit at <id>-answer (its parent is the base
-// commit, so it does not keep the snapshot alive on its own). Every end stage
-// deletes both. Best-effort: a missing ref is exactly the state left behind.
-export function dropDurabilityRefs(repoRoot: string, id: string): void {
-  gitOutcome(repoRoot, ['update-ref', '-d', refName(id)]);
-  gitOutcome(repoRoot, ['update-ref', '-d', `${refName(id)}-answer`]);
+// Normalizes the two shapes on disk: records from before this wave carry one
+// `answer` block pinned at refs/box-bounty/<id>-answer and no report; newer
+// records carry `attempts`. An older answered/verified/applied record reads as
+// a single attempt — verified when the bounty is mechanical, answered when
+// reviewed — with an empty report, which status says plainly.
+export function attemptsOf(record: BountyRecord): Attempt[] {
+  if (record.attempts !== undefined) return record.attempts;
+  if (record.answer !== null && record.answer !== undefined) {
+    return [{
+      n: 1,
+      at: record.events.at(-1)?.at ?? record.createdAt,
+      commit: record.answer.commit,
+      changed: record.answer.changed,
+      added: record.answer.added,
+      deleted: record.answer.deleted,
+      outcome: record.level === 'mechanical' ? 'verified' : 'answered',
+      conflicts: record.conflicts?.paths ?? null,
+      report: []
+    }];
+  }
+  return [];
+}
+
+// The attempts a person could apply: the check passed, or there was never a
+// check to run. A failed or unrunnable check is still an attempt — it can be
+// applied only by naming it (`apply <id> <n>`), never by default.
+export const applicableAttempts = (attempts: readonly Attempt[]): Attempt[] =>
+  attempts.filter(attempt => attempt.outcome === 'verified' || attempt.outcome === 'answered');
+
+// An open bounty can pin several commits: the snapshot at <id>, each attempt's
+// answer commit at <id>-answer-<n>, and the single <id>-answer of records from
+// before this wave (an attempt commit's parent is the base commit, so it does
+// not keep the snapshot alive on its own). Every end stage deletes them all.
+// Best-effort: a missing ref is exactly the state left behind.
+export function dropDurabilityRefs(repoRoot: string, record: BountyRecord): void {
+  gitOutcome(repoRoot, ['update-ref', '-d', refName(record.id)]);
+  gitOutcome(repoRoot, ['update-ref', '-d', `${refName(record.id)}-answer`]);
+  for (const attempt of attemptsOf(record)) {
+    gitOutcome(repoRoot, ['update-ref', '-d', attemptRefName(record.id, attempt.n)]);
+  }
 }
 export const recordDir = (repoRoot: string): string => join(repoRoot, '.box', 'bounties');
 export const recordPath = (repoRoot: string, id: string): string => join(recordDir(repoRoot), `${id}.json`);
@@ -174,24 +235,47 @@ export function listRecords(repoRoot: string): ListedBounty[] {
   return listed;
 }
 
+const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
+  verified: 'the check exits 0 on it',
+  answered: 'a person reads it — no check was run',
+  'check-failed': 'the check exits nonzero on it',
+  'check-unrunnable': 'the check could not run'
+};
+
 const nextStep = (record: BountyRecord): string => {
   switch (record.stage) {
     case 'drafted': return `the owner's yes comes first — run box bounty confirm ${record.id} once they approve the preview`;
     case 'confirmed': return `deliver it — run box bounty post ${record.id} --to <dir>`;
-    case 'posted': return `wait for the solver — when the bounty folder comes back, run box bounty answer ${record.id} --from <dir>`;
+    case 'posted': {
+      const count = attemptsOf(record).length;
+      if (count === 0) return `wait for the solver — when the bounty folder comes back, run box bounty answer ${record.id} --from <dir>`;
+      return `the bounty is still open with ${count} recorded ${count === 1 ? 'attempt' : 'attempts'} — when another answer comes back run box bounty answer ${record.id} --from <dir>, or end it with box bounty reject ${record.id} --reason "<why>"`;
+    }
     case 'taken': return 'an answer is being verified against the snapshot it was made for — run box bounty status again in a moment';
-    case 'answered': return `a person reads the answer — run box bounty apply ${record.id} to land it on the current code, or box bounty reject ${record.id} --reason "<why>"`;
-    case 'verified':
-      return record.conflicts !== null && record.conflicts !== undefined
-        ? `the merge onto current code conflicts in ${record.conflicts.paths.join(', ')} — it was aborted and nothing changed. Resolve those paths and commit, then box bounty apply ${record.id} retries; or end it with box bounty reject ${record.id} --reason "<why>"`
-        : `the check passed on the snapshot the answer was made for — run box bounty apply ${record.id} to merge it onto the current code`;
+    case 'answered':
+    case 'verified': {
+      const applicable = applicableAttempts(attemptsOf(record));
+      const conflicts = record.conflicts?.paths;
+      const conflictText = conflicts !== undefined && conflicts.length > 0
+        ? ` the last merge try conflicted in ${conflicts.join(', ')} — resolve those paths and commit first, then`
+        : '';
+      if (applicable.length === 0) {
+        return `no attempt has a usable result — name one anyway with box bounty apply ${record.id} <n>, or end the bounty with box bounty reject ${record.id} --reason "<why>"`;
+      }
+      if (applicable.length === 1) {
+        const n = applicable[0]!.n;
+        return `attempt ${n} waits on a decision —${conflictText} run box bounty apply ${record.id} ${n} to merge it onto the current code, or box bounty reject ${record.id} --reason "<why>"`;
+      }
+      return `attempts ${applicable.map(attempt => `#${attempt.n}`).join(' and ')} could be applied —${conflictText} pick one with box bounty apply ${record.id} <n>, or end it with box bounty reject ${record.id} --reason "<why>"`;
+    }
     default: return 'ended — nothing to do';
   }
 };
 
-// Cold-read surface for a fresh agent: every open bounty with id, stage and the
-// next step; ended bounties one compact line; an empty project says so and says
-// what to do. Never prints nothing.
+// Cold-read surface for a fresh agent: every open bounty with id, stage, its
+// attempts (passing first), the top attempt's fact report, a fresh merge read
+// of the current code, and the next step; ended bounties one compact line; an
+// empty project says so and says what to do. Never prints nothing.
 export function renderStatus(repoRoot: string): string {
   const listed = listRecords(repoRoot);
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
@@ -206,15 +290,39 @@ export function renderStatus(repoRoot: string): string {
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
+      const attempts = attemptsOf(record);
+      if (attempts.length > 0) {
+        const applicable = applicableAttempts(attempts);
+        const ordered = [...attempts].sort((a, b) => {
+          const aOk = a.outcome === 'verified' || a.outcome === 'answered' ? 0 : 1;
+          const bOk = b.outcome === 'verified' || b.outcome === 'answered' ? 0 : 1;
+          return aOk - bOk || a.n - b.n;
+        });
+        lines.push(`      attempts (${attempts.length}, passing first):`);
+        for (const attempt of ordered) {
+          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.join(', ')}` : ''}`);
+        }
+        const top = ordered[0]!;
+        if (top.report.length > 0) {
+          lines.push(`      report — attempt #${top.n}, recorded ${top.at}:`);
+          for (const line of top.report) lines.push(`        ${line}`);
+        } else {
+          lines.push(`      this attempt was recorded before fact reports existed — the commit ${top.commit} is pinned at refs/box-bounty/${record.id}-answer`);
+        }
+        if (applicable.length > 0) {
+          const fresh = dryMergeOnto(repoRoot, applicable[0]!.commit);
+          lines.push(`      current code now: ${fresh.kind === 'clean' ? 'attempt #' + applicable[0]!.n + ' would merge cleanly onto the current branch' : fresh.kind === 'conflict' ? `attempt #${applicable[0]!.n} would conflict in ${fresh.paths.join(', ')}` : `the merge cannot be tested — ${fresh.detail}`}`);
+        }
+      }
       lines.push(`      next: ${nextStep(record)}`);
     }
   }
   if (ended.length === 0) lines.push('ended: none');
   else lines.push(`ended: ${ended.map(entry => {
     const record = entry.record!;
-    // applied/rejected name the job the bounty came from, so the record alone
-    // says which piece of work is unblocked — falling back to the title.
-    if (record.stage === 'applied' || record.stage === 'rejected') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
+    // applied/rejected/undone name the job the bounty came from, so the record
+    // alone says which piece of work is unblocked — falling back to the title.
+    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}`;
   }).join(', ')}`);
   for (const entry of corrupt) lines.push(`  ! ${entry.file} — not a readable record`);
@@ -222,14 +330,21 @@ export function renderStatus(repoRoot: string): string {
 }
 
 // Appends one stage event and persists — history is appended, never rewritten.
-// `reason` records why a `rejected` transition happened (failure class plus the
-// check's exit and output tail); `destination` records where `posted` went.
-export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string }): void => {
+// `reason` records why a `rejected` transition happened or why a `posted` one
+// went back (failure class plus the check's exit and output tail);
+// `destination` records where `posted` went; `attempt`, `command` and `merge`
+// say which attempt a transition was about, which command drove it and which
+// commit it made — so the history alone says what ended the bounty and on
+// which attempt.
+export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string; attempt?: number; command?: string; merge?: string }): void => {
   record.events.push({
     stage,
     at: new Date().toISOString(),
     ...(extra?.destination !== undefined ? { destination: extra.destination } : {}),
-    ...(extra?.reason !== undefined ? { reason: extra.reason } : {})
+    ...(extra?.reason !== undefined ? { reason: extra.reason } : {}),
+    ...(extra?.attempt !== undefined ? { attempt: extra.attempt } : {}),
+    ...(extra?.command !== undefined ? { command: extra.command } : {}),
+    ...(extra?.merge !== undefined ? { merge: extra.merge } : {})
   });
   record.stage = stage;
   persistRecord(repoRoot, record);
@@ -299,8 +414,8 @@ export function withdrawBounty(repoRoot: string, id: string): WithdrawOutcome {
   if (!isOpenStage(record.stage)) {
     throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — withdraw only ends an open bounty`);
   }
-  transitionTo(repoRoot, record, 'withdrawn');
-  dropDurabilityRefs(repoRoot, id);
+  transitionTo(repoRoot, record, 'withdrawn', { command: 'withdraw' });
+  dropDurabilityRefs(repoRoot, record);
   return { record, outcome: 'withdrawn' };
 }
 
@@ -320,7 +435,7 @@ export function rejectBounty(repoRoot: string, id: string, reason: string): Boun
   if (!REJECTABLE.has(record.stage)) {
     throw new BountyRefused('wrong-stage', `bounty ${id} is ${record.stage} — reject ends a bounty once it is posted; to end it before that run box bounty withdraw ${id}`);
   }
-  transitionTo(repoRoot, record, 'rejected', { reason: text });
-  dropDurabilityRefs(repoRoot, id);
+  transitionTo(repoRoot, record, 'rejected', { reason: text, command: 'reject' });
+  dropDurabilityRefs(repoRoot, record);
   return record;
 }

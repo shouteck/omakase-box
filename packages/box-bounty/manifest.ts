@@ -28,6 +28,11 @@ export interface BountyManifest {
   readonly note: { readonly file: string; readonly text: string } | null;
   readonly setup: BountyCommand | null;
   readonly check: BountyCommand | null;
+  /** A command the owner declared at `create --guard` as must-keep-passing —
+      run again on the answer and reported as a fact. Bound by the manifest's
+      sha256 like everything else in this file. Absent on manifests written
+      before the flag existed. */
+  readonly guard?: BountyCommand | null;
   readonly level: 'mechanical' | 'reviewed';
   readonly snapshot: {
     readonly commit: string;
@@ -37,5 +42,5 @@ export interface BountyManifest {
   readonly files: readonly { readonly path: string; readonly sha256: string; readonly bytes: number }[];
   readonly counts: { readonly files: number; readonly bytes: number; readonly removed: number };
   readonly neverShip: readonly { readonly rule: string; readonly removed: number }[];
-  readonly verification: { readonly setup: readonly BountyCommandRun[]; readonly check: BountyCommandRun } | null;
+  readonly verification: { readonly setup: readonly BountyCommandRun[]; readonly check: BountyCommandRun | null; readonly guard?: BountyCommandRun | null } | null;
 }

@@ -59,23 +59,39 @@ const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
   throw new Error('unreachable');
 };
 
-describe('answer — a mechanical answer is verified on the snapshot it was made for, then merged', () => {
-  it('a fixing answer lands verified → applied as a merge commit naming the bounty; ref removed', () => {
+describe('answer — a mechanical answer is verified on the snapshot it was made for, then waits', () => {
+  it('a fixing answer lands at verified and stops; apply is a separate command that merges it naming the bounty', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo, { check: FIX_CHECK });
     const headBefore = git(repo, ['rev-parse', 'HEAD']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('applied');
+    expect(result.outcome).toBe('verified');
     const record = readRecord(repo, id);
     // The events tell the true story: taken is implicit in the answer's arrival.
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified', 'applied']);
-    expect(record.stage).toBe('applied');
-    expect(record.answer?.commit).toMatch(/^[a-f0-9]{40}$/);
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified']);
+    expect(record.stage).toBe('verified');
+    expect(record.attempts?.[0]?.commit).toMatch(/^[a-f0-9]{40}$/);
+    // Nothing was applied: HEAD and the worktree are untouched.
+    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore);
+    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
+    // The report is stored on the attempt and names the next command.
+    expect(result.report.join('\n')).toContain(`box bounty apply ${id} 1`);
+
+    const applied = applyBounty(repo, id);
+    expect(applied.outcome).toBe('applied');
+    const after = readRecord(repo, id);
+    expect(after.stage).toBe('applied');
+    expect(after.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified', 'applied']);
+    // The decision is recorded: which command ended it, on which attempt.
+    const appliedEvent = after.events.at(-1)!;
+    expect(appliedEvent.command).toBe('apply');
+    expect(appliedEvent.attempt).toBe(1);
+    expect(appliedEvent.merge).toMatch(/^[a-f0-9]{40}$/);
     // A real merge commit on the owner's branch, naming the bounty.
     const head = git(repo, ['rev-parse', 'HEAD']);
-    expect(result.mergeCommit).toBe(head);
+    expect(applied.mergeCommit).toBe(head);
     expect(head).not.toBe(headBefore);
     expect(git(repo, ['rev-list', '--parents', '-n', '1', 'HEAD']).trim().split(' ')).toHaveLength(3);
     expect(git(repo, ['log', '-1', '--format=%s'])).toContain(`bounty ${id}`);
@@ -84,27 +100,30 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id} applied (job: a task)`);
   });
 
-  it('an answer that does not fix it ends rejected with the failure class, exit and tail recorded', () => {
+  it('an answer that does not fix it is recorded as an attempt and the bounty returns to posted', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo, { check: FIX_CHECK });
     const headBefore = git(repo, ['rev-parse', 'HEAD']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'still broken\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('rejected');
-    expect(result.rejection).toContain('implementation-failure');
-    expect(result.rejection).toContain('exited 1');
+    expect(result.outcome).toBe('check-failed');
     const record = readRecord(repo, id);
-    expect(record.stage).toBe('rejected');
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'rejected']);
+    expect(record.stage).toBe('posted');
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'posted']);
     expect(record.events.at(-1)!.reason).toContain('implementation-failure');
+    expect(record.events.at(-1)!.reason).toContain('exited 1');
+    expect(record.attempts).toHaveLength(1);
+    expect(record.attempts?.[0]?.outcome).toBe('check-failed');
+    expect(result.report.join('\n')).toContain('exits 1');
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore); // nothing was applied
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
-    expect(refGone(repo, id)).toBe(true);
-    expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id} rejected (job: a task)`);
+    // Still open: the durability ref stays, and status says so.
+    expect(refGone(repo, id)).toBe(false);
+    expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id}  posted`);
   });
 
-  it('a conflict aborts clean: the record stays verified naming the paths, worktree and index are untouched', () => {
+  it('a conflicting answer reports the paths dry — no merge ran — and apply still proves the abort boundary', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo, { check: FIX_CHECK });
     // The repository moved on while the bounty was out — on the same lines.
@@ -115,31 +134,29 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('conflict');
+    expect(result.outcome).toBe('verified'); // the check passed — the conflict is a fact, not an ending
     expect(result.conflicts).toEqual(['src/app.py']);
+    expect(result.report.join('\n')).toContain('src/app.py');
     const record = readRecord(repo, id);
     expect(record.stage).toBe('verified');
-    expect(record.conflicts?.paths).toEqual(['src/app.py']);
-    // Byte-identical: HEAD, the index's staged entries and every worktree byte
-    // are exactly what they were before the aborted merge.
+    expect(record.attempts?.[0]?.conflicts).toEqual(['src/app.py']);
+    // The dry merge touched nothing: HEAD, the index's staged entries and
+    // every worktree byte are exactly what they were.
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(before.head);
     expect(git(repo, ['ls-files', '--stage'])).toBe(before.index);
     expect(fingerprint(repo).files).toEqual(before.files);
-    // The .box/ record line legitimately shows modified — persistRecord wrote
-    // the new events — but nothing else may. (Porcelain paths come after the
-    // XY prefix; the trimmed helper can shave a leading space, so strip the
-    // prefix by pattern, not by column.)
-    expect(git(repo, ['status', '--porcelain']).split('\n')
-      .filter(line => line !== '' && !line.replace(/^[ MADRCU?!]{1,2} /, '').startsWith('.box/'))).toEqual([]);
     expect(spawnSync('git', ['-C', repo, 'rev-parse', '-q', '--verify', 'MERGE_HEAD'], { encoding: 'utf8' }).status).not.toBe(0);
 
-    // status names the conflicting paths as the next step.
+    // status repeats the conflict paths as the next step.
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain('src/app.py');
     expect(status).toContain(`box bounty apply ${id}`);
 
-    // Retrying while the conflict is real aborts clean again; reject still ends it.
+    // The real merge on apply still aborts byte-identical; reject still ends it.
     expect(applyBounty(repo, id).outcome).toBe('conflict');
+    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(before.head);
+    expect(git(repo, ['ls-files', '--stage'])).toBe(before.index);
+    expect(fingerprint(repo).files).toEqual(before.files);
     rejectBounty(repo, id, 'resolved by hand instead');
     expect(readRecord(repo, id).stage).toBe('rejected');
     expect(refGone(repo, id)).toBe(true);
@@ -159,11 +176,17 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('conflict'); // the untracked .box/ dir must not crash the abort
+    expect(result.outcome).toBe('verified');
     expect(result.conflicts).toEqual(['src/app.py']);
     const record = readRecord(repo, id);
     expect(record.stage).toBe('verified');
-    expect(record.conflicts?.paths).toEqual(['src/app.py']);
+
+    const applied = applyBounty(repo, id);
+    expect(applied.outcome).toBe('conflict'); // the untracked .box/ dir must not crash the abort
+    expect(applied.conflicts).toEqual(['src/app.py']);
+    const after = readRecord(repo, id);
+    expect(after.stage).toBe('verified');
+    expect(after.conflicts?.paths).toEqual(['src/app.py']);
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('moved on\n'); // byte-identical
     expect(git(repo, ['status', '--porcelain'])).toContain('.box/'); // and .box/ itself is still there
 
@@ -192,7 +215,7 @@ describe('answer — a reviewed bounty waits on a person', () => {
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
     expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
-    expect(record.answer?.added).toEqual(['notes.md']);
+    expect(record.attempts?.[0]?.added).toEqual(['notes.md']);
     // Nothing claims a verification that did not happen: no verified event.
     expect(record.events.some(event => event.stage === 'verified')).toBe(false);
     const status = renderStatus(resolveRepoRoot(repo));
@@ -300,9 +323,9 @@ describe('answer — the extracted change', () => {
     const result = answerBounty(repo, id, dir);
     expect(result.outcome).toBe('answered');
     const record = readRecord(repo, id);
-    expect(record.answer?.changed).toEqual(['src/app.py']);
-    expect(record.answer?.added).toEqual(['new/deep.txt']);
-    expect(record.answer?.deleted).toEqual(['stale.txt']);
+    expect(record.attempts?.[0]?.changed).toEqual(['src/app.py']);
+    expect(record.attempts?.[0]?.added).toEqual(['new/deep.txt']);
+    expect(record.attempts?.[0]?.deleted).toEqual(['stale.txt']);
     expect(applyBounty(repo, id).outcome).toBe('applied');
     expect(existsSync(join(repo, 'stale.txt'))).toBe(false);
     expect(readFileSync(join(repo, 'new', 'deep.txt'), 'utf8')).toBe('added\n');
@@ -416,7 +439,8 @@ describe('the boundary the pass proved open', () => {
     const { id, delivered } = posted(repo, { check });
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('applied');
+    expect(result.outcome).toBe('verified');
+    expect(applyBounty(repo, id).outcome).toBe('applied');
     expect(readRecord(repo, id).stage).toBe('applied');
   });
 
@@ -460,7 +484,7 @@ describe('box bounty answer/apply/reject (built cli)', () => {
   const built = existsSync(CLI_DIST);
   const need = () => { if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first'); };
 
-  it('the whole return journey through the CLI: answer verifies and applies, status names the job', () => {
+  it('the whole return journey through the CLI: answer reports and verifies, apply merges, status names the job', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'fix it\n', 'JOB.md': 'winter launch\n' });
     const out = join(runRoot('out'), 'bounty');
@@ -475,8 +499,14 @@ describe('box bounty answer/apply/reject (built cli)', () => {
     const answer = cli(repo, ['bounty', 'answer', id, '--from', delivered]);
     expect(answer.status).toBe(0);
     expect(answer.stdout).toContain('verified');
-    expect(answer.stdout).toContain('applied');
-    expect(answer.stdout).toContain('JOB.md');
+    expect(answer.stdout).toContain('report');
+    expect(answer.stdout).toContain(`box bounty apply ${id} 1`);
+    // A verified answer stopped: nothing merged yet.
+    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
+    const apply = cli(repo, ['bounty', 'apply', id, '1']);
+    expect(apply.status).toBe(0);
+    expect(apply.stdout).toContain('applied');
+    expect(apply.stdout).toContain('JOB.md');
     const status = cli(repo, ['bounty', 'status']);
     expect(status.stdout).toContain(`${id} applied (job: JOB.md)`);
     // An ended bounty refuses further transitions by name.
