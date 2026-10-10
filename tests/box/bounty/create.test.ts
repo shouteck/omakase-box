@@ -396,6 +396,51 @@ describe('BT3b — fewer things to supply', () => {
     expect(text).not.toContain('other/g.py'); // unchanged — the junction's new spelling is not a change
   });
 
+  // Host-only (K10): the same swap with DIFFERENT bytes behind the link — git
+  // records ` M a/b.py` and the spelling survives in the snapshot tree as a
+  // modified blob, so no deletion branch fires. The base spelling's judgement
+  // must still outrank live canonicalisation: `a/b.py` no longer exists as
+  // itself in the shipped set.
+  it.skipIf(process.platform !== 'win32')('a tracked dir swapped for a junction holding different bytes still names the file the shipped set lost', () => {
+    const repo = makeRepo({ 'a/b.py': 'b1\n', 'x/b.py': 'b2\n', 'TASK.md': 'the task\n' }, (repo) => {
+      rmSync(join(repo, 'a'), { recursive: true });
+      symlinkSync(join(repo, 'x'), join(repo, 'a'), 'junction');
+    });
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const manifest = readManifest(result.outDir);
+    expect(manifest.files.map(file => file.path)).not.toContain('a/b.py'); // the spelling ships no more
+    const text = manifest.note?.text ?? '';
+    expect(text).toContain('a/b.py (deleted)'); // a base file the bounty no longer carries
+    expect(text).not.toContain('matches the last commit'); // the false all-clear
+    expect(text).not.toContain('x/b.py'); // the unchanged redirect target is not a change
+  });
+
+  // Host-only (K10): the same swap pointed at a tracked never-ship target. A
+  // rule-covered canonical must never suppress a rule-free base spelling's
+  // change — `a/b.py`'s loss is named while the name behind the link still
+  // never ships.
+  it.skipIf(process.platform !== 'win32')('a junction swap onto a tracked never-ship target still names the lost base file — never a false all-clear', () => {
+    const repo = makeRepo({ 'a/b.py': 'b1\n', 'secrets/b.py': 'b2\n', 'TASK.md': 'the task\n' }, (repo) => {
+      rmSync(join(repo, 'a'), { recursive: true });
+      symlinkSync(join(repo, 'secrets'), join(repo, 'a'), 'junction');
+    });
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).toContain('a/b.py (deleted)'); // a rule-free base spelling's loss is real
+    expect(text).not.toContain('only in files that do not ship'); // the false all-clear
+    expect(text).not.toContain('secrets'); // the name behind the link still never ships
+  });
+
   it('labels a moved submodule HEAD as a submodule change, never a deleted file', () => {
     const sub = makeRepo({ 's.py': 's\n' });
     const repo = makeRepo({ 'TASK.md': 'the task\n' }, (repo) => {
