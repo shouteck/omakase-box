@@ -1,15 +1,18 @@
 # Status
 
-Replaced by the CTO on 10 October 2026, at the close of wave C1.
+Replaced by the CTO on 10 October 2026, when the owner gave the word to reshape the roadmap.
 
 ## Now
 
-- **C1 is done and merged** (`ad7c1a6`, PASS ui-verified): `box trace --out <dir> -- <test command>` records every repository function a failing Python test ran — identified by file and def-line, child processes included — into a documented `trace.json`, without disturbing the test. New suite `test:box-trace`; docs in `docs/box-v4/BOX-TRACE.md`.
-- **Milestone C is approved** (C1 to C5). Each wave cooks only when the owner names it, and the kitchen stops after each. C5, the first Box posted outside, needs a separate approval.
-- **Known C1 limits for C2:** a child still running at command exit is silently absent from `processes`; cross-process `order` is per-process, not wall-clock; the hook dir must stay outside the traced root; no `box` binary — invoke `node packages/box-cli/dist/cli.js`.
+- **The product is the bounty tool for coding agents:** one command for an agent to hand off work it cannot or should not do, packaged safely, posted where it will get solved, remembered across sessions, and returned verified. [PLAN.md](PLAN.md) holds the whole of it: the journey, what is settled, the rules, the waves.
+- **Milestone BT is approved** (BT1 to BT6). Each wave cooks only when the owner names it, and the kitchen stops after each. BT6, the first bounty posted outside, needs a separate approval and a choice of site.
+- **The bounty is the whole repository** (a snapshot with never-ship files removed). Choosing a smaller set of files is deferred.
+- **C1 is done and merged** (`ad7c1a6`): `box trace` records what a failing Python test ran. It is **not used by milestone BT** and is kept for the smaller Box later. The waves C2 to C5 that were to follow it are withdrawn.
+- **Kept and reused:** the Box format, safe program launch, hashing, the solver's sealing tool, verify in the real repository.
 - **The lab is paused entirely.** Do not read its brief, answer it or run a sync.
-- **Left as they are, not merged and not deleted:** local branches `wave/A6` and `wave/K7` (parked). Deleting an unmerged branch is the owner's call.
+- **Left as they are, not merged and not deleted:** local branches `wave/A6` and `wave/K7`. Deleting an unmerged branch is the owner's call.
+- Master is clean and published. Nothing is running.
 
 ## Next
 
-**C2: from a failing test to a ready Box with nothing written by hand.** One command traces, chooses files, applies the never-ship list, writes the agreement, exports and prints the owner's summary. No brief yet — the CTO writes it when this wave is named. Send `START.md: C2`.
+**BT1: create a bounty, complete and safe, on disk.** Brief at [waves/BT1.md](waves/BT1.md), station packaging. Nothing is posted in this wave. Send `START.md` (or `START.md: BT1`). The kitchen cooks that wave and stops.

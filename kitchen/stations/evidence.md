@@ -1,6 +1,6 @@
 # Station: Evidence
 
-Measurements, comparisons and what the kitchen is allowed to claim. Runs through every milestone. In milestone C it owns the record of each real hand-off (C4, C5): every manual step, what left the machine, and what the solver could see.
+Measurements, comparisons and what the kitchen is allowed to claim. Runs through every milestone. In milestone BT it owns the record of each real bounty (BT5, BT6): every manual step, what left the machine, and what the solver could see.
 
 ## What this station knows
 
@@ -26,9 +26,9 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 - Re-run at least one measured attempt from a clean directory and compare.
 - Read each claim in the report and find the record that supports it; strike any that has none.
 
-## Real hand-offs (milestone C)
+## Real bounties (milestone BT)
 
-Learned the hard way in R3b and the lab's live runs. They apply to C4, C5 and any wave where a solver works from a Box.
+Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and any wave where a solver works from a bounty.
 
 - **Start the solver in an empty folder outside every checkout.** In R3b the solver's session began inside this repository, where the real fix was one file away; its blindness was by instruction only and the result could not be trusted as blind.
 - **Save the solver's own report and its start and end times at hand-off,** before the cook writes any result. In R3b nothing was saved and every statement about what the solver did was unsupported.

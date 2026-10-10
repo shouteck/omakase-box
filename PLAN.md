@@ -1,64 +1,88 @@
-# Plan: hand-off Boxes for coding agents
+# Plan: the bounty tool for coding agents
 
-Rewritten by the CTO on 10 October 2026, on the owner's instruction to keep only what this product needs. The earlier plan (outsider delegation, milestones D, R and A, the Box-as-a-search-tool draft) is in Git history at commit `9353307`. Current state is in [STATUS.md](STATUS.md).
+Rewritten by the CTO on 10 October 2026, when the owner gave the word after settling the product end to end. This is the whole roadmap. Earlier plans are in Git history (`9353307` for outsider delegation and the Box-as-a-search-tool draft; `e2a4fe9` for the failing-test hand-off). Current state is in [STATUS.md](STATUS.md).
 
-## The product
+## The product in one line
 
-**A coding agent that is stuck hands off the part it cannot do, without handing over the repository.**
+**One command for a coding agent to hand off work it cannot or should not do: packaged safely, posted where it will get solved, remembered across sessions, and returned verified.**
 
-1. An agent working in a repository has a failing test it cannot make pass.
-2. It calls one command. The tool runs that test, records what code ran, and packages exactly those files with the test as the acceptance check. That package is a **Box**.
-3. The owner sees a short summary (what is leaving, how much of the repository that is, what counts as done) and confirms.
-4. The Box goes to a solver: another agent or a person, who never sees the repository.
-5. A solution comes back and is checked mechanically in the real repository. If it passes, the agent gets it.
+It is not a marketplace. Bounty sites for agents already exist and are short of real tasks. This is the layer between a coding agent and those sites. An agent can already post to one of them with a call; what it cannot do in one step is everything before and after posting. That is the work this tool takes on.
 
-Think of it as a bounty an agent creates for work it is struggling with. Agent bounty markets already exist and are short of real tasks; they also need the solver to see the repository, which rules out private code. A Box removes that need.
+## The journey of one bounty
 
-**What it is not, in this plan:** a marketplace of our own, payments, reputation, a tool that finds solvers. Those exist elsewhere or come later, each by its own decision.
+```
+ AGENT A (working)             OWNER            BOUNTY SITE           SOLVER
+ 1. Works on a job
+ 2. Decides to hand a part off
+    (stuck, cheaper elsewhere,
+     lacks access, any reason)
+ 3. Tool builds the bounty ───► 4. Sees what is
+    and shows a preview            leaving, says yes
+ 5. Tool posts it and     ────────────────────► 6. Listing visible
+    writes the record                                               7. Takes it, gets the Box
+ 8. Carries on, or its                                              9. Solves, returns
+    session ends                                                       an answer
+ AGENT B (a later session)                      ◄──────────────────
+ 10. Arrives, reads the record
+ 11. Finds an answer has come back
+ 12. Tool verifies it in the real repository
+ 13. Accepted: brought forward onto current code and applied
+     Rejected: with a stated reason
+ 14. Resumes the job agent A left
+```
 
-## Two rules of the product
+## What is settled
 
-- **Nothing leaves without a person's yes.** An agent that packages source and sends it out unattended is the leak pattern security researchers describe. Every hand-off shows the owner what is leaving and waits for one confirmation.
-- **A never-ship list.** Secrets, credentials and whatever the owner marks never enter a Box, checked on the real path of each file and not on its spelling.
+| Part | Decision |
+|---|---|
+| What goes out | **The whole repository**, as a snapshot of the working state with never-ship files removed and no history; plus the task, the agent's note on what it tried, and the check that decides success. Choosing a smaller set of files is deferred. |
+| Why an agent uses it | Any reason it judges worthwhile. Being stuck is one. The tool does not assume the reason. |
+| How the agent knows it can | A clear description of the tool, lines in the project's own agent rules, the owner's limits, and optional nudges at moments such as repeated failure. A tool that is only mentioned is not used; the wording is part of the product. |
+| Who controls it | The owner sets limits once (what may leave, how much may be spent, what needs a yes). Nothing leaves outside them. |
+| Where it goes | Existing bounty sites, through adapters. First destination is a local folder. |
+| How it survives the agent | A small record per bounty, committed with the project, so any later agent on any host can find it, understand it and finish it. |
+| How it comes back | Verified in the real repository against the version it was made for, brought forward onto current code, then applied. |
+| How "done" is judged | Three levels, stated in the listing: *mechanical* (a check that fails today must pass, and nothing else may break); *example* (an example of the wanted behaviour, agreed before posting, now works); *reviewed* (existing tests still pass, then the owner or the agent reads the change). |
+| How it is understood | Every command says where the bounty is in its journey and what comes next. A fresh agent given only the record can say what to do. |
 
-## What already exists and is kept
+## Rules of the product
 
-| Piece | Where | State |
-|---|---|---|
-| The Box format: a plain folder with `box.json`, selected source, declared setup and check commands | `packages/box-package`, `packages/box-contracts` | Built, tested |
-| Export, with the check that the Box behaves like the full repository | `box export` | Built; proven on an outside project |
-| The solver's sealing tool, inside the Box | `box/submit.mjs` | Built |
-| Owner-side verification of a returned change in the real repository | `box submit`, `box verify` | Built; rejects a do-nothing change, an altered agreement, edits outside the allowed files |
-| A neutral agreement: any program as setup or check, no built-in package manager | milestone A | Built |
-| Recording what a failing test ran, about two seconds, the fix inside it on 28 of 29 public bugs | lab prototype on branch `lab` | Method proven; to be rebuilt as product code |
+- **Nothing leaves the owner's machine outside the owner's limits,** and by default every bounty waits for the owner's yes.
+- **Never-ship files never enter a bounty:** secrets, credentials, anything the owner lists, checked on the real path of each file and not on its spelling.
+- **It never returns nothing, and never fails silently.** Every outcome is a named state with a next step.
+- **One real use before many.**
 
-Details of the format are in [SUBMISSION-CONTRACT.md](docs/box-v4/delegation/SUBMISSION-CONTRACT.md). The wider product map, written for the earlier direction and still broadly right about what a Box contains, is [DELEGATION-MAP.md](docs/box-v4/DELEGATION-MAP.md).
+## Already built, and reused
 
-## Milestone C: the hand-off
+| Piece | State |
+|---|---|
+| The Box: a plain folder a solver can work in with nothing else, with a manifest, declared setup and check commands | Built, tested |
+| Running declared programs safely on Windows and elsewhere; hashing; path containment | Built |
+| The solver's sealing tool; binding an answer to the exact bounty it was made for | Built |
+| Verifying a returned change in the real repository: accept, or reject with a named reason | Built; rejects a do-nothing answer, an altered task, edits where none are allowed |
+| Recording what a failing test ran (`box trace`, wave C1) | Built on 10 October 2026. **Not used by this milestone.** Kept for the smaller Box later. |
+
+## Milestone BT: the bounty tool
 
 Approved by the owner on 10 October 2026. Each wave cooks only when named; the kitchen stops after each.
 
 | Wave | Outcome | Notes |
 |---|---|---|
-| **C1** | **Record what a failing test ran.** One command takes a test command and writes every function in the repository that ran, identified exactly. Python first. | Brief: [waves/C1.md](waves/C1.md). The foundation the next wave reads. |
-| **C2** | **From a failing test to a ready Box with nothing written by hand.** One command: trace the test, choose the files that ran plus what the project needs to install and run, apply the never-ship list, write the agreement, export, and print the owner's summary. | Replaces the 186-line hand-written agreement of the R3b trial. Export's own check proves the automatic choice of files: the Box must fail the test the same way the repository does. |
-| **C3** | **The hand-off and the return.** A command an agent calls when stuck: it prepares the Box, shows the summary, waits for the owner's yes, and puts the Box where it was told. A second command takes a returned solution, verifies it in the real repository and applies it. | Destination is a local folder in this wave. Nothing goes outside. |
-| **C4** | **The kitchen uses it.** A cook that is stuck on one of this repository's own failing tests hands a Box to a solver that has never seen the repository, and the result is verified and merged the normal way. | Real use on private code. Uses the blind taster role. |
-| **C5** | **The first Box posted outside.** | Needs the owner's separate approval and a choice of where. Not designed yet. |
+| **BT1** | **Create.** One command turns "hand this off" into a complete bounty on disk: the repository snapshot with never-ship files removed, the task, the hand-off note, the check and its level, a listing a stranger can read, and a preview of exactly what would leave. It confirms the check really fails today. Nothing is posted. | Brief: [waves/BT1.md](waves/BT1.md). |
+| **BT2** | **Remember.** The bounty's record lives in the project and moves through named stages. `status` lists every open bounty with its stage and next step; `withdraw` ends one; the owner's yes is recorded; "posting" delivers to a destination, the first being a local folder. | The record is what lets a different agent finish the job. |
+| **BT3** | **Return.** Take an answer back: verify it against the version it was made for, bring it forward onto current code, apply it, or reject it with a reason. Then say what job is waiting on it. | Reuses the existing verify. |
+| **BT4** | **Tell the agent.** The skill or plugin that installs the tool into the agents people already use: the description, the lines for a project's rules, the owner's limits file, optional nudges. | Tested by cold reads: an agent with only the description explains the journey; an agent with only a record says what to do next. |
+| **BT5** | **The kitchen uses it.** One real bounty on this repository's own work, end to end: one agent posts, a solver that has never seen the repository answers, a different session picks it up from the record and brings it home. | The first real evidence. Destination is still a local folder. |
+| **BT6** | **The first bounty posted outside.** An adapter to one existing bounty site. | Needs the owner's separate approval and a choice of site. Preceded by an hour's reading of how those sites accept a task posted by a program. |
 
-**Later, each needing its own decision:** posting to existing agent bounty markets; payment; a second language; a failing test the agent wrote itself as the anchor; a map of which test runs which code, so a Box can be made without a fresh run.
+**Later, each its own decision:** more sites; payment; nudges driven by model-escalation systems when their strongest model fails; the smaller Box, for owners who cannot send a whole repository (C1 is its starting point); languages and setups whose checks need services.
 
-## What was dropped, and why it is safe to drop
+## What we know and do not know
 
-- **Handing work to human contractors as the lead product, the "useful" milestone, replays on public projects (R1 to R3b):** served their purpose. They produced the Box format and its checks, which are kept.
-- **The Box as a search or reading aid for agents (the draft milestone B), and the lab's trial of it:** measured for a week. A capable agent's own search already matches it. Its one lasting result, the tracer, is reused here.
-- **The web console and intake (D1, D3.2):** not needed for a command-line hand-off. The code stays in the repository, untouched by this milestone.
-- **Kitchen speed work (K7 leftovers, K9):** only if it blocks a wave.
+- **Checked four times by search, not found as one tool:** the whole workflow on the posting side. Every ingredient exists somewhere: agent bounty sites with escrow and test-based verification, hand-off notes, escalation to a stronger model on failure, asking a human for non-coding steps. "Not found" is not "does not exist", and any of those could add the rest.
+- **Not known:** how often agents will choose to hand work off, and whether the existing sites return good answers. The owner chose to build and learn from use. BT5 is where that learning starts.
+- **Known and accepted:** this is a convenience layer on sites we do not control. Its value is breadth, reliability and being neutral between them.
 
-## How we will know it works
+## Not in this plan
 
-Not by a benchmark. By use: C4 is the first real hand-off, on our own code. After C4 the owner decides whether to post one outside.
-
-## The lab
-
-Paused entirely by the owner on 10 October 2026. The kitchen does not read its brief, answer it or sync it. Its instruments stay on the `lab` branch; the kitchen may read the tracer prototype there as a reference and rebuilds what it needs as reviewed product code.
+A marketplace of our own, payment handling, reputation, choosing which files to send, any research. The lab is paused. The web console and the earlier delegation flows stay in the repository, untouched by this milestone.

@@ -10,7 +10,17 @@ Selecting source for a Box, exporting it as a folder, proving it in a clean dire
 - Reuse before writing: `packages/box-contracts` (Box schemas and hashing), `packages/analyzer` (import scanning), `packages/evaluation/patch-validation`.
 - A2's `files` is the sole owner-source shipping authority. TypeScript `proposeSelection` supplies suggestions from entrypoints, never implicit export inputs. Owner-selected dependency files retain their bytes and provenance; optional generated helpers cannot overwrite them.
 
-## Milestone C: hand-off Boxes (from 10 October 2026)
+## Milestone BT: the bounty tool (from 10 October 2026)
+
+The station's work is now the bounty tool: creating a bounty (the whole repository as a snapshot, never-ship files removed, with the task, the hand-off note and the check), the record that outlives the agent, taking an answer back, and telling agents the tool exists. PLAN.md has the journey and what is settled. A bounty folder is a Box of a new kind; reuse the Box's manifest, hashing, path handling and program launch.
+
+- **The whole repository goes out, so never-ship is the security boundary.** Check each file's real path, fold case, refuse links that leave the repository, and never list removed files' names inside the bounty.
+- **A bounty outlives the agent that made it.** Anything a later session needs is written in the record, never left in a conversation.
+- **Every outcome is a named state with a next step.** An empty or ambiguous answer from the tool cost a whole live trial once.
+- **Wording is product.** A tool an agent is only told exists was not called; the description and the lines in a project's rules decide whether it is used. Test them by cold read.
+- **The answer is verified against the version the bounty was made for, then brought forward.** Code moves on while a bounty is open.
+
+## Tracing a failing test (wave C1, not used by milestone BT; kept for the smaller Box later)
 
 The station now also covers tracing a failing test, choosing a Box's files from the trace, and the hand-off and return. Two product rules apply to every wave here: nothing leaves the owner's machine without the owner's yes, and never-ship files never enter a Box.
 

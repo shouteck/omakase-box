@@ -25,7 +25,7 @@ Show the owner the night plan as the pre-cook card (START.md) and wait for "go" 
 
 - anything on the owner-only list in AGENTS.md: spending, new remote destinations, external messages, deleting anything not disposable;
 - starting a milestone the owner did not approve or name, or anything past the end of the night queue;
-- starting C5, or any wave that sends a Box or anything else outside this machine, or whose result is a recommendation to the owner;
+- starting BT6, or any wave that sends a bounty or anything else outside this machine, or whose result is a recommendation to the owner;
 - changing the rules: AGENTS.md, this file, role files and `scripts/verify.mjs` are read-only overnight. Note the change you want in the night file instead. A wave whose brief has to change any of these is a daytime wave: do not put it on a night queue, and if one is named for the night, park it at kickoff and say why;
 - adding or upgrading a dependency, or downloading anything;
 - force-pushing, rewriting history, or pushing an unreviewed branch.

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "planVersion": "handoff-boxes-2026-10-10",
+  "planVersion": "bounty-tool-2026-10-10",
   "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
   "entrypoint": "START.md",
-  "target": "C4",
+  "target": "BT5",
   "status": "milestone_approval_per_AGENTS_md",
   "specification": "PLAN.md",
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone C, hand-off Boxes for coding agents: C1 (trace a failing test), C2 (failing test to a ready Box, nothing written by hand), C3 (hand-off and return), C4 (the kitchen uses it), C5 (first Box outside; owner approval). Each cooks only when named. Earlier unfinished or retired tasks were removed from this list on 10 October 2026; they are in Git history at 9353307. The research lab is paused.",
+    "sequence": "Milestone BT, the bounty tool for coding agents: BT1 (create), BT2 (remember), BT3 (return), BT4 (tell the agent), BT5 (the kitchen uses it), BT6 (first bounty outside; owner approval). Each cooks only when named. C1 (box trace) is done and unused by this milestone; C2 to C5 were withdrawn on 10 October 2026. The research lab is paused. See PLAN.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -748,50 +748,68 @@
       "milestone": "C",
       "title": "Record what a failing test ran",
       "dependencies": [],
-      "ownerApproval": "Milestone C approved by the owner on 10 October 2026.",
-      "handoff": "waves/C1.md"
+      "handoff": "waves/C1.md",
+      "result": "Done 10 October 2026, PASS, merged ad7c1a6: box trace records every repository function a failing Python test ran. Not used by milestone BT; kept for the smaller Box later. See waves/C1.md."
     },
     {
-      "id": "C2",
-      "milestone": "C",
-      "title": "From a failing test to a ready Box with nothing written by hand",
-      "dependencies": [
-        "C1"
-      ],
-      "proposal": "One command: trace, choose the files that ran plus what the project needs to install and run, apply the never-ship list on canonical paths, write the neutral agreement (outcome check is the failing test, editable is the traced non-test source, new files allowed where stated), export with the existing paired check, print the owner summary. Security lens: the never-ship list.",
-      "handoff": "waves/C2.md"
+      "id": "BT1",
+      "milestone": "BT",
+      "title": "Create a bounty, complete and safe, on disk",
+      "dependencies": [],
+      "ownerApproval": "Milestone BT approved by the owner on 10 October 2026.",
+      "handoff": "waves/BT1.md"
     },
     {
-      "id": "C3",
-      "milestone": "C",
-      "title": "The hand-off and the return",
+      "id": "BT2",
+      "milestone": "BT",
+      "title": "Remember: the record that outlives the agent",
       "dependencies": [
-        "C2"
+        "BT1"
       ],
-      "proposal": "A command an agent calls when stuck: prepare, show the summary, wait for the owner yes, place the Box in a local destination. A second command takes a returned submission, runs the existing verify in the real repository and applies it. Nothing goes outside in this wave. User-experience lens: an agent and an owner each use it cold.",
-      "handoff": "waves/C3.md"
+      "proposal": "A small record per bounty committed with the project; named stages (drafted, confirmed, posted, taken, answered, verified, applied; rejected, withdrawn, expired); status and withdraw commands that state the stage and the next step; the owner's yes recorded; posting to a destination adapter, the first being a local folder. A fresh agent given only the record can say what to do next.",
+      "handoff": "waves/BT2.md"
     },
     {
-      "id": "C4",
-      "milestone": "C",
-      "title": "The kitchen uses it on its own failing test",
+      "id": "BT3",
+      "milestone": "BT",
+      "title": "Return: verify an answer, bring it forward, apply it",
       "dependencies": [
-        "C3"
+        "BT2"
       ],
-      "proposal": "A cook that is stuck hands a Box to a blind taster started outside every checkout; the result is verified and merged the normal way. Record every manual step and the solver report at hand-off.",
-      "handoff": "waves/C4.md"
+      "proposal": "Define the answer a solver returns and the sealing tool inside the bounty; verify against the recreated snapshot with the existing verify machinery; bring forward onto current code; apply or reject with a named reason; warn when the code has moved or the agent solved it itself; say what job is waiting.",
+      "handoff": "waves/BT3.md"
     },
     {
-      "id": "C5",
-      "milestone": "C",
-      "title": "The first Box posted outside",
+      "id": "BT4",
+      "milestone": "BT",
+      "title": "Tell the agent: the skill, the description, the owner's limits",
       "dependencies": [
-        "C4"
+        "BT3"
       ],
-      "ownerApproval": "Required separately, with the destination. Sending anything outside is the owner's decision and never happens overnight.",
-      "proposal": "Not designed yet.",
-      "handoff": "waves/C5.md"
+      "proposal": "The skill or plugin for the hosts the kitchen runs on: the tool description (what, when, what happens next), lines for a project's agent rules including \"check open bounties on arrival\", an owner limits file, optional nudges after repeated failure or near a budget. Accepted by cold reads, not by opinion.",
+      "handoff": "waves/BT4.md"
+    },
+    {
+      "id": "BT5",
+      "milestone": "BT",
+      "title": "The kitchen uses it: one real bounty, end to end",
+      "dependencies": [
+        "BT4"
+      ],
+      "proposal": "One agent posts on this repository's own work; a blind solver started outside every checkout answers; a different session picks the bounty up from the record and brings it home. Local-folder destination. Record every manual step, the solver's own report and timings. One use, then stop and read it.",
+      "handoff": "waves/BT5.md"
+    },
+    {
+      "id": "BT6",
+      "milestone": "BT",
+      "title": "The first bounty posted outside",
+      "dependencies": [
+        "BT5"
+      ],
+      "ownerApproval": "Required separately, with the choice of site. Sending anything outside is the owner's decision and never happens overnight.",
+      "proposal": "An adapter to one existing bounty site, after an hour's reading of how those sites accept a task posted by a program, how they verify and how they pay.",
+      "handoff": "waves/BT6.md"
     }
   ],
-  "sequenceRevision": "handoff-boxes-2026-10-10"
+  "sequenceRevision": "bounty-tool-2026-10-10"
 }
