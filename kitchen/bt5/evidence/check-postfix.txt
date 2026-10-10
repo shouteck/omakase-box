@@ -1,0 +1,19 @@
+`node kitchen/bt5/check.mjs` on this repository at wave/BT5 after the solver's
+answer was applied through `box bounty apply` (merge e720caa) — exit 0:
+
+ok   describe exits 0
+ok   describe prints the destinations line
+ok   the destinations line is not dangling
+ok   the destinations line prints no empty parens
+ok   an empty list is not claimed to mean any local folder
+ok   a bounty drafts and confirms in the scratch repo
+ok   post --to is refused destination-not-allowed
+ok   the refusal prints no empty parens
+ok   control: a listed destination is named on the line
+ok   control: --to outside the list is refused
+ok   control: the refusal names the allowed directory
+check: PASS — an empty allowedDestinations list renders honestly and still refuses every destination
+
+Pre-fix output for the same command is scaffold-proof.md (exit 1, two FAIL lines).
+Regression after the applied fix: `node scripts/suite.mjs box --suite bounty`
+— 9 files, 142 tests, all passed.

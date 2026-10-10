@@ -1,0 +1,6 @@
+{
+  "reminders": "off",
+  "rulesFile": "AGENTS.md",
+  "cost": "nothing today — post --to only copies to a local folder; no bounty site or solver is connected yet",
+  "expectedAnswer": "no live solvers yet — a posted bounty sits in a local folder until someone runs the journey by hand"
+}

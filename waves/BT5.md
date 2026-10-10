@@ -64,12 +64,128 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
 
 <One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
+- Worker: cook — scaffolding and install only; journey + rungs are the chef's
+  run per this file. `kitchen/bt5/` holds TASK.md (nit task, cold-solver
+  wording), check.mjs (fails on the two recorded symptoms, passes when fixed;
+  control cases pin the semantics), setup.mjs (single declared setup:
+  install+build), fixtures.mjs (two part-2 repos; php absence proven by
+  executing it — ENOENT — then by the fixture's own check naming it),
+  PROTOCOL.md (clone, roles, rung rubric, evidence paths), and
+  evidence/scaffold-proof.md. `.box/limits.json` ships reminders off,
+  rulesFile AGENTS.md, honest cost/expectedAnswer, no allowedDestinations;
+  the marked block is pasted verbatim into AGENTS.md under "Handing work
+  off". A stray `nul` file (redirect artifact) was removed from the root.
+- Commit: 8f02ed4 code + docs-only Result commits on top
+- Verify: `verify 9d4575d PASS check=0 build=0 test:box-bounty=0 db=embedded 334s`
+  (.kitchen/runs/2026-10-10T12-43-05-255Z-9d4575d); same PASS on 8f02ed4
+  (278s, runs/2026-10-10T12-38-09-599Z-8f02ed4)
+- Verdict: **PASS** on `bac1ca4` · Level: ui-verified — the journey and rungs
+  exercised the tool's real flow end to end (live blind solver, independent
+  collector, three fresh rung agents), and the suite is green on the exact
+  commit. My own verify run in the foreground:
+  `verify bac1ca4 PASS check=0 build=0 test:box-bounty=0 db=embedded 272s`
+  (.kitchen/runs/2026-10-10T13-51-17-939Z-bac1ca4, clean tree, 142/142).
 - Lenses:
-- Method:
-- Findings and limits:
-- Merged: · Resources removed:
+  - Security — holds. The solver saw only the delivered folder (README,
+    bounty.json, the task, repo/ minus the 3 never-ship files create
+    recorded); its one stray `grep` listed origin-checkout path *names*,
+    never contents, and the solver already held the same tree inside repo/ —
+    substance-blindness stands and was disclosed, not hidden. The collector's
+    what-it-did-not-see statement is credible: record plus folder bytes only.
+    `.box` stays never-ship (the record JSON lives where records live; it
+    cannot enter a later bounty). The installed `.box/limits.json` breaks
+    nothing — describe, describe --rules, remind and status all run on this
+    checkout (verified directly), and --rules prints the same bytes AGENTS.md
+    carries between the markers.
+  - User experience — two real cold reads, confusion included. The solver
+    worked from the shipped listing/README alone and asked the two questions
+    a real solver asks (wording review, whether a permanent test belongs).
+    The collector found the bounty from the marked block and OPEN alone, hit
+    finding #2 exactly where a cold return would, and reconstructed the clean
+    hand-back itself — deciding apply on the tool's facts, in its own words.
+    Finding #2 is real, verified in the code: `extractAnswerChange` refuses
+    any link or non-file inside repo/ (`answer-unsafe-path`) and would count
+    every install/build artifact as `added`, while `renderListing`'s README
+    never tells a solver to clean what setup creates.
+  - Measurement fairness — the evidence is real artifacts, not prose: the
+    record JSON shows drafted→confirmed→posted→taken→answered→verified→
+    applied with answer `a3281e3` and merge `e720caa` matching the branch;
+    the committed pre-fix failure (scaffold-proof.md) shows both recorded
+    symptoms really failing, and the same assertions pass now (my own 11/11
+    run of check.mjs). Rung scoring applies the pack's cheaper-solution
+    clause as written: the php fixture's unbound premise is recorded as a
+    fixture flaw, not spun into an underuse success — the least flattering
+    outcome for the tool is what got written down. No sign of an engineered
+    result.
+- The solver's diff (a3281e3, merged by the tool's own apply as e720caa)
+  reviews clean as product code: `allowedDestinations: []` now reads
+  "nowhere — the owner's \"allowedDestinations\" is an empty list, so no
+  destination is allowed" in describe and gets honest prose in the
+  destination-not-allowed refusal; absent still means any local folder;
+  non-empty still names its directories; post still refuses every --to. All
+  three semantics are pinned by the check's control cases, and `loadLimits`
+  type-checks the field so the `.length` branch cannot misfire. House wording
+  style throughout.
+- Defects and nits, none blocking: (1) the empty-allowedDestinations
+  rendering has no permanent *suite* test — tell.test.ts's allowedDestinations
+  block covers non-empty lists only; kitchen/bt5/check.mjs is the durable
+  guard but verify never runs it, so a two-case tell.test.ts addition belongs
+  in a later wave (the solver raised this itself; TASK.md asked for none);
+  (2) the task title's leading `#` carried into the listing title — cosmetic,
+  recorded, the slug itself strips it; (3) the solver's stray path-listing
+  grep — disclosed noise, not a substance leak; (4) BOUNTY.md's solver-facing
+  setup guidance lacks the cold-copy bootstrap caveat — outside this wave's
+  write paths, flagged for a later wave; (5) journey finding #2 and the
+  needs-toolchain fixture flaw are recorded unfixed — correctly deferred as
+  product decisions, not papered over.
+- Reviewer: fresh pass agent (Devin host, Windows; no context shared with
+  the cook) — verify run and the direct check.mjs / describe / --rules /
+  remind / status runs above are mine; the cook's and the chef's recorded
+  runs were read as evidence, not re-trusted.
+- Method: feature playbook (the scaffolding is the feature); principles cited
+  in the cook's report.
+- Findings and limits: the check demonstrably fails today — output committed
+  at `kitchen/bt5/evidence/scaffold-proof.md`; the journey and rungs have not
+  run — they are the chef's part and need live agents.
+- Journey finding #1 (fixed): the declared setup could not run in a cold
+  copy — `scripts/pnpm.mjs` needs `scripts/tooling` installed first, and a
+  shipped snapshot carries no `node_modules`. `setup.mjs`, `TASK.md` and
+  `PROTOCOL.md` now name bootstrap → install → build; proven end-to-end in a
+  node_modules-free copy (setup exit 0, check still fails on the bug —
+  scaffold-proof.md). The same cold-copy caveat belongs in BOUNTY.md's
+  solver-facing setup guidance — flagged for the pass; outside this wave's
+  write paths so left unchanged.
+- **Part 1 — the journey ran end to end** (`kitchen/bt5/evidence/journey.md`):
+  `bt-e197a6998847` created/confirmed/posted in a cold clone; a blind
+  `box-recipient` fixed `tell.ts`+`record.ts` inside the delivered folder
+  only and returned check-green (11/11) with the 142-test suite green; a
+  different fresh session found the bounty from `.box/bounties/OPEN`, hit
+  finding #2, got a facts-only `verified` report, and judged apply — the
+  tool merged it as `e720caa`, fetched here as `7912e1a`. Check red before
+  (`scaffold-proof.md`), green after (`check-postfix.txt`); suite 142/142.
+- Journey finding #2 (recorded, unfixed — product decision): a solver that
+  follows the README cannot hand the folder back — its own setup leaves
+  junctions/build trees in `repo/` and `answer` refuses `answer-unsafe-path`.
+  The collector reconstructed the clean hand-back itself. Detail in
+  `journey-collect.md`.
+- Rough edges recorded: the task title's leading `#` carried into the slug;
+  the solver's one stray `grep` hit the host cwd and listed (never read)
+  origin-checkout paths — disclosed, substance-blindness held.
+- **Part 2 — judgement rungs** (`kitchen/bt5/evidence/rungs.md`): 3 fresh
+  agents, 2 fixtures. Doable rung 1: ignored the tool, did the work, quoted
+  the "not worth it" line — sensible, stopped. Needs-toolchain rungs 1+2:
+  both agents declined with correct cost/wait reasoning — rung 2 derived
+  that the bounty *cannot verify* a missing-local-toolchain fix — then
+  provisioned PHP and solved. No overuse, no underuse failure; the fixture's
+  "missing capability" premise did not bind (php is downloadable, n=2 —
+  recorded as a fixture flaw, not an agent failure).
+- **Part 3 — open install verified:** `.box/limits.json` (reminders off,
+  honest cost/wait, no allowedDestinations) and the marked AGENTS.md block
+  ship on this branch; the `open bounties:` line tracked the journey bounty
+  live and returned to `none` on apply. The observation measure: future
+  `create --why` lines will show whether agents hand off for real reasons.
+- Merged: · Resources removed: scratch repos are temp-dir and self-cleaning;
+  the fixture test build under %TEMP%\bt5-fixtures-test was removed.
+  Journey scratch under %TEMP%\bt5-journey, %TEMP%\bt5-collect and
+  %TEMP%\bt5-fixtures removed at close.
 - Reflect:

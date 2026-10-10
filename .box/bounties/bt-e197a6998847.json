@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "kind": "box-bounty-record",
+  "id": "bt-e197a6998847",
+  "title": "# Fix the dangling rendering of an empty `allowedDestinations` list",
+  "why": "a recorded nit the kitchen handed to a cold solver — the BT5 journey wave",
+  "level": "mechanical",
+  "job": null,
+  "manifestSha256": "326d5b64674fad3d0003762be5374f5d5bef9da3f9b0746b905fb9691886bc30",
+  "stage": "applied",
+  "folder": "C:\\Users\\shout\\AppData\\Local\\Temp\\bt5-journey\\bounties\\fix-the-dangling-rendering-of-an-empty-a",
+  "snapshot": {
+    "commit": "6a6ffe7e914902e42fb03c04424e8462ae0bd636",
+    "tree": "e5643598ef69e6fc83e61744f2f839c10489559c",
+    "baseCommit": "c0746e0b22bab7f875cfc90b07bf727e714fb7be"
+  },
+  "createdAt": "2026-10-10T13:17:44.447Z",
+  "events": [
+    {
+      "stage": "drafted",
+      "at": "2026-10-10T13:17:44.447Z"
+    },
+    {
+      "stage": "confirmed",
+      "at": "2026-10-10T13:17:50.916Z"
+    },
+    {
+      "stage": "posted",
+      "at": "2026-10-10T13:17:55.367Z",
+      "destination": "C:\\Users\\shout\\AppData\\Local\\Temp\\bt5-journey\\delivered\\bt-e197a6998847"
+    },
+    {
+      "stage": "taken",
+      "at": "2026-10-10T13:30:32.246Z",
+      "attempt": 1,
+      "command": "answer"
+    },
+    {
+      "stage": "answered",
+      "at": "2026-10-10T13:30:32.250Z",
+      "attempt": 1
+    },
+    {
+      "stage": "verified",
+      "at": "2026-10-10T13:36:40.990Z",
+      "attempt": 1,
+      "command": "answer"
+    },
+    {
+      "stage": "applied",
+      "at": "2026-10-10T13:38:36.821Z",
+      "attempt": 1,
+      "command": "apply",
+      "merge": "e720caa3cf301a8f1738b6ae8e14568a13224ef5"
+    }
+  ],
+  "conflicts": null,
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-10T13:36:40.989Z",
+      "commit": "a3281e3dc27135acf1655970121f46c32b51b6e5",
+      "changed": [
+        "packages/box-bounty/record.ts",
+        "packages/box-bounty/tell.ts"
+      ],
+      "added": [],
+      "deleted": [],
+      "outcome": "verified",
+      "conflicts": null,
+      "report": [
+        "report — attempt 1 for bt-e197a6998847",
+        "  check: node kitchen/bt5/check.mjs — exited 1 at create; on the answer it exits 0",
+        "  guard: none declared for this bounty",
+        "  change: 2 changed, 0 added, 0 deleted — 13 lines added, 2 removed",
+        "  current code: the answer would merge cleanly onto the current branch",
+        "  flags: none",
+        "  not checked: this report states the declared commands' exits and a merge read only — it says nothing about behaviour those commands do not cover",
+        "  next: box bounty apply bt-e197a6998847 1 — or box bounty reject bt-e197a6998847 --reason \"<why>\""
+      ]
+    }
+  ]
+}
