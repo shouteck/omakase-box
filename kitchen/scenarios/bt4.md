@@ -9,7 +9,7 @@ print). The owner is away: an unattended agent has nobody to ask.
 The shipped pick lives in `packages/box-bounty/wording.ts` — a swap changes
 only that file. These are the three candidates under test:
 
-## Candidate A — what / worth it / not worth it (the provisional pick)
+## Candidate A — what / worth it / not worth it (the pick, confirmed by the runs)
 
 Description (`box bounty describe` prints this, then the facts):
 
@@ -70,7 +70,7 @@ Rules block (`describe --rules` prints this between the markers):
     open bounties: <the line the tool keeps current>
     <!-- /box-bounty -->
 
-**Provisional pick: A.** It is the only candidate that states all three things
+**Pick: A, confirmed.** It is the only candidate that states all three things
 the plan requires — what it does, when it is worth using, when it is not — in
 declarative voice. B leaves a cold agent to guess what "costs and limits"
 means before it can judge; C's imperative triggers ("reach for it when") nudge
