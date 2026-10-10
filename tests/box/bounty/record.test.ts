@@ -255,6 +255,7 @@ describe('box bounty lifecycle (built cli)', () => {
     const again = cli(repo, ['bounty', 'withdraw', id]); // …then through the CLI
     expect(again.status).toBe(0);
     expect(again.stdout).toContain('already withdrawn');
+    expect(again.stdout).toContain('the job it came from: t'); // a terminal state names the job
   });
 
   it('confirm then post --to <dir> delivers through the CLI with stage lines', () => {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, realpathSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, finalizeBounty, planBounty, renderPreview } from '../../../packages/box-bounty/index.js';
@@ -257,6 +257,36 @@ describe('BT3b — fewer things to supply', () => {
     expect(text).not.toContain('.env'); // removed names never ship, even in the note
     const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
     expect(listing).toContain('written by the tool');
+  });
+
+  it('never claims the working state matches the last commit when only never-ship paths differ', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n', 'id_rsa': 'fake-key\n', 'TASK.md': 'the task\n' });
+    write(repo, 'id_rsa', 'fake-key-changed\n'); // the only diff is a path that never ships
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).not.toContain('matches the last commit');
+    expect(text).not.toContain('id_rsa'); // the name still never ships
+  });
+
+  it('names a file the working state deleted instead of claiming the tree matches the last commit', () => {
+    const repo = makeRepo({ 'a.py': 'a\n', 'b.py': 'b\n', '.env': 'FAKE=made-up\n', 'TASK.md': 'the task\n' });
+    rmSync(join(repo, 'b.py'));
+    rmSync(join(repo, '.env')); // a deleted never-ship path: real, but never named
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).not.toContain('matches the last commit');
+    expect(text).toContain('b.py (deleted)');
+    expect(text).not.toContain('.env');
   });
 
   it('a repo with nothing to report gets a plain note, not an error', () => {

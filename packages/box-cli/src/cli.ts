@@ -272,6 +272,7 @@ if (command === 'export') {
       const { record, outcome } = withdrawBounty(resolveRepoRoot(bountyRepo(), 'withdraw'), id);
       if (outcome === 'already-withdrawn') {
         console.log(`${record.id} — already withdrawn — nothing to do`);
+        console.log(`ended — ${jobLine(record)}`);
       } else {
         console.log(`${record.id} — withdrawn — the durability ref is removed and the record says ended`);
         console.log(`ended — ${jobLine(record)}`);

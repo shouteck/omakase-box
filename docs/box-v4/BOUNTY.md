@@ -222,8 +222,12 @@ to what it was before the apply.
 Without `--note`, `create` composes the hand-off note from evidence it
 gathers itself: the declared check with the exit and output tail it recorded
 failing on this snapshot, and the files the working state already changed
-relative to `snapshot.baseCommit` (named only when they are part of the
-shipped set — a removed never-ship path is never named inside the bounty).
+relative to `snapshot.baseCommit` — named when they are part of the shipped
+set, and a file the working state deleted is named when no never-ship rule
+would have kept it out; a path a rule covers is never named inside the bounty.
+When every differing path is one that does not ship, the note says the state
+differs only outside the shipped set — never that the tree matches the last
+commit when it does not.
 The composed note is marked `tool-written` in `bounty.json` and says so in
 its first line. Gathering never crashes `create`: a repository with nothing
 to report — no check, a clean tree — gets a plain note saying so. `--note`

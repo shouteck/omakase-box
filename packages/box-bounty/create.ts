@@ -349,10 +349,12 @@ export function renderPreview(plan: BountyPlan): string {
 // When no --note was given, the note writes itself from evidence the tool
 // gathers: the declared check with the exit and output tail recorded on this
 // snapshot, and the files the working state already changed relative to the
-// snapshot's base commit. The note SHIPS — changed paths are listed only when
-// they are part of the shipped set, so a removed never-ship name can never be
-// named inside the bounty. Gathering never crashes create: a repository with
-// nothing to report gets a plain note, and a failed read falls back to one too.
+// snapshot's base commit. The note SHIPS — a changed path is named only when it
+// is part of the shipped set or, for a file the working state deleted, when no
+// never-ship rule would have kept it out — so a removed never-ship name can
+// never be named inside the bounty. Gathering never crashes create: a repository
+// with nothing to report gets a plain note, and a failed read falls back to one
+// too.
 function composeNote(plan: BountyPlan, verification: BountyManifest['verification']): { file: string; text: string } {
   const lines: string[] = ['written by the tool — no --note was supplied.'];
   try {
@@ -368,11 +370,34 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
       lines.push('', 'the repository has no commits yet — every shipped file is new work.');
     } else {
       const shipped = new Set(plan.files.map(file => file.path.toLowerCase()));
+      // Three fates for each diff path: shipped files are named; a path a
+      // never-ship rule matches — or one still in the snapshot tree that did
+      // not ship — is never named but proves the state differs; anything else
+      // is in the base commit yet absent from the snapshot tree, a file the
+      // working state deleted — a real change, named honestly. The same rules
+      // judge deleted paths so deleting `.env` cannot make its name ship.
+      const ownerList = loadOwnerList(plan.repoRoot);
+      const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
       const diff = gitOutcome(plan.repoRoot, ['diff', '--name-only', '-z', plan.snapshot.baseCommit, plan.snapshot.commit]);
-      const changed = diff.stdout.split('\0').filter(name => name !== '' && shipped.has(name.toLowerCase())).sort();
-      if (changed.length > 0) {
+      if (diff.status !== 0) throw new Error(`git diff failed: ${diff.stderr.trim()}`);
+      const changed: string[] = [];
+      const deleted: string[] = [];
+      let unlisted = false;
+      for (const name of diff.stdout.split('\0')) {
+        if (name === '') continue;
+        const key = name.toLowerCase();
+        if (shipped.has(key)) changed.push(name);
+        else if (plan.snapshotBlobs.has(name) || rules.some(rule => rule.match(key))) unlisted = true;
+        else deleted.push(name);
+      }
+      if (changed.length > 0 || deleted.length > 0) {
         lines.push('', `files already changed in the working state (against commit ${plan.snapshot.baseCommit.slice(0, 12)}):`);
-        for (const name of changed) lines.push(`  ${name}`);
+        for (const name of [...changed.sort(), ...deleted.sort().map(name => `${name} (deleted)`)]) lines.push(`  ${name}`);
+      }
+      if (unlisted) {
+        lines.push('', changed.length === 0 && deleted.length === 0
+          ? 'the working state differs from the last commit only in files that do not ship — their names are not listed by design.'
+          : 'other changed paths do not ship and are not named.');
       }
     }
     if (lines.length === 1) lines.push('', 'nothing else to report — no check was declared and the working state matches the last commit.');
