@@ -50,8 +50,8 @@ describe('bounty create end to end', () => {
     expect(manifest.note?.text).toContain('still red');
     expect(manifest.check).toEqual({ argv: ['python', 'check.py'] });
     expect(manifest.snapshot.commit).toMatch(/^[a-f0-9]{40}$/);
-    expect(manifest.verification?.check.result).toBe('fail');
-    expect(manifest.verification?.check.exit).toBe(1);
+    expect(manifest.verification?.check?.result).toBe('fail');
+    expect(manifest.verification?.check?.exit).toBe(1);
     expect(manifest.files.map(file => file.path)).toContain('app/main.py');
     const entry = manifest.files.find(file => file.path === 'check.py');
     expect(entry?.sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -80,7 +80,7 @@ describe('bounty create end to end', () => {
     const manifest = readManifest(result.outDir);
     expect(manifest.verification?.setup).toHaveLength(1);
     expect(manifest.verification?.setup[0]?.result).toBe('pass');
-    expect(manifest.verification?.check.result).toBe('fail');
+    expect(manifest.verification?.check?.result).toBe('fail');
   });
 
   it('proves setup runs before the check inside the snapshot copy', () => {
@@ -92,7 +92,7 @@ describe('bounty create end to end', () => {
       setup: ['node', '-e', 'require("node:fs").writeFileSync("prepped.txt","1")'],
       check: ['node', '-e', 'process.exit(require("node:fs").existsSync("prepped.txt") ? 1 : 0)']
     })));
-    expect(readManifest(result.outDir).verification?.check.exit).toBe(1);
+    expect(readManifest(result.outDir).verification?.check?.exit).toBe(1);
   });
 
   it('refuses a check that already passes and leaves no folder', () => {

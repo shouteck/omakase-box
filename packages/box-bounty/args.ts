@@ -26,18 +26,19 @@ export interface CreateArgs {
   readonly job?: string;
   readonly setup?: readonly string[];
   readonly check?: readonly string[];
+  readonly guard?: readonly string[];
   readonly out?: string;
   readonly repo?: string;
   readonly preview: boolean;
 }
 
 const VALUE_FLAGS = new Set(['--title', '--task', '--note', '--job', '--out', '--repo']);
-const COMMAND_FLAGS = new Set(['--setup', '--check']);
+const COMMAND_FLAGS = new Set(['--setup', '--check', '--guard']);
 const FLAG_NAMES = new Set([...VALUE_FLAGS, ...COMMAND_FLAGS, '--preview']);
 
 export function parseCreateArgs(argv: readonly string[]): CreateArgs {
   const seen = new Set<string>();
-  const parsed: { title?: string; task?: string; note?: string; job?: string; setup?: string[]; check?: string[]; out?: string; repo?: string; preview: boolean } = { preview: false };
+  const parsed: { title?: string; task?: string; note?: string; job?: string; setup?: string[]; check?: string[]; guard?: string[]; out?: string; repo?: string; preview: boolean } = { preview: false };
   const once = (flag: string): void => {
     if (seen.has(flag)) throw new BountyUsage(`${flag} was given twice`);
     seen.add(flag);
@@ -57,7 +58,7 @@ export function parseCreateArgs(argv: readonly string[]): CreateArgs {
       let j = i + 2;
       while (j < argv.length && !FLAG_NAMES.has(argv[j]!)) { command.push(argv[j]!); j += 1; }
       if (command.length === 0) throw new BountyUsage(`${token} needs a command after --`);
-      parsed[token.slice(2) as 'setup' | 'check'] = command;
+      parsed[token.slice(2) as 'setup' | 'check' | 'guard'] = command;
       i = j - 1;
     } else if (token === '--preview') {
       once(token);
