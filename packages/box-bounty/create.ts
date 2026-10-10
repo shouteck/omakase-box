@@ -69,6 +69,9 @@ export interface BountyPlan {
   /** Canonical paths that exist as blobs in the snapshot tree — their emitted
       bytes come from `commit:path`, never the live worktree. */
   readonly snapshotBlobs: ReadonlySet<string>;
+  /** Paths that are gitlinks (submodules) in the snapshot tree, as spelled by
+      git — never blobs, so a moved submodule HEAD is not a deleted file. */
+  readonly snapshotLinks: ReadonlySet<string>;
   readonly files: readonly PlanFile[];
   readonly removed: readonly SnapshotRemoval[];
   readonly ruleRemovals: readonly RuleRemoval[];
@@ -185,6 +188,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     level: options.check !== undefined && options.check.length > 0 ? 'mechanical' : 'reviewed',
     snapshot: { commit: snapshot.commit, tree: snapshot.tree, baseCommit: snapshot.baseCommit },
     snapshotBlobs: snapshot.blobs,
+    snapshotLinks: snapshot.links,
     files,
     removed,
     ruleRemovals,
@@ -352,9 +356,10 @@ export function renderPreview(plan: BountyPlan): string {
 // snapshot's base commit. The note SHIPS — a changed path is named only when it
 // is part of the shipped set or, for a file the working state deleted, when no
 // never-ship rule would have kept it out — so a removed never-ship name can
-// never be named inside the bounty. Gathering never crashes create: a repository
-// with nothing to report gets a plain note, and a failed read falls back to one
-// too.
+// never be named inside the bounty. Both judgements run on the canonical path,
+// the same one shipping was decided on — never the diff's tree spelling.
+// Gathering never crashes create: a repository with nothing to report gets a
+// plain note, and a failed read falls back to one too.
 function composeNote(plan: BountyPlan, verification: BountyManifest['verification']): { file: string; text: string } {
   const lines: string[] = ['written by the tool — no --note was supplied.'];
   try {
@@ -369,33 +374,54 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
     if (plan.snapshot.baseCommit === null) {
       lines.push('', 'the repository has no commits yet — every shipped file is new work.');
     } else {
-      const shipped = new Set(plan.files.map(file => file.path.toLowerCase()));
-      // Three fates for each diff path: shipped files are named; a path a
-      // never-ship rule matches — or one still in the snapshot tree that did
-      // not ship — is never named but proves the state differs; anything else
-      // is in the base commit yet absent from the snapshot tree, a file the
-      // working state deleted — a real change, named honestly. The same rules
-      // judge deleted paths so deleting `.env` cannot make its name ship.
+      // Classification speaks canonical paths: shipping and the never-ship
+      // rules were both decided on realpath-resolved names, so judging the
+      // diff's tree spellings answers the wrong question — a file tracked
+      // through a junction (jdir/f.py) ships as realdir/f.py and must be
+      // classified by what it resolves to. canonicalForNew plays the same
+      // trick it does for --out/--to: realpath the nearest EXISTING ancestor
+      // and re-append the missing tail, which is all a deleted path can
+      // resolve. A path that resolves outside the checkout keeps its spelling.
+      const realRoot = plan.repoRoot; // already canonical — resolveRepoRoot realpaths it
+      const canonicalDiffPath = (name: string): string | null => {
+        const offset = toPosixPath(relative(realRoot, canonicalForNew(join(realRoot, ...name.split('/')))));
+        return offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset) ? null : offset;
+      };
+      const shipped = new Map(plan.files.map(file => [file.path.toLowerCase(), file.path]));
       const ownerList = loadOwnerList(plan.repoRoot);
       const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
-      const diff = gitOutcome(plan.repoRoot, ['diff', '--name-only', '-z', plan.snapshot.baseCommit, plan.snapshot.commit]);
+      // --no-renames: rename detection folds a paired delete+add into one
+      // line naming only the target (`git mv a.py .env` emits just `.env`),
+      // which would hide the shipped file the working state lost.
+      const diff = gitOutcome(plan.repoRoot, ['diff', '--name-only', '-z', '--no-renames', plan.snapshot.baseCommit, plan.snapshot.commit]);
       if (diff.status !== 0) throw new Error(`git diff failed: ${diff.stderr.trim()}`);
-      const changed: string[] = [];
-      const deleted: string[] = [];
+      // Fates, judged on the canonical path: shipped files are named; a path
+      // a never-ship rule covers — under EITHER the canonical or the raw
+      // spelling, so deleting `.env` under any name cannot make its name ship
+      // — or one still a blob in the snapshot tree is never named but proves
+      // the state differs; a gitlink still in the tree is a moved submodule,
+      // named as one rather than misread as a deletion; what remains is
+      // absent from the snapshot tree entirely, a file the working state
+      // deleted — a real change, named honestly.
+      const named = new Set<string>();
       let unlisted = false;
       for (const name of diff.stdout.split('\0')) {
         if (name === '') continue;
-        const key = name.toLowerCase();
-        if (shipped.has(key)) changed.push(name);
-        else if (plan.snapshotBlobs.has(name) || rules.some(rule => rule.match(key))) unlisted = true;
-        else deleted.push(name);
+        const canonical = canonicalDiffPath(name);
+        const key = (canonical ?? name).toLowerCase();
+        const shippedAs = canonical !== null ? shipped.get(key) : undefined;
+        if (shippedAs !== undefined) { named.add(shippedAs); continue; }
+        if (rules.some(rule => rule.match(key) || rule.match(name.toLowerCase()))) { unlisted = true; continue; }
+        if (plan.snapshotLinks.has(name)) { named.add(`${canonical ?? name} (submodule changed)`); continue; }
+        if (plan.snapshotBlobs.has(name)) { unlisted = true; continue; }
+        named.add(`${canonical ?? name} (deleted)`);
       }
-      if (changed.length > 0 || deleted.length > 0) {
+      if (named.size > 0) {
         lines.push('', `files already changed in the working state (against commit ${plan.snapshot.baseCommit.slice(0, 12)}):`);
-        for (const name of [...changed.sort(), ...deleted.sort().map(name => `${name} (deleted)`)]) lines.push(`  ${name}`);
+        for (const name of [...named].sort()) lines.push(`  ${name}`);
       }
       if (unlisted) {
-        lines.push('', changed.length === 0 && deleted.length === 0
+        lines.push('', named.size === 0
           ? 'the working state differs from the last commit only in files that do not ship — their names are not listed by design.'
           : 'other changed paths do not ship and are not named.');
       }

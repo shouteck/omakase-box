@@ -223,8 +223,11 @@ Without `--note`, `create` composes the hand-off note from evidence it
 gathers itself: the declared check with the exit and output tail it recorded
 failing on this snapshot, and the files the working state already changed
 relative to `snapshot.baseCommit` — named when they are part of the shipped
-set, and a file the working state deleted is named when no never-ship rule
-would have kept it out; a path a rule covers is never named inside the bounty.
+set, a moved submodule is labelled `submodule changed`, and a file the working
+state deleted is named when no never-ship rule would have kept it out; a path
+a rule covers is never named inside the bounty. Every judgement runs on the
+canonical path — the one shipping was decided on — never the diff's spelling,
+and renames are unfolded so a rename's source is still classified.
 When every differing path is one that does not ship, the note says the state
 differs only outside the shipped set — never that the tree matches the last
 commit when it does not.
