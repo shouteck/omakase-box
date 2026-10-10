@@ -5,9 +5,7 @@ name: verify
 on:
   push:
     # Master only — doc-only pushes are skipped by paths-ignore below.
-    # wave/K10 rides along temporarily so this wave can exercise the new suite
-    # list on a real run; it is removed before the wave's final commit.
-    branches: [master, wave/K10]
+    branches: [master]
     # paths-ignore mirrors the "no test reads these" set (INERT) in scripts/suite.mjs: a push
     # that only touches docs/process files costs nothing. Anything else still runs.
     paths-ignore:
