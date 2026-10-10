@@ -23,6 +23,7 @@ export interface CreateArgs {
   readonly title?: string;
   readonly task?: string;
   readonly note?: string;
+  readonly job?: string;
   readonly setup?: readonly string[];
   readonly check?: readonly string[];
   readonly out?: string;
@@ -30,13 +31,13 @@ export interface CreateArgs {
   readonly preview: boolean;
 }
 
-const VALUE_FLAGS = new Set(['--title', '--task', '--note', '--out', '--repo']);
+const VALUE_FLAGS = new Set(['--title', '--task', '--note', '--job', '--out', '--repo']);
 const COMMAND_FLAGS = new Set(['--setup', '--check']);
 const FLAG_NAMES = new Set([...VALUE_FLAGS, ...COMMAND_FLAGS, '--preview']);
 
 export function parseCreateArgs(argv: readonly string[]): CreateArgs {
   const seen = new Set<string>();
-  const parsed: { title?: string; task?: string; note?: string; setup?: string[]; check?: string[]; out?: string; repo?: string; preview: boolean } = { preview: false };
+  const parsed: { title?: string; task?: string; note?: string; job?: string; setup?: string[]; check?: string[]; out?: string; repo?: string; preview: boolean } = { preview: false };
   const once = (flag: string): void => {
     if (seen.has(flag)) throw new BountyUsage(`${flag} was given twice`);
     seen.add(flag);
@@ -47,7 +48,7 @@ export function parseCreateArgs(argv: readonly string[]): CreateArgs {
       once(token);
       const value = argv[i + 1];
       if (value === undefined) throw new BountyUsage(`${token} needs a value`);
-      parsed[token.slice(2) as 'title' | 'task' | 'note' | 'out' | 'repo'] = value;
+      parsed[token.slice(2) as 'title' | 'task' | 'note' | 'job' | 'out' | 'repo'] = value;
       i += 1;
     } else if (COMMAND_FLAGS.has(token)) {
       once(token);

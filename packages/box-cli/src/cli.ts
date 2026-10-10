@@ -3,10 +3,13 @@
 //   submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]
 //   verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]
 //   trace --out <dir> -- <the test command, as it would normally be typed>
-//   bounty create --title "<one line>" --task <file> [--note <file>] [--setup -- <command>] [--check -- <command>] --out <dir> [--repo <path>] [--preview]
+//   bounty create --title "<one line>" --task <file> [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] --out <dir> [--repo <path>] [--preview]
 //   bounty status [--repo <path>]
 //   bounty confirm <id> [--repo <path>]
 //   bounty post <id> --to <dir> [--repo <path>]
+//   bounty answer <id> --from <dir> [--repo <path>]
+//   bounty apply <id> [--repo <path>]
+//   bounty reject <id> --reason "<text>" [--repo <path>]
 //   bounty withdraw <id> [--repo <path>]
 // Thin shell over packages/box-package and packages/box-trace: argument parsing and
 // exit codes live here; all agreement validation, selection, folder emission,
@@ -16,7 +19,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, renderPreview, renderStatus, resolveRepoRoot, withdrawBounty } from '../../box-bounty/index.js';
+import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderPreview, renderStatus, resolveRepoRoot, withdrawBounty } from '../../box-bounty/index.js';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
 import { trace, TraceRefused } from '../../box-trace/index.js';
@@ -40,10 +43,13 @@ function usage(message?: string): never {
   console.error('       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]');
   console.error('       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]');
   console.error('       box trace --out <dir> -- <the test command, as it would normally be typed>');
-  console.error('       box bounty create --title "<one line>" --task <file> [--note <file>] [--setup -- <command>] [--check -- <command>] --out <dir> [--repo <path>] [--preview]');
+  console.error('       box bounty create --title "<one line>" --task <file> [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] --out <dir> [--repo <path>] [--preview]');
   console.error('       box bounty status [--repo <path>]');
   console.error('       box bounty confirm <id> [--repo <path>]');
   console.error('       box bounty post <id> --to <dir> [--repo <path>]');
+  console.error('       box bounty answer <id> --from <dir> [--repo <path>]');
+  console.error('       box bounty apply <id> [--repo <path>]');
+  console.error('       box bounty reject <id> --reason "<text>" [--repo <path>]');
   console.error('       box bounty withdraw <id> [--repo <path>]');
   process.exit(2);
 }
@@ -150,14 +156,19 @@ if (command === 'export') {
   }
 } else if (command === 'bounty') {
   const [subcommand, ...bountyArgs] = rest;
-  if (subcommand === undefined) usage('expected: box bounty create|status|confirm|post|withdraw …');
+  if (subcommand === undefined) usage('expected: box bounty create|status|confirm|post|answer|apply|reject|withdraw …');
   // Subcommand-local parsing: positional ids, plus --repo and --to as box flags.
   const bountyRepo = (): string => {
     const index = bountyArgs.indexOf('--repo');
     return index >= 0 && bountyArgs[index + 1] !== undefined ? resolve(bountyArgs[index + 1]!) : process.cwd();
   };
   const bountyIds = (): string[] =>
-    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to'].includes(bountyArgs[index - 1] ?? ''));
+    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason'].includes(bountyArgs[index - 1] ?? ''));
+
+  // The line every ended bounty prints: which job was waiting on it — the
+  // --job file when one was recorded, else the title.
+  const jobLine = (record: { job?: { file: string } | null; title: string }): string =>
+    `the job it came from: ${record.job?.file ?? record.title}`;
   try {
     if (subcommand === 'create') {
       const parsed = parseCreateArgs(bountyArgs);
@@ -169,6 +180,7 @@ if (command === 'export') {
         title: parsed.title,
         taskPath: resolve(parsed.task),
         ...(parsed.note !== undefined ? { notePath: resolve(parsed.note) } : {}),
+        ...(parsed.job !== undefined ? { jobPath: resolve(parsed.job) } : {}),
         ...(parsed.setup !== undefined ? { setup: parsed.setup } : {}),
         ...(parsed.check !== undefined ? { check: parsed.check } : {}),
         outDir: resolve(parsed.out)
@@ -201,6 +213,47 @@ if (command === 'export') {
       const { record, destination } = postBounty(resolveRepoRoot(bountyRepo()), id, to);
       console.log(`${record.id} — stage 3 of 7: posted — delivered to ${destination}`);
       console.log('next: a solver picks it up there. The answer comes back through this tool; check box bounty status again later.');
+    } else if (subcommand === 'answer') {
+      const fromIndex = bountyArgs.indexOf('--from');
+      const from = fromIndex >= 0 ? bountyArgs[fromIndex + 1] : undefined;
+      const [id, ...extraIds] = bountyIds();
+      if (id === undefined || extraIds.length > 0 || from === undefined) usage('box bounty answer <id> --from <dir> [--repo <path>]');
+      const result = answerBounty(resolveRepoRoot(bountyRepo()), id, resolve(from));
+      if (result.outcome === 'answered') {
+        console.log(`${result.record.id} — stage 5 of 7: answered — the answer is recorded; a person reads it`);
+        console.log(`next: run box bounty apply ${result.record.id} to land it on the current code, or box bounty reject ${result.record.id} --reason "<why>"`);
+      } else if (result.outcome === 'rejected') {
+        console.log(`${result.record.id} — rejected — ${result.rejection}`);
+        console.log(`ended — ${jobLine(result.record)}; the durability ref is removed`);
+      } else if (result.outcome === 'applied') {
+        console.log(`${result.record.id} — the declared check passed on the recreated snapshot: stage 6 of 7: verified`);
+        console.log(`stage 7 of 7: applied — merge commit ${result.mergeCommit} is on this branch and names the bounty`);
+        console.log(`ended — ${jobLine(result.record)}; the durability ref is removed`);
+      } else {
+        console.log(`${result.record.id} — stage 6 of 7: verified, but merging onto the current code conflicts in: ${(result.conflicts ?? []).join(', ')}`);
+        console.log('the merge was aborted — the worktree and index are exactly as before');
+        console.log(`next: resolve those paths and commit, then run box bounty apply ${result.record.id} to retry; or end it with box bounty reject ${result.record.id} --reason "<why>"`);
+      }
+    } else if (subcommand === 'apply') {
+      const [id, ...extraIds] = bountyIds();
+      if (id === undefined || extraIds.length > 0) usage('box bounty apply <id> [--repo <path>]');
+      const result = applyBounty(resolveRepoRoot(bountyRepo()), id);
+      if (result.outcome === 'applied') {
+        console.log(`${result.record.id} — stage 7 of 7: applied — merge commit ${result.mergeCommit} is on this branch and names the bounty`);
+        console.log(`ended — ${jobLine(result.record)}; the durability ref is removed`);
+      } else {
+        console.log(`${result.record.id} — merging the answer onto the current code conflicts in: ${(result.conflicts ?? []).join(', ')}`);
+        console.log('the merge was aborted — the worktree and index are exactly as before; the record stays where it was');
+        console.log(`next: resolve those paths and commit, then run box bounty apply ${result.record.id} to retry; or end it with box bounty reject ${result.record.id} --reason "<why>"`);
+      }
+    } else if (subcommand === 'reject') {
+      const reasonIndex = bountyArgs.indexOf('--reason');
+      const reason = reasonIndex >= 0 ? bountyArgs[reasonIndex + 1] : undefined;
+      const [id, ...extraIds] = bountyIds();
+      if (id === undefined || extraIds.length > 0 || reason === undefined) usage('box bounty reject <id> --reason "<text>" [--repo <path>]');
+      const record = rejectBounty(resolveRepoRoot(bountyRepo()), id, reason);
+      console.log(`${record.id} — rejected — the reason is recorded in ${recordPath(resolveRepoRoot(bountyRepo()), record.id)}`);
+      console.log(`ended — ${jobLine(record)}; the durability ref is removed`);
     } else if (subcommand === 'withdraw') {
       const [id, ...extraIds] = bountyIds();
       if (id === undefined || extraIds.length > 0) usage('box bounty withdraw <id> [--repo <path>]');
@@ -211,7 +264,7 @@ if (command === 'export') {
         console.log(`${record.id} — withdrawn — the durability ref is removed and the record says ended`);
       }
     } else {
-      usage('expected: box bounty create|status|confirm|post|withdraw …');
+      usage('expected: box bounty create|status|confirm|post|answer|apply|reject|withdraw …');
     }
   } catch (error) {
     if (error instanceof BountyUsage) usage(error.message);
