@@ -87,13 +87,18 @@ jobs:
       #    absolute Windows path to this checkout (file:///C:/Users/.../boundaries.mjs)
       #    into the probe it writes, so it can only run on this exact machine. 2 of its
       #    284 tests fail for that reason; test content is outside this wave's scope.
-      # K10 added the milestone-BT product suites and un-excluded test:box-package:
-      #  * test:box-trace, test:box-bounty — in the list since K10. They need the
-      #    `python` command (setup-python step above) and git; nothing else.
-      #  * test:box-package — in the list since K10. Its one platform-bound test
-      #    (a 'SRC/POLICY/LOADER.TS' case-alias entrypoint must still resolve,
-      #    which only holds on a case-insensitive filesystem) is marked host-only
-      #    in tests/box/package/review-security-r2.test.ts and skips on Linux.
+      # K10 added the milestone-BT product suites and un-excluded test:box-package.
+      # What the Linux runner lacked, and how it is provided (no test weakened):
+      #  * `python` by name — test:box-trace spawns it and test:box-bounty runs a
+      #    declared `python` check; setup-python above provides it at 3.12.
+      #  * test:box-bounty has three Windows-bound tests marked host-only beside
+      #    their assertions: the 'npm.cmd' setup recipe (the launcher refuses
+      #    command files off Windows by design) and two junction tests (a
+      #    junction is transparent to git; a Linux symlink stays a visible link
+      #    and is refused under a different named reason — still a refusal).
+      #  * test:box-package's one platform-bound test (a 'SRC/POLICY/LOADER.TS'
+      #    case-alias entrypoint must still resolve — case-insensitive FS only)
+      #    is marked host-only in tests/box/package/review-security-r2.test.ts.
       # `check --full` covers bootstrap/auth/contracts/planner; they are still named so the
       # list reads as the whole suite set (deduped inside one verify run).
       - name: verify

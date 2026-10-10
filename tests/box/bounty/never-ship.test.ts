@@ -10,6 +10,14 @@ import { listTree, makeRepo, runRoot, write } from './support.js';
 // outside the repository is refused by name, never followed. Every secret here is
 // made-up bytes written at run time — nothing real is read or shipped.
 
+// Host-only marks (K10): junction semantics exist only on Windows. A junction is
+// transparent to git and the filesystem scan — the target's paths enumerate
+// under the link's spelling — while a Linux symlink stays a visible link and is
+// refused earlier, still a refusal but under a different named reason. The two
+// junction tests below assert the Windows behavior itself, so they run only
+// where junctions exist.
+const junctions = process.platform === 'win32';
+
 function options(repo: string): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
   return { repoPath: repo, title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty') };
@@ -50,7 +58,9 @@ describe('never-ship holds against hostile paths', () => {
     expect(rules).toContain('private-key');
   });
 
-  it('removes a secret reached through a junction inside the repository', () => {
+  // Host-only: needs a real junction — on Linux the link stays a link and the
+  // snapshot refuses it as 'unreadable-path' before never-ship rules run.
+  it.skipIf(!junctions)('removes a secret reached through a junction inside the repository', () => {
     const { shipped, plan } = ship({ 'secrets/real.key': 'fake-junction-key\n' }, repo => {
       // A junction is a directory link any Windows user can create; git traverses
       // it, so alias/real.key enumerates — only the real path decides what ships.
@@ -79,7 +89,10 @@ describe('never-ship holds against hostile paths', () => {
     expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 2, paths: ['licenses/dataset.lic', 'proprietary/algo.py'] }]);
   });
 
-  it('refuses a link that points outside the repository, by name, without following it', () => {
+  // Host-only: the 'link-escape' name requires the junction to be traversed far
+  // enough to see 'escape/loot.txt' — on Linux the link is refused first as
+  // 'unreadable-path' (a refusal either way; the named reason is the platform's).
+  it.skipIf(!junctions)('refuses a link that points outside the repository, by name, without following it', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const outside = runRoot('outside');
     write(outside, 'loot.txt', 'outside-bytes\n');
