@@ -64,12 +64,27 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
 
 <One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
+- Worker: cook — scaffolding and install only; journey + rungs are the chef's
+  run per this file. `kitchen/bt5/` holds TASK.md (nit task, cold-solver
+  wording), check.mjs (fails on the two recorded symptoms, passes when fixed;
+  control cases pin the semantics), setup.mjs (single declared setup:
+  install+build), fixtures.mjs (two part-2 repos; php absence proven by
+  executing it — ENOENT — then by the fixture's own check naming it),
+  PROTOCOL.md (clone, roles, rung rubric, evidence paths), and
+  evidence/scaffold-proof.md. `.box/limits.json` ships reminders off,
+  rulesFile AGENTS.md, honest cost/expectedAnswer, no allowedDestinations;
+  the marked block is pasted verbatim into AGENTS.md under "Handing work
+  off". A stray `nul` file (redirect artifact) was removed from the root.
+- Commit: 8f02ed4 (+ this Result commit)
+- Verify: `verify 8f02ed4 PASS check=0 build=0 test:box-bounty=0 db=embedded 278s`
+  (.kitchen/runs/2026-10-10T12-38-09-599Z-8f02ed4)
 - Verdict: · Level:
 - Lenses:
-- Method:
-- Findings and limits:
-- Merged: · Resources removed:
+- Method: feature playbook (the scaffolding is the feature); principles cited
+  in the cook's report.
+- Findings and limits: the check demonstrably fails today — output committed
+  at `kitchen/bt5/evidence/scaffold-proof.md`; the journey and rungs have not
+  run — they are the chef's part and need live agents.
+- Merged: · Resources removed: scratch repos are temp-dir and self-cleaning;
+  the fixture test build under %TEMP%\bt5-fixtures-test was removed.
 - Reflect:
