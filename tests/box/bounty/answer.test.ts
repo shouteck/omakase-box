@@ -361,6 +361,61 @@ describe('create --job — owner context that lives only in the record', () => {
   });
 });
 
+describe('the boundary the pass proved open', () => {
+  it("a solver-added path the owner's .boxignore names is refused by name — the return enforces the same table create did", () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n', '.boxignore': 'credentials.json\n' });
+    const { id, delivered } = posted(repo);
+    const dir = returned(delivered, root => write(root, 'repo/credentials.json', 'password=hunter2\n'));
+    const refusal = expectRefusal(() => answerBounty(repo, id, dir), 'answer-never-ship');
+    expect(refusal.message).toContain('credentials.json');
+    expect(readRecord(repo, id).stage).toBe('posted');
+    expect(existsSync(join(repo, 'credentials.json'))).toBe(false);
+  });
+
+  it('the check runs on the shipped set — a never-ship file inside the snapshot commit must not materialise for verification', () => {
+    // .env is tracked, so the snapshot commit contains it — but never-ship
+    // removed it from the bounty the solver saw. Verifying on the whole commit
+    // would resurrect it and reject a correct answer for bytes it never had.
+    const repo = makeRepo({ '.env': 'SECRET=hunter2\n', 'src/app.py': 'x\n' });
+    const check = ['node', '-e', 'const fs=require("node:fs");process.exit(fs.existsSync(".env")||!fs.readFileSync("src/app.py","utf8").includes("fixed")?1:0)'];
+    const { id, delivered } = posted(repo, { check });
+    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
+    const result = answerBounty(repo, id, dir);
+    expect(result.outcome).toBe('applied');
+    expect(readRecord(repo, id).stage).toBe('applied');
+  });
+
+  it('an autocrlf=true checkout lands an existing-file change — a CRLF-clean file is not a false dirty refusal', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    git(repo, ['config', 'core.autocrlf', 'true']);
+    // A file git itself materialised under autocrlf: CRLF bytes, stat-clean —
+    // exactly a default Windows checkout. Hand-writing the CRLF would only
+    // make it stat-dirty, a different case.
+    rmSync(join(repo, 'src', 'app.py'));
+    git(repo, ['checkout', '--', 'src/app.py']);
+    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\r\n');
+    expect(git(repo, ['status', '--porcelain'])).toBe('');
+    const { id, delivered } = posted(repo);
+    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
+    expect(answerBounty(repo, id, dir).outcome).toBe('answered');
+    expect(applyBounty(repo, id).outcome).toBe('applied');
+    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('y\r\n'); // landed under the repo's own convention
+  });
+
+  it('a solver-added path that exists ignored in the worktree is a named refusal — porcelain never lists ignored files', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n', '.gitignore': 'precious.txt\n' });
+    write(repo, 'precious.txt', 'PRECIOUS LOCAL BYTES\n');
+    expect(git(repo, ['status', '--porcelain', '--ignored'])).toContain('precious.txt'); // prove it really is ignored
+    const { id, delivered } = posted(repo);
+    const dir = returned(delivered, root => write(root, 'repo/precious.txt', 'FOREIGN\n'));
+    expect(answerBounty(repo, id, dir).outcome).toBe('answered');
+    const refusal = expectRefusal(() => applyBounty(repo, id), 'apply-worktree-dirty');
+    expect(refusal.message).toContain('precious.txt');
+    expect(readFileSync(join(repo, 'precious.txt'), 'utf8')).toBe('PRECIOUS LOCAL BYTES\n');
+    expect(readRecord(repo, id).stage).toBe('answered');
+  });
+});
+
 // The agent-facing surface, driven through the built CLI: exit codes and the
 // printed states for the whole return. Skipped unless the bundle exists —
 // verify builds first.

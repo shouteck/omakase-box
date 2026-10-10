@@ -41,6 +41,10 @@ export function makeRepo(files: Record<string, string>, mutate?: (repo: string) 
   const repo = join(runRoot('repo'), 'repo');
   mkdirSync(repo, { recursive: true });
   git(repo, ['init', '-b', 'main', '-q']);
+  // Deterministic eol: scratch repos behave like a raw-bytes checkout whatever
+  // the host's global autocrlf says. Tests that want autocrlf set it on the
+  // repo themselves (the product code runs under the repo's own config).
+  git(repo, ['config', 'core.autocrlf', 'false']);
   for (const [rel, content] of Object.entries(files)) write(repo, rel, content);
   git(repo, ['add', '-A']);
   git(repo, ['-c', 'user.name=bt1-test', '-c', 'user.email=bt1@test.invalid', 'commit', '-qm', 'base']);

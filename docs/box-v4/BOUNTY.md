@@ -46,9 +46,10 @@ once the bounty ends (`applied`/`rejected`).
 
 `create` also keeps a Git ref `refs/box-bounty/<id>` pointing at
 `snapshot.commit`, so `git gc --prune=now` cannot take the bytes the identifier
-names. When an answer lands the ref is repointed to the answer commit (the
-snapshot stays reachable as its parent); every ended stage — `applied`,
-`rejected`, `withdrawn` — removes the ref.
+names. When an answer lands, a second ref `refs/box-bounty/<id>-answer` pins
+the answer commit — the answer is parented on the snapshot's *base* commit, so
+it cannot keep the snapshot alive and both refs exist while the bounty is
+open. Every ended stage — `applied`, `rejected`, `withdrawn` — removes both.
 
 ## The commands after create
 
@@ -95,15 +96,19 @@ plus a `repo/` they edited — nothing else to write, no diff format to learn.
 The change is then extracted by comparing `repo/` against the manifest's
 recorded per-file sha256: changed, added and deleted paths — no diff text, no
 git inside the answer. A return that changes nothing is `answer-empty`. Paths
-the never-ship rules would strip (`.git`, `.box`, secrets, keys) and links of
-any kind inside `repo/` are refused by name (`answer-never-ship`,
+the never-ship rules would strip (`.git`, `.box`, secrets, keys, and anything
+the owner's `.boxignore` names — the same table that applied at `create`) and
+links of any kind inside `repo/` are refused by name (`answer-never-ship`,
 `answer-unsafe-path`); everything else — including brand-new files — is the
 answer, and it is the merge commit that carries it into history.
 
-For a **`mechanical`** bounty the snapshot is recreated in a clean directory
-from `refs/box-bounty/<id>` (a pruned ref is `snapshot-lost`), the change
-applied, and the declared setup+check run exactly as `create` ran them. Pass →
-`verified`, then `apply` runs automatically. A check that ran and failed ends
+For a **`mechanical`** bounty the *shipped set* — exactly the manifest's file
+list, emitted as recorded blob bytes from `refs/box-bounty/<id>` — is recreated
+in a clean directory (a pruned ref is `snapshot-lost`), the change applied,
+and the declared setup+check run exactly as `create` ran them on the folder it
+shipped. Never-ship files and `.box` records inside the snapshot commit never
+materialise for the check — the solver is judged on what they were given. Pass
+→ `verified`, then `apply` runs automatically. A check that ran and failed ends
 the bounty `rejected` with `implementation-failure`, the exit and the output
 tail recorded; a setup or check that cannot run is `environment-failure` — a
 different state, same ending.
@@ -114,13 +119,17 @@ For a **`reviewed`** bounty there is no check to run: the answer lands at
 happen.
 
 **Applying is a real git merge, never a file write.** The change becomes a
-commit on top of `snapshot.commit` (built on a temporary index — the worktree
-and real index are never touched), and `git merge` brings it onto the current
-branch as a merge commit whose message names the bounty. A conflict aborts the
-merge — the worktree and index come back byte-identical — and the record keeps
-its stage with the conflicting paths as the next step; fix them, commit, and
-`apply` retries, or `reject` ends it. Uncommitted changes the merge would
-overwrite are refused by name (`apply-worktree-dirty`), never damaged.
+commit on the snapshot's base commit — the base tree plus the extracted delta
+(built on a temporary index — the worktree and real index are never touched),
+so the incoming side of the merge is the solver's change alone — and
+`git merge` brings it onto the current branch as a merge commit whose message
+names the bounty. A conflict aborts the merge — the worktree and index come
+back byte-identical — and the record keeps its stage with the conflicting
+paths as the next step; fix them, commit, and `apply` retries, or `reject`
+ends it. Work the merge would overwrite is refused by name
+(`apply-worktree-dirty`) before it can run — uncommitted content on a touched
+path, and any file that exists at a touched path but is not in the index (an
+ignored file the merge would silently clobber) — never damaged.
 
 ## What the folder contains
 
@@ -197,7 +206,8 @@ an answer against exactly these bytes. Note the corollary: removed files' bytes
 remain reachable to anyone with repository access through `snapshot.commit` —
 the folder ships only the trimmed set, the commit records the full state.
 The commit is pinned under `refs/box-bounty/<id>` (written by `create`, removed
-by `withdraw`), so garbage collection cannot prune it while the bounty is open.
+when the bounty ends), so garbage collection cannot prune it while the bounty
+is open.
 
 ## Never-ship
 

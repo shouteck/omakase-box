@@ -5,9 +5,10 @@ import { dirname, join, resolve } from 'node:path';
 import { runDeclaredCheck } from '../box-package/commands.js';
 import type { CheckRecord } from '../box-package/commands.js';
 import { BountyRefused } from './errors.js';
-import { GitFailed, git, gitOutcome, gitWriteBlob } from './git.js';
+import { GitFailed, git, gitBlob, gitOutcome, gitWriteBlob } from './git.js';
 import type { BountyManifest } from './manifest.js';
-import { BUILTIN_RULES } from './never-ship.js';
+import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
+import type { NeverShipRule } from './never-ship.js';
 import { dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { BountyRecord } from './record.js';
 
@@ -40,7 +41,6 @@ const COMMAND_TIMEOUT_MS = 300_000;
 const TAIL = 2000;
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
-const toPosix = (path: string): string => path.split('\\').join('/');
 const tail = (text: string): string => text.slice(-TAIL);
 const describeCommand = (argv: readonly string[]): string => argv.map(token => (token.includes(' ') ? JSON.stringify(token) : token)).join(' ');
 
@@ -109,10 +109,11 @@ function readAnswerFolder(fromDir: string): AnswerFolder {
 
 // The change, extracted by comparing repo/ against the manifest's per-file
 // sha256 — never a diff text, never git inside the answer. Entries the
-// never-ship rules would strip (.git, .box, secrets, keys) and links of any
-// kind are refused by name: foreign bytes enter the repository only as plain
-// file content through the merge.
-export function extractAnswerChange(manifest: BountyManifest, repoDir: string): AnswerChange {
+// never-ship rules would strip (.git, .box, secrets, keys, and anything the
+// owner's .boxignore names — the same table create enforced outbound) and
+// links of any kind are refused by name: foreign bytes enter the repository
+// only as plain file content through the merge.
+export function extractAnswerChange(manifest: BountyManifest, repoDir: string, rules: readonly NeverShipRule[]): AnswerChange {
   const expected = new Map<string, { readonly path: string; readonly sha256: string }>();
   for (const file of manifest.files) expected.set(file.path.toLowerCase(), file);
   const seen = new Set<string>();
@@ -132,7 +133,7 @@ export function extractAnswerChange(manifest: BountyManifest, repoDir: string): 
         throw new BountyRefused('answer-unsafe-path', `the returned repo/ holds a non-file entry at ${relPath} — an answer carries plain files only`);
       }
       const lower = relPath.toLowerCase();
-      const rule = BUILTIN_RULES.find(candidate => candidate.match(lower));
+      const rule = rules.find(candidate => candidate.match(lower));
       if (rule !== undefined) {
         throw new BountyRefused('answer-never-ship', `the returned repo/ contains ${relPath}, which the never-ship rule '${rule.name}' removes — an answer cannot reintroduce what the boundary strips`);
       }
@@ -195,12 +196,13 @@ const runOne = (argv: readonly string[], name: string, root: string): CheckRecor
   return runDeclaredCheck({ name, program: program!, args, cwd: '.', context: 'recipient', timeoutMs: COMMAND_TIMEOUT_MS }, root);
 };
 
-// Uncommitted paths the merge would overwrite. `status --porcelain -z` through
-// gitOutcome — the trimming `git()` wrapper would eat the leading space of a
-// first-line `' M path'` entry and silently mis-parse it; -z also removes
-// quoting and rename arrows. A `??` dir entry still counts if a touched path
-// sits under it (or it under one).
-function dirtyPaths(repoRoot: string, touched: ReadonlySet<string>): string[] {
+// Every uncommitted path in the worktree, read under the repository's own
+// config — the same view the merge uses. `status --porcelain -z` through
+// gitOutcome: the trimming `git()` wrapper would eat the leading space of a
+// first-line `' M path'` entry and silently mis-parse it, and -z removes
+// quoting and rename arrows. Ignored files are invisible to porcelain by
+// design; the ignored-file boundary below covers them.
+function porcelainDirty(repoRoot: string): string[] {
   const outcome = gitOutcome(repoRoot, ['status', '--porcelain', '-z']);
   if (outcome.status !== 0) {
     throw new GitFailed(`git status failed in ${repoRoot}: ${(outcome.stderr || outcome.stdout).trim()}`);
@@ -212,15 +214,42 @@ function dirtyPaths(repoRoot: string, touched: ReadonlySet<string>): string[] {
     if (entry.length < 4) continue;
     const path = entry.slice(3);
     if (entry[0] === 'R' || entry[0] === 'C' || entry[1] === 'R' || entry[1] === 'C') i += 1; // -z renames carry the source as a second entry
-    const lower = path.toLowerCase();
-    for (const touchedPath of touched) {
-      if (lower === touchedPath || (lower.endsWith('/') && touchedPath.startsWith(lower)) || (touchedPath.endsWith('/') && lower.startsWith(touchedPath))) {
-        dirty.push(path);
-        break;
-      }
-    }
+    dirty.push(path);
   }
   return dirty.sort();
+}
+
+const covers = (dirty: string, touched: ReadonlySet<string>): boolean => {
+  const lower = dirty.toLowerCase();
+  for (const touchedPath of touched) {
+    if (lower === touchedPath || (lower.endsWith('/') && touchedPath.startsWith(lower)) || (touchedPath.endsWith('/') && lower.startsWith(touchedPath))) return true;
+  }
+  return false;
+};
+
+// Raw bytes of every path the merge could write — captured before it runs and
+// restored after a conflict abort or a refusal, so the worktree comes back
+// byte-identical regardless of the host's eol filters. git's own `merge
+// --abort` restores index and merge state; it does not promise the worktree
+// bytes (a refused merge can smudge files through core.autocrlf mid-attempt),
+// which is why the bytes are saved here. null means the path did not exist
+// before the merge — it is removed on restore.
+function snapshotBytes(repoRoot: string, paths: ReadonlySet<string>): Map<string, Buffer | null> {
+  const saved = new Map<string, Buffer | null>();
+  for (const path of paths) {
+    const target = join(repoRoot, ...path.split('/'));
+    const stat = statSync(target, { throwIfNoEntry: false });
+    saved.set(path, stat?.isFile() === true ? readFileSync(target) : null);
+  }
+  return saved;
+}
+
+function restoreBytes(repoRoot: string, saved: ReadonlyMap<string, Buffer | null>): void {
+  for (const [path, bytes] of saved) {
+    const target = join(repoRoot, ...path.split('/'));
+    if (bytes === null) rmSync(target, { force: true });
+    else { mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes); }
+  }
 }
 
 // `apply`: git's own three-way merge lands the recorded answer commit onto the
@@ -240,19 +269,35 @@ export function applyBounty(repoRoot: string, id: string): ApplyResult {
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
     throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot} — finish it or run git merge --abort before applying a bounty`);
   }
-  // Worktree boundary, checked BEFORE the merge runs: the paths git would
-  // overwrite are exactly the merge-base→answer delta (the solver's change,
-  // nothing more). Untracked files in the way count as dirty. Refusing here is
-  // load-bearing — a refused `git merge` is not byte-preserving on autocrlf
-  // hosts: it smudges worktree files during the attempt.
+  // Worktree boundary, checked BEFORE the merge runs, under the repository's
+  // own config — the same view the merge itself uses, so a file that is clean
+  // under this repo's convention (CRLF bytes in an autocrlf checkout) never
+  // draws a false refusal and a real dirty path is named before git can touch
+  // it. The paths at stake are exactly the merge-base→answer delta: the
+  // solver's change, nothing more.
+  //
+  // Two kinds of blocking work, refused by name together:
+  //  - uncommitted content on a touched path — porcelain sees it (modified,
+  //    staged, untracked);
+  //  - a file that exists at a touched path but is not in the index — an
+  //    ignored file, invisible to porcelain, which `git merge` would overwrite
+  //    silently. That is clobber, not a merge: refuse first.
   const mergeBase = gitOutcome(repoRoot, ['merge-base', 'HEAD', record.answer.commit]).stdout.split('\n')[0]!.trim();
-  const touched = /^[0-9a-f]{40}$/.test(mergeBase)
-    ? new Set(gitOutcome(repoRoot, ['diff', '--name-only', '-z', mergeBase, record.answer.commit]).stdout
-        .split('\0').filter(name => name !== '').map(name => name.toLowerCase()))
-    : new Set([...record.answer.changed, ...record.answer.added, ...record.answer.deleted].map(path => path.toLowerCase()));
-  const blocked = dirtyPaths(repoRoot, touched);
+  const deltaPaths = /^[0-9a-f]{40}$/.test(mergeBase)
+    ? gitOutcome(repoRoot, ['diff', '--name-only', '-z', mergeBase, record.answer.commit]).stdout
+        .split('\0').filter(name => name !== '')
+    : [...record.answer.changed, ...record.answer.added, ...record.answer.deleted];
+  const touched = new Set([...deltaPaths, ...record.answer.changed, ...record.answer.added, ...record.answer.deleted].map(path => path.toLowerCase()));
+  const dirty = porcelainDirty(repoRoot);
+  const tracked = new Set(gitOutcome(repoRoot, ['ls-files', '-z']).stdout.split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
+  const blockedDirty = dirty.filter(path => covers(path, touched));
+  const blockedDirtyKeys = new Set(blockedDirty.map(path => path.toLowerCase()));
+  const blockedClobber = [...new Set(deltaPaths)].filter(path =>
+    !blockedDirtyKeys.has(path.toLowerCase()) && !tracked.has(path.toLowerCase())
+    && statSync(join(repoRoot, ...path.split('/')), { throwIfNoEntry: false }) !== undefined);
+  const blocked = [...blockedDirty, ...blockedClobber].sort();
   if (blocked.length > 0) {
-    throw new BountyRefused('apply-worktree-dirty', `uncommitted changes in ${blocked.join(', ')} would be overwritten by the merge — commit or stash them, then run box bounty apply ${id} again`);
+    throw new BountyRefused('apply-worktree-dirty', `uncommitted work in ${blocked.join(', ')} would be overwritten by the merge — commit it, stash it or move it aside, then run box bounty apply ${id} again`);
   }
   const message = [
     `box bounty ${record.id}: ${record.title}`,
@@ -260,11 +305,13 @@ export function applyBounty(repoRoot: string, id: string): ApplyResult {
     `answer: ${record.answer.commit}`,
     `snapshot: ${record.snapshot.commit}`
   ].join('\n');
-  // core.autocrlf=false pins the merge's bytes to the recorded identifiers:
-  // extracted files land as raw blob bytes, and a later --abort restores the
-  // worktree byte-identical instead of re-smudging through the host's filters.
+  // The merge runs under the repository's own config — pinning eol filters off
+  // would make every file clean under the repo's convention look modified to
+  // the merge and break apply on an ordinary autocrlf checkout. Byte identity
+  // on abort is guaranteed by the saved bytes, not by filters: the delta plus
+  // every dirty path is captured raw before the merge runs.
+  const saved = snapshotBytes(repoRoot, new Set([...deltaPaths, ...dirty]));
   const merged = gitOutcome(repoRoot, [
-    '-c', 'core.autocrlf=false',
     '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
     'merge', '--no-ff', '-m', message, record.answer.commit
   ]);
@@ -278,16 +325,18 @@ export function applyBounty(repoRoot: string, id: string): ApplyResult {
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
   if (mergeHead.status === 0) {
-    const paths = gitOutcome(repoRoot, ['diff', '--name-only', '--diff-filter=U']).stdout
-      .split('\n').map(line => line.trim()).filter(line => line !== '').sort();
-    const aborted = gitOutcome(repoRoot, ['-c', 'core.autocrlf=false', 'merge', '--abort']);
+    const paths = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--diff-filter=U']).stdout
+      .split('\0').filter(line => line !== '').sort();
+    const aborted = gitOutcome(repoRoot, ['merge', '--abort']);
     if (aborted.status !== 0) {
       throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
     }
+    restoreBytes(repoRoot, saved);
     record.conflicts = { paths, at: new Date().toISOString() };
     persistRecord(repoRoot, record);
     return { record, outcome: 'conflict', conflicts: paths };
   }
+  restoreBytes(repoRoot, saved);
   const detail = tail(`${merged.stderr}\n${merged.stdout}`.trim());
   if (/local changes|untracked working tree files|would be overwritten/i.test(detail)) {
     throw new BountyRefused('apply-worktree-dirty', `git merge refused: ${detail}`);
@@ -295,17 +344,29 @@ export function applyBounty(repoRoot: string, id: string): ApplyResult {
   throw new BountyRefused('merge-failed', `git merge could not land answer ${record.answer.commit} on ${repoRoot}: ${detail}`);
 }
 
-// The declared setup+check on the recreated snapshot plus the answer — exactly
-// as `create` ran them. Any non-pass ends the bounty `rejected` with the
-// failure class, exit and output tail recorded; pass returns null.
+// The declared setup+check runs on the SHIPPED set plus the answer — the same
+// file list `create` emitted and the solver edited, not the raw snapshot
+// commit. Checking out the whole commit would materialise never-ship files and
+// .box records the solver never saw, and a check could fail on bytes that were
+// never in the bounty. Emission is `cat-file` per manifest path: raw recorded
+// blob bytes, hash-checked against the manifest so a corrupt snapshot names
+// itself instead of running a phantom tree. Any non-pass ends the bounty
+// `rejected` with the failure class, exit and output tail recorded; pass
+// returns null.
 function verifyAnswer(record: BountyRecord, manifest: BountyManifest, repoRoot: string, change: AnswerChange, repoDir: string): string | null {
   const runRoot = mkdtempSync(join(tmpdir(), 'box-bt3-verify-'));
   try {
     const dir = join(runRoot, 'work');
     mkdirSync(dir, { recursive: true });
-    const env = { GIT_INDEX_FILE: join(runRoot, 'index') };
-    git(repoRoot, ['-c', 'core.autocrlf=false', 'read-tree', record.snapshot.commit], env);
-    git(repoRoot, ['-c', 'core.autocrlf=false', 'checkout-index', '-a', `--prefix=${toPosix(dir)}/`], env);
+    for (const file of manifest.files) {
+      const blob = gitBlob(repoRoot, record.snapshot.commit, file.path);
+      if (blob === null || sha256(blob) !== file.sha256) {
+        throw new BountyRefused('snapshot-corrupt', `snapshot ${record.snapshot.commit} cannot reproduce ${file.path} at the recorded sha256 — the version this answer was made for is damaged beyond use; end the bounty with box bounty reject ${record.id} --reason "snapshot corrupt"`);
+      }
+      const target = join(dir, ...file.path.split('/'));
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, blob);
+    }
     for (const path of change.deleted) rmSync(join(dir, ...path.split('/')), { force: true });
     for (const path of [...change.changed, ...change.added]) {
       const target = join(dir, ...path.split('/'));
@@ -357,7 +418,12 @@ export function answerBounty(repoRoot: string, id: string, fromDir: string): Ans
   if (record.manifestSha256 !== undefined && sha256(manifestBytes) !== record.manifestSha256) {
     throw new BountyRefused('manifest-tampered', `the returned bounty.json is not byte-identical to the one this bounty shipped — it binds the answer and must come back unmodified; edit repo/ only`);
   }
-  const change = extractAnswerChange(manifest, repoDir);
+  // Never-ship applies to the return exactly as it did outbound: built-ins plus
+  // the owner's .boxignore. An answer cannot smuggle a path create would have
+  // stripped — it is refused by name before anything is extracted.
+  const ownerList = loadOwnerList(repoRoot);
+  const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
+  const change = extractAnswerChange(manifest, repoDir, rules);
   if (gitOutcome(repoRoot, ['rev-parse', '--verify', '-q', refName(id)]).status !== 0) {
     throw new BountyRefused('snapshot-lost', `refs/box-bounty/${id} is gone — the snapshot this answer was made for can no longer be recreated or merged from. Nothing can come back to this bounty; end it with box bounty reject ${id} --reason "snapshot lost"`);
   }
