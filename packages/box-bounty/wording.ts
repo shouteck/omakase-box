@@ -9,7 +9,7 @@
 // kitchen/scenarios/bt4.md. If the comparative runs overturn the pick, the
 // fix is to swap the constants below — nothing else carries this wording.
 
-// --- Candidate A (provisionally picked): what / worth it / not worth it ---
+// --- Candidate A (picked — the comparative runs stood it): what / worth it / not worth it ---
 // States all three things an agent needs to choose — what the tool does, when
 // it is worth using and when it is not — without commanding a choice. See the
 // pack for candidates B (minimal pointer) and C (trigger list).
@@ -25,8 +25,8 @@ export const DESCRIBE_LINES: readonly string[] = [
   'not worth it when: you can plainly do the work — a bounty has a cost and an',
   'answer takes time.',
   '',
-  'using it is always your call; the owner\'s yes (box bounty confirm) is the',
-  'boundary nothing crosses without. box bounty help shows the whole journey.'
+  'using it is always your call — create a draft any time; the owner\'s yes',
+  '(box bounty confirm) gates posting. box bounty help shows the whole journey.'
 ];
 
 export const RULES_LINES: readonly string[] = [
