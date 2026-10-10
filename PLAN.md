@@ -1,6 +1,6 @@
 # Plan: the bounty tool for coding agents
 
-Updated by the CTO on 10 October 2026 after BT3, from the owner's decisions in discussion that day. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
+Updated by the CTO on 11 October 2026 (BT6 set up), from the owner's decisions in discussion. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
 
 ## The product in one line
 
@@ -77,7 +77,7 @@ Each cooks only when named; the kitchen stops after each.
 | **BT3b** | **Fewer things to supply.** `create` asks for one line of why and records it; takes its title from the task when none is given; picks a sensible place to write; gathers evidence for the note by itself (the failing output, the files changed so far). `box bounty help` shows the whole journey on one screen. Every success line ends with the exact next command. | Small. Closes known rough edges listed in STATUS. |
 | **BT4** | **Tell the agent.** Three separate, switchable pieces: the tool's description (what, when, when not); the lines for a project's rules, with an "open bounties" line the tool keeps current; reminders at moments of difficulty, off by default. Plus the owner's limits file, which also supplies the facts an agent needs to choose. | Accepted by constructed scenarios, below. Two or three wordings are tried and the best kept; published research found wording alone changes a tool's use tenfold, and that more detail is not better. |
 | **BT5** | **The kitchen uses it.** Part one, the journey: a person asks for a bounty on this repository's own work; a solver that has never seen the repository answers; a different session collects it from the record. Part two, judgement: one or two scenarios run in full, climbing from description only, to the rules note, to a reminder, stopping at the first rung where the agent chooses sensibly. Part three, open: the tool stays installed during ordinary waves, nobody mentions it, and the recorded reasons are read afterwards. | Part one proves it works. Parts two and three are reported honestly, including "nobody used it". |
-| **BT6** | **The first bounty posted outside.** An adapter to one existing site. | Needs the owner's separate approval and a choice of site. Preceded by an hour's reading of how those sites take a task from a program, verify and pay. Once money moves, accepting is no longer undoable; that needs its own rule (a window before payment is final) and is not designed yet. |
+| **BT6** | **The first bounty posted outside, as a GitHub issue.** `post --to github` opens an issue on the project's own repository and pushes exactly what was shipped to a branch; an answer returns as a pull request and gets the same facts report; the decision closes the issue. No money. An outside author's code is reported on but not run. | Brief: [waves/BT6.md](waves/BT6.md). Owner chose the destination on 11 October 2026; the repository is public from that day. One real issue, shown to the owner before it is posted. Later, each needing its own approval: a reward through a site that funds issues, with a window before payment is final; a contained run for outside answers. |
 
 ## How BT4 is accepted: constructed scenarios
 

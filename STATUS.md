@@ -25,6 +25,13 @@ Replaced by the CTO on 10 October 2026, at the close of wave BT5.
 
 - Green on master: BT2, BT3, BT3a merge runs passed with the product suites (~6m30s). The BT5 merge run lands in the same shape — check `gh run list` after the push.
 
+## BT6 set up (CTO, 11 October 2026)
+
+- The owner made the repository public on 11 October 2026 and chose a GitHub issue as the first outside destination: no money, and the same issue is what paid sites (Algora, TaskBounty) build on later.
+- The brief is [waves/BT6.md](waves/BT6.md). It posts one real public issue on this repository, and only after the owner has seen its exact text and said "go".
+- An answer from any account other than the one signed in here is fetched and reported but its code is not run on this machine. A contained run is a later wave.
+- Not in BT6: any bounty site, any reward, payment rules.
+
 ## Next
 
-**BT6: first external bounty-site adapter.** Not started — it needs a separate owner approval and a destination choice. Meanwhile the open observation runs: ordinary waves proceed with the tool installed and unmentioned; the record is read at the next milestone review.
+**BT6: the first bounty posted outside, as a GitHub issue.** Send `START.md: BT6`. The kitchen cooks that wave and stops.

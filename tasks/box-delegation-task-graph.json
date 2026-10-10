@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "planVersion": "bounty-tool-2026-10-10b",
+  "planVersion": "bounty-tool-2026-10-11",
   "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
   "entrypoint": "START.md",
   "target": "BT5",
@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone BT, the bounty tool: BT1 to BT3 are merged. Remaining, each only when named: BT3a (report, do not judge), BT3b (fewer things to supply), BT4 (tell the agent; accepted by constructed scenarios), BT5 (the kitchen uses it: journey, judgement, open observation), BT6 (first bounty outside; owner approval). The research lab is paused. See PLAN.md.",
+    "sequence": "Milestone BT, the bounty tool: BT1 to BT5 are merged. Remaining, only when named: BT6 (first bounty outside, as a GitHub issue on the project's own public repository; no money; one real issue shown to the owner first). The research lab is paused. See PLAN.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -815,18 +815,17 @@
       "dependencies": [
         "BT4"
       ],
-      "proposal": "Three parts, kept apart. (1) The journey: a person asks for a bounty on this repository's own work; a blind solver started outside every checkout answers; a different session collects it from the record alone. Proves it works; says nothing about demand. (2) Judgement: one or two of BT4's scenarios run in full, climbing from description only, to the rules note, to a reminder, to a person asking, stopping at the first rung where the agent chooses sensibly; then the easy control at that rung. Record what it did instead when it did not post: kept trying, reported failure, or claimed success. (3) Open: the tool stays installed during ordinary waves, nobody mentions it, and the recorded reasons are read afterwards. Report all three honestly, including \"nobody used it\". One real use before many; capped budgets.",
-      "handoff": "waves/BT5.md"
+      "handoff": "waves/BT5.md",
+      "result": "Done 10 October 2026, merged 751c480: the journey run for real, the rungs, the tool left installed. See waves/BT5.md."
     },
     {
       "id": "BT6",
       "milestone": "BT",
-      "title": "The first bounty posted outside",
+      "title": "The first bounty posted outside, as a GitHub issue",
       "dependencies": [
         "BT5"
       ],
       "ownerApproval": "Required separately, with the choice of site. Sending anything outside is the owner's decision and never happens overnight.",
-      "proposal": "An adapter to one existing bounty site, after an hour's reading of how those sites accept a task posted by a program, how they verify and how they pay. Once money moves, accepting cannot be undone the way a merge can: design a window before payment is final and how disputes are handled before this wave is briefed.",
       "handoff": "waves/BT6.md"
     },
     {
@@ -841,5 +840,5 @@
       "result": "Done 10 October 2026, merged c0dfdae: the off-machine run covers the bounty, trace and package suites on pinned ubuntu-24.04. See waves/K10.md."
     }
   ],
-  "sequenceRevision": "bounty-tool-2026-10-10b"
+  "sequenceRevision": "bounty-tool-2026-10-11"
 }
