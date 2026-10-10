@@ -30,6 +30,7 @@ Replaced by the CTO on 10 October 2026, at the close of wave BT5.
 - The owner made the repository public on 11 October 2026 and chose a GitHub issue as the first outside destination: no money, and the same issue is what paid sites (Algora, TaskBounty) build on later.
 - The brief is [waves/BT6.md](waves/BT6.md). It posts one real public issue on this repository, and only after the owner has seen its exact text and said "go".
 - An answer from any account other than the one signed in here is fetched and reported but its code is not run on this machine. A contained run is a later wave.
+- **Public repositories only** (owner, 11 October 2026): the tool refuses to post a private repository outside and says so in its description, help and doc page. No override.
 - Not in BT6: any bounty site, any reward, payment rules.
 
 ## Next

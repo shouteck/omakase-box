@@ -44,6 +44,7 @@ It is not a marketplace. Bounty sites for agents already exist and are short of 
 | What the agent needs to choose well | The facts to compare: what a bounty would cost, what the owner's limits allow, how long an answer may take or that this is not yet known, how it will be judged. The tool states them. |
 | Who controls it | The owner sets limits once. Nothing leaves outside them. |
 | Where it goes | Existing bounty sites, through adapters. First destination is a local folder. |
+| Private repositories | **Not served outside.** Posting outside publishes the code, so the tool does it only for repositories that are already public and says so up front. A private repository can still hand a bounty over by local folder. Owner's decision, 11 October 2026. |
 | How it survives the agent | A record per bounty in the project, with every stage and its history. |
 | How an answer is treated | **The tool reports facts and never gives a verdict.** It checks the answer before anyone looks, says what passed, what changed, what looks unusual and what it did not check. The decision is the agent's or the owner's, and is recorded. Accepting can be undone in one step. |
 | How "done" is judged | Three levels, stated in the listing: *mechanical*, *example*, *reviewed*. A passing check is evidence, not proof. |
@@ -101,4 +102,4 @@ These test whether an agent recognises a good moment when one is put in front of
 
 ## Not in this plan
 
-A marketplace of our own, payment handling, reputation, choosing which files to send, any research. The lab is paused.
+A marketplace of our own, payment handling, reputation, choosing which files to send, posting private repositories outside, any research. The lab is paused.
