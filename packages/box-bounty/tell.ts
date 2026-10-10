@@ -24,6 +24,7 @@ export function renderDescribe(repoRoot: string | null): string {
   }
   const limits = resolveLimits(repoRoot);
   lines.push('the facts for choosing — .box/limits.json and the live records:');
+  lines.push('  GitHub cost: nothing; public repositories only. Expected wait: unknown; nobody is known to be watching these issues yet.');
   lines.push(`  cost: ${limits.cost ?? 'not stated — the owner sets "cost" in .box/limits.json'}`);
   lines.push(`  expected wait: ${limits.expectedAnswer ?? 'not stated — the owner sets "expectedAnswer" in .box/limits.json'}`);
   lines.push('  how an answer is judged: the level stated in the listing — mechanical: the check declared on it must exit 0; reviewed: a person reads it. The tool reports facts about an answer, never a verdict.');

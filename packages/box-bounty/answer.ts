@@ -12,6 +12,7 @@ import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { Attempt, AttemptOutcome, BountyRecord } from './record.js';
+import { syncGitHubDecision } from './github.js';
 
 // `bounty answer` — the return journey. A solver hands back the whole bounty
 // folder (`bounty.json` + `repo/`); this module binds it, extracts the change,
@@ -98,7 +99,7 @@ export interface UndoResult {
   readonly reverted: string;
 }
 
-function readAnswerFolder(fromDir: string): AnswerFolder {
+export function readAnswerFolder(fromDir: string): AnswerFolder {
   const folder = resolve(fromDir);
   if (!existsSync(folder) || !statSync(folder).isDirectory()) {
     throw new BountyRefused('answer-malformed', `--from ${fromDir} is not a directory — the answer is the whole bounty folder handed back`);
@@ -314,6 +315,11 @@ function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], extraTo
 // number refuses and names them — the choice is the agent's.
 export function applyBounty(repoRoot: string, id: string, attemptN?: number): ApplyResult {
   const record = loadRecord(repoRoot, id);
+  if (record.stage === 'applied' && record.github !== undefined) {
+    syncGitHubDecision(repoRoot, record);
+    const event = [...record.events].reverse().find(entry => entry.command === 'apply');
+    return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge };
+  }
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
   const attempts = attemptsOf(record);
   if (attempts.length === 0) {
@@ -336,6 +342,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
     }
     attempt = applicable[0]!;
   }
+  if (attempt.outcome === 'check-not-run') throw new BountyRefused('foreign-author-not-checked', 'this outside author\'s answer has not been checked in containment; it cannot be applied on this host');
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
     throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot} — finish it or run git merge --abort before applying a bounty`);
   }
@@ -372,6 +379,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
+    syncGitHubDecision(repoRoot, record);
     return { record, outcome: 'applied', attempt: attempt.n, mergeCommit };
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
@@ -402,6 +410,12 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
 // is touched). The same worktree boundary as apply protects uncommitted work.
 export function undoBounty(repoRoot: string, id: string): UndoResult {
   const record = loadRecord(repoRoot, id);
+  if (record.stage === 'undone' && record.github !== undefined) {
+    syncGitHubDecision(repoRoot, record);
+    const event = [...record.events].reverse().find(entry => entry.command === 'undo');
+    const applied = [...record.events].reverse().find(entry => entry.command === 'apply');
+    return { record, outcome: 'undone', undoCommit: event?.merge ?? '', reverted: applied?.merge ?? '' };
+  }
   if (record.stage === 'undone') {
     throw new BountyRefused('already-undone', `bounty ${id} was already undone — the reversal is a commit in history; the record keeps both events`);
   }
@@ -473,6 +487,7 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
     command: 'undo', merge: undoCommit,
     reason: `reverses merge ${merge}`
   });
+  syncGitHubDecision(repoRoot, record);
   return { record, outcome: 'undone', undoCommit, reverted: merge };
 }
 
@@ -665,7 +680,7 @@ function renderAttemptReport(record: BountyRecord, manifest: BountyManifest, n: 
 // arrival; the resulting stage is derived from the best attempt: verified when
 // a check passed, answered when none was declared, posted again when nothing
 // applies.
-export function answerBounty(repoRoot: string, id: string, fromDir: string): AnswerResult {
+export function answerBounty(repoRoot: string, id: string, fromDir: string, execution: 'run' | 'foreign-author' = 'run'): AnswerResult {
   const record = loadRecord(repoRoot, id);
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
   if (record.stage !== 'posted' && record.stage !== 'taken' && record.stage !== 'answered' && record.stage !== 'verified') {
@@ -699,10 +714,13 @@ export function answerBounty(repoRoot: string, id: string, fromDir: string): Ans
   transitionTo(repoRoot, record, 'answered', { attempt: n });
   record.conflicts = null;
 
-  const probe = probeAnswer(record, manifest, repoRoot, change, repoDir);
+  const probe = execution === 'run' ? probeAnswer(record, manifest, repoRoot, change, repoDir) : { setup: null, check: null, guard: null, baseline: null };
   let outcome: AttemptOutcome;
   let detail: string | null = null;
-  if (manifest.check === null || manifest.check.argv.length === 0) {
+  if (execution === 'foreign-author') {
+    outcome = 'check-not-run';
+    detail = 'foreign-author: no setup, check or guard was run because the pull request author is not the signed-in account; a contained run is required and is not available in this wave';
+  } else if (manifest.check === null || manifest.check.argv.length === 0) {
     outcome = 'answered'; // reviewed: there is no check to run — nothing claims one
   } else if (probe.check === null) {
     outcome = 'check-unrunnable';
@@ -736,6 +754,13 @@ export function answerBounty(repoRoot: string, id: string, fromDir: string): Ans
     ? (attempts.some(candidate => candidate.outcome === 'verified') ? 'verified' : 'answered')
     : 'posted';
   const report = renderAttemptReport(record, manifest, n, change, probe, merge, counts, stage, applicable);
+  if (execution === 'foreign-author') {
+    const checkLine = report.findIndex(line => line.startsWith('  check:'));
+    report[checkLine] = '  check: not run (foreign-author). The author differs from the signed-in account; setup, check and guard were not executed.';
+    const guardLine = report.findIndex(line => line.startsWith('  guard:'));
+    if (guardLine >= 0) report[guardLine] = '  guard: not run (foreign-author)';
+    report[report.length - 1] = `  next: a contained run is required and is not available yet; reject with box bounty reject ${id} --reason "<why>" or wait for that capability. No host execution override exists.`;
+  }
   record.attempts = [...attempts.slice(0, -1), { ...attempt, report }];
   // The arrival event already landed the bounty at `answered`; a reviewed
   // bounty derives `answered` again — the same stage is not a transition.

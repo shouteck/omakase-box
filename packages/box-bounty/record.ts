@@ -19,6 +19,7 @@ import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
+import { postGitHub, approveGitHub, syncGitHubDecision } from './github.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
@@ -37,7 +38,7 @@ export interface StageEvent {
   readonly merge?: string; // the commit the command made (the apply merge, or the undo reversal)
 }
 
-export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable';
+export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable' | 'check-not-run';
 
 export interface Attempt {
   /** 1-based, stable within the record — `box bounty apply <id> <n>` names it.
@@ -101,6 +102,8 @@ export interface BountyRecord {
       Cleared when a later apply lands. */
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
   events: StageEvent[];
+  github?: import('./github.js').GitHubPublication;
+  githubApproval?: { readonly repository: string; readonly preview: string };
 }
 
 export interface ListedBounty {
@@ -254,6 +257,7 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
   answered: 'a person reads it — no check was run',
   'check-failed': 'the check exits nonzero on it',
   'check-unrunnable': 'the check could not run'
+  , 'check-not-run': 'the check was not run because the author is outside this account'
 };
 
 const nextStep = (record: BountyRecord): string => {
@@ -304,6 +308,7 @@ export function renderStatus(repoRoot: string): string {
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
+      if (record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
       const attempts = attemptsOf(record);
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
@@ -350,6 +355,8 @@ export function renderStatus(repoRoot: string): string {
 export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned checked.',
+    'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
+    'confirm <id> --to github previews the exact issue and branch; post <id> --to github publishes them. answer <id> lists PRs; answer <id> --pr <n> collects one.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    snapshot the repository minus never-ship files, with the task, a note and the check; prints the preview → drafted',
@@ -396,11 +403,12 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
   persistRecord(repoRoot, record);
 };
 
-export function confirmBounty(repoRoot: string, id: string): BountyRecord {
+export function confirmBounty(repoRoot: string, id: string, destination?: string): BountyRecord {
   const record = loadRecord(repoRoot, id);
-  if (record.stage !== 'drafted') {
+  if (record.stage !== 'drafted' && !(destination === 'github' && record.stage === 'confirmed' && record.githubApproval === undefined)) {
     throw new BountyRefused('not-drafted', `bounty ${id} is ${record.stage}, not drafted — only a drafted bounty can be confirmed`);
   }
+  if (destination === 'github') record.githubApproval = approveGitHub(repoRoot, record);
   transitionTo(repoRoot, record, 'confirmed');
   return record;
 }
@@ -452,7 +460,7 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
   }
   const allowedDestinations = limits.allowedDestinations === undefined
     ? null
-    : limits.allowedDestinations.map(dir => canonicalForNew(resolve(repoRoot, dir)));
+    : limits.allowedDestinations.map(dir => dir === 'github' ? dir : canonicalForNew(resolve(repoRoot, dir)));
   return {
     reminders: limits.reminders,
     cost: limits.cost ?? null,
@@ -467,7 +475,7 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
 export function renderOpenLine(repoRoot: string): string {
   const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   if (open.length === 0) return 'open bounties: none';
-  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})`).join(', ')}`;
+  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})${entry.record!.github !== undefined ? ` ${entry.record!.github!.issue?.url ?? 'github issue pending'} ${entry.record!.github!.branch}` : ''}`).join(', ')}`;
 }
 
 // The maintained-block writer, deliberately boring: find the markers, replace
@@ -509,6 +517,7 @@ function syncOpenSurfaces(repoRoot: string, limits: ResolvedLimits): void {
 }
 
 export function postBounty(repoRoot: string, id: string, toDir: string): { record: BountyRecord; destination: string } {
+  if (toDir === 'github') return postGitHub(repoRoot, id);
   const record = loadRecord(repoRoot, id);
   // The confirmed gate is the owner's-yes boundary: nothing is delivered before it.
   if (record.stage !== 'confirmed') {
@@ -548,6 +557,7 @@ export function postBounty(repoRoot: string, id: string, toDir: string): { recor
   if (limits.allowedDestinations !== null) {
     const destDirKey = `${toPosix(destReal).toLowerCase()}/`;
     const allowed = limits.allowedDestinations.some(dir => {
+      if (dir === 'github') return false;
       const key = `${toPosix(dir).toLowerCase()}/`;
       return destDirKey === key || destDirKey.startsWith(key);
     });
@@ -575,12 +585,13 @@ export interface WithdrawOutcome {
 
 export function withdrawBounty(repoRoot: string, id: string): WithdrawOutcome {
   const record = loadRecord(repoRoot, id);
-  if (record.stage === 'withdrawn') return { record, outcome: 'already-withdrawn' };
+  if (record.stage === 'withdrawn') { syncGitHubDecision(repoRoot, record); return { record, outcome: 'already-withdrawn' }; }
   if (!isOpenStage(record.stage)) {
     throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — withdraw only ends an open bounty`);
   }
   transitionTo(repoRoot, record, 'withdrawn', { command: 'withdraw' });
   dropDurabilityRefs(repoRoot, record);
+  syncGitHubDecision(repoRoot, record);
   return { record, outcome: 'withdrawn' };
 }
 
@@ -594,6 +605,7 @@ export function rejectBounty(repoRoot: string, id: string, reason: string): Boun
     throw new BountyRefused('missing-reason', `reject needs a reason — box bounty reject ${id} --reason "<why this answer did not land>"`);
   }
   const record = loadRecord(repoRoot, id);
+  if (record.stage === 'rejected' && record.github !== undefined) { syncGitHubDecision(repoRoot, record); return record; }
   if (!isOpenStage(record.stage)) {
     throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — there is nothing left to reject`);
   }
@@ -602,5 +614,6 @@ export function rejectBounty(repoRoot: string, id: string, reason: string): Boun
   }
   transitionTo(repoRoot, record, 'rejected', { reason: text, command: 'reject' });
   dropDurabilityRefs(repoRoot, record);
+  syncGitHubDecision(repoRoot, record);
   return record;
 }

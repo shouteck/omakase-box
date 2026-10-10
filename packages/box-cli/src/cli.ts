@@ -24,6 +24,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
+import { answerGitHub, listGitHubAnswers, previewGitHub } from '../../box-bounty/index.js';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
 import { trace, TraceRefused } from '../../box-trace/index.js';
@@ -171,7 +172,7 @@ if (command === 'export') {
     return index >= 0 && bountyArgs[index + 1] !== undefined ? resolve(bountyArgs[index + 1]!) : process.cwd();
   };
   const bountyIds = (): string[] =>
-    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason'].includes(bountyArgs[index - 1] ?? ''));
+    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason', '--pr'].includes(bountyArgs[index - 1] ?? ''));
 
   // The line every ended bounty prints: which job was waiting on it — the
   // --job file when one was recorded, else the title.
@@ -231,7 +232,12 @@ if (command === 'export') {
       const [id, ...extraIds] = bountyIds();
       if (id === undefined || extraIds.length > 0) usage('box bounty confirm <id> [--repo <path>]');
       const repoRoot = resolveRepoRoot(bountyRepo(), 'confirm');
-      const record = confirmBounty(repoRoot, id);
+      const toIndex = bountyArgs.indexOf('--to');
+      const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
+      if (to !== undefined && to !== 'github') usage('box bounty confirm <id> [--to github] [--preview]');
+      if (to === 'github') console.log(previewGitHub(repoRoot, id));
+      if (bountyArgs.includes('--preview')) process.exit(0);
+      const record = confirmBounty(repoRoot, id, to);
       console.log(`${record.id} — stage 2 of 7: confirmed — the owner's yes is recorded in ${recordPath(repoRoot, record.id)}`);
       console.log(`next: deliver it — run box bounty post ${record.id} --to <dir>`);
     } else if (subcommand === 'post') {
@@ -246,14 +252,20 @@ if (command === 'export') {
       const fromIndex = bountyArgs.indexOf('--from');
       const from = fromIndex >= 0 ? bountyArgs[fromIndex + 1] : undefined;
       const [id, ...extraIds] = bountyIds();
-      if (id === undefined || extraIds.length > 0 || from === undefined) usage('box bounty answer <id> --from <dir> [--repo <path>]');
-      const result = answerBounty(resolveRepoRoot(bountyRepo(), 'answer'), id, resolve(from));
+      const prIndex = bountyArgs.indexOf('--pr');
+      const prText = prIndex >= 0 ? bountyArgs[prIndex + 1] : undefined;
+      if (id === undefined || extraIds.length > 0 || from !== undefined && prIndex >= 0 || prIndex >= 0 && (prText === undefined || !/^\d+$/.test(prText))) usage('box bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]');
+      const root = resolveRepoRoot(bountyRepo(), 'answer');
+      if (from === undefined && prText === undefined) { console.log(listGitHubAnswers(root, id)); process.exit(0); }
+      const result = prText !== undefined ? answerGitHub(root, id, Number(prText)) : answerBounty(root, id, resolve(from!));
       if (result.outcome === 'verified') {
         console.log(`${result.record.id} — attempt ${result.attempt} recorded: the check exits 0 on the snapshot it was made for (verified — nothing is applied)`);
       } else if (result.outcome === 'answered') {
         console.log(`${result.record.id} — attempt ${result.attempt} recorded: no check was declared (answered — a person reads it)`);
       } else if (result.outcome === 'check-failed') {
         console.log(`${result.record.id} — attempt ${result.attempt} recorded: the check exits nonzero on it — the bounty is open again`);
+      } else if (result.outcome === 'check-not-run') {
+        console.log(`${result.record.id} — attempt ${result.attempt} recorded: check not run (foreign-author); a contained run is required`);
       } else {
         console.log(`${result.record.id} — attempt ${result.attempt} recorded: the check could not run — the bounty is open again`);
       }
