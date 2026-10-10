@@ -22,6 +22,7 @@
     "test:box-auth": "node scripts/suite.mjs box --suite auth",
     "test:box-delegation": "node scripts/suite.mjs box --suite delegation",
     "test:box-package": "node scripts/suite.mjs box --suite package",
+    "test:box-trace": "node scripts/suite.mjs box --suite trace",
     "test:planner": "node scripts/suite.mjs planner",
     "test:analysis": "node scripts/suite.mjs analysis",
     "test:compiler": "node scripts/suite.mjs compiler",

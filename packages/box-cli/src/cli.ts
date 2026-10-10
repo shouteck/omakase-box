@@ -2,15 +2,18 @@
 //   export <agreement.json> --repo <path> --out <dir> [--pnpm <command|pnpm.cjs path>]
 //   submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]
 //   verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]
-// Thin shell over packages/box-package: argument parsing and exit codes live here; all
-// agreement validation, selection, folder emission, submission checks and owner-side
-// verify live in the library. `verify` applies the patch in a scratch clone, runs the
-// owner checks and lands a scratch merge on pass — real history is never touched.
+//   trace --out <dir> -- <the test command, as it would normally be typed>
+// Thin shell over packages/box-package and packages/box-trace: argument parsing and
+// exit codes live here; all agreement validation, selection, folder emission,
+// submission checks, owner-side verify and test-call tracing live in the libraries.
+// `verify` applies the patch in a scratch clone, runs the owner checks and lands a
+// scratch merge on pass — real history is never touched.
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
+import { trace, TraceRefused } from '../../box-trace/index.js';
 
 function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
   const flagIndex = argv.indexOf('--pnpm');
@@ -30,6 +33,7 @@ function usage(message?: string): never {
   console.error('usage: box export <agreement.json> --repo <path> --out <dir> [--pnpm <command|pnpm.cjs path>]');
   console.error('       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]');
   console.error('       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]');
+  console.error('       box trace --out <dir> -- <the test command, as it would normally be typed>');
   process.exit(2);
 }
 
@@ -41,7 +45,7 @@ const flag = (name: string): string | undefined => {
 const flags = ['--repo', '--out', '--pnpm', '--agreement', '--box', '--base'];
 const positional = rest.filter((arg, index) => !arg.startsWith('--') && !flags.includes(rest[index - 1] ?? ''));
 const [target, ...extra] = positional;
-if (extra.length > 0) usage(`unexpected argument ${extra[0]}`);
+if (command !== 'trace' && extra.length > 0) usage(`unexpected argument ${extra[0]}`);
 
 if (command === 'export') {
   const repoPath = flag('--repo');
@@ -110,6 +114,27 @@ if (command === 'export') {
     process.exitCode = report.verdict === 'pass' ? 0 : 3;
   } catch (error) {
     console.error(`verify failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
+} else if (command === 'trace') {
+  // Everything after `--` is the command's own argv, verbatim — no shell runs
+  // it, so pipes or redirection belong inside a shell the caller invokes.
+  const separator = rest.indexOf('--');
+  const head = separator >= 0 ? rest.slice(0, separator) : rest;
+  const outIndex = head.indexOf('--out');
+  const outDir = outIndex >= 0 ? head[outIndex + 1] : undefined;
+  const argv = separator >= 0 ? rest.slice(separator + 1) : [];
+  if (outDir === undefined || argv.length === 0) usage();
+  try {
+    const result = await trace({ argv, cwd: process.cwd(), outDir: resolve(outDir) });
+    console.error(`box trace: ${result.processes} Python process(es), ${result.functions} function(s), ${result.files} file(s) in ${result.seconds.toFixed(2)}s -> ${result.tracePath}`);
+    process.exitCode = result.exitCode ?? 1;
+  } catch (error) {
+    if (error instanceof TraceRefused) {
+      console.error(`box trace: ${error.message}`);
+      process.exit(2);
+    }
+    console.error(`trace failed: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 } else {
