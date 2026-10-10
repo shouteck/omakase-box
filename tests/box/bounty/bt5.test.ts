@@ -1,17 +1,28 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ROOT } from './support.js';
 
-// BT5 — the scaffolding the wave ships: the fixture builder's absence probe.
-// The probe is the claim "this program is absent on the host", proven by
-// execution — these tests exercise it through the script's --probe mode so a
-// host that gains php also fails here and the fixture premise is re-checked.
+// Exercise the fixture builder's probe in a controlled child environment.
+// The builder itself still checks the real host before creating fixtures.
 
 const FIXTURES = join(ROOT, 'kitchen', 'bt5', 'fixtures.mjs');
-const probe = (program: string) =>
-  spawnSync(process.execPath, [FIXTURES, '--probe', program], { encoding: 'utf8' });
+const probe = (program: string) => {
+  const directory = mkdtempSync(join(tmpdir(), 'kitchen-BT5-ci-probe-'));
+  // Remove every PATH spelling, including Windows' case-insensitive aliases.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'path'));
+  try {
+    return spawnSync(process.execPath, [FIXTURES, '--probe', program], {
+      cwd: directory,
+      env: { ...env, PATH: directory },
+      encoding: 'utf8'
+    });
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+};
 
 describe('bt5 fixtures.mjs absence probe', () => {
   it('reports a program that exists as present — node itself', () => {
@@ -27,9 +38,7 @@ describe('bt5 fixtures.mjs absence probe', () => {
     expect(run.stdout).toContain('absent');
   });
 
-  it('proves the fixture toolchain pick is absent on this host', () => {
-    // The needs-toolchain fixture's premise. If this ever fails, the host
-    // gained php and the fixture must be re-picked — never assumed away.
+  it('reports the fixture toolchain pick as absent in the isolated child', () => {
     const run = probe('php');
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('php absent');
