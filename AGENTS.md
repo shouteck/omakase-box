@@ -50,7 +50,7 @@ The CEO decides:
 - external messages, customer pilots, real payments, production deploys;
 - deleting anything that is not disposable or reproducible from Git.
 
-The CTO decides everything else and reports afterwards: briefs, task order inside a milestone, corrections, retries, test environment, development dependencies, disposable resources and their cleanup, merges to master after review, commits and non-force pushes to the private `origin`.
+The CTO decides everything else and reports afterwards: briefs, task order inside a milestone, corrections, retries, test environment, development dependencies, disposable resources and their cleanup, merges to master after review, commits and non-force pushes to `origin`. `origin` is public since 11 October 2026 and stays public: everything pushed can be read by anyone, so nothing goes into a commit that should not be published.
 
 Stop and bring the CEO one recommendation when a milestone outcome cannot be met as written, when a CEO-only decision is needed, or when two consecutive attempts at the same blocker produced no new information.
 
