@@ -17,6 +17,15 @@ Replaced by the CTO on 10 October 2026, at the close of wave BT3 (two fix rounds
 
 - K10 merge run green on master with the product suites (6m29s); the BT2 merge run was in progress at BT3 kickoff — read the latest before the next merge.
 
+## Roadmap updated (CTO, 10 October 2026, after BT3)
+
+From the owner's decisions in discussion: the tool does everything mechanical and the agent supplies only judgement; it reports facts about an answer and never a verdict; using it is always at the agent's discretion; every bounty records one line of why. PLAN.md has all of it. Two small waves now come before BT4:
+
+- **BT3a, report, do not judge.** Changes two things BT3 shipped: a passing answer waits for a decision instead of being applied automatically, and a failing answer no longer ends the bounty. Adds the facts report, flags, an optional guard command, several answers, and `undo`.
+- **BT3b, fewer things to supply.** The one line of why, defaults, evidence gathered by the tool, `help`, and the known rough edges above.
+
+BT4 is now accepted by constructed scenarios (PLAN.md, "How BT4 is accepted"), and BT5 has three parts: the journey, judgement, and open observation.
+
 ## Next
 
-**BT4: tell the agent.** The skill or plugin that installs the tool into the agents people already use: the description, the lines for a project's rules, the owner's limits file, optional nudges. Tested by cold reads — an agent with only the description explains the journey; an agent with only a record says what to do next. No brief yet. Send `START.md: BT4`.
+**BT3a: report, do not judge.** Brief at [waves/BT3a.md](waves/BT3a.md), station packaging. Send `START.md` (or `START.md: BT3a`). The kitchen cooks that wave and stops.

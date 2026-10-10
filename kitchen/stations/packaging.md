@@ -22,6 +22,10 @@ The station's work is now the bounty tool: creating a bounty (the whole reposito
 - **Wording is product.** A tool an agent is only told exists was not called; the description and the lines in a project's rules decide whether it is used. Test them by cold read.
 - **The answer is verified against the version the bounty was made for, then brought forward.** Code moves on while a bounty is open.
 
+- **Facts, never verdicts.** The tool says "the check you set now passes", never "this answer is correct". A wrong fact is a bug that can be found; a wrong verdict misleads and cannot be traced. Reports always say what was not checked.
+- **Mechanical work is the tool's; judgement is the agent's.** Three decisions belong to the agent: hand off or not, what the task is, accept or not. Anything else a command asks the agent to supply is a defect to remove.
+- **Discretion, not enforcement.** Nothing requires an agent to use the tool. How it is described decides whether it is used: published work found wording alone changes use tenfold, that more detail is not better, and that agents both overuse and ignore tools. Say what it does, when it is worth using, and when it is not.
+
 ## Tracing a failing test (wave C1, not used by milestone BT; kept for the smaller Box later)
 
 The station now also covers tracing a failing test, choosing a Box's files from the trace, and the hand-off and return. Two product rules apply to every wave here: nothing leaves the owner's machine without the owner's yes, and never-ship files never enter a Box.

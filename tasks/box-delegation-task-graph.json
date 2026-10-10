@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "planVersion": "bounty-tool-2026-10-10",
+  "planVersion": "bounty-tool-2026-10-10b",
   "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
   "entrypoint": "START.md",
   "target": "BT5",
@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone BT, the bounty tool for coding agents: BT1 (create), BT2 (remember), BT3 (return), BT4 (tell the agent), BT5 (the kitchen uses it), BT6 (first bounty outside; owner approval). Each cooks only when named. C1 (box trace) is done and unused by this milestone; C2 to C5 were withdrawn on 10 October 2026. The research lab is paused. See PLAN.md.",
+    "sequence": "Milestone BT, the bounty tool: BT1 to BT3 are merged. Remaining, each only when named: BT3a (report, do not judge), BT3b (fewer things to supply), BT4 (tell the agent; accepted by constructed scenarios), BT5 (the kitchen uses it: journey, judgement, open observation), BT6 (first bounty outside; owner approval). The research lab is paused. See PLAN.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -756,8 +756,8 @@
       "milestone": "BT",
       "title": "Create a bounty, complete and safe, on disk",
       "dependencies": [],
-      "ownerApproval": "Milestone BT approved by the owner on 10 October 2026.",
-      "handoff": "waves/BT1.md"
+      "handoff": "waves/BT1.md",
+      "result": "Done 10 October 2026, merged 1d1c32b: box bounty create. See waves/BT1.md."
     },
     {
       "id": "BT2",
@@ -766,8 +766,8 @@
       "dependencies": [
         "BT1"
       ],
-      "proposal": "A small record per bounty committed with the project; named stages (drafted, confirmed, posted, taken, answered, verified, applied; rejected, withdrawn, expired); status and withdraw commands that state the stage and the next step; the owner's yes recorded; posting to a destination adapter, the first being a local folder. A fresh agent given only the record can say what to do next.",
-      "handoff": "waves/BT2.md"
+      "handoff": "waves/BT2.md",
+      "result": "Done 10 October 2026, merged: the record in .box/bounties, stages, status, confirm, post to a local folder, withdraw. See waves/BT2.md."
     },
     {
       "id": "BT3",
@@ -776,17 +776,36 @@
       "dependencies": [
         "BT2"
       ],
-      "proposal": "Define the answer a solver returns and the sealing tool inside the bounty; verify against the recreated snapshot with the existing verify machinery; bring forward onto current code; apply or reject with a named reason; warn when the code has moved or the agent solved it itself; say what job is waiting.",
-      "handoff": "waves/BT3.md"
+      "handoff": "waves/BT3.md",
+      "result": "Done 10 October 2026, merged 8c7d4e9 after two fix rounds: answer, apply, reject; verified on the shipped set; real merge onto current code. See waves/BT3.md."
+    },
+    {
+      "id": "BT3a",
+      "milestone": "BT",
+      "title": "Report, do not judge",
+      "dependencies": [
+        "BT3"
+      ],
+      "handoff": "waves/BT3a.md"
+    },
+    {
+      "id": "BT3b",
+      "milestone": "BT",
+      "title": "Fewer things to supply",
+      "dependencies": [
+        "BT3a"
+      ],
+      "proposal": "create records one line of why (required, short, kept in the record and shown to a later agent); title taken from the task when not given; a sensible default place to write; evidence gathered by the tool for the note (the failing output, files changed so far against the base); box bounty help shows the whole journey on one screen; every success line ends with the exact next command; close the known rough edges (status outside a checkout names the right verb; status repeats conflict paths if BT3a left any gap). The agent still writes the task itself: a badly worded task wastes the bounty.",
+      "handoff": "waves/BT3b.md"
     },
     {
       "id": "BT4",
       "milestone": "BT",
       "title": "Tell the agent: the skill, the description, the owner's limits",
       "dependencies": [
-        "BT3"
+        "BT3b"
       ],
-      "proposal": "The skill or plugin for the hosts the kitchen runs on: the tool description (what, when, what happens next), lines for a project's agent rules including \"check open bounties on arrival\", an owner limits file, optional nudges after repeated failure or near a budget. Accepted by cold reads, not by opinion.",
+      "proposal": "Three separate, switchable pieces: (1) the tool description: what it does, when it is worth using, when it is not, in a few lines, with full instructions loaded only on use; (2) lines for a project's agent rules, including an \"open bounties\" line the tool keeps current so a later agent sees it where it already looks; (3) reminders at moments of difficulty, stated as facts, off by default. Plus the owner's limits file (what may leave, what may be spent, whether a clean mechanical pass may be applied without asking), which also gives the agent the facts it needs to choose: cost, limits, expected wait or \"not yet known\", how the answer will be judged. Nothing enforces use. Accepted by the constructed scenarios in PLAN.md (\"How BT4 is accepted\"): better-choice and not-better situations, every alternative listed and accounted for, a few steps not a whole job, scored on reasoning, each scenario attacked by the pass before use. Two or three wordings tried; the best kept.",
       "handoff": "waves/BT4.md"
     },
     {
@@ -796,7 +815,7 @@
       "dependencies": [
         "BT4"
       ],
-      "proposal": "One agent posts on this repository's own work; a blind solver started outside every checkout answers; a different session picks the bounty up from the record and brings it home. Local-folder destination. Record every manual step, the solver's own report and timings. One use, then stop and read it.",
+      "proposal": "Three parts, kept apart. (1) The journey: a person asks for a bounty on this repository's own work; a blind solver started outside every checkout answers; a different session collects it from the record alone. Proves it works; says nothing about demand. (2) Judgement: one or two of BT4's scenarios run in full, climbing from description only, to the rules note, to a reminder, to a person asking, stopping at the first rung where the agent chooses sensibly; then the easy control at that rung. Record what it did instead when it did not post: kept trying, reported failure, or claimed success. (3) Open: the tool stays installed during ordinary waves, nobody mentions it, and the recorded reasons are read afterwards. Report all three honestly, including \"nobody used it\". One real use before many; capped budgets.",
       "handoff": "waves/BT5.md"
     },
     {
@@ -807,7 +826,7 @@
         "BT5"
       ],
       "ownerApproval": "Required separately, with the choice of site. Sending anything outside is the owner's decision and never happens overnight.",
-      "proposal": "An adapter to one existing bounty site, after an hour's reading of how those sites accept a task posted by a program, how they verify and how they pay.",
+      "proposal": "An adapter to one existing bounty site, after an hour's reading of how those sites accept a task posted by a program, how they verify and how they pay. Once money moves, accepting cannot be undone the way a merge can: design a window before payment is final and how disputes are handled before this wave is briefed.",
       "handoff": "waves/BT6.md"
     },
     {
@@ -817,10 +836,10 @@
       "dependencies": [
         "BT1"
       ],
-      "needsNaming": "Kitchen wave: runs only when the owner names it. Before BT5 at the latest.",
       "why": "The run is green but covers none of the bounty tool suites, and its runner label and actions are about to change.",
-      "handoff": "waves/K10.md"
+      "handoff": "waves/K10.md",
+      "result": "Done 10 October 2026, merged c0dfdae: the off-machine run covers the bounty, trace and package suites on pinned ubuntu-24.04. See waves/K10.md."
     }
   ],
-  "sequenceRevision": "bounty-tool-2026-10-10"
+  "sequenceRevision": "bounty-tool-2026-10-10b"
 }

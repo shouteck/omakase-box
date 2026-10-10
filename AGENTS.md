@@ -4,7 +4,7 @@ This file is the stable rulebook. It does not carry status. For what is happenin
 
 ## Product
 
-The bounty tool for coding agents: one command for an agent to hand off work it cannot or should not do. The tool packages the repository safely with the task, the agent's note on what it tried and the check that decides success; the owner's limits decide what may leave; the bounty goes to an existing bounty site; a record in the project lets any later agent pick it up; and the answer is verified in the real repository before it is applied. The plan, and the only roadmap, is [PLAN.md](PLAN.md). Rules of the product that bind every wave: nothing leaves the owner's machine outside the owner's limits; never-ship files never enter a bounty; no command returns nothing or fails silently; one real use before many.
+The bounty tool for coding agents: one command for an agent to hand off work it cannot or should not do. The tool packages the repository safely with the task, the agent's note on what it tried and the check that decides success; the owner's limits decide what may leave; the bounty goes to an existing bounty site; a record in the project lets any later agent pick it up; and the answer is verified in the real repository before it is applied. The plan, and the only roadmap, is [PLAN.md](PLAN.md). Rules of the product that bind every wave: nothing leaves the owner's machine outside the owner's limits; never-ship files never enter a bounty; no command returns nothing or fails silently; the tool states facts about an answer and never a verdict; using the tool is always at the agent's discretion; one real use before many.
 
 ## Method
 
