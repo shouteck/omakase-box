@@ -20,7 +20,7 @@ const junctions = process.platform === 'win32';
 
 function options(repo: string): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty') };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty') };
 }
 
 function ship(files: Record<string, string>, mutate?: (repo: string) => void): { shipped: string[]; plan: ReturnType<typeof planBounty>; outDir: string } {
@@ -179,7 +179,7 @@ describe('never-ship holds against hostile paths', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, '.env', 'FAKE_TOKEN=made-up\n');
     write(repo, 'TASK.md', 'the task\n');
-    const base = { repoPath: repo, title: 'a task', outDir: join(runRoot('out'), 'bounty') };
+    const base = { repoPath: repo, why: 'a reason', title: 'a task', outDir: join(runRoot('out'), 'bounty') };
     for (const options of [
       { ...base, taskPath: join(repo, '.env') },
       { ...base, taskPath: join(repo, 'TASK.md'), notePath: join(repo, '.env') }
@@ -201,7 +201,7 @@ describe('never-ship holds against hostile paths', () => {
     const outside = runRoot('outside');
     write(outside, '.env', 'FAKE_TOKEN=made-up\n');
     try {
-      planBounty({ repoPath: repo, title: 'a task', taskPath: join(outside, '.env'), outDir: join(runRoot('out'), 'bounty') });
+      planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(outside, '.env'), outDir: join(runRoot('out'), 'bounty') });
       expect.unreachable('expected a refusal');
     } catch (error) {
       expect((error as BountyRefused).reason).toBe('never-ship-input');

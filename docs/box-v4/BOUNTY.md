@@ -1,9 +1,10 @@
 # `box bounty` — a bounty, complete and safe, remembered in the project
 
 ```
-node packages/box-cli/dist/cli.js bounty create --title "<one line>" --task <file> \
-    [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] \
-    [--guard -- <command>] --out <dir> [--repo <path>] [--preview]
+node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>" \
+    [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] \
+    [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]
+node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
 node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
@@ -16,15 +17,37 @@ node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
 
 (If `dist/cli.js` is missing, build first with `node scripts/workspace.mjs build`.)
 
-Run inside a Git checkout (or pass `--repo`). `create` writes one folder and the
-bounty's record; nothing else leaves the machine until `confirm` + `post` — and
-`post` only ever copies to a local folder you name. `--out` must point outside
-the repository (`out-inside-repo` otherwise — a bounty folder inside the
-checkout would ship inside the next bounty). Every outcome is a named state:
-success ends `stage 1 of 7: drafted`; refusals print `refused (<name>)` and
-exit 3; usage errors exit 2; operational failures exit 1. `--task` and `--note`
-are embedded verbatim, so a path the never-ship rules would remove is refused
-(`never-ship-input`).
+Run inside a Git checkout (or pass `--repo`) — `help` alone works anywhere and
+prints the whole journey on one screen. `create` writes one folder and the
+bounty's record; nothing else leaves the machine until `confirm` + `post` —
+and `post` only ever copies to a local folder you name. Every outcome is a
+named state: success ends `stage 1 of 7: drafted`; refusals print
+`refused (<name>)` and exit 3; usage errors exit 2; operational failures
+exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
+rules would remove is refused (`never-ship-input`).
+
+`create` asks only for judgement — a task and one line of why; everything
+mechanical has a default:
+
+- **`--why "<one line>"` is required** — without it the refusal is named
+  (`missing-why`), not a usage wall. It lives only in the record (like
+  `--job`: never in `bounty.json`, the listing or the shipped folder), so
+  the reasons for handing off can be learned from use.
+- **`--title` defaults to the task's first non-empty line**, trimmed;
+  `--title` still wins when given.
+- **`--out` defaults to `bounties/<slug>` next to the repository root** —
+  outside the checkout, where the slug is the title folded to
+  `[a-z0-9-]` (`bounty` when nothing survives). Given or defaulted, the
+  destination must land outside the repository (`out-inside-repo`) and must
+  not already hold files (`out-dir-not-empty`).
+- **`--note` defaults to a note the tool writes itself** — see *The note
+  writes itself* below.
+
+Both `--out` and `post --to` are judged on the path they would really land
+at: the nearest *existing* ancestor is realpath-resolved and the missing
+tail re-appended before the inside-the-repository check, so a nonexistent
+target under a junction pointing into the checkout is refused, not written
+inside it.
 
 ## The record — the bounty outlives the agent
 
@@ -53,7 +76,8 @@ A later agent in a later session reads the record — not your conversation — 
 pick the bounty up. An optional `--job <file>` on `create` records the larger
 piece of work waiting on the bounty; its text lives only in the record — never
 in `bounty.json`, the listing or the shipped folder — and `status` names it
-once the bounty ends (`applied`/`rejected`).
+once the bounty ends (`applied`/`rejected`). The required `--why` line is kept
+the same way: on the record only.
 
 `create` also keeps a Git ref `refs/box-bounty/<id>` pointing at
 `snapshot.commit`, so `git gc --prune=now` cannot take the bytes the identifier
@@ -64,6 +88,10 @@ and all refs exist while the bounty is open. Every ended stage — `applied`,
 
 ## The commands after create
 
+- **`help`** prints the whole journey on one screen — the stages, what each
+  command does in one line, and what ends a bounty. It reads no repository,
+  so it works outside a checkout too. A bare `box bounty` is a usage error
+  pointing at it; an unknown verb is named in the message.
 - **`status`** lists every open bounty with id, title, stage and the next step —
   and never prints nothing: an empty `.box/bounties/` says so and says what to
   do. Ended bounties are one compact line.
@@ -188,6 +216,32 @@ index (`undo-index-staged`), uncommitted work covers a path the reversal would
 touch (`undo-worktree-dirty`), or a dry run of the reversal itself conflicts
 (`undo-conflict`, paths named). After `apply` then `undo`, the tree is equal
 to what it was before the apply.
+
+## The note writes itself
+
+Without `--note`, `create` composes the hand-off note from evidence it
+gathers itself: the declared check with the exit and output tail it recorded
+failing on this snapshot, and the files the working state already changed
+relative to `snapshot.baseCommit` — named when they are part of the shipped
+set, a moved submodule is labelled `submodule changed`, and a file the working
+state deleted is named when no never-ship rule would have kept it out; a path
+a rule covers is never named inside the bounty. Live paths are judged on the
+canonical path — the one shipping was decided on — never the diff's spelling,
+and renames are unfolded so a rename's source is still classified. A deletion
+is judged by the base tree's own spellings instead: what the owner committed,
+never what now occupies the path — a link planted where the file was cannot
+rename the loss after its target, and a base file that ships only as a link's
+view of another tracked path is named as gone — whether the link leaves the
+diff silent (same bytes) or turns the deletion into a modification (different
+bytes), and a rule-covered canonical never suppresses a rule-free base
+spelling's change.
+When every differing path is one that does not ship, the note says the state
+differs only outside the shipped set — never that the tree matches the last
+commit when it does not.
+The composed note is marked `tool-written` in `bounty.json` and says so in
+its first line. Gathering never crashes `create`: a repository with nothing
+to report — no check, a clean tree — gets a plain note saying so. `--note`
+still wins when given.
 
 ## What the folder contains
 

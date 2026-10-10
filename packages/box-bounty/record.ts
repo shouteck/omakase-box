@@ -14,7 +14,7 @@
 // `withdraw` removes the ref.
 
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome } from './git.js';
 
@@ -70,6 +70,10 @@ export interface BountyRecord {
   readonly kind: 'box-bounty-record';
   readonly id: string; // bt-<12 hex>, the same id bounty.json carries
   readonly title: string;
+  /** One line of why the work was handed off, from `create --why` — required
+      since BT3b and kept only here (never shipped), so the reasons for
+      handing off can be learned from use. Absent on older records. */
+  readonly why?: string;
   readonly level: 'mechanical' | 'reviewed';
   /** Owner context from `create --job`: lives only in this record — never in
       bounty.json, the listing or the shipped folder. */
@@ -107,6 +111,7 @@ export interface ListedBounty {
 export interface RecordSeed {
   readonly id: string;
   readonly title: string;
+  readonly why?: string;
   readonly level: 'mechanical' | 'reviewed';
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly folder: string;
@@ -201,6 +206,7 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     kind: 'box-bounty-record',
     id: seed.id,
     title: seed.title,
+    ...(seed.why !== undefined ? { why: seed.why } : {}),
     level: seed.level,
     ...(seed.job !== undefined ? { job: seed.job } : {}),
     ...(seed.manifestSha256 !== undefined ? { manifestSha256: seed.manifestSha256 } : {}),
@@ -284,7 +290,7 @@ export function renderStatus(repoRoot: string): string {
   const lines: string[] = [];
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
-    lines.push('next: create one with box bounty create --title "<one line>" --task <file> --out <dir>');
+    lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
   } else {
     lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
@@ -329,6 +335,36 @@ export function renderStatus(repoRoot: string): string {
   return lines.join('\n');
 }
 
+// `box bounty help` — the whole journey on one screen, for an agent that has
+// never seen the tool: what each command does and the stage it leaves, what
+// ends a bounty, and the minimum create needs. It reads no repository, so it
+// works outside a checkout too. Keep it in step with BOUNTY.md.
+export function renderHelp(): string {
+  return [
+    'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned checked.',
+    '',
+    'the journey (what each command does → the stage it leaves):',
+    '  create    snapshot the repository minus never-ship files, with the task, a note and the check; prints the preview → drafted',
+    '  confirm   the owner\'s yes, recorded — the boundary nothing crosses without → confirmed',
+    '  post      first delivery: copies the folder to --to <dir>/<id> → posted',
+    '  answer    a solver\'s return: bound, checked, reported as facts — never a verdict → verified/answered (or back to posted)',
+    '  apply     merge an attempt onto the current code — the recorded decision → applied',
+    '  undo      reverse an applied merge as a new commit → undone',
+    '  reject    end it with --reason "<why>" kept on the record → rejected',
+    '  withdraw  end any open stage → withdrawn',
+    '  status    every open bounty with its attempts and the exact next step (changes nothing)',
+    '  help      this screen',
+    '',
+    '  create needs only judgement: --task <file> and --why "<one line>" — title, place to write and the hand-off note have defaults.',
+    '',
+    'what ends a bounty: apply, reject, withdraw (undo reverses an applied merge).',
+    'a failed check never ends it — the answer is kept as a numbered attempt and the bounty stays open.',
+    '',
+    'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',
+    'the record lives at .box/bounties/<id>.json inside the repository — it outlives the session that made it.'
+  ].join('\n');
+}
+
 // Appends one stage event and persists — history is appended, never rewritten.
 // `reason` records why a `rejected` transition happened or why a `posted` one
 // went back (failure class plus the check's exit and output tail);
@@ -361,6 +397,23 @@ export function confirmBounty(repoRoot: string, id: string): BountyRecord {
 
 const toPosix = (path: string): string => path.split('\\').join('/');
 
+// The canonical path a not-yet-existing target will land at: walk up to the
+// nearest EXISTING ancestor, realpath it, then re-append the missing tail. A
+// junction at any existing level resolves to its real location, so a --to or
+// --out spelling under a junction pointing into the repository can no longer
+// slip an inside-the-repo destination past the containment checks.
+export function canonicalForNew(target: string): string {
+  const tail: string[] = [];
+  let cursor = target;
+  while (!existsSync(cursor)) {
+    const parent = dirname(cursor);
+    if (parent === cursor) return target; // no existing ancestor — keep the spelling
+    tail.unshift(basename(cursor));
+    cursor = parent;
+  }
+  return join(realpathSync(cursor), ...tail);
+}
+
 export function postBounty(repoRoot: string, id: string, toDir: string): { record: BountyRecord; destination: string } {
   const record = loadRecord(repoRoot, id);
   // The confirmed gate is the owner's-yes boundary: nothing is delivered before it.
@@ -381,7 +434,7 @@ export function postBounty(repoRoot: string, id: string, toDir: string): { recor
     throw new BountyRefused('folder-mismatch', `${join(record.folder, 'bounty.json')} does not name bounty ${id} — the recorded folder is not the bounty it should deliver`);
   }
   const dest = resolve(toDir);
-  const destReal = existsSync(dest) ? realpathSync(dest) : dest;
+  const destReal = canonicalForNew(dest);
   if (existsSync(destReal) && !statSync(destReal).isDirectory()) {
     throw new BountyRefused('destination-exists', `--to ${toDir} resolves to ${destReal}, which exists and is not a directory — point --to at a directory the bounty can be copied into`);
   }

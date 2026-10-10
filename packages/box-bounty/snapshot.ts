@@ -35,6 +35,10 @@ export interface Snapshot {
   /** Every blob path in the snapshot tree, as spelled by git — emission takes
       bytes from `commit:path` whenever a canonical path is present here. */
   readonly blobs: ReadonlySet<string>;
+  /** Every non-blob path in the snapshot tree, as spelled by git — gitlinks
+      (submodules). A gitlink is never a blob, so without this a moved
+      submodule HEAD reads as a deleted file. */
+  readonly links: ReadonlySet<string>;
   readonly removed: readonly SnapshotRemoval[];
 }
 
@@ -56,7 +60,7 @@ export function createSnapshotCommit(repoRoot: string, workDir: string): { commi
   return { commit, tree, baseCommit };
 }
 
-export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string> } {
+export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string>; links: Set<string> } {
   const realRoot = realpathSync(repoRoot);
   // -c core.quotepath=false: without it ls-tree C-quotes non-ASCII names even under -z.
   const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(objectsize) %(path)', commit]);
@@ -66,13 +70,15 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
   const removed: SnapshotRemoval[] = [];
   const removedPaths = new Set<string>();
   const blobSize = new Map<string, number>();
+  const links = new Set<string>();
   for (const record of listing.split('\0')) {
     if (record === '') continue;
     const firstSpace = record.indexOf(' ');
-    if (record.slice(0, firstSpace) !== 'blob') continue; // gitlinks (submodules) and anything non-file
     const secondSpace = record.indexOf(' ', firstSpace + 1);
-    const size = Number.parseInt(record.slice(firstSpace + 1, secondSpace), 10);
+    if (secondSpace === -1) continue;
     const path = record.slice(secondSpace + 1);
+    if (record.slice(0, firstSpace) !== 'blob') { links.add(path); continue; } // gitlinks (submodules) and anything non-file
+    const size = Number.parseInt(record.slice(firstSpace + 1, secondSpace), 10);
     if (Number.isFinite(size)) blobSize.set(path, size);
     const absolute = join(realRoot, ...path.split('/'));
     let real: string;
@@ -111,11 +117,11 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
     );
   }
   const files = [...shipped.values()].sort((a, b) => a.path.localeCompare(b.path));
-  return { files, removed: removed.sort((a, b) => a.path.localeCompare(b.path)), blobs: new Set(blobSize.keys()) };
+  return { files, removed: removed.sort((a, b) => a.path.localeCompare(b.path)), blobs: new Set(blobSize.keys()), links };
 }
 
 export function createSnapshot(repoRoot: string, workDir: string, rules: readonly NeverShipRule[]): Snapshot {
   const { commit, tree, baseCommit } = createSnapshotCommit(repoRoot, workDir);
-  const { files, removed, blobs } = classifySnapshot(repoRoot, commit, rules);
-  return { commit, tree, baseCommit, files, blobs, removed };
+  const { files, removed, blobs, links } = classifySnapshot(repoRoot, commit, rules);
+  return { commit, tree, baseCommit, files, blobs, links, removed };
 }

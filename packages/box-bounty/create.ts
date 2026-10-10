@@ -9,7 +9,7 @@ import { gitBlob, gitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { writeNewRecord } from './record.js';
+import { canonicalForNew, writeNewRecord } from './record.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -27,7 +27,12 @@ const PREVIEW_NAMES_PER_RULE = 20;
 
 export interface CreateOptions {
   readonly repoPath: string;
-  readonly title: string;
+  /** `--why "<one line>"`: why this is being handed off — required. It lives
+      only in the record (like --job), never in bounty.json, the listing or
+      the shipped folder, so the reasons for handing off can be learned. */
+  readonly why: string;
+  /** `--title`: absent or blank, the title is the task's first non-empty line. */
+  readonly title?: string;
   readonly taskPath: string;
   readonly notePath?: string;
   /** `--job <file>`: owner context — the larger piece of work waiting on this
@@ -40,7 +45,9 @@ export interface CreateOptions {
       it on the shipped set and refuses if it does not pass today; `answer`
       runs it after the check and reports the result as a fact. */
   readonly guard?: readonly string[];
-  readonly outDir: string;
+  /** `--out`: absent, the folder goes to a sibling `bounties/<slug>` directory
+      next to the repository root — always outside the checkout. */
+  readonly outDir?: string;
 }
 
 export type PlanFile = SnapshotFile;
@@ -49,6 +56,8 @@ export interface RuleRemoval { readonly rule: string; readonly removed: number; 
 export interface BountyPlan {
   readonly repoRoot: string;
   readonly title: string;
+  /** One line of why — record only, never shipped. */
+  readonly why: string;
   readonly task: { readonly file: string; readonly text: string };
   readonly note: { readonly file: string; readonly text: string } | null;
   readonly job: { readonly file: string; readonly text: string } | null;
@@ -60,6 +69,9 @@ export interface BountyPlan {
   /** Canonical paths that exist as blobs in the snapshot tree — their emitted
       bytes come from `commit:path`, never the live worktree. */
   readonly snapshotBlobs: ReadonlySet<string>;
+  /** Paths that are gitlinks (submodules) in the snapshot tree, as spelled by
+      git — never blobs, so a moved submodule HEAD is not a deleted file. */
+  readonly snapshotLinks: ReadonlySet<string>;
   readonly files: readonly PlanFile[];
   readonly removed: readonly SnapshotRemoval[];
   readonly ruleRemovals: readonly RuleRemoval[];
@@ -103,29 +115,49 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   return { file: inside ? offset : basename(real), text };
 }
 
-export function resolveRepoRoot(repoPath: string): string {
+export function resolveRepoRoot(repoPath: string, command?: string): string {
   const repo = resolve(repoPath);
   const top = gitOutcome(repo, ['rev-parse', '--show-toplevel']);
   if (top.status !== 0 || top.stdout.trim() === '') {
-    throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — bounty create needs a repository to snapshot`);
+    const verb = command !== undefined ? `box bounty ${command}` : 'box bounty';
+    throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in`);
   }
   return realpathSync(top.stdout.trim());
 }
 
+// The default place to write: `bounties/<slug>` NEXT TO the repository root —
+// never inside it (a folder inside the checkout would ship inside the next
+// bounty; the containment check below still runs on whatever this resolves to)
+// and close enough that an agent finds it again. The slug is the title folded
+// to [a-z0-9-]; anything that leaves no characters becomes 'bounty'.
+function defaultOutDir(repoRoot: string, title: string): string {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'bounty';
+  return join(dirname(repoRoot), 'bounties', slug);
+}
+
 export function planBounty(options: CreateOptions): BountyPlan {
-  const title = options.title.trim();
-  if (title === '') throw new BountyRefused('missing-title', 'a bounty needs a one-line --title');
-  const repoRoot = resolveRepoRoot(options.repoPath);
+  const why = options.why.trim();
+  if (why === '') {
+    throw new BountyRefused('missing-why', 'create needs one line of why — pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
+  }
+  const repoRoot = resolveRepoRoot(options.repoPath, 'create');
   const ownerList = loadOwnerList(repoRoot);
   const rules: NeverShipRule[] = ownerList === null ? [...BUILTIN_RULES] : [...BUILTIN_RULES, ownerList.rule];
   const task = readTextFile(options.taskPath, 'missing-task', repoRoot, rules);
   const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot, rules) : null;
   const job = options.jobPath !== undefined ? readTextFile(options.jobPath, 'missing-job', repoRoot, rules) : null;
-  const outDir = resolve(options.outDir);
+  // The title comes from the task when none is given: its first non-empty
+  // line, trimmed. --title still wins when supplied.
+  const title = (options.title ?? '').trim()
+    || task.text.split('\n').map(line => line.trim()).find(line => line !== '')!;
+  // canonicalForNew realpaths the nearest EXISTING ancestor: a nonexistent
+  // --out under a junction pointing into the repository resolves to its real
+  // inside-the-repo path and is refused below instead of slipping past.
+  const outDir = canonicalForNew(resolve(options.outDir ?? defaultOutDir(repoRoot, title)));
   const rootKey = `${toPosixPath(repoRoot).toLowerCase()}/`;
   const outKey = `${toPosixPath(outDir).toLowerCase()}/`;
   if (outKey === rootKey || outKey.startsWith(rootKey)) {
-    throw new BountyRefused('out-inside-repo', `--out ${options.outDir} lands inside the repository — a bounty folder placed there would ship inside the next bounty. Point --out outside the checkout`);
+    throw new BountyRefused('out-inside-repo', `--out ${options.outDir ?? outDir} lands inside the repository — a bounty folder placed there would ship inside the next bounty. Point --out outside the checkout`);
   }
 
   const workDir = mkdtempSync(join(tmpdir(), 'box-bt1-snap-'));
@@ -146,6 +178,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
   return {
     repoRoot,
     title,
+    why,
     task,
     note,
     job,
@@ -155,6 +188,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     level: options.check !== undefined && options.check.length > 0 ? 'mechanical' : 'reviewed',
     snapshot: { commit: snapshot.commit, tree: snapshot.tree, baseCommit: snapshot.baseCommit },
     snapshotBlobs: snapshot.blobs,
+    snapshotLinks: snapshot.links,
     files,
     removed,
     ruleRemovals,
@@ -301,9 +335,12 @@ export function renderPreview(plan: BountyPlan): string {
       if (entry.paths.length > PREVIEW_NAMES_PER_RULE) lines.push(`      … and ${entry.paths.length - PREVIEW_NAMES_PER_RULE} more`);
     }
   }
+  lines.push(`  title: ${plan.title}`);
+  lines.push(`  why: ${plan.why} (record only — never shipped)`);
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
+  else lines.push('  note: written by the tool from the check run and the changed files (no --note)');
   if (plan.job !== null) lines.push(`  job: ${plan.job.file} (record only — never shipped)`);
   lines.push(`  setup: ${plan.setup !== null ? describeCommand(plan.setup) : 'none'}`);
   lines.push(`  check: ${plan.check !== null ? describeCommand(plan.check) : 'none'}`);
@@ -311,6 +348,143 @@ export function renderPreview(plan: BountyPlan): string {
   lines.push(`  level: ${plan.level}${plan.level === 'mechanical' ? ' (the declared check must fail today — it will be run to prove it)' : ' (no check — a person reads the answer)'}`);
   lines.push(`  out: ${plan.outDir}`);
   return lines.join('\n');
+}
+
+// When no --note was given, the note writes itself from evidence the tool
+// gathers: the declared check with the exit and output tail recorded on this
+// snapshot, and the files the working state already changed relative to the
+// snapshot's base commit. The note SHIPS — a changed path is named only when it
+// is part of the shipped set or, for a file the working state deleted, when no
+// never-ship rule would have kept it out — so a removed never-ship name can
+// never be named inside the bounty. Both judgements run on the canonical path,
+// the same one shipping was decided on — never the diff's tree spelling.
+// Gathering never crashes create: a repository with nothing to report gets a
+// plain note, and a failed read falls back to one too.
+function composeNote(plan: BountyPlan, verification: BountyManifest['verification']): { file: string; text: string } {
+  const lines: string[] = ['written by the tool — no --note was supplied.'];
+  try {
+    const check = plan.check !== null ? verification?.check : null;
+    if (check !== null && check !== undefined) {
+      lines.push('', `the declared check exits ${check.exit} on this snapshot:`, `  ${describeCommand(check.argv)}`);
+      if (check.tail.trim() !== '') {
+        lines.push('  output tail:');
+        for (const line of check.tail.trim().split('\n').slice(-8)) lines.push(`    ${line}`);
+      }
+    }
+    if (plan.snapshot.baseCommit === null) {
+      lines.push('', 'the repository has no commits yet — every shipped file is new work.');
+    } else {
+      // Classification speaks canonical paths for what LIVES and base-tree
+      // spellings for what is GONE. Shipping and the never-ship rules were
+      // decided on realpath-resolved names, so a file tracked through a
+      // junction (jdir/f.py) ships as realdir/f.py and is classified by what
+      // it resolves to; canonicalForNew plays the same trick it does for
+      // --out/--to, realpathing the nearest EXISTING ancestor. But a deleted
+      // path can only resolve through whatever occupies the spelling NOW — a
+      // junction planted where the file was would redirect every fact about
+      // the deletion to the link's target — so deletions are judged by the
+      // base tree's own spellings, the names the owner knows.
+      const realRoot = plan.repoRoot; // already canonical — resolveRepoRoot realpaths it
+      const canonicalDiffPath = (name: string): string | null => {
+        const offset = toPosixPath(relative(realRoot, canonicalForNew(join(realRoot, ...name.split('/')))));
+        return offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset) ? null : offset;
+      };
+      const shipped = new Map(plan.files.map(file => [file.path.toLowerCase(), file.path]));
+      const ownerList = loadOwnerList(plan.repoRoot);
+      const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
+      // --no-renames: rename detection folds a paired delete+add into one
+      // line naming only the target (`git mv a.py .env` emits just `.env`),
+      // which would hide the shipped file the working state lost.
+      const diff = gitOutcome(plan.repoRoot, ['diff', '--name-only', '-z', '--no-renames', plan.snapshot.baseCommit, plan.snapshot.commit]);
+      if (diff.status !== 0) throw new Error(`git diff failed: ${diff.stderr.trim()}`);
+      // The base tree's blob spellings — the names the owner committed. -c
+      // core.quotepath=false keeps non-ASCII names unquoted, as in the
+      // snapshot's own ls-tree.
+      const baseBlobs = new Set<string>();
+      const baseListing = gitOutcome(plan.repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(path)', plan.snapshot.baseCommit]);
+      if (baseListing.status !== 0) throw new Error(`git ls-tree failed: ${baseListing.stderr.trim()}`);
+      for (const record of baseListing.stdout.split('\0')) {
+        if (record.startsWith('blob ')) baseBlobs.add(record.slice(5));
+      }
+      const baseBlobsLower = new Set([...baseBlobs].map(path => path.toLowerCase()));
+      // Fates: a gitlink still in the snapshot tree is a moved submodule,
+      // named as one. A diff name that is itself a base blob is judged by its
+      // SPELLING before any live canonicalisation: a rule-covered spelling
+      // still suppresses (`.env` names stay out); a spelling absent from the
+      // snapshot's blobs is a deletion — named by its base spelling, never
+      // resolved through live ancestors; and a spelling that survives only as
+      // a modified blob resolving onto ANOTHER base-tracked path is a junction
+      // replacement — the file no longer exists as itself in the shipped set,
+      // so it is named deleted by the same judgement (a rule-covered
+      // *canonical* must never suppress a rule-free base spelling's change).
+      // Only a base spelling that still stands on its own falls through to
+      // live canonicalisation — a stable junction's canonical was never a
+      // base path, which is what tells it from a post-base replacement.
+      // Anything else — an addition, or a live path under a new spelling — is
+      // canonicalised and named under what it ships as, unless it is a
+      // rule-covered name (unlisted) or a new spelling of a base-tracked file
+      // (a junction repopulating a tracked dir adds a diff line whose
+      // canonical is an unchanged real file — the file itself reports, or
+      // nothing changed).
+      const named = new Set<string>();
+      let unlisted = false;
+      const diffNames = new Set<string>();
+      for (const name of diff.stdout.split('\0')) {
+        if (name === '') continue;
+        diffNames.add(name);
+        if (plan.snapshotLinks.has(name)) { named.add(`${name} (submodule changed)`); continue; }
+        if (baseBlobs.has(name)) {
+          if (rules.some(rule => rule.match(name.toLowerCase()))) { unlisted = true; continue; }
+          if (!plan.snapshotBlobs.has(name)) { named.add(`${name} (deleted)`); continue; }
+          const asItself = shipped.get(name.toLowerCase());
+          if (asItself !== undefined) { named.add(asItself); continue; }
+          const redirect = canonicalDiffPath(name);
+          if (redirect !== null && redirect.toLowerCase() !== name.toLowerCase() && baseBlobsLower.has(redirect.toLowerCase())) {
+            named.add(`${name} (deleted)`); // replaced: the spelling resolves onto another base file
+            continue;
+          }
+        }
+        const canonical = canonicalDiffPath(name);
+        const key = (canonical ?? name).toLowerCase();
+        const shippedAs = canonical !== null ? shipped.get(key) : undefined;
+        if (shippedAs !== undefined) {
+          if (key === name.toLowerCase() || !baseBlobsLower.has(key)) named.add(shippedAs);
+          continue;
+        }
+        if (rules.some(rule => rule.match(key) || rule.match(name.toLowerCase()))) { unlisted = true; continue; }
+        if (plan.snapshotBlobs.has(name)) { unlisted = true; continue; }
+        named.add(`${canonical ?? name} (deleted)`);
+      }
+      // A deletion the diff cannot show: `add -A` repopulates a spelling
+      // through a replacement junction (identical bytes, no line), so a base
+      // file that now resolves onto a DIFFERENT base-tracked file exists only
+      // as a link's view — the shipped set no longer carries its name. A live
+      // junction-tracked file resolves to a canonical that was never a base
+      // path, which is what tells the two apart.
+      for (const name of baseBlobs) {
+        if (diffNames.has(name) || shipped.has(name.toLowerCase()) || !plan.snapshotBlobs.has(name)) continue;
+        const canonical = canonicalDiffPath(name);
+        if (canonical === null || canonical.toLowerCase() === name.toLowerCase()) continue;
+        const key = canonical.toLowerCase();
+        if (!baseBlobsLower.has(key)) continue; // a stable junction — its canonical was never a base path
+        if (rules.some(rule => rule.match(name.toLowerCase()))) { unlisted = true; continue; }
+        named.add(`${name} (deleted)`);
+      }
+      if (named.size > 0) {
+        lines.push('', `files already changed in the working state (against commit ${plan.snapshot.baseCommit.slice(0, 12)}):`);
+        for (const name of [...named].sort()) lines.push(`  ${name}`);
+      }
+      if (unlisted) {
+        lines.push('', named.size === 0
+          ? 'the working state differs from the last commit only in files that do not ship — their names are not listed by design.'
+          : 'other changed paths do not ship and are not named.');
+      }
+    }
+    if (lines.length === 1) lines.push('', 'nothing else to report — no check was declared and the working state matches the last commit.');
+  } catch {
+    lines.push('', 'the tool could not gather more — inspect the repository for what was tried.');
+  }
+  return { file: 'tool-written', text: `${lines.join('\n')}\n` };
 }
 
 export function finalizeBounty(plan: BountyPlan): BountyResult {
@@ -350,6 +524,9 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       files.push({ path: file.path, sha256: sha256(bytes), bytes: bytes.length });
     }
     const verification = proveCheckFails(plan, snapshotDir);
+    // The note: the agent's file when --note was given, else the tool composes
+    // it here — after the check run, so its exit and output tail are evidence.
+    const note = plan.note ?? composeNote(plan, verification);
     const createdAt = new Date().toISOString();
     const id = `bt-${sha256(`${plan.snapshot.commit}\n${plan.title}\n${createdAt}`).slice(0, 12)}`;
     const manifest: BountyManifest = {
@@ -360,7 +537,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       createdAt,
       tool: TOOL_VERSION,
       task: plan.task,
-      note: plan.note,
+      note,
       setup: plan.setup !== null ? { argv: [...plan.setup] } : null,
       check: plan.check !== null ? { argv: [...plan.check] } : null,
       guard: plan.guard !== null ? { argv: [...plan.guard] } : null,
@@ -373,7 +550,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     };
     const manifestJson = JSON.stringify(manifest, null, 2) + '\n';
     writeFileSync(join(staging, 'bounty.json'), manifestJson);
-    writeFileSync(join(staging, 'README.md'), renderListing(manifest, plan.note));
+    writeFileSync(join(staging, 'README.md'), renderListing(manifest, note));
     if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
     renameSync(staging, outDir);
     // With the folder in place, make it reachable later: pin the snapshot
@@ -382,6 +559,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     const written = writeNewRecord(plan.repoRoot, {
       id,
       title: plan.title,
+      why: plan.why,
       level: plan.level,
       snapshot: plan.snapshot,
       folder: outDir,

@@ -19,6 +19,7 @@ function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOption
   write(repo, 'TASK.md', 'Make the greeting say hello twice.\n');
   return {
     repoPath: repo,
+    why: 'a reason',
     title: 'double the greeting',
     taskPath: join(repo, 'TASK.md'),
     outDir: join(runRoot('out'), 'bounty'),
