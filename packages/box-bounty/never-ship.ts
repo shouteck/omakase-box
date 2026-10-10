@@ -28,17 +28,23 @@ const extension = (path: string): string => {
 };
 
 const KEY_EXTENSIONS = new Set(['key', 'pem', 'p12', 'pfx', 'jks', 'keystore', 'ppk', 'gpg']);
-const CERT_EXTENSIONS = new Set(['crt', 'cer', 'der']);
-const CREDENTIAL_NAMES = new Set(['.netrc', '.pgpass', '.htpasswd', '.git-credentials', '.npmrc', '.pypirc', '.dockercfg']);
+const CERT_EXTENSIONS = new Set(['crt', 'cer', 'der', 'cert', 'p7b', 'p7c', 'asc']);
+const CREDENTIAL_NAMES = new Set(['.netrc', '.pgpass', '.htpasswd', '.git-credentials', '.npmrc', '.pypirc', '.dockercfg', '.yarnrc', '.yarnrc.yml']);
 
 export const BUILTIN_RULES: readonly NeverShipRule[] = [
   { name: 'dot-git', match: path => segments(path).includes('.git') },
-  { name: 'dot-env', match: path => /^\.env(?:\.|$)/.test(basename(path)) || /^\.envrc(?:\.|$)/.test(basename(path)) },
-  { name: 'secrets-dir', match: path => segments(path).includes('secrets') },
+  // Dotfiles `.env`/`.envrc` (+ any `.<env>` extension) and env-file spellings like
+  // `prod.env`: the basename ends with `.env`. `.env.example`-style suffixes still
+  // count — templates carry real values often enough to keep the strict reading.
+  { name: 'dot-env', match: path => /^\.env(?:\.|$)/.test(basename(path)) || /^\.envrc(?:\.|$)/.test(basename(path)) || /\.env$/.test(basename(path)) },
+  // Any directory segment containing "secrets" — `secrets/`, `secrets-backup/`,
+  // `mysecrets/`. Deliberately plural so ordinary words like `secretary/` and
+  // `secretariat/` do not match.
+  { name: 'secrets-dir', match: path => segments(path).some(segment => segment.includes('secrets')) },
   { name: 'runtime-dir', match: path => segments(path).includes('.runtime') },
   {
     name: 'private-key',
-    match: path => KEY_EXTENSIONS.has(extension(path)) || /^id_(?:rsa|dsa|ecdsa|ed25519)(?:\.|$)/.test(basename(path))
+    match: path => KEY_EXTENSIONS.has(extension(path)) || /^id_(?:rsa|dsa|ecdsa|ed25519)/.test(basename(path))
   },
   { name: 'certificate', match: path => CERT_EXTENSIONS.has(extension(path)) },
   {
@@ -78,7 +84,9 @@ function globToRegExp(pattern: string): RegExp {
 }
 
 function compilePattern(raw: string, line: number): RegExp {
-  const pattern = raw.trim();
+  // Fold case on the pattern side too: matches run against the lower-cased
+  // canonical path, so an un-folded pattern containing uppercase could never hit.
+  const pattern = raw.trim().toLowerCase();
   if (pattern.startsWith('!')) throw new BountyRefused('invalid-boxignore', `${OWNER_LIST_FILE} line ${line}: '!' negation is not supported — never-ship rules can only remove files`);
   if (pattern.endsWith('/')) {
     const dir = pattern.slice(0, -1);

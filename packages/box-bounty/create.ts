@@ -5,7 +5,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { runDeclaredCheck } from '../box-package/commands.js';
 import type { CheckRecord } from '../box-package/commands.js';
 import { BountyRefused } from './errors.js';
-import { gitOutcome } from './git.js';
+import { gitBlob, gitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
@@ -34,7 +34,7 @@ export interface CreateOptions {
   readonly outDir: string;
 }
 
-export interface PlanFile extends SnapshotFile { readonly bytes: number }
+export type PlanFile = SnapshotFile;
 export interface RuleRemoval { readonly rule: string; readonly removed: number; readonly paths: readonly string[] }
 
 export interface BountyPlan {
@@ -46,6 +46,9 @@ export interface BountyPlan {
   readonly check: readonly string[] | null;
   readonly level: 'mechanical' | 'reviewed';
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
+  /** Canonical paths that exist as blobs in the snapshot tree — their emitted
+      bytes come from `commit:path`, never the live worktree. */
+  readonly snapshotBlobs: ReadonlySet<string>;
   readonly files: readonly PlanFile[];
   readonly removed: readonly SnapshotRemoval[];
   readonly ruleRemovals: readonly RuleRemoval[];
@@ -64,16 +67,26 @@ const tail = (text: string): string => text.slice(-2000);
 
 const toPosixPath = (path: string): string => path.split('\\').join('/');
 
-function readTextFile(path: string, reason: string, repoRoot: string): { file: string; text: string } {
+function readTextFile(path: string, reason: string, repoRoot: string, rules: readonly NeverShipRule[]): { file: string; text: string } {
   const absolute = resolve(path);
   if (!statSync(absolute, { throwIfNoEntry: false })?.isFile()) {
     throw new BountyRefused(reason, `file ${path} does not exist — pass a readable file`);
   }
+  // The file's bytes are embedded verbatim into the bounty — a never-ship path
+  // is refused here exactly as it would be inside the snapshot. Inside the repo
+  // the check runs on the canonical repo-relative path (all owner rules apply);
+  // outside it only the built-ins apply, judged on the canonical absolute path.
+  const real = realpathSync(absolute);
+  const offset = toPosixPath(relative(repoRoot, real));
+  const inside = !(offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset));
+  const key = (inside ? offset : toPosixPath(real)).toLowerCase();
+  const matched = (inside ? rules : BUILTIN_RULES).find(rule => rule.match(key));
+  if (matched !== undefined) {
+    throw new BountyRefused('never-ship-input', `${path} resolves to ${inside ? offset : real}, which the never-ship rule '${matched.name}' removes — task and note files must be safe to embed`);
+  }
   const text = readFileSync(absolute, 'utf8');
   if (text.trim() === '') throw new BountyRefused(reason, `file ${path} is empty — a bounty needs real content`);
-  const offset = toPosixPath(relative(repoRoot, absolute));
-  const file = offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset) ? basename(absolute) : offset;
-  return { file, text };
+  return { file: inside ? offset : basename(real), text };
 }
 
 function resolveRepoRoot(repoPath: string): string {
@@ -89,10 +102,16 @@ export function planBounty(options: CreateOptions): BountyPlan {
   const title = options.title.trim();
   if (title === '') throw new BountyRefused('missing-title', 'a bounty needs a one-line --title');
   const repoRoot = resolveRepoRoot(options.repoPath);
-  const task = readTextFile(options.taskPath, 'missing-task', repoRoot);
-  const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot) : null;
   const ownerList = loadOwnerList(repoRoot);
   const rules: NeverShipRule[] = ownerList === null ? [...BUILTIN_RULES] : [...BUILTIN_RULES, ownerList.rule];
+  const task = readTextFile(options.taskPath, 'missing-task', repoRoot, rules);
+  const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot, rules) : null;
+  const outDir = resolve(options.outDir);
+  const rootKey = `${toPosixPath(repoRoot).toLowerCase()}/`;
+  const outKey = `${toPosixPath(outDir).toLowerCase()}/`;
+  if (outKey === rootKey || outKey.startsWith(rootKey)) {
+    throw new BountyRefused('out-inside-repo', `--out ${options.outDir} lands inside the repository — a bounty folder placed there would ship inside the next bounty. Point --out outside the checkout`);
+  }
 
   const workDir = mkdtempSync(join(tmpdir(), 'box-bt1-snap-'));
   let snapshot: ReturnType<typeof createSnapshot>;
@@ -102,7 +121,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     rmSync(workDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
   }
 
-  const files: PlanFile[] = snapshot.files.map(file => ({ ...file, bytes: statSync(file.realPath).size }));
+  const files: PlanFile[] = [...snapshot.files];
   const removed = snapshot.removed;
   const ruleRemovals: RuleRemoval[] = rules
     .map(rule => ({ rule: rule.name, paths: removed.filter(entry => entry.rule === rule.name).map(entry => entry.path) }))
@@ -118,11 +137,12 @@ export function planBounty(options: CreateOptions): BountyPlan {
     check: options.check !== undefined && options.check.length > 0 ? [...options.check] : null,
     level: options.check !== undefined && options.check.length > 0 ? 'mechanical' : 'reviewed',
     snapshot: { commit: snapshot.commit, tree: snapshot.tree, baseCommit: snapshot.baseCommit },
+    snapshotBlobs: snapshot.blobs,
     files,
     removed,
     ruleRemovals,
     totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
-    outDir: resolve(options.outDir)
+    outDir
   };
 }
 
@@ -193,8 +213,8 @@ export function renderListing(manifest: BountyManifest, note: { file: string; te
     lines.push('## Set up');
     lines.push('');
     lines.push(`    ${describeCommand(manifest.setup.argv)}`);
-    lines.push('');
   }
+  lines.push('');
   lines.push('## How you know you are done');
   lines.push('');
   if (manifest.check !== null && manifest.verification !== null) {
@@ -260,7 +280,25 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     mkdirSync(snapshotDir, { recursive: true }); // the folder exists even when nothing ships
     const files: BountyManifest['files'][number][] = [];
     for (const file of plan.files) {
-      const bytes = readFileSync(file.realPath);
+      // Bytes come from the recorded tree, not the live worktree: what ships is
+      // exactly what the identifier pins, and a file edited or a directory swapped
+      // for a junction between plan and write cannot smuggle in other bytes. The
+      // worktree is read only when the canonical path was never itself a tree
+      // entry (a tracked link pointing at an untracked target).
+      let bytes: Buffer;
+      if (plan.snapshotBlobs.has(file.path)) {
+        const blob = gitBlob(plan.repoRoot, plan.snapshot.commit, file.path);
+        if (blob === null) {
+          throw new BountyRefused('unreadable-path', `snapshot blob for ${file.path} cannot be read back — the object store changed mid-run; rerun box bounty create`);
+        }
+        bytes = blob;
+      } else {
+        try {
+          bytes = readFileSync(file.realPath);
+        } catch {
+          throw new BountyRefused('unreadable-path', `${file.path} vanished between planning and writing — rerun box bounty create`);
+        }
+      }
       const target = join(snapshotDir, ...file.path.split('/'));
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, bytes);

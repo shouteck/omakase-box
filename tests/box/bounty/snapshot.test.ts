@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
@@ -80,6 +80,48 @@ describe('the snapshot is the repository as it stands', () => {
     expect(readFileSync(join(recreated.dir, 'src', 'app.py'), 'utf8')).toBe('print("v2-uncommitted")\n');
     const result = finalizeBounty(plan);
     expect(listTree(join(result.outDir, 'repo'))).toEqual(recreated.files);
+  });
+
+  it('ships files whose names are not ASCII', () => {
+    const repo = makeRepo({ ...BASE_FILES, 'docs/ünïcode.txt': 'umlauts\n', '数据/值.py': 'x\n' });
+    const result = finalizeBounty(planBounty(options(repo)));
+    const shipped = listTree(join(result.outDir, 'repo'));
+    expect(shipped).toContain('docs/ünïcode.txt');
+    expect(shipped).toContain('数据/值.py');
+    expect(readFileSync(join(result.outDir, 'repo', 'docs', 'ünïcode.txt'), 'utf8')).toBe('umlauts\n');
+  });
+
+  it('ships the bytes the snapshot recorded, not bytes swapped in after planning', () => {
+    const repo = makeRepo(BASE_FILES);
+    const plan = planBounty(options(repo));
+    write(repo, 'src/app.py', 'print("SWAPPED-AFTER-PLAN")\n');
+    const result = finalizeBounty(plan);
+    expect(readFileSync(join(result.outDir, 'repo', 'src', 'app.py'), 'utf8')).toBe('print("v1")\n');
+  });
+
+  it('a directory swapped for an outside junction after planning cannot smuggle bytes', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n', 'inner/keep.txt': 'inside-bytes\n' });
+    const plan = planBounty(options(repo));
+    rmSync(join(repo, 'inner'), { recursive: true });
+    const outside = runRoot('outside');
+    write(outside, 'keep.txt', 'OUTSIDE-BYTES\n');
+    symlinkSync(outside, join(repo, 'inner'), 'junction');
+    const result = finalizeBounty(plan);
+    expect(readFileSync(join(result.outDir, 'repo', 'inner', 'keep.txt'), 'utf8')).toBe('inside-bytes\n');
+  });
+
+  it('names a tracked link whose target does not resolve', () => {
+    const repo = makeRepo(BASE_FILES);
+    symlinkSync('no-such-target', join(repo, 'dangling.txt'), 'file'); // git records the link itself; realpath cannot resolve it
+    try {
+      planBounty(options(repo));
+      expect.unreachable('expected a refusal');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BountyRefused);
+      const refusal = error as BountyRefused;
+      expect(refusal.reason).toBe('unreadable-path');
+      expect(refusal.message).toContain('dangling.txt');
+    }
   });
 
   it('refuses clearly outside a Git checkout', () => {

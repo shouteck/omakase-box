@@ -18,7 +18,13 @@ import type { NeverShipRule } from './never-ship.js';
 // or junction inside the repository lands on its real path, and a link whose target
 // leaves the repository is refused by name, not followed.
 
-export interface SnapshotFile { readonly path: string; readonly realPath: string }
+export interface SnapshotFile {
+  readonly path: string;
+  readonly realPath: string;
+  /** Byte size of the emitted content: the recorded blob's size when the
+      canonical path is itself a blob in the tree, else the live file's size. */
+  readonly bytes: number;
+}
 export interface SnapshotRemoval { readonly path: string; readonly rule: string }
 
 export interface Snapshot {
@@ -26,6 +32,9 @@ export interface Snapshot {
   readonly tree: string;
   readonly baseCommit: string | null;
   readonly files: readonly SnapshotFile[];
+  /** Every blob path in the snapshot tree, as spelled by git — emission takes
+      bytes from `commit:path` whenever a canonical path is present here. */
+  readonly blobs: ReadonlySet<string>;
   readonly removed: readonly SnapshotRemoval[];
 }
 
@@ -47,23 +56,32 @@ export function createSnapshotCommit(repoRoot: string, workDir: string): { commi
   return { commit, tree, baseCommit };
 }
 
-export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[] } {
+export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string> } {
   const realRoot = realpathSync(repoRoot);
-  const listing = git(repoRoot, ['ls-tree', '-r', '-z', '--format=%(objecttype) %(path)', commit]);
+  // -c core.quotepath=false: without it ls-tree C-quotes non-ASCII names even under -z.
+  const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(objectsize) %(path)', commit]);
   const escapes: string[] = [];
   const unreadable: string[] = [];
   const shipped = new Map<string, SnapshotFile>();
   const removed: SnapshotRemoval[] = [];
   const removedPaths = new Set<string>();
+  const blobSize = new Map<string, number>();
   for (const record of listing.split('\0')) {
     if (record === '') continue;
-    const tab = record.indexOf(' ');
-    if (record.slice(0, tab) !== 'blob') continue; // gitlinks (submodules) and anything non-file
-    const path = record.slice(tab + 1);
+    const firstSpace = record.indexOf(' ');
+    if (record.slice(0, firstSpace) !== 'blob') continue; // gitlinks (submodules) and anything non-file
+    const secondSpace = record.indexOf(' ', firstSpace + 1);
+    const size = Number.parseInt(record.slice(firstSpace + 1, secondSpace), 10);
+    const path = record.slice(secondSpace + 1);
+    if (Number.isFinite(size)) blobSize.set(path, size);
     const absolute = join(realRoot, ...path.split('/'));
     let real: string;
+    let sizeOnDisk = 0;
     try {
       real = realpathSync(absolute);
+      const stat = statSync(real);
+      if (!stat.isFile()) { unreadable.push(path); continue; }
+      sizeOnDisk = stat.size;
     } catch {
       unreadable.push(path);
       continue;
@@ -73,13 +91,12 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
       escapes.push(path);
       continue;
     }
-    if (!statSync(real).isFile()) { unreadable.push(path); continue; }
     const canonical = offset;
     const key = canonical.toLowerCase();
     if (shipped.has(key) || removedPaths.has(key)) continue; // a second spelling of the same real file
     const rule = rules.find(entry => entry.match(key));
     if (rule !== undefined) { removed.push({ path: canonical, rule: rule.name }); removedPaths.add(key); }
-    else shipped.set(key, { path: canonical, realPath: real });
+    else shipped.set(key, { path: canonical, realPath: real, bytes: blobSize.get(canonical) ?? sizeOnDisk });
   }
   if (escapes.length > 0) {
     throw new BountyRefused(
@@ -94,11 +111,11 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
     );
   }
   const files = [...shipped.values()].sort((a, b) => a.path.localeCompare(b.path));
-  return { files, removed: removed.sort((a, b) => a.path.localeCompare(b.path)) };
+  return { files, removed: removed.sort((a, b) => a.path.localeCompare(b.path)), blobs: new Set(blobSize.keys()) };
 }
 
 export function createSnapshot(repoRoot: string, workDir: string, rules: readonly NeverShipRule[]): Snapshot {
   const { commit, tree, baseCommit } = createSnapshotCommit(repoRoot, workDir);
-  const { files, removed } = classifySnapshot(repoRoot, commit, rules);
-  return { commit, tree, baseCommit, files, removed };
+  const { files, removed, blobs } = classifySnapshot(repoRoot, commit, rules);
+  return { commit, tree, baseCommit, files, blobs, removed };
 }

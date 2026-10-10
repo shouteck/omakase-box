@@ -45,3 +45,17 @@ export function git(repo: string, args: readonly string[], env: GitEnv = {}): st
   }
   return result.stdout.trim();
 }
+
+// Raw blob bytes for a path inside the snapshot commit. cat-file reads the object
+// directly: no eol, attribute or filter transforms ever apply, so the bytes are
+// exactly what the identifier records. Returns null when the path is not a blob
+// in the tree (a link's target that was never itself tracked).
+export function gitBlob(repo: string, commit: string, path: string, env: GitEnv = {}): Buffer | null {
+  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, 'cat-file', 'blob', `${commit}:${path}`], {
+    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', ...env },
+    maxBuffer: 512 * 1024 * 1024,
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) return null;
+  return result.stdout;
+}

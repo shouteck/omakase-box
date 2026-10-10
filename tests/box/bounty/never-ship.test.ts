@@ -131,4 +131,67 @@ describe('never-ship holds against hostile paths', () => {
     });
     expect(shipped).toEqual(['TASK.md', 'notes.txt', 'src/app.py']);
   });
+
+  it('catches env-file suffixes, key backups, cert bundles and secrets-dir variants', () => {
+    const { shipped } = ship({
+      'prod.env': 'fake\n',
+      'config/staging.env': 'fake\n',
+      'id_rsa_backup': 'fake\n',
+      'keys/id_rsa.old': 'fake\n',
+      '.yarnrc': 'fake\n',
+      '.yarnrc.yml': 'fake\n',
+      'tls/ca.cert': 'fake\n',
+      'tls/bundle.p7b': 'fake\n',
+      'tls/bundle.p7c': 'fake\n',
+      'tls/material.asc': 'fake\n',
+      'secrets-backup/api.txt': 'fake\n',
+      'mysecrets/db.txt': 'fake\n',
+      'secretary/minutes.txt': 'kept — plural-only rule must not hit ordinary words\n'
+    });
+    expect(shipped).toEqual(['TASK.md', 'secretary/minutes.txt', 'src/app.py']);
+  });
+
+  it('folds owner-list patterns before matching, on both sides', () => {
+    const { shipped, plan } = ship({
+      'secretdir/inside.txt': 'fake\n',
+      'data/file.key2': 'fake\n',
+      '.boxignore': 'SecretDir/\n*.KEY2\n',
+      'open.txt': 'keep\n'
+    });
+    expect(shipped).toEqual(['.boxignore', 'TASK.md', 'open.txt', 'src/app.py']);
+    expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 2, paths: ['data/file.key2', 'secretdir/inside.txt'] }]);
+  });
+
+  it('refuses a --task or --note path the never-ship rules would remove', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    write(repo, '.env', 'FAKE_TOKEN=made-up\n');
+    write(repo, 'TASK.md', 'the task\n');
+    const base = { repoPath: repo, title: 'a task', outDir: join(runRoot('out'), 'bounty') };
+    for (const options of [
+      { ...base, taskPath: join(repo, '.env') },
+      { ...base, taskPath: join(repo, 'TASK.md'), notePath: join(repo, '.env') }
+    ]) {
+      try {
+        planBounty(options);
+        expect.unreachable('expected a refusal');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BountyRefused);
+        const refusal = error as BountyRefused;
+        expect(refusal.reason).toBe('never-ship-input');
+        expect(refusal.message).toContain('dot-env');
+      }
+    }
+  });
+
+  it('refuses a never-ship --task even when it lives outside the repository', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const outside = runRoot('outside');
+    write(outside, '.env', 'FAKE_TOKEN=made-up\n');
+    try {
+      planBounty({ repoPath: repo, title: 'a task', taskPath: join(outside, '.env'), outDir: join(runRoot('out'), 'bounty') });
+      expect.unreachable('expected a refusal');
+    } catch (error) {
+      expect((error as BountyRefused).reason).toBe('never-ship-input');
+    }
+  });
 });

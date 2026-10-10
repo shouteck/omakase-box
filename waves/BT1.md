@@ -54,14 +54,19 @@ Read "The product in one line", "The journey of one bounty" and "What is settled
 
 ## Result
 
-<One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
-
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
+- Worker: box-cook · Reviewer: the pass (fresh agent; host: Windows, Git Bash + PowerShell; model: Claude/Anthropic)
+- Commit: 24a2822a42e24ccc4a67aa5a2adaecd9dae84991 (reviewed exactly this; tree clean after removing scratch probes)
+- Verify: `verify 24a2822 PASS check=0 build=0 test:box-bounty=0 db=embedded 144s` — recorded run `2026-10-10T01-07-40-935Z-24a2822` (clean tree, all steps 0); plus my own scoped `suite.mjs box --suite bounty` on this SHA: 27/27 pass
+- Verdict: **FAIL** · Level: ui-verified (real built CLI driven end-to-end in both shells; findings demonstrated behaviourally, not just read)
 - Lenses:
-- Method:
+  - **Security:** the core rule holds under every attack — tracked/untracked/case-aliased/junction-reached/nested/owner-listed secrets stayed out and an outside link was refused by name. Two breaks found: `.boxignore` patterns are not case-folded, so `Private/` or `*.PEM` silently never match (docs say case-folded); and a mutation between plan and emit ships swapped bytes, including outside bytes through a swapped junction. Spellings that ship: `prod.env`, `staging.env`, `id_rsa_backup`, `.yarnrc`, `*.cert/.p7b/.asc`, `secrets-backup/`, `mysecrets/`. `--task .env` embeds the file's bytes verbatim into bounty.json and README. Secret added between preview and write cannot enter (the shipped set is pinned by the snapshot commit).
+  - **User experience:** built my own Python repo (uncommitted edit, untracked file, two fake secrets) and drove the CLI from Git Bash, and a Node repo from PowerShell: preview is complete, refusal and success states are named, the folder's README lets a stranger say what is wanted (`repo/` + `python check.py` exits 0 = done). Fresh-agent pass done by me acting from BOUNTY.md alone (the pass may not spawn agents): the doc was enough to succeed; gaps — no build step for missing `dist/cli.js`, the recreate recipe is bash-only, and it never says removed files' bytes remain reachable via `snapshot.commit` in `.git/objects`.
+- Method: read the full diff (scope clean: only `packages/box-bounty`, the `bounty create` CLI branch, `tests/box/bounty`, the doc page, one package.json line; export/submit/verify/trace untouched); relied on the recorded verify (no named doubt); wrote a scratch vitest probe file driving `planBounty`/`finalizeBounty` with hostile mutations, ran it scoped, removed it; manual CLI runs in both shells; direct `git ls-tree` repro for the quoting bug.
 - Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - **Blocking:** (1) any non-ASCII filename makes the whole create refuse as `unreadable-path` — `git ls-tree --format` still applies `core.quotepath` quoting despite `-z` (proved: `blob "\303\274n\303\257code.txt"` vs `blob ünïcode.txt` with `-c core.quotepath=false`); fail-safe but wrong, one-line fix. (2) `.boxignore` patterns are matched case-sensitively against the folded canonical path — an owner pattern containing any uppercase silently protects nothing (proved: `SecretDir/` and `*.KEY2` both shipped their targets).
+  - **TOCTOU (admitted by cook, confirmed):** bytes are emitted from the live worktree, not the recorded tree — a file swapped after `add -A` ships swapped bytes, and a directory swapped for an outside junction ships outside bytes under an inside name. Shipped *paths* are pinned by the snapshot commit; only existing paths' bytes/links can change. Window is intra-run.
+  - **`--task`/`--note` bypass never-ship:** any readable file (`.env` proved) is embedded verbatim in `bounty.json`/`README.md` — the preview shows the text locally, but nothing refuses a never-ship path.
+  - **Confirmed admitted weak spots:** outside junction with only ignored content is silently absent (no refusal, nothing ships); unreachable snapshot commit retains removed files' bytes in `.git/objects` and `snapshot.commit` in the shipped `bounty.json` resolves them (doc implies, never states); `.env.example` is excluded (per spec); no content scanning (documented limit).
+  - **Smaller:** file deleted between plan and emit dies as raw `ENOENT` exit 1 (unnamed state); `--out` inside the repo lets a previous bounty folder ship inside the next; `--preview` still writes unreferenced git objects; `repo/` ships worktree bytes while `snapshot.tree` holds filter-cleaned bytes — "exactly" recreates blob bytes and depends on autocrlf parity (doc recipe unpinned, test pins it); named states `setup-failed`, `unreadable-path`, `out-dir-not-empty`, `invalid-boxignore` have no tests; README misses a blank line before `## How you know you are done` when no setup.
+- Merged: not merged — back to the cook. · Resources removed: scratch probe test deleted; probe temp dirs under `%TEMP%\box-bt1-*` are test-owned and clean themselves up on next suite run pattern.
+- Reflect: the never-ship boundary was attacked hard and mostly held; the two fixes are small (pass `-c core.quotepath=false` to ls-tree; fold `.boxignore` patterns before compiling). A unicode-filename test would have caught finding 1 — worth adding either way.

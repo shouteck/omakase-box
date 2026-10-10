@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, finalizeBounty, planBounty, renderPreview } from '../../../packages/box-bounty/index.js';
@@ -108,6 +108,59 @@ describe('bounty create end to end', () => {
     expect(existsSync(outDir)).toBe(false);
   });
 
+  it('names a setup step that exits non-zero', () => {
+    const repo = repoWithTask({ 'src/x.py': 'x\n' });
+    try {
+      finalizeBounty(planBounty(options(repo, {
+        setup: ['node', '-e', 'process.exit(3)'],
+        check: ['node', '-e', 'process.exit(1)']
+      })));
+      expect.unreachable('expected refusal');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BountyRefused);
+      const refusal = error as BountyRefused;
+      expect(refusal.reason).toBe('setup-failed');
+      expect(refusal.message).toContain('exited 3');
+    }
+  });
+
+  it('refuses an out directory that is not empty', () => {
+    const repo = repoWithTask({ 'src/x.py': 'x\n' });
+    const outDir = join(runRoot('out'), 'bounty');
+    mkdirSync(outDir, { recursive: true });
+    write(outDir, 'stale.txt', 'left behind\n');
+    try {
+      finalizeBounty(planBounty(options(repo, { outDir })));
+      expect.unreachable('expected refusal');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BountyRefused);
+      expect((error as BountyRefused).reason).toBe('out-dir-not-empty');
+    }
+    expect(readFileSync(join(outDir, 'stale.txt'), 'utf8')).toBe('left behind\n'); // untouched
+  });
+
+  it('refuses --out inside the repository, so a bounty folder can never ship inside the next', () => {
+    const repo = repoWithTask({ 'src/x.py': 'x\n' });
+    try {
+      planBounty(options(repo, { outDir: join(repo, 'bounty-out') }));
+      expect.unreachable('expected refusal');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BountyRefused);
+      expect((error as BountyRefused).reason).toBe('out-inside-repo');
+    }
+  });
+
+  it('refuses a negation line in .boxignore instead of silently ignoring it', () => {
+    const repo = repoWithTask({ 'src/x.py': 'x\n', '.boxignore': '!keep-this.txt\n' });
+    try {
+      planBounty(options(repo));
+      expect.unreachable('expected refusal');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BountyRefused);
+      expect((error as BountyRefused).reason).toBe('invalid-boxignore');
+    }
+  });
+
   it('names the program when the check cannot run', () => {
     const repo = repoWithTask({ 'src/x.py': 'x\n' });
     try {
@@ -127,6 +180,8 @@ describe('bounty create end to end', () => {
     const manifest = readManifest(result.outDir);
     expect(manifest.level).toBe('reviewed');
     expect(manifest.verification).toBeNull();
-    expect(readFileSync(join(result.outDir, 'README.md'), 'utf8')).toContain('a person will read your answer');
+    const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
+    expect(listing).toContain('a person will read your answer');
+    expect(listing).toContain('no `.git` and no history.\n\n## How you know you are done'); // sections stay separated
   });
 });
