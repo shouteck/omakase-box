@@ -29,7 +29,9 @@ const caseInsensitiveFs = (() => {
 // a mixed-case prefix declared in the agreement itself, an editable copy under a case
 // alias, a box destination under an excluded prefix, and schema-level '.'/'..' spellings.
 describe('exclusion bypass probes, round 2 (added by the D2.1 pass)', () => {
-  it('names an import specifier that reaches an excluded file through a case alias', () => {
+  // Host-only by the same probe as below: '../PRIVATE/scoring.js' only resolves
+  // to src/private/scoring.ts on a case-insensitive filesystem.
+  it.skipIf(!caseInsensitiveFs)('names an import specifier that reaches an excluded file through a case alias', () => {
     // The alias lives in owner source, not in the agreement: on a case-insensitive
     // filesystem '../PRIVATE/scoring.js' resolves to src/private/scoring.ts.
     const repo = materializeFixtureRepo();

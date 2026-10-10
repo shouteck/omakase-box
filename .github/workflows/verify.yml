@@ -96,9 +96,13 @@ jobs:
       #    command files off Windows by design) and two junction tests (a
       #    junction is transparent to git; a Linux symlink stays a visible link
       #    and is refused under a different named reason — still a refusal).
-      #  * test:box-package's one platform-bound test (a 'SRC/POLICY/LOADER.TS'
-      #    case-alias entrypoint must still resolve — case-insensitive FS only)
-      #    is marked host-only in tests/box/package/review-security-r2.test.ts.
+      #  * test:box-package has nine Windows-bound tests marked host-only beside
+      #    their assertions: two case-FS tests in review-security-r2 (alias
+      #    spellings only resolve on a case-insensitive filesystem), the whole
+      #    'Windows command-file launch rule' block plus one .cmd probe in
+      #    command-checks, and two a4-multi-pkg tests declaring the host's
+      #    'npm.cmd' recipe — the launcher refuses command files off Windows by
+      #    design. The other 50 of 59 run here.
       # `check --full` covers bootstrap/auth/contracts/planner; they are still named so the
       # list reads as the whole suite set (deduped inside one verify run).
       - name: verify

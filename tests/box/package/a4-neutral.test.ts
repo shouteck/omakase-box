@@ -210,7 +210,9 @@ describe('A4 Python verify (a4-py-tools)', () => {
 });
 
 describe('A4 multi-package fixture (a4-multi-pkg)', () => {
-  it('preserves dependency files byte-for-byte, excludes the unselected member and installs the locked package', { timeout: HEAVY }, () => {
+  // Host-only (K10): the fixture's declared setup spells the host's 'npm.cmd'
+  // recipe, and the launcher refuses command files off Windows by design.
+  it.skipIf(process.platform !== 'win32')('preserves dependency files byte-for-byte, excludes the unselected member and installs the locked package', { timeout: HEAVY }, () => {
     const { exported } = shared('a4-multi-pkg');
     const dir = exported.outDir;
     // Owner dependency files ship with their exact bytes, not regenerated ones.
@@ -234,7 +236,8 @@ describe('A4 multi-package fixture (a4-multi-pkg)', () => {
 });
 
 describe('A4 multi-package verify (a4-multi-pkg)', () => {
-  it('verifies an alternative-right seal in the owner scratch clone and rejects a no-op', { timeout: HEAVY }, () => {
+  // Host-only (K10): same a4-multi-pkg 'npm.cmd' recipe as the fixture test.
+  it.skipIf(process.platform !== 'win32')('verifies an alternative-right seal in the owner scratch clone and rejects a no-op', { timeout: HEAVY }, () => {
     const verify = verifier('a4-multi-pkg', 'a4-pkg-verify');
 
     const right = sealed('a4-multi-pkg', 'pkg-right', box => writeFileSync(join(box, 'packages', 'cli', 'bin.js'), ALT_RIGHT['a4-multi-pkg']!.content));

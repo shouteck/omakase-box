@@ -167,7 +167,10 @@ describe('declared command checks: runner', () => {
   });
 });
 
-describe('declared command checks: the Windows command-file launch rule', () => {
+// Host-only (K10): this whole block asserts the Windows command-file launch
+// rule — the launcher refuses .cmd/.bat programs off Windows by design, so the
+// execution assertions can only hold where command files can launch.
+describe.skipIf(process.platform !== 'win32')('declared command checks: the Windows command-file launch rule', () => {
   function npmStyleShim(dir: string, name: string): { shim: string; target: string } {
     const target = join(dir, `${name}-tool.mjs`);
     const shim = join(dir, `${name}.cmd`);
@@ -234,7 +237,9 @@ if (argv[0] === '--exit') process.exit(Number(argv[1]));
 });
 
 describe('declared command checks: spelled-out program paths', () => {
-  it('resolves a relative program path against the context root, not the host cwd', () => {
+  // Host-only (K10): the probe is a .cmd batch file; launching it asserts the
+  // same Windows command-file rule as the block above.
+  it.skipIf(process.platform !== 'win32')('resolves a relative program path against the context root, not the host cwd', () => {
     const dir = runRoot('relprog');
     mkdirSync(join(dir, 'tools'));
     writeFileSync(join(dir, 'tools', 'probe.cmd'), '@echo off\r\necho %*> "%CD%\\rel-argv.json"\r\n');
