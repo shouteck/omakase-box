@@ -1,16 +1,15 @@
 # Status
 
-Replaced by the CTO on 10 October 2026, at the owner's approval of milestone C.
+Replaced by the CTO on 10 October 2026, at the close of wave C1.
 
 ## Now
 
-- **New product, approved:** a coding agent that is stuck on a failing test hands off that part as a Box, without handing over the repository; the returned solution is verified in the real repository. The whole plan is in [PLAN.md](PLAN.md), rewritten to hold only what this needs.
+- **C1 is done and merged** (`ad7c1a6`, PASS ui-verified): `box trace --out <dir> -- <test command>` records every repository function a failing Python test ran — identified by file and def-line, child processes included — into a documented `trace.json`, without disturbing the test. New suite `test:box-trace`; docs in `docs/box-v4/BOX-TRACE.md`.
 - **Milestone C is approved** (C1 to C5). Each wave cooks only when the owner names it, and the kitchen stops after each. C5, the first Box posted outside, needs a separate approval.
-- **Kept from before:** the Box format, export, the solver's sealing tool and owner-side verify. All built and tested; master is at the last accepted product wave, fix-paired-check.
-- **Dropped:** the outsider-delegation order, the Box-as-a-search-tool draft (milestone B and its brief, removed), the web journey. Reasons are in PLAN.md.
-- **The lab is paused entirely.** Do not read its brief, answer it or run a sync. The kickoff and close steps no longer mention it.
-- **Left as they are, not merged and not deleted:** local branches `wave/A6` (an uncooked brief from a retired plan) and `wave/K7` (parked). Deleting an unmerged branch is the owner's call.
+- **Known C1 limits for C2:** a child still running at command exit is silently absent from `processes`; cross-process `order` is per-process, not wall-clock; the hook dir must stay outside the traced root; no `box` binary — invoke `node packages/box-cli/dist/cli.js`.
+- **The lab is paused entirely.** Do not read its brief, answer it or run a sync.
+- **Left as they are, not merged and not deleted:** local branches `wave/A6` and `wave/K7` (parked). Deleting an unmerged branch is the owner's call.
 
 ## Next
 
-**C1: record what a failing test ran.** Brief at [waves/C1.md](waves/C1.md), station packaging. Send `START.md: C1`. The kitchen cooks that wave and stops.
+**C2: from a failing test to a ready Box with nothing written by hand.** One command traces, chooses files, applies the never-ship list, writes the agreement, exports and prints the owner's summary. No brief yet — the CTO writes it when this wave is named. Send `START.md: C2`.

@@ -20,7 +20,10 @@ The station now also covers tracing a failing test, choosing a Box's files from 
 - **A line that ran is not a function that was called.** A definition line runs when its file is loaded. If a later wave reads a standard coverage report in place of the tracer, treat hits as regions, and leave anything uncertain unmarked.
 - **A wrapper must behave exactly like the command it wraps.** The lab's search wrapper ran a search to completion before passing output on, which changed what a piped command returned and went unnoticed because the check replayed old commands. Test the commands an agent actually types, including pipes and early exits.
 - **Offered is not used, and empty costs.** A tool an agent is only told about was not called; a tool that could return nothing cost real steps. Put the hand-off in the path of what the agent already does, and pilot one real use before any batch.
-- The tracer prototype is on the `lab` branch (`lab/lines/box-trial/`). Read it with `git show origin/lab:<path>`; do not import from it.
+- The tracer prototype is on the `lab` branch (`lab/lines/box-trial/`). Read it with `git show origin/lab:<path>`; do not import from it. The product tracer is `packages/box-trace` (C1): a `sitecustomize.py` hook on `PYTHONPATH`, `sys.monitoring` primary with `settrace` fallback.
+- **Traced is not all that ran.** `processes` counts reported processes; a Python child still running when the command exits writes its record after the merge and is silently absent. Cross-process `order` groups per process, never wall-clock. `no-python-process` conflates `-S`/`-I`/`-E`, `python --version`, `os._exit` and killed children.
+- **The hook dir must not sit under the run root.** With cwd an ancestor of the hook's temp dir, the trace lists `sitecustomize.py` itself as repository code.
+- **No `box` binary exists.** The command is `node packages/box-cli/dist/cli.js` after a build; doc pages and tests must say so.
 
 ## Traps
 
