@@ -5,6 +5,8 @@
 //   trace --out <dir> -- <the test command, as it would normally be typed>
 //   bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]
 //   bounty help
+//   bounty describe [--rules] [--repo <path>]
+//   bounty remind [--repo <path>]
 //   bounty status [--repo <path>]
 //   bounty confirm <id> [--repo <path>]
 //   bounty post <id> --to <dir> [--repo <path>]
@@ -21,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderHelp, renderPreview, renderStatus, resolveRepoRoot, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
+import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
 import { trace, TraceRefused } from '../../box-trace/index.js';
@@ -47,6 +49,8 @@ function usage(message?: string): never {
   console.error('       box trace --out <dir> -- <the test command, as it would normally be typed>');
   console.error('       box bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]');
   console.error('       box bounty help');
+  console.error('       box bounty describe [--rules] [--repo <path>]');
+  console.error('       box bounty remind [--repo <path>]');
   console.error('       box bounty status [--repo <path>]');
   console.error('       box bounty confirm <id> [--repo <path>]');
   console.error('       box bounty post <id> --to <dir> [--repo <path>]');
@@ -177,6 +181,22 @@ if (command === 'export') {
     if (subcommand === 'help') {
       // Works outside a checkout too — it reads no repository.
       console.log(renderHelp());
+    } else if (subcommand === 'describe') {
+      // Works outside a checkout too — without a repository it prints the
+      // description and says the live facts need one.
+      if (bountyIds().length > 0) usage('box bounty describe [--rules] [--repo <path>]');
+      let described: string | null = null;
+      try {
+        described = resolveRepoRoot(bountyRepo(), 'describe');
+      } catch (error) {
+        if (!(error instanceof BountyRefused)) throw error; // not-a-repository → the description alone prints
+      }
+      console.log(bountyArgs.includes('--rules') ? renderRules(described) : renderDescribe(described));
+    } else if (subcommand === 'remind') {
+      // The switch lives in .box/limits.json, so a repository is required —
+      // outside one the named refusal not-a-repository is the honest answer.
+      if (bountyIds().length > 0) usage('box bounty remind [--repo <path>]');
+      console.log(renderRemind(resolveRepoRoot(bountyRepo(), 'remind')));
     } else if (subcommand === 'create') {
       const parsed = parseCreateArgs(bountyArgs);
       // --task stays a usage error; a missing --why is the named refusal

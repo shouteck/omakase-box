@@ -7,9 +7,13 @@ export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } f
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome } from './git.js';
 export type { BountyCommand, BountyCommandRun, BountyManifest } from './manifest.js';
+export { LIMITS_FILE, loadLimits } from './limits.js';
+export type { BountyLimits } from './limits.js';
 export { BUILTIN_RULES, loadOwnerList, OWNER_LIST_FILE } from './never-ship.js';
 export type { NeverShipRule } from './never-ship.js';
-export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, confirmBounty, isOpenStage, listRecords, loadRecord, persistRecord, postBounty, recordDir, recordPath, refName, rejectBounty, renderHelp, renderStatus, transitionTo, withdrawBounty, writeNewRecord } from './record.js';
-export type { AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WithdrawOutcome } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, confirmBounty, isOpenStage, listRecords, loadRecord, persistRecord, postBounty, recordDir, recordPath, refName, rejectBounty, renderHelp, renderOpenLine, renderStatus, resolveLimits, transitionTo, withdrawBounty, writeNewRecord } from './record.js';
+export type { AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, ResolvedLimits, StageEvent, WithdrawOutcome } from './record.js';
+export { renderDescribe, renderRemind, renderRules } from './tell.js';
+export { DESCRIBE_LINES, REMINDER_OFF, REMINDER_ON, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
