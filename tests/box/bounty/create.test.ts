@@ -64,7 +64,10 @@ describe('bounty create end to end', () => {
     expect(listTree(result.outDir)).toEqual(expect.arrayContaining(['README.md', 'bounty.json', 'repo/check.py', 'repo/app/main.py']));
   });
 
-  it('creates a mechanical bounty on a Node repository with npm setup', () => {
+  // Host-only (K10): the declared setup spells the host's npm recipe 'npm.cmd',
+  // and the command launcher refuses .cmd files off Windows by design — this is
+  // a host-specific recipe, not a portable executable claim (station card, A4).
+  it.skipIf(process.platform !== 'win32')('creates a mechanical bounty on a Node repository with npm setup', () => {
     const repo = repoWithTask({
       'package.json': JSON.stringify({ name: 'node-fixture', version: '1.0.0', scripts: { test: 'node check.js' } }) + '\n',
       'check.js': 'process.exit(1)\n',
