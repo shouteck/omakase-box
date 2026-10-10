@@ -55,14 +55,15 @@ This changes two things BT3 shipped, on the owner's decision of 10 October 2026:
 
 ## Result
 
-<One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
-
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
+- Worker: · Reviewer: pass (fresh agent, not the cook) — Windows host, Git Bash + PowerShell smoke; Claude.
+- Commit: 5968d84 (wave/BT3a, reviewed `git diff master...5968d84`; tree clean).
+- Verify: `node scripts/verify.mjs test:box-bounty test:box-package` exit 0 on 5968d84 — all four steps reused the recorded PASS at 2026-10-10T07-44-45Z on this exact SHA with clean tree (358s run: check, build, test:box-bounty 98 tests incl. all 17 new report.test.ts tests, test:box-package). Pass's own invocation 2026-10-10T07:54:19Z.
+- Verdict: PASS · Level: ui-verified (built CLI exercised end-to-end on a scratch repo, plus the green suite).
 - Lenses:
-- Method:
-- Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - Security: PASS — all four BT3 attacks re-ran live against the new flow with attempts present and were named refusals changing nothing: `.env`+`secrets/` in the returned repo/ → `answer-never-ship`; a doctored `bounty.json` check → `manifest-tampered`; an ignored `node_modules/injected.js` at a touched path → `apply-worktree-dirty` (file preserved); whole run under host `core.autocrlf=true` — merges and undo land, CRLF-clean files draw no false refusal. `undo` attacks: staged index → `undo-index-staged`; uncommitted bytes at a touched path → `undo-worktree-dirty` (preserved); merge removed by `reset --hard` → `undo-not-on-branch`; diverged file → `undo-conflict` naming path and merge sha; never-applied → `not-applied`; repeat → `already-undone`. BT3's merge boundary is intact: never-ship table, snapshot identifier and manifest sha binding untouched; `snapshotBytes`/`restoreBytes`/`merge --abort`/porcelain-`-z` boundary preserved and now shared with `undo` (whose revert gets the same boundary plus an index-clean gate).
+  - User experience: PASS — cold read of `status`/`answer` output on a scratch repo: a fresh agent can say what ran (check argv, exits at create and on the answer, guard, change counts, merge read with conflict paths), what did not (always-present `not checked:` line) and the exact next command. Flags are observations; nothing reads as advice. Verdict-word test covers verified/check-failed/answered/conflict reports plus status — one shared renderer covers the check-unrunnable path by construction (its dynamic parts are argv and exits only).
+  - Measurement fairness: PASS — every report line on a real answer re-derived by hand: check exit at create from `manifest.verification.check` (re-ran on the untouched shipped set → exit 1); exit on the answer (re-ran inside answer `repo/` → 0); `guard:` from `bounty.json` (null); `change:` counts from the recorded attempt fields vs manifest sha256 comparison; line counts from `git diff --numstat` base→answer (1/1); `current code:` from a manual `git merge-tree --write-tree` (exit 0 clean; `src/app.py` named on the conflict case); each flag re-derived, including the baseline re-run proving the env-marked check exits 0 on the untouched snapshot — so the "says nothing" flag is true. No untraceable line.
+- Method: prove-it-works applied to the real artifacts — scratch repo end-to-end through the built CLI, hand re-derivation of report facts, live refusals. No cook-cited principles to check beyond it.
+- Findings and limits: (trivial) the cook left `bt3a-*.log` scratch files in %TEMP% — removed at close; the wave note says wave temp items are removed. (cosmetic, pre-existing BT3) after an aborted apply under autocrlf=true `git status` stat-flags the touched file while `git diff` is empty — `restoreBytes` rewrites identical bytes. (limits) byte-equality after apply/undo is asserted in-suite only under pinned `autocrlf=false` — on the real host the touched file comes back CRLF-smudged per the repo's own convention (`HEAD^{tree}` identical, git clean); the word-police test does not exercise the check-unrunnable outcome and a solver-controlled check tail can carry a banned word inside the quoted tail block; `apply <id> <n>` deliberately permits a failed attempt by name.
+- Merged: pending head chef · Resources removed: all `bt3a-*` scratch under %TEMP% removed by the pass.
+- Reflect: —
