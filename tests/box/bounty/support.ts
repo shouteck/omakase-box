@@ -56,13 +56,15 @@ export interface RepoFingerprint {
 }
 
 // Byte-for-byte proof that creating a bounty changed nothing: HEAD, the real index
-// bytes, `git status` and every working-tree file's content.
+// bytes, `git status` and every working-tree file's content. `.box/` is excluded:
+// BT2 makes create write the bounty record at `.box/bounties/<id>.json` inside the
+// repository on purpose — everything else must still be untouched.
 export function fingerprint(repo: string): RepoFingerprint {
   const files: Record<string, string> = {};
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const target = join(dir, entry.name);
-      if (entry.isDirectory() && entry.name !== '.git') walk(target);
+      if (entry.isDirectory() && entry.name !== '.git' && entry.name !== '.box') walk(target);
       else if (entry.isFile()) files[target.slice(repo.length + 1).split(BS).join('/')] = createHash('sha256').update(readFileSync(target)).digest('hex');
     }
   };
@@ -70,7 +72,7 @@ export function fingerprint(repo: string): RepoFingerprint {
   return {
     head: git(repo, ['rev-parse', 'HEAD']),
     indexSha256: createHash('sha256').update(readFileSync(join(repo, '.git', 'index'))).digest('hex'),
-    status: git(repo, ['status', '--porcelain']),
+    status: git(repo, ['status', '--porcelain']).split('\n').filter(line => !line.slice(3).startsWith('.box/')).join('\n'),
     files
   };
 }

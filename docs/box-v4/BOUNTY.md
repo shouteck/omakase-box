@@ -1,21 +1,66 @@
-# `box bounty create` — a bounty, complete and safe, on disk
+# `box bounty` — a bounty, complete and safe, remembered in the project
 
 ```
 node packages/box-cli/dist/cli.js bounty create --title "<one line>" --task <file> \
     [--note <file>] [--setup -- <command>] [--check -- <command>] --out <dir> \
     [--repo <path>] [--preview]
+node packages/box-cli/dist/cli.js bounty status [--repo <path>]
+node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
 ```
 
 (If `dist/cli.js` is missing, build first with `node scripts/workspace.mjs build`.)
 
-Run inside a Git checkout (or pass `--repo`). It writes one folder and nothing else
-leaves the machine — posting is a later wave's job. `--out` must point outside the
-repository (`out-inside-repo` otherwise — a bounty folder inside the checkout would
-ship inside the next bounty). Every outcome is a named state: success ends
-`stage 1 of 7: drafted`; refusals print `refused (<name>)` and exit 3; usage
-errors exit 2; operational failures exit 1. `--task` and `--note` are embedded
-verbatim, so a path the never-ship rules would remove is refused
+Run inside a Git checkout (or pass `--repo`). `create` writes one folder and the
+bounty's record; nothing else leaves the machine until `confirm` + `post` — and
+`post` only ever copies to a local folder you name. `--out` must point outside
+the repository (`out-inside-repo` otherwise — a bounty folder inside the
+checkout would ship inside the next bounty). Every outcome is a named state:
+success ends `stage 1 of 7: drafted`; refusals print `refused (<name>)` and
+exit 3; usage errors exit 2; operational failures exit 1. `--task` and `--note`
+are embedded verbatim, so a path the never-ship rules would remove is refused
 (`never-ship-input`).
+
+## The record — the bounty outlives the agent
+
+`create` also writes `.box/bounties/<id>.json` inside the repository and prints
+its path. The tool writes the file; committing it is the agent's normal flow.
+The record holds the id, title, level, the snapshot identifier
+(commit + tree + base), the absolute path of the bounty folder, and the stage
+history — one event appended per transition, never rewritten:
+
+```
+drafted → confirmed → posted → taken → answered → verified → applied
+                (ended early: rejected, withdrawn, expired)
+```
+
+This wave's commands only ever reach `posted` or `withdrawn`. A later agent in
+a later session reads the record — not your conversation — to pick the bounty
+up.
+
+`create` also keeps a Git ref `refs/box-bounty/<id>` pointing at
+`snapshot.commit`, so `git gc --prune=now` cannot take the bytes the identifier
+names. `withdraw` removes the ref.
+
+## The commands after create
+
+- **`status`** lists every open bounty with id, title, stage and the next step —
+  and never prints nothing: an empty `.box/bounties/` says so and says what to
+  do. Ended bounties are one compact line.
+- **`confirm <id>`** records the owner's yes (drafted → confirmed) with a
+  timestamp. The owner's yes is the boundary: nothing is delivered before it.
+  Confirming a bounty that is not drafted is refused (`not-drafted`).
+- **`post <id> --to <dir>`** is the first delivery, and it is gated: unconfirmed
+  → `not-confirmed`; the recorded folder gone → `folder-missing`; its
+  `bounty.json` naming a different id → `folder-mismatch`; the destination
+  inside the repository → `destination-inside-repo`; `<dir>/<id>` already
+  existing → `destination-exists`. On success it **copies** the bounty folder to
+  `<dir>/<id>/` (the recorded folder stays) and marks the bounty `posted` with
+  the destination recorded.
+- **`withdraw <id>`** ends any open stage → `withdrawn`, removes the durability
+  ref, and is safe to repeat: an already-withdrawn bounty is a named state, not
+  an error. An unknown id is `unknown-bounty` everywhere.
 
 ## What the folder contains
 
@@ -91,8 +136,8 @@ other bytes. The shipped set is that tree minus never-ship removals;
 an answer against exactly these bytes. Note the corollary: removed files' bytes
 remain reachable to anyone with repository access through `snapshot.commit` —
 the folder ships only the trimmed set, the commit records the full state.
-Being unreferenced, the commit survives normal use but an explicit
-`git gc --prune=now`/`git prune` could remove it — BT2 keeps the durable record.
+The commit is pinned under `refs/box-bounty/<id>` (written by `create`, removed
+by `withdraw`), so garbage collection cannot prune it while the bounty is open.
 
 ## Never-ship
 
@@ -107,6 +152,9 @@ Built in, not overridable in this wave, checked on each file's **real path**
   `secrets-backup/`, `mysecrets/`); deliberately plural so `secretary/` and
   `secretariat/` do not match
 - `runtime-dir` — any `.runtime/` segment
+- `dot-box` — any `.box` path segment: the tool's own records under
+  `.box/bounties/` never ship inside a later bounty. Exact segment only, so
+  `.boxignore` itself still ships (and still means nothing to this rule).
 - `private-key` — `*.key *.pem *.p12 *.pfx *.jks *.keystore *.ppk *.gpg`,
   and any basename starting `id_rsa`/`id_dsa`/`id_ecdsa`/`id_ed25519`
   (`id_rsa.pub`, `id_rsa_backup`, `id_rsa.old` all count)

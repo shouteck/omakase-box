@@ -1,11 +1,13 @@
 export { BountyUsage, parseCreateArgs } from './args.js';
 export type { CreateArgs } from './args.js';
-export { finalizeBounty, planBounty, renderListing, renderPreview, TOOL_VERSION } from './create.js';
+export { finalizeBounty, planBounty, renderListing, renderPreview, resolveRepoRoot, TOOL_VERSION } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome } from './git.js';
 export type { BountyCommand, BountyCommandRun, BountyManifest } from './manifest.js';
 export { BUILTIN_RULES, loadOwnerList, OWNER_LIST_FILE } from './never-ship.js';
 export type { NeverShipRule } from './never-ship.js';
+export { confirmBounty, isOpenStage, listRecords, loadRecord, postBounty, recordDir, recordPath, renderStatus, withdrawBounty, writeNewRecord } from './record.js';
+export type { BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WithdrawOutcome } from './record.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';

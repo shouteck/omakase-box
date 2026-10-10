@@ -42,14 +42,18 @@ Any later agent arriving in this repository can run `box bounty status`, see eve
 
 ## Result
 
-<One or two lines per item. Detail goes in a notes file next to the evidence, linked from here.>
-
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
+- Worker: box-cook · Reviewer: the pass (fresh agent; host: Windows, Git Bash; model: Claude/Anthropic)
+- Commit: `40f370786d64acce4c1ba4c2c3e6752d2f30494f`
+- Verify: `verify 40f3707 PASS check=reused@2026-10-10T04-14-42-628Z-40f3707 build=reused@2026-10-10T04-14-42-628Z-40f3707 test:box-bounty=reused@2026-10-10T04-14-42-628Z-40f3707 db=embedded 8s` — my own invocation exited 0 at run `2026-10-10T04-22-39-158Z-40f3707`, clean tree, all steps reused recorded PASSes on this exact SHA
+- Verdict: **PASS** · Level: ui-verified (built `dist/cli.js` driven end-to-end on a scratch repo, plus hostile in-band probes)
 - Lenses:
-- Method:
-- Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - **Security:** the `confirmed` gate holds through the tool — post-before-confirm, double-post and post-after-withdraw all refuse `not-confirmed` (exit 3), nothing is copied. `dot-box` holds: `.BOX`/`.Box`/nested `deep/.box/` all removed (canonical path is lower-cased; on Windows the spellings collapse to `.box` anyway), `.boxignore` still ships and its owner list still removes, and `.box/bounties/*.json` never entered a second bounty (proved). Destination escapes refused by name: literal in-repo `--to`, an existing junction realpathing into the repo, an existing `<dir>/<id>`. Residuals below.
+  - **User experience:** read cold as a fresh agent — `status` on a bounty-less project names the state and the exact `create` command; every transition prints `stage N of 7` plus the next command; every refusal names itself, its remedy and exits 3; a corrupt record file is named, not dropped; `already withdrawn` is a named exit-0 state. Unclear: `post`/`status` say "the answer comes back through this tool" but no answer command exists until BT3 (BOUNTY.md does say so); `status` outside a checkout refuses `not-a-repository` but the message says "bounty create needs a repository" — wrong verb for the command run.
+- Method: diffed `master...40f3707` (all touched paths inside the brief's Write scope); read `record.ts`, `create.ts`, `never-ship.ts`, `snapshot.ts`, `cli.ts`, the new tests and the `fingerprint` edit; ran `node scripts/verify.mjs test:box-bounty` myself (reused recorded PASSes on this SHA — nothing about the record was in doubt, no `--fresh` needed); built with `node scripts/workspace.mjs build`; then attacked a real scratch repo in `%TEMP%` with junctions, forged and swapped record/manifest files, deleted folders and case-spelled `.box` dirs.
+- Findings and limits (all non-blocking):
+  - **`--to` nonexistent-under-junction residual (proved):** `--to` is realpath'd only when it exists, so `J\newdir` where junction `J` points into the repo bypasses `destination-inside-repo` — the delivered copy landed inside the checkout and then shipped inside the next bounty (proved end-to-end). Same class as BT1's accepted `--out` junction residual, and narrower: an existing `--to` is realpath'd correctly. Fix direction: realpath the nearest existing ancestor of `--to`.
+  - **The record is a plain JSON the agent can forge:** flipping `stage` to `confirmed` by hand lets `post` deliver without a real confirm (proved). The gate is a workflow convention, not confinement — the same agent could copy the folder directly — and forgery leaves a forensic trace (events show `drafted → posted` with no `confirmed` event). Worth a documented limit, not a block.
+  - **`fingerprint` support edit weighed:** excluding `.box` is required — create now writes `.box/bounties/<id>.json` on purpose — and the intent (everything else untouched: HEAD, index bytes, status, file hashes) is preserved. Minor asymmetry: the file walk skips `.box` at any depth while the status filter hides only root `.box/`; a stray write under root `.box/` outside `bounties/` would be invisible to the helper. Acceptable.
+  - **Test quality checked:** every new test would fail if the code under test did nothing — `expectRefusal` asserts a thrown `BountyRefused` with the exact reason (`expect.unreachable` otherwise), success paths assert on-disk bytes, recorded events and the git ref (gc-survival is a real `gc --prune=now`). All must-fail cases the brief lists are tested and were re-probed live through the CLI.
+- Merged: — (reviewer's call: mergeable) · Resources removed: scratch repo, junctions and delivered copies under `%TEMP%\bt2-review-9ZrSXF` removed; no product code edited, no tests added or weakened.
+- Reflect: the record-as-state-machine and the gated post match the brief; the two residuals are the honest kind — flagged or forgery-visible — and the `.box` never-ship attack surface held under every spelling tried.
