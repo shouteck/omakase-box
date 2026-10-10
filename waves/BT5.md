@@ -79,8 +79,69 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
 - Verify: `verify 9d4575d PASS check=0 build=0 test:box-bounty=0 db=embedded 334s`
   (.kitchen/runs/2026-10-10T12-43-05-255Z-9d4575d); same PASS on 8f02ed4
   (278s, runs/2026-10-10T12-38-09-599Z-8f02ed4)
-- Verdict: · Level:
+- Verdict: **PASS** on `bac1ca4` · Level: ui-verified — the journey and rungs
+  exercised the tool's real flow end to end (live blind solver, independent
+  collector, three fresh rung agents), and the suite is green on the exact
+  commit. My own verify run in the foreground:
+  `verify bac1ca4 PASS check=0 build=0 test:box-bounty=0 db=embedded 272s`
+  (.kitchen/runs/2026-10-10T13-51-17-939Z-bac1ca4, clean tree, 142/142).
 - Lenses:
+  - Security — holds. The solver saw only the delivered folder (README,
+    bounty.json, the task, repo/ minus the 3 never-ship files create
+    recorded); its one stray `grep` listed origin-checkout path *names*,
+    never contents, and the solver already held the same tree inside repo/ —
+    substance-blindness stands and was disclosed, not hidden. The collector's
+    what-it-did-not-see statement is credible: record plus folder bytes only.
+    `.box` stays never-ship (the record JSON lives where records live; it
+    cannot enter a later bounty). The installed `.box/limits.json` breaks
+    nothing — describe, describe --rules, remind and status all run on this
+    checkout (verified directly), and --rules prints the same bytes AGENTS.md
+    carries between the markers.
+  - User experience — two real cold reads, confusion included. The solver
+    worked from the shipped listing/README alone and asked the two questions
+    a real solver asks (wording review, whether a permanent test belongs).
+    The collector found the bounty from the marked block and OPEN alone, hit
+    finding #2 exactly where a cold return would, and reconstructed the clean
+    hand-back itself — deciding apply on the tool's facts, in its own words.
+    Finding #2 is real, verified in the code: `extractAnswerChange` refuses
+    any link or non-file inside repo/ (`answer-unsafe-path`) and would count
+    every install/build artifact as `added`, while `renderListing`'s README
+    never tells a solver to clean what setup creates.
+  - Measurement fairness — the evidence is real artifacts, not prose: the
+    record JSON shows drafted→confirmed→posted→taken→answered→verified→
+    applied with answer `a3281e3` and merge `e720caa` matching the branch;
+    the committed pre-fix failure (scaffold-proof.md) shows both recorded
+    symptoms really failing, and the same assertions pass now (my own 11/11
+    run of check.mjs). Rung scoring applies the pack's cheaper-solution
+    clause as written: the php fixture's unbound premise is recorded as a
+    fixture flaw, not spun into an underuse success — the least flattering
+    outcome for the tool is what got written down. No sign of an engineered
+    result.
+- The solver's diff (a3281e3, merged by the tool's own apply as e720caa)
+  reviews clean as product code: `allowedDestinations: []` now reads
+  "nowhere — the owner's \"allowedDestinations\" is an empty list, so no
+  destination is allowed" in describe and gets honest prose in the
+  destination-not-allowed refusal; absent still means any local folder;
+  non-empty still names its directories; post still refuses every --to. All
+  three semantics are pinned by the check's control cases, and `loadLimits`
+  type-checks the field so the `.length` branch cannot misfire. House wording
+  style throughout.
+- Defects and nits, none blocking: (1) the empty-allowedDestinations
+  rendering has no permanent *suite* test — tell.test.ts's allowedDestinations
+  block covers non-empty lists only; kitchen/bt5/check.mjs is the durable
+  guard but verify never runs it, so a two-case tell.test.ts addition belongs
+  in a later wave (the solver raised this itself; TASK.md asked for none);
+  (2) the task title's leading `#` carried into the listing title — cosmetic,
+  recorded, the slug itself strips it; (3) the solver's stray path-listing
+  grep — disclosed noise, not a substance leak; (4) BOUNTY.md's solver-facing
+  setup guidance lacks the cold-copy bootstrap caveat — outside this wave's
+  write paths, flagged for a later wave; (5) journey finding #2 and the
+  needs-toolchain fixture flaw are recorded unfixed — correctly deferred as
+  product decisions, not papered over.
+- Reviewer: fresh pass agent (Devin host, Windows; no context shared with
+  the cook) — verify run and the direct check.mjs / describe / --rules /
+  remind / status runs above are mine; the cook's and the chef's recorded
+  runs were read as evidence, not re-trusted.
 - Method: feature playbook (the scaffolding is the feature); principles cited
   in the cook's report.
 - Findings and limits: the check demonstrably fails today — output committed
