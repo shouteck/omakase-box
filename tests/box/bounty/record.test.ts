@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, confirmBounty, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus, resolveRepoRoot, withdrawBounty } from '../../../packages/box-bounty/index.js';
@@ -13,7 +13,7 @@ import { CLI_DIST, git, listTree, makeRepo, runRoot, write } from './support.js'
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
 }
 
 function created(repo: string) {
@@ -179,6 +179,19 @@ describe('post — gated first delivery to a local folder', () => {
     writeFileSync(path, JSON.stringify(tampered, null, 2) + '\n');
     expectRefusal(() => postBounty(repo, first.id, join(runRoot('dest'), 'inbox')), 'folder-mismatch');
   });
+
+  // Host-only (K10): junction semantics exist only on Windows — the residual
+  // the pass proved in BT2: a nonexistent --to under a junction used to land
+  // inside the repository because only an existing --to was realpathed.
+  it.skipIf(process.platform !== 'win32')('refuses a nonexistent --to under a junction pointing into the repository', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n', 'inbox/.keep': 'x\n' });
+    const { id } = created(repo);
+    confirmBounty(repo, id);
+    const link = join(runRoot('link'), 'via-junction');
+    symlinkSync(join(repo, 'inbox'), link, 'junction');
+    // link/sub does not exist — its nearest existing ancestor is the junction.
+    expectRefusal(() => postBounty(repo, id, join(link, 'sub')), 'destination-inside-repo');
+  });
 });
 
 describe('withdraw — ends an open bounty cleanly', () => {
@@ -228,7 +241,7 @@ describe('box bounty lifecycle (built cli)', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
     const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--title', 't', '--task', 'TASK.md', '--out', out]);
+    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
     expect(create.status).toBe(0);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
     expect(create.stdout).toContain(`record: ${join(repo, '.box', 'bounties', `${id}.json`)}`);
@@ -248,7 +261,7 @@ describe('box bounty lifecycle (built cli)', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
     const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--title', 't', '--task', 'TASK.md', '--out', out]);
+    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
     const confirm = cli(repo, ['bounty', 'confirm', id]);
     expect(confirm.status).toBe(0);

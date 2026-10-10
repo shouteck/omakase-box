@@ -9,7 +9,7 @@ import { gitBlob, gitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { writeNewRecord } from './record.js';
+import { canonicalForNew, writeNewRecord } from './record.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -27,7 +27,12 @@ const PREVIEW_NAMES_PER_RULE = 20;
 
 export interface CreateOptions {
   readonly repoPath: string;
-  readonly title: string;
+  /** `--why "<one line>"`: why this is being handed off — required. It lives
+      only in the record (like --job), never in bounty.json, the listing or
+      the shipped folder, so the reasons for handing off can be learned. */
+  readonly why: string;
+  /** `--title`: absent or blank, the title is the task's first non-empty line. */
+  readonly title?: string;
   readonly taskPath: string;
   readonly notePath?: string;
   /** `--job <file>`: owner context — the larger piece of work waiting on this
@@ -40,7 +45,9 @@ export interface CreateOptions {
       it on the shipped set and refuses if it does not pass today; `answer`
       runs it after the check and reports the result as a fact. */
   readonly guard?: readonly string[];
-  readonly outDir: string;
+  /** `--out`: absent, the folder goes to a sibling `bounties/<slug>` directory
+      next to the repository root — always outside the checkout. */
+  readonly outDir?: string;
 }
 
 export type PlanFile = SnapshotFile;
@@ -49,6 +56,8 @@ export interface RuleRemoval { readonly rule: string; readonly removed: number; 
 export interface BountyPlan {
   readonly repoRoot: string;
   readonly title: string;
+  /** One line of why — record only, never shipped. */
+  readonly why: string;
   readonly task: { readonly file: string; readonly text: string };
   readonly note: { readonly file: string; readonly text: string } | null;
   readonly job: { readonly file: string; readonly text: string } | null;
@@ -103,29 +112,49 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   return { file: inside ? offset : basename(real), text };
 }
 
-export function resolveRepoRoot(repoPath: string): string {
+export function resolveRepoRoot(repoPath: string, command?: string): string {
   const repo = resolve(repoPath);
   const top = gitOutcome(repo, ['rev-parse', '--show-toplevel']);
   if (top.status !== 0 || top.stdout.trim() === '') {
-    throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — bounty create needs a repository to snapshot`);
+    const verb = command !== undefined ? `box bounty ${command}` : 'box bounty';
+    throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in`);
   }
   return realpathSync(top.stdout.trim());
 }
 
+// The default place to write: `bounties/<slug>` NEXT TO the repository root —
+// never inside it (a folder inside the checkout would ship inside the next
+// bounty; the containment check below still runs on whatever this resolves to)
+// and close enough that an agent finds it again. The slug is the title folded
+// to [a-z0-9-]; anything that leaves no characters becomes 'bounty'.
+function defaultOutDir(repoRoot: string, title: string): string {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'bounty';
+  return join(dirname(repoRoot), 'bounties', slug);
+}
+
 export function planBounty(options: CreateOptions): BountyPlan {
-  const title = options.title.trim();
-  if (title === '') throw new BountyRefused('missing-title', 'a bounty needs a one-line --title');
-  const repoRoot = resolveRepoRoot(options.repoPath);
+  const why = options.why.trim();
+  if (why === '') {
+    throw new BountyRefused('missing-why', 'create needs one line of why — pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
+  }
+  const repoRoot = resolveRepoRoot(options.repoPath, 'create');
   const ownerList = loadOwnerList(repoRoot);
   const rules: NeverShipRule[] = ownerList === null ? [...BUILTIN_RULES] : [...BUILTIN_RULES, ownerList.rule];
   const task = readTextFile(options.taskPath, 'missing-task', repoRoot, rules);
   const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot, rules) : null;
   const job = options.jobPath !== undefined ? readTextFile(options.jobPath, 'missing-job', repoRoot, rules) : null;
-  const outDir = resolve(options.outDir);
+  // The title comes from the task when none is given: its first non-empty
+  // line, trimmed. --title still wins when supplied.
+  const title = (options.title ?? '').trim()
+    || task.text.split('\n').map(line => line.trim()).find(line => line !== '')!;
+  // canonicalForNew realpaths the nearest EXISTING ancestor: a nonexistent
+  // --out under a junction pointing into the repository resolves to its real
+  // inside-the-repo path and is refused below instead of slipping past.
+  const outDir = canonicalForNew(resolve(options.outDir ?? defaultOutDir(repoRoot, title)));
   const rootKey = `${toPosixPath(repoRoot).toLowerCase()}/`;
   const outKey = `${toPosixPath(outDir).toLowerCase()}/`;
   if (outKey === rootKey || outKey.startsWith(rootKey)) {
-    throw new BountyRefused('out-inside-repo', `--out ${options.outDir} lands inside the repository — a bounty folder placed there would ship inside the next bounty. Point --out outside the checkout`);
+    throw new BountyRefused('out-inside-repo', `--out ${options.outDir ?? outDir} lands inside the repository — a bounty folder placed there would ship inside the next bounty. Point --out outside the checkout`);
   }
 
   const workDir = mkdtempSync(join(tmpdir(), 'box-bt1-snap-'));
@@ -146,6 +175,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
   return {
     repoRoot,
     title,
+    why,
     task,
     note,
     job,
@@ -301,9 +331,12 @@ export function renderPreview(plan: BountyPlan): string {
       if (entry.paths.length > PREVIEW_NAMES_PER_RULE) lines.push(`      … and ${entry.paths.length - PREVIEW_NAMES_PER_RULE} more`);
     }
   }
+  lines.push(`  title: ${plan.title}`);
+  lines.push(`  why: ${plan.why} (record only — never shipped)`);
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
+  else lines.push('  note: written by the tool from the check run and the changed files (no --note)');
   if (plan.job !== null) lines.push(`  job: ${plan.job.file} (record only — never shipped)`);
   lines.push(`  setup: ${plan.setup !== null ? describeCommand(plan.setup) : 'none'}`);
   lines.push(`  check: ${plan.check !== null ? describeCommand(plan.check) : 'none'}`);
@@ -311,6 +344,42 @@ export function renderPreview(plan: BountyPlan): string {
   lines.push(`  level: ${plan.level}${plan.level === 'mechanical' ? ' (the declared check must fail today — it will be run to prove it)' : ' (no check — a person reads the answer)'}`);
   lines.push(`  out: ${plan.outDir}`);
   return lines.join('\n');
+}
+
+// When no --note was given, the note writes itself from evidence the tool
+// gathers: the declared check with the exit and output tail recorded on this
+// snapshot, and the files the working state already changed relative to the
+// snapshot's base commit. The note SHIPS — changed paths are listed only when
+// they are part of the shipped set, so a removed never-ship name can never be
+// named inside the bounty. Gathering never crashes create: a repository with
+// nothing to report gets a plain note, and a failed read falls back to one too.
+function composeNote(plan: BountyPlan, verification: BountyManifest['verification']): { file: string; text: string } {
+  const lines: string[] = ['written by the tool — no --note was supplied.'];
+  try {
+    const check = plan.check !== null ? verification?.check : null;
+    if (check !== null && check !== undefined) {
+      lines.push('', `the declared check exits ${check.exit} on this snapshot:`, `  ${describeCommand(check.argv)}`);
+      if (check.tail.trim() !== '') {
+        lines.push('  output tail:');
+        for (const line of check.tail.trim().split('\n').slice(-8)) lines.push(`    ${line}`);
+      }
+    }
+    if (plan.snapshot.baseCommit === null) {
+      lines.push('', 'the repository has no commits yet — every shipped file is new work.');
+    } else {
+      const shipped = new Set(plan.files.map(file => file.path.toLowerCase()));
+      const diff = gitOutcome(plan.repoRoot, ['diff', '--name-only', '-z', plan.snapshot.baseCommit, plan.snapshot.commit]);
+      const changed = diff.stdout.split('\0').filter(name => name !== '' && shipped.has(name.toLowerCase())).sort();
+      if (changed.length > 0) {
+        lines.push('', `files already changed in the working state (against commit ${plan.snapshot.baseCommit.slice(0, 12)}):`);
+        for (const name of changed) lines.push(`  ${name}`);
+      }
+    }
+    if (lines.length === 1) lines.push('', 'nothing else to report — no check was declared and the working state matches the last commit.');
+  } catch {
+    lines.push('', 'the tool could not gather more — inspect the repository for what was tried.');
+  }
+  return { file: 'tool-written', text: `${lines.join('\n')}\n` };
 }
 
 export function finalizeBounty(plan: BountyPlan): BountyResult {
@@ -350,6 +419,9 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       files.push({ path: file.path, sha256: sha256(bytes), bytes: bytes.length });
     }
     const verification = proveCheckFails(plan, snapshotDir);
+    // The note: the agent's file when --note was given, else the tool composes
+    // it here — after the check run, so its exit and output tail are evidence.
+    const note = plan.note ?? composeNote(plan, verification);
     const createdAt = new Date().toISOString();
     const id = `bt-${sha256(`${plan.snapshot.commit}\n${plan.title}\n${createdAt}`).slice(0, 12)}`;
     const manifest: BountyManifest = {
@@ -360,7 +432,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       createdAt,
       tool: TOOL_VERSION,
       task: plan.task,
-      note: plan.note,
+      note,
       setup: plan.setup !== null ? { argv: [...plan.setup] } : null,
       check: plan.check !== null ? { argv: [...plan.check] } : null,
       guard: plan.guard !== null ? { argv: [...plan.guard] } : null,
@@ -373,7 +445,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     };
     const manifestJson = JSON.stringify(manifest, null, 2) + '\n';
     writeFileSync(join(staging, 'bounty.json'), manifestJson);
-    writeFileSync(join(staging, 'README.md'), renderListing(manifest, plan.note));
+    writeFileSync(join(staging, 'README.md'), renderListing(manifest, note));
     if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
     renameSync(staging, outDir);
     // With the folder in place, make it reachable later: pin the snapshot
@@ -382,6 +454,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     const written = writeNewRecord(plan.repoRoot, {
       id,
       title: plan.title,
+      why: plan.why,
       level: plan.level,
       snapshot: plan.snapshot,
       folder: outDir,

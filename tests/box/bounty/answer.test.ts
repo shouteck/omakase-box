@@ -19,7 +19,7 @@ const readManifest = (dir: string): BountyManifest => JSON.parse(readFileSync(jo
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
 }
 
 // create → confirm → post, the whole outbound half. `delivered` is the copy a
@@ -488,7 +488,7 @@ describe('box bounty answer/apply/reject (built cli)', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'fix it\n', 'JOB.md': 'winter launch\n' });
     const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--title', 'fix app', '--task', 'TASK.md', '--job', 'JOB.md', '--check', '--', ...FIX_CHECK, '--out', out]);
+    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 'fix app', '--task', 'TASK.md', '--job', 'JOB.md', '--check', '--', ...FIX_CHECK, '--out', out]);
     expect(create.status).toBe(0);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
     expect(cli(repo, ['bounty', 'confirm', id]).status).toBe(0);
@@ -519,7 +519,7 @@ describe('box bounty answer/apply/reject (built cli)', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 't\n' });
     const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--title', 't', '--task', 'TASK.md', '--out', out]);
+    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
     const answer = cli(repo, ['bounty', 'answer', id, '--from', out]);
     expect(answer.status).toBe(3);

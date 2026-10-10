@@ -9,7 +9,7 @@ export { GitFailed, git, gitOutcome } from './git.js';
 export type { BountyCommand, BountyCommandRun, BountyManifest } from './manifest.js';
 export { BUILTIN_RULES, loadOwnerList, OWNER_LIST_FILE } from './never-ship.js';
 export type { NeverShipRule } from './never-ship.js';
-export { applicableAttempts, attemptRefName, attemptsOf, confirmBounty, isOpenStage, listRecords, loadRecord, persistRecord, postBounty, recordDir, recordPath, refName, rejectBounty, renderStatus, transitionTo, withdrawBounty, writeNewRecord } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, confirmBounty, isOpenStage, listRecords, loadRecord, persistRecord, postBounty, recordDir, recordPath, refName, rejectBounty, renderHelp, renderStatus, transitionTo, withdrawBounty, writeNewRecord } from './record.js';
 export type { AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WithdrawOutcome } from './record.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';

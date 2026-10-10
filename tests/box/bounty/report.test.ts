@@ -18,7 +18,7 @@ const readRecord = (repo: string, id: string): BountyRecord =>
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
 }
 
 function posted(repo: string, extra: Partial<CreateOptions> = {}): { id: string; delivered: string } {
