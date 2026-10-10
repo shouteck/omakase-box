@@ -809,6 +809,17 @@
       "ownerApproval": "Required separately, with the choice of site. Sending anything outside is the owner's decision and never happens overnight.",
       "proposal": "An adapter to one existing bounty site, after an hour's reading of how those sites accept a task posted by a program, how they verify and how they pay.",
       "handoff": "waves/BT6.md"
+    },
+    {
+      "id": "K10",
+      "milestone": "K",
+      "title": "The off-machine run tests the product we are building",
+      "dependencies": [
+        "BT1"
+      ],
+      "needsNaming": "Kitchen wave: runs only when the owner names it. Before BT5 at the latest.",
+      "why": "The run is green but covers none of the bounty tool suites, and its runner label and actions are about to change.",
+      "handoff": "waves/K10.md"
     }
   ],
   "sequenceRevision": "bounty-tool-2026-10-10"
