@@ -75,9 +75,10 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
   rulesFile AGENTS.md, honest cost/expectedAnswer, no allowedDestinations;
   the marked block is pasted verbatim into AGENTS.md under "Handing work
   off". A stray `nul` file (redirect artifact) was removed from the root.
-- Commit: 8f02ed4 (+ this Result commit)
-- Verify: `verify 8f02ed4 PASS check=0 build=0 test:box-bounty=0 db=embedded 278s`
-  (.kitchen/runs/2026-10-10T12-38-09-599Z-8f02ed4)
+- Commit: 8f02ed4 code + docs-only Result commits on top
+- Verify: `verify 9d4575d PASS check=0 build=0 test:box-bounty=0 db=embedded 334s`
+  (.kitchen/runs/2026-10-10T12-43-05-255Z-9d4575d); same PASS on 8f02ed4
+  (278s, runs/2026-10-10T12-38-09-599Z-8f02ed4)
 - Verdict: · Level:
 - Lenses:
 - Method: feature playbook (the scaffolding is the feature); principles cited
