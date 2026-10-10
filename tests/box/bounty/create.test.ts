@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, finalizeBounty, planBounty, renderPreview } from '../../../packages/box-bounty/index.js';
 import type { BountyManifest, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { listTree, makeRepo, runRoot, write } from './support.js';
+import { git, listTree, makeRepo, runRoot, write } from './support.js';
 
 // The create flow end to end: preview first, the check really run inside a clean
 // copy of the snapshot, a passing check refused, and every outcome named.
@@ -287,6 +287,72 @@ describe('BT3b — fewer things to supply', () => {
     expect(text).not.toContain('matches the last commit');
     expect(text).toContain('b.py (deleted)');
     expect(text).not.toContain('.env');
+  });
+
+  it('names the shipped file a rename folded out of the diff instead of claiming only non-shipping paths differ', () => {
+    const repo = makeRepo({ 'a.py': 'a\n', 'TASK.md': 'the task\n' }, (repo) => {
+      // `git mv a.py .env` is a delete+add pair git pairs by similarity:
+      // --name-only emits only `.env`, folding the shipped file away entirely.
+      git(repo, ['mv', 'a.py', '.env']);
+    });
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).not.toContain('only in files that do not ship'); // a.py shipped in the base — its loss is real change
+    expect(text).toContain('a.py (deleted)'); // the folded-away rename source is still reported
+    expect(text).not.toContain('.env'); // the rename target is a never-ship name — never inside the bounty
+  });
+
+  // Host-only (K10): junctions are invisible to git on Windows, so git tracks
+  // jdir/f.py under that spelling while shipping emits the canonical
+  // realdir/f.py — the note must classify the canonical path, not the spelling.
+  it.skipIf(process.platform !== 'win32')('classifies a junction-spelled tracked file by the canonical path it ships under', () => {
+    const repo = makeRepo({ '.gitignore': 'realdir/\n', 'TASK.md': 'the task\n' }, (repo) => {
+      write(repo, 'realdir/f.py', 'x\n');
+      symlinkSync(join(repo, 'realdir'), join(repo, 'jdir'), 'junction');
+      git(repo, ['add', 'jdir/f.py']); // git records the junction spelling
+      git(repo, ['-c', 'user.name=bt1-test', '-c', 'user.email=bt1@test.invalid', 'commit', '-qm', 'track the junction spelling']);
+    });
+    write(repo, 'realdir/f.py', 'x2\n'); // the changed bytes ship under the canonical name
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const manifest = readManifest(result.outDir);
+    expect(manifest.files.map(file => file.path)).toContain('realdir/f.py'); // it ships, canonically
+    const text = manifest.note?.text ?? '';
+    expect(text).toContain('realdir/f.py'); // named under the path it ships as
+    expect(text).not.toContain('jdir'); // the spelling is not what shipped — never named
+    expect(text).not.toContain('only in files that do not ship');
+  });
+
+  it('labels a moved submodule HEAD as a submodule change, never a deleted file', () => {
+    const sub = makeRepo({ 's.py': 's\n' });
+    const repo = makeRepo({ 'TASK.md': 'the task\n' }, (repo) => {
+      git(repo, ['-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', sub.split('\\').join('/'), 'sub']);
+      git(repo, ['-c', 'user.name=bt1-test', '-c', 'user.email=bt1@test.invalid', 'commit', '-qm', 'add submodule']);
+    });
+    // Move the submodule's HEAD: the gitlink changes but no blob does. A
+    // gitlink is never a blob in the snapshot tree, so it must not read as a
+    // deletion.
+    write(join(repo, 'sub'), 's.py', 's2\n');
+    git(join(repo, 'sub'), ['add', '-A']);
+    git(join(repo, 'sub'), ['-c', 'user.name=bt1-test', '-c', 'user.email=bt1@test.invalid', 'commit', '-qm', 's2']);
+    const result = finalizeBounty(planBounty({
+      repoPath: repo,
+      why: 'w',
+      taskPath: join(repo, 'TASK.md'),
+      outDir: join(runRoot('out'), 'bounty')
+    }));
+    const text = readManifest(result.outDir).note?.text ?? '';
+    expect(text).toContain('sub (submodule changed)');
+    expect(text).not.toContain('sub (deleted)');
   });
 
   it('a repo with nothing to report gets a plain note, not an error', () => {
