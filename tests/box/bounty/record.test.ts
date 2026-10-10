@@ -65,10 +65,11 @@ describe('the bounty record', () => {
     expect(shipped.some(path => path.startsWith('.box/'))).toBe(false);
     expect(shipped.some(path => path.includes(first.id))).toBe(false);
     // The removal is accounted under the new built-in rule (names shown only in
-    // the local preview, never inside the bounty).
+    // the local preview, never inside the bounty): the record itself, and the
+    // open-bounties line file BT4 writes alongside it.
     const dotBox = second.plan.ruleRemovals.find(entry => entry.rule === 'dot-box');
-    expect(dotBox?.removed).toBe(1);
-    expect(dotBox?.paths).toEqual([`.box/bounties/${first.id}.json`]);
+    expect(dotBox?.removed).toBe(2);
+    expect(dotBox?.paths).toEqual([`.box/bounties/${first.id}.json`, '.box/bounties/OPEN'].sort());
   });
 
   it('status says what to do on an empty project — never nothing', () => {
