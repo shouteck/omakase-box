@@ -231,8 +231,10 @@ and renames are unfolded so a rename's source is still classified. A deletion
 is judged by the base tree's own spellings instead: what the owner committed,
 never what now occupies the path — a link planted where the file was cannot
 rename the loss after its target, and a base file that ships only as a link's
-view of another tracked path is named as gone even when the diff stays
-silent.
+view of another tracked path is named as gone — whether the link leaves the
+diff silent (same bytes) or turns the deletion into a modification (different
+bytes), and a rule-covered canonical never suppresses a rule-free base
+spelling's change.
 When every differing path is one that does not ship, the note says the state
 differs only outside the shipped set — never that the tree matches the last
 commit when it does not.

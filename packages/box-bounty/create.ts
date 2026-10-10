@@ -408,15 +408,24 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
       }
       const baseBlobsLower = new Set([...baseBlobs].map(path => path.toLowerCase()));
       // Fates: a gitlink still in the snapshot tree is a moved submodule,
-      // named as one; a base blob absent from the snapshot's blobs is a
-      // deletion — named by its base spelling, never resolved through live
-      // ancestors (a replacement junction would rename the loss after
-      // whatever now sits there), and judged for never-ship on that spelling;
-      // a live path — a modification or an addition — is canonicalised and
-      // named under what it ships as, unless it is a rule-covered name
-      // (unlisted) or a new spelling of a base-tracked file (a junction
-      // repopulating a tracked dir adds a diff line whose canonical is an
-      // unchanged real file — the file itself reports, or nothing changed).
+      // named as one. A diff name that is itself a base blob is judged by its
+      // SPELLING before any live canonicalisation: a rule-covered spelling
+      // still suppresses (`.env` names stay out); a spelling absent from the
+      // snapshot's blobs is a deletion — named by its base spelling, never
+      // resolved through live ancestors; and a spelling that survives only as
+      // a modified blob resolving onto ANOTHER base-tracked path is a junction
+      // replacement — the file no longer exists as itself in the shipped set,
+      // so it is named deleted by the same judgement (a rule-covered
+      // *canonical* must never suppress a rule-free base spelling's change).
+      // Only a base spelling that still stands on its own falls through to
+      // live canonicalisation — a stable junction's canonical was never a
+      // base path, which is what tells it from a post-base replacement.
+      // Anything else — an addition, or a live path under a new spelling — is
+      // canonicalised and named under what it ships as, unless it is a
+      // rule-covered name (unlisted) or a new spelling of a base-tracked file
+      // (a junction repopulating a tracked dir adds a diff line whose
+      // canonical is an unchanged real file — the file itself reports, or
+      // nothing changed).
       const named = new Set<string>();
       let unlisted = false;
       const diffNames = new Set<string>();
@@ -424,10 +433,16 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
         if (name === '') continue;
         diffNames.add(name);
         if (plan.snapshotLinks.has(name)) { named.add(`${name} (submodule changed)`); continue; }
-        if (baseBlobs.has(name) && !plan.snapshotBlobs.has(name)) {
-          if (rules.some(rule => rule.match(name.toLowerCase()))) unlisted = true;
-          else named.add(`${name} (deleted)`);
-          continue;
+        if (baseBlobs.has(name)) {
+          if (rules.some(rule => rule.match(name.toLowerCase()))) { unlisted = true; continue; }
+          if (!plan.snapshotBlobs.has(name)) { named.add(`${name} (deleted)`); continue; }
+          const asItself = shipped.get(name.toLowerCase());
+          if (asItself !== undefined) { named.add(asItself); continue; }
+          const redirect = canonicalDiffPath(name);
+          if (redirect !== null && redirect.toLowerCase() !== name.toLowerCase() && baseBlobsLower.has(redirect.toLowerCase())) {
+            named.add(`${name} (deleted)`); // replaced: the spelling resolves onto another base file
+            continue;
+          }
         }
         const canonical = canonicalDiffPath(name);
         const key = (canonical ?? name).toLowerCase();
