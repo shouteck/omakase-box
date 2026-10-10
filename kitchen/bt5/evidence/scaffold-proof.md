@@ -40,6 +40,31 @@ built cli's `describe --rules` / `remind` against each fixture.
 `--probe` mode: `php` → absent (ENOENT); `node`/`process.execPath` → present;
 a made-up program name → absent. Exercised by tests/box/bounty/bt5.test.ts.
 
+## Cold-copy setup — the journey's first finding (fixed)
+
+The head chef's part-1 run found a real defect in the declared setup:
+`create --setup -- node kitchen/bt5/setup.mjs` failed on the shipped
+snapshot with `setup-failed … Repository-local pnpm is unavailable`. A
+shipped snapshot (like a fresh clone) carries no `node_modules`, so
+`scripts/pnpm.mjs` cannot start until `npm ci --prefix scripts/tooling
+--ignore-scripts` restores the repository-local pnpm — the step a warm
+checkout hides. `setup.mjs`, `TASK.md`'s setup section and `PROTOCOL.md`'s
+clone instructions all assumed the warm order; the diagnostic lines in
+`check.mjs`/`fixtures.mjs` said the same. All now name the three steps in
+order: tooling bootstrap, `pnpm install --frozen-lockfile`, build.
+
+Proof — a plain copy of the tree with no `.git`, `node_modules`, `dist` or
+`.box` (the shipped shape), run cold:
+
+    setup: npm ci --prefix scripts/tooling --ignore-scripts        → ran
+    setup: node scripts/pnpm.mjs install --frozen-lockfile         → ran
+    setup: node scripts/workspace.mjs build                        → ran
+    exit 0, ~30s (warm pnpm store), no warnings
+
+`node kitchen/bt5/check.mjs` in that same copy: exit 1 with the identical
+two FAILs as above — the bug stays open for the solver and the check still
+pins it on un-fixed code.
+
 ## Notes for the record
 
 - A stray 54-byte file named `nul` (a Windows "could not find files" INFO

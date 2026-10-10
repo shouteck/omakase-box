@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ROOT } from './support.js';
@@ -33,4 +34,25 @@ describe('bt5 fixtures.mjs absence probe', () => {
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('php absent');
   });
+});
+
+// Journey finding: the declared setup failed in the shipped snapshot —
+// scripts/pnpm.mjs cannot start until `npm ci` restores scripts/tooling, and
+// a cold copy carries no node_modules. The bootstrap must precede install
+// and build in setup.mjs AND in the solver-facing TASK.md, or the next cold
+// run hits the same wall. Order is asserted on the text: the full cold run
+// is minutes long and is proven in evidence/scaffold-proof.md instead.
+describe('bt5 cold-copy setup order', () => {
+  const steps = ['scripts/tooling', 'scripts/pnpm.mjs', 'scripts/workspace.mjs'];
+  const positionsOf = (file: string) => {
+    const text = readFileSync(file, 'utf8');
+    return steps.map(step => text.indexOf(step));
+  };
+  for (const name of ['setup.mjs', 'TASK.md', 'PROTOCOL.md']) {
+    it(`${name} names tooling bootstrap before install and build`, () => {
+      const positions = positionsOf(join(ROOT, 'kitchen', 'bt5', name));
+      expect(positions.every(position => position >= 0)).toBe(true);
+      expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    });
+  }
 });

@@ -70,7 +70,7 @@ const draftConfirmed = (repo, outDir) => {
 const scratch = mkdtempSync(join(tmpdir(), 'box-bt5-check-'));
 try {
   if (!existsSync(CLI)) {
-    check('built cli exists', false, `${CLI} is missing — run the declared setup (install + build) first`);
+    check('built cli exists', false, `${CLI} is missing — run the declared setup first (node kitchen/bt5/setup.mjs: tooling bootstrap, install, build)`);
   } else {
     // --- the empty list: the bug under test --------------------------------
     const empty = makeRepo(join(scratch, 'empty-dests'), { allowedDestinations: [] });

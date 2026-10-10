@@ -35,13 +35,16 @@ the destination list into a sentence without handling the empty case.
 
 ## Set up and prove
 
+    npm ci --prefix scripts/tooling --ignore-scripts
     node scripts/pnpm.mjs install --frozen-lockfile
     node scripts/workspace.mjs build
     node kitchen/bt5/check.mjs
 
-The check builds scratch Git repositories, runs the built CLI's `describe`
-and `post` against them, and exits nonzero today. It needs `node` and `git`
-on PATH.
+The first line is required in a fresh copy: this repository has no
+`node_modules` until then, and `scripts/pnpm.mjs` only runs after the
+repository-local pnpm in `scripts/tooling` is installed. The check builds
+scratch Git repositories, runs the built CLI's `describe` and `post` against
+them, and exits nonzero today. It needs `node`, `npm` and `git` on PATH.
 
 ## Done when
 

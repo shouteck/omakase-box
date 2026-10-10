@@ -138,7 +138,7 @@ function buildNeedsToolchain(dir) {
 // Captures the rung materials through the real cli — the same commands the
 // owner would run for a real install — and proves each check fails today.
 export function buildFixtures(scratchRoot) {
-  if (!existsSync(CLI)) throw new Error(`the built cli is missing at ${CLI} — run node scripts/workspace.mjs build first`);
+  if (!existsSync(CLI)) throw new Error(`the built cli is missing at ${CLI} — run node kitchen/bt5/setup.mjs first (a cold tree needs the scripts/tooling bootstrap before install and build)`);
   const probe = probeProgramAbsent(TOOLCHAIN);
   if (!probe.absent) {
     throw new Error(`cannot build the needs-toolchain fixture: ${probe.detail} — the scenario needs a program absent on this host`);

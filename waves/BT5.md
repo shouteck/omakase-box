@@ -86,6 +86,14 @@ This wave is an experiment, not a feature: the cook builds the scaffolding and t
 - Findings and limits: the check demonstrably fails today — output committed
   at `kitchen/bt5/evidence/scaffold-proof.md`; the journey and rungs have not
   run — they are the chef's part and need live agents.
+- Journey finding #1 (fixed): the declared setup could not run in a cold
+  copy — `scripts/pnpm.mjs` needs `scripts/tooling` installed first, and a
+  shipped snapshot carries no `node_modules`. `setup.mjs`, `TASK.md` and
+  `PROTOCOL.md` now name bootstrap → install → build; proven end-to-end in a
+  node_modules-free copy (setup exit 0, check still fails on the bug —
+  scaffold-proof.md). The same cold-copy caveat belongs in BOUNTY.md's
+  solver-facing setup guidance — flagged for the pass; outside this wave's
+  write paths so left unchanged.
 - Merged: · Resources removed: scratch repos are temp-dir and self-cleaning;
   the fixture test build under %TEMP%\bt5-fixtures-test was removed.
 - Reflect:

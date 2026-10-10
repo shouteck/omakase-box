@@ -24,9 +24,13 @@ the clone need `-c safe.directory=<clone path>` like every call in this repo.
 ## Part 1 — the journey
 
 1. Clone: `git clone . <scratch>\bt5-clone` then `git -C <clone> checkout wave/BT5`
-   (or `git clone -b wave/BT5`). In the clone:
-   `node scripts/pnpm.mjs install --frozen-lockfile` then
-   `node scripts/workspace.mjs build`.
+   (or `git clone -b wave/BT5`). The clone is cold — `node_modules` is not in
+   Git — so the same three steps as TASK.md, in order:
+   `npm ci --prefix scripts/tooling --ignore-scripts` (bootstrap the
+   repository-local pnpm first — `scripts/pnpm.mjs` cannot start without it),
+   then `node scripts/pnpm.mjs install --frozen-lockfile`, then
+   `node scripts/workspace.mjs build`. `node kitchen/bt5/setup.mjs` runs all
+   three and is the same command the declared `--setup` names.
 2. Prove the check fails pre-fix, in the clone:
    `node kitchen/bt5/check.mjs` — expect exit 1 with FAIL lines. Save the
    output to `kitchen/bt5/evidence/` (e.g. `check-prefix.txt`).
@@ -39,9 +43,9 @@ the clone need `-c safe.directory=<clone path>` like every call in this repo.
          --check -- node kitchen/bt5/check.mjs
 
    The declared check must FAIL on the snapshot — that failure is why the
-   bounty exists. Setup runs a real install + build on the snapshot copy:
-   minutes, not seconds — foreground, with the heartbeat pattern the station
-   card records (a $TEMP log plus a ticker).
+   bounty exists. Setup runs the tooling bootstrap, a real install and a
+   build on the snapshot copy: minutes, not seconds — foreground, with the
+   heartbeat pattern the station card records (a $TEMP log plus a ticker).
 4. `bounty confirm <id>` — the owner's yes, recorded honestly as the chef
    standing in for the owner.
 5. `bounty post <id> --to <scratch>\bt5-drop` — delivers
