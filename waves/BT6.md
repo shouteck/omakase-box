@@ -1,6 +1,6 @@
 # BT6: the first bounty posted outside, as a GitHub issue
 
-Milestone: BT · Station: packaging (also evidence) · Base: master at the commit that adds this file · Branch: `wave/BT6` · Timebox: 180 minutes; at expiry, report partial findings and stop
+Milestone: BT · Station: packaging (also evidence) · Base: `9c9dc9b` · Branch: `wave/BT6` · Timebox: 180 minutes; at expiry, report partial findings and stop
 
 ## Outcome
 
