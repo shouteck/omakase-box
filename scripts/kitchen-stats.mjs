@@ -132,13 +132,101 @@ export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPT
 
 const BACKSLASH = String.fromCharCode(92);
 const forwardSlash = path => path.replace(/[/\x5c]+$/, '').replaceAll(BACKSLASH, '/');
-function git(root, args) {
-  const run = spawnSync('git', ['-c', 'safe.directory=' + forwardSlash(root), ...args], { cwd: root, encoding: 'utf8', windowsHide: true });
+// Every Git spawn this page makes funnels through here so tests can count them
+// (K11: the count must not grow with the number of run records). The count is
+// printed to stderr only when KITCHEN_STATS_GIT_TRACE is set.
+let gitProcesses = 0;
+function git(root, args, options = {}) {
+  gitProcesses += 1;
+  const run = spawnSync('git', ['-c', 'safe.directory=' + forwardSlash(root), ...args], { cwd: root, encoding: 'utf8', windowsHide: true, ...options });
   return run.status === 0 ? run.stdout : null;
 }
-const isCommit = (root, sha) => (git(root, ['cat-file', '-t', sha]) || '').trim() === 'commit';
-const isAncestor = (root, a, b) =>
-  spawnSync('git', ['-c', 'safe.directory=' + forwardSlash(root), 'merge-base', '--is-ancestor', a, b], { cwd: root, windowsHide: true }).status === 0;
+// The page used to start Git once per run record (K11: 252 records cost ~470
+// spawns). Everything it needs now comes from a fixed set of reads instead:
+// one `git log --all` for the commit graph, one `rev-parse`/`for-each-ref` for
+// master and the branch tips, and one `cat-file --batch-check` that resolves
+// every leftover sha at once. Ancestor questions become set lookups, so the
+// spawn count stays fixed however many records .kitchen/runs holds.
+
+// sha -> { at: commit time in ms, parents: [sha] } for every commit reachable
+// from any ref. Empty when root is not a repository; callers then report
+// missing, matching the old failed-command behaviour.
+function commitGraph(root) {
+  const nodes = new Map();
+  const text = git(root, ['log', '--all', '--format=%H %cI %P']);
+  if (text === null) return nodes;
+  for (const line of text.split('\n')) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 2 || !/^[0-9a-f]{40}$/.test(parts[0])) continue;
+    nodes.set(parts[0], { at: Date.parse(parts[1]), parents: parts.slice(2) });
+  }
+  return nodes;
+}
+
+// A full sha for a name only when it is exactly or uniquely prefix-matched in
+// the graph — the resolution `git` applies to abbreviated shas.
+function resolveSha(graph, name) {
+  if (typeof name !== 'string') return null;
+  if (graph.has(name)) return name;
+  if (!/^[0-9a-f]{4,39}$/.test(name)) return null;
+  let found = null;
+  for (const sha of graph.keys()) {
+    if (sha.startsWith(name)) {
+      if (found !== null) return null;
+      found = sha;
+    }
+  }
+  return found;
+}
+
+// One batch answers "is this name a commit" for every leftover sha at once;
+// missing, ambiguous or non-commit input maps to null — the same failures the
+// old per-name `cat-file -t` returned. Batch output is one line per input in
+// order; a mismatched count degrades every name to null rather than guessing.
+function resolveCommits(root, names) {
+  const resolved = new Map(names.map(name => [name, null]));
+  if (!names.length) return resolved;
+  const text = git(root, ['cat-file', '--batch-check'], { input: names.join('\n') + '\n' });
+  if (text === null) return resolved;
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  if (lines.length !== names.length) return resolved;
+  names.forEach((name, index) => {
+    const parts = lines[index].trim().split(/\s+/);
+    if (parts[1] === 'commit' && (parts[0] === name || (name.length < 40 && parts[0].startsWith(name)))) resolved.set(name, parts[0]);
+  });
+  return resolved;
+}
+
+// Everything `git log <root>` would need to answer ancestor questions: the
+// commit graph, master's tip, the local branch tips, and a memoized ancestor
+// walk — `isAncestor(sha, x)` becomes `repo.anc(x).has(sha)`, start included.
+function repoView(root) {
+  const graph = commitGraph(root);
+  const tip = (git(root, ['rev-parse', '--verify', 'master^{commit}']) || '').trim();
+  const masterTip = /^[0-9a-f]{40}$/.test(tip) ? tip : null;
+  const tips = new Map();
+  for (const line of (git(root, ['for-each-ref', '--format=%(refname:short) %(objectname)', 'refs/heads/']) || '').split('\n')) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length === 2) tips.set(parts[0], parts[1]);
+  }
+  const cache = new Map();
+  const anc = start => {
+    let seen = cache.get(start);
+    if (seen) return seen;
+    seen = new Set();
+    const stack = [start];
+    while (stack.length) {
+      const sha = stack.pop();
+      if (seen.has(sha)) continue;
+      seen.add(sha);
+      const node = graph.get(sha);
+      if (node) stack.push(...node.parents);
+    }
+    cache.set(start, seen);
+    return seen;
+  };
+  return { graph, masterTip, tips, anc };
+}
 
 // --- wave history -------------------------------------------------------------
 
@@ -158,32 +246,61 @@ function readWaves(root) {
   return waves;
 }
 
-// Branch commits and first-commit-to-merge duration per wave. A wave whose
-// record is incomplete reports "missing", never a guess.
-function waveHistory(root, waves) {
+// Branch commits and first-commit-to-merge duration per wave, all read from
+// the commit graph in repo. A wave whose record is incomplete reports
+// "missing", never a guess.
+function waveHistory(root, waves, repo) {
   const history = [];
-  const merges = (git(root, ['log', '--first-parent', '--format=%H %cI %P', 'master']) || '').split('\n')
-    .map(line => line.trim().split(/\s+/)).filter(parts => parts.length === 4)
-    .map(parts => ({ sha: parts[0], at: parts[1], parent1: parts[2], parent2: parts[3] }));
+  // `git log --first-parent master` in graph form: first-parent chain from the
+  // tip; the merges are the chain nodes with two parents, in the same order.
+  const merges = [];
+  for (let sha = repo.masterTip, seen = new Set(); sha && !seen.has(sha);) {
+    seen.add(sha);
+    const node = repo.graph.get(sha);
+    if (!node) break;
+    if (node.parents.length >= 2) merges.push({ sha, at: node.at, parent1: node.parents[0], parent2: node.parents[1] });
+    sha = node.parents[0];
+  }
   for (const wave of waves) {
     const entry = { id: wave.id, branchCommits: [], firstCommitAt: null, mergedAt: null, mergeSha: null, note: null };
     let merge = wave.merge ? merges.find(item => item.sha.startsWith(wave.merge)) || null : null;
     if (!merge && wave.commits.length) {
-      merge = merges.find(item => wave.commits.some(sha => isAncestor(root, sha, item.parent2) && !isAncestor(root, sha, item.parent1))) || null;
+      merge = merges.find(item => wave.commits.some(name => {
+        const sha = resolveSha(repo.graph, name);
+        return sha !== null && repo.anc(item.parent2).has(sha) && !repo.anc(item.parent1).has(sha);
+      })) || null;
     }
     if (merge) {
       entry.mergeSha = merge.sha;
-      entry.mergedAt = Date.parse(merge.at);
-      entry.branchCommits = (git(root, ['rev-list', merge.parent1 + '..' + merge.parent2]) || '').split('\n').filter(Boolean);
-      const oldest = entry.branchCommits[entry.branchCommits.length - 1];
-      const at = oldest ? (git(root, ['show', '-s', '--format=%cI', oldest]) || '').trim() : null;
-      entry.firstCommitAt = at ? Date.parse(at) : null;
+      entry.mergedAt = merge.at;
+      // rev-list parent1..parent2: on the merged branch, not already on master.
+      const onMaster = repo.anc(merge.parent1);
+      entry.branchCommits = [...repo.anc(merge.parent2)].filter(sha => !onMaster.has(sha));
+      // rev-list prints newest first, so the branch's first commit is the one
+      // with the earliest commit time.
+      const times = entry.branchCommits.map(sha => repo.graph.get(sha)).filter(node => node && !Number.isNaN(node.at)).map(node => node.at);
+      entry.firstCommitAt = times.length ? Math.min(...times) : null;
       if (entry.firstCommitAt === null) entry.note = 'merge found but first commit unreadable';
     } else {
-      const branch = wave.branches.find(name => git(root, ['rev-parse', '--verify', 'refs/heads/' + name]));
+      const branch = wave.branches.find(name => repo.tips.has(name));
       if (branch) {
-        const base = (git(root, ['merge-base', 'master', branch]) || '').trim();
-        entry.branchCommits = base ? (git(root, ['rev-list', base + '..' + branch]) || '').split('\n').filter(Boolean) : [];
+        // rev-list (merge-base master branch)..branch. A merge-base is a
+        // common ancestor no other common ancestor descends from; when the
+        // graph yields exactly one the range is a set difference. Ambiguous
+        // ancestry (criss-cross merges — not this history) asks Git directly.
+        const onBranch = repo.anc(repo.tips.get(branch));
+        const onMaster = repo.masterTip ? repo.anc(repo.masterTip) : new Set();
+        const common = [...onBranch].filter(sha => onMaster.has(sha));
+        const dominated = new Set();
+        for (const sha of common) for (const s of repo.anc(sha)) if (s !== sha) dominated.add(s);
+        const bases = common.filter(sha => !dominated.has(sha));
+        if (bases.length === 1) {
+          const underBase = repo.anc(bases[0]);
+          entry.branchCommits = [...onBranch].filter(sha => !underBase.has(sha));
+        } else if (bases.length > 1) {
+          const base = (git(root, ['merge-base', 'master', branch]) || '').trim();
+          entry.branchCommits = base ? (git(root, ['rev-list', base + '..' + branch]) || '').split('\n').filter(Boolean) : [];
+        }
         entry.note = 'not merged — local branch ' + branch;
       } else entry.note = 'no merged branch or recorded merge found';
     }
@@ -247,7 +364,8 @@ function page(root) {
     out.push('  ' + name.padEnd(22) + ' ' + String(bucket.runs).padStart(3) + ' runs · ' + bucket.failed + ' failed · ' + fmtMin(bucket.seconds).padStart(6) + ' min' + (nightName ? ' (' + fmtMin(bucket.night) + ' ' + nightName + ')' : '') + ' · largest ' + bucket.largest.seconds + 's in ' + bucket.largest.run);
   out.push('');
 
-  const waves = waveHistory(root, readWaves(root));
+  const repo = repoView(root);
+  const waves = waveHistory(root, readWaves(root), repo);
   const attributed = new Map();
   const leftovers = [];
   for (const run of runs) {
@@ -272,9 +390,12 @@ function page(root) {
       groups.set(key, [...(groups.get(key) || []), run]);
     }
     out.push('  not on a wave branch: ' + leftovers.length + ' runs');
+    const resolved = resolveCommits(root, [...groups.keys()]);
+    const onMaster = repo.masterTip ? repo.anc(repo.masterTip) : null;
     for (const [sha, group] of groups) {
       let where = 'commit not in this repository';
-      if (isCommit(root, sha)) where = isAncestor(root, sha, 'master') ? 'on master between waves' : 'commit exists but is on no merged wave branch (superseded or abandoned work)';
+      const full = resolved.get(sha);
+      if (full !== null && full !== undefined) where = onMaster !== null && onMaster.has(full) ? 'on master between waves' : 'commit exists but is on no merged wave branch (superseded or abandoned work)';
       out.push('    ' + sha + ' x' + group.length + ' — ' + where + ' (' + group.map(run => run.name.slice(0, 19)).join(', ') + ')');
     }
   }
@@ -296,6 +417,7 @@ function page(root) {
     if (check.ok === false) failures.push(check.label + ': ' + check.actual + ' over limit ' + check.limit);
   }
   console.log(out.join('\n'));
+  if (process.env.KITCHEN_STATS_GIT_TRACE) console.error('git processes: ' + gitProcesses);
   for (const failure of failures) console.error('LIMIT FAIL: ' + failure);
   if (failures.length) process.exit(1);
 }
