@@ -22,9 +22,18 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 **The rules**
 
-- One file the owner writes holds the standing rules, growing from today's limits file. It says, in plain fields: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking (today it may; the field exists so an owner can say no); and **the reward each bounty states**. That last field is the owner's pricing rule, set once so nobody is asked for an amount per bounty. No payment is implemented (owner, 11 October 2026), so today the only value it accepts is 0, and 0 is its default; any other amount is a named refusal that says payment is not implemented and changes nothing. There is no ceiling or budget field, because nothing can be spent. Existing limits files keep working unchanged and mean what they meant.
-- **With no rules written, nothing gets looser.** The default is today's behaviour: each post waits for the owner.
+- One file the owner writes holds the standing rules, growing from today's limits file. It says, in plain fields: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking (today it may; the field exists so an owner can say no); and **the reward each bounty states**. That last field is the owner's pricing rule, set once so nobody is asked for an amount per bounty. No payment is implemented (owner, 11 October 2026), so today the only value it accepts is 0; any other amount is a named refusal that says payment is not implemented and changes nothing. There is no ceiling or budget field, because nothing can be spent. Existing limits files keep working unchanged and mean what they meant.
+- **With no rules written, nothing gets looser,** and the first use is where the owner is asked (next section).
 - `rules` (or the name BT6 and BT7 leave room for) prints the rules in force, in a few lines, as facts, with the file they came from. An agent can read at any time what it is allowed to do.
+
+**The first time an agent reaches for the tool, the owner is asked to set the rules up, once**
+
+- The owner does not have to know the tool exists beforehand. When an agent first tries to hand work off in a project that has no standing rules, the bounty is prepared as usual and then stops in a named state: the rules have not been set up, and the owner decides.
+- That state shows the owner, in a few plain lines, exactly what they are being asked to set and what each choice lets the agent do from then on: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking; the reward each bounty states ($0 is the only amount available). It gives the one command that sets them, written out with those values, and the command that allows only this one bounty and decides nothing else.
+- The agent may propose values (that is its line of why, and the facts of the bounty in front of the owner); it cannot set them. The tool states no preference among the choices.
+- The owner answers once. The rules are written, the waiting bounty goes ahead under them, and no later bounty asks again. `status` and the open-bounties line show the waiting state until then, so the owner or any later agent sees it.
+- If the owner answers only for the one bounty, the next first-use asks again; the tool does not nag in between and does not treat silence as a yes.
+- A test runs it from nothing: a project with no rules, an agent's first bounty, the waiting state, the owner's one answer, the bounty posted, and a second bounty that goes out with nobody asked.
 
 **Inside the rules, nothing waits**
 
@@ -67,7 +76,7 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 ## Review lenses
 
 - [x] **Security:** the reviewer plays an agent that wants more authority than it was given, using only what an agent can do. It tries: the normal commands with odd arguments; the owner's commands; editing the file directly and seeing whether that is visible afterwards; a solution that carries a rules file; a junction or case trick on the rules path; a rules file that is valid JSON but shaped to confuse (duplicate keys, huge numbers, unknown fields). For each it reports whether the action was prevented, or permitted but visible, and whether the doc page's claim matches.
-- [x] **User experience:** two readers. A fresh agent on a repository whose rules allow posting hands off a task from start to posted with nobody asked, and says what it was allowed to do and how it knew. A fresh agent on a repository with no rules reaches the waiting state and says what it is waiting for and who decides. Separately, the reviewer acts as an owner with only the `setup` output and gets from nothing to rules in force.
+- [x] **User experience:** two readers. A fresh agent on a repository whose rules allow posting hands off a task from start to posted with nobody asked, and says what it was allowed to do and how it knew. A fresh agent on a repository with no rules reaches the first-use waiting state and says what it is waiting for and who decides; the reviewer, as the owner with only that state's output in front of them, sets the rules with one command and says what they have just allowed. Separately, the reviewer acts as an owner with only the `setup` output and gets from nothing to rules in force.
 - [ ] **Measurement fairness:** not applicable.
 
 ## Notes for the worker

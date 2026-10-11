@@ -12,12 +12,12 @@ We are merely a tool. It offers actions and states facts. It does not require, f
 
 **The tool does everything mechanical. The agent supplies only judgement.** The judgement is: whether to hand off, what the task is, and which solution to use, if any. Everything else is one command with defaults, and every output names the next command.
 
-**The owner is involved once.** They set the tool up and write their standing rules. After that the agent runs the whole journey with nobody asked, inside those rules.
+**The owner is involved once.** The first time an agent reaches for the tool in a project, the owner is asked to set the standing rules; they answer once. After that the agent runs the whole journey with nobody asked, inside those rules.
 
 ## The journey of one bounty
 
 ```
- ONCE: THE OWNER
+ ONCE: THE OWNER (asked the first time an agent reaches for the tool)
  a. Signs in to GitHub
  b. Writes the standing rules: what the agent may do without asking
  c. Optionally switches on the hook
