@@ -12,6 +12,7 @@ Replaced by the CTO on 11 October 2026, at a checkpoint after BT6's first run.
 - Nothing is posted on GitHub: no bounty issue, branch, label or pull request. `.box/limits.json` does not allow GitHub yet.
 - BT1 to BT5 are merged; the tool stays installed in this repository with reminders off. The off-machine run is green on master.
 - The lab is paused. C1's `box trace` is kept and unused. Unmerged local `wave/A6` and `wave/K7` are left for the owner.
+- **The kitchen's own suite is red on this host** (found by the CTO, 11 October 2026): one test times out because the stats page starts Git once per run record and there are now 252. Documents only changed; the page's figures are right, it is slow. Brief: [waves/K11.md](waves/K11.md). It does not touch the product suites BT6 is accepted on, and the off-machine run is unaffected.
 - Master is clean. Nothing is running.
 
 ## After BT6, in order (PLAN.md, "Remaining waves")
@@ -20,4 +21,6 @@ BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 
 
 ## Next
 
-**BT6, second run.** Send `START.md: BT6`. The kitchen merges master into `wave/BT6`, cooks the brief, shows the owner the exact issue text and waits for "go" before posting, then closes the wave and stops.
+**BT6, second run.** Send `START.md: BT6`. (Or first the small kitchen repair, `START.md: K11`; the CTO recommends K11 first so every later wave closes on a green kitchen suite.)
+
+BT6: The kitchen merges master into `wave/BT6`, cooks the brief, shows the owner the exact issue text and waits for "go" before posting, then closes the wave and stops.

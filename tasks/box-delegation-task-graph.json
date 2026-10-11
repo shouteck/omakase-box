@@ -882,6 +882,13 @@
       "why": "The run is green but covers none of the bounty tool suites, and its runner label and actions are about to change.",
       "handoff": "waves/K10.md",
       "result": "Done 10 October 2026, merged c0dfdae: the off-machine run covers the bounty, trace and package suites on pinned ubuntu-24.04. See waves/K10.md."
+    },
+    {
+      "id": "K11",
+      "milestone": "K",
+      "title": "The kitchen stats page stays fast as run records grow",
+      "dependencies": [],
+      "handoff": "waves/K11.md"
     }
   ],
   "sequenceRevision": "bounty-tool-2026-10-11b"
