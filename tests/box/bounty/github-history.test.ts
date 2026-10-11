@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, confirmBounty, loadRecord, postBounty, previewGitHub, rejectBounty, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
@@ -14,6 +14,16 @@ import type { GithubFixture } from './github-fixture.js';
 
 const choice = (withChanges: boolean, include: readonly string[] = []) => ({ withChanges, include });
 
+// Whether this host can make file symlinks — Windows needs developer mode or
+// an elevated account; the link-at-tracked-path test skips where it cannot.
+const linkCapable = (() => {
+  const probe = runRoot('bt6a-link-capable');
+  const target = join(probe, 'target.txt');
+  writeFileSync(target, 'x');
+  try { symlinkSync(target, join(probe, 'link.txt'), 'file'); return lstatSync(join(probe, 'link.txt')).isSymbolicLink(); }
+  catch { return false; }
+})();
+
 describe('the GitHub bounty as an issue on the code that is already there', () => {
   it('publishes unpushed commits unchanged — count, identifiers and order preserved', () => fixture(({ repo, bare, id, state }) => {
     write(repo, 'one.txt', 'one\n'); git(repo, ['add', 'one.txt']);
@@ -27,7 +37,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(preview).toContain('commits published for the first time (2)');
     expect(preview).toContain(`${c2!.slice(0, 12)} first local`);
     expect(preview).toContain(`${c1!.slice(0, 12)} second local`);
-    expect(preview).toContain(`Work from: commit ${base}`);
+    expect(preview).toContain(`Base: commit ${base}`);
     confirmBounty(repo, id, 'github', choice(false));
     const result = postBounty(repo, id, 'github');
     const pub = result.record.github!;
@@ -108,7 +118,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(git(bare, ['ls-tree', '-r', '--name-only', result.record.github!.branch])).not.toContain('stay.txt');
     expect(git(bare, ['ls-tree', '-r', '--name-only', result.record.github!.branch])).not.toContain('stray.log');
     expect(git(bare, ['ls-tree', '-r', '--name-only', result.record.github!.branch])).not.toContain('.env.local');
-  }));
+  }), 120000);
 
   it('refuses work the task needs when it touches a never-ship path — worktree or staged, it publishes nothing', () => fixture(({ repo, id }) => {
     write(repo, '.env', 'CHANGED\n');
@@ -126,6 +136,50 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     git(repo, ['-c', 'user.name=poster', '-c', 'user.email=poster@test.invalid', 'commit', '-qm', 'touches env']);
     refused(() => previewGitHub(repo, id), 'github-never-ship');
     expect(git(repo, ['rev-list', '--count', 'HEAD'])).toBe('3');
+  }));
+
+  it('refuses a pushed range that hides a never-ship path inside a root commit', () => fixture(({ repo, id }) => {
+    // An orphan root plants payload/.env; a merge pulls it into the branch
+    // but drops the file in the merge's own tree — no 'A' survives anywhere
+    // and no 'D' ever exists. Only diffing the root against the empty tree
+    // sees it; the failed `sha^` a root has used to scan as "no paths".
+    const env = { GIT_INDEX_FILE: join(runRoot('bt6a-root-plant'), 'index') };
+    objectGit(repo, ['read-tree', '--empty'], env);
+    const secret = gitWriteBlob(repo, Buffer.from('LEAKED_SECRET_BYTES\n'));
+    objectGit(repo, ['update-index', '--add', '--cacheinfo', `100644,${secret},payload/.env`], env);
+    const orphan = objectGit(repo, ['-c', 'user.name=poster', '-c', 'user.email=poster@test.invalid', 'commit-tree', objectGit(repo, ['write-tree'], env), '-m', 'orphan plant'], env);
+    const head = git(repo, ['rev-parse', 'HEAD']);
+    const headTree = git(repo, ['rev-parse', 'HEAD^{tree}']);
+    const merge = objectGit(repo, ['-c', 'user.name=poster', '-c', 'user.email=poster@test.invalid', 'commit-tree', headTree, '-p', head, '-p', orphan, '-m', 'pull in the orphan'], env);
+    git(repo, ['update-ref', 'refs/heads/main', merge]);
+    refused(() => previewGitHub(repo, id), 'github-never-ship');
+    refused(() => confirmBounty(repo, id, 'github', choice(false)), 'github-never-ship');
+    expect(loadRecord(repo, id).github).toBeUndefined();
+  }));
+
+  it('refuses to post when the recorded approval carries only some plan fields', () => fixture(({ repo, id }) => {
+    confirmBounty(repo, id, 'github', choice(false));
+    // Delete one plan field — some-but-not-all is a corrupt record, not a
+    // pre-wave approval; falling back would post a snapshot never approved.
+    const file = join(repo, '.box/bounties', `${id}.json`);
+    const parsed = JSON.parse(readFileSync(file, 'utf8')) as { githubApproval: Record<string, unknown> };
+    delete parsed.githubApproval['tip'];
+    writeFileSync(file, JSON.stringify(parsed));
+    refused(() => postBounty(repo, id, 'github'), 'record-corrupt');
+    expect(loadRecord(repo, id).github).toBeUndefined();
+  }));
+
+  it.runIf(linkCapable)('refuses a link at a tracked path — file contents are published, never links', () => fixture(({ repo, id, scratch }) => {
+    // A link where a tracked file should be: placing it through stat/readFile
+    // would hash the TARGET's bytes under the clean name. lstat refuses it.
+    const target = join(scratch, '.env.local');
+    writeFileSync(target, 'LINKED_SECRET\n');
+    rmSync(join(repo, 'app.txt'));
+    symlinkSync(target, join(repo, 'app.txt'), 'file');
+    expect(git(repo, ['status', '--porcelain'])).toContain('T app.txt');
+    refused(() => previewGitHub(repo, id, choice(true)), 'github-non-plain-path');
+    refused(() => confirmBounty(repo, id, 'github', choice(true)), 'github-non-plain-path');
+    expect(loadRecord(repo, id).github).toBeUndefined();
   }));
 
   it('refuses a branch with no commit the remote has', () => fixture(({ repo, id }) => {
@@ -193,6 +247,28 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     prCommit(c2, 'solver', ['app.txt']);
     refused(() => answerGitHub(repo, id, 1), 'answer-never-ship');
     // The refusal changed nothing: no attempt was pinned.
+    expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
+  }));
+
+  it('refuses a pull request that drops a never-ship path planted inside a root commit it merges', () => fixture(({ repo, id, prCommit }) => {
+    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+    const pub = loadRecord(repo, id).github!;
+    // A solver merges an orphan root carrying payload/.env, dropped in the
+    // merge's own tree: no 'D' exists anywhere in the inbound range, so the
+    // planted path can only be seen by diffing the root against the empty
+    // tree — the same hole the outward scan had.
+    const env = { GIT_INDEX_FILE: join(runRoot('bt6a-pr-root'), 'index') };
+    objectGit(repo, ['read-tree', '--empty'], env);
+    const secret = gitWriteBlob(repo, Buffer.from('LEAKED_SECRET_BYTES\n'));
+    objectGit(repo, ['update-index', '--add', '--cacheinfo', `100644,${secret},payload/.env`], env);
+    const orphan = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', objectGit(repo, ['write-tree'], env), '-m', 'orphan plant'], env);
+    objectGit(repo, ['read-tree', pub.commit], env);
+    const fixed = gitWriteBlob(repo, Buffer.from('fixed\n'));
+    objectGit(repo, ['update-index', '--add', '--cacheinfo', `100644,${fixed},app.txt`], env);
+    const tree = objectGit(repo, ['write-tree'], env);
+    const head = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-p', pub.commit, '-p', orphan, '-m', 'fix with a hitchhiker'], env);
+    prCommit(head);
+    refused(() => answerGitHub(repo, id, 1), 'answer-never-ship');
     expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
   }));
 

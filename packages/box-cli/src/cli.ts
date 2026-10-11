@@ -237,7 +237,13 @@ if (command === 'export') {
       // file. Both are previewed and recorded — post publishes only what the
       // owner saw.
       const withChanges = bountyArgs.includes('--with-changes');
-      const include = bountyArgs.map((arg, index) => arg === '--include' ? bountyArgs[index + 1] : undefined).filter((arg): arg is string => arg !== undefined);
+      const include: string[] = [];
+      bountyArgs.forEach((arg, index) => {
+        if (arg !== '--include') return;
+        const named = bountyArgs[index + 1];
+        if (named === undefined || named.startsWith('--')) usage('box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview]');
+        include.push(named!);
+      });
       if (toIndex >= 0 && to !== 'github' || bountyArgs.includes('--preview') && to !== 'github' || (withChanges || include.length > 0) && to !== 'github') usage('box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview]');
       const githubChoice = { withChanges, include };
       if (bountyArgs.includes('--preview')) { if (to === 'github') console.log(previewGitHub(repoRoot, id, githubChoice)); process.exit(0); }

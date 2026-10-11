@@ -18,7 +18,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     const preview = previewGitHub(repo, id);
     expect(preview).toContain('public. Anyone can read');
     expect(preview).toContain('nothing new is published');
-    expect(preview).toContain(`Work from: commit ${head}`);
+    expect(preview).toContain(`Base: commit ${head}`);
     // A never-ship-named file in the public history is a fact, not a refusal.
     expect(preview).toContain('Already public');
     expect(preview).toContain('.env');
@@ -36,8 +36,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     const issue = state().issues[0]!;
     expect(issue.body).toContain('Repair the app.');
     expect(issue.body).toContain('What was already tried');
-    expect(issue.body).toContain(`Work from commit ${head}`);
-    expect(issue.body).toContain(`\`${pub.branch}\``);
+    expect(issue.body).toContain(`Branch from \`${pub.branch}\``);
+    expect(issue.body).toContain(`based on commit ${head}`);
     expect(issue.body).toContain('it points at that commit — nothing new was published');
     expect(issue.body).toContain('Fork this repository');
     expect(issue.body).toContain('pull request against');

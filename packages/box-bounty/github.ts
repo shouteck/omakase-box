@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
@@ -33,7 +33,7 @@ export interface GitHubPublication {
       is already there; absent on snapshot posts made before. */
   readonly kind?: 'history';
   /** The newest commit on the poster's branch the GitHub repository already
-      had — the starting point solvers are told to work from. History posts. */
+      had — the commit the bounty branch is based on. History posts. */
   readonly base?: string;
   /** Commits the branch carries that GitHub did not have — the poster's
       unpushed commits plus the tool's work-in-progress commit, oldest first. */
@@ -300,17 +300,34 @@ function parseNameStatus(output: string): NamedStatus[] {
   return parsed;
 }
 
-// Paths a diff introduces or changes that a never-ship rule covers. A deletion
-// (status D) adds no bytes, so it is not a violation here — an add in the same
-// range is caught by the earlier commit's own diff.
+// Paths a diff touches that a never-ship rule covers — any status, including
+// D: a path being published for the first time is refused whether a commit
+// adds, changes or deletes it.
 function neverShipViolations(statuses: readonly NamedStatus[], rules: readonly NeverShipRule[]): { path: string; rule: string }[] {
   const violations: { path: string; rule: string }[] = [];
-  for (const { status, path } of statuses) {
-    if (status === 'D') continue;
+  for (const { path } of statuses) {
     const rule = rules.find(candidate => candidate.match(path.toLowerCase()));
     if (rule !== undefined) violations.push({ path, rule: rule.name });
   }
   return violations;
+}
+
+// The empty tree — what a root commit is diffed against, so every path it
+// plants appears as 'A' in the scan instead of disappearing behind the failed
+// `<sha>^` a root has no answer for.
+const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
+// `git diff --name-status` of a commit against its first parent, or against
+// the empty tree when it has none: every path a commit introduces shows up in
+// its own diff, so a never-ship file cannot hide in a root commit or in the
+// tree of a merge that drops it. A failed diff is a refusal, never "no paths".
+function commitStatuses(root: string, sha: string, consequence: string): NamedStatus[] {
+  const parents = gitOutcome(root, ['rev-list', '--parents', '-n', '1', sha]);
+  if (parents.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
+  const parent = parents.stdout.trim().split(/\s+/).slice(1)[0] ?? EMPTY_TREE;
+  const diff = gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', parent, sha]);
+  if (diff.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
+  return parseNameStatus(diff.stdout);
 }
 
 // `git diff HEAD --name-status` — every change to tracked files, staged or
@@ -406,12 +423,24 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
     const changed: string[] = [];
     const added: string[] = [];
     const deleted: string[] = [];
+    // Every component the commit places is checked with lstat, links NOT
+    // followed: a link or junction at the path — or at any directory above
+    // it — resolves to bytes elsewhere, so publishing it would ship what the
+    // path never named. Non-plain entries are refused, not recorded as link
+    // blobs: the stricter of the two fixes, and the simpler.
     const place = (path: string): boolean => {
-      const absolute = join(root, ...path.split('/'));
-      const stat = statSync(absolute, { throwIfNoEntry: false });
-      if (stat === undefined || !stat.isFile()) {
-        git(root, ['update-index', '--force-remove', '--', path], env);
-        return false;
+      const parts = path.split('/');
+      let absolute = root;
+      for (const [index, part] of parts.entries()) {
+        absolute = join(absolute, part);
+        const stat = lstatSync(absolute, { throwIfNoEntry: false });
+        if (stat === undefined) {
+          git(root, ['update-index', '--force-remove', '--', path], env);
+          return false;
+        }
+        if (stat.isSymbolicLink() || (index < parts.length - 1 && !stat.isDirectory()) || (index === parts.length - 1 && !stat.isFile())) {
+          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${path} — the tool publishes file contents, not links; nothing was posted`);
+        }
       }
       const blob = gitWriteBlob(root, readFileSync(absolute));
       git(root, ['update-index', '--add', '--cacheinfo', `${modes.get(path) ?? '100644'},${blob},${path}`], env);
@@ -514,13 +543,13 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
     const tip = wip?.commit ?? headSha;
     const tipTree = wip?.tree ?? git(root, ['rev-parse', 'HEAD^{tree}']);
     // Never-ship on what is new only: every commit first published here,
-    // judged by what it lands versus its first parent. A never-ship-named
-    // file already in the public history is a fact, not a refusal — this
-    // tool cannot take it back, so the preview says so instead.
+    // judged by what it lands versus its first parent — a root commit versus
+    // the empty tree, so a planted path cannot hide. A never-ship-named file
+    // already in the public history is a fact, not a refusal — this tool
+    // cannot take it back, so the preview says so instead.
     const violations: { path: string; rule: string }[] = [];
     for (const sha of unpushed) {
-      const statuses = parseNameStatus(gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', `${sha}^`, sha]).stdout);
-      violations.push(...neverShipViolations(statuses, rules));
+      violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was posted'), rules));
     }
     if (wip !== null) {
       const statuses = parseNameStatus(gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD', wip.tree]).stdout);
@@ -571,10 +600,11 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
   }
 }
 
-// The listing a stranger reads: the task, what was tried, the commit to work
-// from, the branch for pull requests and whether it carries the poster's work
-// in progress, how to answer, the stated reward and the licence fact. No
-// snapshot, no files kept out — the code is the repository's real history.
+// The listing a stranger reads: the task, what was tried, the branch to work
+// from (with the base commit as context — never the bare commit to branch
+// from, or a branch carrying work in progress would refuse the answer), how
+// to answer, the stated reward and the licence fact. No snapshot, no files
+// kept out — the code is the repository's real history.
 function listingHistory(record: BountyRecord, repository: string, plan: GitHubPlan): { branch: string; title: string; body: string } {
   const { manifest } = boundFolder(record);
   const branch = `box-bounty/${record.id}`;
@@ -594,8 +624,8 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     ...(manifest.note !== null ? ['## What was already tried', '', manifest.note.text.trim(), ''] : []),
     '## The code',
     '',
-    `Work from commit ${plan.base} — the newest commit on the poster's branch this repository already had.`,
-    `The branch for solutions is \`${branch}\`: ${onTop}.`,
+    `Branch from \`${branch}\` — it is the branch pull requests for this bounty target.`,
+    `The branch is based on commit ${plan.base}, the newest commit this repository already had: ${onTop}.`,
     '',
     '## How to answer',
     '',
@@ -618,7 +648,7 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
   const lines: string[] = [];
   lines.push(`GitHub preview: ${repository}, public. Anyone can read the issue and branch.`);
   lines.push(`Branch: ${text.branch} → ${plan.tip}`);
-  lines.push(`Work from: commit ${plan.base} — the newest commit on the current branch the repository already has`);
+  lines.push(`Base: commit ${plan.base} — the newest commit on the current branch the repository already has`);
   lines.push('What becomes public that was not:');
   if (plan.pushed.length === 0) {
     lines.push('  nothing new is published');
@@ -690,11 +720,15 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
   if (record.github !== undefined && record.github.account !== account) return invalid('github-account-changed', 'sign in to the account that started this post before retrying; nothing was posted');
   if (record.github === undefined) {
     const approval = record.githubApproval;
+    // A full plan, or none at all: approvals written before this wave carry
+    // only repository and preview, and post the snapshot they approved. Some
+    // fields present and others missing is a record no honest write produced —
+    // falling back would publish the opposite of what was approved.
+    const planFields = ['base', 'head', 'tip', 'tipTree', 'title', 'body', 'pushed', 'wip', 'include', 'withChanges', 'leftHome', 'untracked'] as const;
+    const present = planFields.filter(field => approval[field] !== undefined);
+    const fullPlan = (value: typeof approval): value is typeof approval & Required<Pick<typeof approval, (typeof planFields)[number]>> => planFields.every(field => value[field] !== undefined);
     let publication: GitHubPublication;
-    if (approval.tip === undefined || approval.base === undefined || approval.title === undefined || approval.body === undefined) {
-      // An approval written before this wave: the snapshot post it approved.
-      publication = { repository, account, ...listingSnapshot(record, repository), commit: shippedCommit(root, record), state: 'preparing', issue: null, pending: null };
-    } else {
+    if (fullPlan(approval)) {
       // Publish exactly what was approved: recompute the plan live and refuse
       // by name when the working state, the branch or the remote moved since
       // the preview — the preview and the push can never disagree.
@@ -732,6 +766,11 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
         issue: null,
         pending: null
       };
+    } else if (present.length === 0) {
+      // An approval written before this wave: the snapshot post it approved.
+      publication = { repository, account, ...listingSnapshot(record, repository), commit: shippedCommit(root, record), state: 'preparing', issue: null, pending: null };
+    } else {
+      return invalid('record-corrupt', `the recorded GitHub approval carries only some plan fields (${present.join(', ')}) — it is not a readable approval; nothing was posted`);
     }
     record.github = publication;
     git(root, ['update-ref', publicationRef(id), publication.commit]);
@@ -931,11 +970,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
     .split('\n').map(line => line.trim()).filter(sha => /^[a-f\d]{40}$/.test(sha));
   const violations: { path: string; rule: string }[] = [];
   for (const sha of newCommits) {
-    const statuses = parseNameStatus(gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', `${sha}^`, sha]).stdout);
-    for (const { path } of statuses) {
-      const rule = rules.find(candidate => candidate.match(path.toLowerCase()));
-      if (rule !== undefined) violations.push({ path, rule: rule.name });
-    }
+    violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was collected'), rules));
   }
   if (violations.length > 0) {
     const named = [...new Map(violations.map(v => [v.path, v])).values()];

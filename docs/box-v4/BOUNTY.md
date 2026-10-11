@@ -61,9 +61,9 @@ rules would remove is refused (`never-ship-input`).
 
 ## Post and collect on GitHub
 
-On GitHub, a bounty is an issue on the code that is already there — it names
-the exact commit to work from, and `box-bounty/<id>` is an ordinary branch
-solvers fork and send pull requests to. The tool uses Git and `gh` already
+On GitHub, a bounty is an issue on the code that is already there — solvers
+are told to branch from `box-bounty/<id>`, an ordinary branch based on the
+newest commit the repository already had, and to send pull requests to it. The tool uses Git and `gh` already
 signed in on the machine. Sign in through those programs, outside the tool. It
 never asks for, reads, stores or prints a token. `origin` must have one fetch
 destination and one push destination, both naming the same GitHub repository.
@@ -80,7 +80,7 @@ node packages/box-cli/dist/cli.js bounty confirm <id> --to github --preview
 This changes nothing. It asks the remote what it already has — fetched refs,
 never a possibly-stale local tracking name — and prints:
 
-- the commit solvers are told to work from: the **newest commit on the current
+- the commit the bounty branch is based on: the **newest commit on the current
   branch the GitHub repository already has**;
 - what becomes public that was not: each unpushed commit with its identifier
   and subject, and — when the task is said to need uncommitted work — the
@@ -128,10 +128,10 @@ state, a moved remote, or a named file that drifted is `github-preview-stale`
 — the preview and the push can never disagree. When nothing local was needed,
 the branch is a name pointing at the existing commit and **zero file content
 is uploaded**; otherwise only the new commits go up, identifiers unchanged.
-The issue says the task, what was tried, the commit to work from, the branch
-for pull requests and whether it carries the poster's work in progress and how
-many commits, how to answer (fork, branch from the bounty branch, pull request
-against it), the reward ($0) and the licence as a fact — and carries the
+The issue says the task, what was tried, the branch to branch from and the
+commit it is based on, whether the branch carries the poster's work in progress
+and how and how many commits, how to answer (fork, branch from the bounty branch,
+pull request against it), the reward ($0) and the licence as a fact — and carries the
 `box-bounty` label, created on the repository when missing. The issue address,
 number and branch are kept in the local record and shown by `status` and the
 open-bounties line.
