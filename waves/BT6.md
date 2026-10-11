@@ -47,14 +47,15 @@ This is the second run of BT6. The first run built and reviewed the GitHub adapt
 
 Naming BT6 in the START message is the owner's approval for exactly this and nothing more: one public issue, one branch `box-bounty/<id>`, one label and one pull request on `shouteck/omakase-box`, with comments from the tool's own commands. No other repository, no bounty site, no money, no message to anyone.
 
-1. The first run's prepared draft (`bt-83106aba72a1`) and its trial folders (`kitchen-BT6-owner`, `kitchen-BT6-bounty`, `kitchen-BT6-preparation`) carry a check and are out of date. The kitchen made them; remove them by exact name and prepare again with the finished tool.
+0. **No copy of the repository.** Parts A and B are reviewed and merged to master first. The real post is then made from the main checkout with the merged tool, exactly as an owner would use it: the record and the open-bounties line land in this project. The only copy made anywhere is the solver's own clone of the bounty branch. The first run prepared its bounty in a separate clone because its code was unmerged; do not repeat that.
+1. The first run's prepared draft (`bt-83106aba72a1`) and its trial folders (`kitchen-BT6-owner`, `kitchen-BT6-bounty`, `kitchen-BT6-preparation`) carry a check and are out of date. The kitchen made them; remove them by exact name and prepare again from the main checkout with the merged tool. If the owner does not say "go", withdraw the draft so the checkout is left clean.
 2. Same task as before: the cold-copy bootstrap gap in `docs/box-v4/BOUNTY.md`. This time supply a real note on what was tried.
 3. **Before posting, show the owner the issue title and body exactly as they will appear, and wait for "go".** Only then is `github` added to `.box/limits.json` and the bounty posted.
 4. A blind solver, started in an empty folder outside every checkout and given only the issue's address, clones the bounty branch alone, does the work and opens the pull request. It uses the account signed in on this machine; say so in the Result. No stranger has answered, and a stranger's path is proven by tests only.
 5. A different session collects from the record alone: reads the report, looks at the solution, chooses, and applies it.
 6. Close with the tool's own commands. Anything left outside is listed in the Result by exact name.
 
-If the owner does not say "go" at step 3, the wave closes with Parts A and B merged if they pass, the real post not done, and says so.
+If the owner does not say "go" at step 3, the wave closes with Parts A and B merged, the real post not done, and says so.
 
 ## Review lenses
 
