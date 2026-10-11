@@ -18,7 +18,11 @@ import { spawnSync } from 'node:child_process';
 // result and a returned `.gitattributes` could select commands out of the
 // host's own git config.
 
-export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string }
+// GIT_AUTHOR_DATE and GIT_COMMITTER_DATE pin the tool-built work-in-progress
+// commit: the same tree, parent, message and dates always give the same sha,
+// so the GitHub preview, the record and the push can never disagree about
+// which commit it is.
+export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string; readonly GIT_AUTHOR_DATE?: string; readonly GIT_COMMITTER_DATE?: string }
 
 export interface GitOutcome {
   readonly status: number | null;

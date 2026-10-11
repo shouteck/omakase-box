@@ -53,7 +53,7 @@ function usage(message?: string): never {
   console.error('       box bounty describe [--rules] [--repo <path>]');
   console.error('       box bounty remind [--repo <path>]');
   console.error('       box bounty status [--repo <path>]');
-  console.error('       box bounty confirm <id> [--to github] [--preview] [--repo <path>]');
+  console.error('       box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]');
   console.error('       box bounty post <id> --to <dir|github> [--repo <path>]');
   console.error('       box bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]');
   console.error('       box bounty apply <id> [<attempt>] [--repo <path>]');
@@ -172,7 +172,7 @@ if (command === 'export') {
     return index >= 0 && bountyArgs[index + 1] !== undefined ? resolve(bountyArgs[index + 1]!) : process.cwd();
   };
   const bountyIds = (): string[] =>
-    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason', '--pr'].includes(bountyArgs[index - 1] ?? ''));
+    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason', '--pr', '--include'].includes(bountyArgs[index - 1] ?? ''));
 
   // The line every ended bounty prints: which job was waiting on it — the
   // --job file when one was recorded, else the title.
@@ -231,9 +231,23 @@ if (command === 'export') {
       const repoRoot = resolveRepoRoot(bountyRepo(), 'confirm');
       const toIndex = bountyArgs.indexOf('--to');
       const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
-      if (toIndex >= 0 && to !== 'github' || bountyArgs.includes('--preview') && to !== 'github') usage('box bounty confirm <id> [--to github] [--preview]');
-      if (bountyArgs.includes('--preview')) { if (to === 'github') console.log(previewGitHub(repoRoot, id)); process.exit(0); }
-      const record = confirmBounty(repoRoot, id, to);
+      // The two publication choices: --with-changes says the task needs every
+      // uncommitted change to tracked files (one tool-built commit on the
+      // bounty branch); --include names an untracked file to publish, once per
+      // file. Both are previewed and recorded — post publishes only what the
+      // owner saw.
+      const withChanges = bountyArgs.includes('--with-changes');
+      const include: string[] = [];
+      bountyArgs.forEach((arg, index) => {
+        if (arg !== '--include') return;
+        const named = bountyArgs[index + 1];
+        if (named === undefined || named.startsWith('--')) usage('box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview]');
+        include.push(named!);
+      });
+      if (toIndex >= 0 && to !== 'github' || bountyArgs.includes('--preview') && to !== 'github' || (withChanges || include.length > 0) && to !== 'github') usage('box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview]');
+      const githubChoice = { withChanges, include };
+      if (bountyArgs.includes('--preview')) { if (to === 'github') console.log(previewGitHub(repoRoot, id, githubChoice)); process.exit(0); }
+      const record = confirmBounty(repoRoot, id, to, githubChoice);
       if (record.githubApproval !== undefined) console.log(record.githubApproval.preview);
       console.log(`${record.id} — stage 2 of 7: confirmed — the owner's yes is recorded in ${recordPath(repoRoot, record.id)}`);
       console.log(`next: deliver it — run box bounty post ${record.id} --to ${to === 'github' ? 'github' : '<dir>'}`);
@@ -263,6 +277,7 @@ if (command === 'export') {
       if (id === undefined || extraIds.length > 0 || (attemptText !== undefined && attempt === undefined)) usage('box bounty apply <id> [<attempt>] [--repo <path>]');
       const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, attempt);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
+      if (result.record.github?.closedNote !== undefined) console.log(`github: ${result.record.github.closedNote}`);
       if (result.outcome === 'applied') {
         console.log(`${result.record.id} — stage 7 of 7: applied — attempt ${result.attempt} merged as ${result.mergeCommit}, which is on this branch and names the bounty`);
         console.log(`ended — ${jobLine(result.record)}; the durability refs are removed. To reverse it: box bounty undo ${result.record.id}`);
@@ -276,6 +291,7 @@ if (command === 'export') {
       if (id === undefined || extraIds.length > 0) usage('box bounty undo <id> [--repo <path>]');
       const result = undoBounty(resolveRepoRoot(bountyRepo(), 'undo'), id);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
+      if (result.record.github?.closedNote !== undefined) console.log(`github: ${result.record.github.closedNote}`);
       console.log(`${result.record.id} — undone — commit ${result.undoCommit} on this branch reverses merge ${result.reverted}`);
       console.log(`ended — ${jobLine(result.record)}; the record keeps both events`);
     } else if (subcommand === 'reject') {
@@ -286,6 +302,7 @@ if (command === 'export') {
       const repoRoot = resolveRepoRoot(bountyRepo(), 'reject');
       const record = rejectBounty(repoRoot, id, reason);
       if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
+      if (record.github?.closedNote !== undefined) console.log(`github: ${record.github.closedNote}`);
       console.log(`${record.id} — rejected — the reason is recorded in ${recordPath(repoRoot, record.id)}`);
       console.log(`ended — ${jobLine(record)}; the durability ref is removed`);
     } else if (subcommand === 'withdraw') {
@@ -293,6 +310,7 @@ if (command === 'export') {
       if (id === undefined || extraIds.length > 0) usage('box bounty withdraw <id> [--repo <path>]');
       const { record, outcome } = withdrawBounty(resolveRepoRoot(bountyRepo(), 'withdraw'), id);
       if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
+      if (record.github?.closedNote !== undefined) console.log(`github: ${record.github.closedNote}`);
       if (outcome === 'already-withdrawn') {
         console.log(`${record.id} — already withdrawn — nothing to do`);
         console.log(`ended — ${jobLine(record)}`);

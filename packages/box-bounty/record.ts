@@ -112,7 +112,29 @@ export interface BountyRecord {
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
   events: StageEvent[];
   github?: import('./github.js').GitHubPublication;
-  githubApproval?: { readonly repository: string; readonly preview: string };
+  /** The GitHub preview the owner confirmed. Approvals written since BT6a also
+      carry the approved plan — the base/tip commits, the commits published
+      for the first time, the work-in-progress lists and the choices — so
+      `post` publishes exactly what was approved or refuses by name. */
+  githubApproval?: {
+    readonly repository: string;
+    readonly preview: string;
+    readonly base?: string;
+    readonly head?: string;
+    readonly tip?: string;
+    readonly tipTree?: string;
+    readonly title?: string;
+    readonly body?: string;
+    readonly pushed?: readonly { readonly sha: string; readonly subject: string }[];
+    readonly wipCommit?: string;
+    readonly wip?: { readonly changed: readonly string[]; readonly added: readonly string[]; readonly deleted: readonly string[] } | null;
+    readonly include?: readonly string[];
+    readonly withChanges?: boolean;
+    /** What the preview said stays home — a drift here means the working state
+        moved since approval and the preview no longer tells the truth. */
+    readonly leftHome?: number;
+    readonly untracked?: number;
+  };
 }
 
 export interface ListedBounty {
@@ -323,7 +345,7 @@ export function renderStatus(repoRoot: string): string {
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
-      if (record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
+      if (record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state}${record.github.kind !== 'history' ? ', snapshot-posted — from before the bounty became an issue on the code that is already there' : ''})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
       if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) lines.push(`      github-status-unavailable: could not refresh at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}; retry box bounty status`);
       if (record.github?.outside !== undefined) {
         lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
@@ -380,7 +402,7 @@ export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
-    'confirm <id> --to github previews the exact issue and branch; post <id> --to github publishes them. answer <id> lists PRs; answer <id> --pr <n> collects one. Every bounty states a reward of $0.',
+    'confirm <id> --to github previews exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>); post <id> --to github publishes it. answer <id> lists PRs; answer <id> --pr <n> collects one. Every bounty states a reward of $0.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    snapshot the repository minus never-ship files, with the task and a note; prints the preview → drafted',
@@ -429,12 +451,12 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
   persistRecord(repoRoot, record);
 };
 
-export function confirmBounty(repoRoot: string, id: string, destination?: string): BountyRecord {
+export function confirmBounty(repoRoot: string, id: string, destination?: string, githubChoice?: import('./github.js').GitHubChoice): BountyRecord {
   const record = loadRecord(repoRoot, id);
   if (record.stage !== 'drafted' && !(destination === 'github' && record.stage === 'confirmed' && record.githubApproval === undefined)) {
     throw new BountyRefused('not-drafted', `bounty ${id} is ${record.stage}, not drafted — only a drafted bounty can be confirmed`);
   }
-  if (destination === 'github') record.githubApproval = approveGitHub(repoRoot, record);
+  if (destination === 'github') record.githubApproval = approveGitHub(repoRoot, record, githubChoice ?? { withChanges: false, include: [] });
   transitionTo(repoRoot, record, 'confirmed');
   return record;
 }
