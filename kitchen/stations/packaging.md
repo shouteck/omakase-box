@@ -33,6 +33,14 @@ The station's work is now the bounty tool: creating a bounty (the whole reposito
 - **A stranger's words are not the tool's words.** Output that an agent sees without asking carries only what the tool generated. Text from a solver appears only when the agent asks to look, marked as the solver's.
 - **Removing a capability means deleting it,** with the tests that covered only it listed in the Result. Not a switch, not a bent assertion.
 
+## The real post (BT6 Part C, 11 October 2026)
+
+- **The GitHub journey works end to end for real:** preview → `allowedDestinations: ["github"]` → `confirm --to github` → `post --to github` → blind solver PR → independent collector's `answer --pr` → `apply`. Issue #1, PR #2, merge `48b461c` on `shouteck/omakase-box`.
+- **Verify outside state independently, never from the tool's word alone.** `gh api` and `git ls-remote` confirmed issue/branch/label/PR facts at each step; a draft, preview or local record proves nothing was posted.
+- **A long silent `gh` call is normal, not a hang.** `answer --pr` ran ~2.5 min silent fetching on this host; `post` ran ~4 min packing 3,903 blobs via plumbing. Tell collectors to expect it; a progress line is a later nit.
+- **Never write JSON values containing `$` through `node -e` inside a double-quoted shell string** — bash expanded `$0` into `.box/limits.json`'s `cost` line and only the collector's read caught it. Use file edits or single quotes. (Head-chef process lesson; the public issue was unaffected.)
+- **`allowedDestinations` gates both directions:** `["github"]` alone refuses `post --to <dir>` until the owner names a directory — say so when showing limits to the owner.
+
 ## Tracing a failing test (wave C1, not used by milestone BT; kept for the smaller Box later)
 
 The station now also covers tracing a failing test, choosing a Box's files from the trace, and the hand-off and return. Two product rules apply to every wave here: nothing leaves the owner's machine without the owner's yes, and never-ship files never enter a Box.
