@@ -1,0 +1,67 @@
+{
+  "taskId": "M0.2",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 593,
+      "sha256": "93d9be5dd9dd83115ce2a7848d4a7c85b73d4ad161d1fa523618e69b429d8d2a"
+    },
+    {
+      "path": ".node-version",
+      "bytes": 8,
+      "sha256": "2a42bceee722abfa6c8a7ff6149ada5bca012b841687c62158e5ce60ef528c68"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 4848,
+      "sha256": "1d7e2763294249e3a367b2b3cdf16b812ca1ead1216c12708bc0049b8afce554"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 3863,
+      "sha256": "c37c5d45edf2d4d22ec064784d233ab6622dbac9af6e857e1ba3d108290c314a"
+    },
+    {
+      "path": "infra/compose.yaml",
+      "bytes": 4457,
+      "sha256": "5755abfde07eb6e41d6cd19f49e1e9433d788785a85a3d6c094a0f5c36dc5242"
+    },
+    {
+      "path": "infra/trusted.Dockerfile",
+      "bytes": 2447,
+      "sha256": "a738f39f02ba4df5a807d5520e04b3695540d4a94872936180cd0ee302a8405f"
+    },
+    {
+      "path": "infra/trusted.Dockerfile.dockerignore",
+      "bytes": 485,
+      "sha256": "e73fc7f8921cbb916dc1513b9a98c036f1bc3ecd9951ce09557b2657b697bb78"
+    },
+    {
+      "path": "services/external-api/bootstrap/environment.ts",
+      "bytes": 1559,
+      "sha256": "e49458a07be1fc262e66ab9970e8346df002478907fa1af1ee7ad797e6a36728"
+    },
+    {
+      "path": "services/private-api/bootstrap/environment.ts",
+      "bytes": 1211,
+      "sha256": "ecc69d4deddeb2a17a22a784140aac26eb1ac4f94f17926aa44fa84c91310a6e"
+    },
+    {
+      "path": "services/private-api/bootstrap/owner.ts",
+      "bytes": 1941,
+      "sha256": "a69e2f8841f92b6a28e6e5c06716bf97ee9713cfa7f326139a430cdad056fed5"
+    },
+    {
+      "path": "tests/auth/bootstrap/environment.test.ts",
+      "bytes": 3751,
+      "sha256": "b8a4301e3c0e8f85f1829023054831d1fdd5d63152a9e83f6ce927aebf29c35e"
+    },
+    {
+      "path": "tests/auth/bootstrap/owner.test.ts",
+      "bytes": 2017,
+      "sha256": "9bce4d7b0bc4318e47b522c777ab7a72fdfeec5ce3f5b9a792195792393f52c3"
+    }
+  ]
+}

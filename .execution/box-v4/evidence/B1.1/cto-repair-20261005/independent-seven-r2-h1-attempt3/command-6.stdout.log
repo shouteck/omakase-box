@@ -1,0 +1,39 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/stage[39m
+
+ [32m✓[39m tests/contracts/publication/gate.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 7446[2mms[22m[39m
+   [32m✓[39m readiness record routes — role-gated evidence writes [2m(4)[22m
+     [33m[2m✓[22m[39m owner records a human review; operator records machine evidence[33m 7249[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/routes.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 8839[2mms[22m[39m
+   [33m[2m✓[22m[39m intent routes exist only through authorized wiring and enforce role policy on every route[33m 8756[2mms[22m[39m
+ [32m✓[39m tests/contracts/fixture/private-shop.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 7250[2mms[22m[39m
+   [32m✓[39m synthetic pre-change fixture and independently authored goals [2m(6)[22m
+     [33m[2m✓[22m[39m has an actual synthetic selection HTTP route and safe origin enforcement[33m 7208[2mms[22m[39m
+ [32m✓[39m tests/contracts/boundaries.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 7703[2mms[22m[39m
+   [32m✓[39m public/private import export boundaries [2m(4)[22m
+     [33m[2m✓[22m[39m rejects private package imports and handles static imports, reexports and dynamic imports[33m 1599[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed for an unresolved dynamic import[33m 878[2mms[22m[39m
+     [33m[2m✓[22m[39m walks real external source import closures without private source access[33m 5215[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/session-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3934[2mms[22m[39m
+   [33m[2m✓[22m[39m actual private DB session records protect intent revisions, decisions and immutable owner approval[33m 3932[2mms[22m[39m
+ [32m✓[39m tests/contracts/publication/readiness-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1542[2mms[22m[39m
+   [33m[2m✓[22m[39m real PostgreSQL enforces readiness immutability, owner review authority and solve classification[33m 1540[2mms[22m[39m
+ [32m✓[39m tests/contracts/fixture/seed.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 735[2mms[22m[39m
+   [33m[2m✓[22m[39m seeds only a tagged synthetic workspace, preserves content-addressed snapshots and excludes answers[33m 733[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/orchestrator.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 108[2mms[22m[39m
+ [32m✓[39m tests/contracts/composition.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m tests/contracts/schemas.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+ [32m✓[39m tests/contracts/graph-hardening.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m tests/contracts/intent/session-store.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/contracts/paths.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/contracts/workflow/transitions.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/contracts/canonical-array.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m155 passed[39m[22m[90m (155)[39m
+[2m   Start at [22m 05:22:53
+[2m   Duration [22m 111.56s[2m (tests 48%, import 47%, transform 4%, worker 2%)[22m
+
+[2m    Isolate [22m [33m15 workers spawned[39m[2m · ~2.15s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~30.06s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_read_only_reconciliation",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "recordedAtUtc": "2026-10-04T17:31:05.4601115Z",
+  "authority": ".execution/box-v4/approvals/W002-hold-step1-20261005.json",
+  "author": "root CTO in the current Devin Desktop conversation; not an independent reviewer",
+  "productVerdict": "not_accepted",
+  "holdStatus": "active",
+  "git": {
+    "head": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+    "cachedOriginMaster": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+    "remoteStatus": "No remote query/fetch/upload in this reconciliation; cached tracking equality is not a fresh remote/privacy verification.",
+    "index": "empty staged diff",
+    "candidate": "uncommitted and unstaged",
+    "priorAcceptedCheckpoint": ".execution/box-v4/checkpoints/CP001.json",
+    "checkpointPolicy": "No commit or push while held."
+  },
+  "candidate": {
+    "fullManifest": ".execution/box-v4/evidence/B1.1/verification-recovery/candidate-manifest-r3.json",
+    "fullManifestDigest": "sha256:a6dbf3028f0639e23530f1e30ef2494d5a89e4cf476f4717c46c0af95555f763",
+    "latestDeltaManifest": ".execution/box-v4/evidence/B1.1/verification-recovery/candidate-manifest-r5.json",
+    "latestDeltaManifestDigest": "sha256:22a9ed894b697f931aa9ff76e9cec1e675b447ae7926428eb631169853345ee7",
+    "binding": "r5 restored the fixture manifest exactly to r3 bytes; all 22 files listed by r3 were independently hash-read by root in both the checkout and staged workspace and match the expected digests.",
+    "filesCompared": 22,
+    "hostMismatches": 0,
+    "stageMismatches": 0,
+    "stageRoot": "C:/Users/shout/AppData/Local/Temp/w002-b11-stage",
+    "testExecutionThisSession": false
+  },
+  "existingVerification": {
+    "workerEvidence": ".execution/box-v4/evidence/B1.1/worker-receipt-r3.md",
+    "boxContracts": "7 tests passed in existing r3 evidence; not rerun",
+    "boxAuth": "18 tests passed in existing r3 evidence and reviewer relay-review-r2.json; not rerun",
+    "build": "passed in existing r3 evidence; not rerun",
+    "regressions": "Latest complete recorded check/test:auth/test:contracts/test:planner results remain failed; mailbox successes cannot replace full-suite evidence.",
+    "relayReview": ".execution/box-v4/evidence/B1.1/verification-recovery/relay-review-r3.json",
+    "relayReviewDigest": "sha256:ef8cf1bfabf343d1f3a4c326f388316567a115566e7e39f8c4f3730be047e5b8",
+    "relayPreexecutionVerdict": "pass on exact unchanged bytes; historical gate pass does not override the current Hold",
+    "finalCandidateReview": "not accepted; reconstructed support.ts and amended role/token coverage require final independent behavior/security review",
+    "g5": "This actual START reconciliation occurred without dispatch, but no independent G5 acceptance is recorded. Do not auto-pass or allow later parallel fan-out."
+  },
+  "liveMailboxObservation": {
+    "source": "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/.verification-mailbox",
+    "relayLogDigest": "sha256:f2a59cdd71948644ec32c7cece253085c2cbddec2a1c0e30b0ada50b2a5224ee",
+    "loggedExecutions": 32,
+    "exit0": 29,
+    "exit1": 3,
+    "requestFiles": 40,
+    "responseFiles": 32,
+    "requestsWithoutResponse": 8,
+    "lastLoggedExecutionUtc": "2026-10-04T17:21:29.777Z",
+    "relayProcess": "No matching host node process observed by read-only Win32_Process metadata query; absence is a sampled observation, not a scheduler guarantee.",
+    "workspaceProcess": "Earlier read-only docker top showed only sleep; no candidate process was started by root.",
+    "interpretation": "Real fixture exec occurred after relay review, beyond the older receipts. At least one persistence command later exited zero, but three earlier errors and eight unanswered requests do not establish any passing full suite. Do not replay queued requests blindly.",
+    "secrecy": "Durable record contains only aggregate statuses/digests. No request source/input, response stdout/stderr, tokens, credentials or secret files copied."
+  },
+  "browser": {
+    "manifest": ".execution/box-v4/evidence/B1.1/verification-recovery/browser-manifest.json",
+    "pinnedPackage": "playwright-core 1.63.0",
+    "headlessShellRevision": "1243",
+    "expectedExecutablePresent": false,
+    "observationMethod": "Test-Path on the exact staged browser executable path only; no host .runtime or credential content read.",
+    "acquisitionThisSession": false
+  },
+  "containers": {
+    "neededForRecovery": [
+      {"name": "w002-b11-ws", "id": "92107bf48d48767f9af619b23e99710eb97f44d8b8ef755f9cc3be37918608f0", "state": "running"},
+      {"name": "w002-b11-db", "id": "739950c27bd4a7897c4f04bd151fe1054bf84b5493d8e53defcba2f605bc6c2b", "state": "running", "warning": "tmpfs DB; prior metadata shows OOMKilled=true. Stopping may lose fixture data."},
+      {"name": "w002-b11-svc-private-api", "id": "cc50b7e2826cd6461f1de07f4da78decdd91e27ae470ba3fe6a863d34c38aa01", "state": "running"},
+      {"name": "w002-b11-svc-external-api", "id": "334ddb4b12e004f5da650551624ec13a05e1ed6690a348173c613bba6ab78c37", "state": "running"},
+      {"name": "w002-b11-fixture-db-private", "id": "2553a9a5bbe43098ae1bdd6369144054f9d524719dda426052dbca4cdf5d0752", "state": "running", "warning": "tmpfs DB; preserve while held"},
+      {"name": "w002-b11-fixture-db-external", "id": "e1d136307aee4ab77cc353bd0b0a9d34e8fb02f403d84cb0cbe6084860dacb26", "state": "running", "warning": "tmpfs DB; preserve while held"}
+    ],
+    "inertPreserveDoNotReuse": [
+      {"name": "w002-b11-stage-helper", "state": "exited", "reason": "noncompliant helper stopped previously; no reuse"},
+      {"name": "w002-b11-srcimg", "state": "created", "reason": "inspection artifact; not needed for verification"}
+    ],
+    "separateLegacyStackPreserved": ["private-task-mvp-synthetic-private-api-1", "private-task-mvp-synthetic-external-api-1", "private-task-mvp-synthetic-db-private-1", "private-task-mvp-synthetic-db-external-1"],
+    "resourcePolicy": "Six W002 containers plus owned internal network retained. Existing legacy stack and volumes untouched. No container start/stop/create/remove, daemon socket, reset, drop or cleanup authorized by step 1."
+  },
+  "remainingBlockers": [
+    "Active CEO Hold; no execution until explicit resume approval binds the new frozen proposal.",
+    "Missing pinned Linux browser and unresolved external-image environment check.",
+    "Live relay no longer observed running; eight unanswered requests require reconciliation without unsafe replay.",
+    "All required full regression outcomes and same-byte final independent acceptance are absent.",
+    "Final review must cover reconstructed support.ts, amended authorization/token negatives and actual session-resumption evidence."
+  ],
+  "actionsActuallyTaken": ["read records", "read-only Git status/history/index/revision inspection", "hash comparison of checkout and staged candidate", "Docker metadata inventory/inspection", "process metadata query", "mailbox status/digest aggregation", "root governance preparation"],
+  "actionsNotTaken": ["dispatch/resume workers or reviewers", "candidate or test execution", "tests/builds", "browser download", "container changes", "data mutation", "deletion", "Git staging/commit/push"],
+  "limitations": "Root reconciliation is not independent review. Prior test results remain historical exact-byte evidence, not reruns in the later fixture environment. Container running state is not service health or a passing test. Approval times are not invented from the recording clock."
+}

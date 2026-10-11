@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--input-type=module",
+    "-e",
+    "import fs from 'node:fs';import crypto from 'node:crypto';import assert from 'node:assert/strict';const s=JSON.parse(fs.readFileSync('.execution/state.json'));const id='M1.1';const m=JSON.parse(fs.readFileSync(s.tasks[id].revision.manifest));const mismatches=m.files.filter(f=>crypto.createHash('sha256').update(fs.readFileSync(f.path)).digest('hex')!==f.sha256);const digest=crypto.createHash('sha256').update(JSON.stringify(m)).digest('hex');console.log(JSON.stringify({taskId:id,digest,fileCount:m.files.length,mismatches}));assert.equal(digest,s.tasks[id].revision.digest);assert.equal(mismatches.length,0);"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:00:55.261Z",
+  "finishedAt": "2026-10-02T17:00:55.355Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"taskId\":\"M1.1\",\"digest\":\"cbf74267e6516e7488e347e97cf382c881c2a91243ddc303463ce375fa412fd0\",\"fileCount\":62,\"mismatches\":[]}\n"
+}

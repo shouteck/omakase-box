@@ -1,0 +1,15 @@
+node:internal/fs/promises:642
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: ENOENT: no such file or directory, open '.cto-r1-evidence/proof-contracts.stdout.log'
+    at async open (node:internal/fs/promises:642:25)
+    at async writeFile (node:internal/fs/promises:1249:14)
+    at async file:///stage/.cto-r1-evidence/launcher-r2-review/[eval1]:1:1512 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '.cto-r1-evidence/proof-contracts.stdout.log'
+}
+
+Node.js v24.11.0

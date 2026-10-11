@@ -1,0 +1,24 @@
+{
+  "step": "runtime-alias",
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "300",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import {readFile,writeFile} from 'node:fs/promises';import {createRequire} from 'node:module';import {stageWorkspaceAliases} from './scripts/box-verification/environment-host.mjs';const m=JSON.parse(await readFile('/stage/.cto-r1-evidence/environment-manifest.json'));const result=await stageWorkspaceAliases(m,{stageRoot:'/stage'});const rows=[];for(const a of m.stage.workspaceAliases){const req=createRequire('/stage/'+a.packageJson);let resolved;try{resolved=req.resolve(a.name)}catch(e){if(!a.name.startsWith('@types/'))throw e;resolved=req.resolve(a.name+'/package.json')}rows.push({packageJson:a.packageJson,name:a.name,resolved})}await writeFile('/stage/.cto-r1-evidence/alias-runtime.json',JSON.stringify({result,rows}));console.log(JSON.stringify({result,rows}));process.exit(result.status==='staged'&&rows.length===22?0:1)"
+  ],
+  "exit": 0,
+  "elapsedMs": 52453,
+  "recordedAtUtc": "2026-10-05T02:58:33.065827+00:00",
+  "sourcePlan": "ready-command-plan-r1.json",
+  "stdout": "ready-runtime-alias.stdout.log",
+  "stderr": "ready-runtime-alias.stderr.log"
+}

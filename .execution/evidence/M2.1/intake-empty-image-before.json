@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/planner/evidence/media.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:39:32.010Z",
+  "finishedAt": "2026-10-02T18:39:36.884Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/planner/evidence/media.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 16\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m accepts bounded UTF-8 text as data, preserving HTML-like content without interpretation\u001b[32m 5\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m validates PNG structure, dimensions, CRC and exact end rather than just the prefix\u001b[32m 3\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m rejects a PNG with no compressed image data even when its chunk CRCs are valid\u001b[39m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m enforces upload limits before parsing and rejects empty data\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/planner/evidence/media.test.ts\u001b[2m > \u001b[22mrejects a PNG with no compressed image data even when its chunk CRCs are valid\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected [Function] to throw an error\u001b[39m\n\n\u001b[32m- Expected:\u001b[39m\nnull\n\n\u001b[31m+ Received:\u001b[39m\nundefined\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/planner/evidence/media.test.ts:\u001b[2m31:58\u001b[22m\u001b[39m\n    \u001b[90m 29|\u001b[39m });\n    \u001b[90m 30|\u001b[39m it('rejects a PNG with no compressed image data even when its chunk CR…\n    \u001b[90m 31|\u001b[39m   expect(() => validateEvidence('image/png', png(true))).toThrow('inva…\n    \u001b[90m   |\u001b[39m                                                          \u001b[31m^\u001b[39m\n    \u001b[90m 32|\u001b[39m });\n    \u001b[90m 33|\u001b[39m it('enforces upload limits before parsing and rejects empty data', () …\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m3 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2m   Start at \u001b[22m 02:39:34\n\u001b[2m   Duration \u001b[22m 2.42s\u001b[2m (import 92%, transform 5%, worker 2%, tests 1%)\u001b[22m\n\n"
+}

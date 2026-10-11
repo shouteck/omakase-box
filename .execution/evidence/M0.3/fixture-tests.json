@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:contracts",
+    "--",
+    "--suite",
+    "fixture"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T05:08:23.101Z",
+  "finishedAt": "2026-10-02T05:08:26.349Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/contracts/fixture/seed.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 323\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m seeds only a tagged synthetic workspace, preserves content-addressed snapshots and excludes answers\u001b[33m 321\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/contracts/fixture/private-shop.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 392\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m synthetic pre-change fixture and independently authored goals \u001b[2m(6)\u001b[22m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m has an actual synthetic selection HTTP route and safe origin enforcement\u001b[33m 370\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m18 passed\u001b[39m\u001b[22m\u001b[90m (18)\u001b[39m\n\u001b[2m   Start at \u001b[22m 13:08:24\n\u001b[2m   Duration \u001b[22m 1.40s\u001b[2m (tests 46%, import 41%, transform 11%, worker 1%)\u001b[22m\n\n"
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_current_environment_ready_r2",
+  "status": "ready",
+  "reviewer": "/root/recovery_assurance",
+  "environmentId": "w002-b11-env-r4-env2",
+  "manifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "recordedAtUtc": "2026-10-05T03:33:03.427921+00:00",
+  "currentReview": "independent-review-r2-final.json",
+  "currentRuntime": "independent-r2-current-runtime.json",
+  "focusedActual": "independent-r2-actual-focused.result.json",
+  "overlay": "stage-overlay-r2.json",
+  "reusedUnaffectedEvidence": [
+    "independent-preliminary-ready-r1.json",
+    "service-artifact-comparison-r1.json",
+    "independent-environment-ready-r1.json",
+    "independent-final-closure.result.json"
+  ],
+  "reuseJustification": "Exactlysuite/config/sourcehashmanifestrows changed. Closure/browser/services/metadata/dependencyhelper/resource settings unchanged; actualnew456sourceparity and realreadonly focusedruntime, liveIDs/noOOM/runneridle and freshlease/lifecyclereconciled. No helper/build/browser/fullclosure replay.",
+  "acceptance": false,
+  "receiptCorrection": "Before presenting, corrected closure evidence filename from nonexistent planning shorthand to actual independent-final-closure.result.json; prior own receipt bytes preserved, no verdict/source change."
+}

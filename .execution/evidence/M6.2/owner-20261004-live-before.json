@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservations/signed-assignment-live.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:58:56.219Z",
+  "finishedAt": "2026-10-03T23:58:58.180Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n \u001b[31m❯\u001b[39m tests/portal/reservations/signed-assignment-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 117\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m real separate private/external databases bind owner authority, signed choice, replay and authenticated durable reservation routes\u001b[39m\u001b[32m 115\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/portal/reservations/signed-assignment-live.test.ts\u001b[2m > \u001b[22mreal separate private/external databases bind owner authority, signed choice, replay and authenticated durable reservation routes\n\u001b[31m\u001b[1mError\u001b[22m: \u001b[31mBuild failed with 1 error:\n\n\u001b[31m[UNRESOLVED_ENTRY] \u001b[0mCannot resolve entry module services/private-api/assignments/live-fixture.ts.\n\u001b[31m\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m aggregateBindingErrorsIntoJsError node_modules/.pnpm/rolldown@1.2.11/node_modules/rolldown/dist/shared/error-C7pxws0W.mjs:\u001b[2m48:18\u001b[22m\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m unwrapBindingResult node_modules/.pnpm/rolldown@1.2.11/node_modules/rolldown/dist/shared/error-C7pxws0W.mjs:\u001b[2m18:128\u001b[22m\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m RolldownBuild.#build node_modules/.pnpm/rolldown@1.2.11/node_modules/rolldown/dist/shared/rolldown-CgWItHdG.mjs:\u001b[2m133:34\u001b[22m\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m buildEnvironment node_modules/.pnpm/vite@8.3.1_@types+node@24.1_8d2d73743f30d1068d44c84e6a2a0d7c/node_modules/vite/dist/node/chunks/node.js:\u001b[2m34445:66\u001b[22m\u001b[39m\n\u001b[90m \u001b[2m❯\u001b[22m Object.build node_modules/.pnpm/vite@8.3.1_@types+node@24.1_8d2d73743f30d1068d44c84e6a2a0d7c/node_modules/vite/dist/node/chunks/node.js:\u001b[2m34866:19\u001b[22m\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m runIn tests/portal/reservations/signed-assignment-live.test.ts:\u001b[2m10:18\u001b[22m\u001b[39m\n\n\u001b[90m \u001b[2m❯\u001b[22m tests/portal/reservations/signed-assignment-live.test.ts:\u001b[2m22:25\u001b[22m\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 07:58:57\n\u001b[2m   Duration \u001b[22m 841ms\u001b[2m (import 53%, transform 26%, tests 19%, worker 2%)\u001b[22m\n\n"
+}

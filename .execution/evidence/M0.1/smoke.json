@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/smoke-bootstrap.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T02:57:44.463Z",
+  "finishedAt": "2026-10-02T02:57:45.140Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n403 !== 200\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/smoke-bootstrap.mjs:35:12\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 403,\r\n  expected: 200,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

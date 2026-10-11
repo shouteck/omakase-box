@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "reportKind": "independent_review",
+  "reviewer": "opencode-reviewer-subagent-foundation-20261003",
+  "reviewedAt": "2026-10-04T00:22:00Z",
+  "taskId": "M0.2",
+  "reviewedRevision": {
+    "digest": "811748e90be19f27994c257842704c46b680a7622a2440d434a4cdf319688594",
+    "manifest": ".execution/evidence/M0.2/revision-811748e90be19f27994c257842704c46b680a7622a2440d434a4cdf319688594.json"
+  },
+  "revisionBinding": {
+    "manifestFileCount": 61,
+    "filesMissing": 0,
+    "productPathsByteIdentical": true,
+    "mismatchedFiles": [
+      { "path": "docs/DECISIONS.md", "recordedSha256Prefix": "6a1587a2aa94", "actualSha256Prefix": "35c49af98eb2", "classification": "shared_rebind_batch" },
+      { "path": "scripts/execution.mjs", "recordedSha256Prefix": "03bff9fd5ce6", "actualSha256Prefix": "607ee65151cb", "classification": "shared_rebind_batch" }
+    ],
+    "sharedBatchRationale": "Exactly the coordinator-declared shared batch from M4.2 runtime verification and migration 0007 (M5.3); infra/compose.yaml, infra/runner/broker.py, services/*/src/bootstrap/main.ts and other product-bound paths all re-hash identically to the current manifest. Recorded canonical digest verified: sha256(canonical JSON.stringify(manifest)) matches state.json tasks.M0.2.revision.digest.",
+    "previousAcceptedDiff": {
+      "previousDigest": "69e5223040fe1af4a9807c767585a9a2caa699c86c9b5a8fc0f866cbe45c2a96",
+      "added": ["infra/runner/broker.py", "scripts/verify-auth.mjs", "scripts/verify-empty-migrations.mjs", "scripts/verify-intake.mjs", "scripts/verify-intent-sessions.mjs", "scripts/verify-lifecycles.mjs"],
+      "changed": ["AGENTS.md", "docs/DECISIONS.md", "infra/compose.yaml", "infra/trusted.Dockerfile", "infra/trusted.Dockerfile.dockerignore", "pnpm-lock.yaml", "scripts/doctor.mjs", "scripts/execution.mjs", "scripts/verify-mvp.mjs", "scripts/vitest.config.mjs", "scripts/workspace.mjs", "services/external-api/src/bootstrap/main.ts", "services/private-api/bootstrap/build.mjs", "services/private-api/src/bootstrap/main.ts"],
+      "removed": [],
+      "note": "Changes since the older accepted revision are later shared/integration batches (M1.3/M2.1/M5.x) disclosed in the draft handoff; current content re-hashes to the current manifest."
+    },
+    "pnpmLockfileDigestMatchesManifest": true
+  },
+  "commandsRun": [
+    { "label": "review-20261003-1-auth-bootstrap", "command": "node scripts/evidence.mjs M0.2 review-20261003-1-auth-bootstrap scripts/pnpm.mjs test:auth -- --suite bootstrap", "exitCode": 0, "outcome": "21 tests passed in 5 files: browser-cookie (real Chromium), owner, environment (10), cookie-policy (4), owner-store (4). No 429; rate policy not triggered by this subgroup; test:auth run exactly once by this reviewer." },
+    { "label": "review-20261003-2-doctor", "command": "node scripts/evidence.mjs M0.2 review-20261003-2-doctor scripts/pnpm.mjs doctor --json", "exitCode": 0, "outcome": "docker tested; databases private/external tested (live own-identity probes); browserHosts private.localhost tested, contributor.localhost unverified (honest); model/runner needs_configuration; independentReview unverified" }
+  ],
+  "acceptanceJudgement": [
+    {
+      "bullet": "External service cannot read private DB/storage or obtain model/release credentials.",
+      "judgement": "met",
+      "evidence": "Recorded resume-20261003-runtime-separation.json (exit 0, tested): external.ownDatabase tested, external.privateDatabaseConnections 'denied', external.privateSourceSecretsStorageSocket 'absent', plus private rollback/one-time-owner/concurrency/replay all tested. This reviewer independently read verify-runtime.mjs-verified behaviour via the check reruns (boundaries + auth-live suites exercise the live synthetic runtime). Compose grants are per-scope with separate volumes/networks/credentials; .env.example contains secret file PATHS only, no values."
+    },
+    {
+      "bullet": "Default listeners are loopback; missing config fails explicitly; ordinary startup does not launch untrusted jobs.",
+      "judgement": "met",
+      "evidence": "infra/compose.yaml publishes only 127.0.0.1:4000/127.0.0.1:4001; API containers run user node, read_only, cap_drop ALL. missing-config-startup.json evidence: both services fail_closed with rawPrivateError not_exposed. Health-only APIs issue no sessions and no job launching exists in bootstrap paths; bootstrap suite tests (fixed positive health projection, foreign Host rejection) passed in the check rerun."
+    },
+    {
+      "bullet": "Real browser requests to contributor host contain no private session credential; cookies are host-only and origins explicitly allowed.",
+      "judgement": "met",
+      "evidence": "tests/auth/bootstrap/browser-cookie.test.ts read in full by this reviewer: launches real headless Chromium, seeds both synthetic cookies, observes actual cross-host requests, asserts private token/cookie absent from every contributor-host request, contributor token absent from private-host requests, and context cookies carry exact host-only domains (private.localhost / contributor.localhost), HttpOnly, SameSite=Strict. services/private-api/bootstrap/cookie-policy.ts read: no Domain attribute, __Host- prefix + Secure in production mode. Passed live in this reviewer's test:auth bootstrap run and again in both check reruns. Limitation disclosed, not weakening: native system DNS for contributor.localhost is unverified (doctor reports it); browser probes use explicit loopback host-resolver mapping, and M0.2 never claimed native DNS."
+    }
+  ],
+  "retainedFailures": [
+    "cookie-mode-before-fix.json (recorded before-fix regression, exit failing as required, retained; fixed implementation passed without changing expectations)."
+  ],
+  "reviewerProcessNotes": [
+    "Synthetic runtime up with 4 containers for the whole review; no restarts needed; no data reset; no rate-policy or Docker setting change.",
+    "This reviewer ran test:auth (bootstrap subgroup) exactly once; the full auth suite additionally executed twice as part of mandated check runs (see M0.3 report for the one 429 handling)."
+  ],
+  "verdict": "approved",
+  "verdictBasis": "Product paths byte-identical to the bound revision (only the declared shared rebind batch drifts); both card checks rerun with exit 0; all three acceptance bullets evidenced by real behavioural tests, actual Compose separation evidence and honest fail-closed configuration handling; known limitations (native contributor DNS, no real VM isolation yet) are recorded as unverified rather than blessed."
+}

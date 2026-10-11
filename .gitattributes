@@ -1,0 +1,3 @@
+# Box and historical evidence manifests bind exact file bytes.
+# Preserve those bytes across staging and checkout on every platform.
+* -text

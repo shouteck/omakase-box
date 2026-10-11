@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round3",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r1",
+  "actor": "subagent_general/c0c68c39",
+  "resumeTarget": "c0c68c39",
+  "reviewerNote": "Requested reviewer identity remains f3ab3b2f; latest completion envelope returned 60cb430c (previous 23bce751) — identity mismatch disclosed, not waived.",
+  "inResponseTo": "independent reviewer FAIL_PREEXECUTION: residual defects D1 (no composed batch supervisor) and D2 (network absence not inspectable)",
+  "status": "SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "leaseCompliance": "Edits confined to the already-leased tests/box/delegation/environment-host.mjs plus this worker receipt. No new product/test/config files, no governance writes, no comment additions/removals, no stage/commit/push.",
+  "corrections": [
+    {
+      "id": "D1",
+      "defect": "supervisedCommand/requiredIdleMs/atomicWriteJson existed but no composed function enforced the fixed 8-command order, first-failed/unknown stop, enforced 305s idle before repeated legacy-auth indices 2 and 5, and durable atomic JSON ledger persistence.",
+      "fix": "Added superviseBatch({leaseOwner, ledgerPath, resume}) to environment-host.mjs only. It requires a non-empty leaseOwner and a '..' -free ledgerPath; initializes a schema-bound batch_command_ledger; iterates ALLOWED_COMMANDS indices 0-7 in fixed order only; enforces requiredIdleMs(previousIndices,index) (305000 ms before a repeated legacy-auth index, recorded in ledger.idleEnforced before sleeping); invokes each command exclusively through supervisedCommand -> execArgv(ALLOWED_COMMANDS[index]); persists every result atomically via the ledger.push adapter -> atomicWriteJson (temp file + rename); retains argv/startedAt/durationMs/exit/signal/stdout/stderr (1 MiB caps)/interrupted/descendants per record; stops the batch and marks status 'stopped_first_failure' + stoppedAt on the first exit!==0, non-null signal, null exit (unknown), or interrupted record. Truthful resume: on resume=true an existing ledger is ownership-checked (kind + leaseOwner), each stored result is verified to match the fixed argv for its index with exit===0 and interrupted===false (ledger_replay_mismatch otherwise), and iteration continues from ledger.results.length — never blind replay; a pre-existing ledger without resume=true throws ledger_exists; a full ledger short-circuits to 'complete'. supervisedSpawn additionally records descendants {mode: taskkill_tree|process_group, terminated} and escalates the kill phase to a tree/group kill (taskkill /T /F on win32, kill(-pid,SIGKILL) elsewhere) with detached process-group spawn on POSIX.",
+      "files": ["tests/box/delegation/environment-host.mjs"],
+      "executed": false
+    },
+    {
+      "id": "D2",
+      "defect": "inspectResource/assertNoCollision reject w005-d12-delegation-net as unlisted while environmentPlan's collision-check step listed it, so network absence was not inspectable.",
+      "fix": "Added networkInspectArgv(manifest) which hard-requires manifest.network.id === NET_NAME (network_id_drift) and emits the fixed ['network','inspect','--format','{{.Id}} {{.Internal}}',w005-d12-delegation-net] argv; inspectNetwork(manifest) distinguishes present/absent/error (internal flag parsed on present); assertNoNetworkCollision(manifest) throws environment_collision on present and environment_inspect_failed on error, absent passes. environmentPlan collision-check now lists only EXPECTED_NAMES and a new 'network-absence-check' step carries the bound network id + inspect argv before 'network-create', preserving fail-closed create as backstop. The inspect argv is bound to the exact approved name only; it never accesses or mutates w002-b11-net or global DNS.",
+      "files": ["tests/box/delegation/environment-host.mjs"],
+      "executed": false
+    }
+  ],
+  "preserved": "All R1-R8 corrections and approved semantics unchanged: fixed ALLOWED_COMMANDS, image pins, alias-at-create, fail-closed collision/staging rules, shared run-DB cap accounting, and all other files byte-identical to correction-receipt-2.",
+  "currentManifest": {
+    "hashNote": "SHA-256 recomputation requires shell/file-hashing which is outside this dispatch's dedicated read/edit/write-only tool scope. Only tests/box/delegation/environment-host.mjs changed since correction-receipt-2; all other 21 digests below remain accurate from that receipt. The reviewer should re-hash environment-host.mjs from current bytes.",
+    "newFiles": [
+      {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8"},
+      {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061"},
+      {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359"},
+      {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8"},
+      {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682"},
+      {"path": "tests/box/delegation/support.ts", "sha256": "792a34e901a58df92d822a6110c7f0daaf744bab4233aeb76df7c8c49f073581"},
+      {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "a9289afcfbbfba95318c182e287287738a44593dc6bab5790bdb4eea4ed516bc"},
+      {"path": "tests/box/delegation/preparation.test.ts", "sha256": "4d03ea2ad58fc653ffee89435c3d36b52a4dd1e6e2463a1242e9e7d884524426"},
+      {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "d0ac29da37c52780c79683c4a85e4284c485fff56488f924f14c5a706013866e"},
+      {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5"},
+      {"path": "tests/box/delegation/environment-manifest.json", "sha256": "517af933548ce8ea09feb50f7f97dd777ac0f616995cde7d9568e357e9da3db4"},
+      {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe"},
+      {"path": "tests/box/delegation/environment-host.mjs", "sha256": "REQUIRES_REHASH (changed this round; prior 64300b15232fcbed6555f26be128d7549ea48d968513072a31dbf0e9b25e2f64)"}
+    ],
+    "modifiedSharedPaths": [
+      {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986"},
+      {"path": "services/private-api/boxes/store/store.ts", "sha256": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19"},
+      {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234"},
+      {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da"},
+      {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf"},
+      {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787"},
+      {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7"}
+    ]
+  },
+  "commandsRun": [
+    {"call": "read tests/box/delegation/environment-host.mjs", "exit": 0},
+    {"call": "read .execution/box-v4/evidence/D1.2/worker/correction-receipt-2.json", "exit": 0},
+    {"call": "edit environment-host.mjs (networkInspectArgv/inspectNetwork/assertNoNetworkCollision; environmentPlan network-absence-check)", "exit": 0},
+    {"call": "edit environment-host.mjs (supervisedSpawn descendant/tree-kill evidence; superviseBatch)", "exit": 0},
+    {"call": "node --check tests/box/delegation/environment-host.mjs", "exit": 0, "note": "non-executing syntax parse only, same disclosed practice as receipt-2"},
+    {"call": "write .execution/box-v4/evidence/D1.2/worker/correction-receipt-3.json", "exit": 0}
+  ],
+  "runtimeConfirmation": "No runtime/candidate/tests/typecheck/build/browser/DB/Docker create-start-cp/stage/tmpfs/fixture execution; no install/pull/secrets/config/security changes; no governance writes; no stage/commit/push. superviseBatch and network inspection are source-only additions and were not invoked.",
+  "unperformed": [
+    "superviseBatch execution and all 8 fixed commands remain for a separately released pre-execution phase.",
+    "Network absence check execution deferred; w005-d12-delegation-net still does not exist on the host."
+  ],
+  "knownLimitations": [
+    "Fresh SHA-256 for environment-host.mjs not computable under read/edit/write-only tool constraints; reviewer must re-hash.",
+    "Descendant evidence on Windows relies on taskkill /T semantics (source-only); POSIX uses detached process-group kill."
+  ]
+}

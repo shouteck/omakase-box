@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact_reviewed_stage_overlay_performed",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "release": "devin-h1-stage-overlay-release.json",
+  "review": "devin-h1-review/independent-review-r2-h1-attempt2-final.json",
+  "preservation": "pre-stage-overlay-r2-h1/",
+  "preservedHashesVerified": true,
+  "hostReviewedHashesVerified": true,
+  "operations": ["Docker cp preserved two old tests and both old manifest copies, each exit0", "Get-FileHash SHA256 confirmed all4preserved hashes and all3current reviewed hashes", "Docker cp copied exactly two reviewed tests and both manifest destinations, each exit0", "Docker cp copied exact independent final review to /stage/.cto-r1-evidence, exit0"],
+  "manifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "stagePostCopyIndependentHashes": "pending_reviewer_ready_gate",
+  "mountsChanged": false,
+  "resourcesAdded": false,
+  "sourceAuthoredByRoot": false,
+  "productAccepted": false
+}

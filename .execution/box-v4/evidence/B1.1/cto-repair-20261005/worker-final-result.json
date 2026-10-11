@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "actor": "/root/verification_repair_worker",
+  "argv": [
+    "docker",
+    "exec",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r1-worker-final",
+    "w002-b11-ws",
+    "sh",
+    "-c",
+    "ln -s /workspace/node_modules node_modules && ln -s /workspace/scripts/tooling/node_modules scripts/tooling/node_modules && timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/relay-lifecycle.test.ts --config scripts/vitest.config.mjs -t \"verification supervisor durable completion\""
+  ],
+  "exit": 0,
+  "elapsedMs": 14625,
+  "stdout": "worker-final.stdout.log",
+  "stderr": "worker-final.stderr.log",
+  "manifestDigest": "48c7aee9d229e7223268f6a12b57567273f36c7b05f676837ab2a2c428b9a5e6"
+}

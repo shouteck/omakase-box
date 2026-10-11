@@ -1,0 +1,19 @@
+{
+  "kind": "frozen_actual_stage_r2_focused_plan",
+  "reviewer": "/root/recovery_assurance",
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "120",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import{mkdir,readFile,writeFile}from'node:fs/promises';import{spawnSync}from'node:child_process';import{createHash}from'node:crypto';const review=JSON.parse(await readFile('/stage/.cto-r1-evidence/independent-review-r2-static.json'));const bad=[];for(const[p,h]of Object.entries(review.candidateFiles))if(createHash('sha256').update(await readFile('/stage/'+p)).digest('hex')!==h)bad.push(p);if(bad.length)throw Error('source drift:'+bad.join(','));let configs=[];for(const profile of [null,'wrong','w002-b11-environment-first-r4']){if(profile===null)delete process.env.BOX_VERIFICATION_PROFILE;else process.env.BOX_VERIFICATION_PROFILE=profile;const c=(await import('./scripts/vitest.config.mjs?independentActual='+String(profile))).default;configs.push({profile,cacheDir:c.cacheDir??null,hookTimeout:c.test.hookTimeout??null,maxWorkers:c.test.maxWorkers,testTimeout:c.test.testTimeout})}const temp='/tmp/cto-r2-actual-focus';for(const d of ['config','cache','data'])await mkdir(temp+'/'+d,{recursive:true});const env={...process.env,HOME:temp,XDG_CONFIG_HOME:temp+'/config',XDG_CACHE_HOME:temp+'/cache',XDG_DATA_HOME:temp+'/data',BOX_VERIFICATION_PROFILE:'w002-b11-environment-first-r4',BOX_VERIFICATION_BROWSER_PATH:'/ms-playwright',PLAYWRIGHT_BROWSERS_PATH:'/ms-playwright'};const started=Date.now();const out=spawnSync('timeout',['90','node','scripts/pnpm.mjs','test:box-contracts'],{env,encoding:'utf8',maxBuffer:4194304});await writeFile('/stage/.cto-r1-evidence/r2-focused-contracts.stdout.log',out.stdout??'');await writeFile('/stage/.cto-r1-evidence/r2-focused-contracts.stderr.log',out.stderr??'');const cachePath='/stage/.cto-r1-evidence/vitest-cache/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json';const cacheExists=await readFile(cachePath,'utf8').then(()=>true).catch(()=>false);const configPass=configs.slice(0,2).every(c=>c.cacheDir===null&&c.hookTimeout===null)&&configs[2].cacheDir==='/stage/.cto-r1-evidence/vitest-cache/'&&configs[2].hookTimeout===60000&&configs.every(c=>c.maxWorkers===1&&c.testTimeout===30000);const result={status:out.status===0&&!out.signal&&!out.error&&out.stdout.includes('7 passed')&&cacheExists&&configPass?'pass':'failed',code:out.status,signal:out.signal,error:out.error?String(out.error):null,elapsedMs:Date.now()-started,configs,cacheExists,sourceCompared:Object.keys(review.candidateFiles).length,stdout:out.stdout,stderr:out.stderr};await writeFile('/stage/.cto-r1-evidence/r2-focused-actual.json',JSON.stringify(result));console.log(JSON.stringify(result));process.exit(result.status==='pass'?0:1)"
+  ],
+  "sourceSha256": "822db04d3d8c3dc8b6308bff993126594880a7a16d8ccc9356919cdaa8eda127",
+  "manifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "conditions": "Rootcurrent3fileoverlayrecord and independent-review-r2-static exactmetadata copy required; no fixture/DB/source changes/helper/probe replay; knownactualreadonlydependencies. Ownedacceptancechildonly HOME/XDG config/cache/data underapprovedtmpfs. One90scontractsselection plus meaningfulconfiginvariants; postprocessreconciliation."
+}

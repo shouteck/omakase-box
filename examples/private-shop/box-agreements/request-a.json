@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "private-shop-request-a",
+    "name": "Strengthen the response security policy",
+    "version": 1
+  },
+  "outcome": "Harden the shop's response headers. Set frame-ancestors to 'none', turn on X-Content-Type-Options nosniff, set Referrer-Policy to no-referrer, and enable HSTS with a one-year max-age (no includeSubDomains). Keep /health exempt from all of it.",
+  "sourceRoot": "examples/private-shop",
+  "files": [
+    { "owner": "src/policy/loader.ts", "box": "src/policy/loader.ts" },
+    { "owner": "src/policy/strict-json.ts", "box": "src/policy/strict-json.ts" }
+  ],
+  "entrypoints": ["src/policy/loader.ts"],
+  "editable": [
+    { "kind": "copy", "owner": "config/response-security.json", "box": "src/config/response-security.json" }
+  ],
+  "readContext": ["src/server.ts", "src/selection/api.ts"],
+  "declaredDependencies": { "zod": "4.6.5" },
+  "excludedPrefixes": ["src/private/", "reference-solutions/", "node_modules/", "dist/"],
+  "inventoryExcludePrefixes": ["node_modules/", "dist/", ".git/", "reference-solutions/", "box-agreements/"],
+  "nodejs": { "node": ">=24.11.0 <25", "pnpm": "10.34.5", "typescript": "6.0.3", "vitest": "5.0.1", "typesNode": "24.13.6" },
+  "requires": [
+    { "program": "node", "version": ">=24.11.0 <25" }
+  ],
+  "setup": [],
+  "checks": ["pnpm exec tsc --noEmit", "pnpm exec vitest run evaluator/request-a.test.ts"],
+  "evaluator": [
+    { "box": "evaluator/request-a.test.ts", "generator": "private-shop-request-a" }
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "instructions": "Edit only the files listed in box.json editable paths. Return the changed package files; the owner maps src/config/response-security.json back to config/response-security.json."
+  }
+}

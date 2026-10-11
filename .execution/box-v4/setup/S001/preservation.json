@@ -1,0 +1,24 @@
+{
+  "beforeSetupFiles": [
+    {
+      "path": ".execution/box-v4/briefings/W001.md",
+      "sha256": "7b3acdaad3279d725a0cda99df37ef7c63741f48c36d4736262323f118f2a100"
+    },
+    {
+      "path": ".execution/box-v4/state.json",
+      "sha256": "e1feb663832bc91ec60382bea99c81da5c5768dda7cd330ae394d132d37a960b"
+    },
+    {
+      "path": ".execution/box-v4/waves/W001.json",
+      "sha256": "1995119afdbac1f9d0c5c128f92dfea583f516b60755bd83625892fda6929540"
+    },
+    {
+      "path": ".execution/state.json",
+      "sha256": "80a58bbef674c24854957f83c3acd2fb263e76f3e89f18f18e9944a094a3b6b3"
+    },
+    {
+      "path": "tasks/task-graph.json",
+      "sha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101"
+    }
+  ]
+}

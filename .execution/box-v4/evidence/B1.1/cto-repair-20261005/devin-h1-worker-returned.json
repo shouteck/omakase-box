@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual_worker_return_checkpoint",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "worker": "box-worker/483988b4",
+  "operation": "read_subagent_blocking_wait_completion",
+  "status": "source_frozen_for_independent_review",
+  "receipt": "devin-h1-worker/worker-receipt.json",
+  "candidateManifestDigest": "ebdd89a9ffd1b17fd939ac9d03e5be8830815ee9b019441805cef96055e888bc",
+  "candidateFiles": {
+    "tests/box/verification/environment-readiness.test.ts": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735",
+    "tests/box/verification/relay-lifecycle.test.ts": "91e06903c8b308f7ccf38c397d21d17aa21260eced90d64fc98e80cf3d6d5aa6",
+    "scripts/box-verification/environment-manifest.json": "ebdd89a9ffd1b17fd939ac9d03e5be8830815ee9b019441805cef96055e888bc"
+  },
+  "workerChecks": {"tsc": "passed_exit0", "verificationRegressionTests": "passed65_exit0", "check": "failed_exit1_workspace_copy_missing_docker_fixture_transport; preserveFAIL, run reviewed runner tail only after currentreview/ready"},
+  "stageOverlayReleased": false,
+  "acceptanceReleased": false,
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

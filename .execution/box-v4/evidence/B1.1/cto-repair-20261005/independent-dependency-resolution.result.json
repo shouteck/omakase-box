@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "w002-b11-ws",
+    "node",
+    "-e",
+    "const fs=require('fs'),m=require('module'),base='/workspace/.r4-harness-review-cto-r1-independent';let rows=[];for(const scope of ['','services/private-api','services/external-api','apps/private-console','apps/contributor-portal']){const p=base+'/'+scope+'/package.json';if(!fs.existsSync(p))continue;const data=JSON.parse(fs.readFileSync(p));const req=m.createRequire(p);for(const pkg of Object.keys({...data.dependencies,...data.devDependencies})){if(pkg.startsWith('@private-task/'))continue;try{rows.push({scope,pkg,status:'resolved',path:req.resolve(pkg)})}catch(e){rows.push({scope,pkg,status:'unavailable',code:e.code})}}}console.log(JSON.stringify({rows},null,2))"
+  ],
+  "exit": 0,
+  "elapsedMs": 1016,
+  "meaning": "Core module resolver metadata only; no package execution"
+}

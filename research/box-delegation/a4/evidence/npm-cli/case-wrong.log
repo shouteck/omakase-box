@@ -1,0 +1,76 @@
+npm-wrong start 13:07:56Z
+{
+  "submission": "C:\\Users\\shout\\Desktop\\a4-boxes\\neg\\npm-wrong\\submission.json",
+  "box": "a4-npm-cli-paint",
+  "version": 1,
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "files": 1,
+  "changed": 1
+}
+submit exit=0
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "command-check",
+  "detail": "declared guard check 'cli-guard' did not pass (result: fail, exit 1): GUARD FAIL uncolored text must pass through unchanged; empty text must stay empty",
+  "checks": [],
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "expectedBaseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "attemptSha256": "b0719b078b9d3897c09671fe4dcef89f4e114aefded67abae6e7a33783b771b8",
+  "applies": [
+    {
+      "owner": "src/paint.js",
+      "box": "src/paint.js",
+      "changed": true,
+      "sha256": "0bea8695e2321b8f3f31558be95022f898f76ad00fc2bba87d1ea7dcd200b877",
+      "bytes": 52
+    }
+  ],
+  "commandChecks": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "declaredArgv": [
+        "checks/guard.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "exit": 1,
+      "result": "fail",
+      "log": "GUARD FAIL uncolored text must pass through unchanged; empty text must stay empty",
+      "outputSha256": "d4da1b2b3e784cceeda6c180a355ae7d8ad8adca98d29d4316b2838309d76ba8",
+      "seconds": 0.084
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "declaredArgv": [
+        "checks/outcome.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"XXhi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"XXok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"XXsky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"XXa b\"\nOUTCOME FAIL paint(\"hi\", \"pink\") expected \"hi\" got \"XXhi\"\nOUTCOME FAIL paint(\"\", \"red\") expected \"\" got \"XX\"\na4-npm-cli outcome: 6 failing case(s)",
+      "outputSha256": "f6bbe49836de0f0477193b00a9334e6416698a38a9f6698d32c43afebf95717d",
+      "seconds": 0.083
+    }
+  ]
+}
+verify exit=3
+npm-wrong end 13:08:06Z

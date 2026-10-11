@@ -1,0 +1,54 @@
+{
+  "taskId": "M2.2",
+  "reviewer": "opencode-reviewer-subagent-m2-20261003",
+  "revisionDigest": "48153084c16a0558bdaa84546c25c54c33ac0f47413c797bd462c2c6474577a7",
+  "decision": "approved",
+  "manifestClassification": {
+    "manifest": ".execution/evidence/M2.2/revision-48153084c16a0558bdaa84546c25c54c33ac0f47413c797bd462c2c6474577a7.json",
+    "files": 57,
+    "recomputed": "every file SHA-256 and byte size recomputed against the current tree",
+    "matching": 55,
+    "missing": 0,
+    "drifted": [
+      { "path": "docs/DECISIONS.md", "expected": "6a1587a2aa94.../26488", "actual": "35c49af98eb2.../28711", "classification": "declared shared path; today's coordinator batch" },
+      { "path": "scripts/execution.mjs", "expected": "03bff9fd5ce6.../7503", "actual": "607ee65151cb.../7633", "classification": "declared shared path; today's coordinator batch" }
+    ],
+    "productPaths": "all writePaths (packages/planner/providers/**, packages/planner/prompts/**, tests/planner/provider/**, docs/model-configuration.md) byte-identical to the recorded revision",
+    "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101 recomputed over tasks/task-graph.json and matches",
+    "boundaryWeakening": "none found"
+  },
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M2.2 review-20261003-1-planner-provider scripts/pnpm.mjs test:planner -- --suite provider",
+      "exitCode": 0,
+      "observed": "28/28 tests passed (4 files): demo fixtures/scenarios, strict input/config bindings, repair, cancellation, timeout, envelope/tool/egress/byte bounds and actual native HTTP against synthetic listeners.",
+      "evidencePath": ".execution/evidence/M2.2/review-20261003-1-planner-provider.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M2.2 review-20261003-2-prompt-injection scripts/pnpm.mjs test:security -- --suite prompt-injection",
+      "exitCode": 0,
+      "observed": "6/6 tests passed (2 files): injected instruction text cannot replace the system policy or grant approval (forged approval/tools in model output asserted to fail with invalid_response), provider failure DTOs asserted free of private canaries, model answers cannot fill owner decisions, private input snapshotted before await with post-await mutation rejected.",
+      "evidencePath": ".execution/evidence/M2.2/review-20261003-2-prompt-injection.json"
+    }
+  ],
+  "retainedFailures": [],
+  "acceptanceJudgements": [
+    {
+      "criterion": "Malformed/timeout/tool-call responses never create an approved/publishable intent",
+      "verdict": "met",
+      "basis": "Read ollama.ts in full: tool_calls present or model mismatch rejects the envelope; strict schema reparse plus context revalidation (validateIntentProposal/validatePartitionProposal against exact goal/evidence); exactly one bounded repair then typed failure; shared monotonic deadline covers request/response/repair with AbortController cancellation; loopback transport rejects 3xx redirects, non-identity content-encoding and over-bound bodies. The orchestrator (M2.3 wiring) re-validates provider output and throws ProviderUnavailable before any persistence, so a failed/malformed/timeout response cannot produce an intent row. Injection tests assert failed status for forged authority. Rerun green."
+    },
+    {
+      "criterion": "Demo/mock/live modes remain distinguishable; endpoint is operator-controlled; no private egress to an unapproved provider",
+      "verdict": "met",
+      "basis": "ProviderResult records mode ('demo', 'ollama_protocol_mock' for injected transports, 'ollama_live'); missing config yields needs_configuration with no implicit demo fallback (constructor nulls invalid config); the endpoint regex accepts only numeric 127.0.0.1/[::1] /api/chat and comes exclusively from operator configuration (OllamaConfigSchema), never from request bodies (M2.3's IntentCreationInputSchema is strict {mode}); no DNS resolution, proxy, redirect or arbitrary route selection in the native transport. docs/model-configuration.md present in the manifest. Rerun green."
+    }
+  ],
+  "evidenceChallenged": "Retained sweep/revalidate evidence (revalidate-20261003-planner-provider.json, revalidate-20261003-security-prompt-injection.json, sweep-20261003-provider.json, sweep-20261003-prompt-injection.json) opened and verified as genuine recorded runs (exit 0, untruncated output). Historical failing checkpoints (schema-canonical-diagnostic, transport-first, provider-types) are preserved and were not blessed by expectation changes; the fixes were verified in source (plain-JSON normalization only for the trusted schema export; reject-first abort classification; exactOptionalPropertyTypes preserved).",
+  "limitations": [
+    "These are protocol/boundary tests against synthetic transports and listeners; no live model was contacted and model quality/prompt robustness against real adversarial models remains an open gate.",
+    "Ollama mode is operator-unconfigured in this runtime (safe needs_configuration only); container loopback is not Windows host loopback, so a co-located operator-managed model remains an explicit setup requirement.",
+    "No paid endpoint, weight download or egress beyond loopback occurred; this review does not close live-model, real-runner or delivery gates."
+  ],
+  "reviewedAt": "2026-10-03T16:56:25.218Z"
+}

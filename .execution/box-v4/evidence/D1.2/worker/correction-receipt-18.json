@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt_round18_versions_and_manifest_path",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "subagent_general/c0c68c39 (same logical worker role handle; actual returned envelope bound externally by lead/root)",
+  "resumeTarget": "c0c68c39",
+  "inResponseTo": "Independent readiness check: (1) linuxDependencies packageVersions caused dependency_version_mismatch despite matching counts/closureSha256; (2) MANIFEST_PATH used URL.pathname producing /C:/... on Windows. No setup/runtime released.",
+  "status": "SOURCE_READY_FOR_FULL_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "phasePassClaim": false,
+  "setupReadinessClaim": false,
+  "leaseCompliance": "Only the two leased env files changed plus this append-only receipt. No code semantics weakened; counts, seeds, closureSha256, approved roots, URLs and all prior corrections unchanged; no comments added.",
+  "filesChanged": [
+    {
+      "path": "tests/box/delegation/environment-host.mjs",
+      "sha256Before": "73f2d4646825e5bdbe3e9410760560e0db9132af3f4767b1439387912a26ec49",
+      "sha256After": "c709fa0930a5f9929960998c111ecc20d274f5c50ed8a47c54c8f508bff01284",
+      "changes": [
+        "Added import { fileURLToPath } from 'node:url'",
+        "MANIFEST_PATH = fileURLToPath(new URL('./environment-manifest.json', import.meta.url)) — Windows-safe filesystem path; manifest loading semantics otherwise unchanged"
+      ]
+    },
+    {
+      "path": "tests/box/delegation/environment-manifest.json",
+      "sha256Before": "cfd0c9b390cabfa4f7717189aafcbd205b32e27b14c667b827daad78bf95ead0",
+      "sha256After": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d",
+      "changes": [
+        "plans.linuxDependencies.packageVersions corrected to the actual deterministic 131-row [name,version] set produced by the same closure semantics on the fixed source root (read-only recompute). Three stale rows fixed: [\"@fastify/fast-json-stringify\",\"5.1.0\"] -> [\"@fastify/fast-json-stringify-compiler\",\"5.1.0\"] (wrong name key; the closure records the dependency name actually resolved), [\"@fastify/proxy-addr\",\"5.0.2\"] -> \"5.1.1\", [\"fast-querystring\",\"1.0.1\"] -> \"1.1.2\". Row count remains 131; seeds, seedPaths, packageCount/fileCount/closureSha256 and approved roots unchanged. Source bytes untouched."
+      ]
+    }
+  ],
+  "checksRunThisRound": [
+    {"command": "node --check tests/box/delegation/environment-host.mjs", "exit": 0},
+    {"command": "node -e JSON.parse(environment-manifest.json)", "exit": 0},
+    {"command": "read-only loadEnvironmentManifest() via corrected MANIFEST_PATH default", "exit": 0, "result": "loaded environmentId w005-d12-delegation-env (proves Windows path fix)"},
+    {"command": "read-only verifyDependencyClosure(plan,{root:plan.sourceHostRoot}) linuxDependencies", "exit": 0, "result": "status ok, 131 packages / 7274 files / closureSha256 d6413531fdfb601a... matches pinned manifest values — dependency_version_mismatch resolved"},
+    {"command": "read-only verifyDependencyClosure linuxTooling source root", "exit": 0, "result": "status ok, 1 package / 1077 files / b5b8b1d27e37f103... matches pinned manifest values"},
+    {"command": "sha256sum on both leased env paths", "exit": 0}
+  ],
+  "versionCorrectionBasis": "Replicated verifyDependencyClosure's exact traversal (seeds + seedPaths, realpath-bounded resolveDependencyDir/resolvePackageAt, dependency-name keys not pkg.name) against the live source root C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules read-only; diff of the 131 actual rows against the manifest list isolated exactly the three stale entries corrected above.",
+  "pathSha256": {
+    "services/private-api/boxes/preparation/types.ts": "525eb0c8f6e700fccd1478b82a364c6f84203582bb9cc37cb097f8937b1693b8",
+    "services/private-api/boxes/preparation/orchestrator.ts": "ab62a95572fcd0c7e3f0fe96525632d02c10b666cd40d45d746870869b78d061",
+    "services/private-api/boxes/preparation/routes.ts": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359",
+    "services/private-api/db/migrations/0013_delegation_preparation.sql": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8",
+    "apps/private-console/boxes/preparation/preparation-client.ts": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f",
+    "apps/private-console/boxes/preparation/preparation-screen.tsx": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330",
+    "apps/private-console/boxes/preparation/preparation-screen.css": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682",
+    "tests/box/delegation/support.ts": "995cb1f51eface163b49fa846406386a6cbba3c89d11597fee5df0d48bfe6016",
+    "tests/box/delegation/fixture-registration.test.ts": "bead39e339fa4a51a366263cfff4c7f906979c26768877fb64116372e4eb2710",
+    "tests/box/delegation/preparation.test.ts": "409dc7c3b81ac039601d86a0e5c98db0191541dcd855b51aacff2e73eaa1f770",
+    "tests/box/delegation/agreement-card.test.ts": "bf25917a766ecc5e4c7b623dc0d7ff22efdd347b941dd0b8d5367eb52e280f9a",
+    "tests/box/delegation/fixture-manifest.json": "0b0d01bc96c6b77773c05738d0bdc8b7e22a4a9eb68aeef1463723d58514ece5",
+    "tests/box/delegation/environment-manifest.json": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d",
+    "tests/box/delegation/register-fixture.mjs": "0d2d5a18c5b82e693d7769b0c3fe41ba62aba5b9d4e35b14c108543646d71fbe",
+    "tests/box/delegation/environment-host.mjs": "c709fa0930a5f9929960998c111ecc20d274f5c50ed8a47c54c8f508bff01284",
+    "services/private-api/boxes/store/schema.ts": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986",
+    "services/private-api/boxes/store/store.ts": "61e312af11429c2aad198012383609d5ab81ff960a81215d76cf6ab983d3ef19",
+    "services/private-api/db/migrations/meta/_journal.json": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234",
+    "services/private-api/src/bootstrap/server.ts": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da",
+    "services/private-api/src/bootstrap/main.ts": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf",
+    "apps/private-console/intake/private-client.ts": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787",
+    "apps/private-console/src/bootstrap/main.tsx": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7",
+    "tests/box/auth/support.ts": "fe24c42d767701bb13d3bbe36215d33b3f3b57d31da76d25d05feeb8732a5d25"
+  },
+  "unperformed": [
+    "No runtime, tests, typecheck, build, browser, DB, Docker create/exec/cp/inspect; STAGE_ROOT, DEPS_ROOT and receipt dirs were NOT created or populated.",
+    "No controller mode invoked (verifyDependencyClosure was called directly, read-only, on sourceHostRoot only — never destRoot); no commits/pushes; no comments added."
+  ],
+  "unresolvedPrerequisites": [
+    "Root has not released setup/runtime; controller('deps') population path remains gated behind the ledger and unreleased.",
+    "DB uid-999 account existence remains UNVERIFIED behind the encoded fail-closed getent gate.",
+    "A fresh independent full pre-execution review of this exact candidate (env-host c709fa09, manifest e9e82800) is required before any runtime release."
+  ]
+}

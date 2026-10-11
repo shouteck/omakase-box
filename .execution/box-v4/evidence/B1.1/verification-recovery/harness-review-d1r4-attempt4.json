@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_harness_preexecution_review",
+  "reviewer": "a689979b",
+  "lead": "89140b96",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "attempt": "d1-r4-04",
+  "revision": "2026-10-05-d1-r4",
+  "approval": {"path":".execution/box-v4/approvals/W002-D1-r4-approval.json","decision":"Approve"},
+  "boundBriefSha256": "13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+  "base": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "documentaryHead": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "lease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+  "leaseObservedState": "correction_required_setup_held",
+  "verdict": "fail",
+  "phaseVerdict": "PRE-EXECUTION FAIL",
+  "acceptance": "B1.1 remains unaccepted; this is not acceptance, setup, readiness, fixture release, resource release or authorization for later phases.",
+  "model": "unobserved",
+  "candidateFiles": {
+    "scripts/box-verification/environment-host.mjs": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59",
+    "scripts/box-verification/environment-manifest.json": "c1e1f55ca2196ef3ee5abad341e09f4815e7e38e031ec8a75216e9a8dfff1705",
+    "scripts/box-verification/fixture-exec-host.mjs": "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+    "scripts/box-verification/fixture-exec-runner.mjs": "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+    "scripts/box-verification/run-verification.mjs": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+    "scripts/box-verification/fixture-command-manifest.json": "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+    "tests/box/verification/environment-readiness.test.ts": "4ed19d807c775b1757825bf45ec9948b19564da0336bb3399e5a7cb2bb26d78a",
+    "tests/box/verification/relay-lifecycle.test.ts": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
+  },
+  "workerClaimComparison": "all eight independently recomputed hashes match the worker-claimed attempt4 map",
+  "manifestDigest": "c1e1f55ca2196ef3ee5abad341e09f4815e7e38e031ec8a75216e9a8dfff1705",
+  "environmentId": "w002-b11-env-r4-env2",
+  "attempt3Delta": {
+    "changed": {
+      "scripts/box-verification/environment-manifest.json": {"before":"bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5","after":"c1e1f55ca2196ef3ee5abad341e09f4815e7e38e031ec8a75216e9a8dfff1705"},
+      "tests/box/verification/environment-readiness.test.ts": {"before":"6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d","after":"4ed19d807c775b1757825bf45ec9948b19564da0336bb3399e5a7cb2bb26d78a"}
+    },
+    "unchanged": [
+      "scripts/box-verification/environment-host.mjs",
+      "scripts/box-verification/fixture-exec-host.mjs",
+      "scripts/box-verification/fixture-exec-runner.mjs",
+      "scripts/box-verification/run-verification.mjs",
+      "scripts/box-verification/fixture-command-manifest.json",
+      "tests/box/verification/relay-lifecycle.test.ts"
+    ],
+    "outsideEightLeasedPaths": 0,
+    "wholeLineCommentChanges": 0,
+    "newModuleImportsOrPackageDependencies": 0,
+    "manifestDelta": "top-level and stage fields are identical except stage.sourceFilesPlan"
+  },
+  "sourceMap": {
+    "ruleApplied": "six named root files plus every regular file under apps/, services/, packages/, examples/, tests/, scripts/, infra/, templates/workspaces/, research/fixtures/; exclusions node_modules/.runtime/dist/.git, all .env* except root .env.example, scripts/tooling/node_modules, environment-manifest.json itself and credential/key material",
+    "expectedCount": 455,
+    "actualCount": 455,
+    "setEqual": true,
+    "sorted": true,
+    "duplicateCount": 0,
+    "missing": [],
+    "extra": [],
+    "digestMismatches": [],
+    "requiredPins": {
+      "scripts/pnpm.mjs": "1992e940c548105fe64be3f6fcdbcd40cc7737f7182593b9a474da612ab33758",
+      "scripts/workspace.mjs": "43e37233f31fa92349e490d1f69a9275e2af98dc4c06b778ccb98d227e3c973f",
+      "scripts/suite.mjs": "56e1b62ad19152adedfd7a5be76a92a1e2d8b9b238d24d219836aa94077675eb",
+      "scripts/process.mjs": "19b3c82f9db6214e8f351a45650ece10ba3754783985956f47967b40c4665aff",
+      "scripts/vitest.config.mjs": "5991e2e726dbdead242a0923059e61479766f4e5691091e6b675becf76f059c2",
+      "scripts/boundaries.mjs": "947e14ad51573b05da76f62d44599647ef720fef1ab807172954ce92e643be6c",
+      "scripts/docker.mjs": "52a28ccf40172e6884a6b5822cc848d4c0631ab9cc6267e466b8cd697066fc61",
+      "scripts/synthetic-runtime.mjs": "de2ae8e84e7114fc94cc0618979e748c938351c78935227d6d3364f081a4db34",
+      "scripts/vite-safety.ts": "e90d5b7cd8c8f4b11a1244e01f3fe8db086d16f93f20722fba27d459561c1bbf",
+      "scripts/tooling/package.json": "ac4a3418a76afa4385a73c22fa460c6cf7394fede3c828def7e1347b32c451f6",
+      "scripts/tooling/package-lock.json": "82ba56e583b4d3d542f4fd5e425864b0ece9acc37ea7dcdf5617ff5d202ee488"
+    },
+    "noWholeCheckoutOrUnapprovedFamilies": true,
+    "allEntriesStageableByCurrentAssertStageableRel": true,
+    "artifacts": {
+      "regenerationSummary": {"path":"review-a689979b-attempt4/source-map-regeneration.json","sha256":"f9ee6507fb6b19b002970e4c333c48001e53244aa8a6c7d72c5c2921b53e9734"},
+      "expectedMap": {"path":"review-a689979b-attempt4/source-map-expected.json","sha256":"a320ffe4d45549371952eaa8617f49056252a62e95b4b20e279b5be6d95070e6"}
+    }
+  },
+  "manifestChecks": {
+    "revisionLiteral": "2026-10-05-d1-r4-environment-v4",
+    "loaderExpectedRevision": "2026-10-05-d1-r4-environment-v4",
+    "loaderProbe": "loaded revision/environmentId exactly on Windows host",
+    "briefDigest": "sha256:13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+    "limits": {"setupAttempts":1,"activeSetupMinutesPerAttempt":20,"transferCheckMinutes":10,"minutesPerRequiredCommand":8,"supervisoryCheckpointMinutes":15},
+    "staleLimitFieldsAbsent": ["environmentAttempts","harnessCorrectionRounds","totalActiveMinutes"],
+    "harnessFileDigests": "fixture-exec-runner and fixture-command-manifest digests match actual bytes"
+  },
+  "runnerMountContract": {
+    "manifestBinds": [
+      {"host":"C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2","container":"/stage","readOnly":false},
+      {"host":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules","container":"/stage/node_modules","readOnly":true},
+      {"host":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules","container":"/stage/scripts/tooling/node_modules","readOnly":true}
+    ],
+    "exactThreeMounts": true,
+    "noBroadWorkspaceMount": true,
+    "noPortsDaemonSocketEgressOrExtraResource": true,
+    "pnpmEntrypoint": "host and /workspace copies of scripts/tooling/node_modules/pnpm/bin/pnpm.cjs exist"
+  },
+  "linuxClosures": {
+    "containerRootVerification": {
+      "dependencies": {"status":"ok","root":"/workspace/node_modules","packageCount":44,"fileCount":1153,"closureSha256":"6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6"},
+      "tooling": {"status":"ok","root":"/workspace/scripts/tooling/node_modules","packageCount":1,"fileCount":1077,"closureSha256":"b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6"},
+      "artifact": "review-a689979b-attempt4/dependency-closures-linux.json"
+    },
+    "actualCreateResourcesHostGate": {
+      "dependencies": {"status":"unavailable","reason":"dependency_closure_mismatch","packageCount":44,"fileCount":1153,"actualSha256":"ead110d9d96c350bf285426de8b3b3803e5aad381a3e940d9c1c98c2b4728103","expectedSha256":"6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6"},
+      "tooling": {"status":"unavailable","reason":"dependency_closure_mismatch","packageCount":1,"fileCount":1077,"actualSha256":"8a49333e9d16750a1dd853bb534e97eee4f2f01c4f44369f4a482cbc8a175d2e","expectedSha256":"b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6"},
+      "artifact": "review-a689979b-attempt4/dependency-closures.json"
+    }
+  },
+  "decisiveFailure": {
+    "finding": "createResources is host-side and verifies manifest.linuxDependencies and manifest.linuxTooling at their Windows hostRoot values before assertNoCollision or Docker create/start. verifyDependencyClosure records package-relative paths using the platform separator. On the actual Windows host those rows contain backslashes, producing valid counts but different closure SHA-256 values than the Linux-normalized manifest digests. Independently rerunning the exact function against manifest.hostRoot produced dependency_closure_mismatch for both closures.",
+    "consequence": "createResources throws environment_dependency_closure_failed/environment_tooling_closure_failed before resource creation even though the same byte closure verifies successfully under the Linux containerRoot. The new 455-entry source plan is complete, but the setup gate itself is not executable with the bound host contract.",
+    "codeLocations": ["scripts/box-verification/environment-host.mjs verifyDependencyClosure rows.push(path.slice(...))", "scripts/box-verification/environment-host.mjs createResources verifyDependencyClosure(... hostRoot)"]
+  },
+  "maps": {
+    "current14AgainstR8": {"changed":8,"unchanged":6,"allChangedPathsLeased":true},
+    "protected16AgainstR3": {"checked":16,"mismatches":0},
+    "oldStaged22AgainstR3": {"checked":22,"mismatches":0,"artifact":"/workspace/.d1-r4-reviewer-review-a689979b-attempt3 check-staged22.mjs"},
+    "auxiliaryAttempt3ManifestFiles": {"checked":21,"unchanged":19,"changed":2},
+    "manifestSourceFilesPlan": {"checked":455,"mismatches":0,"setEqualToIndependentMap":true}
+  },
+  "linuxReviewDirectory": {
+    "container": "/workspace/.d1-r4-reviewer-review-a689979b-attempt4",
+    "host": "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/.d1-r4-reviewer-review-a689979b-attempt4",
+    "exclusiveBeforeCreation": true,
+    "copiedFilesObserved": 463,
+    "manifestPlanParity": {"checked":455,"bad":0,"artifact":"review-a689979b-attempt4/linux-parity.json"},
+    "node_modules": "review-only symlink to /workspace/node_modules",
+    "extraCopiedRoots": "review directory includes full templates/ and research/ families beyond the two required subroots; those extra bytes were not part of the 455-entry plan or test evidence"
+  },
+  "boundedHarnessCheck": {
+    "command": "timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs",
+    "cwd": "/workspace/.d1-r4-reviewer-review-a689979b-attempt4",
+    "wrapper": "setsid timeout wrapper only for durable pid/process-group accounting",
+    "backgroundShellId": "00c54a",
+    "pid": 22355,
+    "pgid": 22355,
+    "observedSamePgidPids": [22355,22359,22468,22790,22912],
+    "postRunSamePgidPids": [],
+    "exit": 0,
+    "durationNs": 27475658208,
+    "vitestDuration": "22.59s",
+    "stdoutBytes": 1744,
+    "stderrBytes": 0,
+    "testFiles": "3 passed (3)",
+    "tests": "63 passed (63)",
+    "artifactDir": "review-a689979b-attempt4"
+  },
+  "staticReview": {
+    "preMutationGates": "review digest/file and verdict pass precede harness/source digest checks, dependency/tooling closure checks, collision inspection, mkdir/state writes and Docker create/start",
+    "stagingBoundaries": "the reviewed 455-entry plan is itself safe and all entries pass assertStageableRel; stageFiles verifies path form/digest and resolved source/destination boundaries before additive wx writes",
+    "stagingPolicyResidual": "assertStageableRel still rejects only leading .git/node_modules/.runtime and root .env variants and does not independently reject nested forbidden names, dist, or credential/key material for a hypothetical caller-supplied sourceFiles map; this does not affect the bound 455-entry manifest plan but should not be treated as a general allowlist enforcement proof",
+    "manifestSelfDigestBinding": "manifest digest, environmentId, harness digests, 455 source digests and review candidate map are recomputed before relevant execution gates",
+    "relay": "lease/run/environment binding, fresh exclusive state, durable started before child spawn, result before response, replay/size/malformed denial and unavailable-on-ambiguity remain statically intact and covered by the 32-test relay file",
+    "descendantAccounting": "fixture runner and seven-command supervisor use detached process groups, bounded signals and fail closed on surviving/unconfirmed descendants",
+    "sevenCommandSupervisor": "manifest and REQUIRED_SEQUENCE preserve the exact ordered seven commands and 8-minute per-command deadline"
+  },
+  "containerContext": {
+    "name": "w002-b11-ws",
+    "id": "92107bf48d48767f9af619b23e99710eb97f44d8b8ef755f9cc3be37918608f0",
+    "status": "running",
+    "newR4Env2ContainersObserved": false,
+    "observedW002Containers": "only existing ws/db/service/fixture/helper/srcimg names; no w002-b11-linux-r4-env2 or w002-b11-box-db-r4-env2"
+  },
+  "workerOrderingLimitation": {
+    "recorded": "attempt-d1r4-04-correction.json was persisted alongside first enumeration/edits rather than strictly before",
+    "effect": "process-ordering limitation; not a candidate byte defect and not the decisive failure"
+  },
+  "reviewerSideEffect": {
+    "artifact": "/workspace/C:/Program Files/Git/workspace/.d1-r4-reviewer-review-a689979b-attempt4",
+    "observed": "an early MSYS path-conversion staging attempt created an unintended 512-file/13MB copy outside the intended review directory, including generated/dependency content; cleanup/deletion was forbidden, so it was left untouched and unused",
+    "effect": "no canonical source or candidate bytes were altered; the artifact is not in the source plan, runner mount, mailbox or Docker resources"
+  },
+  "smallestSafeCorrection": "Within the same eight leased paths, update scripts/box-verification/environment-host.mjs so verifyDependencyClosure canonicalizes every package-relative row path to '/' (for example via path.relative(...).split(sep).join('/')) before hashing, preserving root/realpath/package/version checks. Add/coherently update environment-readiness.test.ts coverage for canonical path hashing or Windows-style roots. Keep manifest hostRoot/containerRoot/mount bindings and the now-correct 455-entry source map unchanged, then rerun the bounded three-file check and obtain another exact review.",
+  "commands": [
+    {"command":"PowerShell Get-FileHash over eight leased candidate files","exit":0,"result":"all eight recomputed hashes equal worker claims"},
+    {"command":"PowerShell attempt3 manifest map comparison","exit":0,"result":"19 unchanged, exactly manifest and environment-readiness changed"},
+    {"command":"Node independent deterministic source-map regeneration and set/order/digest comparison","exit":0,"result":"455 expected/actual, set equal, sorted, no duplicates, no digest mismatches"},
+    {"command":"Node verifyDependencyClosure using manifest Windows hostRoot values","exit":0,"result":"both closures unavailable: dependency_closure_mismatch; deps ead110d9..., tooling 8a49333e..."},
+    {"command":"docker exec Node verifyDependencyClosure using Linux containerRoot values","exit":0,"result":"deps 44/1153/6dafd9a0 and tooling 1/1077/b5b8b1d2 both ok"},
+    {"command":"docker exec review-dir manifest plan parity","exit":0,"result":"455 checked, bad=[]"},
+    {"command":"docker exec bounded Vitest selection","exit":0,"result":"exit 0, 3 files/63 tests, stderr empty, duration 27475658208 ns, no same-PGID survivors"},
+    {"command":"read-only docker ps and /proc checks","exit":0,"result":"no new env2 resources; reviewed PIDs absent"}
+  ],
+  "durableArtifacts": {
+    "dir": ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt4",
+    "files": {
+      "dependency-closures.json": "379265bc1b873b70d9d148c14971c5273024d64442ae0bc921507666a4eb2e83",
+      "dependency-closures-linux.json": "857f871c5e3665f2fad1dbd94df2b31f37c651b4628f2c1cb8310ee3c204258b",
+      "linux-parity.json": "8acf13375792684cc296e99bd45c7ada136188d7d96668e02e76bf5283eefe06",
+      "source-map-expected.json": "a320ffe4d45549371952eaa8617f49056252a62e95b4b20e279b5be6d95070e6",
+      "source-map-regeneration.json": "f9ee6507fb6b19b002970e4c333c48001e53244aa8a6c7d72c5c2921b53e9734",
+      "vitest-attempt4.command": "e3917bb893bd08cb39b7e3e35c12520eabc850c6a8317d91a1d8dac5a85d0f9b",
+      "vitest-attempt4.stdout": "3979957399ce59c65d988d2bb78388dee1507bb74c313bb7bf141c3bf710e637",
+      "vitest-attempt4.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "vitest-attempt4.exit": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "vitest-attempt4.duration-ns": "50c0e786f4126b6035582a85495e6a7c4c25b2f0ea00bb608363a0242e7261a5",
+      "vitest-attempt4.pid": "490f9a8c1c3a1b3512f1e08a142ee7adbb75a3e4c3843db5e94ff5b2d9a5dc81",
+      "vitest-attempt4.pgid": "490f9a8c1c3a1b3512f1e08a142ee7adbb75a3e4c3843db5e94ff5b2d9a5dc81",
+      "vitest-attempt4.pids-live": "261c9af04a929d820ade215f0c20810ce9e53bb3adc58a0b4d83c1dfd08b8392",
+      "vitest-attempt4.pids-after": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "limitations": [
+    "No createResources, Docker create/start/stop, setup/readiness/live fixture execution, DB/mailbox mutation or replay, acceptance command, credentials/.runtime access, Git mutation, cleanup or deletion occurred.",
+    "The review-only node_modules symlink made Vitest available in the exclusive review directory; it is not evidence that the future runner stages dependencies itself.",
+    "Static review cannot prove hypothetical caller-supplied sourceFiles maps outside the manifest-bound 455-entry plan.",
+    "The worker ordering disclosure remains unresolved but does not affect candidate byte correctness.",
+    "The unintended /workspace/C:/... review staging artifact remains because deletion was forbidden; it is not consumed by the candidate.",
+    "Model remains unobserved/unpinned."
+  ],
+  "prohibitedActions": "No candidate edits/repairs, delegation, setup/readiness/live fixture execution, resource creation, DB/mailbox mutation/replay, Git stage/commit/push, credentials/.runtime reads, cleanup/deletion or acceptance occurred."
+}

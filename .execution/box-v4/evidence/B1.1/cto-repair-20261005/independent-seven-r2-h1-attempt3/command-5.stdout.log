@@ -1,0 +1,31 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/stage[39m
+
+ [32m✓[39m tests/auth/persistence/auth-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 40955[2mms[22m[39m
+   [33m[2m✓[22m[39m actual synthetic APIs reject forged identity, CSRF, expired sessions and invitation replay[33m 40954[2mms[22m[39m
+ [32m✓[39m tests/auth/persistence/migrations-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 12388[2mms[22m[39m
+   [33m[2m✓[22m[39m applies all forward migrations and replays on fresh identified synthetic databases without dropping data[33m 12386[2mms[22m[39m
+ [32m✓[39m tests/auth/routes.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 9823[2mms[22m[39m
+   [33m[2m✓[22m[39m logout requires verified mutation authority and expires only the host-local session cookie[33m 9785[2mms[22m[39m
+ [32m✓[39m tests/auth/persistence/workflow-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 7588[2mms[22m[39m
+   [33m[2m✓[22m[39m real synthetic PostgreSQL enforces revision/approval and reservation concurrency invariants[33m 7586[2mms[22m[39m
+ [32m✓[39m tests/auth/persistence/lifecycle-live.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3265[2mms[22m[39m
+   [33m[2m✓[22m[39m real PostgreSQL rejects lifecycle bypass, identity mutation, supersession reset and outbox tampering[33m 3263[2mms[22m[39m
+ [32m✓[39m tests/auth/credentials.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 383[2mms[22m[39m
+   [33m[2m✓[22m[39m uses salted bounded scrypt hashes and constant-format verification[33m 378[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/browser-cookie.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 541[2mms[22m[39m
+   [33m[2m✓[22m[39m real browser sends synthetic private cookies only to the private hostname (bootstrap policy, not DB authentication)[33m 539[2mms[22m[39m
+ [32m✓[39m tests/auth/session-store.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 303[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/owner.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 210[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/environment.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/cookie-policy.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/auth/bootstrap/owner-store.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[32m40 passed[39m[22m[90m (40)[39m
+[2m   Start at [22m 05:20:38
+[2m   Duration [22m 129.46s[2m (tests 75%, import 20%, transform 3%, worker 1%)[22m
+
+[2m    Isolate [22m [33m12 workers spawned[39m[2m · ~2.43s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~26.77s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+

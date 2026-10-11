@@ -1,0 +1,11 @@
+**
+!Dockerfile
+!.dockerignore
+!bootstrap/
+!bootstrap/package.json
+!bootstrap/package-lock.json
+!toolchain/
+!toolchain/package.json
+!toolchain/pnpm-lock.yaml
+!toolchain/pnpm-workspace.yaml
+!self-check.mjs

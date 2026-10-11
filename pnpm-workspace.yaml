@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - services/*
+  - packages/*
+  - examples/*
+minimumReleaseAge: 10080
+strictDepBuilds: true
+allowBuilds:
+  esbuild: true
+  '@embedded-postgres/windows-x64': false
+  # Linux runners (K8 verify): the postinstall hydrates native/pg-symlinks.json — Linux
+  # postgres ships versioned .so symlinks the binaries need; Windows ships none (false above).
+  '@embedded-postgres/linux-x64': true

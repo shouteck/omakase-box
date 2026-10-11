@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.2",
+  "assurance": "tested",
+  "observedAtUtc": "2026-10-02T04:20:49.7713508Z",
+  "scope": "User-authorized Docker Desktop installation, WSL repair and hypervisor boot configuration; not product runtime separation or isolated-runner validation.",
+  "installer": {
+    "version": "4.93.0",
+    "source": "https://desktop.docker.com/win/main/amd64/240920/Docker%20Desktop%20Installer.exe",
+    "localPath": ".runtime/DockerDesktopInstaller-4.93.0.exe",
+    "downloadExitCode": 0,
+    "authenticodeStatus": "Valid",
+    "publisher": "Docker Inc",
+    "releaseChoice": "Official 2026-09-28 release includes a documented VM-side Unix-socket forwarding security fix; selected rather than the older release despite being less than seven days old.",
+    "installationMode": "per-user",
+    "installExitCode": 0,
+    "licenseAcceptedByAgent": false
+  },
+  "installedDockerCli": {
+    "path": "C:\\Users\\shout\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe",
+    "version": "29.8.1",
+    "composeVersion": "5.5.1",
+    "versionCommandExitCode": 0,
+    "composeCommandExitCode": 0
+  },
+  "wsl": {
+    "updateExitCode": 0,
+    "version": "3.0.1.0",
+    "kernelVersion": "6.18.40.1-1",
+    "defaultVersion": 2,
+    "versionCommandExitCode": 0,
+    "statusCommandExitCode": 0,
+    "existingDistributionsRemoved": false
+  },
+  "virtualization": {
+    "firmwareEnabled": true,
+    "vmMonitorExtensions": true,
+    "secondLevelAddressTranslation": true,
+    "windowsSubsystemLinuxFeature": "enabled",
+    "virtualMachinePlatformFeature": "enabled",
+    "previousHypervisorLaunchType": "Off",
+    "configuredHypervisorLaunchType": "Auto",
+    "bootChangeExplicitlyApprovedByUser": true,
+    "bootChangeExitCode": 0,
+    "hypervisorRunningAfterChange": false,
+    "windowsRestartRequired": true,
+    "rebootPerformedByAgent": false
+  },
+  "dockerEngine": {
+    "context": "desktop-linux",
+    "assurance": "unverified",
+    "versionProbeExitCode": 1,
+    "observedError": "Docker Desktop is unable to start",
+    "readiness": "awaiting_windows_restart_and_first_run_completion"
+  },
+  "commandsActuallyRun": [
+    "curl --fail --location --retry 2 --output C:/Users/shout/Desktop/Projects/private-task-mvp/.runtime/DockerDesktopInstaller-4.93.0.exe https://desktop.docker.com/win/main/amd64/240920/Docker%20Desktop%20Installer.exe",
+    "Get-AuthenticodeSignature -FilePath C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.runtime\\DockerDesktopInstaller-4.93.0.exe",
+    "Start-Process DockerDesktopInstaller-4.93.0.exe -ArgumentList install,--user -Wait -PassThru",
+    "wsl --update",
+    "C:\\Users\\shout\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe --version",
+    "C:\\Users\\shout\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe compose version",
+    "wsl --version",
+    "wsl --status",
+    "Start-Process C:\\Users\\shout\\AppData\\Local\\Programs\\DockerDesktop\\Docker Desktop.exe",
+    "C:\\Users\\shout\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe --context desktop-linux version --format {{.Server.Version}}",
+    "C:\\Users\\shout\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe desktop status",
+    "wsl --list --verbose",
+    "Get-CimInstance Win32_ComputerSystem, Win32_Processor and Win32_OptionalFeature (selected virtualization fields only)",
+    "bcdedit.exe /enum {current}",
+    "bcdedit.exe /set {current} hypervisorlaunchtype Auto",
+    "bcdedit.exe /enum {current}; verify Auto and query HypervisorPresent"
+  ],
+  "limitations": [
+    "Docker CLI/Compose versions are verified; a running Linux engine is not yet verified.",
+    "No Compose services, DB separation, owner persistence or browser-cookie gates were exercised in this host-setup step.",
+    "Docker Desktop on this workstation is for trusted development services only, not the mandatory hostile-code runner.",
+    "Dedicated operator-owned Linux KVM fresh-VM infrastructure remains unconfigured.",
+    "The user must restart Windows and complete any Docker license/first-run prompts locally."
+  ]
+}

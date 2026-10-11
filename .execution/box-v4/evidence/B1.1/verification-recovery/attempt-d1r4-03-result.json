@@ -1,0 +1,27 @@
+{
+  "attempt": "d1-r4-03",
+  "status": "complete_worker_self_check",
+  "reviewerFailAddressed": "runner had only /stage bind + workdir; /workspace unmounted, /stage/node_modules and /stage/scripts/tooling/node_modules absent, no ESM path for 'node scripts/pnpm.mjs ...'; also environment-host verified Linux-only /workspace root via Windows host fs",
+  "changedLeasedPaths": {
+    "scripts/box-verification/environment-manifest.json": {"before": "4a46055f1372f336a2671fd573fbc626148e7d72e472b905aee52f307deb5806", "after": "bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5"},
+    "scripts/box-verification/environment-host.mjs": {"before": "73402dd181934c66e3c35e445f6d1995477f31a157e6852f95cf4238e70647e3", "after": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59"},
+    "tests/box/verification/environment-readiness.test.ts": {"before": "2261a2da74d173e68c62da69783016ff681e3473603ace31b204e7df054358eb", "after": "6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d"}
+  },
+  "correction": {
+    "revision": "2026-10-05-d1-r4-environment-v4",
+    "linuxDependencies": "hostRoot C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules -> mountTarget /stage/node_modules read-only; containerRoot /workspace/node_modules; closure unchanged 44 pkgs/1153 files/6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6",
+    "linuxTooling": "hostRoot .../w002-b11-stage/scripts/tooling/node_modules -> mountTarget /stage/scripts/tooling/node_modules read-only; seeds [pnpm]; 1 pkg/1077 files/b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6; pnpm 10.34.5",
+    "runnerBinds": "exact 3-mount list validated and emitted; dep mounts carry ',readonly'; no whole-/workspace bind, no writable dep mounts",
+    "hostSide": "verifyDependencyClosure binds plan.hostRoot; createResources verifies deps+tooling closures before any Docker call"
+  },
+  "linuxChecks": {
+    "vitest": {"literalExit": 0, "testFiles": "3 passed (3)", "tests": "62 passed (62)", "vitestDuration": "20.60s", "stderrBytes": 0, "evidence": "vitest-selection-d1r4-attempt3.stdout.txt/.stderr-status.txt"},
+    "argvProbe": {"exit": 0, "result": "three exact mounts emitted, both dep mounts readonly, no /workspace bind", "evidence": "wiring-probe-d1r4-attempt3.txt"},
+    "closureProbe": {"exit": 0, "dep": {"status":"ok","packageCount":44,"fileCount":1153,"closureSha256":"6dafd9a0..."}, "tool": {"status":"ok","packageCount":1,"fileCount":1077,"closureSha256":"b5b8b1d2..."}}
+  },
+  "backgroundedCommands": "exec invocations fb53bf (intentional vt3), feb821, 9b1cf3, 053941, 440dbb, 48f87d, 0a39a8 were harness-backgrounded; all superseded by durable /tmp file polls — nothing inferred from disappearance",
+  "stillRunning": "none observed; all durable outputs retrieved",
+  "forbidden": "none: docker exec read-only probes only in existing w002-b11-ws; no create/start/inspect mutations, no environment-host createResources, no setup/readiness/fixtures/acceptance/Git/DB/API/queue/credential actions",
+  "readyForSameReviewerPreExecutionReview": true,
+  "note": "worker self-check only; not independent review or acceptance; lease active_harness_only held; setup release still suspended by root"
+}

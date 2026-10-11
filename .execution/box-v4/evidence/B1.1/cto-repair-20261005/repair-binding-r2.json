@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_direct_repair_request_scoped_continuation",
+  "recordedAtUtc": "2026-10-05T03:18:06.268814+00:00",
+  "repairId": "W002-CTO-R2",
+  "originalHumanRequest": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+  "brief": ".execution/box-v4/briefings/W002-CTO-R2.md",
+  "briefDigest": "4fff30c2d0dd9eed78af223d32a3930058a6b53b956241047d2a43cecc837323",
+  "meaning": "Necessary narrow test-launcher repair under actual direct CEO fix request; CTO-defined scope, not an invented CEO Approve message or new feature approval.",
+  "additionalPaths": [
+    "scripts/suite.mjs",
+    "scripts/vitest.config.mjs"
+  ],
+  "failedEvidence": "independent-seven-r1.verification-run.json",
+  "previousCandidatePreserved": true,
+  "acceptanceReleased": false,
+  "modelsChanged": false,
+  "extraResources": false,
+  "newFeatureApproved": false,
+  "oldDevinResumed": false
+}

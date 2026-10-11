@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "assurance": "tested",
+  "kind": "trusted_synthetic_demo",
+  "startedAt": "2026-10-03T18:16:52.221Z",
+  "finishedAt": "2026-10-03T18:16:54.395Z",
+  "command": [
+    "node",
+    ".execution/evidence/M5.2/trusted-demo-20261004.mjs"
+  ],
+  "realCustomerData": false,
+  "candidateExecution": false,
+  "liveModelCalls": false,
+  "privateConsole": "http://private.localhost:3000",
+  "contributorPortal": "http://contributor.localhost:3001",
+  "ownerUsername": "synthetic.auth.owner.7c498f4c",
+  "snapshotId": "2334b3a3-5dc6-414e-b648-ac1184385043",
+  "intentId": "e7b1d362-9c43-4c62-bda2-6acb6fd17af3",
+  "observed": {
+    "apiHealth": "tested",
+    "ownerBrowserSignIn": "tested",
+    "syntheticSnapshot": "tested",
+    "goalOnlyDemoDraft": "tested",
+    "unresolvedDecisionGate": "tested",
+    "contributorPlaceholder": "tested",
+    "privateCookieAbsentFromContributorHealth": "tested",
+    "browserErrors": 0
+  },
+  "limitations": [
+    "Hostnames explicitly mapped in Chromium; native contributor DNS remains unverified.",
+    "No outcome approval, release publication, hostile code evaluation, acceptance or payment exercised.",
+    "This synthetic workflow does not satisfy M5.2 or M9 delivery gates."
+  ]
+}

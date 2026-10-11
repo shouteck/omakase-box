@@ -1,0 +1,278 @@
+--- stopped/scripts/box-verification/run-verification.mjs
++++ current/scripts/box-verification/run-verification.mjs
+@@ -5,6 +5,8 @@
+ // confirmed it is recorded unavailable (descendants unaccounted), never a pass.
+ 
+ import { spawn } from 'node:child_process';
++import { createWriteStream } from 'node:fs';
++import { finished as streamFinished } from 'node:stream/promises';
+ import { createHash } from 'node:crypto';
+ import { mkdir, readFile, writeFile } from 'node:fs/promises';
+ import { join } from 'node:path';
+@@ -71,7 +73,7 @@
+   return { status: 'ok', compared: Object.keys(declared).length };
+ }
+ 
+-export async function runSequence(manifest, { stateDir, spawnImpl = spawn, clock = () => Date.now(), deadlineMs = PER_COMMAND_DEADLINE_MS } = {}) {
++export async function runSequence(manifest, { stateDir, spawnImpl = spawn, clock = () => Date.now(), deadlineMs = PER_COMMAND_DEADLINE_MS, drainMs = EXIT_CONFIRM_MS } = {}) {
+   const sequence = validateSequence(manifest);
+   await mkdir(stateDir, { recursive: true });
+   const record = {
+@@ -88,8 +90,8 @@
+     const entry = { command, status: 'running', startedAt: new Date().toISOString() };
+     record.commands.push(entry);
+     await persist();
+-    const result = await runOne(command, deadlineMs, spawnImpl, clock);
+-    const status = result.code === 0 && !result.timedOut ? 'pass' : (result.unconfirmed ? 'unavailable' : 'failed');
++    const result = await runOne(command, deadlineMs, spawnImpl, clock, join(stateDir, 'command-' + record.commands.length), drainMs);
++    const status = result.unconfirmed ? 'unavailable' : (result.code === 0 && !result.timedOut ? 'pass' : 'failed');
+     Object.assign(entry, result, { status, endedAt: new Date().toISOString() });
+     await persist();
+     if (entry.status !== 'pass') {
+@@ -103,43 +105,92 @@
+   return record;
+ }
+ 
+-function runOne(command, deadlineMs, spawnImpl, clock) {
++function runOne(command, deadlineMs, spawnImpl, clock, logPrefix, drainMs) {
+   return new Promise(resolve => {
+-    const [bin, ...args] = command.split(' ');
+     const started = clock();
+-    const child = spawnImpl(bin, args, { stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
++    const stdoutPath = logPrefix + '.stdout.log';
++    const stderrPath = logPrefix + '.stderr.log';
++    const stdoutLog = createWriteStream(stdoutPath, { flags: 'wx' });
++    const stderrLog = createWriteStream(stderrPath, { flags: 'wx' });
++    // Attach failure handlers before spawning. A failed durable sink never passes.
++    let captureError = null;
++    const sinks = [stdoutLog, stderrLog].map(sink => streamFinished(sink).catch(error => { captureError = String(error?.message ?? error); }));
++    let stdout = ''; let stderr = ''; let timedOut = false; let settling = false;
++    let code = null; let exitSignal = null; let exitObserved = false;
++    let killTimer; let confirmTimer; let drainTimer; let timer;
++    let child;
+     const signal = sig => {
+-      try { if (process.platform !== 'win32' && typeof child.pid === 'number') process.kill(-child.pid, sig); else child.kill(sig); }
+-      catch { try { child.kill(sig); } catch { /* noop */ } }
++      try { if (process.platform !== 'win32' && typeof child?.pid === 'number') process.kill(-child.pid, sig); else child?.kill(sig); }
++      catch { try { child?.kill(sig); } catch { /* only the owned child */ } }
+     };
+-    let stdout = ''; let stderr = ''; let timedOut = false; let finished = false;
+-    let killTimer; let confirmTimer;
+-    // On timeout: signal the supervised child only (never arbitrary PIDs), then
+-    // wait a bounded window for exit confirmation. If exit never arrives the
+-    // outcome is unavailable with descendants unaccounted, not a silent pass or
+-    // an indefinite wait.
+-    const finish = value => { if (!finished) { finished = true; resolve(value); } };
+-    const timer = setTimeout(() => {
+-      timedOut = true;
+-      signal('SIGTERM');
+-      killTimer = setTimeout(() => signal('SIGKILL'), SIGKILL_GRACE_MS);
+-      killTimer.unref?.();
+-      confirmTimer = setTimeout(() => finish({ code: null, timedOut: true, unconfirmed: true, descendants: 'unaccounted', elapsedMs: clock() - started, stdout, stderr: stderr + ' termination_unconfirmed' }), SIGKILL_GRACE_MS + EXIT_CONFIRM_MS);
+-      confirmTimer.unref?.();
+-    }, deadlineMs);
+-    child.stdout?.on('data', chunk => { stdout = (stdout + chunk.toString()).slice(-262144); });
+-    child.stderr?.on('data', chunk => { stderr = (stderr + chunk.toString()).slice(-262144); });
+-    child.on('error', error => { clearTimeout(timer); clearTimeout(killTimer); clearTimeout(confirmTimer); finish({ code: null, timedOut, unconfirmed: true, elapsedMs: clock() - started, stdout: '', stderr: 'spawn_unavailable:' + String(error?.message ?? error) }); });
+-    child.on('exit', code => {
+-      clearTimeout(timer); clearTimeout(killTimer); clearTimeout(confirmTimer);
+-      let unconfirmed = false;
+-      let descendants = 'none';
+-      if (process.platform !== 'win32' && typeof child.pid === 'number') {
++    const settle = async (drained, reason = null) => {
++      if (settling) return;
++      settling = true;
++      clearTimeout(timer); clearTimeout(killTimer); clearTimeout(confirmTimer); clearTimeout(drainTimer);
++      if (!drained) {
++        child?.stdout?.unpipe(stdoutLog); child?.stderr?.unpipe(stderrLog);
++        child?.stdout?.destroy(); child?.stderr?.destroy();
++      }
++      // End the sinks even on unavailable completion, retaining all captured bytes.
++      stdoutLog.end(); stderrLog.end();
++      let captureDrainTimer;
++      const captured = await Promise.race([
++        Promise.all(sinks).then(() => true),
++        new Promise(resolveCapture => { captureDrainTimer = setTimeout(() => resolveCapture(false), drainMs); })
++      ]);
++      clearTimeout(captureDrainTimer);
++      if (!captured) {
++        captureError = 'durable_capture_drain_unconfirmed';
++        stdoutLog.destroy(); stderrLog.destroy();
++        drained = false;
++        reason = 'durable_capture_drain_unconfirmed';
++      }
++      let descendants = 'none'; let unconfirmed = !drained || !exitObserved || captureError !== null;
++      if (process.platform !== 'win32' && typeof child?.pid === 'number') {
+         descendants = 'process_group_confirmed_empty';
+         try { process.kill(-child.pid, 0); unconfirmed = true; descendants = 'unaccounted'; }
+         catch (error) { if (error?.code !== 'ESRCH') { unconfirmed = true; descendants = 'unaccounted'; } }
+       }
+-      finish({ code: code ?? 1, timedOut, unconfirmed, descendants, elapsedMs: clock() - started, stdout, stderr });
++      resolve({ code, exitSignal, exitObserved, timedOut, unconfirmed, descendants,
++        outputDrained: drained, captureError, reason, elapsedMs: clock() - started,
++        stdout, stderr, stdoutPath, stderrPath });
++    };
++    try {
++      const [bin, ...args] = command.split(' ');
++      child = spawnImpl(bin, args, { stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
++    } catch (error) {
++      captureError = 'spawn_unavailable:' + String(error?.message ?? error);
++      void settle(false, 'spawn_unavailable');
++      return;
++    }
++    // Pipe preserves full raw byte streams with backpressure; JSON retains a bounded
++    // convenience summary only. Sink completion is required before recording PASS.
++    for (const [input, sink, label] of [[child.stdout, stdoutLog, 'stdout'], [child.stderr, stderrLog, 'stderr']]) {
++      if (!input) { captureError = 'missing_' + label; continue; }
++      input.on('data', chunk => {
++        if (label === 'stdout') stdout = (stdout + chunk.toString()).slice(-262144);
++        else stderr = (stderr + chunk.toString()).slice(-262144);
++      });
++      input.on('error', error => { captureError = String(error?.message ?? error); void settle(false, 'output_error'); });
++      input.pipe(sink);
++      sink.on('error', () => { signal('SIGTERM'); void settle(false, 'capture_error'); });
++    }
++    timer = setTimeout(() => {
++      timedOut = true;
++      signal('SIGTERM');
++      killTimer = setTimeout(() => signal('SIGKILL'), SIGKILL_GRACE_MS);
++      confirmTimer = setTimeout(() => { void settle(false, 'termination_unconfirmed'); }, SIGKILL_GRACE_MS + drainMs);
++    }, deadlineMs);
++    child.on('error', error => { captureError = 'spawn_unavailable:' + String(error?.message ?? error); void settle(false, 'spawn_unavailable'); });
++    child.on('exit', (literalCode, literalSignal) => {
++      code = literalCode; exitSignal = literalSignal ?? null; exitObserved = true;
++      clearTimeout(timer);
++      // Parent exit does not establish stream drain or descendant completion.
++      drainTimer = setTimeout(() => { signal('SIGTERM'); void settle(false, 'output_drain_unconfirmed'); }, drainMs);
++    });
++    child.on('close', (literalCode, literalSignal) => {
++      if (!exitObserved) { code = literalCode; exitSignal = literalSignal ?? null; }
++      void settle(true);
+     });
+   });
+ }
+--- stopped/tests/box/verification/relay-lifecycle.test.ts
++++ current/tests/box/verification/relay-lifecycle.test.ts
+@@ -6,6 +6,9 @@
+ import { mkdtemp, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
+ import { tmpdir } from 'node:os';
+ import { join } from 'node:path';
++import { EventEmitter } from 'node:events';
++import { PassThrough } from 'node:stream';
++import { spawn } from 'node:child_process';
+ import { describe, expect, it } from 'vitest';
+ import {
+   acquireLease, loadLease, loadSeen, setLifecycle, getLifecycle, validateRequest,
+@@ -15,7 +18,7 @@
+   READY_COMMAND_DEADLINE_MS
+ } from '../../../scripts/box-verification/fixture-exec-host.mjs';
+ import { runChild, bindRunnerArgv, resolveEntry } from '../../../scripts/box-verification/fixture-exec-runner.mjs';
+-import { validateSequence, gateStart, REQUIRED_SEQUENCE } from '../../../scripts/box-verification/run-verification.mjs';
++import { validateSequence, gateStart, REQUIRED_SEQUENCE, runSequence } from '../../../scripts/box-verification/run-verification.mjs';
+ 
+ const tmp = () => mkdtemp(join(tmpdir(), 'w002-b11-r4-relay-'));
+ const uuid = () => crypto.randomUUID();
+@@ -469,3 +472,78 @@
+     expect(outcomeRequest.reason).toBe('ambiguous_prior_state');
+   });
+ });
++
++
++describe('verification supervisor durable completion', () => {
++  const sequenceManifest = { environmentId: 'supervision-regression', commands: { sequence: REQUIRED_SEQUENCE.slice() } };
++  const mockChild = () => Object.assign(new EventEmitter(), {
++    stdout: new PassThrough(), stderr: new PassThrough(), kill: () => true
++  });
++
++  it('does not advance after zero parent exit with a surviving owned group', async () => {
++    if (process.platform === 'win32') return;
++    const dir = await tmp();
++    let calls = 0;
++    let child: ReturnType<typeof spawn> | undefined;
++    try {
++      const result = await runSequence(sequenceManifest, { stateDir: dir, spawnImpl: (_bin, _args, options) => {
++        calls += 1;
++        child = spawn(process.execPath, ['-e', 'require("child_process").spawn("sleep",["30"],{stdio:"ignore"});process.exit(0)'], options);
++        return child;
++      } });
++      expect(calls).toBe(1);
++      expect(result.status).toBe('unavailable');
++      expect(result.commands[0]).toMatchObject({ code: 0, exitObserved: true, unconfirmed: true, descendants: 'unaccounted' });
++      expect(JSON.parse(await readFile(join(dir, 'verification-run.json'), 'utf8')).status).toBe('unavailable');
++    } finally {
++      // This test owns the freshly detached group; no unrelated PID is touched.
++      if (child?.pid) { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already exited */ } }
++    }
++  }, 25000);
++
++  it('waits for late output and retains complete raw bytes beyond the summary cap', async () => {
++    const dir = await tmp();
++    const payload = Buffer.concat([Buffer.from('begin\n'), Buffer.alloc(300000, 120), Buffer.from('\nlate-end\n')]);
++    let calls = 0;
++    const result = await runSequence(sequenceManifest, { stateDir: dir, spawnImpl: () => {
++      const child = mockChild();
++      calls += 1;
++      setTimeout(() => {
++        child.emit('exit', 0, null);
++        setTimeout(() => {
++          child.stdout.end(payload); child.stderr.end('late-warning\n');
++          child.emit('close', 0, null);
++        }, 15);
++      }, 5);
++      return child;
++    } });
++    expect(calls).toBe(7);
++    expect(result.status).toBe('pass');
++    for (const entry of result.commands) {
++      expect(entry).toMatchObject({ code: 0, exitSignal: null, exitObserved: true, outputDrained: true, unconfirmed: false });
++      expect(entry.elapsedMs).toBeGreaterThanOrEqual(15);
++      expect(await readFile(entry.stdoutPath)).toEqual(payload);
++      expect(await readFile(entry.stderrPath, 'utf8')).toBe('late-warning\n');
++      expect(entry.stdout.length).toBeLessThanOrEqual(262144);
++    }
++  });
++
++  it('bounds incomplete drainage, preserves captured bytes and stops the sequence', async () => {
++    const dir = await tmp();
++    let calls = 0;
++    const result = await runSequence(sequenceManifest, { stateDir: dir, drainMs: 40, spawnImpl: () => {
++      const child = mockChild();
++      calls += 1;
++      setTimeout(() => { child.stdout.write('captured-before-exit'); child.emit('exit', 0, null); }, 5);
++      // Neither stream ends and no close arrives: the actual drain timer must fire.
++      return child;
++    } });
++    expect(calls).toBe(1);
++    expect(result.status).toBe('unavailable');
++    const entry = result.commands[0];
++    expect(entry).toMatchObject({ code: 0, outputDrained: false, unconfirmed: true, reason: 'output_drain_unconfirmed' });
++    expect(entry.elapsedMs).toBeGreaterThanOrEqual(40);
++    expect(entry.elapsedMs).toBeLessThan(2000);
++    expect(await readFile(entry.stdoutPath, 'utf8')).toBe('captured-before-exit');
++  });
++});
+--- stopped/scripts/box-verification/environment-manifest.json
++++ current/scripts/box-verification/environment-manifest.json
+@@ -551,7 +551,7 @@
+         },
+         {
+           "rel": "scripts/box-verification/run-verification.mjs",
+-          "sha256": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be"
++          "sha256": "a3a30d326a6e2a2935b9e8f0cd22316f5106855ea1f09919c1a6a88aed86e2e8"
+         },
+         {
+           "rel": "scripts/check-startup.mjs",
+@@ -1487,7 +1487,7 @@
+         },
+         {
+           "rel": "tests/box/verification/relay-lifecycle.test.ts",
+-          "sha256": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
++          "sha256": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825"
+         },
+         {
+           "rel": "tests/compiler/approval/browser.test.ts",
+@@ -2264,4 +2264,4 @@
+     "supervisoryCheckpointMinutes": 15,
+     "correctionSupervision": "progress-based informative corrections and affected reruns within the eight leased paths; no blanket correction/rerun count, no overall active-minute cutoff, no unchanged no-evidence retry loop"
+   }
+-}+}

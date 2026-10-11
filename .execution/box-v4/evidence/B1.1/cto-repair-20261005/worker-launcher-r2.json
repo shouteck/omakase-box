@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "worker_launcher_r2_repair",
+  "actor": "/root/verification_repair_worker",
+  "repairId": "W002-CTO-R2",
+  "recordedAtUtc": "2026-10-05T03:24:13.146862+00:00",
+  "authority": "repair-binding-r2.json",
+  "status": "focused_worker_check_pass_independent_review_pending",
+  "changedFiles": [
+    "scripts/suite.mjs",
+    "scripts/vitest.config.mjs",
+    "scripts/box-verification/environment-manifest.json"
+  ],
+  "diff": "worker-launcher-r2.diff",
+  "freeze": "candidate-freeze-launcher-r2.json",
+  "manifestDigest": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+  "installedSourceEvidence": "vitest-cache-mechanism-inspection.json",
+  "supportedLoaderEvidence": "Installed Vitest5 CLI option forwardsconfigLoader to Vite8.3.1 which explicitly accepts native and directly imports native .mjs configs; actual profile suite passed7contracts tests.",
+  "configuration": "Exact w002-b11-environment-first-r4 only: native loader plus cacheDir bound to config-owned .cto-r1-evidence/vitest-cache. Default and wrong profile keep priorargv/cache/hook configuration.",
+  "runtimeEvidence": "worker-launcher-r2-result.json",
+  "focusedResults": "worker-launcher-r2-focused.json",
+  "testResult": {
+    "passedContracts": 7,
+    "literalExit": 0,
+    "totalElapsedMs": 25297,
+    "descendants": "all narrow commands process_group_confirmed_empty",
+    "unavailableSuiteExit": 2,
+    "realExit": 2,
+    "defaultAndWrongProfileCache": null,
+    "defaultAndWrongProfileHook": null,
+    "testTimeoutUnchanged": 30000,
+    "workersUnchanged": 1
+  },
+  "cacheArtifact": ".cto-r1-evidence/vitest-cache/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+  "limits": [
+    "Worker reviewstage dependencies are linked existingLinuxstore rather than actual readonlymount; reviewer actualstage readiness/fullbatch proves EROFS remedy",
+    "No fullbatch or product acceptance by worker"
+  ],
+  "preservation": "Failedpreviousfullbatch and R1 receipts unchanged; actual /stage untouched; no deps/node_modules writes, new containers, DB/fixture requests, Git, installs or models",
+  "acceptanceClaim": false
+}

@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent-review",
+  "taskId": "M5.3",
+  "reviewer": "opencode-reviewer-subagent-m5-20261003",
+  "reviewedAt": "2026-10-04T02:10:00.000Z",
+  "revision": {
+    "digest": "97a2d343aa01a28a53c0498c08230f73be133b5677822eebe9f693025f03b411",
+    "manifest": ".execution/evidence/M5.3/revision-97a2d343aa01a28a53c0498c08230f73be133b5677822eebe9f693025f03b411.json"
+  },
+  "manifestClassification": {
+    "recomputedWith": "PowerShell/System.Security.Cryptography.SHA256 over every listed path; byte sizes also compared",
+    "totalFiles": 52,
+    "hashMatches": 51,
+    "missing": 0,
+    "byteSizeMismatches": 0,
+    "drift": [
+      {
+        "path": "services/private-api/db/migrations/meta/_journal.json",
+        "manifestSha256": "47eebff897d071f78bd6b410f1eb93eaebe1483ec65c4d49aecad1563aca9357",
+        "actualSha256": "7e212e83e09cf4cb9e17b919509fa6f44b7cb908886dd006c4c7b03d642ec519",
+        "classification": "integration-drift/expected",
+        "verifiedAgainst": "full journal inspected: only entry idx 7 (tag 0007_evaluation_jobs) differs from the coordinator-at-checked revision, `when` now 1791048947405 (a real timestamp near 2026-10-03/04, not the recorded-at-checked future value); all other entries, tags, breakpoints and the file size (1245 bytes) are consistent with the disclosed ~110-byte bookkeeping correction; migration SQL byte-identity independently re-proven: 0007_evaluation_jobs.sql matches EVALUATION_JOB_DDL exactly and hashes A6131ACD589E35EAA655F1CE7A84BF6D8B5159FA24B7665DE8D0FF2A3D80F509 / 10145 bytes as bound in the manifest"
+      }
+    ],
+    "productPaths": "byte-identical",
+    "beyondExpectedDrift": []
+  },
+  "reruns": [
+    {
+      "label": "review-20261003-1-m53-lifecycle",
+      "command": "node scripts/evidence.mjs M5.3 review-20261003-1-m53-lifecycle scripts/pnpm.mjs test:runner -- --suite lifecycle",
+      "exitCode": 0,
+      "testsPassed": 25,
+      "expected": 25,
+      "note": "store-live 8/8 executed inside the running synthetic Docker runtime against fresh isolated synthetic_jobs_* PostgreSQL databases (fixture applies real migrations 0000-0007 and asserts 0007/DDL byte-identity); protocol 17/17"
+    },
+    {
+      "label": "review-20261003-2-m53-boundary",
+      "command": "node scripts/evidence.mjs M5.3 review-20261003-2-m53-boundary scripts/pnpm.mjs test:security -- --suite output-boundary",
+      "exitCode": 0,
+      "testsPassed": 12,
+      "expected": 12,
+      "note": "includes source-level layering probes (runner-results imports only contracts modules; job store import allowlist)"
+    }
+  ],
+  "acceptanceJudgements": [
+    {
+      "criterion": "Timeouts, corrupted/replayed results and interrupted jobs never become passed/accepted",
+      "judgement": "approved-at-protocol-level (tested on the synthetic runtime; no real VM)",
+      "evidence": [
+        "store.ts recordResult re-verifies every delivered result with packages/runner-protocol verifyTrustedResult against the row-rebuilt Job/Lease (no signing reimplementation); any unauthenticated/binding-mismatch/stale/malformed/incomplete/contradictory outcome is recorded as an unverified evidence row and completes the job unverified with evaluation -> infrastructure_failure (applyAnomaly, store.ts:444-458)",
+        "runner-declared unverified: applyRunnerUnverified records class unverified + cause 'runner_reported_unverified', never passing (store.ts:461-467)",
+        "replay: bounded canonical payload digest of the delivered signed input; payloadSeenBefore marks duplicates 'replayed_result' (store.ts:118-129,400-403); verified pass retains authority and replay cannot overturn it (fixture scenario 1: authoritative_outcome stays 'passed', evaluation stays public_evaluating)",
+        "late/post-cancel/post-completion results: recorded unverified 'late_result', never affecting state (store.ts:317-320); past-deadline delivery throws 'Stale runner result.' -> stale_result -> infrastructure_failure",
+        "log bytes that mismatch the signed logDigest downgrade a verified claim to unverified 'log_mismatch' (store.ts:324); stored logs are first-capture-wins (captureLogs ON CONFLICT DO NOTHING) and digest-bound to the stored bytes",
+        "timeouts/interruptions: recordTimeout valid on running only (queued 422), recordInterruption validates the cause enum; both insert infrastructure evidence and land evaluation in infrastructure_failure; terminal reports are honest no-ops (recorded:false)",
+        "DDL defense-in-depth: class/outcome alignment CHECK, authoritative_result_required matching against the append-only results table, result rows UPDATE/DELETE-raising triggers, log rows immutable except delete under a cancelled parent, jobs binding fields row-immutability trigger, 1 MiB bytea bound (ddl.ts + migration 0007); sql-guards fixture scenario asserts exact SQL error messages for binding mutation, idle version bump, result/log tamper, oversized log insert",
+        "aggregate rule: aggregateAuthoritativeOutcome requires verified passing evidence for BOTH kinds; infrastructure -> infrastructure_failure; any unverified -> unverified; public-only/private-only -> unverified (never passed); buildInternalEvaluationResult throws EvaluationNotPassedError otherwise; fixture scenario 'anomalies-never-pass' asserts evaluation state infrastructure_failure and result payload null for corrupt/forged/log-mismatch/runner-unverified/malformed/past-deadline cases"
+      ],
+      "limitation": "exercised against the isolated synthetic PostgreSQL fixture inside the synthetic runtime; real hostile-code execution belongs to M5.2/M5.4 and remains blocked"
+    },
+    {
+      "criterion": "Evidence binds evaluated bytes and revisions (digest bindings)",
+      "judgement": "approved",
+      "evidence": [
+        "verifiedResultEvidence rejects any record whose packageHash/submissionHash/artifactHash/imageDigest/harnessId/harnessDigest/jobId/jobKind differ from the immutable job binding (runner-results/index.ts:161-187)",
+        "InternalEvaluationResult evidence entries bind checkId/jobId/jobKind/artifactHash/harnessDigest and the result binds evaluationId/attemptId/submissionHash/packageHash/privateBaseRevision; verified-flow fixture scenario asserts exact artifact linkage (ARTIFACT_PUBLIC vs ARTIFACT_PRIVATE) and revision hashes in the owner-review payload",
+        "trimCapture digest always names exactly the stored bytes with complete/originalByteCount provenance",
+        "verifyEvidenceBinding reports every drifted field including revision.taskId/taskVersion/privateBaseRevision"
+      ]
+    },
+    {
+      "criterion": "Job cleanup cannot affect another workspace or active job",
+      "judgement": "approved",
+      "evidence": [
+        "cancel/cleanup operate inside one transaction scoped to a single FOR UPDATE job row, require evaluation.operator + in-transaction session re-validation (requiresEvaluationOperator) and exact expectedVersion (stale -> 409); cleanup deletes only the log row of that job and refuses completed jobs (store.ts:361-398)",
+        "cleanup-isolation fixture scenario: A's cancel+cleanup leaves workspace B fully intact (B's verified evidence and log bytes preserved, authoritative_outcome 'passed'), second cleanup idempotent, completed cleanup refused, stale-version cancel denied, replay after terminal recorded unverified",
+        "SQL-level log delete requires a cancelled parent (trigger job_log_delete_requires_cancelled_parent)"
+      ]
+    },
+    {
+      "criterion": "Idempotent duplicate enqueue",
+      "judgement": "approved",
+      "evidence": [
+        "enqueue is transactional with in-transaction actor/session re-check; duplicate identical binding returns created:false with no evaluation version churn (fixture asserts version stays 2 and one row per kind); any binding difference is JobBindingConflict 409; concurrent private enqueues produce exactly one created winner under unique (evaluation_id, job_kind) + (permit_id, job_kind) with unique-violation retry (fixture idempotent scenario)",
+        "authority: enqueue takes package/submission/task/permit/submissionId only from the permit-bound private_evaluations row (never caller assertions); requires approved release manifest executionImageDigest, exact published publicChecks set for public kind, fixed trustedHarness digest matching, deadline inside (now, now+120s], rejects superseded/out-of-order (private-before-public) enqueues; authority scenario asserts zero jobs created from client assertions"
+      ]
+    },
+    {
+      "criterion": "SQL-level guard bypass attempts rejected",
+      "judgement": "approved",
+      "evidence": [
+        "fixture sql-guards scenario asserts exact PG error strings: job_binding_immutable (job_kind/artifact/image/attempt/checks/deadline), invalid_job_transition (job_state to completed, idle version bump), job_result_immutable, job_log_immutable, job_log_delete_requires_cancelled_parent, 23514 for a 1,048,577-byte log insert",
+        "independently traced the trigger: a completed row cannot be re-pointed at a fabricated authoritative result (sequence must reference an existing recorded row with equal class/outcome/cause), cannot leave completed, cannot resurrect cancelled"
+      ]
+    },
+    {
+      "criterion": "Output-boundary (never leaking private evaluation data)",
+      "judgement": "approved",
+      "evidence": [
+        "projectPublicFeedback exposes only approved categories and public-verified check details; private evidence contributes nothing; unknown states/ids/versions fail closed; forged categories rejected",
+        "store read projections carry digests only; readLogs is the only raw-log path and is operator-only with in-transaction session validation",
+        "projectJobError maps to fixed safe strings (403/409/422/503) and never leaks internal detail",
+        "layering probes: runner-results imports only contracts modules; the store import surface is allowlisted (no private-api internals)"
+      ]
+    },
+    {
+      "criterion": "Never-pass guarantee vs SECURITY.md ('Hostile submissions and isolated evaluator', 'Additional reviewed gates')",
+      "judgement": "approved-at-protocol-level",
+      "evidence": [
+        "unsigned/corrupt/unavailable jobs become infrastructure/unverified rows, never acceptance (SECURITY.md line 27); the store completes only via authoritative evidence rows which are append-only and class-aligned",
+        "jobs cannot accept themselves: the highest state the store produces is owner_review with a verified-passed aggregate payload; acceptance remains M7 (owner-only), and M7 guidance in the draft records superseded/infrastructure/changes_required as never accepted",
+        "no gate in code or evidence claims real-VM validation; state.json M5.3 blockers state 'Protocol-level only: no real VM'; the M5.2 dedicated-Linux-KVM prerequisite is unchanged and blocked"
+      ]
+    }
+  ],
+  "retainedFailures": [
+    "worker-disclosed mid-attempt failures: lifecycle-suite-final.json / lifecycle-suite-final2.json (byte-identity guard catching the initial hand-written migration copy) retained as unverified/exit 1; empty-migration-report.json reports foundation/intake/total counts honestly (22 total = 10 foundation + 5 intake + 7 release/job tables)",
+    "no new failing run was produced in this review; both rerun suites exited 0"
+  ],
+  "limitations": [
+    "All lifecycle/store observations ran against the isolated synthetic runtime databases; no real VM, no real hostile patch, no controller-to-store wiring exists yet (M5.4).",
+    "recordResult treats log bytes as optional today (M5.1 controller supplies only the signed result); when absent the signed logDigest is recorded as attestation without stored bytes - disclosed in the draft and accepted for M5.3 scope with capture wiring owned by M5.4.",
+    "artifact-digest authority is first-hash binding per (evaluation, kind) with image/harness enforced against approved release data - disclosed optional M5.4/M5.2 hardening; not a never-pass violation.",
+    "Cancellation mid-flight leaves the evaluation in operator-visible limbo (e.g. public_evaluating) rather than a synthetic failure state; the store never manufactures acceptance - disclosed, M5.4/M7 own recovery.",
+    "Read-only observation: idle version bumps on completed job rows are not rejected by the SQL trigger (app-level staleness already denies their use); defence-in-depth nitpick, no never-pass impact."
+  ],
+  "findings": [],
+  "verdict": "approved"
+}

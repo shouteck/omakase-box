@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_worker_correction_receipt",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r3",
+  "briefSha256": "0627ab37fd8fac13e33606fc07d82330a6b3cd7f9a2aa3a611550152dbb5bbe1",
+  "worker": "box-worker/7759c6eb",
+  "lead": "box-assurance-lead/cfd46892",
+  "attribution": "Faithful attributed excerpt of the exact worker receipt returned in the lead foreground response; root-created record, not child-written. Decorative formatting omitted; no factual change.",
+  "baselineHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "previousCandidate": "worker-attempt1.json",
+  "candidate": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "7d039c1035931f6bc76bc860096f35008e47cd60db87c26d2a0b13b94da085bf",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "0c8c80297186b10017a5ab8ff5d82ad167521cfbe87652a9bfaa7ec764dc7cb7",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "4875d4427493be2077d6fa046cc82c7db4285197ac201d15e0f9f9f4d527d4a5"
+  },
+  "dedicatedEditsReported": {"SUPPORTED-CASE.md": 9, "REUSE-INTERFACES.md": 8, "FIRST-IMPLEMENTATION-BRIEF.md": 25, "failedNonmutatingMatches": 2},
+  "commandsReported": [
+    {"command": "sha256sum over the three absolute target paths", "count": 3, "allExits": 0},
+    {"command": "git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp status --short -- three target paths", "count": 3, "allExits": 0, "output": "All three design documents untracked"}
+  ],
+  "duration": "Not exposed to worker; unavailable, not fabricated",
+  "correctedObligations": ["IdSchema-compatible references and exact environment/evaluator digest shapes", "Protected source never exported, including explanatory context", "Runnable-only forbidden imports and actual request-specific dependencies", "Real owner fixture tests/support inventory and migration journal idx13 convention", "Future isolated Linux/API/browser/Postgres recipe with exact cached IDs and independent new-resource allowance", "Current new-file capability prerequisite and future explicitly approved supported writer placement"],
+  "sourceReferences": ["packages/contracts/common.ts", "packages/box-contracts/index.ts", "examples/private-shop/fixture.json", "tests/contracts/fixture/private-shop.test.ts", "tests/contracts/fixture/seed.test.ts", "research/fixtures/candidates.json", "services/private-api/src/bootstrap/main.ts", "services/private-api/src/bootstrap/server.ts", "services/private-api/db/migrations/meta/_journal.json", "services/private-api/snapshots/sources.ts", "services/private-api/snapshots/importer.ts", "tests/box/auth/support.ts", "scripts/box-verification/environment-manifest.json", "scripts/vitest.config.mjs", "apps/private-console/vite.config.ts", "scripts/vite-safety.ts", "apps/private-console/intake/private-client.ts"],
+  "noNewFilesOrEvidenceCreatedByWorker": true,
+  "productSourceWrites": false,
+  "runtimeTests": "No suite/build/browser/Docker/Postgres/fixture/package/recipient run; future recipe not probed",
+  "futurePrerequisites": ["Separate D1.2 approval", "Supported new-file worker capability", "Current cached tool/dependency/resource ownership readiness", "Independent exact-ID proof of any legacy-hostname alias in wholly new network", "Real registration digests at implementation"],
+  "modelIdentity": "Not exposed; no diversity claim",
+  "acceptance": "not_child_accepted"
+}

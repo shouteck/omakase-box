@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/audit-execution.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T21:27:39.744Z",
+  "finishedAt": "2026-10-03T21:27:39.999Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Changed byte size: services/external-api/db/migrations/meta/_journal.json\r\n\r\n796 !== 579\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/audit-execution.mjs:28:12 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 796,\r\n  expected: 579,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

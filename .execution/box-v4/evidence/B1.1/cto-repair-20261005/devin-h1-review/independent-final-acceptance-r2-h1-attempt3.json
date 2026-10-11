@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_final_acceptance_review_r2_h1_attempt3",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "reviewer": "Devin reviewer27f919af (distinct from worker483988b4; reviewed this exact candidate, did not implement)",
+  "recordedAtUtc": "2026-10-05T05:27:16.583Z",
+  "verdict": "pass",
+  "bindsCandidate": {
+    "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+    "environmentId": "w002-b11-env-r4-env2",
+    "changedFinal": {
+      "scripts/box-verification/run-verification.mjs": "199021cd141b613138b0839d61ec195d603f3de4b1975ca4cd813f634aed4094",
+      "tests/box/verification/environment-readiness.test.ts": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735",
+      "tests/box/verification/relay-lifecycle.test.ts": "e4d5fd076c1fb3520aa64c4e72253a3d771131b6b8aa6fddd17909af6d082b7d",
+      "scripts/box-verification/environment-manifest.json": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f"
+    },
+    "candidateFiles": "embedded in devin-h1-review/independent-review-r2-h1-attempt3-final.json (456 entries, verified 456/456 on /stage post-overlay)"
+  },
+  "sevenCommandBatch": {
+    "status": "pass",
+    "outerExit": 0,
+    "ended": "2026-10-05T05:26:04Z",
+    "commands": [
+      {
+        "cmd": "test:box-contracts",
+        "status": "pass",
+        "ms": 18436,
+        "tests": "7/7"
+      },
+      {
+        "cmd": "test:box-auth",
+        "status": "pass",
+        "ms": 45407,
+        "tests": "18/18"
+      },
+      {
+        "cmd": "check",
+        "status": "pass",
+        "ms": 355271,
+        "tests": "bootstrap14+auth40+contracts155+planner51+tsc0errors"
+      },
+      {
+        "cmd": "build",
+        "status": "pass",
+        "ms": 52985
+      },
+      {
+        "cmd": "test:auth",
+        "status": "pass",
+        "ms": 135112,
+        "tests": "40/40 incl auth-live 40.9s (no 429; limiter window elapsed naturally)"
+      },
+      {
+        "cmd": "test:contracts",
+        "status": "pass",
+        "ms": 117271,
+        "tests": "155/155"
+      },
+      {
+        "cmd": "test:planner",
+        "status": "pass",
+        "ms": 78495,
+        "tests": "51/51"
+      }
+    ],
+    "cooldown": {
+      "beforeCommand": "test:auth",
+      "reason": "repeated_auth_limiter_window",
+      "idleMs": 305000,
+      "startedAt": "05:15:28.170Z",
+      "endedAt": "05:20:33.181Z",
+      "durationMs": 305011,
+      "persistedMidWait": true
+    },
+    "durableDir": "evidence/B1.1/cto-repair-20261005/independent-seven-r2-h1-attempt3/ (host copy) + /stage/.cto-r1-evidence/",
+    "logSha256": {
+      "command-1.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-1.stdout.log": "d7aa3195d8c1e90bb13177a4ad0aa837bba001f2112b70288540316ab8951fb4",
+      "command-2.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-2.stdout.log": "0c584ad38a366fd7ef19f338aa0d3aa3ecdbb5b796ef1a7c24bbedb245ffb0ad",
+      "command-3.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-3.stdout.log": "f6f374938e3f1ac3bd2d9fb8cf30f8d87c0bc5ac44187ccf68d44dc1e2004d4c",
+      "command-4.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-4.stdout.log": "74e3f27c3a91173f94dda294d782a2870a02d94b8af0cb0486ac65d3c0b947ba",
+      "command-5.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-5.stdout.log": "e6f8a84d8779cb1fc9e9fb2a8c310f1eded1350fb4b5431ece23a638ded56e0d",
+      "command-6.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-6.stdout.log": "f308bcae3d5e59823e41538fe9ee1c417486fa6d9427eefd7e99694c6c7af8a9",
+      "command-7.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command-7.stdout.log": "49a44fa39a2b3ea290228c536dfaf89149e1d8f69eea5c53144592d9d326e1a5",
+      "verification-run.json": "60ef04d7cab78ec20caf9a65978c443d388e2c72314ef0cdf2a5c697de1d59d4"
+    },
+    "outerFiles": "independent-seven-r2-h1-attempt3-outer.{stdout.log,stderr.log,result} copied host-side"
+  },
+  "postRunReconciliation": {
+    "runner": "only sleep infinity — zero residual owned descendants",
+    "mailbox": {
+      "requests": 84,
+      "responses": 84,
+      "allAnswered": true,
+      "newRequests50": "all fresh IDs for this run",
+      "old8Untouched": true
+    },
+    "fixtureDb": {
+      "count": 12,
+      "cap": 12,
+      "boundary": "exactly at cap — expected; no reset/drop/increase; no further mutating batch without authority"
+    },
+    "relay": {
+      "pid": 201644,
+      "alive": true,
+      "lifecycle": "ready",
+      "leaseExpires": "06:11:46Z",
+      "drainNotCalled": true
+    },
+    "resources": "approved container IDs unchanged, OOMKilled false, restarts 0"
+  },
+  "b11Review": {
+    "freshMigrations": "migrations-live passed inside check + test:auth (real PostgreSQL, replay on fresh DBs)",
+    "transactionsRolesVersionToken": "lifecycle-live (revision/approval/reservation concurrency, lifecycle bypass, identity mutation, supersession reset, outbox tampering), routes authz negatives, credentials scrypt, session-store, cookie policy — all pass on real synthetic PostgreSQL",
+    "supportTs": "unchanged (DB prefix/cap/host intact; 12 fixture DBs counted)",
+    "sourceShapes": "UI/API/policy compositions covered by contract155+planner51+readiness30+relay37 suites on literal current source; no hidden expectation expansion found"
+  },
+  "gates": {
+    "G1": "EVIDENCED — original W002-CTO-R2 approval + named H1 handover (.execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json) preceded all writes",
+    "G2": "EVIDENCED — single exact worker483988b4, three scoped diffs, returned/frozen before batches",
+    "G3": "EVIDENCED — this reviewer27f919af distinct from worker; static+74/74 narrow+live batch on same exact candidate 61f21cc7",
+    "G4": "EVIDENCED — durable receipts at every phase incl. preserved FAILs (independent-seven-r2, independent-seven-r2-h1)",
+    "G5": "EVIDENCED — current session user-requested resume, START read, handover authority reconciled before worker writes, old Devin r4 held/stopped, no old8 replay, no held-dispatch resume"
+  },
+  "finalVerdict": "INDEPENDENT ACCEPTANCE EVIDENCE COMPLETE for B1.1 on candidate 61f21cc7 in w002-b11-env-r4-env2. Root alone performs acceptance/save.",
+  "remainingGaps": "none blocking B1.1; root checkpoint/save then next delegation proposal; no D feature approved or started",
+  "checkpointProposal": {
+    "scope": "456 reviewed source files incl. 3 attempt3-changed + all durable evidence under .execution/box-v4/evidence/B1.1/cto-repair-20261005/ (reviews, receipts, diffs, both batch log sets, narrow-suite logs) + approval/briefing/handoff records as-is",
+    "exclude": [
+      "raw stage/tar exports",
+      "mailbox secrets or .runtime credentials",
+      "unrelated unfinished source beyond reviewed map",
+      "machine-specific temp paths"
+    ],
+    "note": "inventory only — no staging or commit performed by reviewer"
+  }
+}

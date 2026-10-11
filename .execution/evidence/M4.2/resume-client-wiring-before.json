@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/compiler/package/workspace.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T13:40:58.034Z",
+  "finishedAt": "2026-10-03T13:40:59.381Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/compiler/package/workspace.test.ts \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 77\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m assembles one shared offline workspace before approval and binds every fixed tooling/interface byte\u001b[32m 35\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m full-stack ownership includes contributor-editable typed client wiring, not a silently pre-solved layer\u001b[39m\u001b[32m 11\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m single-unit compatibility uses the same manifest/toolchain model\u001b[32m 2\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m changes to a unit/interface invalidate the complete prepared content rather than splitting a layer bounty\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m requires explicit policy choices and never invents a universal hardening requirement\u001b[32m 5\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m does not normalize or silently omit an unsupported edit responsibility\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects re-signed altered tooling, missing interface schemas and conflicting setup bytes\u001b[32m 15\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m remains general over safe declared module paths and does not expose retained adapters\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/compiler/package/workspace.test.ts\u001b[2m > \u001b[22mfull-stack ownership includes contributor-editable typed client wiring, not a silently pre-solved layer\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected undefined to be defined\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/compiler/package/workspace.test.ts:\u001b[2m29:18\u001b[22m\u001b[39m\n    \u001b[90m 27|\u001b[39m   const frontend = prepared.contract.workUnits.find(unit => unit.adapt…\n    \u001b[90m 28|\u001b[39m   const client = frontend.editablePaths.find(path => path.endsWith('.t…\n    \u001b[90m 29|\u001b[39m   expect(client).toBeDefined();\n    \u001b[90m   |\u001b[39m                  \u001b[31m^\u001b[39m\n    \u001b[90m 30|\u001b[39m   expect(prepared.contract.editablePaths).toContain(client);\n    \u001b[90m 31|\u001b[39m   expect(text(prepared, client!)).toContain('Implementation needed');\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m7 passed\u001b[39m\u001b[22m\u001b[90m (8)\u001b[39m\n\u001b[2m   Start at \u001b[22m 21:40:58\n\u001b[2m   Duration \u001b[22m 597ms\u001b[2m (import 41%, transform 37%, tests 20%, worker 2%)\u001b[22m\n\n"
+}

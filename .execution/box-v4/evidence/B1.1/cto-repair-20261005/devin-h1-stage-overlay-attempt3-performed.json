@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed_attempt3_stage_overlay_operations",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "release": "devin-h1-stage-acceptance-release-attempt3.json",
+  "preservedInputs": "pre-stage-overlay-r2-h1-attempt3/",
+  "beforeHashesVerified": true,
+  "hostReviewedHashesVerified": true,
+  "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "operations": "Four priorbytes Docker cp operations exit0 and hashverified; four exact reviewed Docker cp stage/source/gate operations requested by root under released overlay. Actual results in root tool transcript; independent postcopy456parity is mandatory nextgate.",
+  "sourceAuthoredByRoot": false,
+  "mountsChanged": false,
+  "resourcesAdded": false,
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

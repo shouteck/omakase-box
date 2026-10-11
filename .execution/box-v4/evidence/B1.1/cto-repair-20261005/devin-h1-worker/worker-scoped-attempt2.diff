@@ -1,0 +1,393 @@
+--- .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts	2026-10-05 12:05:09.906948200 +0800
++++ tests/box/verification/environment-readiness.test.ts	2026-10-05 12:11:58.820335600 +0800
+@@ -6,7 +6,41 @@
+ import { join } from 'node:path';
+ import { createHash } from 'node:crypto';
+ import { describe, expect, it } from 'vitest';
+-import {
++interface ReadinessPage { goto(url: string): Promise<unknown>; content(): Promise<string>; }
++interface ReadinessContext { newPage(): Promise<ReadinessPage>; close(): Promise<unknown>; }
++interface ReadinessBrowser { newContext(): Promise<ReadinessContext>; close(): Promise<unknown>; }
++interface ChromiumLauncher { launch(options?: { executablePath?: string; headless?: boolean }): Promise<ReadinessBrowser>; }
++interface HealthProbeResult { status: string; url?: string; consecutive: number; probes: unknown[] }
++interface BrowserProbeResult { status: string; reason?: string; revision?: number }
++interface BrowserExecutable { executablePath: string; revision: number }
++interface EntrypointCheckResult { status: string; missing?: string[] }
++interface MetadataMismatch { rel: string; missing?: boolean; digest?: string; expected?: string }
++interface MetadataCheckResult { status: string; compared?: number; mismatches?: MetadataMismatch[] }
++interface NamedCheckResult { status: string; reason?: string }
++interface DependencyPlan { hostRoot: string; containerRoot: string; mountTarget?: string; seeds: string[]; seedPaths?: Array<{ name: string; rel: string }>; packageVersions: ReadonlyArray<readonly string[]>; packageCount: number; fileCount: number; closureSha256: string }
++interface DependencyClosureResult { status: string; reason?: string; packageCount?: number; fileCount?: number; closureSha256?: string }
++interface WorkspaceAliasResult { status: string; count: number; closureSha256?: string }
++interface ReadinessModule {
++  probeServiceHealth(url: string, options?: { windowMs?: number; maxProbes?: number; requestTimeoutMs?: number; successes?: number; gapMs?: number; fetchImpl?: (url: string, init?: { signal: AbortSignal }) => Promise<{ status: number }>; sleep?: (ms: number) => Promise<void> }): Promise<HealthProbeResult>;
++  probeBrowser(options?: { browserPath?: string; expectedRevision?: number; deadlineMs?: number; loadChromium?: () => ChromiumLauncher | Promise<ChromiumLauncher>; pageUrl?: string }): Promise<BrowserProbeResult>;
++  findBrowserExecutable(browserPath: string, expectedRevision?: number): Promise<BrowserExecutable | null>;
++  checkFixtureEntrypoints(root: string, required?: Record<string, string[]>): Promise<EntrypointCheckResult>;
++  checkStagedMetadata(stageRoot: string, expected?: Record<string, string>): Promise<MetadataCheckResult>;
++  checkResourceRecord(recordPath: string, manifest: unknown): Promise<NamedCheckResult>;
++  compareSourceStage(pairs: Array<{ source: string; staged: string }>): Promise<NamedCheckResult>;
++  checkDbReadiness(connect: () => Promise<{ query(sql: string): Promise<{ rows: unknown[] }>; release?(): Promise<unknown>; end?(): Promise<unknown> }>, options?: { attempts?: number }): Promise<NamedCheckResult>;
++  checkRelayRunContract(mailbox: string, options: { runId: string; environmentId: string; leaseTtlMs?: number }): Promise<NamedCheckResult>;
++  ENV_EXAMPLE_EXPECTED_SHA256: string;
++}
++interface EnvironmentHostModule {
++  verifyDependencyClosure(plan: DependencyPlan, options?: { root: string; readFileImpl?: (path: string) => Promise<Uint8Array> }): Promise<DependencyClosureResult>;
++  stageFiles(options: { sourceRoot: string; stageRoot: string; files: Array<{ rel: string; sha256: string }> }): Promise<unknown>;
++  runnerCreateArgv(manifest: unknown, options: { databaseUrl: string; runId: string }): string[];
++  stageWorkspaceAliases(manifest: unknown, options?: { stageRoot?: string }): Promise<WorkspaceAliasResult>;
++}
++const readiness: ReadinessModule = await import(new URL('../../../scripts/box-verification/readiness.mjs', import.meta.url).href);
++const environmentHost: EnvironmentHostModule = await import(new URL('../../../scripts/box-verification/environment-host.mjs', import.meta.url).href);
++const {
+   probeServiceHealth,
+   probeBrowser,
+   findBrowserExecutable,
+@@ -17,8 +51,8 @@
+   checkDbReadiness,
+   checkRelayRunContract,
+   ENV_EXAMPLE_EXPECTED_SHA256
+-} from '../../../scripts/box-verification/readiness.mjs';
+-import { verifyDependencyClosure, stageFiles, runnerCreateArgv, stageWorkspaceAliases } from '../../../scripts/box-verification/environment-host.mjs';
++} = readiness;
++const { verifyDependencyClosure, stageFiles, runnerCreateArgv, stageWorkspaceAliases } = environmentHost;
+ 
+ const tmp = () => mkdtemp(join(tmpdir(), 'w002-b11-r4-readiness-'));
+ const noSleep = () => Promise.resolve();
+@@ -102,13 +136,13 @@
+     let closed = false; let gotoUrl = null;
+     const fakeBrowser = {
+       newContext: async () => ({
+-        newPage: async () => ({ goto: async (url) => { gotoUrl = url; }, content: async () => '<html>local</html>' }),
++        newPage: async () => ({ goto: async (url: string) => { gotoUrl = url; }, content: async () => '<html>local</html>' }),
+         close: async () => undefined
+       }),
+       close: async () => { closed = true; }
+     };
+     const loadChromium = async () => ({
+-      launch: async (opts) => {
++      launch: async (opts: { executablePath?: string; headless?: boolean }) => {
+         expect(opts.executablePath).toBe(exe);
+         return fakeBrowser;
+       }
+@@ -136,7 +170,7 @@
+     await chmod(shellExe, 0o755);
+     const foundShell = await findBrowserExecutable(shellRoot, 1243);
+     expect(foundShell).not.toBeNull();
+-    expect(foundShell.executablePath).toBe(shellExe);
++    expect(foundShell?.executablePath).toBe(shellExe);
+ 
+     const fullRoot = await tmp();
+     const fullDir = join(fullRoot, 'chromium-1243', 'chrome-linux64');
+@@ -146,7 +180,7 @@
+     await chmod(fullExe, 0o755);
+     const foundFull = await findBrowserExecutable(fullRoot, 1243);
+     expect(foundFull).not.toBeNull();
+-    expect(foundFull.executablePath).toBe(fullExe);
++    expect(foundFull?.executablePath).toBe(fullExe);
+ 
+     const good = await probeBrowser({ browserPath: shellRoot, loadChromium: async () => ({ launch: async () => ({
+       newContext: async () => ({ newPage: async () => ({ goto: async () => undefined, content: async () => '<html>ok</html>' }), close: async () => undefined }),
+@@ -161,7 +195,7 @@
+     const result = await checkFixtureEntrypoints(root);
+     expect(result.status).toBe('failed');
+     // private: 3 entrypoints, external: 1 -> not the old indiscriminate 6.
+-    expect(result.missing.length).toBe(4);
++    expect(result.missing?.length).toBe(4);
+     expect(result.missing).toContain('external-api/dist/fixture.js');
+     expect(result.missing).toContain('private-api/dist/session-fixture.js');
+   });
+@@ -206,11 +240,11 @@
+     // With no expected digests supplied the bound default digest still compares:
+     // the synthetic .env.example fails as a digest mismatch, and absent files
+     // fail as missing entries.
+-    expect(missing.mismatches.some(item => item.rel === '.env.example')).toBe(true);
++    expect(missing.mismatches?.some(item => item.rel === '.env.example')).toBe(true);
+     // Absent required metadata always fails as missing.
+     const absent = await checkStagedMetadata(join(root, 'empty'), digests);
+     expect(absent.status).toBe('failed');
+-    expect(absent.mismatches.every(item => item.missing)).toBe(true);
++    expect(absent.mismatches?.every(item => item.missing)).toBe(true);
+     expect(ENV_EXAMPLE_EXPECTED_SHA256).toMatch(/^[a-f0-9]{64}$/);
+   });
+ 
+@@ -312,7 +346,7 @@
+     expect(probe.reason).toBe('dependency_closure_mismatch');
+     expect(probe.packageCount).toBe(2);
+     expect(probe.fileCount).toBe(2);
+-    const good = await verifyDependencyClosure({ ...plan, packageCount: probe.packageCount, fileCount: probe.fileCount, closureSha256: probe.closureSha256 }, { root: nm });
++    const good = await verifyDependencyClosure({ ...plan, packageCount: probe.packageCount ?? plan.packageCount, fileCount: probe.fileCount ?? plan.fileCount, closureSha256: probe.closureSha256 ?? plan.closureSha256 }, { root: nm });
+     expect(good.status).toBe('ok');
+     expect(good.packageCount).toBe(2);
+     expect(good.fileCount).toBe(2);
+@@ -369,7 +403,7 @@
+ });
+ 
+ describe('environment: runner dependency mount contract', () => {
+-  const manifestFor = binds => ({
++  const manifestFor = (binds: Array<{ host: string; container: string; readOnly: boolean }>) => ({
+     stage: { rootHost: '/host/stage', rootContainer: '/stage', workspaceBind: { host: '/host/ws', container: '/workspace' } },
+     linuxDependencies: { hostRoot: '/host/ws/node_modules', containerRoot: '/workspace/node_modules', mountTarget: '/stage/node_modules', readOnly: true },
+     linuxTooling: { hostRoot: '/host/ws/scripts/tooling/node_modules', containerRoot: '/workspace/scripts/tooling/node_modules', mountTarget: '/stage/scripts/tooling/node_modules', readOnly: true },
+@@ -393,7 +427,8 @@
+   it('rejects drift that drops the dependency mount or makes it writable', () => {
+     expect(() => runnerCreateArgv(manifestFor(validBinds().slice(0, 1)), { databaseUrl: 'postgres://box_fixture:x@w002-b11-box-db-r4-env2:5432/postgres', runId: 'w002-b11-env-r4-env2' })).toThrow('runner_bind_drift');
+     const writable = validBinds();
+-    writable[1].readOnly = false;
++    const dependencyBind = writable[1];
++    if (dependencyBind !== undefined) dependencyBind.readOnly = false;
+     expect(() => runnerCreateArgv(manifestFor(writable), { databaseUrl: 'postgres://box_fixture:x@w002-b11-box-db-r4-env2:5432/postgres', runId: 'w002-b11-env-r4-env2' })).toThrow('runner_bind_drift');
+   });
+ 
+@@ -409,7 +444,7 @@
+   const manifestPath = new URL('../../../scripts/box-verification/environment-manifest.json', import.meta.url);
+   it('binds immediate tooling scripts, sorted duplicate-free entries and mandatory exclusions', async () => {
+     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+-    const files = manifest.stage.sourceFilesPlan.files;
++    const files: Array<{ rel: string; sha256: string }> = manifest.stage.sourceFilesPlan.files;
+     const byRel = new Map(files.map(item => [item.rel, item.sha256]));
+     expect(byRel.get('scripts/pnpm.mjs')).toBe('1992e940c548105fe64be3f6fcdbcd40cc7737f7182593b9a474da612ab33758');
+     expect(byRel.get('scripts/workspace.mjs')).toBe('43e37233f31fa92349e490d1f69a9275e2af98dc4c06b778ccb98d227e3c973f');
+@@ -423,7 +458,7 @@
+       expect(parts.includes('.runtime')).toBe(false);
+       expect(parts.includes('dist')).toBe(false);
+       expect(parts.includes('.git')).toBe(false);
+-      expect(rel === '.env' || (rel.split('/').pop().startsWith('.env.') && rel !== '.env.example')).toBe(false);
++      expect(rel === '.env' || (rel.split('/').pop()?.startsWith('.env.') && rel !== '.env.example')).toBe(false);
+       expect(rel.startsWith('scripts/tooling/node_modules/')).toBe(false);
+       expect(rel === 'scripts/box-verification/environment-manifest.json').toBe(false);
+       expect(/\.(pem|key|p12|pfx)$/.test(rel)).toBe(false);
+@@ -458,7 +493,8 @@
+     const base = await tmp();
+     const nm = join(base, 'node_modules');
+     const aliases = []; const files = []; const seedPaths = [];
+-    for (const [workspace, version] of [['services/test-api', '1.0.0'], ['apps/test-ui', '2.0.0']]) {
++    const workspaces: Array<[string, string]> = [['services/test-api', '1.0.0'], ['apps/test-ui', '2.0.0']];
++    for (const [workspace, version] of workspaces) {
+       const targetRel = `.pnpm/foo@${version}/node_modules/foo`;
+       await mkdir(join(nm, targetRel), { recursive: true });
+       await writeFile(join(nm, targetRel, 'package.json'), JSON.stringify({ name: 'foo', version }));
+@@ -472,7 +508,7 @@
+     }
+     const plan = { hostRoot: nm, containerRoot: '/logical/node_modules', mountTarget: '/stage/node_modules', seeds: [], seedPaths, packageVersions: [['foo', '1.0.0'], ['foo', '2.0.0']], packageCount: 0, fileCount: 0, closureSha256: '0'.repeat(64) };
+     const probe = await verifyDependencyClosure(plan, { root: nm });
+-    const frozen = { ...plan, packageCount: probe.packageCount, fileCount: probe.fileCount, closureSha256: probe.closureSha256 };
++    const frozen = { ...plan, packageCount: probe.packageCount ?? plan.packageCount, fileCount: probe.fileCount ?? plan.fileCount, closureSha256: probe.closureSha256 ?? plan.closureSha256 };
+     return { base, manifest: { linuxDependencies: frozen, stage: { rootContainer: base, workspaceAliases: aliases, sourceFilesPlan: { files } } } };
+   }
+ 
+@@ -499,7 +535,8 @@
+     const { base, manifest } = await fixture();
+     await expect(stageWorkspaceAliases({ ...manifest, stage: { ...manifest.stage, workspaceAliases: manifest.stage.workspaceAliases.slice(0, 1) } })).rejects.toThrow('workspace_alias_incomplete');
+     const aliases = manifest.stage.workspaceAliases.map(alias => ({ ...alias }));
+-    aliases[0].targetRel = '.pnpm/unreviewed/node_modules/foo';
++    const firstAlias = aliases[0];
++    if (firstAlias !== undefined) firstAlias.targetRel = '.pnpm/unreviewed/node_modules/foo';
+     await expect(stageWorkspaceAliases({ ...manifest, stage: { ...manifest.stage, workspaceAliases: aliases } })).rejects.toThrow('workspace_alias_unhashed_target');
+     await writeFile(join(base, 'services/test-api/package.json'), '{}');
+     await expect(stageWorkspaceAliases(manifest)).rejects.toThrow('workspace_alias_source_drift');
+@@ -522,13 +559,13 @@
+     const canonical = [{ name: 'seed', version: '1.0.0', root: '/logical/node_modules/seed', files: rows.length, treeSha256: createHash('sha256').update(JSON.stringify(rows)).digest('hex') }];
+     const plan = { hostRoot: nm, containerRoot: '/logical/node_modules', seeds: ['seed'], packageVersions: [['seed', '1.0.0']], packageCount: 1, fileCount: rows.length, closureSha256: createHash('sha256').update(JSON.stringify(canonical)).digest('hex') };
+     let active = 0; let maximum = 0;
+-    const read = async path => {
++    const read = async (path: string) => {
+       active += 1; maximum = Math.max(maximum, active);
+       try { await new Promise(resolve => setTimeout(resolve, 2)); return await readFile(path); }
+       finally { active -= 1; }
+     };
+     expect((await verifyDependencyClosure(plan, { root: nm, readFileImpl: read })).status).toBe('ok');
+     expect(maximum).toBeGreaterThan(1); expect(maximum).toBeLessThanOrEqual(32);
+-    await expect(verifyDependencyClosure(plan, { root: nm, readFileImpl: async path => { if (path.endsWith('file-032')) throw new Error('evidence_read_failed'); return readFile(path); } })).rejects.toThrow('evidence_read_failed');
++    await expect(verifyDependencyClosure(plan, { root: nm, readFileImpl: async (path: string) => { if (path.endsWith('file-032')) throw new Error('evidence_read_failed'); return readFile(path); } })).rejects.toThrow('evidence_read_failed');
+   });
+ });
+--- .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/relay-lifecycle.test.ts	2026-10-05 12:05:09.928779100 +0800
++++ tests/box/verification/relay-lifecycle.test.ts	2026-10-05 12:29:22.523998900 +0800
+@@ -8,17 +8,76 @@
+ import { join } from 'node:path';
+ import { EventEmitter } from 'node:events';
+ import { PassThrough } from 'node:stream';
+-import { spawn } from 'node:child_process';
++import { spawn, type SpawnOptions } from 'node:child_process';
+ import { describe, expect, it } from 'vitest';
+-import {
++interface RelayLease { runId: string; environmentId: string }
++interface RelayContext { lease: RelayLease; manifestDigest: string }
++interface RelayOutcome { status: string; reason?: string }
++interface WrapperResult { code: number; stdout: string; stderr: string; remoteState: 'unconfirmed' | 'terminated' | 'exited' }
++interface FixtureExecEntry {
++  id: string;
++  service: string;
++  workdir: string;
++  env?: string[];
++  argv: string[];
++  runnerArgv?: string[];
++  input: string;
++  timeoutMs?: number;
++  sourceSha256?: string;
++  requiresSpecificConfirmation?: boolean;
++}
++interface FixtureExecHostModule {
++  acquireLease(mailbox: string, options: { runId: string; environmentId: string; ttlMs?: number; now?: () => Date }): Promise<RelayLease>;
++  loadLease(mailbox: string, options: { runId: string; environmentId: string; now?: () => number }): Promise<RelayLease>;
++  loadSeen(mailbox: string): Promise<Set<string>>;
++  setLifecycle(mailbox: string, state: string): Promise<void>;
++  getLifecycle(mailbox: string): Promise<string | null>;
++  validateRequest(raw: string): unknown;
++  assertSafeEntry(entry: unknown): void;
++  assertReadyProfileEntry(entry: unknown): void;
++  assertWrapperBinding(manifest: unknown): void;
++  buildExecArgv(manifest: unknown, request: unknown): { argv: string[]; entry: FixtureExecEntry };
++  buildLiveArgv(manifest: unknown, request: unknown): { argv: string[]; entry: FixtureExecEntry; envelope: string };
++  executeRequest(manifest: unknown, mailbox: string, fileName: string, seen: Set<string>, context?: RelayContext): Promise<RelayOutcome>;
++  requestDrain(mailbox: string): Promise<RelayOutcome>;
++  run(manifestPath: string, mailbox: string, options: { runId: string; environmentId: string; sessionDeadlineMs?: number; pollMs?: number }): Promise<RelayOutcome>;
++  manifestDigest(manifest: unknown): string;
++  transformWrapperResult(raw: string): WrapperResult;
++  findStartedWithoutResult(mailbox: string): Promise<string[]>;
++  READY_COMMAND_DEADLINE_MS: number;
++}
++interface RunnerChildOutcome { status: string; code?: number; reason?: string }
++interface FixtureExecRunnerModule {
++  runChild(manifest: unknown, commandId: string, options?: { input?: unknown; timeoutMs?: number; source?: string; spawnImpl?: unknown; clock?: () => number; killGraceMs?: number }): Promise<RunnerChildOutcome>;
++  bindRunnerArgv(entry: unknown, options?: { source?: string }): string[];
++  resolveEntry(manifest: unknown, commandId: string): unknown;
++}
++interface SequenceChild {
++  stdout: NodeJS.ReadableStream | null;
++  stderr: NodeJS.ReadableStream | null;
++  on(event: string, listener: (...args: unknown[]) => void): unknown;
++  kill(signal?: number | NodeJS.Signals): boolean;
++  pid?: number | undefined;
++}
++interface VerificationCommandEntry { code: number | null; exitSignal: string | null; exitObserved: boolean; timedOut: boolean; unconfirmed: boolean; descendants: string; outputDrained: boolean; captureError: string | null; reason: string | null; elapsedMs: number; stdoutPath: string; stderrPath: string; stdout: string; stderr: string }
++interface RunVerificationModule {
++  validateSequence(manifest: unknown): string[];
++  gateStart(options: { review: unknown; environmentReceipt: unknown; manifestDigest: string; environmentId: string }): { status: string; reason?: string };
++  REQUIRED_SEQUENCE: string[];
++  runSequence(manifest: unknown, options: { stateDir: string; spawnImpl?: (bin: string, args: string[], options: SpawnOptions) => SequenceChild; clock?: () => number; deadlineMs?: number; drainMs?: number }): Promise<{ status: string; commands: VerificationCommandEntry[] }>;
++}
++const execHost: FixtureExecHostModule = await import(new URL('../../../scripts/box-verification/fixture-exec-host.mjs', import.meta.url).href);
++const execRunner: FixtureExecRunnerModule = await import(new URL('../../../scripts/box-verification/fixture-exec-runner.mjs', import.meta.url).href);
++const supervisor: RunVerificationModule = await import(new URL('../../../scripts/box-verification/run-verification.mjs', import.meta.url).href);
++const {
+   acquireLease, loadLease, loadSeen, setLifecycle, getLifecycle, validateRequest,
+   assertSafeEntry, assertReadyProfileEntry, assertWrapperBinding, buildExecArgv,
+   buildLiveArgv, executeRequest, requestDrain, run, manifestDigest,
+   transformWrapperResult, findStartedWithoutResult,
+   READY_COMMAND_DEADLINE_MS
+-} from '../../../scripts/box-verification/fixture-exec-host.mjs';
+-import { runChild, bindRunnerArgv, resolveEntry } from '../../../scripts/box-verification/fixture-exec-runner.mjs';
+-import { validateSequence, gateStart, REQUIRED_SEQUENCE, runSequence } from '../../../scripts/box-verification/run-verification.mjs';
++} = execHost;
++const { runChild, bindRunnerArgv, resolveEntry } = execRunner;
++const { validateSequence, gateStart, REQUIRED_SEQUENCE, runSequence } = supervisor;
+ 
+ const tmp = () => mkdtemp(join(tmpdir(), 'w002-b11-r4-relay-'));
+ const uuid = () => crypto.randomUUID();
+@@ -123,7 +182,7 @@
+   it('denies malformed and wrong-run requests', async () => {
+     const mailbox = await makeMailbox();
+     await setLifecycle(mailbox, 'ready');
+-    const seen = new Set();
++    const seen = new Set<string>();
+ 
+     const bad = uuid() + '.json';
+     await writeFile(join(mailbox, 'requests', bad), '{not json');
+@@ -203,7 +262,7 @@
+   it('refuses live execution without a reviewed bound context', async () => {
+     const mailbox = await makeMailbox();
+     await setLifecycle(mailbox, 'ready');
+-    const seen = new Set();
++    const seen = new Set<string>();
+     const id = uuid();
+     await writeFile(join(mailbox, 'requests', id + '.json'), requestFile({ requestId: id }));
+     // No context at all: deny execution_context, never dispatch.
+@@ -216,7 +275,7 @@
+   it('refuses dispatch when the manifest digest does not match the bound context', async () => {
+     const mailbox = await makeMailbox();
+     await setLifecycle(mailbox, 'ready');
+-    const seen = new Set();
++    const seen = new Set<string>();
+     const id = uuid();
+     await writeFile(join(mailbox, 'requests', id + '.json'), requestFile({ requestId: id }));
+     const bad = { lease: { runId: 'run-test-1', environmentId: 'env-test-1' }, manifestDigest: 'f'.repeat(64) };
+@@ -229,7 +288,7 @@
+   it('refuses dispatch while the lifecycle is not ready', async () => {
+     const mailbox = await makeMailbox();
+     await setLifecycle(mailbox, 'draining');
+-    const seen = new Set();
++    const seen = new Set<string>();
+     const id = uuid();
+     await writeFile(join(mailbox, 'requests', id + '.json'), requestFile({ requestId: id }));
+     const outcome = await executeRequest(manifest, mailbox, id + '.json', seen, contextFor());
+@@ -241,7 +300,7 @@
+     await setLifecycle(mailbox, 'ready');
+     // Poison the records path: a regular file where the records dir belongs.
+     await writeFile(join(mailbox, 'state', 'records'), 'not a dir');
+-    const seen = new Set();
++    const seen = new Set<string>();
+     const id = uuid();
+     await writeFile(join(mailbox, 'requests', id + '.json'), requestFile({ requestId: id }));
+     const outcome = await executeRequest(manifest, mailbox, id + '.json', seen, contextFor());
+@@ -291,7 +350,7 @@
+   it('accepts only the exact original ordered seven commands', () => {
+     const good = { commands: { sequence: REQUIRED_SEQUENCE.slice() } };
+     expect(validateSequence(good)).toHaveLength(7);
+-    const duplicated = { commands: { sequence: REQUIRED_SEQUENCE.slice(0, 6).concat([REQUIRED_SEQUENCE[5]]) } };
++    const duplicated = { commands: { sequence: REQUIRED_SEQUENCE.slice(0, 6).concat(REQUIRED_SEQUENCE.slice(5, 6)) } };
+     expect(() => validateSequence(duplicated)).toThrow('verification_sequence');
+     const reordered = { commands: { sequence: REQUIRED_SEQUENCE.slice().reverse() } };
+     expect(() => validateSequence(reordered)).toThrow('verification_sequence');
+@@ -390,7 +449,7 @@
+     const { fileURLToPath } = await import('node:url');
+     const runnerPath = fileURLToPath(new URL('../../../scripts/box-verification/fixture-exec-runner.mjs', import.meta.url));
+     const { spawn } = await import('node:child_process');
+-    const result = await new Promise(resolve => {
++    const result = await new Promise<{ code: number | null; stdout: string; stderr: string }>(resolve => {
+       const child = spawn(process.execPath, [runnerPath, runnerManifestPath, 'literal.ok'], { stdio: ['pipe', 'pipe', 'pipe'] });
+       let stdout = ''; let stderr = '';
+       child.stdout.on('data', chunk => { stdout += chunk.toString(); });
+@@ -411,7 +470,7 @@
+     await writeFile(join(mailbox, 'state', 'lease.json'), JSON.stringify({
+       runId: 'run-test-1', environmentId: 'env-test-1', expiresAt: new Date(Date.now() - 1).toISOString()
+     }));
+-    const seen = new Set();
++    const seen = new Set<string>();
+     const id = uuid();
+     await writeFile(join(mailbox, 'requests', id + '.json'), requestFile({ requestId: id }));
+     const outcome = await executeRequest(manifest, mailbox, id + '.json', seen, contextFor());
+@@ -439,7 +498,7 @@
+   it('persists a durable result record for every denial outcome', async () => {
+     const mailbox = await makeMailbox();
+     await setLifecycle(mailbox, 'ready');
+-    const seen = new Set();
++    const seen = new Set<string>();
+     const id = uuid();
+     await writeFile(join(mailbox, 'requests', id + '.json'), requestFile({ requestId: id, runId: 'other-run' }));
+     const outcome = await executeRequest(manifest, mailbox, id + '.json', seen, contextFor());
+@@ -541,6 +600,7 @@
+     expect(calls).toBe(1);
+     expect(result.status).toBe('unavailable');
+     const entry = result.commands[0];
++    if (entry === undefined) throw new Error('verification_command_entry_missing');
+     expect(entry).toMatchObject({ code: 0, outputDrained: false, unconfirmed: true, reason: 'output_drain_unconfirmed' });
+     expect(entry.elapsedMs).toBeGreaterThanOrEqual(40);
+     expect(entry.elapsedMs).toBeLessThan(2000);
+--- .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-manifest.json	2026-10-05 12:05:09.949777400 +0800
++++ scripts/box-verification/environment-manifest.json	2026-10-05 12:34:06.233017300 +0800
+@@ -1483,11 +1483,11 @@
+         },
+         {
+           "rel": "tests/box/verification/environment-readiness.test.ts",
+-          "sha256": "bab5ddf71e83c87b08f2b6e69c3efc5aea5bca512641e75fc1f7383bbc0ef279"
++          "sha256": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735"
+         },
+         {
+           "rel": "tests/box/verification/relay-lifecycle.test.ts",
+-          "sha256": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825"
++          "sha256": "b7cee05122690fa71077161bb6214327c40cfff10beb335890b802bdd4811306"
+         },
+         {
+           "rel": "tests/compiler/approval/browser.test.ts",

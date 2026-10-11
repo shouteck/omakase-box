@@ -1,0 +1,750 @@
+{
+  "id": "0bef95b5-364f-4c93-bdc7-b1e9df161729",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.external_accounts": {
+      "name": "external_accounts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "disabled": {
+          "name": "disabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "external_accounts_username_unique": {
+          "name": "external_accounts_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.external_attempt_outbox": {
+      "name": "external_attempt_outbox",
+      "schema": "",
+      "columns": {
+        "permit_id": {
+          "name": "permit_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivered_at": {
+          "name": "delivered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "external_attempt_outbox_permit_id_external_submissions_permit_id_fk": {
+          "name": "external_attempt_outbox_permit_id_external_submissions_permit_id_fk",
+          "tableFrom": "external_attempt_outbox",
+          "tableTo": "external_submissions",
+          "columnsFrom": [
+            "permit_id"
+          ],
+          "columnsTo": [
+            "permit_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.external_feedback": {
+      "name": "external_feedback",
+      "schema": "",
+      "columns": {
+        "public_id": {
+          "name": "public_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "submission_id": {
+          "name": "submission_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "external_feedback_submission_id_external_submissions_id_fk": {
+          "name": "external_feedback_submission_id_external_submissions_id_fk",
+          "tableFrom": "external_feedback",
+          "tableTo": "external_submissions",
+          "columnsFrom": [
+            "submission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.external_invitations": {
+      "name": "external_invitations",
+      "schema": "",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "char(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revoked": {
+          "name": "revoked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "redeemed_at": {
+          "name": "redeemed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.external_task_lineages": {
+      "name": "external_task_lineages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "evaluated_attempts": {
+          "name": "evaluated_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "external_lineage_budget_nonnegative": {
+          "name": "external_lineage_budget_nonnegative",
+          "value": "\"external_task_lineages\".\"evaluated_attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.external_reservations": {
+      "name": "external_reservations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "task_version": {
+          "name": "task_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "package_hash": {
+          "name": "package_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contributor_id": {
+          "name": "contributor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "terms_hash": {
+          "name": "terms_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "external_reservation_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "evaluated_attempts": {
+          "name": "evaluated_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "external_one_live_reservation": {
+          "name": "external_one_live_reservation",
+          "columns": [
+            {
+              "expression": "task_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "task_version",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"external_reservations\".\"state\" IN ('active', 'in_review')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "external_reservations_contributor_id_external_accounts_id_fk": {
+          "name": "external_reservations_contributor_id_external_accounts_id_fk",
+          "tableFrom": "external_reservations",
+          "tableTo": "external_accounts",
+          "columnsFrom": [
+            "contributor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "external_reservations_task_id_task_version_package_hash_external_task_versions_id_version_package_hash_fk": {
+          "name": "external_reservations_task_id_task_version_package_hash_external_task_versions_id_version_package_hash_fk",
+          "tableFrom": "external_reservations",
+          "tableTo": "external_task_versions",
+          "columnsFrom": [
+            "task_id",
+            "task_version",
+            "package_hash"
+          ],
+          "columnsTo": [
+            "id",
+            "version",
+            "package_hash"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "external_reservation_version_positive": {
+          "name": "external_reservation_version_positive",
+          "value": "\"external_reservations\".\"version\" > 0 AND \"external_reservations\".\"evaluated_attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.external_sessions": {
+      "name": "external_sessions",
+      "schema": "",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "char(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "csrf_hash": {
+          "name": "csrf_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "external_sessions_account_id_external_accounts_id_fk": {
+          "name": "external_sessions_account_id_external_accounts_id_fk",
+          "tableFrom": "external_sessions",
+          "tableTo": "external_accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.external_submissions": {
+      "name": "external_submissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "reservation_id": {
+          "name": "reservation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contributor_id": {
+          "name": "contributor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "task_id": {
+          "name": "task_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "task_version": {
+          "name": "task_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "package_hash": {
+          "name": "package_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submission_hash": {
+          "name": "submission_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patch": {
+          "name": "patch",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permit_id": {
+          "name": "permit_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permit": {
+          "name": "permit",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "external_submission_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'received'"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "superseded": {
+          "name": "superseded",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "external_submissions_reservation_id_external_reservations_id_fk": {
+          "name": "external_submissions_reservation_id_external_reservations_id_fk",
+          "tableFrom": "external_submissions",
+          "tableTo": "external_reservations",
+          "columnsFrom": [
+            "reservation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "external_submissions_contributor_id_external_accounts_id_fk": {
+          "name": "external_submissions_contributor_id_external_accounts_id_fk",
+          "tableFrom": "external_submissions",
+          "tableTo": "external_accounts",
+          "columnsFrom": [
+            "contributor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "external_submissions_task_id_task_version_package_hash_external_task_versions_id_version_package_hash_fk": {
+          "name": "external_submissions_task_id_task_version_package_hash_external_task_versions_id_version_package_hash_fk",
+          "tableFrom": "external_submissions",
+          "tableTo": "external_task_versions",
+          "columnsFrom": [
+            "task_id",
+            "task_version",
+            "package_hash"
+          ],
+          "columnsTo": [
+            "id",
+            "version",
+            "package_hash"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "external_submissions_permit_id_unique": {
+          "name": "external_submissions_permit_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "permit_id"
+          ]
+        },
+        "external_submission_idempotency": {
+          "name": "external_submission_idempotency",
+          "nullsNotDistinct": false,
+          "columns": [
+            "contributor_id",
+            "idempotency_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "external_patch_byte_limit": {
+          "name": "external_patch_byte_limit",
+          "value": "octet_length(\"external_submissions\".\"patch\") <= 1048576"
+        },
+        "external_submission_version_positive": {
+          "name": "external_submission_version_positive",
+          "value": "\"external_submissions\".\"version\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.external_task_versions": {
+      "name": "external_task_versions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lineage_id": {
+          "name": "lineage_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "package_hash": {
+          "name": "package_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contract": {
+          "name": "contract",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "listing": {
+          "name": "listing",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "envelope": {
+          "name": "envelope",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "withdrawn": {
+          "name": "withdrawn",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "external_task_versions_lineage_id_external_task_lineages_id_fk": {
+          "name": "external_task_versions_lineage_id_external_task_lineages_id_fk",
+          "tableFrom": "external_task_versions",
+          "tableTo": "external_task_lineages",
+          "columnsFrom": [
+            "lineage_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "external_task_versions_id_version_pk": {
+          "name": "external_task_versions_id_version_pk",
+          "columns": [
+            "id",
+            "version"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "external_task_exact_binding": {
+          "name": "external_task_exact_binding",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "version",
+            "package_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "external_task_version_positive": {
+          "name": "external_task_version_positive",
+          "value": "\"external_task_versions\".\"version\" > 0"
+        },
+        "external_package_hash_syntax": {
+          "name": "external_package_hash_syntax",
+          "value": "\"external_task_versions\".\"package_hash\" ~ '^[a-f0-9]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.external_workspace_attempts": {
+      "name": "external_workspace_attempts",
+      "schema": "",
+      "columns": {
+        "permit_id": {
+          "name": "permit_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "external_workspace_attempts_permit_id_external_submissions_permit_id_fk": {
+          "name": "external_workspace_attempts_permit_id_external_submissions_permit_id_fk",
+          "tableFrom": "external_workspace_attempts",
+          "tableTo": "external_submissions",
+          "columnsFrom": [
+            "permit_id"
+          ],
+          "columnsTo": [
+            "permit_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.external_reservation_state": {
+      "name": "external_reservation_state",
+      "schema": "public",
+      "values": [
+        "active",
+        "in_review",
+        "accepted",
+        "expired",
+        "cancelled"
+      ]
+    },
+    "public.external_submission_state": {
+      "name": "external_submission_state",
+      "schema": "public",
+      "values": [
+        "received",
+        "public_evaluating",
+        "private_evaluating",
+        "owner_review",
+        "accepted",
+        "changes_required",
+        "package_defect",
+        "infrastructure_failure"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

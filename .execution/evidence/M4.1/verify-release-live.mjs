@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { build } from 'vite';
+import { docker } from '../../../scripts/docker.mjs';
+import { composeArguments } from '../../../scripts/synthetic-runtime.mjs';
+
+const root = resolve(import.meta.dirname, '../../..');
+const journal = JSON.parse(await readFile(resolve(root, 'services/private-api/db/migrations/meta/_journal.json'), 'utf8'));
+const migrations = await Promise.all(journal.entries.filter(entry => entry.tag !== '0006_immutable_release_content').map(entry => readFile(resolve(root, `services/private-api/db/migrations/${entry.tag}.sql`), 'utf8')));
+const schemaSql = await readFile(resolve(root, 'services/private-api/db/migrations/0006_immutable_release_content.sql'), 'utf8');
+assert.equal(schemaSql, await readFile(resolve(root, 'services/private-api/releases/schema.sql'), 'utf8'));
+const bundle = await build({ configFile: false, root: resolve(root, 'services/private-api'), logLevel: 'silent', build: { ssr: 'releases/live-fixture.ts', write: false, minify: false, sourcemap: false, rollupOptions: { output: { inlineDynamicImports: true } } } });
+assert.ok(!Array.isArray(bundle) && 'output' in bundle);
+const chunk = bundle.output.find(item => item.type === 'chunk');
+assert.ok(chunk);
+const source = `${chunk.code}\ntry { console.log(JSON.stringify(await runReleaseFixture(${JSON.stringify(migrations)},${JSON.stringify(schemaSql)}))); } catch (error) { console.error(error instanceof Error ? error.message : 'release_fixture_failed'); process.exitCode=1; }\n`;
+const result = await docker([...composeArguments, 'exec', '-T', '--env', 'SYNTHETIC_RELEASE_FIXTURE=private-task-mvp-synthetic', '--workdir', '/workspace/services/private-api', 'private-api', 'node', '--input-type=module'], { input: source, timeout: 60000 });
+assert.equal(result.code, 0, `Synthetic release fixture failed: ${result.stderr.slice(-2048)}`);
+const report = JSON.parse(result.stdout);
+assert.equal(report.assurance, 'tested'); assert.equal(report.realCustomerData, false);
+console.log(JSON.stringify(report));

@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 1,
+  "waveId": "W002",
+  "planVersion": "box-v4-2026-10-04.1",
+  "status": "completed",
+  "completionRecord": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/cto-acceptance-h1.json",
+  "completedRepair": "W002-CTO-R2-Devin-H1",
+  "oldDevinSuspended": true,
+  "newFeatureApproved": false,
+  "taskIds": [
+    "B1.1"
+  ],
+  "brief": ".execution/box-v4/briefings/W002.md",
+  "briefRevision": "2026-10-04-r1",
+  "briefDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9",
+  "approval": {
+    "record": ".execution/box-v4/approvals/W002-approval.json",
+    "approver": "CEO (human operator)",
+    "message": "Approve",
+    "observedAt": "2026-10-04T08:35:06.1650860Z",
+    "boundBriefDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
+  "holdEvents": [
+    {
+      "record": ".execution/box-v4/approvals/W002-hold-diagnosis-20261005.json",
+      "status": "held",
+      "messageExcerpt": "Record W002 on Hold. Preserve all code, evidence and databases.",
+      "resumeAuthorized": false,
+      "productLeaseGranted": false
+    },
+    {
+      "record": ".execution/box-v4/approvals/W002-hold-step1-20261005.json",
+      "recordedAtUtc": "2026-10-04T17:31:05.4601115Z",
+      "timestampMeaning": "recording clock, not human-message timestamp",
+      "messageExcerpt": "Read START.md. Keep W002 on Hold and reconcile the existing work.",
+      "boundBriefDigest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+      "status": "resumed_under_r3",
+      "resumedBy": ".execution/box-v4/approvals/W002-r3-approval.json",
+      "governanceOnlyApproval": "Subsequent Approve authorizes step-1 hold/evidence/proposal preparation only; not resume, workers, tests, container changes, deletion or Git saving."
+    },
+    {
+      "record": ".execution/box-v4/approvals/W002-hold-cto-repair-20261005.json",
+      "status": "held",
+      "recordedAtUtc": "2026-10-04T23:29:40.259192+00:00",
+      "messageExcerpt": "Im stopping the devin kitchen abruptly, im leaving it up to you to fix it for me so that we are right behind a feature.",
+      "resumeAuthorized": false
+    }
+  ],
+  "resumeAuthorizations": [
+    {
+      "record": ".execution/box-v4/approvals/W002-r3-approval.json",
+      "revision": "2026-10-05-r3",
+      "message": "Approve",
+      "recordedAtUtc": "2026-10-04T17:38:29.4702442Z",
+      "boundBriefDigest": "sha256:8f95b5bfebee620dd74072a5a495cc60d6fb989660f1069d6aa54b005cf5d733",
+      "scope": "Exact r3 verification resume only, original-team preflight required; no cleanup or later wave"
+    }
+  ],
+  "revocationEvents": [],
+  "scope": {
+    "productWrites": true,
+    "readOnlyInspection": true,
+    "governancePreparation": true,
+    "subagentDelegation": "proposed root -> box-platform-lead -> one box-worker then distinct box-reviewer, foreground/sequential; no dispatch until actual approval",
+    "pluginInstallation": false,
+    "globalModelConfiguration": false,
+    "processStartup": "proposed isolated disposable local workspace and synthetic PostgreSQL containers only, cached pinned images, no pulls; exact policy in frozen brief; not authorized until approval",
+    "remoteUpload": false,
+    "spending": false,
+    "gitCommitsOrMerges": "routine reviewed checkpoints per docs/box-v4/GIT-CHECKPOINTS.md standing authority, non-force to existing private origin/master; no PR, other destination or shared-branch merge",
+    "destructiveOperations": "require explicit confirmation for each specific action; no resets/drops of existing DBs or deletion of unrelated resources"
+  },
+  "scopeStatus": "Completed acceptedB1.1 under CEOapprovedH1 handover; noactivewriter. Originalreviews/holds preservedas history; nextfeaturepending.",
+  "historicalR8ScopeStatus": "Actual r4-r8 approvals/history preserved. R8 fresh lead76d471f9 -> workerf271fb6b -> distinct reviewer9e3fe1a6 executed sequentially and ended at independent UNKNOWN. One correction consumed, no usable passing test evidence, scope/timing/static issues retained. Lease inactive; setup/readiness/acceptance closed. R9 evidence-first repair and explicit budget increase proposal await actual approval.",
+  "revisionPolicy": "Frozen r1 prepared for the CEO decision card in this session. No execution authority exists until actual human approval binds these exact brief bytes. Material changes require a new revision and approval. Earlier unapproved drafts remain in Git history.",
+  "runtimePolicy": {
+    "placement": "local_existing_resources",
+    "models": "preserve_current_available_settings",
+    "maxAgents": "root plus one active lead and one terminal child at a time within actual host capacity",
+    "heavyChecks": "serialized",
+    "adapter": "devin_portable_pstack_adaptation",
+    "baseRevision": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+    "workspaceImageId": "sha256:99fc47dac8b729a5060068378def035fab6542c9be55885187251291e71e65c9",
+    "postgresImage": "postgres:17-bookworm@sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+    "workspaceReadiness": "cached image metadata observed; execution/toolchain preflight not yet run; non-root override required because dependency image has no configured User"
+  },
+  "pilotGates": [
+    "G1 actual approval bound to frozen brief digest",
+    "G2 single-worker receipt bound to exact candidate manifest",
+    "G3 distinct box-reviewer verdict on identical recomputed bytes",
+    "G4 durable worker/reviewer evidence persisted",
+    "G5 real START resumption demonstrated; undemonstrated is degraded, not passed, and blocks later parallel fan-out"
+  ],
+  "adoptedChoicesOnApproval": [
+    "Q2: behavior artifact is a distinct object from InternalIntent",
+    "Q3: owner-role behavior and merge approvals remain separate records; executor cannot approve its own behavior, review or merge",
+    "scripts/boundaries.mjs gains packages/box-*/ forbidden-prefix coverage under tooling-scripts lease",
+    "Follow existing hand-authored migration convention with new 0012 SQL and journal idx 12; no new snapshot",
+    "Colocate Box table definitions in the store tree; defer existing schema/auth session/bootstrap edits and public routes"
+  ],
+  "checkpointStatus": "B1.1 accepted and reviewedsource/evidence saved a38c1e01cdf139af31a80d816efce8b9e023513a onprivateorigin/master. PriorCP001/CP002/historypreserved; W003approvalpending.",
+  "historicalCheckpointStatusAtCtoRepair": "Prior accepted W001/S001 checkpoint recorded at CP001; W002 candidate remains unaccepted/uncommitted/unstaged. No blocked product checkpoint; routine accepted exact-reviewed saving still requires current destination/history checks.",
+  "executionStatus": "completed_b11_accepted_h1_source_saved",
+  "currentCheckpoint": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/checkpoint-h1-saved.json",
+  "r4Assignments": {
+    "lead": "box-platform-lead/89140b96",
+    "worker": "box-worker/0efad945",
+    "reviewer": "box-reviewer/a689979b",
+    "lease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+    "status": "correction_required_setup_held",
+    "phaseReleaseRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json",
+    "phaseReleaseSuspendedRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json"
+  },
+  "d1r4Attempt2": {
+    "independentReview": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-d1r4-attempt2.json",
+    "reviewSha256": "8da66e664bc71457f7b53216a1f87180ee4d462585e2bc4a39ec335f7da1bab6",
+    "initialPhaseVerdict": "PRE-EXECUTION PASS",
+    "latestReview": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-d1r4-attempt2-dependency-wiring-amendment.json",
+    "latestReviewSha256": "b6f0fbc98f740f810d4cb23834f1c9284653e7521f2f574fbefc93c2fdbfb830",
+    "verdict": "fail",
+    "phaseVerdict": "PRE-EXECUTION FAIL (initially PASS, amended by same reviewer a689979b: dependency/tooling not mounted/staged/resolvable inside /stage runner)",
+    "candidateManifest": ".execution/box-v4/evidence/B1.1/verification-recovery/candidate-manifest-d1r4-attempt2.json",
+    "changedLeasedPaths": 8,
+    "phaseReleaseRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json",
+    "phaseReleaseSuspendedRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json",
+    "resourcesCreated": 0,
+    "setupAttemptsUsed": 0,
+    "acceptanceBatchesRun": 0,
+    "productAccepted": false,
+    "note": "Setup release suspended before any setup attempt was consumed; one scoped in-lease dependency-wiring correction plus fresh independent PASS required before re-release."
+  },
+  "pendingProposal": ".execution/box-v4/briefings/W002-D1-r4.md",
+  "pendingProposalBinding": ".execution/box-v4/evidence/B1.1/verification-recovery/proposal-binding-d1-r4.json",
+  "historicalD1r3Budget": {
+    "priorConservativeMinutes": 164,
+    "amendmentConservativeDebitMinutes": 15,
+    "chargedMinutes": 179,
+    "cumulativeCeilingMinutes": 284,
+    "remainingMaximumMinutes": 105,
+    "reset": false
+  },
+  "historicalD1r3Proposal": ".execution/box-v4/evidence/B1.1/verification-recovery/proposal-binding-d1-r3.json",
+  "proposedSupervision": {
+    "policy": "progress_based",
+    "overallActiveMinuteCutoff": null,
+    "blanketCorrectionLimit": null,
+    "blanketFailedSuiteRerunLimit": null,
+    "informativeAttemptRecordRequired": true,
+    "unchangedLoopPermitted": false,
+    "checkpointIntervalActiveMinutes": 15,
+    "currentIndependentReviewRequired": true,
+    "acceptanceWaived": false,
+    "timeLedgerUse": "historical_information_not_deadline",
+    "status": "approved"
+  },
+  "historicalExecutionStatus": "blocked_r8_preexecution_unknown_correction_consumed",
+  "r6Assignments": {
+    "lead": "box-platform-lead/9d815787",
+    "worker": "box-worker/0f83ba36",
+    "reviewer": "box-reviewer/8eabd268",
+    "lease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-r6.json",
+    "phase": "ended; independent FAIL, lease inactive, no setup/acceptance release"
+  },
+  "r6Outcome": {
+    "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r6-final.json",
+    "preexecutionVerdict": "fail",
+    "extraCorrectionUsed": 1,
+    "extraCorrectionLimit": 1,
+    "newResourcesCreated": 0,
+    "environmentAttemptsUsed": 0,
+    "conservativeDebitedActiveMinutes": 134,
+    "totalActiveMinuteLimit": 180,
+    "remainingMaximumMinutes": 46,
+    "acceptanceBatchesRun": 0,
+    "productAccepted": false
+  },
+  "r4Outcome": {
+    "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r4-final.json",
+    "preexecutionVerdict": "fail; same reviewer retracted overbroad PASS",
+    "newResourcesCreated": 0,
+    "environmentAttemptsUsed": 0,
+    "harnessCorrectionsUsed": 1,
+    "harnessCorrectionLimit": 1,
+    "conservativeReportedActiveMinutes": 74,
+    "totalActiveMinuteLimit": 180,
+    "acceptanceBatchesRun": 0,
+    "productAccepted": false
+  },
+  "proposedLiveWiringAmendment": {
+    "revision": "2026-10-05-r5-live-wiring",
+    "brief": ".execution/box-v4/briefings/W002-r5.md",
+    "briefDigest": "sha256:4f45b5bf2861ff05bf485778c30b9a4e0d303fc820c04691cbd3b08b20c3919e",
+    "status": "approved_blocked_required_team_unavailable",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r5-approval.json",
+      "message": "START.MD, I approve the latest briefing W002-r5",
+      "boundBriefDigest": "sha256:4f45b5bf2861ff05bf485778c30b9a4e0d303fc820c04691cbd3b08b20c3919e"
+    },
+    "scope": "One additional same-worker harness correction and same-reviewer exact live-wiring gate, followed only on PASS by existing two-resource/readiness/seven-check scope. No application/assertion changes, cleanup or budget reset."
+  },
+  "proposedTeamReplacement": {
+    "revision": "2026-10-05-r6-team-replacement",
+    "brief": ".execution/box-v4/briefings/W002-r6.md",
+    "briefDigest": "sha256:cdf07ae76424d7288fc582173ddd547e4844f566616e0af4ea1392b619c6f2f2",
+    "status": "ended_preexecution_fail",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r6-approval.json",
+      "message": "Approve",
+      "boundBriefDigest": "sha256:cdf07ae76424d7288fc582173ddd547e4844f566616e0af4ea1392b619c6f2f2"
+    },
+    "scope": "Fresh sequential lead/sole worker/distinct reviewer, only after safe ownership and current Free routing proof. Same unused r5 correction, exact paths, gates, resources, acceptance and cumulative limits; no budget reset.",
+    "preflight": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-r5.json"
+  },
+  "proposedHarnessClosure": {
+    "revision": "2026-10-05-r7-harness-closure",
+    "brief": ".execution/box-v4/briefings/W002-r7.md",
+    "briefDigest": "sha256:bbf8e4c0533d9cbad9b715b7b5dc4079a27b9e2f09b66877a5f4ec9d2170057b",
+    "status": "approved_blocked_required_team_unavailable",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r7-approval.json",
+      "message": "START.MD, Approve briefing W002-r7",
+      "boundBriefDigest": "sha256:bbf8e4c0533d9cbad9b715b7b5dc4079a27b9e2f09b66877a5f4ec9d2170057b"
+    },
+    "scope": "One new narrow harness-only correction, same actual team, worker20/reviewer10-minute caps within remaining46/180; resolve exact denial/state/create-digest/stage-boundary/descendant gaps. No environment/resource/readiness or acceptance batch execution, no application writes or budget reset.",
+    "preflight": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-r7.json"
+  },
+  "proposedR8TeamReplacement": {
+    "revision": "2026-10-05-r8-team-replacement",
+    "brief": ".execution/box-v4/briefings/W002-r8.md",
+    "briefDigest": "sha256:7fe770df0d3cfbb176ee5113283bb7e20678bce79d887355a3859790aa4f752f",
+    "status": "ended_preexecution_unknown_correction_consumed",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r8-approval.json",
+      "message": "Approve",
+      "boundBriefDigest": "sha256:7fe770df0d3cfbb176ee5113283bb7e20678bce79d887355a3859790aa4f752f"
+    },
+    "scope": "Fresh sequential Platform lead -> sole worker -> distinct reviewer after verified Free routing and safe ownership/source preflight. Same unused r7 correction, eight paths, worker20/reviewer10 within46/180; no setup/readiness/acceptance or budget reset.",
+    "outcome": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r8-final.json"
+  },
+  "r8Assignments": {
+    "lead": "box-platform-lead/76d471f9",
+    "worker": "box-worker/f271fb6b",
+    "reviewer": "box-reviewer/9e3fe1a6",
+    "lease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-r8.json",
+    "phase": "ended; independent UNKNOWN, inactive lease, no setup/acceptance release"
+  },
+  "r8Outcome": {
+    "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r8-final.json",
+    "preexecutionVerdict": "unknown",
+    "correctionUsed": 1,
+    "correctionLimit": 1,
+    "newResourcesCreated": 0,
+    "environmentAttemptsUsed": 0,
+    "conservativeDebitedActiveMinutes": 164,
+    "totalActiveMinuteLimit": 180,
+    "remainingMaximumMinutes": 16,
+    "workerTestResult": "unknown_output_unrecoverable",
+    "reviewerTest": "not_run",
+    "productAccepted": false
+  },
+  "proposedR9EvidenceFirstRepair": {
+    "revision": "2026-10-05-r9-evidence-first-repair",
+    "brief": ".execution/box-v4/briefings/W002-r9.md",
+    "briefDigest": "sha256:aad5106bc1203c0d0a7de7000a45d852a856a567a121154e5975603c059a89b7",
+    "status": "awaiting_ceo",
+    "approval": null,
+    "scope": "Reviewer Linux transport/evidence proof before worker writes; one new8-path harness correction plus independent review, worker40/reviewer20 including preflight, explicit proposed cumulative ceiling180->240 preserving prior164; bounded one safe team transfer. No setup/readiness/acceptance, paid usage or model/config changes."
+  },
+  "r7Outcome": {
+    "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-r7.json",
+    "status": "blocked_required_team_unavailable",
+    "actualDispatches": 0,
+    "candidateLeaseGranted": false,
+    "correctionUsed": 0,
+    "conservativeDebitedActiveMinutes": 134,
+    "remainingMaximumMinutes": 46
+  },
+  "historicalR4Assignments": {
+    "lead": "box-platform-lead/553458f9",
+    "worker": "box-worker/92162dc8",
+    "reviewer": "box-reviewer/424d5727",
+    "lease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-r4.json",
+    "topology": "fresh sequential nested foreground lead -> sole harness worker then distinct reviewer; actual child IDs pending",
+    "modelEvidence": ".execution/box-v4/evidence/B1.1/verification-recovery/model-confirmation-r4.json; runtime routed model unobserved"
+  },
+  "activeAuthority": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+  "historicalD1r2Authority": ".execution/box-v4/approvals/W002-D1-r2-approval.json",
+  "historicalR8Authority": ".execution/box-v4/approvals/W002-r8-approval.json",
+  "activeHold": ".execution/box-v4/approvals/W002-hold-cto-repair-20261005.json",
+  "latestHold": {
+    "status": "held",
+    "record": ".execution/box-v4/approvals/W002-hold-cto-repair-20261005.json",
+    "resumeAuthorized": false,
+    "productLeaseGranted": false
+  },
+  "reconciledDocumentaryCheckpoint": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "actualAssignments": {
+    "lead": "box-platform-lead/f65bedca",
+    "worker": "box-worker/e44008a7",
+    "reviewer": "box-reviewer/77c88b35",
+    "topology": "foreground sequential nested lead -> worker then distinct reviewer; children terminal",
+    "observedModels": "not exposed by this session's run_subagent response; no diversity claim"
+  },
+  "assignmentsStatus": "prior_execution_authority_suspended_runtime_shutdown_unconfirmed",
+  "candidate": "Protected16 source/old staged22 preserved; current14 exact final hashes in .execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r8-final.json;5 leased files changed, unaccepted/uncommitted",
+  "review": ".execution/box-v4/evidence/B1.1/reviewer-verdict-r2.md",
+  "relayPreexecutionReview": ".execution/box-v4/evidence/B1.1/verification-recovery/relay-review-r3.json",
+  "reconciliation": ".execution/box-v4/evidence/B1.1/verification-recovery/reconciliation-20261005.json",
+  "pilotGatesObserved": {
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "degraded_not_demonstrated"
+  },
+  "routineRetriesUsed": 1,
+  "materialChangeRequired": "R8 ended at independent UNKNOWN, correction/review consumed, lease inactive. No worker test result or reviewer Linux run, scope/timing and root static defects preserved. Conservative164/180 leaves16. Further correction/review or budget increase requires actual r9 approval; no setup/acceptance release.",
+  "dispatchStop": {
+    "executionPermitted": false,
+    "readOnlyLeadDispatchPermitted": false,
+    "harnessCorrectionDispatchPermitted": false,
+    "r4PhaseRelease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+    "environmentSetupPermitted": false,
+    "acceptanceChecksPermitted": false,
+    "activeApproval": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+    "historicalR8Approval": ".execution/box-v4/approvals/W002-r8-approval.json",
+    "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r8-final.json",
+    "historicalRuntimeBlocker": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-r7.json",
+    "historicalPreexecutionFail": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r6-final.json",
+    "type": "ceo_stop_cto_repair",
+    "approvedRecovery": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+    "d1r4PhaseReleaseRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json",
+    "d1r4PhaseReleaseSuspendedRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json",
+    "d1r4ReviewAmendment": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-d1r4-attempt2-dependency-wiring-amendment.json",
+    "historicalD1r2Approval": ".execution/box-v4/approvals/W002-D1-r2-approval.json",
+    "historicalType": "r8_preexecution_unknown_correction_consumed",
+    "nextBrief": ".execution/box-v4/briefings/W002-D1-r4.md",
+    "nextBriefBindingRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/proposal-binding-d1-r4.json",
+    "historicalD1r2BriefGitBlobId": "251c79345cb7699ade79cfb18428cdffc063ef23",
+    "historicalUnapprovedR9Brief": ".execution/box-v4/briefings/W002-r9.md",
+    "historicalUnapprovedR9Digest": "sha256:aad5106bc1203c0d0a7de7000a45d852a856a567a121154e5975603c059a89b7",
+    "nextApproval": null,
+    "previousStateAtCtoStop": {
+      "executionPermitted": "one_scoped_in_lease_correction_only_setup_held",
+      "readOnlyLeadDispatchPermitted": true,
+      "harnessCorrectionDispatchPermitted": true,
+      "r4PhaseRelease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+      "environmentSetupPermitted": false,
+      "acceptanceChecksPermitted": false,
+      "activeApproval": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+      "historicalR8Approval": ".execution/box-v4/approvals/W002-r8-approval.json",
+      "evidence": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r8-final.json",
+      "historicalRuntimeBlocker": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-r7.json",
+      "historicalPreexecutionFail": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-r6-final.json",
+      "type": "r4_setup_release_suspended_correction_required",
+      "approvedRecovery": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+      "d1r4PhaseReleaseRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json",
+      "d1r4PhaseReleaseSuspendedRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json",
+      "d1r4ReviewAmendment": ".execution/box-v4/evidence/B1.1/verification-recovery/harness-review-d1r4-attempt2-dependency-wiring-amendment.json",
+      "historicalD1r2Approval": ".execution/box-v4/approvals/W002-D1-r2-approval.json",
+      "historicalType": "r8_preexecution_unknown_correction_consumed",
+      "nextBrief": ".execution/box-v4/briefings/W002-D1-r4.md",
+      "nextBriefBindingRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/proposal-binding-d1-r4.json",
+      "historicalD1r2BriefGitBlobId": "251c79345cb7699ade79cfb18428cdffc063ef23",
+      "historicalUnapprovedR9Brief": ".execution/box-v4/briefings/W002-r9.md",
+      "historicalUnapprovedR9Digest": "sha256:aad5106bc1203c0d0a7de7000a45d852a856a567a121154e5975603c059a89b7",
+      "nextApproval": null
+    },
+    "holdRecord": ".execution/box-v4/approvals/W002-hold-cto-repair-20261005.json"
+  },
+  "proposedPlacementAmendment": {
+    "revision": "2026-10-05-r4",
+    "brief": ".execution/box-v4/briefings/archive/W002-r4-team-only.md",
+    "briefDigest": "sha256:54069277604005284e6a395512fc86361bd75442c26ea92b8977a67ab8451823",
+    "status": "superseded_unapproved",
+    "approval": null,
+    "scope": "Historical team-only proposal preserved; it was never approved and cannot authorize the revised environment."
+  },
+  "proposedEnvironmentAmendment": {
+    "revision": "2026-10-05-r4-environment-v2",
+    "brief": ".execution/box-v4/briefings/W002-r4.md",
+    "briefDigest": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721",
+    "status": "approved",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r4-approval.json",
+      "message": "Approve",
+      "boundBriefDigest": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721"
+    },
+    "scope": "Fresh sequential nested team; leased test harness/configuration changes; two new cached-image containers; independent environment readiness before the original seven checks. Protected B1.1 implementation and acceptance unchanged; no downloads or cleanup.",
+    "newContainerNames": [
+      "w002-b11-linux-r4-env2",
+      "w002-b11-box-db-r4-env2"
+    ],
+    "environmentAttemptLimit": 2,
+    "setupMinutesPerAttempt": 20,
+    "totalActiveMinutes": 180,
+    "preserveExistingTmpfsDatabases": true,
+    "modelOperatingMode": "Free while quota unknown, contingent on verified actual child routing; no profile/model setup or paid fallback authorized",
+    "preparationEvidence": ".execution/box-v4/evidence/B1.1/verification-recovery/environment-plan-r4-v2.json"
+  },
+  "proposedAmendment": {
+    "revision": "2026-10-04-r2",
+    "brief": ".execution/box-v4/briefings/W002-r2.md",
+    "briefDigest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+    "status": "approved",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r2-approval.json",
+      "message": "Approve",
+      "observedAt": "2026-10-04T15:50:36.0926937Z",
+      "boundBriefDigest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167"
+    },
+    "materialPermissions": "reviewed fixed-command fixture relay, disposable synthetic service containers, matching pinned Linux Chromium download in public-toolchain-only acquisition container, specific test harness timeout/staging leases; no host candidate execution or daemon socket"
+  },
+  "proposedResume": {
+    "revision": "2026-10-05-r3",
+    "brief": ".execution/box-v4/briefings/W002-r3.md",
+    "briefDigest": "sha256:8f95b5bfebee620dd74072a5a495cc60d6fb989660f1069d6aa54b005cf5d733",
+    "status": "approved",
+    "approval": {
+      "record": ".execution/box-v4/approvals/W002-r3-approval.json",
+      "message": "Approve",
+      "boundBriefDigest": "sha256:8f95b5bfebee620dd74072a5a495cc60d6fb989660f1069d6aa54b005cf5d733"
+    },
+    "scope": "Unchanged B1.1 candidate verification; reuse six W002 containers, reconcile mailbox, at most one bounded public-toolchain browser acquisition container, seven serialized checks and original distinct reviewer. No cleanup or later wave."
+  },
+  "previousLatestHoldAtCtoStop": {
+    "status": "resumed_under_r4_fresh_transfer_checks",
+    "resumeAuthorized": true,
+    "productLeaseGranted": true,
+    "record": ".execution/box-v4/approvals/W002-hold-diagnosis-20261005.json",
+    "resumeRecord": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+    "freshTransferEvidence": ".execution/box-v4/evidence/B1.1/verification-recovery/resume-preflight-d1-r4.json",
+    "recoveryProposal": ".execution/box-v4/briefings/W002-D1-r4.md",
+    "recoveryBindingRecord": ".execution/box-v4/evidence/B1.1/verification-recovery/proposal-binding-d1-r4.json",
+    "recoveryRevision": "2026-10-05-d1-r4",
+    "transferAcknowledgement": null,
+    "transferPolicy": "Proposed approval-gated present-day reconciliation, no historical conversation/acknowledgement lookup; fresh exclusive lease only on conflict-free process/lease/hash/resource/mutation checks. Old queues/DBs preserved, no replay; no lease now.",
+    "verificationProposal": "R4 progress-supervised in-scope corrections and justified affected reruns; current independent review of changed candidates, reviewer-only complete final seven-command batch and every acceptance gate. Command hang/resource/safety bounds retained; time ledger historical, no overall active-minute cutoff.",
+    "recoveryApproval": ".execution/box-v4/approvals/W002-D1-r4-approval.json",
+    "historicalConditionalApproval": ".execution/box-v4/approvals/W002-D1-r2-approval.json",
+    "conditionalResumeAuthorized": false,
+    "approvalStatus": "approved_fresh_transfer_passed",
+    "note": "Current direct CEO Hold supersedes execution availability, not historical approvals or evidence. R9 remains unapproved and is not extended. No product ownership assumed."
+  },
+  "activeRepair": {
+    "id": "W002-CTO-R2-Devin-H1",
+    "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+    "status": "completed_source_saved",
+    "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+    "acceptance": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/cto-acceptance-h1.json",
+    "worker": "box-worker/483988b4",
+    "reviewer": "box-reviewer/27f919af",
+    "newFeatureApproved": false
+  },
+  "historicalR2RepairAtH1": {
+    "id": "W002-CTO-R2",
+    "authority": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+    "brief": ".execution/box-v4/briefings/W002-CTO-R2.md",
+    "briefDigest": "4fff30c2d0dd9eed78af223d32a3930058a6b53b956241047d2a43cecc837323",
+    "status": "independent_r2_full_acceptance_released",
+    "oldDevinSuspended": true,
+    "newFeatureApproved": false,
+    "lease": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-lease.json",
+    "checkpoint": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/acceptance-phase-release-r2.json",
+    "supervisorReview": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-review-r1.json",
+    "setupReleased": true,
+    "candidateFreeze": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/candidate-freeze-launcher-r2.json",
+    "binding": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-binding-r2.json",
+    "setupRelease": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/setup-release.json",
+    "setupAttempt": 1,
+    "resourcesCreated": 2,
+    "pollerReleased": true,
+    "acceptanceReleased": true,
+    "readiness": "independent-environment-ready-r1.json",
+    "relayToolSessionId": 75109,
+    "previousR1": {
+      "id": "W002-CTO-R1",
+      "authority": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+      "brief": ".execution/box-v4/briefings/W002-CTO-R1.md",
+      "briefDigest": "ae620e68cb07739308145cecfc0385c257551fba7bedd372f6f0d2fd594df396",
+      "status": "independent_full_acceptance_released",
+      "oldDevinSuspended": true,
+      "newFeatureApproved": false,
+      "lease": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-lease.json",
+      "checkpoint": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/acceptance-phase-release.json",
+      "supervisorReview": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-review-r1.json",
+      "setupReleased": true,
+      "candidateFreeze": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/candidate-freeze-dependency.json",
+      "binding": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-binding.json",
+      "setupRelease": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/setup-release.json",
+      "setupAttempt": 1,
+      "resourcesCreated": 2,
+      "pollerReleased": true,
+      "acceptanceReleased": true,
+      "readiness": "independent-environment-ready-r1.json",
+      "relayToolSessionId": 75109
+    },
+    "currentReview": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-review-r2-final.json",
+    "currentReady": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-environment-ready-r2.json"
+  },
+  "nextProposal": ".execution/box-v4/briefings/W003.md",
+  "historicalR2Proposal": ".execution/box-v4/briefings/W002-CTO-R2.md",
+  "previousProposalBindingAtCtoRepair": null,
+  "nextProposalBinding": ".execution/box-v4/evidence/W003-proposal-binding.json",
+  "historicalR2ProposalBinding": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/repair-binding-r2.json"
+}

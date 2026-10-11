@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/migrate-runtime.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T07:00:46.618Z",
+  "finishedAt": "2026-10-02T07:00:47.666Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: private-api migration failed; private diagnostics must remain private.\r\n\r\n1 !== 0\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/scripts/migrate-runtime.mjs:7:10\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 1,\r\n  expected: 0,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

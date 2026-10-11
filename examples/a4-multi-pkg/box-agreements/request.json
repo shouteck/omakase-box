@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "a4-multi-pkg-banner",
+    "name": "Print the a4-multi-pkg CLI banner in green with picocolors",
+    "version": 1
+  },
+  "outcome": "In packages/cli/bin.js print the banner from packages/core (banner()) in green using the installed picocolors dependency, so `node packages/cli/bin.js` outputs exactly the ANSI green banner line. Edit only the declared editable file.",
+  "sourceRoot": "examples/a4-multi-pkg",
+  "files": [
+    {
+      "owner": "package.json",
+      "box": "package.json"
+    },
+    {
+      "owner": "package-lock.json",
+      "box": "package-lock.json"
+    },
+    {
+      "owner": "README.md",
+      "box": "README.md"
+    },
+    {
+      "owner": "packages/cli/package.json",
+      "box": "packages/cli/package.json"
+    },
+    {
+      "owner": "packages/core/package.json",
+      "box": "packages/core/package.json"
+    },
+    {
+      "owner": "packages/core/index.js",
+      "box": "packages/core/index.js"
+    },
+    {
+      "owner": "checks/guard.mjs",
+      "box": "checks/guard.mjs"
+    },
+    {
+      "owner": "checks/outcome.mjs",
+      "box": "checks/outcome.mjs"
+    }
+  ],
+  "entrypoints": [
+    "packages/cli/bin.js"
+  ],
+  "editable": [
+    {
+      "kind": "copy",
+      "owner": "packages/cli/bin.js",
+      "box": "packages/cli/bin.js"
+    }
+  ],
+  "readContext": [],
+  "declaredDependencies": {
+    "picocolors": "1.1.1"
+  },
+  "excludedPrefixes": [
+    "packages/internal/",
+    "box-agreements/",
+    "node_modules/",
+    ".git/"
+  ],
+  "inventoryExcludePrefixes": [
+    "box-agreements/",
+    "node_modules/",
+    ".git/"
+  ],
+  "requires": [
+    {
+      "program": "node",
+      "version": ">=24.11.0 <25"
+    },
+    {
+      "program": "npm.cmd"
+    }
+  ],
+  "checks": [
+    "declared setup: npm ci --ignore-scripts installs the locked picocolors 1.1.1; declared outcome: node checks/outcome.mjs requires the green banner; declared guard: node checks/guard.mjs keeps the banner text and exit 0 green"
+  ],
+  "evaluator": [],
+  "setup": [
+    {
+      "name": "install",
+      "program": "npm.cmd",
+      "args": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "examples/a4-multi-pkg",
+      "context": "owner",
+      "timeoutMs": 300000
+    },
+    {
+      "name": "box-install",
+      "program": "npm.cmd",
+      "args": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "timeoutMs": 300000
+    }
+  ],
+  "commands": [
+    {
+      "name": "pkg-guard",
+      "program": "node",
+      "args": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-multi-pkg",
+      "context": "owner",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "pkg-outcome",
+      "program": "node",
+      "args": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-multi-pkg",
+      "context": "owner",
+      "role": "outcome",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-pkg-guard",
+      "program": "node",
+      "args": [
+        "checks/guard.mjs"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-pkg-outcome",
+      "program": "node",
+      "args": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 120000
+    }
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "instructions": "Run npm ci --ignore-scripts --no-audit --no-fund first. Edit only the file listed in box.json editable paths (packages/cli/bin.js). It maps back to packages/cli/bin.js in the owner repository. Print the banner() from packages/core in green using picocolors so the CLI output is the ANSI green 'a4 ok' line. Seal the work with node box/submit.mjs and return submission.json."
+  }
+}

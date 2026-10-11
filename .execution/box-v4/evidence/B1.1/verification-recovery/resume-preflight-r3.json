@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_runtime_resume_preflight",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "recordedAtUtc": "2026-10-04T17:41:34.3573797Z",
+  "timestampMeaning": "Actual host recording clock, not an inferred human-message timestamp.",
+  "authority": ".execution/box-v4/approvals/W002-r3-approval.json",
+  "brief": ".execution/box-v4/briefings/W002-r3.md",
+  "briefDigest": "sha256:8f95b5bfebee620dd74072a5a495cc60d6fb989660f1069d6aa54b005cf5d733",
+  "approvalStatus": "actual human Approve recorded and exact brief binding verified",
+  "status": "blocked_original_lead_unavailable",
+  "productVerdict": "not_accepted",
+  "attempt": {
+    "tool": "functions.run_subagent",
+    "profile": "box-platform-lead",
+    "resume": "f65bedca",
+    "is_background": false,
+    "requestedWork": "Read-only original-team identity/capability/preflight check only; no children or execution until root release.",
+    "actualResult": "Tool 'run_subagent' validation failed: No subagent found with ID: f65bedca",
+    "newAgentCreated": false,
+    "leadResumed": false,
+    "workerOrReviewerResumed": false,
+    "interpretation": "Original lead resumption is unavailable through this current runtime's actual tool lookup. This is not a permission denial, proof that all subagents are unavailable, or proof that historical dispatch never occurred."
+  },
+  "identityReconciliation": {
+    "lead": "f65bedca",
+    "worker": "e44008a7",
+    "reviewer": "77c88b35",
+    "recordCheck": "Read-only targeted lookup of f65bedca in existing B1.1 evidence returned the same identity in coordinator-rollup.json and governance-review-r3.json; no alternate resumable identifier was found there.",
+    "scopeRule": "Frozen r3 requires stopping if an original identity cannot resume. No replacement writer, flattened topology or new team is authorized by that approval."
+  },
+  "preservation": {
+    "candidateManifest": ".execution/box-v4/evidence/B1.1/verification-recovery/candidate-manifest-r3.json plus candidate-manifest-r5.json",
+    "candidateFilesCompared": 22,
+    "hostAndStageMismatches": 0,
+    "head": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+    "productLease": null,
+    "containers": "Read-only docker ps confirms all six W002-owned running containers retain their recorded IDs; stopped helper and inert source-image container remain preserved; separate four-container legacy stack untouched.",
+    "testsRun": 0,
+    "browserAcquisition": false,
+    "containerMutation": false,
+    "databaseMutation": false,
+    "cleanupDeletion": false,
+    "gitStagingCommitPush": false,
+    "setupAllowance": "No worker/environment setup attempted in this r3 preflight. Do not reset or invent the remaining r2 allowance."
+  },
+  "stop": "Execution stopped at the original-team gate before worker dispatch, relay restart, browser acquisition or tests. Human approval remains recorded; technical failure does not revoke it or create a fabricated new CEO Hold.",
+  "checkpoint": "No product acceptance or save. New governance is local only and lacks current independent review. Preserve all unrelated/unaccepted work unstaged.",
+  "nextProposal": ".execution/box-v4/briefings/W002-r4.md",
+  "recommendation": "Seek explicit amended approval for a fresh platform lead, one verification worker and distinct independent reviewer on the identical candidate and resources, without source changes or cleanup."
+}

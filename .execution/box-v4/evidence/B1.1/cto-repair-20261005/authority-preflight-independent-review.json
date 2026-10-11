@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_authority_preflight_review",
+  "reviewer": "Codex /root/recovery_assurance",
+  "recordedAtUtc": "2026-10-04T23:41:55.866313+00:00",
+  "repairId": "W002-CTO-R1",
+  "authorityRecord": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+  "briefSha256": "ae620e68cb07739308145cecfc0385c257551fba7bedd372f6f0d2fd594df396",
+  "authorityDigestMatches": true,
+  "authorityMeaning": "Direct CEO repair request, CTO-defined bounded scope; no invented Approve of unseen digest; old Devin remains suspended",
+  "reviewVerdict": "pass_for_bounded_worker_repair_subject_to_actual_exclusive_lease",
+  "concernsResolved": [
+    "Separate actual-request record and superseding interpretation preserve old hold",
+    "START separates historical r4 from new Codex repair",
+    "Full durable output/stream drain and descendant false-pass regressions mandatory",
+    "Changed supervisor/test rows refrozen in existing manifest; fresh independent exact-input gate required",
+    "Seven original acceptance commands and G1-G5 remain mandatory",
+    "Same named resource count/images/policy; no installs/downloads/cleanup/new feature"
+  ],
+  "currentSourceCheck": {
+    "count": 456,
+    "mismatches": [],
+    "meaning": "Independent byte hashes only, no candidate execution"
+  },
+  "preflightAssessment": {
+    "status": "read_only_ownership_samples_passed_new_write_lease_pending_current_source_check",
+    "processEvidence": "Reviewed root-recorded host/container metadata samples; reviewer did not independently execute process/Docker checks in this receipt",
+    "terminationClaim": false,
+    "oldMailboxReplayPermitted": false,
+    "historicalOomPreserved": true
+  },
+  "remainingExecutionGates": [
+    "Root must register one exclusive current repair writer lease before source edits; no competing owner",
+    "Current independent candidate review/narrow runtime test evidence after worker correction",
+    "Independently confirm setup allowance unused, resource identities/headroom and browser/service/DB/migration/relay readiness before setup/acceptance",
+    "Complete independent exact-final seven-command batch and G1-G5 before B1.1 acceptance"
+  ],
+  "notReleased": [
+    "setup",
+    "readiness mutation",
+    "acceptance batch",
+    "product acceptance",
+    "new feature",
+    "old Devin resume"
+  ],
+  "operations": "Read files and computed hashes; wrote only this reviewer receipt; no tests/candidate imports/Docker/process mutation"
+}

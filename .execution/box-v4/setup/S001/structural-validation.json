@@ -1,0 +1,14 @@
+{
+  "sourceFilesVerified": 91,
+  "pluginFilesRegisteredBytesMatch": 95,
+  "productFilesPreserved": 426,
+  "presentedW001AndLegacyRecordsPreserved": true,
+  "rootDelegatedOnlyToLead": true,
+  "leadDelegatedToWorkerThenDistinctReviewer": true,
+  "terminalChildrenDidNotDelegate": true,
+  "reviewBoundToExactWorkerCandidate": true,
+  "nativeSkillInvocation": true,
+  "noProductShellWriteNetworkToolsInSuccessfulRun": true,
+  "STARTStaticApprovalGate": true,
+  "STARTLiveRouting": "passed with explicit read-only rehearsal constraints"
+}

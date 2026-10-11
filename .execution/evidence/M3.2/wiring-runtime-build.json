@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts\\synthetic-runtime.mjs",
+    "build"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:37:14.326Z",
+  "finishedAt": "2026-10-03T01:37:18.871Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "{\"assurance\":\"unverified\",\"kind\":\"synthetic_runtime\",\"action\":\"build\",\"exitCode\":1}\n Image private-task-mvp-synthetic-private-api Building \n Image private-task-mvp-synthetic-external-api Building \nWARNING: current commit information was not captured by the build: failed to read current commit information with git rev-parse --is-inside-work-tree\n\nWARNING: current commit information was not captured by the build: failed to read current commit information with git rev-parse --is-inside-work-tree\n\ntrusted.Dockerfile:29\n\n--------------------\n\n  27 |     COPY packages/contracts/private ./packages/contracts/private\n\n  28 |     COPY packages/contracts/workflow ./packages/contracts/workflow\n\n  29 | >>> RUN node services/private-api/bootstrap/build.mjs\n\n  30 |     \n\n  31 |     FROM dependencies AS external-build\n\n--------------------\n\ntarget private-api: failed to solve: process \"/bin/sh -c node services/private-api/bootstrap/build.mjs\" did not complete successfully: exit code: 1\n\n\n"
+}

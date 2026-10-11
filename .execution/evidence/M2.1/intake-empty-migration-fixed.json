@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/verify-empty-migrations.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:45:36.220Z",
+  "finishedAt": "2026-10-02T18:45:40.288Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"service\":\"private-api\",\"emptyDatabaseMigration\":\"tested\",\"replay\":\"tested\",\"tableCount\":10,\"tableCountScope\":\"foundation\",\"allTableCount\":15,\"intakeTableCount\":5,\"fixtureDatabase\":\"synthetic_empty_3018184d596443da9d7b115b4f660448\",\"cleanup\":\"preserved_no_drop\"}\n{\"assurance\":\"tested\",\"service\":\"external-api\",\"emptyDatabaseMigration\":\"tested\",\"replay\":\"tested\",\"tableCount\":10,\"tableCountScope\":\"foundation\",\"allTableCount\":10,\"intakeTableCount\":0,\"fixtureDatabase\":\"synthetic_empty_9fbaaf4f72fd40e892ecb4c9ff3e0088\",\"cleanup\":\"preserved_no_drop\"}\n"
+}

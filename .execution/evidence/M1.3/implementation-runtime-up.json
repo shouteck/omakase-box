@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/synthetic-runtime.mjs",
+    "up"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:54:31.752Z",
+  "finishedAt": "2026-10-02T17:54:35.218Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"kind\":\"synthetic_runtime\",\"action\":\"up\",\"exitCode\":0}\n"
+}

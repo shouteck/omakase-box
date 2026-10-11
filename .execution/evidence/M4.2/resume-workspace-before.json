@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:compiler",
+    "--",
+    "--suite",
+    "package"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:33:14.879Z",
+  "finishedAt": "2026-10-03T03:33:17.599Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[32m✓\u001b[39m tests/compiler/package/approved-only.test.ts \u001b[2m(\u001b[22m\u001b[2m22 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 309\u001b[2mms\u001b[22m\u001b[39m\n \u001b[31m❯\u001b[39m tests/compiler/package/workspace.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Suites 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/compiler/package/workspace.test.ts\u001b[2m [ tests/compiler/package/workspace.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../../packages/compiler/workspace.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/compiler/package/workspace.test.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/compiler/package/workspace.test.ts:\u001b[2m2:1\u001b[22m\u001b[39m\n    \u001b[90m  1|\u001b[39m import { expect, it } from 'vitest';\n    \u001b[90m  2|\u001b[39m import { preparePublicWorkspace, PUBLIC_TEMPLATE_HASH, verifyVettedWor…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m  3|\u001b[39m import { fullStackContract, singleUnitContract } from '../../contracts…\n    \u001b[90m  4|\u001b[39m\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m22 passed\u001b[39m\u001b[22m\u001b[90m (22)\u001b[39m\n\u001b[2m   Start at \u001b[22m 11:33:16\n\u001b[2m   Duration \u001b[22m 1.07s\u001b[2m (tests 49%, import 27%, transform 21%, worker 2%)\u001b[22m\n\n"
+}

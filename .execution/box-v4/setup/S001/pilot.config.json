@@ -1,0 +1,23 @@
+{
+  "subagents_enabled": true,
+  "permissions": {
+    "allow": [
+      "read",
+      "grep",
+      "glob",
+      "run_subagent",
+      "read_subagent"
+    ],
+    "deny": [
+      "edit",
+      "exec",
+      "mcp__*",
+      "Read(.runtime/**)",
+      "Read(.env*)",
+      "Read(secrets/**)",
+      "Read(apps/**)",
+      "Read(services/**)",
+      "Read(packages/**)"
+    ]
+  }
+}

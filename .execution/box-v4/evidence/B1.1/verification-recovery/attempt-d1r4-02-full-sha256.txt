@@ -1,0 +1,10 @@
+73402dd181934c66e3c35e445f6d1995477f31a157e6852f95cf4238e70647e3 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/environment-host.mjs
+cec00cf80cbce786bdb9afb16d069a4fbb84ec40d250ad5daf9cace2095083a7 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/fixture-exec-client.mjs
+d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/fixture-exec-host.mjs
+8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/fixture-exec-runner.mjs
+7bdc452407b07de3f5e96b6244d90f6b0ea7dc94d57ce96f3b7394c328e2adc0 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/readiness.mjs
+b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/run-verification.mjs
+4a46055f1372f336a2671fd573fbc626148e7d72e472b905aee52f307deb5806 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/environment-manifest.json
+34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4 */c/Users/shout/Desktop/Projects/private-task-mvp/scripts/box-verification/fixture-command-manifest.json
+2261a2da74d173e68c62da69783016ff681e3473603ace31b204e7df054358eb */c/Users/shout/Desktop/Projects/private-task-mvp/tests/box/verification/environment-readiness.test.ts
+37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219 */c/Users/shout/Desktop/Projects/private-task-mvp/tests/box/verification/relay-lifecycle.test.ts

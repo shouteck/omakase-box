@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:38:58.335Z",
+  "finishedAt": "2026-10-03T23:39:11.908Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "tests/portal/reservations/reservations.test.ts(344,31): error TS2540: Cannot assign to 'label' because it is a read-only property.\r\n"
+}

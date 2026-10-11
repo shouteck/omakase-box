@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_approved_wave_preflight",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "recordedAtUtc": "2026-10-04T18:13:53.1976057Z",
+  "authority": ".execution/box-v4/approvals/W002-r4-approval.json",
+  "briefDigest": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721",
+  "humanApproval": "Approve recorded for exact environment-first r4; no repeated wave approval is needed within that scope.",
+  "status": "pending_actual_free_child_routing_confirmation",
+  "implementation": {"baselineFiles": 22, "checkoutAndStageMismatches": 0, "sourceWrites": 0, "productVerdict": "not_accepted"},
+  "publicTemplate": {
+    "path": ".env.example",
+    "readResult": "functions.read succeeded for this exact approved public template through native tool controls; no bypass or policy change used.",
+    "digest": "sha256:93d9be5dd9dd83115ce2a7848d4a7c85b73d4ad161d1fa523618e69b429d8d2a",
+    "contentsClassification": "Tracked public references to credential file locations, not credential values. No referenced runtime/secret files read.",
+    "limit": "Does not authorize actual .env/.runtime/secrets reads or claim a blanket permission grant. Child tools must obey their actual permission controls."
+  },
+  "modelPreflight": {
+    "operatingMode": "Free required while quota unknown",
+    "dailyAndWeeklyAllowance": "unknown; no supported agent-readable account source exposed",
+    "currentProfiles": "box-platform-lead, box-worker and box-reviewer reread; none has a model field",
+    "actualToolSchema": "run_subagent accepts profile, not a model argument",
+    "localDocumentation": "Installed devin-cli skill source docs/subagents.mdx confirms custom profiles resolve through the default subagent model/router with possible admin override; cheap SWE-1.6 defaults described there are not proof of current account-free SWE-2 routing.",
+    "documentationSource": "C:/Users/shout/AppData/Local/Programs/Devin/resources/app/extensions/windsurf/devin/share/devin/docs/subagents.mdx",
+    "configuredChildModel": "unverified router result",
+    "observedChildModel": "no child dispatched",
+    "accountFreeStatus": "not verified",
+    "cliInspection": "Get-Command devin returned no installed command on this shell PATH; no installation or replacement CLI launched.",
+    "requiredNextEvidence": "One current human confirmation of the actual default subagent model/router and its Free account label, not the main conversation model. If not verified, keep stopped and prepare separate supported routing setup.",
+    "excluded": "No model/profile/config edits, paid fallback, default general-agent substitution, speculative model slug or probe child dispatch to discover billing."
+  },
+  "resources": "Read-only Docker inventory confirms the same six W002 running containers and old tmpfs DBs; helper remains stopped, source-image artifact inert, legacy stack untouched. Neither proposed r4 container created.",
+  "execution": {"childDispatches": 0, "harnessWrites": 0, "testsOrBuilds": 0, "downloads": 0, "containerChanges": 0, "databaseChanges": 0, "environmentSetupAttemptsUsed": 0, "productRetriesUsed": 1, "productRetryLimit": 2, "gitStageCommitPush": false},
+  "stopBoundary": "Frozen r4 requires actual free assignment before any child dispatch. Approval is preserved; this unresolved model prerequisite is not revocation or a fabricated CEO Hold.",
+  "next": "Resolve the one routing confirmation, then fresh lead preflight within the existing approved scope. Public-template reading itself is no longer an observed blocker."
+}

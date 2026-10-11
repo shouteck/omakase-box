@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "current_human_free_child_routing_confirmation",
+  "waveId": "W002",
+  "revision": "2026-10-05-r6-team-replacement",
+  "authority": ".execution/box-v4/approvals/W002-r6-approval.json",
+  "recordedAtUtc": "2026-10-04T19:22:19.2785404Z",
+  "timestampMeaning": "Host recording clock; human reply timestamp not exposed.",
+  "question": "Does the actual default router for unpinned custom subagents still resolve to SWE-2 marked Free for your account, as previously confirmed?",
+  "answer": "Still SWE-2 Free",
+  "evidenceSource": "Actual human answer returned by functions.ask_user_question in this conversation.",
+  "operatingMode": "Free",
+  "configuredAssignment": "Existing unpinned custom-profile router, human-confirmed still SWE-2 Free; no settings changed.",
+  "observedChildModel": "Unobserved; not inferred from main model.",
+  "quota": "Daily/weekly allowance unknown; no premium fallback or automatic spend enforcement claimed.",
+  "rootOwnershipObservation": "Bounded Win32_Process filter returned no matching W002/fixture-exec/vitest/pnpm node/docker/browser processes. docker top preserved workspace shows sleep only. Six original W002 containers running, helper stopped, source image artifact Created; neither named r4 new resource exists. No child lease granted yet.",
+  "release": "Fresh read-only Platform lead preflight permitted; no worker writes/setup/acceptance until subsequent root phase release.",
+  "stop": "Changed/unknown/non-Free route, permission denial, active writer, unresolved process accounting or source mismatch stops dispatch. No model/profile/config change."
+}

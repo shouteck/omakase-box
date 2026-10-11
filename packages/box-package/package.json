@@ -1,0 +1,7 @@
+{
+  "name": "@private-task/box-package",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "typescript": "6.0.3", "zod": "4.6.5" }
+}

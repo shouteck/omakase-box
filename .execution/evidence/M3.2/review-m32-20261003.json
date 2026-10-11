@@ -1,0 +1,120 @@
+{
+  "taskId": "M3.2",
+  "reviewer": "opencode-reviewer-subagent",
+  "revisionDigest": "42af213aa36bd8c214e535813acb92190c363aed244ce8dd892fada298a4e032",
+  "decision": "approved",
+  "checksRerun": [
+    {
+      "command": "node scripts/evidence.mjs M3.2 review-rerun-analysis-partition scripts/pnpm.mjs test:analysis -- --suite partition",
+      "exitCode": 0,
+      "observed": "16 tests / 2 files passed: the coupled selection fixture acquires a newly typed PublicOptions boundary with both layers parameterized (api.ts parameter mode, panel.tsx props mode), retained adapter keeps the protected computation, public projection excludes captured payloads/private paths/adapter body, uncaptured couplings listed advisory, hash drift and every unsupported shape refused explicitly.",
+      "evidencePath": ".execution/evidence/M3.2/review-rerun-analysis-partition.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.2 review-rerun-planner-partition scripts/pnpm.mjs test:planner -- --suite partition",
+      "exitCode": 0,
+      "observed": "15 tests / 2 files passed: one coherent composed selection task with connected UI/API units and frozen obligations, full-stack+policy composition, ranking pure-module task with retained private scoring, application-policy data-file exception, deterministic composition, untraceable requirements/missing declared destinations/editable retained paths refused as explicit not_supported, provider unsupported flows through, exact intent-hash binding enforced, and the preparation API honoring exact revision binding, role denials and invalid bodies.",
+      "evidencePath": ".execution/evidence/M3.2/review-rerun-planner-partition.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.2 review-rerun-tsc node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "observed": "Repository-wide TypeScript check produced no output (no type errors).",
+      "evidencePath": ".execution/evidence/M3.2/review-rerun-tsc.json"
+    }
+  ],
+  "criterionFindings": [
+    {
+      "criterion": "Frontend component / backend pure-module / scoped backend API work-unit proposals with public interfaces and ONE private integration map for one coherent task",
+      "verdict": "met",
+      "basis": "Source: compose.ts builds exactly one composition with one PrivateIntegrationPlan per call (schema-validated, hash-derived proposal IDs, deterministic) and exposes no splitting mechanism; the composition schema enforces connected work units via published interfaces and rejects dangling links. Re-run observed: the selection fixture composes selection_ui (frontend_component) + selection_api (backend_api) with one selection_http interface and one integration plan; the full-stack+policy goal composes three units in one task; the ranking goal composes one backend_pure_module task."
+    },
+    {
+      "criterion": "Cost/retained-work record",
+      "verdict": "met",
+      "basis": "PartitionCostRecord (schemaVersion 1, compositionHash, per-unit adapterKind/version/effortBand/editablePathCount/retainedAdapterPath/interfacesSupplied, retainedWork strings, assurance 'bounded') is emitted for both proposed and not_supported results. Re-run observed: cost records asserted in the composed-selection tests including for the provider-unsupported cloud case (units empty, retained work present)."
+    },
+    {
+      "criterion": "Explicit unsupported capability results; nothing silently dropped or silently shrunk",
+      "verdict": "met",
+      "basis": "Provider not_supported flows through verbatim with reason/missingCapabilities/retained work; missing declared private destinations and unmapped interfaces produce explicit not_supported with PartitionUnsupportedRecord kinds; extraction returns explicit not_supported (never silent) for every unsupported shape and lists advisoryUncapturedCandidates for captured-but-undeclared protected importers. Re-run observed: the dedicated tests for untraceable requirements, missing destination/interface adapter, cloud unsupported flow-through, and the advisory uncaptured candidate list all pass."
+    },
+    {
+      "criterion": "Bounded AST extraction/parameterization creates a NEW typed public boundary while protected rule computation stays in a private adapter",
+      "verdict": "met",
+      "basis": "Source: extraction.ts parameterizes coupled consumer modules (readonly boundary-typed array parameter / single-field props rewrite), removes protected imports, generates the retained private adapter that still invokes the protected computation, and rewrites declared private callers to supply inputs only through the adapter. Re-run observed: the initially-coupled fixture (api.ts and panel.tsx importing the private rules module) yields boundary src/selection/public-options.ts with the extracted primitive shape; the retained adapter retains the protected call; transformation-model assertions confirm removal and retention."
+    },
+    {
+      "criterion": "The proposed private diff is checked BEFORE approval",
+      "verdict": "met",
+      "basis": "Source: proposeBoundaryExtraction runs the baseline type program (refuses broken baselines), the transformed type program (parameterized modules + boundary + adapter + rewritten callers), and the transformation-model checks (boundary exposes exactly the extracted fields and no captured string literals; parameterized modules lose all protected references; adapter retains the protected call; callers supply inputs only via the adapter) before returning any proposal; approval is {required, status pending_owner_approval, proposalHash} and there is no apply/execute path (Object.keys assertions in tests). Re-run observed: checks all 'passed' with the four model assertions; drift and broken-baseline refusals exercised."
+    },
+    {
+      "criterion": "Private eligibility/scoring remain private while contributor obligations are meaningful",
+      "verdict": "met",
+      "basis": "Retained adapters are required to stay inside a private-managed path segment and outside candidate-editable paths (compose.ts + extraction.ts both enforce); the contributor-facing composition carries real obligations (requirements, interfaces, trusted checks, end-to-end coverage enforced by the composition schema). Re-run observed: composed-selection tests assert private retained paths, editable path unions, and the excluded production capabilities record."
+    },
+    {
+      "criterion": "Each external requirement traces privately to an approved intent; exact revision/hash binding",
+      "verdict": "met",
+      "basis": "compose.ts maps every public/compatibility requirement ID to the approved intent's acceptance-example IDs and refuses untraceable ones as explicit not_supported; validatePartitionInput (providers/contracts.ts) re-derives contentHash(approvedIntent) and rejects any mismatch with approvedIntentHash or the server-supplied approval tuple, and binds snapshot/evidence references to the planning input. The preparation orchestrator resolves the provenance request line, re-reads owned evidence and passes the validated intent. Re-run observed: stripped-intent and wrong-hash fixtures are refused as not_supported."
+    },
+    {
+      "criterion": "A fixture initially coupled to a protected module acquires a newly typed boundary; static type and transformation-model checks pass",
+      "verdict": "met",
+      "basis": "Re-run observed: boundary-extraction suite (14 tests) passes, including the two-layer parameterization with checks {baselineTypes, transformedTypes, transformationModel} all 'passed'; the transformed program is type-checked in a disposed temporary snapshot, and the model assertions confirm the boundary carries exactly the extracted generic fields with zero captured string literals."
+    },
+    {
+      "criterion": "One composed task, not separate layer bounties",
+      "verdict": "met",
+      "basis": "composePartition returns exactly one task per call with no layer-splitting mechanism; the demo provider composes the full-stack goal as one proposed composition of two/three units. Re-run observed: dedicated test asserts the full-stack outcome stays one task and no per-layer split keys/units appear."
+    },
+    {
+      "criterion": "No production authentication/billing capability is claimed",
+      "verdict": "met",
+      "basis": "Source: compose.ts records excludedProductionCapabilities ['production authentication systems','production billing/payment processing'] in every cost record and its retained-work text states no such capability is claimed; the demo provider's unsupported fixtures exclude executable CI/cloud/data-migration capabilities as explicit not_supported. Re-run observed: composed-selection tests assert the exclusion list; no auth/billing adapter or capability appears in any composed output."
+    },
+    {
+      "criterion": "Runtime preservation/integration of the proposed private diff remains honestly labelled pending (M4.3 gate after M5.2/M5.3), not claimed",
+      "verdict": "met",
+      "basis": "BOUNDED_EXTRACTION_LIMITS states runtime preservation and integration remain pending gates for the isolated runner, and the proposal's assumptions bind this to M4.3 after M5.2/M5.3; no apply/execute/import path exists in extraction.ts, compose.ts or the preparations orchestrator, and the preparation API is a read-only proposal surface (no persistence, approval or packaging). Re-run observed: nothing in any suite or source claims preservation/integration execution."
+    },
+    {
+      "criterion": "Generated/proposed code is never executed, never imported from trusted service code, never written into a trusted path",
+      "verdict": "met",
+      "basis": "Source: extraction.ts writes captured/generated text only into an OS-temp mkdtemp snapshot (refuses if the temp root intersects the repository root) and disposes it in finally; there is no eval/vm/child_process/worker machinery in packages/analyzer or packages/planner/partition; grep confirms no services/** or apps/** module imports the extraction adapter (it is consumed only by tests); compose.ts and preparations/** perform no filesystem writes at all. Re-run observed: the never-executes/never-writes-into-workspace test and the whole-repo tsc pass."
+    },
+    {
+      "criterion": "Private computation is not embedded in the public projection",
+      "verdict": "met",
+      "basis": "Source: the extraction public projection exposes only status/assurance/proposalHash/the generated public boundary text/extracted shape/checks/approval status; the private proposal (parameterized sources, adapter body, private paths) is a separate private-side object. The preparation projection carries the composition (public contract schema) plus private-facing integration/cost records to the internal console only, and contains no captured evidence text or generated code bodies. Re-run observed: projection test asserts the canary, protected identifiers, private paths and adapter body never appear in the public projection."
+    },
+    {
+      "criterion": "The preparation route requires a verified SessionActor (server-side authority; no client-supplied authority assertion or bearer capability in a request body) and binds an exact intent revision/hash",
+      "verdict": "met",
+      "basis": "Source: routes.ts mounts POST /v1/intents/:id/preparation through requirePermission('intent.read') (requester/owner only per packages/contracts/auth/policy.ts) and passes only the verified actor to the orchestrator; the body schema is a strictObject {expectedVersion, expectedHash, mode} with no actor/role/token/capability field; the orchestrator rejects stale versions (409), hash mismatches and non-approved states (422), derives the request binding server-side from the immutable provenance line, and obtains declared integration targets from a server-owned source that rechecks the actor role. Re-run observed: the preparation-api suite asserts the 201 composed proposal with no snapshot text, stale/wrong-hash refusals, missing-binding refusal, and 403/400 denials."
+    },
+    {
+      "criterion": "Coordinator wiring inspected: server.ts installPreparationRoutes with demo-mode-only derivation, and infra trusted image COPY/allowlist lines",
+      "verdict": "met",
+      "basis": "Read services/private-api/src/bootstrap/server.ts myself: preparations derive only from the derived fallback gated on auth.mode === 'localhost_demo' && auth.intake (server.ts:39-40); the trusted runtime entrypoint (main.ts) never injects preparations, so production derivation cannot mount them; the host/origin allowlist hook and error mapping are unchanged. Read infra/trusted.Dockerfile (COPY services/private-api/preparations line 21, COPY packages/planner/partition line 25 inside the private-build stage only) and infra/trusted.Dockerfile.dockerignore (exactly the matching !services/private-api/preparations/** and !packages/planner/partition/** allowlist lines 43-44/52-53); the external-api build stage and its allowlist are untouched, and the external boundary checker (scripts/boundaries.mjs) forbids external services/apps from importing packages/planner/**, packages/analyzer/** and services/private-api/**."
+    },
+    {
+      "criterion": "Revision integrity: the review binds the exact declared revision digest",
+      "verdict": "met",
+      "basis": "I recomputed the M3.2 revision manifest per scripts/execution.mjs and reproduced digest 42af213aa36bd8c214e535813acb92190c363aed244ce8dd892fada298a4e032 with 0 missing / 0 added / 0 changed files against the stored manifest; taskDefinitionSha256 matches tasks/task-graph.json."
+    }
+  ],
+  "securityReadCompleted": true,
+  "limitations": [
+    "The extraction check is static and structural under a deliberately narrow bounded model (top-level exported consumers, one protected computation per proposal, removable trailing subject parameter or single-field props, declared callers); ambient shims declare externals data-only, so external behaviour is neither interpreted nor executed. Equivalence beyond the bounded model is not claimed anywhere and returns explicit not_supported.",
+    "Runtime preservation and integration execution of the proposed private diff remain pending gates for M4.3 after M5.2/M5.3 (real isolated runner); nothing in this review verifies them, and no isolated-runner or real-VM gate is claimed.",
+    "The extraction adapter is currently consumed only by the analysis partition suites; it is not yet wired into the private API or a persistence store (M4.1 concern recorded by the worker). The proposalHash is content-addressed for future approval binding, not yet an accepted release artifact.",
+    "Deterministic UUIDs are hash-derived PROPOSAL identifiers only; they are not task reservations, approvals, payments or published tasks (disclosed in the draft).",
+    "The demo declared-target source maps only the six synthetic demo goals to fixed synthetic private-shop paths; any other goal yields explicit missing_evidence. No real customer data, credentials or private runtime logs were used.",
+    "The preparation route is currently exercised by in-process/injected-transport tests (fastify inject with a trusted handler stub); the full HTTP journey through the canonical runtime is exercised by the e2e intent suite for the intent routes, and the coordinator's sweep recorded a rebuilt canonical runtime including the preparations wiring.",
+    "M2.2/M3.1 prerequisite independent reviews remain open (no accepted handoff files yet); this review covers the M3.2 revision under the sequential fallback and does not close prerequisite gates.",
+    "No secrets, prompts or real private fixture contents appear in this report; all observations use synthetic accounts and synthetic fixture data."
+  ],
+  "reviewedAt": "2026-10-03T02:02:53.425Z"
+}

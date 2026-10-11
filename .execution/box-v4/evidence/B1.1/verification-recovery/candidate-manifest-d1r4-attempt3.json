@@ -1,0 +1,27 @@
+{
+  "attempt": "d1-r4-03",
+  "basis": "attempt2 manifest plus dependency-wiring correction to environment-manifest.json + environment-host.mjs + environment-readiness.test.ts",
+  "files": {
+    "scripts/box-verification/environment-host.mjs": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59",
+    "scripts/box-verification/environment-manifest.json": "bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5",
+    "scripts/box-verification/fixture-exec-host.mjs": "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+    "scripts/box-verification/fixture-exec-runner.mjs": "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+    "scripts/box-verification/run-verification.mjs": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+    "scripts/box-verification/fixture-command-manifest.json": "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+    "tests/box/verification/environment-readiness.test.ts": "6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d",
+    "tests/box/verification/relay-lifecycle.test.ts": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219",
+    "scripts/box-verification/readiness.mjs": "7bdc452407b07de3f5e96b6244d90f6b0ea7dc94d57ce96f3b7394c328e2adc0",
+    "scripts/box-verification/fixture-exec-client.mjs": "cec00cf80cbce786bdb9afb16d069a4fbb84ec40d250ad5daf9cace2095083a7",
+    "scripts/docker.mjs": "52a28ccf40172e6884a6b5822cc848d4c0631ab9cc6267e466b8cd697066fc61",
+    "scripts/suite.mjs": "56e1b62ad19152adedfd7a5be76a92a1e2d8b9b238d24d219836aa94077675eb",
+    "scripts/vitest.config.mjs": "5991e2e726dbdead242a0923059e61479766f4e5691091e6b675becf76f059c2",
+    "scripts/process.mjs": "19b3c82f9db6214e8f351a45650ece10ba3754783985956f47967b40c4665aff",
+    "scripts/synthetic-runtime.mjs": "de2ae8e84e7114fc94cc0618979e748c938351c78935227d6d3364f081a4db34",
+    "tests/box/auth/support.ts": "10122a9644c9f6f4a01bcea4090cf9fc5b1c26fcdd7b659815eccfab8f3997fd",
+    "tests/box/auth/fixture-transport.test.ts": "eea4d8ecb9ad224e44316266e2aed7f624296cf2b33bc29f9ef256a4e2a7b4eb",
+    "package.json": "f58a04e0bdc46efb69e332fb6958d37321c17110cb1848ec44fd89c51cce83ca",
+    "tsconfig.json": "c3a2af313d61a6f90c79071bdd058a4220233475c2fb6da9e054add42ade3a52",
+    "pnpm-lock.yaml": "d81f530fa0b59f1cb6ebfcfc8a40a0f0cccefc509ba126debd8898db7f52a720",
+    ".env.example": "93d9be5dd9dd83115ce2a7848d4a7c85b73d4ad161d1fa523618e69b429d8d2a"
+  }
+}

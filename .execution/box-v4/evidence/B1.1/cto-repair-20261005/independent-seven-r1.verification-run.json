@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "verification_run",
+  "environmentId": "w002-b11-env-r4-env2",
+  "startedAt": "2026-10-05T03:14:46.083Z",
+  "commands": [
+    {
+      "command": "node scripts/pnpm.mjs test:box-contracts",
+      "status": "failed",
+      "startedAt": "2026-10-05T03:14:46.094Z",
+      "code": 1,
+      "exitSignal": null,
+      "exitObserved": true,
+      "timedOut": false,
+      "unconfirmed": false,
+      "descendants": "process_group_confirmed_empty",
+      "outputDrained": true,
+      "captureError": null,
+      "reason": null,
+      "elapsedMs": 6438,
+      "stdout": "",
+      "stderr": "failed to load config from /stage/scripts/vitest.config.mjs\n\n\u001b[31mâŽ¯âŽ¯âŽ¯âŽ¯âŽ¯âŽ¯âŽ¯\u001b[39m\u001b[1m\u001b[41m Startup Error \u001b[49m\u001b[22m\u001b[31mâŽ¯âŽ¯âŽ¯âŽ¯âŽ¯âŽ¯âŽ¯âŽ¯\u001b[39m\nError: EROFS: read-only file system, open '/stage/node_modules/.vite-temp/vitest.config.mjs.timestamp-1791170092472-3c59b441643af8.mjs'\n    at async open (node:internal/fs/promises:642:25)\n    at async Object.writeFile (node:internal/fs/promises:1249:14)\n    at async loadConfigFromBundledFile (file:///stage/node_modules/.pnpm/vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1/node_modules/vite/dist/node/chunks/node.js:37862:3)\n    at async bundleAndLoadConfigFile (file:///stage/node_modules/.pnpm/vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1/node_modules/vite/dist/node/chunks/node.js:37710:21)\n    at async loadConfigFromFile (file:///stage/node_modules/.pnpm/vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1/node_modules/vite/dist/node/chunks/node.js:37670:42)\n    at async resolveConfig (file:///stage/node_modules/.pnpm/vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1/node_modules/vite/dist/node/chunks/node.js:37271:22)\n    at async resolveConfig$1 (file:///stage/node_modules/.pnpm/vitest@5.0.1_@types+node@24.13.6_vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.DzobfTyw.js:14777:25)\n    at async createVitest (file:///stage/node_modules/.pnpm/vitest@5.0.1_@types+node@24.13.6_vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1_/node_modules/vitest/dist/chunks/cli-api.DcLieX4F.js:26:17)\n    at async prepareVitest (file:///stage/node_modules/.pnpm/vitest@5.0.1_@types+node@24.13.6_vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1_/node_modules/vitest/dist/chunks/cli-api.DcLieX4F.js:421:14)\n    at async startVitest (file:///stage/node_modules/.pnpm/vitest@5.0.1_@types+node@24.13.6_vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1_/node_modules/vitest/dist/chunks/cli-api.DcLieX4F.js:340:14) {\n  errno: -30,\n  code: 'EROFS',\n  syscall: 'open',\n  path: '/stage/node_modules/.vite-temp/vitest.config.mjs.timestamp-1791170092472-3c59b441643af8.mjs'\n}\n\n\n\n",
+      "stdoutPath": "/stage/.cto-r1-evidence/independent-seven-r1/command-1.stdout.log",
+      "stderrPath": "/stage/.cto-r1-evidence/independent-seven-r1/command-1.stderr.log",
+      "endedAt": "2026-10-05T03:14:52.536Z"
+    }
+  ],
+  "status": "failed"
+}

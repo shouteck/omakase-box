@@ -1,0 +1,38 @@
+{
+  "kind": "actual_created_resource_identity_check",
+  "recordedAtUtc": "2026-10-05T02:57:21.347230+00:00",
+  "runner": {
+    "id": "9161a456732e470d9fea5a5aeb79849f47508644cda8fe2eb6ac03a9747453c2",
+    "user": "1000:1000",
+    "readOnlyRoot": true,
+    "memoryBytes": 2147483648,
+    "pidsLimit": 256,
+    "networkMode": "container:92107bf48d48767f9af619b23e99710eb97f44d8b8ef755f9cc3be37918608f0",
+    "capDrop": [
+      "ALL"
+    ],
+    "securityOpt": [
+      "no-new-privileges"
+    ],
+    "mounts": "Exactthree plannedbinds withrootwritable andbothdependency/toolingreadonly",
+    "oom": false
+  },
+  "database": {
+    "id": "da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86",
+    "user": "999:999",
+    "memoryBytes": 1073741824,
+    "pidsLimit": 128,
+    "networkMode": "w002-b11-net",
+    "capDrop": [
+      "ALL"
+    ],
+    "securityOpt": [
+      "no-new-privileges"
+    ],
+    "bindsOrVolumes": [],
+    "oom": false
+  },
+  "status": "pass",
+  "credentialsRead": false,
+  "limitation": "Identity/hardening only;actualruntime readinesspending"
+}

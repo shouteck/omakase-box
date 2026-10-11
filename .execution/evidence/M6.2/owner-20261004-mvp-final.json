@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "verify:mvp"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:18:48.232Z",
+  "finishedAt": "2026-10-04T00:18:52.720Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "{\n  \"schemaVersion\": 1,\n  \"assurance\": \"unverified\",\n  \"software\": \"incomplete\",\n  \"mandatoryGates\": \"unavailable\",\n  \"reason\": \"Required end-to-end product, isolated-runner, composition and security gates remain incomplete.\",\n  \"realIsolatedRunner\": \"unverified\",\n  \"livePrivateModel\": \"unverified\",\n  \"independentReview\": \"unverified\",\n  \"humanPilot\": \"not_conducted\"\n}\n"
+}

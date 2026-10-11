@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.3",
+  "reviewer": "opencode-reviewer-subagent-m3-20261003",
+  "reviewType": "independent_first_review",
+  "reviewedAt": "2026-10-03T01:20:00.000Z",
+  "scope": "Full first independent review of M3.3 (no prior independent review; sequential-fallback status 'review'). Reviewer did not implement these tasks; decisive check rerun on current bytes plus source-level challenge of the mandated specifics.",
+  "revisionBinding": {
+    "currentManifest": ".execution/evidence/M3.3/revision-56f00f4d790ddc1bb900774e65ea6fd7c5b5362041d29b2ea7d46718ec2f07db.json",
+    "recomputedEveryFileSha256": true,
+    "fileCount": 54,
+    "missingFiles": 0,
+    "internalDigestRecomputation": {
+      "stateDigest": "56f00f4d790ddc1bb900774e65ea6fd7c5b5362041d29b2ea7d46718ec2f07db",
+      "recomputedFromManifest": "56f00f4d790ddc1bb900774e65ea6fd7c5b5362041d29b2ea7d46718ec2f07db",
+      "fileNameDigestMatches": true,
+      "taskDefinitionSha256Matches": true
+    },
+    "classification": {
+      "product": 11,
+      "sharedOnly": 43,
+      "integrationOnly": 0,
+      "outOfScope": 0,
+      "note": "Product paths: packages/evaluation/contracts/** (5 modules), tests/acceptance/contract-fit/** (5 files), docs/assurance-model.md — all in scope and hash-verified."
+    },
+    "productPathMismatches": [],
+    "sharedPathMismatches": [
+      { "path": "docs/DECISIONS.md", "cause": "today's coordinator decision-log edit after the snapshot" },
+      { "path": "scripts/execution.mjs", "cause": "today's coordinator execution-script edit after the snapshot" }
+    ],
+    "staleSharedEntriesNote": "Recorded manifest shared-file entries are stale for docs/DECISIONS.md and scripts/execution.mjs relative to the current tree; both coordinator-owned, outside the M3.3 write scope."
+  },
+  "rerunChecks": [
+    {
+      "command": "node scripts/evidence.mjs M3.3 review-20261003-1-contract-fit scripts/pnpm.mjs test:acceptance -- --suite contract-fit",
+      "label": "review-20261003-1-contract-fit",
+      "exitCode": 0,
+      "observed": "Exactly 44 tests / 3 files passed as the card mandates: bounded-ranker 14/14, caller-assumptions 12/12, contract-fit 18/18.",
+      "evidencePath": ".execution/evidence/M3.3/review-20261003-1-contract-fit.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M4.2 shared evidence (coordinator-recorded 2026-10-03T14:18Z)",
+      "exitCode": 0,
+      "observed": "test:contracts 144/144 on current bytes covers the card's second mandated check (pnpm test:contracts); rerun not repeated to avoid login-heavy suites.",
+      "evidencePath": ".execution/evidence/M4.2/shared-contracts-final.json"
+    }
+  ],
+  "retainedFailures": [
+    { "note": "Reviewer produced no failing rerun for M3.3. The worker's disclosed process gap (three pre-capture development runs while five test-side mismatches were fixed, with real reporting gaps hardened rather than tests weakened) is honestly recorded in the draft; the resulting hardening (explicit unscored refusal, unknown bound set reports every item unverifiable, no over-truncation) is visible in the delivered code and tests." }
+  ],
+  "acceptanceJudgements": [
+    {
+      "bullet": "Local contract and private caller assumptions are both checked in stated bounds.",
+      "verdict": "met",
+      "basis": "caller-assumptions.ts classifies every declared assumption (item bound, alphabet, score range, immutability, determinism, unscored handling) as within_bounds/out_of_bounds/unverifiable against registered CALLER_BOUND_SETS['ranker_bounded_v1']; absent/malformed/unknown-bound-set declarations are reported unverifiable, never assumed; behavioural declarations count as within-bounds only with boundedRankerStatus==='passed'. contract-fit.ts gates fit on allWithinStatedBounds. Verified by reruns and direct source reading."
+    },
+    {
+      "bullet": "An alternative valid implementation is accepted; a missing private requirement is classified as package defect; all bounds/unknowns are reported.",
+      "verdict": "met",
+      "basis": "REAL tests confirmed by reading them: (1) bounded-ranker.test.ts 'the property checker accepts the reference model and a genuinely different insertion-sort implementation' — a genuinely different insertion-sort implementation (different algorithm, written test-side) passes the property checker alongside the reference model, plus contract-fit.test.ts 'an alternative valid implementation is accepted' reaching fit/passed; (2) contract-fit.test.ts 'a private integration requirement missing from the published contract is classified as a package defect' — observed private requirement browser_context_cannot_override absent from published obligations -> aggregateOutcome package_defect with packageDefectSuspected, no failed published check; (3) every report embeds bounds, caseCounts (valid 2713), limits and disclaimer; unknown/timeout evidence keeps aggregate unverified (test 'unknown and unavailable observed evidence is reported explicitly and never passes')."
+    },
+    {
+      "bullet": "Contract checking distinguishes missing published obligations from implementation errors; all required units/interfaces must be supported and unit success alone cannot imply complete fit.",
+      "verdict": "met",
+      "basis": "completeness.ts checkAggregateFit classifies an observed result referencing an unpublished check/requirement as missingPublishedObligations -> package_defect, while a failed published check is classified by kind (end_to_end -> integration_failure, unit/interface -> contract_failure); both channels co-exist in one report (test 'implementation errors are distinguished from missing published obligations in one report'). Static completeness requires every unit registered/supported at its version and mapped, every interface mapped with a compatibility check, whole-task end-to-end coverage, and traceability. 'units_passed_only' evidence with missing interface+journey checks stays unverified (test). The 'mismatch' fixture really passes both unit checks (selection_ui_check, selection_api_check public+passed) and is caught only by selection_http_check -> contract_failure, never aggregate-passed; the static client/API schema-conflict counterexample is caught as package_defect by the completeness check. Fixtures are built through the REAL delivered chain (DemoPlannerProvider intent -> approval -> proposePartition -> composePartition), so the checker exercises actual M3.2 outputs."
+    },
+    {
+      "bullet": "Deliverable: independent property checker and 0..4-item bounded ranker model.",
+      "verdict": "met",
+      "basis": "bounded-ranker.ts rankBounded enforces the 0..4/ids a..d/scores 0..2 envelope with explicit typed refusals (duplicates, nonfinite, range, non-integer, alphabet, unscored missing/null with explicit 'unscored' message, extra keys, malformed items, non-arrays, beyond-bounds 5-item cases). checkBoundedRanker verifies observed results by DIRECT PROPERTIES (exactly-once multiset per (id,score), pairwise descending-score/ascending-id ordering, input immutability via pinned JSON, two-observation determinism), NOT by diffing against the model output — confirmed by source reading; it accepts the model probe and the alternative implementation and fails wrong-order/tie-break/mutating/unbounded/silent-default probes. The 2713-case enumeration is mathematically exhaustive for lengths 0..4 x ordered distinct a..d sequences x scores 0..2 (sum L=0..4 of P(4,L)*3^L = 1+12+108+648+1944 = 2713) and the test recomputes that count independently."
+    },
+    {
+      "bullet": "Deliverable: caller-assumption checks, package-defect counterexample fixture, docs/assurance-model.md.",
+      "verdict": "met",
+      "basis": "caller-assumptions.ts + 12-test suite; unpublishedPrivateRequirementEvidence counterexample; docs/assurance-model.md describes labels, six verification layers, aggregate-fit rule, ranker/caller bounds, package-defect vs implementation-error classification, explicit non-claims and open gates — no overclaim found."
+    }
+  ],
+  "weakenedExpectationsChecked": "None found. The checker refuses rather than blesses: not_supported partitions never fit and ignore observed evidence (observedFit null); malformed/hostile partition data is assessed as data with no prototype pollution; the checker is independent of the composer (fixtures mutate composed data test-side so the checker must catch the counterexamples).",
+  "findings": [
+    {
+      "severity": "note",
+      "finding": "The observed-evidence layer classifies what trusted evaluation adapters report; authenticity/provenance of observed results in production belongs to the runner/result-signing gates (M5), correctly disclosed in the draft and COMPLETENESS_LIMITS rather than claimed."
+    },
+    {
+      "severity": "note",
+      "finding": "Worker's disclosed deviation: three development runs before evidence capture began were not recorded through the evidence helper. The delivered revision's mandated runs are recorded and independently rerun green here; the process gap is honestly disclosed and does not affect the current bytes."
+    }
+  ],
+  "verdict": "approved",
+  "limitations": "Property checking over bounded synthetic domains only; no semantics interpretation, no correctness/preservation proof, generated/contributor code never executed on this host; M4.3/M5 real-runner gates remain open and are not claimed. All fixtures synthetic; no private data or canary leak (FIT_CANARY asserted absent from every serialized report)."
+}

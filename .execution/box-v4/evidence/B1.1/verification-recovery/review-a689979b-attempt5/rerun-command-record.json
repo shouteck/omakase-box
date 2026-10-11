@@ -1,0 +1,27 @@
+{
+    "reviewer":  "a689979b",
+    "lead":  "89140b96",
+    "attempt":  "d1-r4-05",
+    "kind":  "affected_evidence_rerun",
+    "recordedBeforeRerun":  true,
+    "priorVerdict":  "PRE-EXECUTION UNKNOWN",
+    "concreteUnknown":  "harness-review-d1r4-attempt5.json: all byte/source/closure/mount/static gates passed, but the one prior Vitest wrapper lost the durable shell exit status and exact wrapper duration because shell precedence orphaned the command process.",
+    "unchangedCandidateManifest":  ".execution/box-v4/evidence/B1.1/verification-recovery/candidate-manifest-d1r4-attempt5.json",
+    "unchangedCandidateManifestDigest":  "c45befd226012dd0e5fb22b4ebda0d2df0c410b8e5eba44a28f9804f02f94929",
+    "whyRerunDistinguishes":  "The observed UNKNOWN was evidence-transport failure, not a candidate or test failure. Re-running the same already-reviewed command against the same unchanged eight-byte candidate and fresh durable wrapper captures only missing process metadata; it does not re-review a changed candidate or grant acceptance.",
+    "exactCommand":  "timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs",
+    "workingDirectory":  "/workspace/.d1-r4-reviewer-review-a689979b-attempt5",
+    "outputDestinations":  [
+                               "/workspace/.d1-r4-reviewer-review-a689979b-attempt5/.review-a689979b-attempt5-rerun/vitest-attempt5-rerun.command",
+                               ".../vitest-attempt5-rerun.stdout",
+                               ".../vitest-attempt5-rerun.stderr",
+                               ".../vitest-attempt5-rerun.exit",
+                               ".../vitest-attempt5-rerun.duration-ns",
+                               ".../vitest-attempt5-rerun.pid",
+                               ".../vitest-attempt5-rerun.pgid",
+                               ".../vitest-attempt5-rerun.pids-live",
+                               ".../vitest-attempt5-rerun.pids-after"
+                           ],
+    "mutationFootprint":  "review-dir output files and copied durable evidence only; no candidate edits",
+    "safetyGate":  "no createResources; no Docker create/start/stop; no setup/readiness/live fixtures; no DB/mailbox mutation or replay; no acceptance commands; no Git mutation; no credentials/.runtime; no cleanup/deletion"
+}

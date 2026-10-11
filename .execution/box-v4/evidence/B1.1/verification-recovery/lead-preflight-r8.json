@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_actual_read_only_lead_preflight",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "authority": ".execution/box-v4/approvals/W002-r8-approval.json",
+  "briefDigest": "sha256:7fe770df0d3cfbb176ee5113283bb7e20678bce79d887355a3859790aa4f752f",
+  "lead": "box-platform-lead/76d471f9",
+  "evidenceSource": "Actual foreground functions.run_subagent box-platform-lead result in this conversation; no child dispatch or writes occurred.",
+  "observedModel": "unobserved; human-confirmed Free default router, not parent model inheritance or diversity",
+  "leadVerdict": "Not safe to grant candidate lease yet; eight-file correction structurally feasible subject to root stage/ownership/input/governance reconciliation",
+  "leadFindings": ["Confirmed existing source still has r6 dispatcher persistence failure, uncertain state treated as empty, caller-string create gate, optional unsupplied sourceFiles, incomplete symlink boundary, wrong acceptance CLI root, unconfirmed descendant termination and delayed signal timer", "Historical r4/r6 leases inactive; unavailable historical agents alone do not establish process accounting", "Need exact Linux review inputs including current14, process.mjs, synthetic-runtime.mjs, unchanged fixture-transport.test.ts, dependency/lock/tsconfig provenance and independent evidence", "Active approval pointer updated to r8 but nested stop fields were still historical r7; root must reconcile before release"],
+  "rootSubsequentObservations": ["Actual current14 hash comparison against r6 final map passed all14; protected16 host hashes passed r3 baseline after excluding six historical harness deltas", "Actual old staged22 hash comparison passed r3 baseline in C:/Users/shout/AppData/Local/Temp/w002-b11-stage", "Bounded project/W002/fixture-exec/vitest/pnpm command-line process filter returned no matching non-shell processes; no process killed", "w002-b11-ws top sleep only; preserved private/external APIs each MainThread only", "Six old W002 containers running, helper stopped, source artifact Created, no named new r4 resources", "Workspace mount old stage -> /workspace RW=true; Linux Node24.11.0, installed Vitest5.0.1, actual pnpm Vitest path observed", "Exact public .env.example native read succeeded, only path-reference template read; no referenced credential file read", "Generic dependency-tree hash inspection stopped on workspace-package link .pnpm/node_modules/@private-task/contracts; no copy/mutation. Narrow exact test-tool package closure investigation follows, not a generic copy or boundary exception"],
+  "remainingBeforeLease": ["Finish provenance/hash-bound isolated Linux dependency/source input contract", "Persist root phase release after full checks and supply it to the same lead", "Fresh worker/reviewer identities not yet created; nesting and execution not claimed"],
+  "phaseLimit": "No worker writes/tests yet. Future stage/mailbox, setup/readiness/acceptance, host candidate execution and live API/DB actions excluded even on PASS.",
+  "historicalBudget": {"priorConservativeMinutes": 134, "totalActiveMinuteLimit": 180, "remainingMaximumMinutes": 46, "r7CorrectionUsed": 0, "r8WorkerDispatched": false, "r8ReviewerDispatched": false}
+}

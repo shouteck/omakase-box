@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_setup_release",
+  "supersedes": {
+    "path": ".execution/box-v4/evidence/D1.2/cto/setup-release-2.json",
+    "sha256": "3a75cc620dd685282582fa1298a05b31a5d0d65eeb48e2ae2a5c2f5348502c49",
+    "note": "The attempt-2 release remains preserved unchanged for history; it bound host sha256 2df8b379... which is superseded by the corrected candidate."
+  },
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "recordedAtUtc": "2026-10-05T11:29:39Z",
+  "authority": [
+    ".execution/box-v4/approvals/W005-approval.json",
+    ".execution/box-v4/approvals/W005-r2-approval.json"
+  ],
+  "authorityNote": "The rootSetupRelease:false fields in the approval files reflect the pending state at approval time; this root record is the separate contemplated release those approvals anticipated.",
+  "review": {
+    "path": ".execution/box-v4/evidence/D1.2/cto/independent-review-round20.json",
+    "verdict": "PASS_PREEXECUTION"
+  },
+  "dependencySourceReadiness": {
+    "linuxDependencies": {
+      "status": "ok",
+      "packageCount": 131,
+      "fileCount": 7274,
+      "closureSha256": "d6413531fdfb601a93738990c3e6f8c44e319b7acfc9a1540edecc30f21d66a9",
+      "synthesizedLinks": {
+        "packages": 54,
+        "links": 148
+      }
+    },
+    "linuxTooling": {
+      "status": "ok",
+      "packageCount": 1,
+      "fileCount": 1077,
+      "closureSha256": "b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6",
+      "synthesizedLinks": {
+        "packages": 0,
+        "links": 0
+      }
+    }
+  },
+  "candidateSnapshot": {
+    "workerReceipt": ".execution/box-v4/evidence/D1.2/worker/correction-receipt-20.json",
+    "workerReceiptSha256": "675cdecfa5b20db45a1fca67181d31a1414895a81ac8e52f241712ca54f118d4",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d",
+    "hostSha256": "be81885d761a8b8da4a6190f39b5324b16b607312082fdf33f3f794a6d8d4e01",
+    "pathMapSha256": "8ba1c4b4c525e0cd08d044717e66e0c48e4c69e09837e1b9fdc71eeafa44eaf2",
+    "pathMapSha256Methodology": "sha256(JSON.stringify(receipt-20 pathSha256))"
+  },
+  "history": "Attempt 1 (runtime-run-1.json, sha256 72e9b0cd5d4f87d515cb99fa4148ff5c75b7a0037b5a5a0a28bf4ab5953bf200) stopped fail-closed at plan on the inspect-format defect with zero resources created. Attempt 2 (runtime-run-2.json, sha256 e73d9521744a61ed9c875f46e7651866b38f437f7f80230856fc5cc443cac407) stopped fail-closed at deps on an EACCES lstat of a W002 source symlink; DEPS_ROOT was never created; the ledger exists and may be reused. This is attempt 3 for the corrected candidate.",
+  "rootSetupRelease": true,
+  "releasedModes": [
+    "plan",
+    "ledger",
+    "deps",
+    "create",
+    "start",
+    "verify",
+    "stage",
+    "supervise"
+  ],
+  "releasedModesPolicy": "Fixed order listed; each controller mode invoked once via controller(mode); stop on first failure or uncertain result; no replay of interrupted/unknown commands without separate authority. final_verify is NOT a controller mode (ALLOWED_MODES excludes it): it is released only as the fixed environmentPlan final_verify argv set (containerInspectArgv for both containers plus networkIdArgv), executed once after supervise completes.",
+  "resumeSemantics": "The ledger already exists from attempt 2; controller('ledger') is idempotent by design (creates only if absent), so the executor may rerun the full ordered sequence including ledger without violating once-only semantics. deps resumes from absent DEPS_ROOT; create resumes from zero resources.",
+  "releasedResources": {
+    "network": {
+      "name": "w005-d12-delegation-net",
+      "internal": true
+    },
+    "containers": [
+      {
+        "name": "w005-d12-delegation-db",
+        "image": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+        "user": "999:999"
+      },
+      {
+        "name": "w005-d12-delegation-runner",
+        "image": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+        "user": "1000:1000"
+      }
+    ],
+    "alias": "w002-b11-box-db-r4-env2",
+    "constraints": [
+      "Fixed limits/tmpfs",
+      "cap-drop ALL",
+      "no-new-privileges",
+      "read-only roots",
+      "Only two read-only dependency mounts",
+      "No ports",
+      "No extra volumes"
+    ]
+  },
+  "secretHandling": "Synthetic in-memory dbPassword passed to both container creates; never persisted; redacted from records.",
+  "constraints": [
+    "Cumulative DB cap of 12 across prefixes w002_b11_r4run_ and w005_d12_run_ checked before and after each inner command",
+    "Collision, drift or missing inventory fails closed with no delete/reconcile/overwrite",
+    "No old W002 mutation",
+    "No cleanup/drop/reset",
+    "Preserve resources at interruption or completion",
+    "No commits/pushes until acceptance",
+    "No D2-D4, pilot, outreach, payment or deploy activity"
+  ],
+  "executorInstruction": "node --input-type=module -e invoking controller(mode) once per released mode in fixed order (plan,ledger,deps,create,start,verify,stage,supervise) with the default reviewed manifest path only; final_verify is then run once, not via controller(mode), as the fixed environmentPlan final_verify argv set (containerInspectArgv for both containers plus networkIdArgv) after supervise completes",
+  "hostDockerCallLimit": "Host docker calls limited to controller-generated fixed argv.",
+  "durableInnerRecords": "Durable inner command records must be retrieved and validated before treating commands as run.",
+  "acceptanceReleased": false,
+  "checkpointReleased": false
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "git_checkpoint_receipt",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "worker": "box-worker/483988b4",
+  "authority": [
+    "docs/box-v4/GIT-CHECKPOINTS.md",
+    ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-git-checkpoint-release.json"
+  ],
+  "selection": {
+    "manifest": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-review/checkpoint-selection-manifest.json",
+    "sha256": "e39d1d67a1a8e51afe076653e87e08dceb4bce82f0a3e35b1f9d0adca9c8bf3a",
+    "selectedFiles": 989,
+    "verifiedWorkingTree": {
+      "ok": 988,
+      "missing": 0,
+      "mismatch": 0,
+      "selfEntry": "manifest self-hash entry inherently records pre-finalization digest 38ad1e49; actual bound file sha256 e39d1d67 verified"
+    }
+  },
+  "staging": {
+    "method": "git add --pathspec-from-file (checkpoint-pathspec.txt, 990 entries = 989 selection + authorized review record); no git add . or broad dirs",
+    "stagedFiles": 552,
+    "indexParity": "552/552 staged blob sha256 == selection map (self-entry drift expected); 0 paths outside selection",
+    "diffCheck": "git -c core.whitespace=cr-at-eol diff --cached --check: only informational trailing-whitespace/blank-EOF notes inside recorded evidence logs/diffs; evidence bytes must not be normalized"
+  },
+  "commit": {
+    "hash": "a38c1e01cdf139af31a80d816efce8b9e023513a",
+    "message": "Finish B1.1 recovery with independently verified acceptance",
+    "trailers": "Generated with [Devin](https://devin.ai) / Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+    "filesChanged": 552,
+    "insertions": 49099,
+    "deletions": 509,
+    "parent": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+    "hooks": "no pre-commit hook mutations observed; commit clean on first attempt"
+  },
+  "push": {
+    "remote": "origin https://github.com/shouteck/omakase-box.git",
+    "privateVerified": "gh repo view -> isPrivate:true, defaultBranchRef master (rechecked immediately before push)",
+    "preRemote": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+    "postRemote": "a38c1e01cdf139af31a80d816efce8b9e023513a",
+    "mode": "non-force fast-forward f952c73..a38c1e0"
+  },
+  "preservedUnstaged": [
+    "independent-*.tar raw archives",
+    "stopped-candidate/, supervisor-checkpoint/, pre-stage-overlay-r2*/, pre-launcher-r2/ bulk copies",
+    "parity-attempt3-linux.out",
+    "devin-h1-git-checkpoint-release.json and this receipt (post-selection artifacts, intentionally uncommitted)",
+    ".runtime/secrets untouched, never read"
+  ],
+  "remainingStatus": "see post-commit-status.txt: only the preserved untracked artifacts listed above; zero modified-tracked residue",
+  "notDone": [
+    "no source edits",
+    "no test reruns",
+    "no canonical state/approval writes",
+    "no history rewrite/force/branch/PR/merge",
+    "no new feature or wave execution"
+  ],
+  "limitation": "this receipt is post-commit evidence; it is not inside the commit it describes"
+}

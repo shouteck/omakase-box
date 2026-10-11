@@ -1,0 +1,52 @@
+{
+ "wave": "W002",
+ "task": "B1.1",
+ "plan": "box-v4-2026-10-04.1",
+ "workerDispatchId": "e44008a7",
+ "revision": "r4-bounded-relay-gate-correction",
+ "status": "not_accepted",
+ "authority": {
+  "r1": {
+   "brief": ".execution/box-v4/briefings/W002.md",
+   "sha256": "44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
+  "r2": {
+   "brief": ".execution/box-v4/briefings/W002-r2.md",
+   "sha256": "1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+   "approval": ".execution/box-v4/approvals/W002-r2-approval.json",
+   "decision": "Approve",
+   "observedAt": "2026-10-04T15:50:36.0926937Z"
+  },
+  "r4Dispatch": "Bounded post-review correction: fix two sourceSha256 digests per reviewer 77c88b35 relay-review.json pre-execution FAIL"
+ },
+ "changeFromR3": {
+  "scripts/box-verification/fixture-command-manifest.json": {
+   "previous": "94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7",
+   "r4": "0f43e93ba9ffc125f30c944d8cbd7d4d4121b0d0063408d05f77953fa3bfc2b2",
+   "delta": "only two fields changed: persistence.private-api sourceSha256 8ca8183b...->5e7ae1664d5d157050fb754fc5314d39ec3310668a5f35fc4627a225a5c00b0d; persistence.external-api sourceSha256 63e46a09...->5f6bffd416e6ce9cd3d7beaec300f2b1baf597f11af035e6990731e366a60595 (exact values evidenced in relay-review.json verifiedMismatch)",
+   "noOtherChanges": "entry set, argv, env, workdir, containers, notes, schemaVersion unchanged; no relay/client/test/product file touched"
+  }
+ },
+ "discrepancyDisclosure": "Worker-independent recomputation from verify-persistence.mjs source produced raw private template 8ca8183b (has NO ${} interpolation per grep of lines 12-59) and external expanded-with-singleUnitContract 63e46a09 (matching previous manifest values); reviewer relay-review.json reports captured runtime argv digests 5e7ae166/5f6bffd4 (contract fixture sha bcb46146 independently reproduced and matches). Digest was set to the reviewer-evidenced values as instructed; the divergence between static-template recomputation and captured-argv digests is recorded verbatim for re-review. If reviewer capture is correct, runtime expansion differs from naive template substitution and the r4 values are required; a wrong digest would only fail closed (denial), never bypass.",
+ "checks": {
+  "vitest run tests/box/auth/fixture-transport.test.ts (in w002-b11-ws)": {
+   "exit": 0,
+   "result": "1 file, 7 tests passed"
+  },
+  "manifest self-check (in w002-b11-ws)": {
+   "exit": 0,
+   "result": "13 entries, unique ids, @SOURCE@<->64-hex digest pairing consistent"
+  },
+  "node scripts/pnpm.mjs test:box-auth (in w002-b11-ws)": {
+   "exit": 0,
+   "result": "5 files, 18 tests passed, 54.61s"
+  }
+ },
+ "stageParity": "fixture-command-manifest.json staged byte-identical (sha256 0f43e93b both host and stage); all other candidate files unchanged from r3 manifest",
+ "scope": "bounded relay-gate correction only; no git stage/commit/push/config/reset; host relay NOT executed; no fixture services, browser acquisition, host execution or daemon forwarding; all five W002 resources preserved untouched",
+ "candidateFilesR4": {
+  "scripts/box-verification/fixture-command-manifest.json": "0f43e93ba9ffc125f30c944d8cbd7d4d4121b0d0063408d05f77953fa3bfc2b2",
+  "allOtherFiles": "unchanged from candidate-manifest-r3.json (22-file set; 21 files retain r3 digests)"
+ },
+ "readiness": "ready for independent re-review by 77c88b35 of amended manifest bytes; product remains not_accepted; retry count unchanged (1 of max 2)"
+}

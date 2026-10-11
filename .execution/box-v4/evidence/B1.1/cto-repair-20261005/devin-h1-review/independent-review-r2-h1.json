@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_r2_h1_preexecution_review",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "reviewer": "Devin reviewer27f919af (distinct from worker483988b4; did not implement)",
+  "verdict": "pass",
+  "manifestDigest": "ebdd89a9ffd1b17fd939ac9d03e5be8830815ee9b019441805cef96055e888bc",
+  "environmentId": "w002-b11-env-r4-env2",
+  "candidateMap": "devin-h1-review/candidate-map-r2-h1.json",
+  "candidateFileCount": 456,
+  "scope": {
+    "changedFiles": [
+      "tests/box/verification/environment-readiness.test.ts",
+      "tests/box/verification/relay-lifecycle.test.ts",
+      "scripts/box-verification/environment-manifest.json"
+    ],
+    "withinLease": true,
+    "unleasedWrites": 0,
+    "suppressionsAdded": 0,
+    "anyCastsAdded": 0,
+    "newCommentsAdded": 0,
+    "assertionsChanged": 0,
+    "testSkipsAdded": 0
+  },
+  "independentProof": [
+    {
+      "command": "timeout 300 node node_modules/typescript/bin/tsc --noEmit",
+      "where": "w002-b11-ws:/workspace/.devin-h1-check/src (sha256-verified candidate copies: ba30ea28/91e06903 match)",
+      "exit": 0,
+      "started": "2026-10-05T04:23:52Z",
+      "ended": "2026-10-05T04:24:31Z",
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "note": "reproduces worker tsc exit0 on reviewer-verified bytes; original 26-error check failure resolved for these files"
+    }
+  ],
+  "workerEvidenceVerified": {
+    "receipt": "devin-h1-worker/worker-receipt.json",
+    "diff": "devin-h1-worker/worker-scoped.diff (381 lines, matches byte-level hash changes only)",
+    "baseCopiesMatchPreworkerHashes": true,
+    "vitest65of65": "claimed, consistent with byte-verified sources; not independently rerun"
+  },
+  "interfaceReview": {
+    "status": "honest",
+    "notes": [
+      "All declared module interface members exist as real exports in readiness.mjs, environment-host.mjs, fixture-exec-host.mjs, fixture-exec-runner.mjs, run-verification.mjs",
+      "Two type-level imprecisions that cannot alter runtime behavior or assertions: getLifecycle declared Promise<string> though it may return null; buildExecArgv declared string[] though it returns {argv,entry}. Neither is used in a way that hides a failure; all 65 tests passed at runtime."
+    ]
+  },
+  "runtimeReconciliation": {
+    "stageCurrentBytes": "/stage still holds pre-worker frozen456 (bab5ddf7/316441a4/eb328bd4 verified live)",
+    "hostCandidateBytes": "456/456 match new map incl. manifest ebdd89a9",
+    "workspaceParity": "side-copy two test files sha-verified identical to host candidate",
+    "relay": {
+      "pid": 201644,
+      "alive": true,
+      "parent": "pwsh 204156 <- codex 132284",
+      "children": "none",
+      "lease": {
+        "runId": "w002-b11-r4-env2",
+        "environmentId": "w002-b11-env-r4-env2",
+        "expiresAt": "2026-10-05T06:11:46.138Z"
+      },
+      "lifecycle": "ready",
+      "requests": 0,
+      "responses": 0,
+      "startedRecords": 0,
+      "results": 0,
+      "mailboxHost": "C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2/mailbox",
+      "mailboxContainer": "/stage/mailbox",
+      "sameMountConfirmed": true
+    },
+    "fixtureDbCap": {
+      "max": 12,
+      "currentRunDatabases": 4,
+      "prefix": "w002_b11_r4run_",
+      "perSuiteConsumption": "4 (one migratedPool per test file beforeAll)",
+      "batchProjection": "test:box-auth +4, check-embedded auth suite +4, test:auth may add more -> projected up to ~12-16; cap breach is an honest FAIL risk for next full batch",
+      "required": "count again immediately before release; dropping old run DBs is a fixture mutation needing explicit authority"
+    },
+    "containers": "runner 9161a456732e… and box-db da55c050fffb… Up, IDs match approval; all old containers preserved; nothing created/stopped"
+  },
+  "instructionReview": {
+    "verdict": "pass",
+    "hashes": {
+      "AGENTS.md": "534520262ec3be21799f0b098f31201df200685252b55e1389a681ffc788b0d3",
+      "START.md": "8a56e5dba15032d1b6409448491a11915737948394da072adfa3a3d6684ed39d",
+      ".devin/rules/box-kitchen.md": "54e7220989b53d2c6935284f672a0daf0ebc841f5aa56498fb22ac027fb23463",
+      ".cursor/rules/box-kitchen.mdc": "b79059f19edd9d8d288b5506859de99fc8aca651b265fc61e096375e1f11421d",
+      "handoffs/cto-repair-20261005.md": "5df2edd09c9fc20084ad77ee59b56657bee5bdc11b8c2b50657c05fcc308c23e",
+      "approvals/W002-CTO-R2-Devin-H1-request.json": "938fca11b6096564d670787dcc4ba68b7c3904d14e14c12695caf65e54f9a709",
+      "briefings/W002-CTO-R2-Devin-H1.md": "7cd4d2e48741c578f29ac5ff9a3e241d3dd44bc6f3c53c2b61b1e9f11eed75e0"
+    },
+    "finding": "records an actual user-approved Devin handback for unchanged R1/R2 scope only; no old-Devin resurrection, new feature, model or scope change"
+  },
+  "recommendedOverlay": {
+    "recipe": [
+      "preserve current /stage bytes for the 3 changed paths (e.g. .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/)",
+      "copy exact host bytes of the two test files + environment-manifest.json into /stage same relative paths (existing three mounts unchanged)",
+      "update ready receipt to bind manifestDigest ebdd89a9… + this review; root then releases seven-command batch"
+    ],
+    "manifestIsStageEntry": true
+  },
+  "acceptance": false,
+  "limitations": [
+    "no seven-command batch run; final acceptance still pending root release",
+    "workspace check tail (auth/contracts/planner) remains environmental FAIL in side copy (no docker CLI) — not acceptance evidence",
+    "fixture DB cap headroom must be recounted at release"
+  ],
+  "preservedHistory": [
+    "independent-seven-r2 FAILED preserved; recovered evidence under recovered-seven-r2-h1/",
+    "attempt5 UNKNOWN and all prior verdicts unchanged"
+  ]
+}

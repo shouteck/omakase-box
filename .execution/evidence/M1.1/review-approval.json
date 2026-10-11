@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "tested",
+  "decision": "APPROVED",
+  "reviewer": "/root/contracts_review",
+  "revision": {
+    "algorithm": "sha256",
+    "digest": "cbf74267e6516e7488e347e97cf382c881c2a91243ddc303463ce375fa412fd0",
+    "manifest": ".execution/evidence/M1.1/revision-cbf74267e6516e7488e347e97cf382c881c2a91243ddc303463ce375fa412fd0.json"
+  },
+  "verifiedFileCount": 62,
+  "mismatches": [],
+  "evidence": [
+    {
+      "path": ".execution/evidence/M1.1/review-contracts-final.json",
+      "sha256": "92d41ca687295a76a4b49c8ddb3716c1c9d6ebe2f5befa3a8811f17439a8fc24"
+    },
+    {
+      "path": ".execution/evidence/M1.1/review-array-accessor-recheck.json",
+      "sha256": "a29afc1fc2421ebc3e6b4d2f22b8ee6a5ad65680e198ef91acd1ea6a5f2d396f"
+    },
+    {
+      "path": ".execution/evidence/M1.1/review-final-revision.json",
+      "sha256": "562561f25b82280003fe43890ee85ffee491a1490335c1f54bc6b03899e984dd"
+    },
+    {
+      "path": ".execution/evidence/M0.1/review-check.json",
+      "sha256": "f442baa738c7e68a01f1f7bb4832e9bde5e35d6feaa0b20a876f3d8f63100c5a"
+    }
+  ],
+  "finishedAt": "2026-10-02T17:30:12.018Z"
+}

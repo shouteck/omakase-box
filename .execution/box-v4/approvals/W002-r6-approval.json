@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "human_team_replacement_amendment_approval",
+  "waveId": "W002",
+  "taskIds": ["B1.1"],
+  "revision": "2026-10-05-r6-team-replacement",
+  "brief": ".execution/box-v4/briefings/W002-r6.md",
+  "briefDigest": "sha256:cdf07ae76424d7288fc582173ddd547e4844f566616e0af4ea1392b619c6f2f2",
+  "inheritedBriefs": {".execution/box-v4/briefings/W002-r5.md": "sha256:4f45b5bf2861ff05bf485778c30b9a4e0d303fc820c04691cbd3b08b20c3919e", ".execution/box-v4/briefings/W002-r4.md": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721"},
+  "decision": "Approve",
+  "message": "Approve",
+  "approver": "CEO (human operator)",
+  "evidenceSource": "Actual latest user reply immediately following the W002-r6 decision card in this conversation.",
+  "recordedAtUtc": "2026-10-04T19:21:26.2363501Z",
+  "timestampMeaning": "Actual host recording clock, not human-message timestamp. Supplied session date is 2026-10-05; clock discrepancy preserved.",
+  "approvedScope": "One fresh sequential box-platform-lead -> sole box-worker then distinct box-reviewer, depth<=2, after current Free routing and safe ownership/source preflight. Same unused r5 correction and gated inherited r4 environment/readiness/seven-check continuation, no application/assertion changes or budget reset.",
+  "limits": {"additionalHarnessCorrections": 1, "activeWorkerMinutes": 40, "activeReviewerMinutes": 20, "priorConservativeActiveMinutes": 74, "totalActiveMinutes": 180, "environmentAttemptsUsed": 0, "environmentAttemptLimit": 2, "historicalProductRetriesUsed": 1},
+  "conditionalAuthority": "Approval is valid; model/ownership, exact independent pre-execution PASS and independent readiness gates must be satisfied before their corresponding releases. Root alone records acceptance. No later wave, cleanup, paid fallback or profile change.",
+  "excluded": ["application/assertion changes", "downloads/installs", "model/profile/global configuration changes", "paid/cloud usage", "existing container stop/recreate", "database DROP/TRUNCATE/reset", "cleanup/deletion", "old mailbox replay", "host candidate tests", "PR or later wave"]
+}

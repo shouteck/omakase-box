@@ -1,0 +1,76 @@
+py-noop start 13:08:16Z
+{
+  "submission": "C:\\Users\\shout\\Desktop\\a4-boxes\\neg\\py-noop\\submission.json",
+  "box": "a4-py-tools-slugify",
+  "version": 1,
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "files": 1,
+  "changed": 0
+}
+submit exit=0
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "command-check",
+  "detail": "declared outcome check 'slug-outcome' did not pass (result: fail, exit 1): OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'Hello World'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got '  Trim  Me  '\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'Cafe! au_lait'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got '--lead--trail--'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'A1 b2'\na4-py-tools outcome: 5 failing case(s)",
+  "checks": [],
+  "box": {
+    "id": "a4-py-tools-slugify",
+    "name": "Implement real slugify in the a4-py-tools slug helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "expectedBaseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "attemptSha256": "6e53169df6258362e10c41fcda004f94b9acb9a804ec3b9cfdf3aa55c51cc719",
+  "applies": [
+    {
+      "owner": "tools/slug.py",
+      "box": "tools/slug.py",
+      "changed": false,
+      "sha256": "9a4dc63b675ca8a5578500408b7cffe9cb123a37e706338240f05ba8f1e3f6d8",
+      "bytes": 290
+    }
+  ],
+  "commandChecks": [
+    {
+      "name": "slug-guard",
+      "program": "python",
+      "declaredArgv": [
+        "checks/guard.py"
+      ],
+      "command": "C:\\Users\\shout\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "argv": [
+        "checks/guard.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-py-tools guard: base behavior intact",
+      "outputSha256": "e8dba818e886af50587bb4d3ae3efaac2fa830a46ea444e29c16a20ae345d6da",
+      "seconds": 0.092
+    },
+    {
+      "name": "slug-outcome",
+      "program": "python",
+      "declaredArgv": [
+        "checks/outcome.py"
+      ],
+      "command": "C:\\Users\\shout\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "argv": [
+        "checks/outcome.py"
+      ],
+      "cwd": "examples/a4-py-tools",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL slugify('Hello World') expected 'hello-world' got 'Hello World'\nOUTCOME FAIL slugify('  Trim  Me  ') expected 'trim-me' got '  Trim  Me  '\nOUTCOME FAIL slugify('Cafe! au_lait') expected 'cafe-au-lait' got 'Cafe! au_lait'\nOUTCOME FAIL slugify('--lead--trail--') expected 'lead-trail' got '--lead--trail--'\nOUTCOME FAIL slugify('A1 b2') expected 'a1-b2' got 'A1 b2'\na4-py-tools outcome: 5 failing case(s)",
+      "outputSha256": "9656f948f4e316ef1758e67533f6eb8f78d93fce3c8231719a6fbbba551d11d4",
+      "seconds": 0.095
+    }
+  ]
+}
+verify exit=3
+py-noop end 13:08:25Z

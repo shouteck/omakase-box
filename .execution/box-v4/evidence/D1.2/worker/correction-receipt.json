@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_correction_receipt",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r1",
+  "actor": "subagent_general/c0c68c39",
+  "inResponseTo": "independent reviewer f3ab3b2f FAIL_PREEXECUTION findings D1-D5 plus minor observations",
+  "status": "SOURCE_READY_FOR_PREEXECUTION_REREVIEW",
+  "acceptanceClaim": false,
+  "leaseCompliance": "All edits confined to the 15 approved new paths, the 7 shared leased paths, and .execution/box-v4/evidence/D1.2/worker/**. No new product paths, no unleased shared edits, no governance/state writes, no comments added or removed, no dependency/config/security changes.",
+  "corrections": [
+    {
+      "id": "D1",
+      "defect": "All behavior-approval call sites passed agreement.artifactHashes.agreement (artifact hash) as expectedHash, but BoxStore.approveBehavior compares expectedHash to the box_versions content_hash (version hash).",
+      "fix": "Every call site now passes the version contentHash (agreement.contentHash). BoxStore.approveBehavior semantics unchanged; orchestrator.approve still returns the recorded artifactHash, so assertions comparing approvedHash/approval.artifactHash to artifactHashes.agreement remain correct.",
+      "edits": [
+        "tests/box/delegation/preparation.test.ts ~L36 store-level approve: expectedHash agreement.artifactHashes.agreement -> agreement.contentHash",
+        "tests/box/delegation/preparation.test.ts ~L107 forbidden_role negative: expectedHash -> prepared.agreement.contentHash",
+        "tests/box/delegation/preparation.test.ts ~L144 HTTP approve: expectedHash -> prepared.agreement.contentHash",
+        "tests/box/delegation/preparation.test.ts ~L147 HTTP denied approve: expectedHash -> prepared.agreement.contentHash",
+        "tests/box/delegation/agreement-card.test.ts ~L64-66: approve uses before.contentHash; post-approval artifactHash assertion still checks before.artifactHashes.agreement",
+        "apps/private-console/boxes/preparation/preparation-screen.tsx ~L71: hash = agreement.contentHash"
+      ]
+    },
+    {
+      "id": "D2",
+      "defect": "Resource names did not match the approved names.",
+      "fix": "All names corrected to w005-d12-delegation-net, w005-d12-delegation-runner, w005-d12-delegation-db across environment-manifest.json and environment-host.mjs: manifest checks, container keys, alias target, create argv names, execArgv target, validateCreateArgv image-position check. New exported constants NET_NAME/RUNNER_NAME/DB_NAME prevent future drift. The unchanged DB alias w002-b11-box-db-r4-env2 is preserved as a network-local alias to w005-d12-delegation-db.",
+      "edits": ["tests/box/delegation/environment-manifest.json network/aliases/containers/commands.entrypoint", "tests/box/delegation/environment-host.mjs EXPECTED_NAMES, loadEnvironmentManifest, aliasConnectArgv, boxDbCreateArgv, runnerCreateArgv, execArgv, validateCreateArgv"]
+    },
+    {
+      "id": "D3",
+      "defect": "Runner pidsLimit was 512 (approved: 256); DB memory was 512 MiB (approved: 1 GiB).",
+      "fix": "manifest runner pidsLimit -> 256; db memoryBytes -> 1073741824. Host argv builders now fail closed on drift: runnerCreateArgv asserts c.pidsLimit === 256, boxDbCreateArgv asserts c.memoryBytes === 1073741824.",
+      "edits": ["environment-manifest.json runner.pidsLimit, db.memoryBytes", "environment-host.mjs runnerCreateArgv/boxDbCreateArgv drift assertions"]
+    },
+    {
+      "id": "D4",
+      "defect": "Runner used read-only rootfs + no volumes while commands run under /stage, so staged source could not reach a writable /stage.",
+      "fix": "Added bounded writable tmpfs /stage (rw, uid/gid 1000, mode 755, size 2g) and a bounded writable HOME tmpfs /home/box (rw, uid/gid 1000, mode 755, size 64m) plus HOME=/home/box env, in both manifest runner config and runnerCreateArgv. Read-only rootfs, capDrop ALL, no-new-privileges, no volumes/host mounts and fixed argv preserved. New stageCopyArgv(stageRoot) emits the fixed ['cp','<stageRoot>/.','w005-d12-delegation-runner:/stage'] host-side copy into the tmpfs, and manifest stage.delivery documents this bounded delivery mode. Staging remains fail-closed via assertStageableRel/digest/boundary checks.",
+      "edits": ["environment-manifest.json containers.runner.tmpfs/env + stage.delivery block", "environment-host.mjs runnerCreateArgv tmpfs/env, new stageCopyArgv export"]
+    },
+    {
+      "id": "D5",
+      "defect": "No actual UI/browser coverage; manifest excluded browser evidence.",
+      "fix": "Added a real-browser test (delegation box preparation flow, 'collects real browser UI evidence...', ~L167-243 of preparation.test.ts): launches pinned chromium via @playwright/test with per-process --host-resolver-rules mapping only private.localhost (no global DNS, no /etc/hosts mutation, no browser install, no host browser); serves the real private console via a vite dev server on 127.0.0.1:3000 and the real private API via app.listen on 127.0.0.1:4000; seeds real session cookie + sessionStorage CSRF; drives genuine UI prepare -> agreement card -> owner approve -> amend -> reload -> reopened persisted version-2 draft/superseded state; asserts UI negatives (invalid box id failure, requester sees no approve control and the owner-only note) and a genuine browser-issued API negative (uncredentialed-csrf approve fetch returns >=400). No mocks, stubs or simulator claims. Manifest browserEvidence block documents this real-browser mode and replaces the prior exclusion note; runner env gains PLAYWRIGHT_BROWSERS_PATH=/ms-playwright.",
+      "edits": ["tests/box/delegation/preparation.test.ts imports + new browser test", "environment-manifest.json browserEvidence block", "environment-host.mjs runner env PLAYWRIGHT_BROWSERS_PATH"]
+    },
+    {
+      "id": "minor-1",
+      "defect": "agreement() for a non-prepared box could 503 by querying repo_id=undefined.",
+      "fix": "BoxStore.readPrepared now guards: the repository query only runs when head.version_payload.repoId is a string; otherwise repository=null and orchestrator.agreement returns missing_evidence (422).",
+      "edits": ["services/private-api/boxes/store/store.ts readPrepared repoId guard"]
+    },
+    {
+      "id": "minor-2",
+      "defect": "Projection facts claimed assurance 'tested' before any execution.",
+      "fix": "Projection now emits assurance 'unverified' (allowed by BoxAgreementProjectionSchema), truthful about pre-execution status.",
+      "edits": ["services/private-api/boxes/preparation/orchestrator.ts projection() facts assurance"]
+    }
+  ],
+  "unchangedApprovedRequirements": "Two literal supported cases, transactional registry/snapshot/provenance, approved-intent binding, foreign-repo negative, immutable artifact/version/operation-key atomicity, BoxStore guards, owner exact hash/version approval (now bound to version content_hash), stale amendment superseded, deterministic floor, no URL fetch, protected-source non-export, HSTS semantics, auth/CSRF/rate limits preserved, no secrets/env reads beyond the approved test env vars, <=1 network/<=2 containers/<=12 DB cap, W002 resources preserved.",
+  "currentManifest": {
+    "newFiles": [
+      {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "079e8cb19c5d0c58755539059fd422bc7d1105aa9189c0d5b91aa97959dab5ec"},
+      {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "5b11a0ed97e730f86dddd36cdad9545cf064bc547478b77a1799d19d21e022f4"},
+      {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359"},
+      {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8"},
+      {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "6b6c7f872da526f0016619cf83940169e5966410bfe7c4fafc60053d82a28330"},
+      {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682"},
+      {"path": "tests/box/delegation/support.ts", "sha256": "430788756fd9c229254a25d2e483f58a5a3723b69c952f7e95c0e10503b4cacf"},
+      {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "ffba8732093ce6cbb892b914be173e2255c6b1440525db0ae3b8edd1ea2318f6"},
+      {"path": "tests/box/delegation/preparation.test.ts", "sha256": "7d4a541b8bbba3489d65c11fdad665bb87394197ef21d89b2a285a24bf39f683"},
+      {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "aa8fd2b6063511a6d297f1c050c9ec08989d5c7d4aca36b75008236398aa6c87"},
+      {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "4a189d78530c2464b23a767b106d8ea5fc2122c681b5f204e304e8a256c7f8a3"},
+      {"path": "tests/box/delegation/environment-manifest.json", "sha256": "e37d14142b084204e9a2a270a25fbc2d5540b56d9f35fb649a082db66ecff274"},
+      {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "e0098ba5ec96bbeebb0d06db32129f3f671fa36985f9adfda67e047e638a84dc"},
+      {"path": "tests/box/delegation/environment-host.mjs", "sha256": "3b3affcbbee16945a5b81c0514fb935ca2aa8f290990bd0d84ef9f0253702684"}
+    ],
+    "modifiedSharedPaths": [
+      {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986"},
+      {"path": "services/private-api/boxes/store/store.ts", "sha256": "60bdd0040e24a61d4fafb9ec4748d4fa5f7b2bea6dff773c626c76de87b25ee9"},
+      {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234"},
+      {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da"},
+      {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf"},
+      {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787"},
+      {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7"}
+    ]
+  },
+  "toolsAndCommands": [
+    {"tool": "read", "use": "preparation.test.ts, agreement-card.test.ts, preparation-screen.tsx, preparation-client.ts, environment-host.mjs, environment-manifest.json, support.ts, orchestrator.ts, types.ts, store.ts (lines 1-130,130-209,315-409), private-client.ts, main.tsx greps, vite.config.ts"},
+    {"tool": "edit/write", "use": "all corrections via dedicated edit; environment-manifest.json rewritten via dedicated write after read"},
+    {"command": "node --check tests/box/delegation/environment-host.mjs", "exit": 0, "note": "read-only syntax parse only; no runtime execution"},
+    {"command": "certutil -hashfile SHA256 over 7 corrected paths", "exit": 0},
+    {"command": "grep residual-name and package checks", "exit": "0/1 (no residual old resource names)"}
+  ],
+  "unperformed": [
+    "No tests/typecheck/build executed; node scripts/suite.mjs box --suite delegation and the full batch remain for the released pre-execution phase.",
+    "Browser test requires the runner image's pinned /ms-playwright chromium and staged dependencies; neither provisioned in source phase.",
+    "No services, browsers, docker resources, networks, databases, staging dirs, candidate execution, commits or pushes performed."
+  ],
+  "knownLimitations": [
+    "The new browser test is unconditional inside the delegation suite: if the reviewed environment lacks the pinned chromium revision it fails honestly rather than skipping or mocking.",
+    "Image digests retain to-be-pinned-by-review placeholders; dependency provisioning for /stage commands remains a setup-review item per the pinned runner image convention.",
+    "apps/private-console and services/private-api have no own tsconfig.json (root config covers); disclosed typecheck-risk items unchanged except where fixed by D1/minor edits."
+  ]
+}

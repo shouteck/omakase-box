@@ -1,0 +1,18 @@
+{
+  "exit": 0,
+  "elapsedMs": 25297,
+  "argv": [
+    "docker",
+    "exec",
+    "-i",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r2-worker",
+    "w002-b11-ws",
+    "timeout",
+    "180",
+    "node",
+    "--input-type=module"
+  ],
+  "stdout": "worker-launcher-r2.stdout.log",
+  "stderr": "worker-launcher-r2.stderr.log"
+}

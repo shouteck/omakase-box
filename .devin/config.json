@@ -1,0 +1,13 @@
+{
+  "subagents_enabled": true,
+  "permissions": {
+    "deny": [
+      "Read(.runtime/**)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(secrets/**)",
+      "Write(.execution/state.json)",
+      "Write(tasks/task-graph.json)"
+    ]
+  }
+}

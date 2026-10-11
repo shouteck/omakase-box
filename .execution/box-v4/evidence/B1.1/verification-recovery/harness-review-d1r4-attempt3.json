@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_harness_preexecution_review",
+  "reviewer": "a689979b",
+  "lead": "89140b96",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "attempt": "d1-r4-03",
+  "revision": "2026-10-05-d1-r4",
+  "approval": {"path":".execution/box-v4/approvals/W002-D1-r4-approval.json","decision":"Approve"},
+  "boundBriefSha256": "13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+  "base": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "documentaryHead": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "lease": ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+  "leaseObservedState": "correction_required_setup_held",
+  "verdict": "fail",
+  "phaseVerdict": "PRE-EXECUTION FAIL",
+  "acceptance": "B1.1 remains unaccepted; this is not acceptance, setup, readiness, fixture release, resource release or authorization for later phases.",
+  "model": "unobserved",
+  "candidateFiles": {
+    "scripts/box-verification/environment-host.mjs": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59",
+    "scripts/box-verification/environment-manifest.json": "bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5",
+    "scripts/box-verification/fixture-exec-host.mjs": "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+    "scripts/box-verification/fixture-exec-runner.mjs": "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+    "scripts/box-verification/run-verification.mjs": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+    "scripts/box-verification/fixture-command-manifest.json": "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+    "tests/box/verification/environment-readiness.test.ts": "6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d",
+    "tests/box/verification/relay-lifecycle.test.ts": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
+  },
+  "workerClaimComparison": "all eight independently recomputed hashes match the worker-claimed attempt3 map",
+  "manifestDigest": "bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5",
+  "environmentId": "w002-b11-env-r4-env2",
+  "decisiveFailure": {
+    "finding": "The fixed commands begin with 'node scripts/pnpm.mjs', but scripts/pnpm.mjs is absent from the manifest sourceFilesPlan. The runner has no /workspace mount, so nothing in the reviewed setup path places that executable source file at /stage/scripts/pnpm.mjs. Mounting /stage/scripts/tooling/node_modules supplies only pnpm's package entrypoint after scripts/pnpm.mjs itself exists. The declared plan also lacks scripts/workspace.mjs, which package scripts check/build invoke, and does not contain a complete source/test closure for all seven required commands.",
+    "actualHashesOfMissingEntrypoints": {
+      "scripts/pnpm.mjs": "1992e940c548105fe64be3f6fcdbcd40cc7737f7182593b9a474da612ab33758",
+      "scripts/workspace.mjs": "43e37233f31fa92349e490d1f69a9275e2af98dc4c06b778ccb98d227e3c973f"
+    },
+    "consequence": "A runner using only the manifest-declared source staging cannot literally start the seven commands. A caller could theoretically supply a larger sourceFiles argument, but no exact complete digest map is bound by the candidate; the manifest's own populated plan is incomplete. This is a concrete pre-execution setup defect, not a live-run failure."
+  },
+  "attempt2Delta": {
+    "changed": {
+      "scripts/box-verification/environment-host.mjs": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59",
+      "scripts/box-verification/environment-manifest.json": "bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5",
+      "tests/box/verification/environment-readiness.test.ts": "6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d"
+    },
+    "unchanged": {
+      "scripts/box-verification/fixture-exec-host.mjs": "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+      "scripts/box-verification/fixture-exec-runner.mjs": "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+      "scripts/box-verification/run-verification.mjs": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+      "scripts/box-verification/fixture-command-manifest.json": "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+      "tests/box/verification/relay-lifecycle.test.ts": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
+    },
+    "changedCount": 3,
+    "outsideEightLeasedPaths": 0,
+    "wholeLineCommentChanges": 0,
+    "newModuleImportsOrPackageDependencies": 0
+  },
+  "manifestChecks": {
+    "revisionLiteral": "2026-10-05-d1-r4-environment-v4",
+    "loaderExpectedRevision": "2026-10-05-d1-r4-environment-v4",
+    "briefDigest": "sha256:13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+    "limits": {"setupAttempts":1,"activeSetupMinutesPerAttempt":20,"transferCheckMinutes":10,"minutesPerRequiredCommand":8,"supervisoryCheckpointMinutes":15,"correctionSupervision":"progress-based"},
+    "sourceFilesPlan": {"count":47,"mismatches":0,"missingExamples":["scripts/pnpm.mjs","scripts/workspace.mjs","complete test/auth/contracts/planner input closure"]},
+    "harnessFileDigests": {"mismatches":0},
+    "staleLimitFieldsAbsent": ["environmentAttempts","harnessCorrectionRounds","totalActiveMinutes"]
+  },
+  "runnerMountContract": {
+    "manifestBinds": [
+      {"host":"C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2","container":"/stage","readOnly":false},
+      {"host":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules","container":"/stage/node_modules","readOnly":true},
+      {"host":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules","container":"/stage/scripts/tooling/node_modules","readOnly":true}
+    ],
+    "runnerCreateArgvEmits": "--network container:w002-b11-ws --user 1000:1000 --read-only --cap-drop ALL --security-opt no-new-privileges --tmpfs /tmp... three --mount entries, workdir /stage, image sha256:eb4a84ec..., entrypoint sleep infinity",
+    "noBroadWorkspaceMount": true,
+    "noPortsDaemonSocketEgressOrExtraResource": true,
+    "dependencyResolutionPath": "If /stage/scripts/pnpm.mjs and a complete reviewed source map were staged, Node ESM would resolve /stage/scripts/../node_modules and tooling package bytes through the two read-only mounts."
+  },
+  "linuxClosures": {
+    "dependencies": {"status":"ok","hostRoot":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules","containerRoot":"/workspace/node_modules","mountTarget":"/stage/node_modules","packageCount":44,"fileCount":1153,"closureSha256":"6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6","versions":["vitest 5.0.1","vite 8.3.1","typescript 6.0.3"]},
+    "tooling": {"status":"ok","hostRoot":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules","containerRoot":"/workspace/scripts/tooling/node_modules","mountTarget":"/stage/scripts/tooling/node_modules","packageCount":1,"fileCount":1077,"closureSha256":"b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6","pnpmVersion":"10.34.5"},
+    "controlledWorkspaceBind": "both hostRoot values are strict descendants of manifest.stage.workspaceBind.host C:/Users/shout/AppData/Local/Temp/w002-b11-stage; createResources verifies each closure at the same hostRoot before assertNoCollision or Docker create/start and runnerCreateArgv uses the same hostRoot as the bind source",
+    "pnpmEntrypoint": "/workspace/scripts/tooling/node_modules/pnpm/bin/pnpm.cjs exists; mounted it becomes /stage/scripts/tooling/node_modules/pnpm/bin/pnpm.cjs"
+  },
+  "maps": {
+    "current14AgainstR8": {"changed":8,"unchanged":6,"allChangedPathsLeased":true},
+    "protected16AgainstR3": {"checked":16,"mismatches":0},
+    "oldStaged22AgainstR3": {"checked":22,"mismatches":0,"artifact":"review-a689979b-attempt3/staged22-attempt3.out"},
+    "auxiliaryInputs": {"scripts/process.mjs":"19b3c82f9db6214e8f351a45650ece10ba3754783985956f47967b40c4665aff","scripts/synthetic-runtime.mjs":"de2ae8e84e7114fc94cc0618979e748c938351c78935227d6d3364f081a4db34","tests/box/auth/fixture-transport.test.ts":"eea4d8ecb9ad224e44316266e2aed7f624296cf2b33bc29f9ef256a4e2a7b4eb","package.json":"f58a04e0bdc46efb69e332fb6958d37321c17110cb1848ec44fd89c51cce83ca","tsconfig.json":"c3a2af313d61a6f90c79071bdd058a4220233475c2fb6da9e054add42ade3a52","pnpm-lock.yaml":"d81f530fa0b59f1cb6ebfcfc8a40a0f0cccefc509ba126debd8898db7f52a720",".env.example":"93d9be5dd9dd83115ce2a7848d4a7c85b73d4ad161d1fa523618e69b429d8d2a"},
+    "manifestSourceFilesPlan": {"checked":47,"mismatches":0}
+  },
+  "linuxReviewDirectory": {"container":"/workspace/.d1-r4-reviewer-review-a689979b-attempt3","host":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage/.d1-r4-reviewer-review-a689979b-attempt3","exclusive":true,"copiedFiles":23,"node_modules":"review-only symlink to /workspace/node_modules","hostContainerParityMismatches":0,"parityArtifact":"review-a689979b-attempt3/parity-attempt3-linux.out"},
+  "boundedHarnessCheck": {"command":"timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs","cwd":"/workspace/.d1-r4-reviewer-review-a689979b-attempt3","backgroundShellId":"778897","completionShellId":"131f4f","pid":21103,"exit":0,"durationNs":26560646593,"stdoutBytes":1744,"stderrBytes":0,"testFiles":"3 passed (3)","tests":"62 passed (62)","observedDescendants":[21105],"postCheckPidsAbsent":[21103,21105],"artifactDir":"review-a689979b-attempt3"},
+  "staticReview": {
+    "preMutationGates": "review digest/file and verdict pass precede harness/source digest checks, both dependency closures, collision inspection, mkdir/state writes and Docker create/start",
+    "stagingBoundaries": "stageFiles rejects .git/.runtime/top-level node_modules and non-example .env, validates path form and digest, resolves source/stage boundaries, checks ancestor/destination symlinks and writes only wx/additive matching bytes",
+    "manifestSelfDigestBinding": "manifest digest, environmentId, harness digests, 47 source digests and review candidate map are recomputed before relevant execution gates; the incomplete 47-entry plan itself is the failure",
+    "relay": "one lease/run/environment, fresh-state checks, unresolved durable started records, ready lifecycle, manifest digest context, durable started before child spawn, result before response, replay/size/malformed denials and unavailable-on-ambiguity remain intact",
+    "descendantAccounting": "fixture runner and supervisor use detached process groups, bounded SIGTERM/SIGKILL and mark unconfirmed survivors unavailable rather than pass",
+    "sevenCommandSupervisor": "manifest and code require the exact original seven-command order and 8-minute per-command deadline; candidate digest/environment/review gates precede runSequence"
+  },
+  "containerContext": {"name":"w002-b11-ws","id":"92107bf48d48767f9af619b23e99710eb97f44d8b8ef755f9cc3be37918608f0","image":"sha256:99fc47dac8b729a5060068378def035fab6542c9be55885187251291e71e65c9","status":"running","mount":"C:/Users/shout/AppData/Local/Temp/w002-b11-stage -> /workspace RW","newR4Env2ContainersObserved":false},
+  "commands": [
+    {"shell":"a26bf4","command":"PowerShell Get-FileHash over candidate eight plus unchanged companion/auxiliary files","exit":0,"result":"all candidate hashes match worker claims; unchanged maps exact"},
+    {"shell":"a5dff0","command":"PowerShell attempt2-to-attempt3 eight-file map comparison","exit":0,"result":"exactly three files changed"},
+    {"shell":"1068a5","command":"PowerShell current14 comparison against harness-review-r8-final.json","exit":0,"result":"8 leased changes, 6 unchanged"},
+    {"shell":"f57715","command":"PowerShell protected16 comparison against candidate-manifest-r3.json","exit":0,"result":"16 checked, 0 mismatches"},
+    {"shell":"c639cb","command":"PowerShell environment-manifest sourceFilesPlan rehash","exit":0,"result":"47 checked, 0 mismatches; scripts/pnpm.mjs=false; scripts/workspace.mjs=false"},
+    {"shell":"5fe5dd","command":"host Test-Path plus docker exec test for dependency/tooling roots and pnpm entrypoint","exit":0,"result":"host/container roots and pnpm.cjs exist"},
+    {"shell":"efaa59","command":"review directory existence check","exit":0,"result":"attempt3 review dir absent before creation"},
+    {"shell":"2ad873","command":"PowerShell copied 23 reviewed/input files to exclusive review directory","exit":0,"result":"copied=23"},
+    {"shell":"bad8b7","command":"docker exec created/verified review-dir node_modules symlink to /workspace/node_modules","exit":0,"result":"node_modules_link_ready"},
+    {"shell":"83b15f/842ac1","command":"docker exec sha256sum of copied review files, durable parity output","exit":0,"result":"host/container parity exact"},
+    {"shell":"a367c2","command":"docker exec Node SHA-256 comparison of all 22 old staged files against candidate-manifest-r3","exit":0,"result":"22 checked, 0 mismatches"},
+    {"shell":"181190 then 5a867b/c7ec5a","command":"docker exec Node verifyDependencyClosure for linuxDependencies and linuxTooling using containerRoots","exit":0,"result":"dependencies 44/1153 expected digest; tooling 1/1077 expected digest"},
+    {"shell":"d9bd32","command":"inline Vitest wrapper attempt","exit":1,"result":"shell quoting syntax error; not counted as the one test run"},
+    {"shell":"778897 then 131f4f","command":"docker exec wrapper ran exact timeout 180 node node_modules/vitest/vitest.mjs selection with durable pid/stdout/stderr/exit/duration/descendants","exit":0,"result":"3 files, 62 tests, exit 0, stderr empty, duration 26560646593 ns"},
+    {"shell":"dc71b4 and 149dee and ef7e91","command":"read-only Docker inspect/ps and post-run /proc checks","exit":0,"result":"existing resources only; test PIDs 21103/21105 absent"},
+    {"shell":"c4ee37","command":"PowerShell whole-line comment comparison for three changed files versus attempt2","exit":0,"result":"0 added, 0 removed"}
+  ],
+  "smallestSafeCorrection": "Within the same eight leased paths, update environment-manifest.json (and any coherent tests/loader metadata only if needed) to bind a complete reviewed source staging map for all seven commands, minimally adding exact hash-bound scripts/pnpm.mjs and scripts/workspace.mjs and every required test/source/config/fixture entry. Keep the now-correct three-mount dependency/tooling wiring unchanged. The map must be sufficient for 'node scripts/pnpm.mjs ...' at /stage without a /workspace mount or installs. A corrected candidate needs another exact independent review before consuming the single setup attempt.",
+  "workerEvidenceReliedOn": "Worker claims were used only as a comparison target. All eight candidate hashes, unchanged/companion/protected/staged maps, manifest source plan, closure results, mount semantics, test output and resource context were independently recomputed or inspected.",
+  "limitations": ["No createResources, Docker create/start/stop, setup/readiness/live fixture execution, DB/mailbox mutation or replay, acceptance commands, credentials/.runtime access, Git mutation, cleanup or deletion occurred.", "The review-only symlink made node_modules/vitest/vitest.mjs available inside the exclusive review directory; it is not evidence that the future runner stages a source file itself.", "An initial inline Vitest wrapper had a shell quoting syntax error before spawning Node; only the durable wrapper run was counted.", "Static review cannot prove unlisted future caller-supplied sourceFiles maps; the decisive defect is the manifest's own populated plan and fixed command path.", "Model remains unobserved/unpinned."],
+  "prohibitedActions": "No candidate edits/repairs, delegation, setup/readiness/live fixture execution, resource creation, DB/mailbox mutation/replay, Git stage/commit/push, credentials/.runtime reads, cleanup/deletion or acceptance occurred."
+}

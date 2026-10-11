@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:40:39.013Z",
+  "finishedAt": "2026-10-04T00:40:49.914Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": ""
+}

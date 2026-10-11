@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_worker_final_receipt",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r1",
+  "actor": "subagent_general/c0c68c39",
+  "baseHead": "baa8acbf92f6f15fb81a340ef4511fc639ea7562",
+  "status": "SOURCE_READY_FOR_PREEXECUTION_REVIEW",
+  "acceptanceClaim": false,
+  "preExecutionPassClaim": false,
+  "capabilityInventory": {
+    "read": "dedicated read tool used for all source reads",
+    "write": "dedicated write tool used for every new file (parent directories created normally)",
+    "edit": "dedicated edit tool used for every shared-path modification after reading the file",
+    "grep_glob": "dedicated grep/find_file_by_name used for search",
+    "code_search": "not invoked during implementation; classical grep/glob/read used instead and reported",
+    "exec": "used only for read-only listings, Get-FileHash/certutil SHA-256 hashing and grep; never for product writes",
+    "blockers": "none"
+  },
+  "newFiles": [
+    {"path": "services/private-api/boxes/preparation/types.ts", "sha256": "079e8cb19c5d0c58755539059fd422bc7d1105aa9189c0d5b91aa97959dab5ec", "role": "Box preparation input/output schemas, supported-case descriptors, context manifest constants, agreement projection schema, safeBoxError"},
+    {"path": "services/private-api/boxes/preparation/orchestrator.ts", "sha256": "300bef79ca62bc09130e27fe924b6c92c2ef1a6858a8e4c56be143e73509cea8", "role": "Deterministic register/prepare/agreement/approve/readiness/revise orchestration composing intake, intents and BoxStore"},
+    {"path": "services/private-api/boxes/preparation/routes.ts", "sha256": "3a4f6aed8692dc9f2e57f9ec624b0036fe5f8944ac932929622ddfe2fb8b2359", "role": "POST /v1/box-repositories (snapshot.import), POST /v1/boxes/prepare (box.write), GET /v1/boxes/:id/agreement (box.read), POST /v1/boxes/:id/behavior-approval (box.behavior.approve), POST /v1/boxes/:id/readiness (box.write), POST /v1/boxes/:id/revisions (box.write)"},
+    {"path": "services/private-api/db/migrations/0013_delegation_preparation.sql", "sha256": "3230319c5876b43d3a3b8599110dc591736bc440c44b296418440686f8b060d8", "role": "box_repository_registrations table with immutable trigger and (snapshot_id, base_commit, context_manifest_hash) uniqueness"},
+    {"path": "apps/private-console/boxes/preparation/preparation-client.ts", "sha256": "f087ba0ee764c0dcf58ead901b0d10383dad67892a15152d7e35d6fb0ece698f", "role": "Console API client for prepare/agreement/approve/readiness/revise"},
+    {"path": "apps/private-console/boxes/preparation/preparation-screen.tsx", "sha256": "e606e266717566824193368857f87d75022e81070bed0d63f07255aaae798418", "role": "Preparation screen: registration, prepare, agreement card, owner-only approval, readiness, amend-invalidate"},
+    {"path": "apps/private-console/boxes/preparation/preparation-screen.css", "sha256": "5dbc9eb2c07c6f1df9e6440313982df641c53319618f63a7e526f4ecd0c97682", "role": "Bounded styles for the preparation screen"},
+    {"path": "tests/box/delegation/support.ts", "sha256": "430788756fd9c229254a25d2e483f58a5a3723b69c952f7e95c0e10503b4cacf", "role": "Delegation-owned migratedPool (w005_d12_run_ prefix, cap 12, alias host), account/session helpers, services/API assembly, approved-intent helper, literal request texts"},
+    {"path": "tests/box/delegation/fixture-registration.test.ts", "sha256": "ffba8732093ce6cbb892b914be173e2255c6b1440525db0ae3b8edd1ea2318f6", "role": "Baseline materialization + repository registration tests incl. replay and conflict negatives"},
+    {"path": "tests/box/delegation/preparation.test.ts", "sha256": "51dd1d4c37b1bc3b3c672c6c64e79520058727f415077dfb9ada05103dcc58a8", "role": "End-to-end prepare/approve/readiness/amend + negatives at store and HTTP level"},
+    {"path": "tests/box/delegation/agreement-card.test.ts", "sha256": "f925c622e9fac62915757f585b3d3a42052cca931162a79e14c78b5c565b93af", "role": "Agreement projection checks: surfaces, package map, HSTS/localhost truths, blocking reasons, superseded approval"},
+    {"path": "tests/box/delegation/fixture-manifest.json", "sha256": "4a189d78530c2464b23a767b106d8ea5fc2122c681b5f204e304e8a256c7f8a3", "role": "Reviewed private-shop inventory, roles, coupling, supported/unsupported case ids, environment/evaluator descriptors, git baseline policy"},
+    {"path": "tests/box/delegation/environment-manifest.json", "sha256": "dedabcfd49ca2e5f96bd2259078da686af4ecd8f1073e91ff003405570906833", "role": "W005 environment registry: one internal network, two containers, network-local legacy alias, 12-DB cap, fixed argv command list"},
+    {"path": "tests/box/delegation/register-fixture.mjs", "sha256": "e0098ba5ec96bbeebb0d06db32129f3f671fa36985f9adfda67e047e638a84dc", "role": "Fixed-argv baseline materializer: copies hash-pinned inventory, git init/commit, emits baseline.json"},
+    {"path": "tests/box/delegation/environment-host.mjs", "sha256": "086a709971dc2bb5905decb678493cb09bedae1aa346694e11ac7bb169caf767", "role": "Trusted host argv builders/validators mirroring W002 conventions scoped to W005 names; fail-closed staging"}
+  ],
+  "modifiedSharedPaths": [
+    {"path": "services/private-api/boxes/store/schema.ts", "sha256": "15cc0cba0917a44c3e6907537cc22503ff4a9af93f212e2d975c764d69115986", "change": "added boxRepositoryRegistrations table definition only"},
+    {"path": "services/private-api/boxes/store/store.ts", "sha256": "701b5aed9ec35d4f29933aaa93cbe6cba7f6b5ccee16b7eefe032fed177e9e81", "change": "additive: registerRepository, registeredRepository, createPrepared, revisePrepared, readPrepared; all guards (assertNoRestrictedFields, permissions, idempotent keys) reused; no existing method altered"},
+    {"path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "e29d384208712c426749b34795456b3d3499edd3b0dc7ef2a0a94b182e319234", "change": "appended idx 13 entry 0013_delegation_preparation"},
+    {"path": "services/private-api/src/bootstrap/server.ts", "sha256": "a985c64d319313f16c383fcd21502d0717ffff1dd95e34cc4b47cca7dc6957da", "change": "imports + optional boxes/boxSources/boxPreparation auth fields + route install; existing planner preparation seam untouched"},
+    {"path": "services/private-api/src/bootstrap/main.ts", "sha256": "b83fde812664e2ec0883726424d3e611d58edfe7a56780342a122391656cccdf", "change": "BoxStore import, private-shop source registration alongside synthetic-shop, boxes/boxSources injection"},
+    {"path": "apps/private-console/intake/private-client.ts", "sha256": "4e22699dd8ef1e20dea90fc43bb2810b25d574fd852fbe33033da3c72c845787", "change": "added BoxRegistrationView type and registerBoxRepository call; existing literal API base unchanged"},
+    {"path": "apps/private-console/src/bootstrap/main.tsx", "sha256": "a05007509bee79119e9993b7ec8223432f35ea5e599cad7a55c8110e3eb0a2e7", "change": "added preparation tab import/button/render branch"}
+  ],
+  "designDecisions": [
+    "POST /v1/boxes/prepare composes PrivateIntakeStore.request, IntentOrchestration.currentForRequest (requires approved, non-superseded, zero required-unresolved) and the registered repository row; repository snapshotId must equal the request snapshotId (missing_evidence otherwise).",
+    "Deterministic floor: supportedCaseId selects one of two literal descriptors in types.ts; the unsupported coupling label and any unknown id throw unsupported_case (422).",
+    "createPrepared/revisePrepared insert artifact+version(+head) atomically inside one transaction, reusing assertNoRestrictedFields, requirePermission and the existing idempotent key machinery; amend keeps the same intent provenance and invalidates prior approval (supersededApproval visible via read).",
+    "Registration imports the pinned snapshot, writes private_intake_objects/private_snapshots/private_snapshot_provenance and box_repository_registrations in one transaction; data-level idempotency via the unique (snapshot_id, base_commit, context_manifest_hash) key; operation keys reuse the 'create' op namespace with a kind discriminator.",
+    "Context manifest records per-file sha256/bytes/role (protected/explanatory/runnable/excluded), per-case runnable/explanatory/packageMap/dependencyVersions/runnableChecks, plannerExcludedPaths, initialCoupling and the structural environment/evaluator descriptors; environmentRef/evaluatorRef digests are sha256 of the descriptor JSON at registration time.",
+    "Agreement projection is a fresh Box-specific schema exposing boxId, version, state, repoId, snapshot/baseCommit, editableSurface, runnable/explanatory, packageMap, truths (helper-level HTTPS/non-localhost HSTS vs live-localhost no-HSTS), environment/evaluator refs, merge target, artifactHashes, approval, supersededApproval and blockingReasons.",
+    "Readiness opens only when artifact.unknowns is empty and an exact-hash approval exists for the current version; revising a Box with new unknowns blocks readiness (missing_evidence).",
+    "Console: new Preparation tab; registration form visible to owner/operator; prepare/agreement/amend to owner/requester; behavior-approval control owner-only with note otherwise; reloads project persisted agreement state."
+  ],
+  "commandsRun": [
+    "ls services/private-api/intents services/private-api/requests services/private-api/preparations (exit 0)",
+    "find apps/private-console -type f (exit 0)",
+    "ls services/private-api/snapshots + grep exports (exit 0)",
+    "grep private_snapshots schema in migrations (exit 0)",
+    "grep constructor signatures and ReviewProjection fields (exit 0)",
+    "find environment manifests + grep docker.mjs exports + view scripts/suite.mjs (exit 0)",
+    "certutil -hashfile SHA256 over all 22 leased paths (exit 0)"
+  ],
+  "unperformed": [
+    "No tests executed; node scripts/suite.mjs box --suite delegation and all acceptance commands remain for the released pre-execution phase.",
+    "No services, browsers, docker resources, networks, databases, staging dirs or candidate code were run or created.",
+    "No staging, commits or pushes performed; checkpointing remains root-owned after independent review.",
+    "No credentials, .runtime.env or live environment inspection performed."
+  ],
+  "knownLimitations": [
+    "apps/private-console and services/private-api have no own tsconfig.json; root tsconfig covers them (observed absence reported, no substitute used).",
+    "Image digests inside tests/box/delegation/environment-manifest.json carry explicit to-be-pinned placeholders pending setup-time review pinning, mirroring the W002 registry convention.",
+    "The planner-preparation seam /v1/intents/:id/preparation is untouched; Box preparation uses only the new /v1/boxes/prepare route.",
+    "code_search subagent was not invoked; classical dedicated grep/glob/read covered exploration."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r1-independent-final",
+    "w002-b11-ws",
+    "node",
+    "-e",
+    "const fs=require('fs'),p=require('path'),m=require('module'),crypto=require('crypto');const manifest=JSON.parse(fs.readFileSync('scripts/box-verification/environment-manifest.json'));const list=manifest.stage.workspaceAliases;let rows=[];for(const a of list){const pkg=JSON.parse(fs.readFileSync(a.packageJson));if(crypto.createHash('sha256').update(fs.readFileSync(a.packageJson)).digest('hex')!==a.packageJsonSha256||({...pkg.dependencies,...pkg.devDependencies})[a.name]!==a.version)throw Error('declaration drift');const target=p.join('/workspace/node_modules',a.targetRel);const targetReal=fs.realpathSync(target);if(!targetReal.startsWith('/workspace/node_modules/'))throw Error('target escape');const info=JSON.parse(fs.readFileSync(p.join(target,'package.json')));if(info.name!==a.name||info.version!==a.version)throw Error('target drift');const dest=p.join(p.dirname(a.packageJson),'node_modules',a.name);fs.mkdirSync(p.dirname(dest),{recursive:true});fs.symlinkSync(p.relative(p.resolve(p.dirname(dest)),target),dest,'dir');const req=m.createRequire(p.resolve(a.packageJson));let resolved;try{resolved=req.resolve(a.name)}catch(e){if(!a.name.startsWith('@types/'))throw e;resolved=fs.realpathSync(dest)}rows.push({packageJson:a.packageJson,name:a.name,version:info.version,resolved})}const req=m.createRequire(p.resolve('services/private-api/package.json'));const subpaths=['pg','drizzle-orm/node-postgres','drizzle-orm/node-postgres/migrator'];console.log(JSON.stringify({count:rows.length,rows,criticalSubpaths:subpaths.map(x=>[x,req.resolve(x)])},null,2))"
+  ],
+  "exit": 0,
+  "elapsedMs": 2016,
+  "meaning": "Simulation of22exactfixedaliases in exclusive reviewer dir only; actualstageWorkspaceAliases on real bind remains postsetup gate"
+}

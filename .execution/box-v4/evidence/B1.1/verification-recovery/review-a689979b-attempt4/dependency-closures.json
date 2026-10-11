@@ -1,0 +1,16 @@
+{
+  "deps": {
+    "status": "unavailable",
+    "reason": "dependency_closure_mismatch",
+    "packageCount": 44,
+    "fileCount": 1153,
+    "closureSha256": "ead110d9d96c350bf285426de8b3b3803e5aad381a3e940d9c1c98c2b4728103"
+  },
+  "tooling": {
+    "status": "unavailable",
+    "reason": "dependency_closure_mismatch",
+    "packageCount": 1,
+    "fileCount": 1077,
+    "closureSha256": "8a49333e9d16750a1dd853bb534e97eee4f2f01c4f44369f4a482cbc8a175d2e"
+  }
+}

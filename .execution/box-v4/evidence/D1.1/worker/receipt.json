@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "d11_design_worker_receipt",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r1",
+  "brief": ".execution/box-v4/briefings/W003.md",
+  "briefSha256": "491074d91dc72f7fc130fd2adabd8dcbf3d6c5a16889a26639b8df8b4455ec8c",
+  "briefHashVerified": true,
+  "approval": ".execution/box-v4/approvals/W003-approval.json",
+  "taskId": "D1.1",
+  "actor": "terminal D1.1 design worker (Devin portable pstack adaptation; sole writer for the three records)",
+  "baselineHead": "021024594c8b08ef7a8b24e08cfb7c8b9e021086",
+  "acceptedSourceBaseline": "a38c1e01cdf139af31a80d816efce8b9e023513a",
+  "b11ManifestSha256": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "deliverables": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "066c7759c9462f01487d2b7fe0595369e0de92440465e722997b71b3a2b80d9c",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "a66803ed0dba89da28adeaaee6b28ce847148fe87e4e73ae142fcd60bd60160c",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "0e106481d62a1f0cc5bfe1d2a169ba30fa632a1129f8367e040ffd1b7dbc5791"
+  },
+  "hashMethod": "node:crypto sha256 over file bytes",
+  "writeCapability": "Verified before substantive writing via .execution/box-v4/evidence/D1.1/worker/.write-probe (created, read back, then removed). No dedicated file-write tool exists in this runtime; new files were created with exec heredocs, the only available mechanism for new files. Long single commands were truncated by the tool mid-write twice; both files were then written in verified chunks and re-hashed.",
+  "toolsUsed": ["read", "grep", "find_file_by_name (unused)", "exec (ls/cat/head/git -c safe.directory=... read-only, node sha256, heredoc file writes)"],
+  "sourceFindings": [
+    "box-contracts/index.ts exports the full versioned Box contract set including BehaviorArtifactSchema, BoxVersionSchema, approve/revise transition guards and assertNoRestrictedFields (bounty/payment keys rejected).",
+    "BoxStore (services/private-api/boxes/store/store.ts) implements createArtifact/create/revise/approveBehavior/read/transition/assign/attempts with session+role auth, owner-only behavior approval, stale_version and approvalInvalidated semantics; accepted under B1.1.",
+    "No HTTP route installs BoxStore: services/private-api/src/bootstrap/server.ts installs auth/intake/intents/preparations/releases/assignments/readiness/acceptance only. The Box HTTP surface is absent; D1.2 must add it.",
+    "Auth actions box.* already exist in packages/contracts/auth/policy.ts with requester/owner/operator grants; no new actions needed.",
+    "Intent layer (intents/routes.ts, orchestrator.ts, types.ts ReviewProjectionSchema, db/intent-store.ts) supplies the exact-version/exact-hash approval pattern and the concise review projection the agreement card reuses.",
+    "Fixture examples/private-shop is synthetic, modular TypeScript with fixture.json declaring snapshotPaths, plannerExcludedPaths, initialCoupling (protected private/ modules) and knownMissingBehaviour that map to the two chosen requests; reference-solutions exist owner-side.",
+    "Owner Git worktree/commit helpers are absent (REUSE.md); D1.2 stores baseCommit as registered data.",
+    "tests/box currently contains auth, contracts, verification subgroups; scripts/suite.mjs discovers tests/<suite>/<subgroup>; tests/box/delegation/* is the proposed D1.2 registration."
+  ],
+  "skills": "unslop and typescript-best-practices exist on disk under .devin/plugins/box-pstack/skills and were read and applied during writing (concise prose, boundary-validation framing). No skill tool invocation was available/required.",
+  "classification": "accepted vs source-only vs absent vs proposed recorded in REUSE-INTERFACES.md; nothing source-only or proposed is presented as accepted.",
+  "limitations": [
+    "Design only: no product source, tests, examples or schema written; no fixture executed; no runtime/container started.",
+    "store.ts read in full only through line ~252 plus schema.ts; recordEvaluation/review/merge tail was not line-read, but none of it is needed for the D1.2 prepare/approve/amend slice.",
+    "Per-file fixture digests are deferred to D1.2 fixture registration as designed; this wave verified paths/imports read-only.",
+    "No independent review performed or claimed; a distinct reviewer must check all three records against source before acceptance. No acceptance marked.",
+    "Ordinary-delegation comparison is predeclared, not run; no vendor access or outreach."
+  ],
+  "stopConditionsObserved": "None hit. Writes stayed inside the three named records plus this receipt directory.",
+  "status": "complete_pending_independent_review_not_accepted"
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/auth/session-store.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:59:13.247Z",
+  "finishedAt": "2026-10-02T17:59:14.552Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/auth/session-store.test.ts \u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 317\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m derives authority only from unexpired enabled DB account/session records\u001b[32m 9\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects wrong service signatures, revoked/expired records and forged CSRF\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m requires an actual bounded CSRF token for mutations, not an omitted GET-style argument\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m rejects stored contributor authority in the private service and revokes only the verified current session\u001b[32m 1\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m refuses disabled account login even with a valid password\u001b[32m 194\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m rechecks and locks current owner session authority inside invitation creation\u001b[39m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m locks invitation redemption and rolls back revoked/expired/missing tokens\u001b[32m 97\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/auth/session-store.test.ts\u001b[2m > \u001b[22mrechecks and locks current owner session authority inside invitation creation\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected 'SELECT id FROM private_accounts WHERE…' to contain 'JOIN private_sessions'\u001b[39m\n\nExpected: \u001b[32m\"JOIN private_sessions\"\u001b[39m\nReceived: \u001b[31m\"SELECT id FROM private_accounts WHERE id=$1 AND role='owner' AND NOT disabled FOR SHARE\"\u001b[39m\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/auth/session-store.test.ts:\u001b[2m43:15\u001b[22m\u001b[39m\n    \u001b[90m 41|\u001b[39m   await store.createPrivateInvitation(actor, 'requester');\n    \u001b[90m 42|\u001b[39m   const [sql, parameters] = query.mock.calls[1]!;\n    \u001b[90m 43|\u001b[39m   expect(sql).toContain('JOIN private_sessions');\n    \u001b[90m   |\u001b[39m               \u001b[31m^\u001b[39m\n    \u001b[90m 44|\u001b[39m   expect(sql).toContain('session.token_hash=$2');\n    \u001b[90m 45|\u001b[39m   expect(sql).toContain('session.csrf_hash=$3');\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[1m\u001b[32m6 passed\u001b[39m\u001b[22m\u001b[90m (7)\u001b[39m\n\u001b[2m   Start at \u001b[22m 01:59:13\n\u001b[2m   Duration \u001b[22m 610ms\u001b[2m (tests 75%, transform 17%, import 7%, worker 1%)\u001b[22m\n\n"
+}

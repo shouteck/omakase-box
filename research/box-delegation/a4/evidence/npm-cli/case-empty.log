@@ -1,0 +1,76 @@
+npm-empty start 13:07:45Z
+{
+  "submission": "C:\\Users\\shout\\Desktop\\a4-boxes\\neg\\npm-empty\\submission.json",
+  "box": "a4-npm-cli-paint",
+  "version": 1,
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "files": 1,
+  "changed": 1
+}
+submit exit=0
+{
+  "verdict": "fail",
+  "failureClass": "implementation-failure",
+  "reason": "command-check",
+  "detail": "declared guard check 'cli-guard' did not pass (result: fail, exit 1): file:///<root>/examples/a4-npm-cli/checks/guard.mjs:1\nimport { paint } from '../src/paint.js';\n         ^^^^^\nSyntaxError: The requested module '../src/paint.js' does not provide an export named 'paint'\n    at #_instantiate (node:internal/modules/esm/module_job:254:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v24.11.0",
+  "checks": [],
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "expectedBaseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "attemptSha256": "465295baf1eb77931540a5e85b93d3235b0d788a129ff6f6f410cf0f268fa0c1",
+  "applies": [
+    {
+      "owner": "src/paint.js",
+      "box": "src/paint.js",
+      "changed": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "commandChecks": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "declaredArgv": [
+        "checks/guard.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "exit": 1,
+      "result": "fail",
+      "log": "file:///<root>/examples/a4-npm-cli/checks/guard.mjs:1\nimport { paint } from '../src/paint.js';\n         ^^^^^\nSyntaxError: The requested module '../src/paint.js' does not provide an export named 'paint'\n    at #_instantiate (node:internal/modules/esm/module_job:254:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v24.11.0",
+      "outputSha256": "2b441a78393639296ce9f94dc8039fbefcd8ae7c1e5f8a58c2eb96aa1c7a62fa",
+      "seconds": 0.103
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "declaredArgv": [
+        "checks/outcome.mjs"
+      ],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "file:///<root>/examples/a4-npm-cli/checks/outcome.mjs:1\nimport { paint } from '../src/paint.js';\n         ^^^^^\nSyntaxError: The requested module '../src/paint.js' does not provide an export named 'paint'\n    at #_instantiate (node:internal/modules/esm/module_job:254:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v24.11.0",
+      "outputSha256": "7604310697817b8a958ef99556908f01659d0f60863c979a08d32f16deb6cfc6",
+      "seconds": 0.091
+    }
+  ]
+}
+verify exit=3
+npm-empty end 13:07:56Z

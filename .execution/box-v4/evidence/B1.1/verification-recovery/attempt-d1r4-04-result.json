@@ -1,0 +1,21 @@
+{
+  "attempt": "d1-r4-04",
+  "status": "complete_worker_self_check",
+  "reviewerFailAddressed": "sourceFilesPlan incomplete (scripts/pnpm.mjs, scripts/workspace.mjs missing; full seven-command source/test/static fixture closure unbound). Mount/tooling wiring kept unchanged.",
+  "changedLeasedPaths": {
+    "scripts/box-verification/environment-manifest.json": {"before": "bc347d0645bb1b1f70f696b820ab04e73df7162ca064a47e2a8316441a04f8e5", "after": "c1e1f55ca2196ef3ee5abad341e09f4815e7e38e031ec8a75216e9a8dfff1705"},
+    "tests/box/verification/environment-readiness.test.ts": {"before": "6af40747553e7bda5857d02e0631d59d5bd99db79360e975d1ec308e34448a2d", "after": "4ed19d807c775b1757825bf45ec9948b19564da0336bb3399e5a7cb2bb26d78a"},
+    "scripts/box-verification/environment-host.mjs": {"unchanged": "44e2b35257be5a18b9068300f405107761fca06ced7283bf022a9c1bbd5f8e59"}
+  },
+  "sourceMap": {"entries": 455, "matchesReviewerIndependentMeasure": true, "sortedDuplicateFree": true, "keyPins": {"scripts/pnpm.mjs": "1992e940c548105fe64be3f6fcdbcd40cc7737f7182593b9a474da612ab33758", "scripts/workspace.mjs": "43e37233f31fa92349e490d1f69a9275e2af98dc4c06b778ccb98d227e3c973f"}, "credsEncountered": 0, "symlinksInScope": 0},
+  "linuxChecks": {
+    "mapProbe": {"exit": 0, "result": "455 entries, sorted, dup-free, exclusions hold, staged digests match, key pins match", "evidence": "sourcemap-probe-d1r4-attempt4.txt"},
+    "vitest": {"literalExit": 0, "testFiles": "3 passed (3)", "tests": "63 passed (63)", "vitestDuration": "27.62s", "stderrBytes": 0, "evidence": "vitest-selection-d1r4-attempt4.stdout.txt/.stderr-status.txt"}
+  },
+  "orderingLimitation": "attempt-d1r4-04-correction.json persisted alongside first enumeration/edits rather than strictly before; recorded honestly",
+  "backgroundedCommands": "7847a7 (intentional vt4), 8cc50e, 873948, 9bf17b harness-backgrounded; superseded by durable /tmp polls",
+  "stillRunning": "none observed",
+  "forbidden": "none: read-only docker exec in existing w002-b11-ws only; no createResources, no setup/readiness/fixtures/acceptance/Git/DB/API/queue/credentials",
+  "readyForSameReviewerPreExecutionReview": true,
+  "note": "worker self-check only; not independent review or acceptance; setup release still root-suspended"
+}

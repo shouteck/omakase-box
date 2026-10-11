@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:security",
+    "--",
+    "--suite",
+    "release-content"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:24:15.721Z",
+  "finishedAt": "2026-10-03T03:24:18.031Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "{\"assurance\":\"unverified\",\"suite\":\"security\",\"subgroup\":\"release-content\",\"status\":\"unavailable\",\"reason\":\"This required suite has not been implemented.\"}\n"
+}

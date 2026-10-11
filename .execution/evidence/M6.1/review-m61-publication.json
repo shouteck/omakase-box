@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:portal",
+    "--",
+    "--suite",
+    "publication"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T21:39:53.858Z",
+  "finishedAt": "2026-10-03T21:40:00.172Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n \u001b[32m✓\u001b[39m tests/portal/publication/durable-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2916\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m the signed bridge publishes released data into the external store over real container separation\u001b[33m 2913\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m tests/portal/publication/release.test.ts \u001b[2m(\u001b[22m\u001b[2m8 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 301\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m9 passed\u001b[39m\u001b[22m\u001b[90m (9)\u001b[39m\n\u001b[2m   Start at \u001b[22m 05:39:54\n\u001b[2m   Duration \u001b[22m 4.90s\u001b[2m (tests 73%, import 19%, transform 8%)\u001b[22m\n\n"
+}

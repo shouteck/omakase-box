@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "informative_dependency_audit_correction",
+  "recordedAtUtc": "2026-10-05T02:41:57.576863+00:00",
+  "actor": "/root/verification_repair_worker",
+  "finding": "Complete declared dependency closure is substantially larger than prior44seedclosure; serial bindfilesystem reads exceeded hostcollector90s. HostCLI termination did not establish remote exit. Worker identified and stopped exactownedhashNode thenconfirmedabsence; original UNKNOWN preserved.",
+  "nextCorrection": "Existing envhost verifier bounded32concurrent filehash batches, identical sorted rows/canonicalpackage order/digest semantics. Remotehash300s timeout anddurableJSON/logs, actual toolsessioncollected tocompletion.",
+  "allowedPaths": [
+    "scripts/box-verification/environment-host.mjs",
+    "scripts/box-verification/environment-manifest.json",
+    "tests/box/verification/environment-readiness.test.ts"
+  ],
+  "independentCurrentReviewRequired": true,
+  "newResourceAllowed": false,
+  "setupReleased": false,
+  "overallCompletionDeadline": null,
+  "sourceOfAuthority": "W002-CTO-R1 directrequest andsameeightpathrepairscope"
+}

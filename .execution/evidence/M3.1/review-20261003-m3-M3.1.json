@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.1",
+  "reviewer": "opencode-reviewer-subagent-m3-20261003",
+  "reviewType": "independent_rebind_review",
+  "reviewedAt": "2026-10-03T01:10:00.000Z",
+  "scope": "Independent reviewer for the M3.1 rebind (previous approval 7fe68431dfd8815027e8accdd951b7b76e813cbb1cf98c66e73ae1ce56435824 by opencode-reviewer-subagent; current revision a710eff4f9e01ad0ca248fcd18773d9e636b35ef934fe6147f60704d7b264c11). Reviewer did not implement these tasks; decisive checks rerun on current bytes.",
+  "revisionBinding": {
+    "currentManifest": ".execution/evidence/M3.1/revision-a710eff4f9e01ad0ca248fcd18773d9e636b35ef934fe6147f60704d7b264c11.json",
+    "recomputedEveryFileSha256": true,
+    "fileCount": 58,
+    "missingFiles": 0,
+    "internalDigestRecomputation": {
+      "stateDigest": "a710eff4f9e01ad0ca248fcd18773d9e636b35ef934fe6147f60704d7b264c11",
+      "recomputedFromManifest": "a710eff4f9e01ad0ca248fcd18773d9e636b35ef934fe6147f60704d7b264c11",
+      "fileNameDigestMatches": true,
+      "taskDefinitionSha256Matches": true
+    },
+    "classification": {
+      "product": 15,
+      "sharedOnly": 43,
+      "integrationOnly": 0,
+      "outOfScope": 0,
+      "note": "Product paths: packages/analyzer/** (6 files incl. M3.4 policy additions under the same glob) and tests/analysis/** (9 files incl. M3.2/M3.4 subdirectory additions under the same glob)."
+    },
+    "productPathMismatches": [],
+    "sharedPathMismatches": [
+      { "path": "docs/DECISIONS.md", "cause": "today's coordinator decision-log edit after the snapshot" },
+      { "path": "scripts/execution.mjs", "cause": "today's coordinator execution-script edit after the snapshot" }
+    ],
+    "staleSharedEntriesNote": "The recorded manifest's shared-file entries for docs/DECISIONS.md and scripts/execution.mjs are stale relative to the current tree (coordinator edited them after the last snapshot). Both are coordinator-owned shared paths outside the M3.1 write scope; the coordinator should re-snapshot when recording the review decision.",
+    "rebindVerification": {
+      "previouslyApprovedManifest": ".execution/evidence/M3.1/revision-7fe68431dfd8815027e8accdd951b7b76e813cbb1cf98c66e73ae1ce56435824.json",
+      "previousManifestAssurance": "tested",
+      "productPathsInApprovedManifest": 49,
+      "byteIdenticalToCurrentTree": 46,
+      "changedSinceApproval": 3,
+      "changedPaths": [
+        { "path": "infra/trusted.Dockerfile", "owner": "M0.2 shared coordinator file, not M3.1 product" },
+        { "path": "infra/trusted.Dockerfile.dockerignore", "owner": "M0.2 shared coordinator file, not M3.1 product" },
+        { "path": "scripts/execution.mjs", "owner": "M0.1 shared coordinator file, not M3.1 product" }
+      ],
+      "addedSinceApproval": [
+        { "path": "packages/analyzer/policy/index.ts", "owner": "M3.4 new file inside the overlapping packages/analyzer/** glob" },
+        { "path": "packages/analyzer/policy/strict-json.ts", "owner": "M3.4 new file inside the overlapping packages/analyzer/** glob" },
+        { "path": "tests/analysis/policy/adapter.test.ts", "owner": "M3.4 new file inside the overlapping tests/analysis/** glob" }
+      ],
+      "removedSinceApproval": [],
+      "rebindCleared": true,
+      "rebindStatement": "Rebind CLEARED: every M3.1 product path present in the previously approved manifest is byte-identical (SHA-256) between that approved manifest and the current tree. No M3.1-owned product file was modified since approval; the only changes inside the broad M3.1 write-scope globs are M3.4's new product files (separately in M3.4 first review) and coordinator-owned shared-file batches."
+    }
+  },
+  "rerunChecks": [
+    {
+      "command": "node scripts/evidence.mjs M3.1 review-20261003-5-analysis scripts/pnpm.mjs test:analysis",
+      "label": "review-20261003-5-analysis",
+      "exitCode": 0,
+      "observed": "37 tests / 7 files passed: boundary-detection 4/4 (protected worker/cluster/child_process couplings incl. nested workers, env reach without reading values, unsafe globals eval/new Function/globalThis/global, omitted state dependencies), surface-classification 3/3 (every import shape classified, JSON/type-only out of runtime classes, computed/unresolved never safe, limits+disclaimer), empty-surface 2/2, private-analysis-journey 3/3, boundary-detection(partition) 2/2, boundary-extraction 14/14, policy adapter 9/9. Suite has grown from the approved 28 to 37 because M3.2/M3.4 product additions share the analysis suite; all green on current bytes.",
+      "evidencePath": ".execution/evidence/M3.1/review-20261003-5-analysis.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M3.1 review-20261003-6-dep-boundary scripts/pnpm.mjs test:security -- --suite dependency-boundary",
+      "label": "review-20261003-6-dep-boundary",
+      "exitCode": 0,
+      "observed": "4/4 tests passed in tests/security/dependency-boundary/coupling.test.ts: protected-coupling rejection incl. transitive rejected_dependency, public->private import rejection with published_private_reach, computed dynamic loading never safe with verdict/limits assertions, advisory-only facade with hash-drift fail-closed.",
+      "evidencePath": ".execution/evidence/M3.1/review-20261003-6-dep-boundary.json"
+    },
+    {
+      "command": "node scripts/evidence.mjs M4.2 shared evidence (coordinator-recorded 2026-10-03T14:18-14:20Z)",
+      "exitCode": 0,
+      "observed": "test:contracts 144/144, test:auth, test:bootstrap, test:planner all exit 0 on current bytes per coordinator context; not rerun to avoid login-heavy repeats.",
+      "evidencePath": ".execution/evidence/M4.2/shared-contracts-final.json"
+    }
+  ],
+  "retainedFailures": [
+    { "path": ".execution/evidence/M3.1/review-20261003-1-analysis.json", "exitCode": 1, "cause": "reviewer invocation error: leading 'node' passed into evidence.mjs args so the spawned module path was wrong; unusable record, retained because labels are never overwritten" },
+    { "path": ".execution/evidence/M3.1/review-20261003-3-analysis.json", "exitCode": 1, "cause": "same reviewer invocation error, corrected at labels -5/-6" },
+    { "path": ".execution/evidence/M3.1/review-20261003-4-dep-boundary.json", "exitCode": 1, "cause": "same reviewer invocation error, corrected at label -6" }
+  ],
+  "acceptanceJudgements": [
+    {
+      "bullet": "Known forbidden coupling is rejected; unknown dynamic behaviour is not marked safe.",
+      "verdict": "met",
+      "basis": "Source review of packages/analyzer/core/boundary-surface.ts: 'safe' classification is reachable only for runtime imports statically resolved inside the captured manifest that are neither private-target nor protected (classifyImport, lines 196-210); computed dynamic import()/require() (non-literal) -> 'computed', unresolved -> 'unknown', remote http(s) -> 'rejected', worker_threads/cluster/child_process -> 'protected'. Module verdicts use the conservative worst of rejected > unsupported > unknown > clean; the literal 'safe' is never a module verdict (classifyEvidence, line 481+). Tests verify each: coupling.test.ts, surface-classification.test.ts 'never reports computed or unresolved dynamic behaviour as safe', boundary-detection.test.ts."
+    },
+    {
+      "bullet": "Reports disclose assumptions and limits; AST linting is never labeled semantic confidentiality proof.",
+      "verdict": "met",
+      "basis": "ANALYSIS_LIMITS (5 items) and ANALYSIS_DISCLAIMER ('never a semantic confidentiality proof') are embedded in every report (limits/assurance fields) and asserted by tests (surface-classification.test.ts, coupling.test.ts, empty-surface.test.ts). DependencyBoundaryReport re-embeds assurance 'bounded', limits and disclaimer (dependency-boundary.ts:37-48). Findings documented as advisory, unable to authorize any privileged action."
+    },
+    {
+      "bullet": "Deliverable: TypeScript AST/import closure, edit-surface report and conservative unsupported-feature classification; detects protected imports, dynamic loading, unsafe globals and omitted state dependencies.",
+      "verdict": "met",
+      "basis": "source-surface.ts (cached ASTs, syntactic helpers), boundary-surface.ts (importClosures reachable/privateReachable, editSurface.dependentsOf reverse closure incl. type-only/JSON edges, findings for private_source_import/protected_import/computed_import/env_reachable/unsafe_global/published_reachable/omitted_state_dependency, hash-verified pinned bytes, 256-file/1MiB/16MiB bounds, strict relative-path policy, no execution of captured code), dependency-boundary.ts facade. Verified by reruns above."
+    },
+    {
+      "bullet": "Security-boundary challenge: captured bytes are never executed and reports never emit captured payloads or host paths.",
+      "verdict": "met",
+      "basis": "No exec/spawn/child_process anywhere in the analyzer modules; buildBoundarySurface reads bytes only to hash-verify and parse; serialized report asserted free of captured string payloads (surface-classification.test.ts asserts SYNTHETIC_SECRET absent; boundary tests assert 'synthetic-default' and host paths absent from JSON)."
+    }
+  ],
+  "weakenedExpectationsChecked": "None found. The worker's documented expectation corrections (draft, section 'Expectation corrections') are shape fixes with stronger replacements (e.g. removed nonexistent absolutePath property in favour of no-host-path assertions); independent reruns confirm no mandated expectation was deleted. The analysis suite grew from 28 to 37 tests solely by successor-task additions, not by weakening.",
+  "findings": [
+    {
+      "severity": "note",
+      "finding": "Recorded manifest is stale on two coordinator-owned shared files (docs/DECISIONS.md, scripts/execution.mjs) relative to the current tree; coordinator should re-snapshot at acceptance. Not an M3.1 product issue and not grounds for rejection."
+    }
+  ],
+  "verdict": "approved",
+  "rebindCleared": true,
+  "limitations": "Static AST linting over pinned bytes only; aliases, decorators, generics, conditional runtime paths and variable dataflow are not interpreted (disclosed in ANALYSIS_LIMITS and asserted by tests). Findings are advisory and authorize nothing. All fixtures synthetic."
+}

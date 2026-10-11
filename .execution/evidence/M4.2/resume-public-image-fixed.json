@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M4.2/public-image.mjs",
+    "--existing",
+    "public-image-audit-rZbcgt"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:40:50.735Z",
+  "finishedAt": "2026-10-03T03:41:25.468Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"imageDigest\":\"sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8\",\"sourceContextHash\":\"1db95bb47287ffce16eba7fcad21a2e9b1219c82331a0db6941a735d6aad396d\",\"filesScanned\":31066,\"bytesScanned\":2779100026,\"layerCount\":16,\"violations\":[],\"actualVmValidation\":\"unverified\",\"candidateExecuted\":false,\"evidence\":\"C:\\\\Users\\\\shout\\\\Desktop\\\\Projects\\\\private-task-mvp\\\\.execution\\\\evidence\\\\M4.2\\\\public-image-eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8.json\",\"archive\":\"C:\\\\Users\\\\shout\\\\Desktop\\\\Projects\\\\private-task-mvp\\\\.runtime\\\\public-image-audit-rZbcgt\\\\image.tar\"}\n"
+}

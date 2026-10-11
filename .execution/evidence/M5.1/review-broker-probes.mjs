@@ -1,0 +1,1 @@
+import {spawnSync} from 'node:child_process'; const result=spawnSync(process.platform==='win32'?'python':'python3',['-B','.execution/evidence/M5.1/review-broker-probes.py'],{shell:false,windowsHide:true,stdio:'inherit',timeout:15000}); process.exitCode=result.status??2;

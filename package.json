@@ -1,0 +1,53 @@
+{
+  "name": "private-task-mvp",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=24.11.0 <25",
+    "pnpm": "10.34.5"
+  },
+  "scripts": {
+    "check": "node scripts/workspace.mjs check",
+    "check:full": "node scripts/workspace.mjs check --full",
+    "build": "node scripts/workspace.mjs build",
+    "doctor": "node scripts/doctor.mjs",
+    "demo:seed": "node scripts/demo-seed.mjs",
+    "demo": "node scripts/demo.mjs",
+    "test:bootstrap": "node scripts/suite.mjs bootstrap",
+    "test:contracts": "node scripts/suite.mjs contracts",
+    "test:auth": "node scripts/suite.mjs auth",
+    "test:box-contracts": "node scripts/suite.mjs box --suite contracts",
+    "test:box-auth": "node scripts/suite.mjs box --suite auth",
+    "test:box-delegation": "node scripts/suite.mjs box --suite delegation",
+    "test:box-package": "node scripts/suite.mjs box --suite package",
+    "test:box-trace": "node scripts/suite.mjs box --suite trace",
+    "test:box-bounty": "node scripts/suite.mjs box --suite bounty",
+    "test:planner": "node scripts/suite.mjs planner",
+    "test:analysis": "node scripts/suite.mjs analysis",
+    "test:compiler": "node scripts/suite.mjs compiler",
+    "test:runner": "node scripts/suite.mjs runner",
+    "test:portal": "node scripts/suite.mjs portal",
+    "test:acceptance": "node scripts/suite.mjs acceptance",
+    "test:security": "node scripts/suite.mjs security",
+    "test:containers": "node scripts/suite.mjs containers",
+    "test:e2e": "node scripts/suite.mjs e2e",
+    "test:kitchen": "node scripts/suite.mjs kitchen",
+    "research:report": "node scripts/suite.mjs research-report",
+    "verify:mvp": "node scripts/verify-mvp.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.13.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "drizzle-kit": "0.31.11",
+    "embedded-postgres": "17.10.0-beta.17",
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "vitest": "5.0.1",
+    "yaml": "2.9.1"
+  }
+}

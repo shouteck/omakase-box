@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "kind": "read_only_exact_team_reconciliation",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "revision": "2026-10-05-r5-live-wiring",
+  "authority": ".execution/box-v4/approvals/W002-r5-approval.json",
+  "recordedAtUtc": "2026-10-04T19:18:33.4194684Z",
+  "timestampMeaning": "Host recording clock, not message timestamp; supplied session date is 2026-10-05.",
+  "briefHashesRecomputed": {"W002-r5.md": "4f45b5bf2861ff05bf485778c30b9a4e0d303fc820c04691cbd3b08b20c3919e", "W002-r4.md": "f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721"},
+  "lookups": [
+    {"tool": "read_subagent", "agentId": "553458f9", "result": "No subagent found with agent_id=553458f9"},
+    {"tool": "read_subagent", "agentId": "92162dc8", "result": "No subagent found with agent_id=92162dc8"},
+    {"tool": "read_subagent", "agentId": "424d5727", "result": "No subagent found with agent_id=424d5727"}
+  ],
+  "interpretation": "Required identities unavailable to this session. No claim they resumed or their old host processes stopped. r5 line19 requires stop/rebrief, so no run_subagent dispatch attempted.",
+  "documentaryHead": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "workingTree": "Existing modified/untracked governance and unaccepted product/harness preserved; master tracks cached origin/master. Remote privacy/history not refreshed, no upload.",
+  "candidateVerification": "All14 current harness files independently hashed with Get-FileHash match candidateFiles in harness-review-r4-final.json. This is root byte reconciliation, not independent acceptance or current protected22/stage/environment validation.",
+  "toolsObserved": "poteto-mode, recall, unslop and principle-build-the-lever invoked through native skill tool; project lead/worker/reviewer profiles read. No fresh nesting/product dispatch proven.",
+  "modelEvidence": "Historical human SWE-2 Free confirmation preserved at model-confirmation-r4.json; actual routed child model/quota unobserved, no new dispatch or settings change.",
+  "actionsNotTaken": ["product/harness writes", "lease acquisition", "worker/reviewer dispatch", "candidate tests", "host harness/relay launch", "container creation", "API/DB mutation", "credential reads", "cleanup", "Git staging/commit/push"],
+  "budgets": "74 conservative active minutes retained; no correction/setup/check budget consumed by a child in this reconciliation. No retry reset.",
+  "status": "blocked_required_team_unavailable",
+  "nextProposal": ".execution/box-v4/briefings/W002-r6.md"
+}

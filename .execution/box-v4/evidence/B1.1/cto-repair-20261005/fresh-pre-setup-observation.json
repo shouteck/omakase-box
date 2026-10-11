@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "fresh_pre_setup_runtime_observation",
+  "recordedAtUtc": "2026-10-05T02:53:21.115672+00:00",
+  "preservedContainerIds": "All six actual inspected IDs equal repair-preflight.json; all running",
+  "oom": "OriginalBoxDB historicaltrue unchanged; otherfivefalse",
+  "allowedNewNamesPresent": false,
+  "hostProcessSample": "13Node processes, none matchedW002/verification/hashcommand metadata. This doesnotprove inaccessibleinferenceagentsstopped.",
+  "memory": {
+    "hostFreePhysicalKiB": 2551336,
+    "linuxMemTotalKiB": 8100680,
+    "linuxMemAvailableKiB": 5786844,
+    "linuxMemFreeKiB": 1655904,
+    "plannedAdditionalResourceCeilingsBytes": 3221225472,
+    "decision": "Supports serialized boundedsetup usingavailableguestmemory; recheckOOM andstoponnewOOM. Limitsnotreservations."
+  },
+  "collectionNotes": "InitialDockerps template used.Id ratherthan.ID andmixedPowerShellobjects hidprocesscolumns; correctedmetadata callscompleted. Neithererrorchangedresources.",
+  "scope": "Readonlymetadata before setuprelease"
+}

@@ -1,0 +1,2 @@
+export failed: git clone --local --quiet /src/zod /tmp/box-base-RnUNPk/owner failed in /src/zod: fatal: failed to create link '/tmp/box-base-RnUNPk/owner/.git/objects/pack/pack-5bd3f3d98bfee7cfc7a7c99e35345676486a835f.idx': Invalid cross-device link
+EXPORT_EXIT=0

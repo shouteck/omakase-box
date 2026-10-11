@@ -1,0 +1,19 @@
+{"assurance":"unverified","suite":"nonexistent","status":"unavailable","reason":"This required suite has not been implemented."}
+{"assurance":"unverified","suite":"box","status":"unavailable","reason":"Real VM execution is not configured or implemented."}
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/workspace/.r4-harness-review-cto-r2-worker[39m
+
+ [32m✓[39m tests/box/contracts/box-schemas.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m tests/box/contracts/boundary.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3046[2mms[22m[39m
+   [32m✓[39m private box boundary regression [2m(1)[22m
+     [33m[2m✓[22m[39m forbids external-side imports of packages/box-* and box-contracts workspace specifiers[33m 3044[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 03:22:46
+[2m   Duration [22m 17.23s[2m (import 69%, tests 24%, transform 4%, worker 2%)[22m
+
+[2m    Isolate [22m [33m2 workers spawned[39m[2m · ~2.19s startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~2.19s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+[{"label":"default","cacheDir":null,"hookTimeout":null,"testTimeout":30000,"maxWorkers":1},{"label":"wrong","cacheDir":null,"hookTimeout":null,"testTimeout":30000,"maxWorkers":1},{"label":"verification","cacheDir":"/workspace/.r4-harness-review-cto-r2-worker/.cto-r1-evidence/vitest-cache/","hookTimeout":60000,"testTimeout":30000,"maxWorkers":1},{"label":"unavailable","argv":["scripts/suite.mjs","nonexistent"],"code":2,"signal":null,"elapsedMs":56,"descendants":"process_group_confirmed_empty"},{"label":"real","argv":["scripts/suite.mjs","box","--real"],"code":2,"signal":null,"elapsedMs":52,"descendants":"process_group_confirmed_empty"},{"label":"contracts","argv":["scripts/suite.mjs","box","--suite","contracts"],"code":0,"signal":null,"elapsedMs":22218,"descendants":"process_group_confirmed_empty"}]

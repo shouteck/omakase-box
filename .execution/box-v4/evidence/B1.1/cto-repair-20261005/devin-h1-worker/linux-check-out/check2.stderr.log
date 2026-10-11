@@ -1,0 +1,297 @@
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/auth/persistence/auth-live.test.ts[2m > [22mactual synthetic APIs reject forged identity, CSRF, expired sessions and invitation replay
+[31m[1mError[22m: Command failed: /usr/local/bin/node scripts/verify-auth.mjs
+node:internal/child_process:286
+      const err = new ErrnoException(exitCode, syscall);
+                  ^
+
+Error: spawn docker ENOENT
+    at ChildProcess._handle.onexit (node:internal/child_process:286:19)
+    at onErrorNT (node:internal/child_process:484:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawn docker',
+  path: 'docker',
+  spawnargs: [
+    '--context',
+    'default',
+    'compose',
+    '--parallel',
+    '1',
+    '--project-name',
+    'private-task-mvp-synthetic',
+    '--env-file',
+    '/workspace/.devin-h1-check/src/.runtime/synthetic-runtime/runtime.env',
+    '-f',
+    '/workspace/.devin-h1-check/src/infra/compose.yaml',
+    'exec',
+    '-T',
+    '--env',
+    'SYNTHETIC_AUTH_FIXTURE=private-task-mvp-synthetic',
+    '--workdir',
+    '/workspace/services/private-api',
+    'private-api',
+    'node',
+    'dist/fixture.js'
+  ]
+}
+
+Node.js v24.11.0
+[39m
+[36m [2m❯[22m tests/auth/persistence/auth-live.test.ts:[2m5:16[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth/persistence/lifecycle-live.test.ts[2m > [22mreal PostgreSQL rejects lifecycle bypass, identity mutation, supersession reset and outbox tampering
+[31m[1mError[22m[39m: Command failed: /usr/local/bin/node scripts/verify-lifecycles.mjs
+node:internal/child_process:286
+      const err = new ErrnoException(exitCode, syscall);
+                  ^
+
+Error: spawn docker ENOENT
+    at ChildProcess._handle.onexit (node:internal/child_process:286:19)
+    at onErrorNT (node:internal/child_process:484:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawn docker',
+  path: 'docker',
+  spawnargs: [
+    '--context',
+    'default',
+    'compose',
+    '--parallel',
+    '1',
+    '--project-name',
+    'private-task-mvp-synthetic',
+    '--env-file',
+    '/workspace/.devin-h1-check/src/.runtime/synthetic-runtime/runtime.env',
+    '-f',
+    '/workspace/.devin-h1-check/src/infra/compose.yaml',
+    'exec',
+    '-T',
+    '--workdir',
+    '/workspace/services/private-api',
+    'private-api',
+    'node',
+    '--input-type=module',
+    '-e',
+    '\n' +
+      "  import assert from 'node:assert/strict'; import fs from 'node:fs'; import { randomUUID } from 'node:crypto'; import { Pool } from 'pg';\n" +
+      "  const pool = new Pool({ host: process.env.PRIVATE_DATABASE_HOST, database: process.env.PRIVATE_DATABASE_NAME, user: process.env.PRIVATE_DATABASE_USER, password: fs.readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE, 'utf8').trim(), max: 2 });\n" +
+      '  const deny = (sql, args, message) => assert.rejects(pool.query(sql, args), error => error.message === message);\n' +
+      '  try {\n' +
+      "    const id = randomUUID(); const hash = 'a'.repeat(64);\n" +
+      "    await pool.query('INSERT INTO private_evaluations (id, permit_id, task_id, task_version, submission_id, submission_hash, package_hash, private_base_revision) VALUES ($1,$2,$3,1,$4,$5,$5,$5)', [id, randomUUID(), randomUUID(), randomUUID(), hash]);\n" +
+      `    await deny("UPDATE private_evaluations SET state='accepted', version=version+1 WHERE id=$1", [id], 'invalid_evaluation_transition');\n` +
+      `    await deny("UPDATE private_evaluations SET state='public_evaluating' WHERE id=$1", [id], 'stale_evaluation_version');\n` +
+      `    await deny("UPDATE private_evaluations SET package_hash=$2, version=version+1 WHERE id=$1", [id, 'b'.repeat(64)], 'evaluation_binding_immutable');\n` +
+      `    await pool.query("UPDATE private_evaluations SET state='public_evaluating', version=version+1 WHERE id=$1", [id]);\n` +
+      `    await pool.query("UPDATE private_evaluations SET state='private_evaluating', version=version+1 WHERE id=$1", [id]);\n` +
+      `    await deny("UPDATE private_evaluations SET state='owner_review', version=version+1 WHERE id=$1", [id], 'completed_evaluation_required');\n` +
+      `    await pool.query("UPDATE private_evaluations SET state='owner_review', result=$2, version=version+1 WHERE id=$1", [id, { outcome: 'passed', syntheticConstraintFixture: true }]);\n` +
+      "    await pool.query('UPDATE private_evaluations SET superseded=true, version=version+1 WHERE id=$1', [id]);\n" +
+      "    await deny('UPDATE private_evaluations SET superseded=false, version=version+1 WHERE id=$1', [id], 'supersession_irreversible');\n" +
+      '    const event = randomUUID();\n' +
+      `    await pool.query("INSERT INTO private_payment_obligations (event_id,payee_id,reason,currency,amount_minor) VALUES ($1,$2,'synthetic compensation constraint fixture','USD',0)", [event, randomUUID()]);\n` +
+      "    await deny('UPDATE private_payment_obligations SET amount_minor=1 WHERE event_id=$1', [event], 'obligation_terms_immutable');\n" +
+      `    await deny("UPDATE private_payment_obligations SET state='settlement_recorded' WHERE event_id=$1", [event], 'settlement_reference_required');\n` +
+      `    await pool.query("UPDATE private_payment_obligations SET state='settlement_recorded',settlement_reference='synthetic-no-money-moved' WHERE event_id=$1", [event]);\n` +
+      `    await deny("UPDATE private_payment_obligations SET state='due' WHERE event_id=$1", [event], 'settlement_immutable');\n` +
+      "    const feedbackId = randomUUID(); const feedback = { schemaVersion: 1, publicId: feedbackId, category: 'received', releasePolicyVersion: 1, publicCheckDetails: [] };\n" +
+      "    await pool.query('INSERT INTO private_feedback_outbox (event_id,submission_id,payload) VALUES ($1,$2,$3)', [feedbackId, randomUUID(), feedback]);\n" +
+      "    await pool.query('INSERT INTO private_feedback_outbox (event_id,submission_id,payload) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING', [feedbackId, randomUUID(), feedback]);\n" +
+      "    assert.equal((await pool.query('SELECT count(*)::int AS count FROM private_feedback_outbox WHERE event_id=$1', [feedbackId])).rows[0].count, 1);\n" +
+      "    await deny('UPDATE private_feedback_outbox SET payload=$2 WHERE event_id=$1', [feedbackId, { ...feedback, category: 'accepted' }], 'outbox_event_immutable');\n" +
+      "    await pool.query('UPDATE private_feedback_outbox SET delivered_at=now() WHERE event_id=$1', [feedbackId]);\n" +
+      "    await deny('UPDATE private_feedback_outbox SET delivered_at=NULL WHERE event_id=$1', [feedbackId], 'outbox_delivery_immutable');\n" +
+      "    console.log(JSON.stringify({ lifecycle: 'tested', immutableEvaluationBinding: 'tested', supersession: 'tested', immutableObligationAndSettlement: 'tested', outboxReplay: 'one_event', authority: 'synthetic_schema_test_not_runner_verdict' }));\n" +
+      '  } finally { await pool.end(); }\n'
+  ]
+}
+
+Node.js v24.11.0
+
+[36m [2m❯[22m tests/auth/persistence/lifecycle-live.test.ts:[2m6:18[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth/persistence/migrations-live.test.ts[2m > [22mapplies all forward migrations and replays on fresh identified synthetic databases without dropping data
+[31m[1mError[22m: Command failed: /usr/local/bin/node scripts/verify-empty-migrations.mjs
+node:internal/child_process:286
+      const err = new ErrnoException(exitCode, syscall);
+                  ^
+
+Error: spawn docker ENOENT
+    at ChildProcess._handle.onexit (node:internal/child_process:286:19)
+    at onErrorNT (node:internal/child_process:484:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawn docker',
+  path: 'docker',
+  spawnargs: [
+    '--context',
+    'default',
+    'compose',
+    '--parallel',
+    '1',
+    '--project-name',
+    'private-task-mvp-synthetic',
+    '--env-file',
+    '/workspace/.devin-h1-check/src/.runtime/synthetic-runtime/runtime.env',
+    '-f',
+    '/workspace/.devin-h1-check/src/infra/compose.yaml',
+    'exec',
+    '-T',
+    '--workdir',
+    '/workspace/services/private-api',
+    'private-api',
+    'node',
+    '--input-type=module',
+    '-e',
+    "import assert from 'node:assert/strict'; import fs from 'node:fs'; import {randomUUID} from 'node:crypto'; import {Pool} from 'pg'; import {drizzle} from 'drizzle-orm/node-postgres'; import {migrate} from 'drizzle-orm/node-postgres/migrator';\n" +
+      "    const prefix='PRIVATE'; const config={host:process.env[prefix+'_DATABASE_HOST'],database:process.env[prefix+'_DATABASE_NAME'],user:process.env[prefix+'_DATABASE_USER'],password:fs.readFileSync(process.env[prefix+'_DATABASE_PASSWORD_FILE'],'utf8').trim(),max:1};\n" +
+      "    const database='synthetic_empty_'+randomUUID().replaceAll('-',''); assert.match(database,/^synthetic_empty_[a-f0-9]{32}$/);\n" +
+      "    const admin=new Pool(config); try{await admin.query('CREATE DATABASE '+database);}finally{await admin.end();}\n" +
+      '    const pool=new Pool({...config,database});try{\n' +
+      "      const db=drizzle(pool);await migrate(db,{migrationsFolder:'db/migrations'});await migrate(db,{migrationsFolder:'db/migrations'});\n" +
+      `      const tables=await pool.query("SELECT tablename FROM pg_tables WHERE schemaname='public'");\n` +
+      '      const expectedFoundation=["private_accounts","private_sessions","private_invitations","private_intent_revisions","private_intent_heads","private_release_approvals","private_evaluations","private_acceptances","private_payment_obligations","private_feedback_outbox"];const expectedIntake=["private_intake_objects","private_snapshots","private_snapshot_provenance","private_requests","private_request_evidence"];\n' +
+      '      const foundationTables=tables.rows.filter(row=>expectedFoundation.includes(row.tablename));\n' +
+      '      assert.equal(foundationTables.length,10);assert.deepEqual(foundationTables.map(row=>row.tablename).sort(),expectedFoundation.slice().sort());\n' +
+      '      for(const name of expectedIntake)assert.ok(tables.rows.some(row=>row.tablename===name));\n' +
+      "      if(prefix==='EXTERNAL')assert.ok(tables.rows.every(row=>!row.tablename.startsWith('private_')));\n" +
+      "      console.log(JSON.stringify({assurance:'tested',service:'private-api',emptyDatabaseMigration:'tested',replay:'tested',tableCount:foundationTables.length,tableCountScope:'foundation',allTableCount:tables.rows.length,intakeTableCount:expectedIntake.length,fixtureDatabase:database,cleanup:'preserved_no_drop'}));\n" +
+      '    }finally{await pool.end();}'
+  ]
+}
+
+Node.js v24.11.0
+[39m
+[36m [2m❯[22m tests/auth/persistence/migrations-live.test.ts:[2m5:18[22m[39m
+    [90m  3|[39m
+    [90m  4|[39m it('applies all forward migrations and replays on fresh identified syn…
+    [90m  5|[39m   const output = execFileSync(process.execPath, ['scripts/verify-empty…
+    [90m   |[39m                  [31m^[39m
+    [90m  6|[39m   const reports = output.trim().split('\n').map(line => JSON.parse(lin…
+    [90m  7|[39m   expect(reports).toHaveLength(2);
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth/persistence/workflow-live.test.ts[2m > [22mreal synthetic PostgreSQL enforces revision/approval and reservation concurrency invariants
+[31m[1mError[22m[39m: Command failed: /usr/local/bin/node scripts/verify-persistence.mjs
+node:internal/child_process:286
+      const err = new ErrnoException(exitCode, syscall);
+                  ^
+
+Error: spawn docker ENOENT
+    at ChildProcess._handle.onexit (node:internal/child_process:286:19)
+    at onErrorNT (node:internal/child_process:484:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'spawn docker',
+  path: 'docker',
+  spawnargs: [
+    '--context',
+    'default',
+    'compose',
+    '--parallel',
+    '1',
+    '--project-name',
+    'private-task-mvp-synthetic',
+    '--env-file',
+    '/workspace/.devin-h1-check/src/.runtime/synthetic-runtime/runtime.env',
+    '-f',
+    '/workspace/.devin-h1-check/src/infra/compose.yaml',
+    'exec',
+    '-T',
+    '--workdir',
+    '/workspace/services/private-api',
+    'private-api',
+    'node',
+    '--input-type=module',
+    '-e',
+    '\n' +
+      "  import assert from 'node:assert/strict'; import fs from 'node:fs'; import { randomUUID } from 'node:crypto'; import { Pool } from 'pg'; import { PrivateIntentStore } from './dist/intent-store.js';\n" +
+      "  const pool = new Pool({ host: process.env.PRIVATE_DATABASE_HOST, database: process.env.PRIVATE_DATABASE_NAME, user: process.env.PRIVATE_DATABASE_USER, password: fs.readFileSync(process.env.PRIVATE_DATABASE_PASSWORD_FILE, 'utf8').trim(), max: 3 });\n" +
+      '  try {\n' +
+      `    const owner = (await pool.query("SELECT id FROM private_accounts WHERE username = 'synthetic.bootstrap.owner' AND role = 'owner'")).rows[0].id;\n` +
+      '    const requester = randomUUID(); const other = randomUUID();\n' +
+      `    for (const id of [requester, other]) await pool.query("INSERT INTO private_accounts (id, username, password_hash, role) VALUES ($1, $2, 'synthetic-test-only-hash', 'requester')", [id, 'synthetic.requester.' + id.slice(0, 8)]);\n` +
+      '    const id = randomUUID(); const store = new PrivateIntentStore(pool);\n' +
+      "    const draft = { schemaVersion: 1, intentId: id, version: 1, state: 'draft', goal: 'Synthetic workflow guard probe', snapshotHash: 'a'.repeat(64), facts: [], evidence: [], decisions: [{ id: 'choice', question: 'Synthetic required decision?', required: true, answer: null }], assumptions: [], unknowns: [], acceptanceExamples: [], scope: { included: ['Synthetic test only'], excluded: ['Real customer approval'] } };\n" +
+      '    await store.create(requester, draft);\n' +
+      "    await assert.rejects(store.transition(requester, id, 1, 'ready_for_approval'));\n" +
+      '    await assert.rejects(store.revise(other, { ...draft, version: 2 }, 1));\n' +
+      "    await store.revise(requester, { ...draft, version: 2, decisions: [{ ...draft.decisions[0], answer: 'resolved' }] }, 1);\n" +
+      "    const ready = await store.transition(requester, id, 2, 'ready_for_approval');\n" +
+      "    await assert.rejects(store.transition(requester, id, 2, 'approved', ready.contentHash));\n" +
+      "    await assert.rejects(store.transition(owner, id, 2, 'approved', 'b'.repeat(64)));\n" +
+      "    await store.transition(owner, id, 2, 'approved', ready.contentHash);\n" +
+      "    await assert.rejects(pool.query('UPDATE private_intent_revisions SET payload = $2 WHERE id = $1 AND version = 2', [id, { ...draft, goal: 'changed' }]), error => error.message === 'approved_revision_immutable');\n" +
+      "    await assert.rejects(pool.query('UPDATE private_intent_revisions SET content_hash = $2 WHERE id = $1 AND version = 2', [id, 'b'.repeat(64)]));\n" +
+      "    await store.revise(requester, { ...draft, version: 3, goal: 'New synthetic revision' }, 2);\n" +
+      "    const results = await Promise.allSettled([store.revise(requester, { ...draft, version: 4, goal: 'Synthetic edit A' }, 3), store.revise(requester, { ...draft, version: 4, goal: 'Synthetic edit B' }, 3)]);\n" +
+      "    assert.equal(results.filter(result => result.status === 'fulfilled').length, 1); assert.equal(results.filter(result => result.status === 'rejected').length, 1);\n" +
+      "    await assert.rejects(pool.query('UPDATE private_intent_heads SET current_version=2 WHERE id=$1', [id]), error => error.message === 'stale_intent_head');\n" +
+      "    const approved = (await pool.query('SELECT content_hash, approved_hash, state FROM private_intent_revisions WHERE id = $1 AND version = 2', [id])).rows[0]; assert.equal(approved.state, 'approved'); assert.equal(approved.approved_hash, ready.contentHash); assert.equal(approved.content_hash, ready.contentHash);\n" +
+      '    const evaluationId = randomUUID(); const eventId = randomUUID(); const acceptanceId = randomUUID();\n' +
+      '    const seedEvaluation = async evalId => {\n' +
+      "      await pool.query('INSERT INTO private_evaluations (id, permit_id, task_id, task_version, submission_id, submission_hash, package_hash, private_base_revision) VALUES ($1,$2,$3,1,$4,$5,$5,$5)', [evalId, randomUUID(), randomUUID(), randomUUID(), 'a'.repeat(64)]);\n" +
+      "      for (const state of ['public_evaluating', 'private_evaluating']) await pool.query('UPDATE private_evaluations SET state=$2,version=version+1 WHERE id=$1', [evalId, state]);\n" +
+      `      await pool.query("UPDATE private_evaluations SET state='owner_review',result=$2,version=version+1 WHERE id=$1", [evalId, { outcome: 'passed', syntheticConstraintFixture: true }]);\n` +
+      '    };\n' +
+      '    await seedEvaluation(evaluationId);\n' +
+      '    const client = await pool.connect();\n' +
+      '    try {\n' +
+      "      await client.query('BEGIN');\n" +
+      "      await client.query('INSERT INTO private_acceptances (id, event_id, evaluation_id, owner_id, submission_hash, package_hash, private_base_revision, candidate_diff_hash) VALUES ($1, $2, $3, $4, $5, $5, $5, $5)', [acceptanceId, eventId, evaluationId, owner, 'a'.repeat(64)]);\n" +
+      "      await assert.rejects(client.query('COMMIT'), error => error.code === '23503');\n" +
+      "      await client.query('ROLLBACK');\n" +
+      "      await client.query('BEGIN');\n" +
+      "      await client.query('INSERT INTO private_acceptances (id, event_id, evaluation_id, owner_id, submission_hash, package_hash, private_base_revision, candidate_diff_hash) VALUES ($1, $2, $3, $4, $5, $5, $5, $5)', [acceptanceId, eventId, evaluationId, owner, 'a'.repeat(64)]);\n" +
+      `      await client.query("INSERT INTO private_payment_obligations (event_id, acceptance_id, payee_id, reason, currency, amount_minor) VALUES ($1, $2, $3, 'synthetic constraint test, not a real obligation', 'USD', 0)", [eventId, acceptanceId, randomUUID()]);\n` +
+      "      await client.query('COMMIT');\n" +
+      '    } finally { client.release(); }\n' +
+      '    const mismatchedEvaluation = randomUUID();\n' +
+      '    await seedEvaluation(mismatchedEvaluation);\n' +
+      "    await assert.rejects(pool.query('INSERT INTO private_acceptances (id, event_id, evaluation_id, owner_id, submission_hash, package_hash, private_base_revision, candidate_diff_hash) VALUES ($1, $2, $3, $4, $5, $6, $5, $5)', [randomUUID(), randomUUID(), mismatchedEvaluation, owner, 'a'.repeat(64), 'b'.repeat(64)]), error => error.code === '23503' && error.constraint.startsWith('private_acceptances_evaluation_id_submission_hash'));\n" +
+      "    console.log(JSON.stringify({ roleAndResourceGuards: 'tested', unresolvedApproval: 'denied', exactApprovalHash: 'tested', approvedRevisionImmutable: 'tested', concurrentRevision: 'one_winner', priorApprovalPreserved: true, acceptanceRequiresAtomicPayable: 'tested', exactEvaluationBinding: 'tested', evaluationAuthority: 'unverified_synthetic_constraint_fixture_only' }));\n" +
+      '  } finally { await pool.end(); }\n'
+  ]
+}
+
+Node.js v24.11.0
+
+[36m [2m❯[22m tests/auth/persistence/workflow-live.test.ts:[2m6:18[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth/bootstrap/browser-cookie.test.ts[2m > [22mreal browser sends synthetic private cookies only to the private hostname (bootstrap policy, not DB authentication)
+[31m[1mError[22m: browserType.launch: Executable doesn't exist at /workspace/.devin-h1-check/src/.runtime/browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     pnpm exec playwright install                           ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝[39m
+[36m [2m❯[22m tests/auth/bootstrap/browser-cookie.test.ts:[2m37:36[22m[39m
+    [90m 35|[39m   const externalPort = await listen(externalServer);
+    [90m 36|[39m   try {
+    [90m 37|[39m     const browser = await chromium.launch({ headless: true, args: ['--…
+    [90m   |[39m                                    [31m^[39m
+    [90m 38|[39m     try {
+    [90m 39|[39m       const context = await browser.newContext();
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+

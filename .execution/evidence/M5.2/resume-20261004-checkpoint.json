@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "tested",
+  "scope": "Coordinator resumption metadata only; no implementation, runtime validation or new independent review.",
+  "previousStateSha256": "3c58ce037998c1353ef01d4cf34aea1561c99f71c992f644a1dca6c1d2a639d5",
+  "checkpointScriptSha256": "fffd7e80b30c0ec7dfa2b74f03a1845f03fda15783803a2840d27f9170d8e34c",
+  "handoff": {
+    "path": ".execution/drafts/M5.2.md",
+    "sha256": "1eb021710b65d1fb0bc1fad2052b7d86bb44b492bf541a31695fc032f2248ccf"
+  },
+  "observations": [
+    {
+      "path": ".execution/evidence/M5.2/resume-20261004-packet-audit.json",
+      "sha256": "f6e0b9fa8e17e84fe119b74bf727f6c233b7e0799b7791add37207b55a73eead",
+      "exitCode": 0,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/audit-execution.mjs"
+      ]
+    },
+    {
+      "path": ".execution/evidence/M5.2/resume-20261004-doctor.json",
+      "sha256": "c82c2a3279e0e884682dedc124d9aaf7617c1e9ea5285a59a4660082c26ba151",
+      "exitCode": 0,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "doctor",
+        "--json"
+      ]
+    },
+    {
+      "path": ".execution/evidence/M5.2/resume-20261004-real-runner.json",
+      "sha256": "fdf8bc831c41bff133990a15c93ca8a930f78aa9f81e7fdc858e36f208a07c17",
+      "exitCode": 2,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:runner",
+        "--",
+        "--real"
+      ]
+    },
+    {
+      "path": ".execution/evidence/M5.2/resume-20261004-runtime-security.json",
+      "sha256": "f789d89d0c19ea5113283b3e78cd9bc10012d28fed4ff6c63a839b78e32caa90",
+      "exitCode": 2,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:security",
+        "--",
+        "--suite",
+        "runtime",
+        "--real"
+      ]
+    },
+    {
+      "path": ".execution/evidence/M5.2/resume-20261004-runner-protocol.json",
+      "sha256": "232b5d4c803e3c941efcdd040f8832b987e2af567cbd7a0bd58ab1a9b6c24ae2",
+      "exitCode": 0,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:runner",
+        "--",
+        "--suite",
+        "protocol"
+      ]
+    },
+    {
+      "path": ".execution/evidence/M5.2/resume-20261004-mvp-gate.json",
+      "sha256": "ef2bb66427b4236d73f25408a31e2623d4844a0d5a1c38afa0f77e42ffb7bcde",
+      "exitCode": 2,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "verify:mvp"
+      ]
+    }
+  ],
+  "unavailableTasks": [
+    "M4.3",
+    "M5.2",
+    "M5.4",
+    "M6.1",
+    "M6.2",
+    "M6.3",
+    "M7.1",
+    "M7.2",
+    "M7.3",
+    "M8.1",
+    "M8.2",
+    "M8.3",
+    "M9.1",
+    "M9.2",
+    "M9.3"
+  ],
+  "realIsolatedRunner": "unverified",
+  "software": "incomplete",
+  "humanPilot": "not_conducted"
+}

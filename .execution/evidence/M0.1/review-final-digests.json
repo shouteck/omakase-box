@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "reviewer": "/root/foundation_review",
+  "assurance": "tested",
+  "manifest": ".execution/evidence/M0.1/revision-bdc072bb7c939c0f01be51428d7f06c500767e57eec8c21fa3573e1782ca65b9.json",
+  "digest": "bdc072bb7c939c0f01be51428d7f06c500767e57eec8c21fa3573e1782ca65b9",
+  "aggregateMatches": true,
+  "taskDefinitionMatches": true,
+  "fileCount": 53,
+  "changed": []
+}

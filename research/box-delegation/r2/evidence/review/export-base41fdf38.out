@@ -1,0 +1,36 @@
+{
+  "exported": "C:\\Users\\shout\\AppData\\Local\\Temp\\kitchen-r2-review-base41\\box",
+  "baseCommit": "41fdf38df149adc12bcb4922ebee07eacabb89d3",
+  "files": [
+    "box.json",
+    "box/submit.mjs",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/packages/box-contracts/index.ts",
+    "src/packages/box-package/agreement.ts",
+    "src/packages/box-package/commands.ts",
+    "src/packages/box-package/errors.ts",
+    "src/packages/box-package/export.ts",
+    "src/packages/box-package/git.ts",
+    "src/packages/box-package/index.ts",
+    "src/packages/box-package/manifest.ts",
+    "src/packages/box-package/owner-checks.ts",
+    "src/packages/box-package/scaffolds.ts",
+    "src/packages/box-package/selection.ts",
+    "src/packages/box-package/submission.ts",
+    "src/packages/box-package/submit-tool.ts",
+    "src/packages/box-package/verify.ts",
+    "src/packages/contracts/common.ts",
+    "src/packages/contracts/paths.ts",
+    "src/packages/contracts/public/composition.ts",
+    "src/packages/contracts/workflow/index.ts",
+    "src/tests/box/package/r1-kitchen-stats.test.ts",
+    "src/tests/box/package/support.ts",
+    "tsconfig.json"
+  ],
+  "disclosure": {
+    "shippedOwnerFiles": 20,
+    "inventoryFiles": 1801,
+    "share": 0.01110494169905608
+  }
+}

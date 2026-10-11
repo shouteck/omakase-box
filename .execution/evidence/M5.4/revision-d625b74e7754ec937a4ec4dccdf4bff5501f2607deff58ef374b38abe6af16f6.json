@@ -1,0 +1,87 @@
+{
+  "taskId": "M5.4",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 63073,
+      "sha256": "f306bda007b773c575aa1edade8d256a17167b8061387c2e7eb5b86c0f7926cb"
+    },
+    {
+      "path": "infra/runner/composition/composed-supervisor.mjs",
+      "bytes": 4962,
+      "sha256": "a2055654e13e998dd7167af9a58a980fe678b957138c334a4d09cc633e26e7b0"
+    },
+    {
+      "path": "infra/runner/composition/driver-composed.mjs",
+      "bytes": 8964,
+      "sha256": "e2704021dc0026b54cb804748ff5b79b638ba38ce504c56d2fb3ea71f28ff495"
+    },
+    {
+      "path": "infra/runner/composition/policy-apply.mjs",
+      "bytes": 4994,
+      "sha256": "9951572a357d304243f1d8a418f8ee87e4b77952271c48538df54ba2e250a4a3"
+    },
+    {
+      "path": "infra/runner/composition/proxy-profile.mjs",
+      "bytes": 7118,
+      "sha256": "b7774fd5f57b2e22f77ff34fcd3f7dc2d36c4c9333f6a522d71e94a95d1db63b"
+    },
+    {
+      "path": "infra/runner/jobs/guest-provision.yaml",
+      "bytes": 3856,
+      "sha256": "69f272a89fc839bf4edb974e2349a307027b9df98c469b295f6b9a640d7ca5f7"
+    },
+    {
+      "path": "infra/runner/jobs/harness/supervisor.mjs",
+      "bytes": 16337,
+      "sha256": "25b3a99fffd4e85f613f44456d3c4eba0bec7b2c0287b688cf7e54d5dc9c3d8b"
+    },
+    {
+      "path": "packages/evaluation/composition/descriptor.ts",
+      "bytes": 10378,
+      "sha256": "0a3fdc102410a24874803dc8c79736b7bb94b73281f62be2241a392316a8dab5"
+    },
+    {
+      "path": "packages/evaluation/composition/index.ts",
+      "bytes": 289,
+      "sha256": "fff4db932b7d4428fabd174dcf1aa794570628f729a5b3c9d754f8929c004c98"
+    },
+    {
+      "path": "services/runner-controller/composition/aggregate.ts",
+      "bytes": 3399,
+      "sha256": "b0fa9642215b474d9bef57846447efbc6bd6ef6c297cecaad209a3bbc15b6833"
+    },
+    {
+      "path": "services/runner-controller/composition/fanout.ts",
+      "bytes": 1994,
+      "sha256": "3f970955182c652482cfbfd073b3a5194b3ca8b725f90bfe5d3c13f00d19a461"
+    },
+    {
+      "path": "services/runner-controller/composition/index.ts",
+      "bytes": 205,
+      "sha256": "bd43ad00d4caaf3258d8e5bd836a9d5e911a24c22e86b2dc27f6f7471bdb0a27"
+    },
+    {
+      "path": "tests/runner/composition/attempt.test.ts",
+      "bytes": 7514,
+      "sha256": "c57cdbdd9b520a75b0b2d53ca9218fdc627d84848aefeff4bf7ad904bcfa0712"
+    },
+    {
+      "path": "tests/runner/composition/proxy-profile.test.ts",
+      "bytes": 4186,
+      "sha256": "e306bc81bb46192cdff0d9ecd6a65c8d89ecf28db27d9a69b1f8b1d194ab2a65"
+    },
+    {
+      "path": "tests/security/composition/policy-forgery.test.ts",
+      "bytes": 12196,
+      "sha256": "f973fa4a80e0f377e10b4f6d6cc4f64b5a8b4b9c5b9a22120481aa0661ad1182"
+    },
+    {
+      "path": "tests/security/composition/proxy-escape.test.ts",
+      "bytes": 4314,
+      "sha256": "a3734c3167c863a78d8f2d4a619b2faeac76a5fa223c9db0549bd221252dfb25"
+    }
+  ]
+}

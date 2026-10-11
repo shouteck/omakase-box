@@ -1,0 +1,77 @@
+{
+  "taskId": "M7.1",
+  "assurance": "unverified",
+  "taskDefinitionSha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101",
+  "files": [
+    {
+      "path": "docs/DECISIONS.md",
+      "bytes": 63073,
+      "sha256": "f306bda007b773c575aa1edade8d256a17167b8061387c2e7eb5b86c0f7926cb"
+    },
+    {
+      "path": "packages/evaluation/pipeline/advance.ts",
+      "bytes": 4755,
+      "sha256": "e545ad47e912bd9af18783a2209e5f45c3acd3f09eeecdf98ca433f126eadd90"
+    },
+    {
+      "path": "packages/evaluation/pipeline/candidate-diff.ts",
+      "bytes": 2061,
+      "sha256": "49c07daf898157350fe7cedf1f7c47abfc9a5e1b1d3e5a7dcbba3631197665f2"
+    },
+    {
+      "path": "packages/evaluation/pipeline/fit.ts",
+      "bytes": 3285,
+      "sha256": "3ac2e215435041735d2e144a17aa9ab2edefa320671f63c86e511a4a2b3342e4"
+    },
+    {
+      "path": "packages/evaluation/pipeline/index.ts",
+      "bytes": 152,
+      "sha256": "37782c503dd8d9d589d7957a54c1575dda72fe233db7f2a7c5bef3eb31eb9c38"
+    },
+    {
+      "path": "packages/evaluation/pipeline/jobs.ts",
+      "bytes": 4855,
+      "sha256": "6567efc07709a32045c71025f19241e32392b23bc2ec03405e016fca6ad384d4"
+    },
+    {
+      "path": "packages/evaluation/pipeline/patch-map.ts",
+      "bytes": 2591,
+      "sha256": "189c1b0af9332bf402dad0c912c099e2e3ef9681828c4df4c1f06213680261a0"
+    },
+    {
+      "path": "scripts/execution.mjs",
+      "bytes": 8295,
+      "sha256": "ec028276052a97b082caf38d2994280b174d81273836c3cce212932cae50778f"
+    },
+    {
+      "path": "scripts/verify-evaluation-pipeline.mjs",
+      "bytes": 5361,
+      "sha256": "32f8f97b967641fd4467eb9a33a98a5f67f88f37fdb045e9e945cf618771763e"
+    },
+    {
+      "path": "services/private-api/evaluations/pipeline.ts",
+      "bytes": 9113,
+      "sha256": "00a2b168b66d6a76147d0daf03f28430a42ae55b058aeb71f2aa559bed7ee884"
+    },
+    {
+      "path": "services/private-api/preparations/policy/index.ts",
+      "bytes": 3821,
+      "sha256": "70c2e91aedea645bf0bb6049df8c3b9d9963bb885ad991f9971f512d7341c9aa"
+    },
+    {
+      "path": "tests/acceptance/integration/fixtures.ts",
+      "bytes": 3605,
+      "sha256": "5593ad9461ecbd884e2433774b9662012f85b118c032afc3996b369ed8bde8cf"
+    },
+    {
+      "path": "tests/acceptance/integration/pipeline-live.test.ts",
+      "bytes": 536,
+      "sha256": "694ae1728daeef4efcc54e28d5bd093866ad00dff7db9baa2a91c2939cafa983"
+    },
+    {
+      "path": "tests/acceptance/integration/pipeline.test.ts",
+      "bytes": 12825,
+      "sha256": "4221663aa2edd2bbef19ba5f9457f3903d835e5ef9ab24e061806fc0a822f201"
+    }
+  ]
+}

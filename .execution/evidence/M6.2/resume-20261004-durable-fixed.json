@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservations/durable-live.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:38:56.581Z",
+  "finishedAt": "2026-10-03T23:39:01.258Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n \u001b[31m❯\u001b[39m tests/portal/reservations/durable-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m | \u001b[22m\u001b[31m1 failed\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 2562\u001b[2mms\u001b[22m\u001b[39m\n\u001b[31m   \u001b[31m×\u001b[31m real PostgreSQL enforces one reservation, frozen terms, invitation binding and own idempotent defects\u001b[39m\u001b[33m 2561\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Tests 1 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/portal/reservations/durable-live.test.ts\u001b[2m > \u001b[22mreal PostgreSQL enforces one reservation, frozen terms, invitation binding and own idempotent defects\n\u001b[31m\u001b[1mAssertionError\u001b[22m: expected { assurance: 'unverified', …(11) } to deeply equal ObjectContaining{…}\u001b[39m\n\n\u001b[32m- Expected\u001b[39m\n\u001b[31m+ Received\u001b[39m\n\n\u001b[32m- ObjectContaining {\u001b[39m\n\u001b[32m-   \"acceptancePreservesExpiry\": true,\u001b[39m\n\u001b[31m+ {\u001b[39m\n\u001b[2m    \"assignmentBound\": true,\u001b[22m\n\u001b[32m-   \"assurance\": \"tested\",\u001b[39m\n\u001b[32m-   \"attemptRows\": 2,\u001b[39m\n\u001b[32m-   \"concurrentOneWinner\": true,\u001b[39m\n\u001b[32m-   \"defectAccepted\": true,\u001b[39m\n\u001b[32m-   \"defectIdempotent\": true,\u001b[39m\n\u001b[32m-   \"expiryFrozen\": true,\u001b[39m\n\u001b[32m-   \"guessedSafe\": true,\u001b[39m\n\u001b[32m-   \"immutableGuards\": true,\u001b[39m\n\u001b[31m+   \"assurance\": \"unverified\",\u001b[39m\n\u001b[31m+   \"candidateExecution\": false,\u001b[39m\n\u001b[31m+   \"database\": \"synthetic_reservations_e928f7d497490e0130834f5e8b48f3cc\",\u001b[39m\n\u001b[31m+   \"failure\": \"42703\",\u001b[39m\n\u001b[31m+   \"failureStage\": \"assignment\",\u001b[39m\n\u001b[31m+   \"integratedIntoRuntime\": false,\u001b[39m\n\u001b[2m    \"invitationIssued\": true,\u001b[22m\n\u001b[32m-   \"latestAttemptAccepted\": true,\u001b[39m\n\u001b[32m-   \"liveReservations\": 1,\u001b[39m\n\u001b[2m    \"migrationReplay\": true,\u001b[22m\n\u001b[32m-   \"reactivationPreservesExpiry\": true,\u001b[39m\n\u001b[32m-   \"reactivationReactivates\": true,\u001b[39m\n\u001b[32m-   \"redemptionBound\": true,\u001b[39m\n\u001b[31m+   \"realCustomerData\": false,\u001b[39m\n\u001b[2m    \"requestedDdlApplied\": true,\u001b[22m\n\u001b[32m-   \"resubmissionSupersedes\": true,\u001b[39m\n\u001b[32m-   \"staleAttemptRejected\": true,\u001b[39m\n\u001b[32m-   \"termsFrozen\": true,\u001b[39m\n\u001b[32m-   \"uploadToInReview\": true,\u001b[39m\n\u001b[31m+   \"supplementalM61Ddl\": true,\u001b[39m\n\u001b[2m  }\u001b[22m\n\n\u001b[36m \u001b[2m❯\u001b[22m tests/portal/reservations/durable-live.test.ts:\u001b[2m18:18\u001b[22m\u001b[39m\n\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[31m1 failed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 07:38:57\n\u001b[2m   Duration \u001b[22m 3.54s\u001b[2m (tests 77%, import 18%, transform 5%)\u001b[22m\n\n"
+}

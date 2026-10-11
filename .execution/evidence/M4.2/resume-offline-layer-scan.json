@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/evidence/M4.2/scan-public-image.py"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T13:21:48.844Z",
+  "finishedAt": "2026-10-03T13:21:48.949Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/esm/get_format:185\r\n  throw new ERR_UNKNOWN_FILE_EXTENSION(ext, filepath);\r\n        ^\r\n\r\nTypeError [ERR_UNKNOWN_FILE_EXTENSION]: Unknown file extension \".py\" for C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.execution\\evidence\\M4.2\\scan-public-image.py\r\n    at Object.getFileProtocolModuleFormat [as file:] (node:internal/modules/esm/get_format:185:9)\r\n    at defaultGetFormat (node:internal/modules/esm/get_format:211:36)\r\n    at defaultLoad (node:internal/modules/esm/load:94:16)\r\n    at ModuleLoader.load (node:internal/modules/esm/loader:841:12)\r\n    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:612:31)\r\n    at #createModuleJob (node:internal/modules/esm/loader:643:36)\r\n    at #getJobFromResolveResult (node:internal/modules/esm/loader:353:34)\r\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:318:41)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:685:25) {\r\n  code: 'ERR_UNKNOWN_FILE_EXTENSION'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

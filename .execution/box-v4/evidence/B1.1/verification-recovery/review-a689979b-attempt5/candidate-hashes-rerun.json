@@ -1,0 +1,10 @@
+{
+    "scripts/box-verification/environment-host.mjs":  "b74f2ec5953014094f764642fef35eb995fb8a047839f9906d5f5cdac4ef2200",
+    "scripts/box-verification/environment-manifest.json":  "c45befd226012dd0e5fb22b4ebda0d2df0c410b8e5eba44a28f9804f02f94929",
+    "scripts/box-verification/fixture-exec-host.mjs":  "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+    "scripts/box-verification/fixture-exec-runner.mjs":  "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+    "scripts/box-verification/run-verification.mjs":  "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+    "scripts/box-verification/fixture-command-manifest.json":  "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+    "tests/box/verification/environment-readiness.test.ts":  "7ba24f3d14eac696009f305ed010c7e3d7c1ce93a2e945c225f78df9b5934321",
+    "tests/box/verification/relay-lifecycle.test.ts":  "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
+}

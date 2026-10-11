@@ -1,0 +1,56 @@
+#!/bin/sh
+# container-init: runs as the first process inside the unshared user/pid/ipc/
+# uts/mount namespaces (PID 1 inside). argv[1] is a JSON argv array to exec.
+# Applies the supervisor-declared mount table and device policy, marks the
+# root recursively read-only/private, then execs the fixed inner argv —
+# which itself drops to pwuser via setpriv before prlimit wraps the worker.
+set -eu
+
+# Private propagation first: nothing mounted here can ever propagate out.
+/bin/mount --make-rprivate /
+
+# Stash the real device nodes before the private /dev hides them. The stash
+# lives on a private tmpfs mounted over /run (provision guarantees the dir).
+/bin/mount -t tmpfs -o nodev,nosuid,noexec,size=65536,mode=0700 tmpfs /run
+mkdir -p /run/.devstash
+for dev in null zero urandom; do
+  touch "/run/.devstash/$dev"
+  /bin/mount --bind "/dev/$dev" "/run/.devstash/$dev"
+done
+
+# Minimal private /dev: small tmpfs with only the three stashed devices —
+# no virtio-ports, no host block/net devices, no mknod fallback granted.
+/bin/mount -t tmpfs -o nodev,nosuid,noexec,size=65536,mode=0755 tmpfs /dev
+for dev in null zero urandom; do
+  touch "/dev/$dev"
+  /bin/mount --bind "/run/.devstash/$dev" "/dev/$dev"
+done
+/bin/umount /run
+
+# Read-only root inside this namespace (after the stash lifecycle above).
+/bin/mount -o remount,ro,bind /
+
+# Writable scratch areas: bounded tmpfs, nodev/nosuid,noexec, pwuser-owned.
+/bin/mount -t tmpfs -o "rw,nodev,nosuid,noexec,size=234881024,uid=1000,gid=1000,mode=0700" tmpfs /work
+/bin/mount -t tmpfs -o "rw,nodev,nosuid,noexec,size=33554432,uid=1000,gid=1000,mode=0700" tmpfs /tmp
+mkdir -p /work/tooling /work/candidate
+
+# Verified candidate bytes were staged supervisor-side (root-owned) and are
+# bind-mounted read-only — the tmpfs over /work would otherwise hide them
+# and the candidate must never get write access to its own inputs.
+/bin/mount --bind -o ro /var/private-task/staging/candidate /work/candidate
+
+# Tooling is staged by the supervisor and mounted read-only so the candidate
+# cannot alter its own harness shim. The shared harness libraries are
+# already reachable read-only at /opt/private-task/harness via the
+# remounted read-only root; the result key is root:0400 and unreachable by
+# pwuser regardless.
+/bin/mount --bind -o ro /opt/private-task/tooling /work/tooling
+
+# Scrub environment and exec the fixed inner argv: drop to pwuser, pin the
+# remaining rlimits, run the worker shim. All values are the protocol's
+# pinned literals — nothing here is parameterized by candidate input.
+exec /usr/bin/env -i PATH=/usr/local/bin LANG=C HOME=/work TMPDIR=/tmp \
+  /usr/bin/setpriv --reuid=1000 --regid=1000 --clear-groups --no-new-privs \
+  /usr/bin/prlimit --cpu=120 --as=536870912 --nproc=128 --fsize=1048576 --nofile=64 --locks=0 --sigpending=64 \
+  -- /usr/local/bin/node /work/tooling/worker.mjs

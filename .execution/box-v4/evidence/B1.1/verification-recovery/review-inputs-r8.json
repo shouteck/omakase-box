@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_fixed_isolated_linux_harness_input_contract",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "authority": ".execution/box-v4/approvals/W002-r8-approval.json",
+  "recordedAtUtc": "2026-10-04T20:05:52.371Z",
+  "timestampMeaning": "Observed root clock, not child timing or human timestamp; supplied session date differs.",
+  "linuxWorkspace": {"container": "w002-b11-ws", "node": "v24.11.0", "sourceRoot": "/workspace", "hostMountRoot": "C:/Users/shout/AppData/Local/Temp/w002-b11-stage", "reviewDirectory": "/workspace/.r8-harness-review-<unique-actor-run-id>", "policy": "Only additive isolated actor review directory. Old staged22 and old mailbox untouched. Verify real ancestors and exclusive new actor directory before use. No future r4 stage/mailbox population."},
+  "candidateSourceMaps": {"current14": "Exact candidateFiles map in harness-review-r6-final.json, all14 freshly root-rehashed; candidate revisions require fresh worker/full reviewer manifests", "protected16": "candidate-manifest-r3.json candidateFiles minus scripts/docker.mjs, scripts/vitest.config.mjs, fixture-command-manifest.json, fixture-exec-client.mjs, fixture-exec-host.mjs and tests/box/auth/support.ts; all16 freshly match", "oldStaged22": "all22 candidate-manifest-r3.json candidateFiles match preserved old host stage; candidate-manifest-r5.json confirms fixture manifest reversion"},
+  "auxiliarySourceFiles": {
+    "scripts/process.mjs": "19b3c82f9db6214e8f351a45650ece10ba3754783985956f47967b40c4665aff",
+    "scripts/synthetic-runtime.mjs": "de2ae8e84e7114fc94cc0618979e748c938351c78935227d6d3364f081a4db34",
+    "tests/box/auth/fixture-transport.test.ts": "eea4d8ecb9ad224e44316266e2aed7f624296cf2b33bc29f9ef256a4e2a7b4eb",
+    "package.json": "f58a04e0bdc46efb69e332fb6958d37321c17110cb1848ec44fd89c51cce83ca",
+    "tsconfig.json": "c3a2af313d61a6f90c79071bdd058a4220233475c2fb6da9e054add42ade3a52",
+    "pnpm-lock.yaml": "d81f530fa0b59f1cb6ebfcfc8a40a0f0cccefc509ba126debd8898db7f52a720"
+  },
+  "auxiliaryParity": "All six auxiliary host hashes equal their preserved staged Linux inputs.",
+  "linuxDependencyContract": {
+    "root": "/workspace/node_modules",
+    "seeds": ["vitest", "vite", "typescript"],
+    "packageCount": 44,
+    "fileCount": 1153,
+    "closureSha256": "6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6",
+    "packageVersions": [["@esbuild/linux-x64","0.28.2"],["@jridgewell/resolve-uri","3.1.2"],["@jridgewell/sourcemap-codec","1.6.0"],["@jridgewell/trace-mapping","0.3.31"],["@oxc-project/types","0.151.0"],["@rolldown/binding-linux-x64-gnu","1.2.11"],["@rolldown/pluginutils","1.0.1"],["@types/chai","5.2.3"],["@types/deep-eql","4.0.2"],["@types/estree","1.0.9"],["@types/node","24.13.6"],["@vitest/mocker","5.0.1"],["@vitest/spy","5.0.1"],["assertion-error","2.0.1"],["chai","6.2.2"],["detect-libc","2.1.2"],["es-module-lexer","2.3.2"],["esbuild","0.28.2"],["estree-walker","3.0.3"],["expect-type","1.4.0"],["fdir","6.5.0"],["lightningcss-linux-x64-gnu","1.33.0"],["lightningcss","1.33.0"],["magic-string","1.4.2"],["nanoid","3.3.19"],["obug","2.2.1"],["picocolors","1.1.1"],["picomatch","4.0.7"],["postcss","8.5.28"],["rolldown","1.2.11"],["siginfo","2.0.0"],["source-map-js","1.2.1"],["stackback","0.0.2"],["std-env","4.2.0"],["tinybench","6.1.4"],["tinyexec","1.3.0"],["tinyglobby","0.2.17"],["tsx","4.23.15"],["typescript","6.0.3"],["undici-types","7.18.2"],["vite","8.3.1"],["vitest","5.0.1"],["why-is-node-running","2.3.0"],["yaml","2.9.1"]],
+    "algorithm": "Resolve seed real directories under /workspace/node_modules. For each package read package.json, recursively resolve required dependencies plus present optionalDependencies and peerDependencies by walking ancestor node_modules/<name>/package.json. Missing required dependency fails. Require every real package root within /workspace/node_modules. Sort entries of roots Map by real root using [...roots].sort(). In each root recursively sort readdir names, reject symlinks and non-file/non-directory objects, and collect rows [package-relative-path,SHA256(file bytes)]. Package object property order {name,version,root,files,treeSha256} with treeSha256=SHA256(JSON.stringify(rows)). closureSha256=SHA256(JSON.stringify(package objects in real-root sort order)). Check all44 versions and1153 file hashes/count against this exact closure before any test. Generate/retain full per-file map in the allowed candidate environment-manifest contract as needed; any digest/count/version or ancestor mismatch blocks execution.",
+    "policy": "Reuse existing exact Linux tool dependency closure only. No generic node_modules or whole-checkout copy, no workspace package/private-contract links, no host Windows deps, no installs/downloads. A read-only reference to these verified existing package roots for isolated harness module resolution is allowed; do not mutate dependencies. Per-file copy, if needed, must use the verified exact closure and preserve pnpm linkage semantics without escaping its allowed roots. The initial generic-tree inspection failed on an unrelated workspace-package link and is not used as authorization. An explicit top-level esbuild seed was absent; the available vite peer-resolved esbuild is now included in the valid44-package closure. Neither inspection performed a test or mutation."
+  },
+  "publicTemplate": {"path": ".env.example", "nativePermissionObservation": "Root exact read tool succeeded in this r8 turn", "sha256": "93d9be5dd9dd83115ce2a7848d4a7c85b73d4ad161d1fa523618e69b429d8d2a", "policy": "Future plan metadata only. Each child's native denial stops; never bypass through exec/Git/config. No actual referenced credentials read or copied."},
+  "verificationCommand": "timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs",
+  "notReadiness": "Root input hashing is not independent review or runtime readiness. Complete fixed future source/static-fixture/Linux dependency maps and actual caller wiring are the authorized worker deliverable, not a pre-existing PASS. Reviewer must resolve completeness independently. Any missing map stays non-pass.",
+  "excluded": ["broad application test selection", "live API/DB action", "future resource/stage/mailbox setup", "host candidate execution", "old mailbox read/replay", "cleanup/deletion", "credential/runtime env reads", "dependency mutation", "Git stage/commit/push"]
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_initial_reviewer_history",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r3",
+  "reviewer": "box-reviewer/6f9cae38",
+  "lead": "box-assurance-lead/cfd46892",
+  "attribution": "Faithful excerpt from actual lead-returned review reconciliation; root persisted, not reviewer-written. The underlying initial full child receipt was not returned verbatim by the lead.",
+  "reportedVerdict": "PASS",
+  "currentAcceptanceUse": false,
+  "toolBoundaryFinding": "Initial reviewer disclosed shell ls/head/python-c file inspection outside permitted core Git/hash/JSON allowance. Lead retained this as history and requested compliant same-reviewer recheck.",
+  "candidateReceipt": "worker-attempt1.json",
+  "productOrCandidateWrites": false,
+  "runtimeTests": "not_run",
+  "limitations": "Initial PASS is historical only; root does not treat it as clean current proof. Exact original command arguments/exits/durations were not supplied in this excerpt."
+}

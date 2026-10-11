@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_read_only_present_day_ownership_reconciliation",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "proposal": ".execution/box-v4/briefings/W002-D1-r3.md",
+  "authority": "Current user request to inspect read-only and freeze a revised proposal, explicitly not recovery approval.",
+  "observer": "Current root CTO; not an independent reviewer or the previous coordinator",
+  "holdReleased": false,
+  "productLeaseGranted": false,
+  "dispatches": 0,
+  "agentShutdownConfirmed": false,
+  "historicalAcknowledgementInvented": false,
+  "historicalAgentLookups": 0,
+  "clock": {
+    "firstCensus": "2026-10-05T05:05:03.4859110+08:00",
+    "secondCensus": "2026-10-05T05:07:00.1718398+08:00",
+    "hashSamplesUtc": ["2026-10-04T21:07:19.143Z", "2026-10-04T21:08:03.178Z"],
+    "meaning": "Observed recording clocks, not human-message or historical actor stop timestamps. UTC observations correspond to the supplied local 5 October date. Final verification is bound in the separate pending proposal record."
+  },
+  "git": {
+    "head": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+    "branch": "master",
+    "registeredWorktrees": 1,
+    "index": "empty",
+    "unfinishedDirtyWork": "preserved, unstaged, unaccepted",
+    "remoteQueries": 0,
+    "checkpoint": "No stage/commit/push while held"
+  },
+  "hashes": {
+    "check": ".execution/box-v4/evidence/B1.1/verification-recovery/ownership-check-d1-r3.mjs",
+    "candidateMapSha256": "6b0d21c4d3d46c97f09131b00a31a3184ecf5a5a1908743804864ab7faee6a08",
+    "representation": "SHA256 of JSON.stringify(sorted path-to-expected-byte-hash map combining protected16 and current14). Actual bytes matched all expected rows twice.",
+    "countsPerSample": {"current14": 14, "protected16": 16, "oldStaged22": 22, "auxiliaryHost6": 6, "auxiliaryStage6": 6},
+    "mismatchesPerSample": 0,
+    "hashCommandExitCodes": [0, 0],
+    "hashCommandElapsedMs": [615.1821, 205.2561],
+    "containerCoreHashCommand": "docker exec w002-b11-ws sha256sum /workspace/package.json /workspace/pnpm-lock.yaml /workspace/scripts/process.mjs /workspace/scripts/synthetic-runtime.mjs /workspace/tests/box/auth/fixture-transport.test.ts /workspace/tsconfig.json",
+    "containerCoreHashResult": "All six actual Linux hashes match review-inputs-r8 auxiliarySourceFiles; exit 0",
+    "linuxDependencyClosure": "Not rerun here; unchanged exact independent closure prerequisite remains mandatory before candidate execution",
+    "historicalBindings": {
+      ".execution/box-v4/briefings/W002-D1-r2.md": "35f0f2859bc144f64432289b33cb6f4e1caefd38b0b49dc449fded11dc87ea3a",
+      ".execution/box-v4/approvals/W002-D1-r2-approval.json": "b2a71bb7994f6276d17c0d29dab8caf18ce87ed7a7dd44fafe974a353e6f4c1c",
+      ".execution/box-v4/approvals/W002-hold-diagnosis-20261005.json": "8e554b891b450e97b4f6ab8275e8f0d9af93351d02be8f6b979c75eb9856660c",
+      "candidate-manifest-r3.json": "a6dbf3028f0639e23530f1e30ef2494d5a89e4cf476f4717c46c0af95555f763",
+      "harness-review-r8-final.json": "8d061a0e0fbf50fbf283e63a9aaa92dbe2a919fa047893be4c131e062a6aa4e4",
+      "review-inputs-r8.json": "03880923316c27c343fc5a8f361c5a3c53debf8796365a12907e8abb72536597"
+    }
+  },
+  "leases": {
+    "canonicalTaskLease": null,
+    "r4": {"status": "inactive", "sha256": "064e83b5fd3afee8cdb6f8f72819e049f0f421fb23e775eea9d34a15871e8885"},
+    "r6": {"status": "inactive", "sha256": "868855ae6bdcae6cc35e208235519095fabc0b70dc4247e05e723ec0cff6fecb"},
+    "r8": {"status": "inactive", "sha256": "a76ed8a3a5faf70b7f4934497e6f6a62c5082380effe7347d31b7dd9d1b49015"},
+    "r7": "never leased per canonical state/wave records",
+    "newerLeaseFilesFound": 0,
+    "transferPerformed": false
+  },
+  "processes": {
+    "method": "Two Get-CimInstance Win32_Process censuses using project/W002/harness/test patterns, relevant runtime command lines and parent identities; Docker top for each running W002 container, with workspace/private DB repeat",
+    "unavailableRelevantCommandLines": 0,
+    "unexplainedW002WritersObserved": 0,
+    "workspace": {"pid": 81798, "command": "sleep infinity"},
+    "privateApi": {"pid": 82936, "command": "node dist/main.js"},
+    "externalApi": {"pid": 83093, "command": "node dist/main.js"},
+    "databases": "PostgreSQL housekeeping; private_service/private_task connection from workspace network was idle in repeated top. No active query command was shown. No DB query executed for this observation.",
+    "otherRuntimes": "Codex app-server/MCP/REPL support and command runners identified by parent paths; current Devin ACP PID187232 and summarizer PID180264 share editor parent189428. Docker/WSL infrastructure accounted for. No unrelated process modified.",
+    "limitation": "Sampled command liveness is not historical scheduler shutdown proof or a guarantee against future concurrent writes. Fresh check and exclusive canonical lease required after approval."
+  },
+  "docker": {
+    "context": "desktop-linux",
+    "workspaceAndApiImage": "sha256:99fc47dac8b729a5060068378def035fab6542c9be55885187251291e71e65c9",
+    "dbImage": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+    "running": [
+      {"name": "w002-b11-ws", "id": "92107bf48d48767f9af619b23e99710eb97f44d8b8ef755f9cc3be37918608f0", "startedAt": "2026-10-04T08:53:04.676579263Z"},
+      {"name": "w002-b11-db", "id": "739950c27bd4a7897c4f04bd151fe1054bf84b5493d8e53defcba2f605bc6c2b", "startedAt": "2026-10-04T08:42:30.740676639Z", "OOMKilled": true},
+      {"name": "w002-b11-fixture-db-private", "id": "2553a9a5bbe43098ae1bdd6369144054f9d524719dda426052dbca4cdf5d0752", "startedAt": "2026-10-04T17:11:39.929153448Z"},
+      {"name": "w002-b11-fixture-db-external", "id": "e1d136307aee4ab77cc353bd0b0a9d34e8fb02f403d84cb0cbe6084860dacb26", "startedAt": "2026-10-04T17:11:47.959169124Z"},
+      {"name": "w002-b11-svc-private-api", "id": "cc50b7e2826cd6461f1de07f4da78decdd91e27ae470ba3fe6a863d34c38aa01", "startedAt": "2026-10-04T17:12:10.036051499Z"},
+      {"name": "w002-b11-svc-external-api", "id": "334ddb4b12e004f5da650551624ec13a05e1ed6690a348173c613bba6ab78c37", "startedAt": "2026-10-04T17:12:18.598946076Z"}
+    ],
+    "preservedInert": [
+      {"name": "w002-b11-stage-helper", "id": "0c21fe670a72db9588c72faf521467e470b5399f06e5232ae693a67350cd746f", "status": "exited", "exitCode": 137},
+      {"name": "w002-b11-srcimg", "id": "515a8aacb978a6bd5f8e707b9eab0ab181c0145663f7d12fba31770567b339cf", "status": "created"}
+    ],
+    "network": {"name": "w002-b11-net", "id": "99a014176527413af7aa737cded4e958b75f705060603417c0b04769cbf7fb25"},
+    "identityComparison": "All six running IDs equal preserved reconciliation-20261005 records and remained identical in repeat inspection",
+    "volatileStorage": "All three W002 DBs use tmpfs; preserve without stopping. OOMKilled original Box DB flag is historical, not proof of a new event.",
+    "legacyStack": "Four existing private-task-mvp-synthetic containers inventoried and untouched",
+    "inspectionError": "First formatted inspect of two inert artifacts omitted fields because optional Tmpfs key was absent. Narrow Id/Name/Image/State inspect then succeeded. Not a Docker access failure or lifecycle operation.",
+    "readiness": "Not tested; running metadata does not establish health",
+    "lifecycleOperations": 0
+  },
+  "oldMailbox": {
+    "requestCount": 40,
+    "responseCount": 32,
+    "unansweredCount": 8,
+    "metadataSha256BothSamples": "49ac493440897c4ceb25b6f11efc57339a24988178580897104502ebe3db713c",
+    "payloadsRead": false,
+    "observedActiveRelay": false,
+    "mutationHistory": "Unknown for unanswered requests. Absence of response is neither proof of execution nor proof of no side effect.",
+    "recommendedResolution": "Preserve queue/old DBs with no replay; unchanged r2 fresh exclusive mailbox, fresh synthetic Box DB and run-prefixed fixture namespaces, independently gated before use. Changing metadata or an active unexplained transaction in fresh check stops transfer."
+  },
+  "budget": {
+    "priorConservativeActiveMinutes": 164,
+    "amendmentConservativeDebitMinutes": 15,
+    "chargedAtFreezeMinutes": 179,
+    "additionalAllowanceMinutesUnchanged": 120,
+    "cumulativeCeilingMinutesUnchanged": 284,
+    "remainingMaximumMinutes": 105,
+    "meaning": "Conservative upper-bound preparation debit, not an invented measured duration. Includes pre-census root turns and final verification if within debit; further preparation must be charged if exceeded. No refund or reset. Future transfer cap10/setup cap20 are inside remainder, not new allowances."
+  },
+  "actualToolEvidence": {
+    "skill": "Native skill tool invoked poteto-mode; source plugin v0.11.3-box.1. Not native Cursor/Codex dispatch.",
+    "profilesRead": ["box-platform-lead", "box-worker", "box-reviewer"],
+    "profileModels": "Unpinned, unchanged",
+    "hostCensusShells": ["a22dfb", "41d7eb", "971ba8"],
+    "dockerInventoryShells": ["8105ca", "d1071e", "971ba8", "c7c2f4"],
+    "hashShells": ["269c48", "c7c2f4"],
+    "fullHashOutput": "C:/Users/shout/AppData/Local/Temp/devin.exe-overflows/shell-269c48-d977d281afe34176/content.txt",
+    "checkCommand": "node .execution/box-v4/evidence/B1.1/verification-recovery/ownership-check-d1-r3.mjs",
+    "rawOutputPolicy": "Machine-local tool outputs only; no raw process/session export or mailbox payload added to checkpoint scope"
+  },
+  "conclusion": "Present-day sampled candidate/lease quiescence established; no concrete competing owner or in-progress unexplained mutation observed. Historical acknowledgement/shutdown and unknown command outcomes not established. Recommend approval-gated fresh reconciliation and new exclusive lease, with old-state isolation. This is not product acceptance.",
+  "actionsNotTaken": ["historical agent lookup", "child dispatch", "candidate execution", "test/build/readiness run", "lease transfer", "DB query/mutation", "old queue replay", "container lifecycle action", "cleanup", "credentials read", "model/profile/config change", "Git stage/commit/push"]
+}

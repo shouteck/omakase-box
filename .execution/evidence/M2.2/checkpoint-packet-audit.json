@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/audit-execution.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T19:14:51.475Z",
+  "finishedAt": "2026-10-02T19:14:52.199Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"status\":\"passed\",\"scope\":\"Execution packet content/reference consistency only; not delivery, runtime or independent review.\",\"audited\":[{\"taskId\":\"M0.1\",\"status\":\"review\",\"files\":58},{\"taskId\":\"M0.2\",\"status\":\"review\",\"files\":60},{\"taskId\":\"M0.3\",\"status\":\"review\",\"files\":65},{\"taskId\":\"M1.1\",\"status\":\"review\",\"files\":68},{\"taskId\":\"M1.2\",\"status\":\"review\",\"files\":68},{\"taskId\":\"M1.3\",\"status\":\"review\",\"files\":70},{\"taskId\":\"M2.1\",\"status\":\"review\",\"files\":65},{\"taskId\":\"M2.2\",\"status\":\"running\",\"files\":47},{\"taskId\":\"M5.1\",\"status\":\"review\",\"files\":56},{\"taskId\":\"M5.2\",\"status\":\"blocked\",\"files\":42}]}\n"
+}

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "reportKind": "independent_review",
+  "reviewer": "opencode-reviewer-subagent-foundation-20261003",
+  "reviewedAt": "2026-10-04T00:20:00Z",
+  "taskId": "M0.1",
+  "reviewedRevision": {
+    "digest": "cf18ade39ac2920d254b5d239769a5b74e6ce48ad787acb94547fe701ab78519",
+    "manifest": ".execution/evidence/M0.1/revision-cf18ade39ac2920d254b5d239769a5b74e6ce48ad787acb94547fe701ab78519.json"
+  },
+  "revisionBinding": {
+    "manifestFileCount": 59,
+    "filesMissing": 0,
+    "productPathsByteIdentical": true,
+    "mismatchedFiles": [
+      { "path": "docs/DECISIONS.md", "recordedSha256Prefix": "6a1587a2aa94", "actualSha256Prefix": "35c49af98eb2", "classification": "shared_rebind_batch" },
+      { "path": "scripts/execution.mjs", "recordedSha256Prefix": "03bff9fd5ce6", "actualSha256Prefix": "607ee65151cb", "classification": "shared_rebind_batch" }
+    ],
+    "sharedBatchRationale": "Exactly the coordinator-declared 2026-10-03/04 shared batch {docs/DECISIONS.md, scripts/execution.mjs} from M4.2 runtime verification and migration 0007 (M5.3). scripts/execution.mjs formally falls under M0.1 writePaths glob scripts/** but AGENTS.md assigns it to the coordinator as shared tooling; current file contains the M5.3 integrationPaths entry for 0007_evaluation_jobs.sql, consistent with the declared batch. No product-path drift found. Recorded canonical digest verified: sha256(canonical JSON.stringify(manifest)) matches state.json tasks.M0.1.revision.digest.",
+    "previousAcceptedDiff": {
+      "previousDigest": "bdc072bb7c939c0f01be51428d7f06c500767e57eec8c21fa3573e1782ca65b9",
+      "added": ["packages/runner-protocol/package.json", "scripts/verify-auth.mjs", "scripts/verify-empty-migrations.mjs", "scripts/verify-intake.mjs", "scripts/verify-intent-sessions.mjs", "scripts/verify-lifecycles.mjs"],
+      "changed": ["AGENTS.md", "apps/private-console/src/bootstrap/main.tsx", "docs/DECISIONS.md", "infra/trusted.Dockerfile", "infra/trusted.Dockerfile.dockerignore", "pnpm-lock.yaml", "scripts/doctor.mjs", "scripts/execution.mjs", "scripts/verify-mvp.mjs", "scripts/vitest.config.mjs", "scripts/workspace.mjs", "services/external-api/src/bootstrap/main.ts", "services/external-api/src/bootstrap/server.ts", "services/private-api/src/bootstrap/main.ts", "services/private-api/src/bootstrap/server.ts", "services/runner-controller/src/bootstrap/index.ts", "tests/bootstrap/commands.test.ts"],
+      "removed": [],
+      "note": "Differences vs the older accepted revision are later coordinator-owned shared/integration batches (M1.3/M2.1/M5.1) disclosed in the draft handoff; current content of every listed file re-hashes to the current manifest."
+    },
+    "pnpmLockfileDigestMatchesManifest": true
+  },
+  "commandsRun": [
+    { "label": "review-20261003-1-check", "command": "node scripts/evidence.mjs M0.1 review-20261003-1-check scripts/pnpm.mjs check", "exitCode": 0, "outcome": "tsc --noEmit pass; boundary checker pass (27 source files); vitest suites bootstrap 14, auth 40, contracts 144, planner 51 = 249 tests passed" },
+    { "label": "review-20261003-2-build", "command": "node scripts/evidence.mjs M0.1 review-20261003-2-build scripts/pnpm.mjs build", "exitCode": 0, "outcome": "3 trusted service SSR builds + owner-cli/owner-store/migrate/intent-store/reservation-store entries + private-shop SSR/client + both UI clients, no source maps" },
+    { "label": "review-20261003-3-doctor", "command": "node scripts/evidence.mjs M0.1 review-20261003-3-doctor scripts/pnpm.mjs doctor --json", "exitCode": 0, "outcome": "node 24.11.0 supported; docker tested; databases private/external tested via own-identity probes; model needs_configuration; runner needs_configuration realValidation unverified; contributor.localhost unverified (private.localhost tested); independentReview unverified" },
+    { "label": "recorded frozen-install evidence (not rerun per review instruction)", "files": ["resume-20261003-frozen-install.json (exit 0, --frozen-lockfile --offline, 9 projects)", "revalidate-20261003-frozen-install.json (exit 0)", "final-install.json (exit 0)", "review-install-escalated.json (exit 0, genuine clean install: node_modules recreated, 131 packages added)", "review-install.json / review-install-ci.json (exit 1 no-TTY purge abort, honestly retained as unverified)"], "outcome": "Lockfile up-to-date under --frozen-lockfile; pnpm-lock.yaml byte-matches the manifest" }
+  ],
+  "acceptanceJudgement": [
+    {
+      "bullet": "A clean dependency installation and build succeed or an exact host prerequisite is recorded.",
+      "judgement": "met",
+      "evidence": "Recorded frozen-install evidence exits 0 including one true clean recreate-install; lockfile digest matches the bound manifest; build rerun by this reviewer exits 0 producing runnable services/UIs (not empty manifests). No host prerequisite exemption needed."
+    },
+    {
+      "bullet": "Doctor reports model/DB/VM capabilities without credentials; no unavailable suite is represented as passing.",
+      "judgement": "met",
+      "evidence": "Doctor rerun live: model needs_configuration, runner needs_configuration with realValidation unverified and hostExecutionAllowed false, contributor.localhost unverified, independentReview unverified, humanPilot not_conducted - no unavailable capability labelled passing. Bootstrap suite test 'does not print environment credentials in doctor output' passed in the check rerun. verify:mvp retained evidence exits 2 (unavailable gates not blessed); bootstrap test 'fails the final delivery verifier until required gates exist' passed."
+    }
+  ],
+  "retainedFailures": [
+    "review-install.json and review-install-ci.json (previous reviewer): frozen install aborted on no-TTY module-dir purge; honestly retained unverified; superseded by review-install-escalated.json exit 0.",
+    "verify-unavailable.json / review-unavailable-gate.json exit 2: correct fail-closed behaviour, not a defect."
+  ],
+  "reviewerProcessNotes": [
+    "Reviewer initially misinvoked scripts/evidence.mjs with a leading 'node' argument (spawn uses process.execPath), producing MODULE_NOT_FOUND; the single erroneous label file .execution/evidence/M0.1/review-20261003-1-check.json created by the reviewer was deleted seconds after creation and rerun under the same label with the correct invocation. Disclosed for audit honesty; no product or prior evidence was modified.",
+    "Synthetic runtime was up (4 containers); doctor DB probes exercised live own-identity checks; no data reset, no rate-policy or Docker setting change."
+  ],
+  "verdict": "approved",
+  "verdictBasis": "Current revision binds current content on every product path (only the declared shared rebind batch drifts); all four card checks rerun or re-verified with exit 0; both acceptance bullets evidenced without weakened expectations; unavailable gates honestly fail closed."
+}

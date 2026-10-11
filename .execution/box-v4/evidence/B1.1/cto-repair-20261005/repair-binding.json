@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_direct_request_scope_binding",
+  "recordedAtUtc": "2026-10-05T02:50:16.133579+00:00",
+  "repairId": "W002-CTO-R1",
+  "brief": ".execution/box-v4/briefings/W002-CTO-R1.md",
+  "briefDigest": "ae620e68cb07739308145cecfc0385c257551fba7bedd372f6f0d2fd594df396",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+  "meaning": "CTO-defined scope under actual direct CEO repair task; not invented CEO approval of an unseen briefing; old Devin suspended; new feature pending."
+}

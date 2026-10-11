@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/smoke-bootstrap.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T03:02:24.651Z",
+  "finishedAt": "2026-10-02T03:02:25.304Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"host\":\"private.localhost\",\"port\":4000,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"contributor.localhost\",\"port\":4001,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"private.localhost\",\"port\":3000,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n{\"assurance\":\"tested\",\"host\":\"contributor.localhost\",\"port\":3001,\"result\":\"reachable\",\"hostHeaderOverride\":true}\n"
+}

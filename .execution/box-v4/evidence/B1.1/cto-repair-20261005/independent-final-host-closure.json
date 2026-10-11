@@ -1,0 +1,10 @@
+{
+  "status": "ok",
+  "packageCount": 131,
+  "fileCount": 7274,
+  "closureSha256": "d6413531fdfb601a93738990c3e6f8c44e319b7acfc9a1540edecc30f21d66a9",
+  "treeMismatches": [],
+  "elapsedMs": 3094,
+  "meaning": "Independent Python core host hash of cached Linux bytes and canonical sorted package/row JSON; no candidate module execution on Windows",
+  "collectorCorrection": "First read-only parser attempt used default Windows cp1252; corrected explicit UTF8 package metadata decoding; neither attempt mutated input"
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "explicit_ceo_runtime_handover",
+  "repairId": "W002-CTO-R2",
+  "handoverId": "W002-CTO-R2-Devin-H1",
+  "source": "Current Devin Desktop conversation, ask_user_question response",
+  "question": "Approve transferring the existing R1/R2 repair to this Devin CTO, using one new scoped worker and a distinct independent reviewer after safely accounting for the live Codex relay? The repair scope and acceptance checks stay unchanged; no feature starts.",
+  "answer": "Approve Devin handover",
+  "runtime": "devin_portable_pstack_adaptation",
+  "topology": "root-direct sequential one scoped box-worker and distinct box-reviewer",
+  "brief": ".execution/box-v4/briefings/W002-CTO-R2-Devin-H1.md",
+  "originalAuthority": ".execution/box-v4/approvals/W002-CTO-R1-request.json",
+  "oldDevinTeamResumed": false,
+  "newFeatureApproved": false,
+  "maximumProductWriters": 1,
+  "handoverPrerequisite": "Current source/stage/resource/process and mutation accounting. Existing Codex relay remains live and must be accounted for without killing an unknown process, duplicating its mailbox owner or replaying any prior request.",
+  "sourceScopeExpanded": false,
+  "acceptanceWaived": false,
+  "modelsOrSettingsChanged": false,
+  "resourcesAdded": false,
+  "status": "approved_ownership_reconciliation_required"
+}

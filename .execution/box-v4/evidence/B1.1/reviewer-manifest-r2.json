@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewer-manifest-r2",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "planVersion": "box-v4-2026-10-04.1",
+  "adapter": "devin_portable_pstack_adaptation",
+  "reviewer": "77c88b35",
+  "workerDispatchId": "e44008a7",
+  "workerRetry": 1,
+  "reviewedAt": "2026-10-04T09:50:00Z",
+  "brief": { "path": ".execution/box-v4/briefings/W002.md", "revision": "2026-10-04-r1", "recomputedDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9" },
+  "approval": { "path": ".execution/box-v4/approvals/W002-approval.json", "sha256": "5114753a22c249d4c315eaa23b9fc629d66c797574cce94f0f90c92a9fa7c5a9", "observedAt": "2026-10-04T08:35:06.1650860Z" },
+  "governance": {
+    "waves/W002.json": "c485b959e75d2bbbf466d47717d4d44d374754b13fab45b255f5038c1bb4f571",
+    "state.json": "de0b4db6677db4a29b44e3458eeec4b02a4e9deebbcaeed4b450d56bd12de933",
+    "verdict": "consistent; no holds/revocations; B1.1 ready not accepted; not itself a candidate acceptance"
+  },
+  "baseRevision": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "candidateFiles": {
+    "package.json": "f58a04e0bdc46efb69e332fb6958d37321c17110cb1848ec44fd89c51cce83ca",
+    "packages/box-contracts/index.ts": "91d7061bcfd36630ce7bae6d9a2329c527e36773ca016f57d4969bedf4c04332",
+    "packages/box-contracts/package.json": "d217fac28d8f721f1a6f777b7999dfed38b72fbf52bc8d2776c054e03c32a28c",
+    "packages/contracts/auth/policy.ts": "5b303861d2a5dab8442c5b4c05984ce1983a2a32344ce1fa8fd8b65dc2ed7522",
+    "scripts/boundaries.mjs": "947e14ad51573b05da76f62d44599647ef720fef1ab807172954ce92e643be6c",
+    "services/private-api/boxes/store/schema.ts": "9692f18fec4e942e8773c4d335cd26552bbfe1913541d15d8db45054dc8e40ca",
+    "services/private-api/boxes/store/store.ts": "f592cb1850b49939eba4e8c09df2a01ab0827feb957a0259d3bf7e81646da44c",
+    "services/private-api/db/migrations/0012_open_box_foundation.sql": "f271a6a07dde82db2be33ee0f27a084530ca8afdeac8b0140d1f14910e5a8f84",
+    "services/private-api/db/migrations/meta/_journal.json": "d46dc1f035987525dd52e57e60fb12cfed73c38c05d507e496473b8a233bfa9a",
+    "tests/box/auth/box-store.test.ts": "498a9c8bb6c23e9b77b6dfbfe6849982bd5a978d5c56063bd45d220ff63f9a74",
+    "tests/box/auth/roles-merge.test.ts": "beb3c1433cb9b28491e3096838fc2cb12da135bc5780ca3735f4e7f8201156d2",
+    "tests/box/auth/scopes-idempotency.test.ts": "a98198cd70e2c3f5406ef6c29e4ac6b1f5a16003d908505f8824be3ca7912658",
+    "tests/box/auth/support.ts": "5198c739c220064d73333ed0f5f80a10f8ef06eb6255dc6999710d75ecb7f631",
+    "tests/box/contracts/boundary.test.ts": "b1173a2420d47dd8c0750fa693c22650924f4025d8480d9ee2294e5b5bf56ecc",
+    "tests/box/contracts/box-schemas.test.ts": "5f7ed23c542395d4aad6cd1ba74d489306a6eee3df9595bd025950fb53c1406e"
+  },
+  "restoredToBase": { "scripts/vitest.config.mjs": "0af03a7f47a408a87392340c5a2848e5b810cdc98d47f966e4b256327210c208", "note": "byte-identical to base blob; no longer a candidate change" },
+  "evidenceFiles": {
+    "candidate-manifest.json": "ca56e74fd79c1da7e057b720a826e87771891d882549e36ebb73a21bb35b8659",
+    "candidate-manifest.txt": "1dab104c064eee44cc1ff2e44676df3cc5de05ac8f735343c1779bfe0b2d0196",
+    "preflight-receipt.md": "53caa44d232edfb0484caa0c5ab56113d1bade090bbb122c6849b071907b77bc",
+    "worker-receipt.md": "94159c82a295f3771a2fe21c19f8526e05299b791dec8c7ec45ae87f816a934f",
+    "worker-receipt-r2.md": "b849ad463bf62534dd2becf7f797e78568ad544cffbbddcccde7e60a8cec2dc9",
+    "workspace-recipe.md": "380841d9bd2defcaaad2804153730750771db82730b9486ca96165ee1e590e7b",
+    "reviewer-verdict.md": "10758eb7b0f631e26e7c8c836092123ae2fad4e28c50b9f850f03d6b58c77227",
+    "reviewer-manifest.json": "a2e71071fd1afee2b683f0d8644273e2ef6351bff2062bb30a2fe8f35606d328"
+  },
+  "stagedVsCheckout": "cmp-clean on all 16 candidate files against C:/Users/shout/AppData/Local/Temp/w002-b11-stage",
+  "checksRun": [
+    { "command": "node scripts/pnpm.mjs test:box-contracts", "exit": 0, "result": "7/7 passed" },
+    { "command": "node scripts/pnpm.mjs test:box-auth", "exit": 0, "result": "7/7 passed; real migrator 0001-0012 on fresh synthetic DBs" },
+    { "command": "node scripts/pnpm.mjs build", "exit": 0, "result": "all builds completed" },
+    { "command": "node scripts/pnpm.mjs check", "exit": 1, "result": "tsc+boundary(59 files)+bootstrap 13/14; private-api health 6.4s > 5000ms env-slow; auth suite not reached" },
+    { "command": "node scripts/pnpm.mjs test:auth", "exit": 1, "result": "24/30; 6 failures: routes logout 6.4s timeout, browser-cookie no chromium, 4 persistence *-live docker ENOENT; environment.test.ts file-level" },
+    { "command": "node scripts/pnpm.mjs test:contracts", "exit": 1, "result": "149/155; 6 failures: 3 env timeouts, research/fixtures/candidates.json ENOENT, 2 live-DB docker ENOENT" },
+    { "command": "node scripts/pnpm.mjs test:planner", "exit": 1, "result": "49/51; intake-live docker ENOENT, preparation-api >5s timeout" }
+  ],
+  "resourceAudit": {
+    "w002-b11-ws": "compliant: readonly, cap-drop ALL, no-new-privileges, 1000:1000, 2GiB/2CPU/256pids, single stage bind, internal net",
+    "w002-b11-db": "compliant per recipe: 256MiB/0.5CPU/128pids, tmpfs, internal net",
+    "w002-b11-net": "Internal=true",
+    "w002-b11-srcimg": "Created, never started, inert",
+    "w002-b11-stage-helper": "DEVIATION confirmed: RW rootfs, no cap-drop/no-new-privileges/limits, default bridge egress; staging tool only; disclosed by worker; recommend root remediation",
+    "priorRmProbe": "preflight id-probe used --rm and auto-removed; disclosed; historical policy deviation, not reproducible now",
+    "stagingManifestDeviation": "templates/ and relink*.sh present in stage beyond recipe list; approved repo bytes/helpers only; recommend recipe manifest update"
+  },
+  "pilotGates": { "G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "degraded_not_passed" },
+  "verdict": "not_accepted",
+  "reasons": [
+    "required check and test:auth still exit 1 (environment-dependent); failed/unavailable is not pass",
+    "r1 scope violations fully corrected and verified; no remaining scope drift",
+    "chromium absent from pinned image; live-persistence tests need an unapproved docker/compose seam"
+  ]
+}

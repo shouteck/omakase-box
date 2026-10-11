@@ -1,0 +1,61 @@
+--- pre-r2/scripts/suite.mjs
++++ current/scripts/suite.mjs
+@@ -24,8 +24,13 @@
+ // exact '/ms-playwright' value activates the override; every other value, and the
+ // default (no profile), keep the original .runtime/browsers behavior and the
+ // unavailable-suite/--real semantics above.
+-const browserOverride = process.env.BOX_VERIFICATION_PROFILE === 'w002-b11-environment-first-r4' && process.env.BOX_VERIFICATION_BROWSER_PATH === '/ms-playwright'
++const verificationProfile = process.env.BOX_VERIFICATION_PROFILE === 'w002-b11-environment-first-r4';
++const browserOverride = verificationProfile && process.env.BOX_VERIFICATION_BROWSER_PATH === '/ms-playwright'
+   ? '/ms-playwright'
+   : null;
+ const vitest = fileURLToPath(new URL('../node_modules/vitest/vitest.mjs', import.meta.url));
+-process.exit(await runNode(vitest, ['run', directory, '--config', 'scripts/vitest.config.mjs'], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browserOverride ?? join(root, '.runtime', 'browsers') } }));
++// Native ESM loading avoids Vite's bundled-config write into read-only dependencies.
++// Installed Vitest forwards this supported option to Vite; default runs retain
++// their original loader and argv.
++const configLoader = verificationProfile ? ['--configLoader', 'native'] : [];
++process.exit(await runNode(vitest, ['run', directory, '--config', 'scripts/vitest.config.mjs', ...configLoader], { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browserOverride ?? join(root, '.runtime', 'browsers') } }));
+--- pre-r2/scripts/vitest.config.mjs
++++ current/scripts/vitest.config.mjs
+@@ -1,6 +1,12 @@
+ import { defineConfig } from 'vitest/config';
++import { fileURLToPath } from 'node:url';
++
++const verificationProfile = process.env.BOX_VERIFICATION_PROFILE === 'w002-b11-environment-first-r4';
+ 
+ export default defineConfig({
++  // Task-owned writable cache; dependencies stay mounted read-only. Installed
++  // Vitest derives its test cache from Vite cacheDir when no override is set.
++  ...(verificationProfile ? { cacheDir: fileURLToPath(new URL('../.cto-r1-evidence/vitest-cache/', import.meta.url)) } : {}),
+   test: {
+     include: ['tests/**/*.test.ts'],
+     exclude: ['.runtime/**', '**/dist/**', '**/node_modules/**'],
+@@ -8,6 +14,6 @@
+     testTimeout: 30000,
+     // Optional constrained verification profile only; default runs keep the
+     // original implicit hook timeout unchanged.
+-    ...(process.env.BOX_VERIFICATION_PROFILE === 'w002-b11-environment-first-r4' ? { hookTimeout: 60000 } : {})
++    ...(verificationProfile ? { hookTimeout: 60000 } : {})
+   }
+ });
+--- pre-r2/scripts/box-verification/environment-manifest.json
++++ current/scripts/box-verification/environment-manifest.json
+@@ -603,7 +603,7 @@
+         },
+         {
+           "rel": "scripts/suite.mjs",
+-          "sha256": "56e1b62ad19152adedfd7a5be76a92a1e2d8b9b238d24d219836aa94077675eb"
++          "sha256": "32dd144e4ae53b30f8b5194b0ffe328f4038268b0601d78c7a99b9803db5bd84"
+         },
+         {
+           "rel": "scripts/synthetic-runtime.mjs",
+@@ -671,7 +671,7 @@
+         },
+         {
+           "rel": "scripts/vitest.config.mjs",
+-          "sha256": "5991e2e726dbdead242a0923059e61479766f4e5691091e6b675becf76f059c2"
++          "sha256": "13034a4b012d563bdd4f185e4c3ebb60cdfe64e143c20ea4897a2cfe33c1aef4"
+         },
+         {
+           "rel": "scripts/workspace.mjs",

@@ -1,0 +1,5 @@
+type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2,target=/stage
+type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules,target=/stage/node_modules,readonly
+type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules,target=/stage/scripts/tooling/node_modules,readonly
+{"dep":{"status":"unavailable","reason":"dependency_link_or_missing:vitest"},"tool":{"status":"unavailable","reason":"dependency_link_or_missing:pnpm"}}
+{"dep":{"status":"ok","packageCount":44,"fileCount":1153,"closureSha256":"6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6"},"tool":{"status":"ok","packageCount":1,"fileCount":1077,"closureSha256":"b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6"}}

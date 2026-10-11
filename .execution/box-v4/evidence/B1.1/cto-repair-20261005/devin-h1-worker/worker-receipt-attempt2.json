@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "kind": "worker_receipt_attempt2",
+  "supersedes": "worker-receipt.json (attempt1 preserved as immutable history; attempt1 candidate digests recorded there remain untouched)",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "reviewHold": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-review-hold-typing.json",
+  "worker": "same sole worker483988b4 under existing H1 authority/lease; no new worker",
+  "baseCommit": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "attempt2Change": {
+    "file": "tests/box/verification/relay-lifecycle.test.ts",
+    "corrections": [
+      "getLifecycle: Promise<string> corrected to Promise<string | null> - real implementation returns null on ENOENT",
+      "buildExecArgv: string[] corrected to { argv: string[]; entry: FixtureExecEntry } - real returns {argv,entry}; FixtureExecEntry mirrors the manifest entry fields the primary source uses (id,service,workdir,env?,argv,runnerArgv?,input,timeoutMs?,sourceSha256?,requiresSpecificConfirmation?)",
+      "buildLiveArgv: {argv,envelope} corrected to {argv,entry,envelope} - real returns all three",
+      "WrapperResult.code number|null tightened to number and remoteState tightened to the closed union unconfirmed|terminated|exited - transformWrapperResult always sets code and only emits those three states",
+      "RunnerChildOutcome.code number|null tightened to number - runChild emits code ?? 1, never null"
+    ],
+    "audited": [
+      "acquireLease/loadLease declared RelayLease is a truthful structural subset of the real lease record",
+      "executeRequest/requestDrain/run outcomes: declared {status,reason?} subsets match real returns (run also emits error/requestIds fields - superset, honest)",
+      "validateRequest/manifestDigest/loadSeen/resolveEntry/bindRunnerArgv/findStartedWithoutResult/validateSequence/gateStart/runSequence signatures verified against implementations - subset/union shapes honest, no provable inaccuracy",
+      "environment-readiness.test.ts unchanged this attempt (correction scope was relay-lifecycle.test.ts per dispatch)"
+    ],
+    "format": "manifest refrozen by byte-level in-place replacement of the two sha256 values only; original CRLF endings and all other bytes preserved (same length as base: 107396 bytes, 2837 CRLF); attempt1 had normalized to LF which is now corrected"
+  },
+  "candidateFiles": {
+    "tests/box/verification/environment-readiness.test.ts": {
+      "base": "bab5ddf71e83c87b08f2b6e69c3efc5aea5bca512641e75fc1f7383bbc0ef279",
+      "attempt1": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735",
+      "attempt2": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735"
+    },
+    "tests/box/verification/relay-lifecycle.test.ts": {
+      "base": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825",
+      "attempt1": "91e06903c8b308f7ccf38c397d21d17aa21260eced90d64fc98e80cf3d6d5aa6",
+      "attempt2": "b7cee05122690fa71077161bb6214327c40cfff10beb335890b802bdd4811306"
+    },
+    "scripts/box-verification/environment-manifest.json": {
+      "base": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594",
+      "attempt1": "ebdd89a9ffd1b17fd939ac9d03e5be8830815ee9b019441805cef96055e888bc",
+      "attempt2": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+      "rows": "455 sorted rows; only the two leased test rows differ from base (indexes 359,360)"
+    }
+  },
+  "manifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "checks": [
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "where": "w002-b11-ws:/workspace/.devin-h1-check/src",
+      "exit": 0,
+      "started": "04:30:18Z",
+      "ended": "04:30:55Z",
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "note": "whole tsconfig include set clean; logs persisted to container /workspace/.devin-h1-check/out/attempt2/ AND copied to host linux-check-out-attempt2/ (durable, not tmpfs-only)"
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run tests/box/verification/relay-lifecycle.test.ts",
+      "where": "same copy",
+      "exit": 1,
+      "started": "04:31:08Z",
+      "ended": "04:31:53Z",
+      "result": "65 passed / 2 failed",
+      "note": "INFORMATIVE DEVIATION, not the approved recipe: bare vitest applied default 5s testTimeout causing two timing-sensitive supervisor tests to exceed bounds (timeout at 5000ms; elapsedMs 2645 vs <2000 bound), and the path glob also matched two stale .execution evidence copies (one failed module resolution, one ran 32 tests). No assertion/candidate defect; recorded verbatim"
+    },
+    {
+      "command": "node scripts/suite.mjs box --suite verification",
+      "where": "same copy",
+      "exit": 0,
+      "started": "04:32:33Z",
+      "ended": "04:33:04Z",
+      "result": "2 test files passed, 65/65 tests, duration 27.17s",
+      "note": "authoritative suite recipe; the two timing-sensitive tests passed under proper configuration (late-output test 9876ms within its declared bound)"
+    }
+  ],
+  "byteParity": "container sha256 of all three synced files matches host candidate exactly (b7cee051..., ba30ea28..., 3555d4dd...)",
+  "descendantStatus": "no node/vitest/tsc descendants remain in w002-b11-ws (post-run /proc cmdline poll)",
+  "unchangedEvidence": [
+    "worker-receipt.json (attempt1) preserved untouched",
+    "worker-scoped.diff (attempt1, 381 lines) preserved",
+    "base/ copies preserved",
+    "worker-scoped-attempt2.diff is base->attempt2 authoritative diff, 393 lines"
+  ],
+  "limitations": [
+    "full check tail (auth/contracts/planner) still cannot run in the side workspace: spawn docker ENOENT; unchanged environmental limitation, seven-command acceptance batch not run",
+    "candidate not overlaid to /stage; root release withheld pending reviewer re-review of this attempt2 candidate",
+    "no acceptance claim"
+  ],
+  "notTouched": [
+    "fixture relay poller/mailbox/lease",
+    "runner /stage bytes",
+    ".mjs implementations",
+    "tsconfig/declarations/dependencies",
+    "test assertions/expected outcomes",
+    "no comments or suppressions added or removed",
+    "no Git mutation"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/verify-readiness.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T03:45:04.325Z",
+  "finishedAt": "2026-10-04T03:45:04.848Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"private\":{\"lifecycle\":\"tested\",\"immutableRecords\":\"tested\",\"immutableDecisions\":\"tested\",\"ownerReviewAuthority\":\"tested\",\"solveClassification\":\"tested\",\"statusReasonShape\":\"tested\",\"bindingFormat\":\"tested\",\"authority\":\"synthetic_schema_test_not_runner_verdict\"}}\n"
+}

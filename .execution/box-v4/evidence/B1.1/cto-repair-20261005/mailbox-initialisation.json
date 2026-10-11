@@ -1,0 +1,15 @@
+{
+  "kind": "fresh_mailbox_initialisation",
+  "recordedAtUtc": "2026-10-05T03:00:05.092044+00:00",
+  "mailboxHost": "C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2/mailbox",
+  "mailboxContainer": "/stage/mailbox",
+  "priorExists": false,
+  "initialRequests": 0,
+  "initialResponses": 0,
+  "leaseCreated": false,
+  "relayStarted": false,
+  "manifestSha256": "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+  "runId": "w002-b11-r4-env2",
+  "environmentId": "w002-b11-env-r4-env2",
+  "oldMailboxReadOrReplayed": false
+}

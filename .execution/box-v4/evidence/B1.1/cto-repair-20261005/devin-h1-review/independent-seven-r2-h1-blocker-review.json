@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_seven_r2_h1_blocker_review",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "reviewer": "Devin reviewer27f919af (not implementer worker483988b4)",
+  "recordedAtUtc": "2026-10-05T04:51:20.364Z",
+  "verdict": "batch_failed_demonstrated_blocker",
+  "manifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "environmentId": "w002-b11-env-r4-env2",
+  "batch": {
+    "outerExit": 1,
+    "endedAt": "2026-10-05T04:50:22Z",
+    "status": "failed",
+    "commands": [
+      {
+        "n": 1,
+        "cmd": "test:box-contracts",
+        "status": "pass",
+        "ms": 26974
+      },
+      {
+        "n": 2,
+        "cmd": "test:box-auth",
+        "status": "pass",
+        "ms": 43177
+      },
+      {
+        "n": 3,
+        "cmd": "check",
+        "status": "pass",
+        "ms": 382387
+      },
+      {
+        "n": 4,
+        "cmd": "build",
+        "status": "pass",
+        "ms": 52245
+      },
+      {
+        "n": 5,
+        "cmd": "test:auth",
+        "status": "failed",
+        "ms": 91223
+      },
+      {
+        "n": 6,
+        "cmd": "test:contracts",
+        "status": "not_run_stop_on_first_failure"
+      },
+      {
+        "n": 7,
+        "cmd": "test:planner",
+        "status": "not_run_stop_on_first_failure"
+      }
+    ],
+    "durableDir": "/stage/.cto-r1-evidence/independent-seven-r2-h1/ (verification-run.json + command-1..5 stdout/stderr, outer stdout/stderr/result)"
+  },
+  "demonstratedBlocker": {
+    "test": "tests/auth/persistence/auth-live.test.ts > actual synthetic APIs reject forged identity, CSRF, expired sessions and invitation replay",
+    "assertion": "scripts/verify-auth.mjs:33 expected HTTP 400 (rejected credentials) but received HTTP 429 (rate limited)",
+    "mechanism": "auth-live ran twice against the same long-lived synthetic auth service: first inside command-3 check (PASS, 37.7s) then again as command-5 test:auth (FAIL at 8.3s). The failed-credential login from the check-embedded pass populated the service login rate limiter; the frozen plan repeats auth-live within the limiter window, so the second invocation receives 429 instead of 400.",
+    "evidence": "command-3.stdout.log line40 auth-live PASS 37731ms; command-5.stderr.log AssertionError 429!==400 at verify-auth.mjs:33",
+    "classification": "frozen-plan state interaction / environmental rate-limit coupling, NOT a candidate source defect: the same test passed on first run against fresh limiter state; leased files uninvolved. No source fix attempted per stop rules."
+  },
+  "postStopReconciliation": {
+    "runnerTop": "only sleep infinity; zero residual owned descendants",
+    "mailbox": {
+      "requests": 34,
+      "responses": 34,
+      "unanswered": 0,
+      "allNewIds": true,
+      "old8Untouched": true
+    },
+    "fixtureDb": "8/12 exactly as projected (4 prior + 4 new from test:box-auth); no drop/reset",
+    "resources": "same 2 identities, OOMKilled false, no restart",
+    "stage": "unchanged 456 candidate; verification-run.json status failed"
+  },
+  "verdictNote": "B1.1 seven-command acceptance NOT achieved this attempt. Root decides remediation: e.g., allow limiter window to elapse or reset only the synthetic auth-service limiter state via an approved operation before a single rerun of the tail — requires explicit root release; no blind rerun performed.",
+  "acceptance": false,
+  "productAccepted": false,
+  "historyPreserved": [
+    "independent-seven-r2 FAILED (tsc26)",
+    "independent-seven-r2-h1 FAILED (auth-live 429)",
+    "all worker/reviewer receipts preserved"
+  ]
+}

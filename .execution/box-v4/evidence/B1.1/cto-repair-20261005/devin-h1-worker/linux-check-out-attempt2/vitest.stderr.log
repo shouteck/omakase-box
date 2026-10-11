@@ -1,0 +1,43 @@
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/tests/box/verification/relay-lifecycle.test.ts[2m [ .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/tests/box/verification/relay-lifecycle.test.ts ][22m
+[31m[1mError[22m: Cannot find module '../../../scripts/box-verification/fixture-exec-host.mjs' imported from /workspace/.devin-h1-check/src/.execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/tests/box/verification/relay-lifecycle.test.ts[39m
+[36m [2m❯[22m .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/tests/box/verification/relay-lifecycle.test.ts:[2m13:1[22m[39m
+    [90m 11|[39m import { spawn } from 'node:child_process';
+    [90m 12|[39m import { describe, expect, it } from 'vitest';
+    [90m 13|[39m import {
+    [90m   |[39m [31m^[39m
+    [90m 14|[39m   acquireLease, loadLease, loadSeen, setLifecycle, getLifecycle, valid…
+    [90m 15|[39m   assertSafeEntry, assertReadyProfileEntry, assertWrapperBinding, buil…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/box/verification/relay-lifecycle.test.ts[2m > [22mverification supervisor durable completion[2m > [22mwaits for late output and retains complete raw bytes beyond the summary cap
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m tests/box/verification/relay-lifecycle.test.ts:[2m563:3[22m[39m
+    [90m561|[39m   }, 25000);
+    [90m562|[39m
+    [90m563|[39m   it('waits for late output and retains complete raw bytes beyond the …
+    [90m   |[39m   [31m^[39m
+    [90m564|[39m     const dir = await tmp();
+    [90m565|[39m     const payload = Buffer.concat([Buffer.from('begin\n'), Buffer.allo…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/box/verification/relay-lifecycle.test.ts[2m > [22mverification supervisor durable completion[2m > [22mbounds incomplete drainage, preserves captured bytes and stops the sequence
+[31m[1mAssertionError[22m: expected 2645 to be less than 2000[39m
+[36m [2m❯[22m tests/box/verification/relay-lifecycle.test.ts:[2m606:29[22m[39m
+    [90m604|[39m     expect(entry).toMatchObject({ code: 0, outputDrained: false, uncon…
+    [90m605|[39m     expect(entry.elapsedMs).toBeGreaterThanOrEqual(40);
+    [90m606|[39m     expect(entry.elapsedMs).toBeLessThan(2000);
+    [90m   |[39m                             [31m^[39m
+    [90m607|[39m     expect(await readFile(entry.stdoutPath, 'utf8')).toBe('captured-be…
+    [90m608|[39m   });
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+

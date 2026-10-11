@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed_exact_stage_overlay_release",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "inheritedStageAuthority": ".execution/box-v4/briefings/W002-CTO-R2.md",
+  "review": "devin-h1-review/independent-review-r2-h1-attempt2-final.json",
+  "reviewer": "box-reviewer/27f919af",
+  "sourceWriter": "box-worker/483988b4_returned_frozen",
+  "candidateManifestDigest": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae",
+  "scope": "Preserve prior3source paths and duplicate gate manifest bytes. Copy exactly reviewed two tests and manifest to their same /stage paths and manifest gate metadata. No source authoring, mount/resource/helper changes or test execution by root.",
+  "reviewedHashes": {"tests/box/verification/environment-readiness.test.ts": "ba30ea2896bf911286e8afde6a2b31d649c439d6c13ef5c70cd22eb1b22ff735", "tests/box/verification/relay-lifecycle.test.ts": "b7cee05122690fa71077161bb6214327c40cfff10beb335890b802bdd4811306", "scripts/box-verification/environment-manifest.json": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae"},
+  "previousStageHashes": {"tests/box/verification/environment-readiness.test.ts": "bab5ddf71e83c87b08f2b6e69c3efc5aea5bca512641e75fc1f7383bbc0ef279", "tests/box/verification/relay-lifecycle.test.ts": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825", "scripts/box-verification/environment-manifest.json": "eb328bd4e4e12d9bbee148889391d25f8e1a34221cd1500972296dbbb0443594"},
+  "preservationDirectory": "pre-stage-overlay-r2-h1/",
+  "acceptanceReleased": false,
+  "currentReadyReceiptRequired": true,
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

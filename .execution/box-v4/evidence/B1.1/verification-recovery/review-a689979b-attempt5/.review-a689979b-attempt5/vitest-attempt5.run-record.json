@@ -1,0 +1,24 @@
+{
+    "command":  "timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs",
+    "exitStatus":  "unavailable_after_completed_run",
+    "vitestSummary":  {
+                          "testFiles":  "3 passed (3)",
+                          "tests":  "65 passed (65)",
+                          "durationSeconds":  21.07,
+                          "stdoutBytes":  1744,
+                          "stderrBytes":  0
+                      },
+    "processGroup":  {
+                         "pid":  23520,
+                         "pgid":  23520,
+                         "observedPids":  [
+                                              23520,
+                                              23524,
+                                              23575
+                                          ],
+                         "survivors":  [
+
+                                       ]
+                     },
+    "limitation":  "Shell operator precedence backgrounded the setup-and-command list, so the required command ran once and produced a complete pass summary, but its shell exit status and exact wrapper duration were not durably captured."
+}

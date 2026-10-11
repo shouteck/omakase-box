@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "setup_path_observation",
+  "recordedAtUtc": "2026-10-05T02:38:15.855563+00:00",
+  "stageRootExists": false,
+  "stageRootSymlink": false,
+  "harnessRootExists": false,
+  "setupConsumption": "Existingrecords0; twoallowednewnamesabsent inrootDocker sample; creation stillnotreleased",
+  "imageIds": {
+    "runner": "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8",
+    "database": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652"
+  },
+  "network": {
+    "name": "w002-b11-net",
+    "id": "99a014176527413af7aa737cded4e958b75f705060603417c0b04769cbf7fb25",
+    "internal": true
+  },
+  "operations": "Readmetadata only; noresource orcandidatechange"
+}

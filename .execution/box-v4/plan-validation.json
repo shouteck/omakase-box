@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-04",
+  "kind": "instructions_only_structural_validation",
+  "planVersion": "box-v4-2026-10-04.1",
+  "tasks": 18,
+  "milestones": 9,
+  "dependencyLayers": [
+    [
+      "B0.1",
+      "B0.2"
+    ],
+    [
+      "B1.1"
+    ],
+    [
+      "B1.2"
+    ],
+    [
+      "B2.1",
+      "B3.1"
+    ],
+    [
+      "B2.2"
+    ],
+    [
+      "B3.2"
+    ],
+    [
+      "B4.1"
+    ],
+    [
+      "B4.2",
+      "B5.2"
+    ],
+    [
+      "B5.1",
+      "B6.1"
+    ],
+    [
+      "B6.2",
+      "B7.1"
+    ],
+    [
+      "B7.2"
+    ],
+    [
+      "B8.1"
+    ],
+    [
+      "B8.2"
+    ]
+  ],
+  "graphAndCardsConsistent": true,
+  "requiredReadsExist": true,
+  "localLinksChecked": 26,
+  "productFilesPreserved": 426,
+  "legacyGraphAndStateUnchanged": true,
+  "legacySnapshotsUnchanged": true,
+  "supplementCopyUnchanged": true,
+  "approvalStatus": "awaiting_ceo",
+  "allNewTasksPending": true,
+  "independentPlanningReviews": [
+    "box_v4_reuse_audit",
+    "kitchen_orchestration_review"
+  ],
+  "limitations": [
+    "No product tests run",
+    "No plugin installed or activated",
+    "No native orchestration dispatch proved",
+    "No wave execution or product implementation authorized"
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent-review",
+  "taskId": "M5.1",
+  "reviewer": "opencode-reviewer-subagent-m5-20261003",
+  "reviewedAt": "2026-10-04T02:10:00.000Z",
+  "revision": {
+    "digest": "b215698a427220eb6f5e16934d14a330a0f55ad44592c767739f98187df675d7",
+    "manifest": ".execution/evidence/M5.1/revision-b215698a427220eb6f5e16934d14a330a0f55ad44592c767739f98187df675d7.json"
+  },
+  "manifestClassification": {
+    "recomputedWith": "PowerShell/System.Security.Cryptography.SHA256 over every listed path; byte sizes also compared",
+    "totalFiles": 57,
+    "hashMatches": 55,
+    "missing": 0,
+    "byteSizeMismatches": 0,
+    "drift": [
+      { "path": "docs/DECISIONS.md", "manifestSha256": "6a1587a2aa9408c664e21cf7188b9fe4f076f5a06fad6f914f4c201362d5a615", "actualSha256": "35c49af98eb2cf479a7204668762c196640ff17232932e959b2a465f51f91a45", "classification": "shared-drift/expected", "verifiedAgainst": "actual bytes equal to M5.3-manifest versions of the same two files (proving identical coordinator batch, no task-unique content hidden here)" },
+      { "path": "scripts/execution.mjs", "manifestSha256": "03bff9fd5ce6e12186b91cd7f1ee60c33e899c03236c66490a3d031cb6edadb5", "actualSha256": "607ee65151cb8c2f21843afd4ee98a7b828b61948ce760f3e64a0f7b27c5244c", "classification": "shared-drift/expected", "verifiedAgainst": "actual bytes equal to M5.3-manifest versions of the same two files" }
+    ],
+    "productPaths": "byte-identical",
+    "beyondExpectedDrift": []
+  },
+  "reruns": [
+    {
+      "label": "review-20261003-1-m51-protocol",
+      "command": "node scripts/evidence.mjs M5.1 review-20261003-1-m51-protocol node scripts/pnpm.mjs test:runner -- --suite protocol",
+      "exitCode": 1,
+      "assurance": "unverified",
+      "outcome": "invalid invocation: the extra literal 'node' made evidence.mjs spawn node.exe with 'node' as the first script argument (MODULE_NOT_FOUND); no tests ran. Retained as-is.",
+      "counts": "not a suite observation"
+    },
+    {
+      "label": "review-20261003-1b-m51-protocol",
+      "command": "node scripts/evidence.mjs M5.1 review-20261003-1b-m51-protocol scripts/pnpm.mjs test:runner -- --suite protocol",
+      "exitCode": 0,
+      "testsPassed": 39,
+      "expected": 39,
+      "note": "one test file; internally runs the injected executable Python broker cases (10 unittest cases)"
+    },
+    {
+      "label": "review-20261003-2-m51-doctor",
+      "command": "node scripts/evidence.mjs M5.1 review-20261003-2-m51-doctor scripts/pnpm.mjs doctor --json",
+      "exitCode": 0,
+      "runnerCapability": { "status": "needs_configuration", "realValidation": "unverified", "hostExecutionAllowed": false },
+      "note": "docker tested; private/external own-DB identity probes tested; native contributor.localhost DNS unverified (disclosed)"
+    }
+  ],
+  "acceptanceJudgements": [
+    {
+      "criterion": "Untrusted commands/URLs/harness IDs cannot control host execution",
+      "judgement": "approved-at-protocol-level",
+      "evidence": [
+        "packages/runner-protocol/index.ts:7,24-29 - HarnessId is a closed five-value enum; trustedHarness returns a frozen fixed descriptor (absolute /opt/.../supervisor + fixed arg array) with digest = sha256(canonical descriptor); no caller string reaches argv",
+        "packages/runner-protocol/index.ts:10,30-34 - JobSchema is strictObject (unknown fields rejected, tested with command/url/shell/privateRepositoryRoot/signingKey canaries), profile is z.literal of the dedicated profile, limits are z.literal exact values, harnessDigest must equal the derived trusted digest, deadline must lie in (now, now+120s]",
+        "packages/runner-protocol/index.ts:39-47 - verifyTrustedResult requires Ed25519 signature over canonical bytes, exact binding equality for 9 fields, fresh lease ownership, expiry <= deadline, complete unique required-check coverage, and rejects passed verdict with any non-passed check",
+        "services/runner-controller/transport.ts:10-20,27 - executeBounded spawns ssh/sftp with shell:false, fixed arg array, BatchMode/StrictHostKeyChecking=no-update/ForwardAgent=no/ClearAllForwardings, bounded time/output; only identity/known-hosts/user@host (config-validated) plus the constant broker path are interpolated; CR+LF/NUL rejected in file paths; sftp upload uses a mkdtemp path with escaped quotes and UUID-validated jobId, staging path fixed",
+        "services/runner-controller/controller.ts:8-16 - snapshot of approved artifact bytes is digest-pinned to job.artifactHash (16 MiB cap) BEFORE claim/lease; replay claim is durable-first; verified result required; destroy always runs in finally and a failed disposal rejects the result (never passed)",
+        "services/runner-controller/provider.ts:12-39 - fresh-lease receipt validated field-by-field; execute requires the exact active lease object + artifact digest; destroy verifies destroyed receipt; lost create responses are disposed by fixed lease ID; fake lease/unknown lease fail closed",
+        "infra/runner/broker.py:21-24,131-216 - subprocess calls are fixed absolute executables with argument arrays (no shell), fixed env, 20s/64KiB bounds and kill; request schema is an exact-key set; UUID identifiers; baseline read-only + digest-verified before any overlay; no networking in domain XML; run operation hard-rejected until M5.2; disposal owns only its own lease paths and quarantines on failure",
+        "tests/runner/protocol/protocol.test.ts - untrusted-field canaries, forged mapping/harness digest/profile/limits/deadline, wrong-key/unsigned/contradictory/incomplete results, loopback/numeric/metadata host aliases, sftp traversal '../evil', broker command injection attempts, baseline mutation/write-mode denial, lease ownership mismatch"
+      ],
+      "limitation": "all broker observations are mocked-KVM/injected-transport; labelled honestly"
+    },
+    {
+      "criterion": "Fake runner is explicit; missing/invalid required profile fails closed and leaves real-validation tasks blocked",
+      "judgement": "approved-at-protocol-level",
+      "evidence": [
+        "services/runner-controller/provider.ts:41-46 - FakeDevelopmentProvider hard-throws on createFromBaseline/execute/destroy and capability() returns mode 'fake_development', realValidation 'unverified', satisfiesRequiredProfile false, hostExecutionAllowed false",
+        "services/runner-controller/config.ts:14-19 - RunnerConfigSchema is strictObject requiring the exact profile literal, valid Ed25519 key, dedicated-host attestation true, and rejecting localhost/numeric/hex/loopback/metadata hosts; runnerCapability always reports assurance unverified + hostExecutionAllowed false (needs_configuration or configured_not_validated)",
+        "services/runner-controller/src/bootstrap/index.ts:3-13 - public projection is exactly the four bounded fields plus runUnavailableJob() which throws 'Real isolated runner is unavailable; host execution is forbidden.'",
+        "scripts/doctor.mjs:9-28,60 - runner section is pure capability output, always unverified/hostExecutionAllowed false; my rerun observed needs_configuration",
+        "tests/runner/protocol/protocol.test.ts:50-51,74 - alias rejection, invalid key, unknown config field, localhost/http://evil, attestation=false, fake capability assertions"
+      ]
+    },
+    {
+      "criterion": "Mocked-KVM honesty (no gate claims real-VM validation)",
+      "judgement": "approved",
+      "evidence": [
+        "draft lines 3,5,20,32,34 - 'No actual KVM, SSH/SFTP connection, candidate execution or resource/egress validation occurred', 'These are mock observations, not KVM evidence', 'Broker rejects run until M5.2 supplies the reviewed isolated guest supervisor; harness entries report installed false'",
+        "docs/runner-setup.md lines 3,11,15 - real execution unverified, lifecycle protocol not exercised against actual KVM, protocol tests cannot establish isolation/provenance, real M5/M9 gates stay open",
+        "broker.py line 135-136 + error path - run operation rejects with 'isolated_guest_harness_not_installed'",
+        "state.json M5.1 independentReviewStatus 'not_available', integrationStatus 'needs_revalidation'; my doctor rerun keeps realValidation unverified"
+      ]
+    }
+  ],
+  "retainedFailures": [
+    { "evidence": ".execution/evidence/M5.1/review-20261003-1-m51-protocol.json", "reason": "reviewer invocation-form error (extra 'node'), not a product defect; kept unverified/exit 1" },
+    "historical failing evidence referenced by the draft (protocol-broker-executable.json Windows path-comparison failure, review-config-aliases.json alias finding) remain in the evidence directory and state evidence list"
+  ],
+  "limitations": [
+    "No real KVM/libvirt/QEMU, SSH/SFTP broker or guest execution was exercised on this host; M5.2's dedicated-Linux-KVM prerequisite remains genuinely blocked and protocol evidence must not be counted as VM validation.",
+    "Synthetic test keys only; no authoritative customer evaluation exists yet."
+  ],
+  "findings": [],
+  "verdict": "approved"
+}

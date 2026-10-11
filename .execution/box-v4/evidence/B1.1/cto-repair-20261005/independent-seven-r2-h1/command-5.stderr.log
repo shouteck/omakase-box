@@ -1,0 +1,31 @@
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/auth/persistence/auth-live.test.ts[2m > [22mactual synthetic APIs reject forged identity, CSRF, expired sessions and invitation replay
+[31m[1mError[22m: Command failed: /usr/local/bin/node scripts/verify-auth.mjs
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+429 !== 400
+
+    at file:///stage/scripts/verify-auth.mjs:33:8
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 429,
+  expected: 400,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.11.0
+[39m
+[90m [2m❯[22m scripts/verify-auth.mjs:[2m33:8[22m[39m
+[36m [2m❯[22m tests/auth/persistence/auth-live.test.ts:[2m5:16[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+

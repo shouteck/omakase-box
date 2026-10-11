@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "reportKind": "independent_review",
+  "reviewer": "opencode-reviewer-subagent-foundation-20261003",
+  "reviewedAt": "2026-10-04T00:24:00Z",
+  "taskId": "M0.3",
+  "reviewedRevision": {
+    "digest": "ea6b6a8336dade0aae20792bf072ef979d21e19e097c0ae90894921ecb4531f7",
+    "manifest": ".execution/evidence/M0.3/revision-ea6b6a8336dade0aae20792bf072ef979d21e19e097c0ae90894921ecb4531f7.json"
+  },
+  "revisionBinding": {
+    "manifestFileCount": 66,
+    "filesMissing": 0,
+    "productPathsByteIdentical": true,
+    "mismatchedFiles": [
+      { "path": "docs/DECISIONS.md", "recordedSha256Prefix": "6a1587a2aa94", "actualSha256Prefix": "35c49af98eb2", "classification": "shared_rebind_batch" },
+      { "path": "scripts/execution.mjs", "recordedSha256Prefix": "03bff9fd5ce6", "actualSha256Prefix": "607ee65151cb", "classification": "shared_rebind_batch" }
+    ],
+    "sharedBatchRationale": "Exactly the coordinator-declared shared batch from M4.2 runtime verification and migration 0007 (M5.3). Every examples/private-shop/**, research/fixtures/**, scripts/demo-seed.mjs and tests/contracts/fixture/** path re-hashes identically to the current manifest. Recorded canonical digest verified: sha256(canonical JSON.stringify(manifest)) matches state.json tasks.M0.3.revision.digest.",
+    "previousAcceptedDiff": {
+      "previousDigest": "f7e9a46bc66c7e62f908866dd86c23bcd8f7dfcc61bfac1779700493c2a6570a",
+      "added": ["scripts/verify-auth.mjs", "scripts/verify-empty-migrations.mjs", "scripts/verify-intake.mjs", "scripts/verify-intent-sessions.mjs", "scripts/verify-lifecycles.mjs"],
+      "changed": ["AGENTS.md", "docs/DECISIONS.md", "infra/trusted.Dockerfile", "infra/trusted.Dockerfile.dockerignore", "pnpm-lock.yaml", "scripts/doctor.mjs", "scripts/execution.mjs", "scripts/verify-mvp.mjs", "scripts/vitest.config.mjs", "scripts/workspace.mjs", "services/external-api/src/bootstrap/main.ts", "services/private-api/src/bootstrap/main.ts"],
+      "removed": [],
+      "note": "All changes since the older accepted revision are coordinator-owned shared/integration files; no fixture/reference product file changed."
+    },
+    "pnpmLockfileDigestMatchesManifest": true
+  },
+  "commandsRun": [
+    { "label": "review-20261003-1-seed", "command": "node scripts/evidence.mjs M0.3 review-20261003-1-seed scripts/pnpm.mjs demo:seed", "exitCode": 0, "outcome": "assurance tested, kind synthetic_only, assetCount 10, snapshotHash 4c40e9389076ca887cb928db8263dc8fa89bbdc4226628ded0c66a641927c8fd - identical to the draft-recorded hash; referenceSolutionsIncluded false" },
+    { "label": "review-20261003-2-fixture", "command": "node scripts/evidence.mjs M0.3 review-20261003-2-fixture scripts/pnpm.mjs test:contracts -- --suite fixture", "exitCode": 0, "outcome": "18 tests passed (seed.test.ts 1, private-shop.test.ts 17)" },
+    { "label": "review-20261003-3-check", "command": "node scripts/evidence.mjs M0.3 review-20261003-3-check scripts/pnpm.mjs check", "exitCode": 1, "outcome": "RETAINED FAILURE: auth-live verify-auth.mjs assertion 429 !== 400 - the synthetic API login rate policy responded 429 on the second auth-suite execution of the day; not a product defect (same suite passed fully in the M0.1 check ~3 minutes earlier); assurance unverified; left in place" },
+    { "label": "private-api-only restart", "command": "node -e \"import('./scripts/docker.mjs')... docker([...composeArguments, 'restart', 'private-api'])\"", "exitCode": 0, "outcome": "Container private-task-mvp-synthetic-private-api-1 restarted alone; other 3 services untouched; no data dropped; no rate-policy or Docker setting change" },
+    { "label": "review-20261003-4-check-retry", "command": "node scripts/evidence.mjs M0.3 review-20261003-4-check-retry scripts/pnpm.mjs check", "exitCode": 0, "outcome": "Full pass after restart: bootstrap 14, auth 40 (auth-live 8.1s), contracts 144, planner 51 = 249 tests; tsc and boundary checker pass" }
+  ],
+  "acceptanceJudgement": [
+    {
+      "bullet": "Fixture includes single-unit, coherent full-stack and executable response-security policy goals, plus unsupported cloud/data/tooling candidates. Full-stack work follows one UI-to-API outcome rather than unrelated bundled exercises.",
+      "judgement": "met",
+      "evidence": "research/fixtures/candidates.json read: component_selection (frontend), ranking (backend/data), selection_journey (frontend+backend, one UI-to-API flow with server-side rejection and visible recovery), response_policy (application_policy), selection_with_policy (frontend+backend+security); cloud_deployment, data_migration, ci_workflow recorded individually as requires_new_adapter with reasons. private-shop.test.ts read and rerun: asserts those exact candidate ids/statuses, asserts genuine initial coupling (SelectionPanel.tsx and selection/api.ts import ../private/eligibility; rankPrivateItems imports ../private/scoring), exercises the real HTTP selection route via app.inject with Host/Origin enforcement, and validates the strict JSON policy parser (duplicate keys, unicode-key collisions, NaN, unknown executable/remote fields) plus header-stripping/trusted-ingress/excluded-/health-route behaviour. Browser smoke evidence (recorded) drove the real UI button to the real fixture API."
+    },
+    {
+      "bullet": "Reset/seed touches only identified synthetic data; reference fixes and canaries are not public assets.",
+      "judgement": "met",
+      "evidence": "scripts/demo-seed.mjs read: writes only .runtime/private-shop-demo behind a synthetic identity marker (refuses unrecognized dirs), forbids symlinks/hardlinks (nlink check), restricts snapshot paths to src|config and explicitly rejects 'reference-solutions', stores content-addressed immutable objects, emits preChangeRevision + referenceSolutionsIncluded:false; seed test proves idempotency and answer exclusion. Reference solutions are a separate examples/private-shop/reference-solutions/ tree excluded from planner snapshots. Canaries (SYNTHETIC_PRIVATE_*_CANARY_M0) live only in private fixture source and the private seed snapshot; no public release/publishing exists in M0, and canary exclusion from public release assets is an M4.2 compiler gate recorded as pending. Observation disclosed, not a defect at this scope."
+    }
+  ],
+  "retainedFailures": [
+    "review-20261003-3-check.json (exit 1, assurance unverified): synthetic API login rate policy returned 429 during the auth-live portion of the second full check of the day; per instructions only the private-api service was restarted and the check rerun passed (review-20261003-4-check-retry.json). Both runs recorded; no policy or data altered.",
+    "Recorded before-fix/retry evidence (fixture Vite declaration inference failure, browser smoke retries) retained honestly by prior attempts; fixes did not weaken declared settings."
+  ],
+  "reviewerProcessNotes": [
+    "demo:seed verified idempotent against the exact draft-recorded snapshot hash; demo children/listeners: none left running by this reviewer (seed writes data only).",
+    "This reviewer ran the mandated test:auth bootstrap subgroup once (M0.2) and no additional standalone test:auth runs; the 429 arose from the mandated second full check and was handled exactly per the review instruction."
+  ],
+  "verdict": "approved",
+  "verdictBasis": "Fixture/reference product paths byte-identical to the bound revision (only the declared shared rebind batch drifts); demo:seed and fixture suites rerun exit 0 with an unchanged snapshot hash; full check passes after the disclosed 429 -> private-api-only restart -> single retry sequence; both acceptance bullets evidenced by tests that assert real behaviour rather than filenames; baseline missing behaviour is declared as work input and is not used as an evaluator expected output."
+}

@@ -1,0 +1,122 @@
+{
+  "assurance": "bounded",
+  "action": "metadata_rebind",
+  "changedPath": "docs/DECISIONS.md",
+  "reviewer": null,
+  "rebound": [
+    {
+      "taskId": "M0.1",
+      "previousRevision": "23196f8d6ff5063b46fbcbbe64501e1b528442bdb682f262af55b1aaba12ba06",
+      "revision": "c290fd10ed259791a068df244cb5965a812f17e0d85859a2193be2923c12f74a",
+      "status": "review"
+    },
+    {
+      "taskId": "M0.2",
+      "previousRevision": "1955138703fbe362f20edfae1f11f0a68d28c0966d23d889594cff71849ef15c",
+      "revision": "c06104b42ca837a392496f0afa8c2df7bbd29fefdbd8824176083aa9cc65d2ba",
+      "status": "review"
+    },
+    {
+      "taskId": "M0.3",
+      "previousRevision": "a06a5ef2e1b420d937a421bc61b38e6fbd25d523a773f985fd8886d9e90aab27",
+      "revision": "2b75b420cec1bc3d914f49f873d262014d0d1e40ddd823302bec1fac4dbd2948",
+      "status": "review"
+    },
+    {
+      "taskId": "M1.1",
+      "previousRevision": "b22e19b72dd2b92f745b09de8412ae3762ff1d3811618dac4ad210dd78d68137",
+      "revision": "2be0be2bf2e75e16d07d0726faebb8b666876340208fecc75c0bfc7d4d1c374e",
+      "status": "review"
+    },
+    {
+      "taskId": "M1.2",
+      "previousRevision": "019a453f08392a2d51942f95b4d1f11d1a6e4d4e22a17f7cddd1949a2f2e76cb",
+      "revision": "c6a833bc7e09edb26766bdc03682ddf7cf88096383ef8db7d3c91b5db4e2b8ed",
+      "status": "review"
+    },
+    {
+      "taskId": "M1.3",
+      "previousRevision": "709f0c5e5a7e013f49b8ce89f4dcbf614ab92159964d044d8b75a52ae34f6b8f",
+      "revision": "6a05314c8f0b83db3b31747e3b02ae39ecc1028cf71437f797bfdd87fddfcfc6",
+      "status": "review"
+    },
+    {
+      "taskId": "M2.1",
+      "previousRevision": "f78c348a09729674d3c314c84df6d418569498cd23c1cd2a93aeeb3f5e9765df",
+      "revision": "103ae140268c628abf168107c146c8f3d7b082b770d7bce28e73ce04828d8037",
+      "status": "review"
+    },
+    {
+      "taskId": "M2.2",
+      "previousRevision": "ed6d7bd2824c372554ba259524ecaed25c3f49a1e821c15a46aecc9ac726c572",
+      "revision": "9b31275ea7d8d03d764effd9cdf2453072dd63e3984141a7e0657bb011e6dc31",
+      "status": "review"
+    },
+    {
+      "taskId": "M2.3",
+      "previousRevision": "267955936ba596f08b46994a4c2a895c38c03fc18b55f1b3c8fc21d6f32870bb",
+      "revision": "2810605f9d22ec614cb34861c37448690b5fed79386a02744232e86f6b86e2a6",
+      "status": "review"
+    },
+    {
+      "taskId": "M3.1",
+      "previousRevision": "b4df9fd792e9c492063ccf3b84edf5efa218ab52eaaabe803584955ac8bdca39",
+      "revision": "aa6e480617a59fe3d9ed1ed92529be3cc054451b3babe5709903a6c006797417",
+      "status": "review"
+    },
+    {
+      "taskId": "M3.2",
+      "previousRevision": "0cb710a1d9c6a7dc8d4c221e27086dfcda084c51d14e32df6ecea737039d39f3",
+      "revision": "92b67b2ab36f393e18b7ab1393493a36fe29c66349353b34c53bb9ad27716e04",
+      "status": "review"
+    },
+    {
+      "taskId": "M3.3",
+      "previousRevision": "9dd2375da11a692d5c6af8f461fd7ca6dee4025b5e5dffa8fbe291a01308ea23",
+      "revision": "dfb64c664edf6a8973b2f5f2223fa7980339b7f109895f7cfce0d090fc599480",
+      "status": "review"
+    },
+    {
+      "taskId": "M3.4",
+      "previousRevision": "151b6ee0396ae84c4c6681c4bafd3166a4d61f6f4669c563233747432f8b7174",
+      "revision": "20ce2e22255f3561c3b7d9cd16c86e6234014c597541eb638ca4f2c8531dc26e",
+      "status": "review"
+    },
+    {
+      "taskId": "M4.1",
+      "previousRevision": "aabcaf2f253f657e8e7a91e95f149e8fafc2c14d7b4cef2be88eedcc40b49a13",
+      "revision": "017d5d7e6dd31556528449c95ab0206ef397d1f0b1d549602a453e21839061b8",
+      "status": "review"
+    },
+    {
+      "taskId": "M4.2",
+      "previousRevision": "b68715e7613f2bec9ee081ca3a19bd5883fc5fbe58befeb3584f55b2220acc98",
+      "revision": "a36fac2834247274d9ddd18f01922b50c9998efb9b1c3f24657f02c25922fc14",
+      "status": "review"
+    },
+    {
+      "taskId": "M5.1",
+      "previousRevision": "115a2ecfcb6d4cfc18afe9be45a57c73b1bd2296f26139c3adff5b110b179b4a",
+      "revision": "dec49d5cf1a2c2109933628be4a43bb6554a67bc351bc99b5e53a44a60e5771f",
+      "status": "review"
+    },
+    {
+      "taskId": "M5.2",
+      "previousRevision": "67752a2f9d0142d86760918e3229a0ff3f6427bf4798fa321479a951f0b51406",
+      "revision": "f2aa323860a444ef1e91c44b86c953f42aad04a3c43c8df053faf63a71397b41",
+      "status": "blocked"
+    },
+    {
+      "taskId": "M5.3",
+      "previousRevision": "6d4d101d237a07f468e99be5c9c85f2f926b2c390ef4e680fb0e2452df3b129e",
+      "revision": "402a9b5a532784ccabb305c63798f9413945b9a966153ee9628dd9ce1293ef07",
+      "status": "review"
+    },
+    {
+      "taskId": "M6.1",
+      "previousRevision": "021c7268b720c13e282e566db2d6f5bf2a8de336b4dffd5a526e84be0519ae14",
+      "revision": "535a9d948a758f8f41b2fb0a1852be9b168ec1b34fa3356837ed21c8b6a5e101",
+      "status": "review"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "mode": "prepare",
+  "base": "fca3bb7da891a88fc7ca8239253930be512a664f",
+  "fix": "130cf3a9d0dab501f295674166994b41982546a7",
+  "steps": [
+    {
+      "note": "node_modules reused for fca3bb7da891a88fc7ca8239253930be512a664f",
+      "lockSha256": "6e843be6f9f0b5aeacc0853eb03b4a37d29d663349d2bd0b69b3903ea6f6aa32",
+      "dir": "/src/nm/6e843be6f9f0b5aeacc0853eb03b4a37d29d663349d2bd0b69b3903ea6f6aa32"
+    },
+    {
+      "note": "node_modules reused for 130cf3a9d0dab501f295674166994b41982546a7",
+      "lockSha256": "6e843be6f9f0b5aeacc0853eb03b4a37d29d663349d2bd0b69b3903ea6f6aa32",
+      "dir": "/src/nm/6e843be6f9f0b5aeacc0853eb03b4a37d29d663349d2bd0b69b3903ea6f6aa32"
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+{
+    "reviewer":  "a689979b",
+    "lead":  "89140b96",
+    "attempt":  "d1-r4-05",
+    "verdict":  "unknown",
+    "phaseVerdict":  "PRE-EXECUTION UNKNOWN",
+    "acceptance":  "B1.1 remains unaccepted; this is not acceptance, setup, readiness, fixture release, resource release, or authorization for later phases.",
+    "authority":  {
+                      "wave":  "W002",
+                      "task":  "B1.1",
+                      "revision":  "2026-10-05-d1-r4",
+                      "environmentRevision":  "2026-10-05-d1-r4-environment-v4",
+                      "boundBriefSha256":  "13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+                      "base":  "cd3feaf0c467df6c4b9734974722f8471f0da891",
+                      "documentaryHead":  "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+                      "lease":  "correction_required_setup_held",
+                      "approvalDecision":  "Approve"
+                  },
+    "candidateFiles":  {
+                           "scripts/box-verification/environment-host.mjs":  "b74f2ec5953014094f764642fef35eb995fb8a047839f9906d5f5cdac4ef2200",
+                           "scripts/box-verification/environment-manifest.json":  "c45befd226012dd0e5fb22b4ebda0d2df0c410b8e5eba44a28f9804f02f94929",
+                           "scripts/box-verification/fixture-exec-host.mjs":  "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+                           "scripts/box-verification/fixture-exec-runner.mjs":  "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+                           "scripts/box-verification/run-verification.mjs":  "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+                           "scripts/box-verification/fixture-command-manifest.json":  "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+                           "tests/box/verification/environment-readiness.test.ts":  "7ba24f3d14eac696009f305ed010c7e3d7c1ce93a2e945c225f78df9b5934321",
+                           "tests/box/verification/relay-lifecycle.test.ts":  "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
+                       },
+    "workerClaimMatch":  true,
+    "attempt4Delta":  {
+                          "changed":  [
+                                          "scripts/box-verification/environment-host.mjs",
+                                          "scripts/box-verification/environment-manifest.json",
+                                          "tests/box/verification/environment-readiness.test.ts"
+                                      ],
+                          "unchangedLeased":  [
+                                                  "scripts/box-verification/fixture-exec-host.mjs",
+                                                  "scripts/box-verification/fixture-exec-runner.mjs",
+                                                  "scripts/box-verification/run-verification.mjs",
+                                                  "scripts/box-verification/fixture-command-manifest.json",
+                                                  "tests/box/verification/relay-lifecycle.test.ts"
+                                              ],
+                          "broaderAttempt4Map":  {
+                                                     "checked":  21,
+                                                     "unchanged":  18,
+                                                     "changed":  3
+                                                 },
+                          "current14AgainstR8":  {
+                                                     "changed":  8,
+                                                     "unchanged":  6
+                                                 },
+                          "protected16AgainstR3":  {
+                                                       "checked":  16,
+                                                       "mismatches":  0
+                                                   },
+                          "oldStaged22":  {
+                                              "checked":  22,
+                                              "mismatches":  0
+                                          },
+                          "comments":  {
+                                           "environmentHost":  "37 before/37 after",
+                                           "environmentReadiness":  "8 before/8 after",
+                                           "newComments":  0
+                                       },
+                          "importsOrModules":  "unchanged; no added imports/modules/dependencies"
+                      },
+    "manifest":  {
+                     "digest":  "c45befd226012dd0e5fb22b4ebda0d2df0c410b8e5eba44a28f9804f02f94929",
+                     "revision":  "2026-10-05-d1-r4-environment-v4",
+                     "briefDigest":  "sha256:13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf",
+                     "environmentId":  "w002-b11-env-r4-env2",
+                     "sequence":  [
+                                      "node scripts/pnpm.mjs test:box-contracts",
+                                      "node scripts/pnpm.mjs test:box-auth",
+                                      "node scripts/pnpm.mjs check",
+                                      "node scripts/pnpm.mjs build",
+                                      "node scripts/pnpm.mjs test:auth",
+                                      "node scripts/pnpm.mjs test:contracts",
+                                      "node scripts/pnpm.mjs test:planner"
+                                  ],
+                     "exactThreeMounts":  true,
+                     "workspaceBind":  {
+                                           "host":  "C:/Users/shout/AppData/Local/Temp/w002-b11-stage",
+                                           "container":  "/workspace",
+                                           "existing":  true
+                                       },
+                     "linuxDependencies":  {
+                                               "hostRoot":  "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules",
+                                               "containerRoot":  "/workspace/node_modules",
+                                               "mountTarget":  "/stage/node_modules",
+                                               "readOnly":  true,
+                                               "packageCount":  44,
+                                               "fileCount":  1153,
+                                               "closureSha256":  "6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6"
+                                           },
+                     "linuxTooling":  {
+                                          "hostRoot":  "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules",
+                                          "containerRoot":  "/workspace/scripts/tooling/node_modules",
+                                          "mountTarget":  "/stage/scripts/tooling/node_modules",
+                                          "readOnly":  true,
+                                          "packageCount":  1,
+                                          "fileCount":  1077,
+                                          "closureSha256":  "b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6"
+                                      }
+                 },
+    "sourceMap":  {
+                      "artifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/source-map-regeneration.json",
+                      "expectedArtifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/source-map-expected.json",
+                      "expectedCount":  455,
+                      "actualCount":  455,
+                      "setEqual":  true,
+                      "sorted":  true,
+                      "duplicates":  0,
+                      "missing":  [
+
+                                  ],
+                      "extra":  [
+
+                                ],
+                      "digestMismatches":  0,
+                      "manifestRePins":  "environment-host and environment-readiness only; manifest itself remains excluded",
+                      "requiredEntries":  [
+                                              "scripts/pnpm.mjs",
+                                              "scripts/workspace.mjs",
+                                              "scripts/suite.mjs",
+                                              "scripts/process.mjs",
+                                              "scripts/vitest.config.mjs",
+                                              "scripts/boundaries.mjs",
+                                              "scripts/docker.mjs",
+                                              "scripts/synthetic-runtime.mjs",
+                                              "scripts/vite-safety.ts",
+                                              "scripts/tooling/package.json",
+                                              "scripts/tooling/package-lock.json"
+                                          ]
+                  },
+    "dependencyClosure":  {
+                              "hostArtifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/dependency-closures-host.json",
+                              "linuxArtifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/dependency-closures-linux.json",
+                              "host":  {
+                                           "deps":  {
+                                                        "status":  "ok",
+                                                        "packageCount":  44,
+                                                        "fileCount":  1153,
+                                                        "closureSha256":  "6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6"
+                                                    },
+                                           "tooling":  {
+                                                           "status":  "ok",
+                                                           "packageCount":  1,
+                                                           "fileCount":  1077,
+                                                           "closureSha256":  "b5b8b1d27e37f103c97325659c83b8e89a2582fb7a95aa23e1317e224802f0b6"
+                                                       }
+                                       },
+                              "linux":  true,
+                              "canonicalization":  {
+                                                       "packageRoot":  "plan.containerRoot plus slash-joined path relative to plan.hostRoot",
+                                                       "fileRows":  "slash-joined paths",
+                                                       "sort":  "canonical package root",
+                                                       "containerRootRequired":  true
+                                                   }
+                          },
+    "bindRootValidation":  {
+                               "artifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/bind-root-validation.json",
+                               "actualRelativePaths":  {
+                                                           "linuxDependencies":  "node_modules",
+                                                           "linuxTooling":  "scripts/tooling/node_modules"
+                                                       },
+                               "hostOutside":  "dependency_bind_root_mismatch",
+                               "containerMismatch":  "dependency_bind_root_mismatch",
+                               "toolingMismatch":  "dependency_bind_root_mismatch",
+                               "ordering":  "assertWorkspaceDependencyRoot precedes verifyDependencyClosure, collision checks, Docker calls and staging in createResources; runnerCreateArgv applies it before mount construction",
+                               "implementationLimitation":  "bindRelative performs lexical normalized strict-prefix checks for this fixed manifest; it does not normalize dot-dot segments as a general path resolver"
+                           },
+    "runnerArgv":  {
+                       "artifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/runner-argv.json",
+                       "mountCount":  3,
+                       "mounts":  [
+                                      "type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2,target=/stage",
+                                      "type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules,target=/stage/node_modules,readonly",
+                                      "type=bind,source=C:/Users/shout/AppData/Local/Temp/w002-b11-stage/scripts/tooling/node_modules,target=/stage/scripts/tooling/node_modules,readonly"
+                                  ],
+                       "workdir":  "/stage",
+                       "user":  "1000:1000",
+                       "readOnly":  true,
+                       "capDrop":  "ALL",
+                       "network":  "container:w002-b11-ws",
+                       "image":  "sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8"
+                   },
+    "staticGates":  {
+                        "reviewDigestAndPass":  "present in createResources and run-verification",
+                        "harnessAndSourceDigests":  "verified before assertNoCollision/mkdir/staging/Docker calls",
+                        "staging":  "relative, source/destination boundary and realpath checks; symlink/nonregular rejection; additive hash-listed files only",
+                        "relay":  "unchanged digest-bound durable mailbox lifecycle; fresh-state and replay checks unchanged",
+                        "descendants":  "process-group detached Linux execution, bounded SIGTERM/SIGKILL and unconfirmed termination recorded unavailable",
+                        "sequence":  "exact ordered seven commands; a non-pass stops the batch",
+                        "limits":  "r4 image/network/user/read-only/cap/resource/tmpfs contract preserved"
+                    },
+    "linuxVerification":  {
+                              "directory":  "/workspace/.d1-r4-reviewer-review-a689979b-attempt5",
+                              "parityArtifact":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/linux-parity.json",
+                              "parity":  {
+                                             "checked":  455,
+                                             "bad":  [
+
+                                                     ]
+                                         },
+                              "command":  "timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs",
+                              "artifactDir":  ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5",
+                              "runsObserved":  1,
+                              "stdoutBytes":  1744,
+                              "stderrBytes":  0,
+                              "testFiles":  "3 passed (3)",
+                              "tests":  "65 passed (65)",
+                              "vitestDurationSeconds":  21.07,
+                              "pid":  23520,
+                              "pgid":  23520,
+                              "observedPids":  [
+                                                   23520,
+                                                   23524,
+                                                   23575
+                                               ],
+                              "survivors":  [
+
+                                            ],
+                              "shellExit":  "unavailable_after_completed_run",
+                              "wrapperDurationNs":  "unavailable",
+                              "limitation":  "Shell operator precedence backgrounded the setup-and-command list, so the required command ran once and produced a complete pass summary, but its shell exit status and exact wrapper duration were not durably captured. A second run was not performed because the dispatch required one run."
+                          },
+    "resourceSafety":  {
+                           "dockerCreateOrStart":  false,
+                           "createResources":  false,
+                           "setupReadinessLiveFixtures":  false,
+                           "newEnv2ContainersObserved":  false,
+                           "dbMailboxMutation":  false,
+                           "acceptanceCommands":  false,
+                           "gitMutation":  false,
+                           "credentialsOrRuntime":  false,
+                           "accidentalAttempt4Artifact":  "left untouched and not consumed"
+                       },
+    "limitations":  [
+                        "PRE-EXECUTION UNKNOWN solely because the one permitted bounded Vitest run lacked a durable shell exit status and exact wrapper duration; all other recomputed byte/source/closure/mount/static gates passed.",
+                        "The wrapper defect is reviewer-process evidence loss, not an observed candidate defect. No second run was performed under the explicit one-run requirement.",
+                        "Model remains unobserved/unpinned.",
+                        "assertStageableRel remains limited to the fixed reviewed map; bindRelative is lexical and does not normalize dot-dot path segments, though the fixed manifest roots are correct."
+                    ],
+    "evidence":  [
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/source-map-regeneration.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/source-map-expected.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/source-map-filelist.txt",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/dependency-closures-host.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/dependency-closures-linux.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/bind-root-validation.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/runner-argv.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/manifest-contract.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/linux-parity.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.command",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.stdout",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.stderr",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.pid",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.pgid",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.pids-live",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.pids-after",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.run-record.json",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.exit-observation.txt",
+                     ".execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt5/.review-a689979b-attempt5/vitest-attempt5.duration-observation.txt"
+                 ]
+}

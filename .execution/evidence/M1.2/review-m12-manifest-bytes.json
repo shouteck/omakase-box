@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Users\\shout\\AppData\\Local\\Temp\\opencode\\verify-manifest.mjs",
+    ".execution/evidence/M1.2/revision-019a453f08392a2d51942f95b4d1f11d1a6e4d4e22a17f7cddd1949a2f2e76cb.json"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T21:42:19.080Z",
+  "finishedAt": "2026-10-03T21:42:19.161Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "manifest=.execution/evidence/M1.2/revision-019a453f08392a2d51942f95b4d1f11d1a6e4d4e22a17f7cddd1949a2f2e76cb.json files=72 verified_ok=72 problems=0\n"
+}

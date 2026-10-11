@@ -1,0 +1,44 @@
+# W002-CTO-R1: restore verification and finish the Box foundation
+
+Revision: 2026-10-05-cto-r1. Recovery task authorised by the CEO's direct request in Codex chat 01a0f9c5-6bae-7e11-ad83-eae338485a02: "Im stopping the devin kitchen abruptly, im leaving it up to you to fix it for me so that we are right behind a feature." This is a bounded repair under that request, not a claim that the CEO replied Approve to a briefing they had not seen. The stopped Devin authority is suspended; no new product feature is authorised.
+
+## Outcome
+
+Repair command/result supervision, verify the current B1.1 foundation against every existing acceptance obligation, and return to one concise feature briefing. If an actual unleased product defect or unavailable resource blocks that route, preserve the work and report the specific next decision rather than silently expanding scope.
+
+## Baseline and stop
+
+The preserved source baseline is evidence/B1.1/cto-repair-20261005/stop-snapshot.json (456 copied source/manifest files). Original state/wave/approval and attempt5 evidence, including invalid attempt5 correction JSON, are preserved under prior-records. Attempt5 independently matches the stopped source, source map, dependencies and mounts; its UNKNOWN is due to missing shell exit/duration after accidental backgrounding, not a demonstrated Box failure. Preserve that verdict as UNKNOWN.
+
+The direct CEO stop is approvals/W002-hold-cto-repair-20261005.json. Host process metadata sampled no matching W002 command; docker top w002-b11-ws showed only sleep. Neither sample proves unavailable agent termination. Old Devin execution authority remains suspended; no old agent acknowledgement, queue replay or repeated handle search is required. Acquire the new sole repair lease only after current hashes/process/resource/mutation reconciliation; a real competing writer or ambiguous mutation blocks the affected action.
+
+## Team and runtime
+
+Use the current Codex session as sole root CTO, one named implementation worker and one distinct independent reviewer through actual collaboration tools. Root directly dispatches both sequentially for this recovery; there is no nested lead or repeated probe agent. Platform/assurance station responsibilities remain logical roles; do not invent extra agents. This is the documented pstack-method Codex fallback, not native Cursor pstack or a verified Devin UI fix. Keep current model settings and subscription resources; no model/profile/global/plugin changes or paid API/cloud work.
+
+Record actual spawn versus follow-up/wait operations with the tool-provided agent identity. One receipt identifies a real actor across attempts. Repeated status reads are not new agents or progress. Root provides concise Progress / Blocker / Next updates and persists current state at meaningful boundaries. No arbitrary overall deadline or blanket correction count.
+
+## Permitted repair
+
+Worker may repair only the existing eight r4 harness/test paths named in W002-D1-r4.md and refreeze their existing source/environment manifests. The immediate correction is in scripts/box-verification/run-verification.mjs: unconfirmed descendant completion must prevent PASS even if parent exit is zero. Complete stdout/stderr must be drained and durably captured before terminal success, with literal exit and duration retained. Add meaningful regressions for zero-exit/unaccounted descendants, output after parent exit, full output beyond the former summary cap and bounded incomplete drainage in the existing tests/box/verification/relay-lifecycle.test.ts; preserve original assertions and expected behavior. Existing Node core streaming/file APIs are permitted for that narrow correction; no new third-party dependency, source module/framework, application/migration edit or broader assertion change.
+
+Refreeze the changed supervisor/test rows in environment-manifest.json and independently recompute the complete current source map, manifest SHA and candidate map. A fresh independent PASS must carry manifestDigest, environmentId, candidateFiles and verdict:'pass' as consumed by existing gates. Keep the r4 environment revision/brief digest as the inherited exact environment contract; the separate R1 authority and review explicitly bind this repair overlay and suspend old Devin. Do not pretend the historical r4 environment contract alone releases execution under the CEO stop. Preserve every old review, including attempt5 UNKNOWN.
+
+Root owns kitchen instruction/governance repairs, stop/lease/progress records and independent review bookkeeping. Worker owns source corrections and its receipts. Reviewer never repairs the candidate or reviews their own implementation.
+
+Use structural JSON serialization for new receipts. Do not repair old immutable malformed JSON in place: preserve its original bytes and record a superseding valid observation. A green test summary without a captured literal exit/completion remains incomplete evidence.
+
+## Verification route
+
+1. Worker corrects the supervisor and performs focused checks in a fresh bounded review directory inside the existing approved Linux workspace. Project candidate code never runs on the Windows host. Host core-tool input/hash copies and the previously designed byte-reviewed Docker/environment adapter are the only host execution route.
+2. Reviewer binds the exact changed candidate, recomputes affected source/harness/environment gates and reuses current unchanged evidence. Run the existing three-file narrow selection with reliable foreground capture of stdout/stderr, exit, duration and owned descendants. Use existing scripts/process.mjs where suitable. Shell '&' must not accidentally background a compound command list. A corrected evidence collector justifies an affected read-only rerun without an unrelated source edit. Do not call the prior UNKNOWN a PASS.
+3. After current independent pre-execution PASS, root releases the original reviewed setup/readiness contract. The eight original mailbox requests remain unknown and are never replayed. Use fresh exclusive mailbox and synthetic Box DB namespaces; preserve all old data/stages.
+4. Retain the original two named cached-image resources, w002-b11-linux-r4-env2 and w002-b11-box-db-r4-env2, their exact pinned image/network/user/read-only/cap/resource/tmpfs settings and resource-count ceiling. Setup has not been consumed according to current records; independently verify that before use. No extra image download, install, additional container, stop/recreate/delete, cleanup, volume removal, old DB reset, private credential read, egress or public upload is authorised. Current headroom, expected identities and real browser/service/migration/relay readiness are gates. Use exact public .env.example only under its existing declared fixture permission.
+5. Reviewer runs the complete original seven-command acceptance batch on the final frozen candidate and independently ready environment: node scripts/pnpm.mjs test:box-contracts, test:box-auth, check, build, test:auth, test:contracts, test:planner. Preserve sequence, eight-minute command limits, narrow readiness/setup bounds and owned-descendant drain limits. A failed gate stops the affected phase; safe informative in-scope corrections reopen affected review and then the current final batch. No duplicate worker full batch is required.
+6. Final independent review covers every original B1.1 requirement, fresh migrations/transactions, role/version/token negatives, reconstructed support.ts and actual G1-G5 Hold/START/resumption evidence. Root accepts only current passing evidence; governance-only START reconciliation cannot launch another feature. Reviewed scoped saving uses standing private origin/master authority only after no hold blocks the scoped checkpoint, independent instruction review and exact staged/outgoing/privacy checks. Unfinished work is never blanket-staged.
+
+The CTO task request supplies repair authority, not new-feature, model/spending, cleanup or publication authority. Command timeout, lost output, unconfirmed descendants, denied permissions, identity drift, OOM, ambiguous prior mutations or a competing writer block the affected phase. No historical total-time cap or arbitrary one-rerun dispatch wording is reintroduced.
+
+## Return to the product
+
+B1.1 is a foundation, not the portable delegation feature. After exact acceptance, prepare the D-series next-wave brief under PLAN.md and DELEGATION-MAP.md. The nearest user-visible target is preparing a versioned Box from a direct request/pasted issue and approving its completion agreement; D1.1 first reconciles supported fixture/reuse/comparison scope and D1.2 implements that journey. Keep that new feature pending the CEO's ordinary approval. If this recovery cannot reach acceptance, present its actual blocker rather than skipping B1.1 or building another recovery framework.

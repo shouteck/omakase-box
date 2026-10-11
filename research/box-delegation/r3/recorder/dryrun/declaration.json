@@ -1,0 +1,7 @@
+{
+  "runId": "kitchen-r3-fix-138ae38b",
+  "commands": [
+    { "name": "fixture-fail", "argv": ["node", "/work/dryrun/fixture-fail.mjs"], "cwd": "/work", "timeoutMs": 30000 },
+    { "name": "fixture-pass", "argv": ["node", "/work/dryrun/fixture-pass.mjs"], "cwd": "/work", "timeoutMs": 30000 }
+  ]
+}

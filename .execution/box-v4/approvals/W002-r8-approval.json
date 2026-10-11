@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "human_team_replacement_harness_only_approval",
+  "waveId": "W002",
+  "taskIds": ["B1.1"],
+  "revision": "2026-10-05-r8-team-replacement",
+  "brief": ".execution/box-v4/briefings/W002-r8.md",
+  "briefDigest": "sha256:7fe770df0d3cfbb176ee5113283bb7e20678bce79d887355a3859790aa4f752f",
+  "inheritedBriefs": {
+    ".execution/box-v4/briefings/W002-r7.md": "sha256:bbf8e4c0533d9cbad9b715b7b5dc4079a27b9e2f09b66877a5f4ec9d2170057b",
+    ".execution/box-v4/briefings/W002-r6.md": "sha256:cdf07ae76424d7288fc582173ddd547e4844f566616e0af4ea1392b619c6f2f2",
+    ".execution/box-v4/briefings/W002-r5.md": "sha256:4f45b5bf2861ff05bf485778c30b9a4e0d303fc820c04691cbd3b08b20c3919e",
+    ".execution/box-v4/briefings/W002-r4.md": "sha256:f40a0d3b7302540a73cdbb923b0ae26647cef74450bfaff5999a7aba40d19721"
+  },
+  "decision": "Approve",
+  "message": "Approve",
+  "approver": "CEO (human operator)",
+  "evidenceSource": "Actual user reply immediately following the W002-r8 proposal in this conversation.",
+  "recordedAtUtc": "2026-10-04T19:55:47.851Z",
+  "timestampMeaning": "Observed host recording clock, not human-message timestamp. Supplied session date 2026-10-05 differs; discrepancy retained.",
+  "approvedScope": "Fresh sequential Platform lead -> one sole harness worker -> distinct reviewer, depth<=2. First lead dispatch read-only with no children; root candidate lease only after verified Free routing and ownership/source/stage checks. Same unused r7 correction on eight existing paths, independent Linux harness review only; no setup/readiness/acceptance release even on PASS.",
+  "limits": {"unusedR7CorrectionLimit": 1, "activeWorkerMinutes": 20, "activeReviewerMinutes": 10, "priorConservativeActiveMinutes": 134, "totalActiveMinuteLimit": 180, "remainingMaximumMinutesBeforeDispatch": 46, "environmentAttemptsUsed": 0, "historicalProductRetriesUsed": 1},
+  "modelConfirmation": ".execution/box-v4/evidence/B1.1/verification-recovery/model-confirmation-r8.json",
+  "excluded": ["application/original assertion changes", "new source files or dependencies", "environment creation/startup/readiness/acceptance batch", "future stage/mailbox population", "host candidate execution", "live API/DB actions", "cleanup/deletion/reset", "old queue replay", "downloads/installs", "profile/model/global/security setting changes", "paid/cloud action", "parallel fan-out or silent flattening", "PR/deployment/later wave"]
+}

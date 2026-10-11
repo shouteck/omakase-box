@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "supervisory_checkpoint",
+  "recordedAtUtc": "2026-10-05T02:59:20.519967+00:00",
+  "repairId": "W002-CTO-R1",
+  "progress": [
+    "CurrentpreexecutionPASS independent72tests andfull131closureWindowsLinuxparity",
+    "Exactlytwoapprovedresources created exit0/5.046s",
+    "Source455staged andexactreviewmetadata copied",
+    "Actualnamedrunner22aliases/resolution passed exit0/52.453s"
+  ],
+  "currentPhase": "Serializedfixturebuilds andactualbrowser/services/DBSELECT1/source/resource/metadata readiness",
+  "resourcesCreated": 2,
+  "setupStartUtc": "2026-10-05T02:54:18.5429704Z",
+  "setupActiveMinuteLimit": 20,
+  "relayStarted": false,
+  "acceptanceReleased": false,
+  "oldDevinSuspended": true,
+  "newFeatureApproved": false
+}

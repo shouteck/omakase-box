@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "kind": "cto_worker_execution_checkpoint",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "worker": "box-worker/483988b4",
+  "status": "focused_linux_work_observed_worker_not_returned",
+  "observation": "New devin-h1-worker/base preserves all3primary source inputs and preworker-hashes.json exists. docker top w002-b11-ws observed bounded timeout/Node descendants, consistent with focused workspace execution. This process sample is not a test verdict.",
+  "stageOverlayReleased": false,
+  "acceptanceReleased": false,
+  "existingRelay": "Preserve/reuse only after reviewer current identity/lease/lifecycle/source/mutation reconciliation; no foreign OS session adoption, duplicate poller or replay authorized.",
+  "saving": "Private origin/master verified; no staging/commit/push because current product acceptance remains pending.",
+  "next": "Collect worker durable literal results, then resume reviewer27f919af for exact candidate and gate assessment.",
+  "productAccepted": false,
+  "newFeatureApproved": false
+}

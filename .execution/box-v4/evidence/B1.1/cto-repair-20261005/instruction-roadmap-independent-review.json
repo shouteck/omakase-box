@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_kitchen_instruction_roadmap_review",
+  "reviewer": "Codex /root/recovery_assurance",
+  "recordedAtUtc": "2026-10-05T02:44:52.688022+00:00",
+  "verdict": "pass",
+  "candidateFiles": {
+    "AGENTS.md": "25971779ffadf0744b4fc4a2cdc3487634152228b316c1c1f8fd419b82da7cfc",
+    "START.md": "d0047b917200089065d7352846ad30c8e25291a188902fcf99ea0d10026f5c99",
+    "PLAN.md": "978796fb8db3e345bf2fb7858053e7ab3214fec3c1740f8da1ff8a2dcefa6c36",
+    "README.md": "801a39a52d341a6bab994ed66bf84f386f8a6b144ed0e41804a3c76aef50aebf",
+    ".cursor/rules/box-kitchen.mdc": "7b130177c9ad851430172e26edac3c0d9cc491002a3efc7d85ecee9522ec2915",
+    ".devin/rules/box-kitchen.md": "1e50731f24390323874cdf005a0014ea71401dc83d2c26923c533ce3598181a1",
+    ".execution/box-v4/PROTOCOL.md": "9a406fba87797fcb0987fe8b3d7cb017f6f6cb6c75e7491355c649857b08043d",
+    "docs/box-v4/ARCHITECTURE.md": "f8f0b0a3d4285f63fb00a49a2bba18d624751d81d6cfcc244ba42c8e573cd9e9",
+    "docs/box-v4/KITCHEN.md": "a8fb4e744f988634fa50e09b4c64fea7b1b7e45fa2fc8648276bcf63bab4ea9d",
+    "docs/box-v4/RESEARCH.md": "f366d98cf1244a7846e41d850de3fe2720aa0135416c8e917ec1853471fcda8e",
+    "docs/box-v4/SPEC.md": "c8240cfd2779c63cde0361281c4db1f899775788a65d21c61625c9b2e8bf6306",
+    "docs/box-v4/STANDING_ORDERS.md": "364caebfa04d46540acae3e5bfea8949685fb25be4836f747316c03f882d333c",
+    "templates/box-v4/briefing.md": "d258f9900e11009388658bce367eb2e629eb004e4c9449dac1939a9409be31ec",
+    "docs/box-v4/DELEGATION-MAP.md": "5981aaaaa7d755bec1bd6c4faa3e87a508280855bd5fdcc6f1fc75b5816d6495",
+    "docs/box-v4/delegation/VALIDATION-PLAN.md": "91096e4893bd010d3c0c5e282f4917bbdc5cf36fda5bbbedb5b893e7124343fe",
+    "tasks/box-delegation-task-graph.json": "8514c28d5d191cec4c92beb969a0d4a8e56e18b4c2946f851085a4b312cd1be2",
+    ".execution/box-v4/handoffs/delegation-focus-20261005.md": "06a5e0c837cbab8110309179c0db2dca04b77d27c747ff2269e69b6de7c513c5",
+    ".execution/box-v4/handoffs/cto-repair-20261005.md": "d3b19674adef5a5622200fb722fbc109840ff2e57a2c1f58b1d7b139c52dc6e2"
+  },
+  "scope": "Only enumerated18 instructions/roadmap/handoffs/graph; excludes mutable execution state/wave and unfinished product. Checkpoint remains subject to exact staged privacy/history/hold rules.",
+  "observations": [
+    "Portable delegation core, optional conversation, later marketplace/privacy and buyer-effort comparison coherent",
+    "Eight D units retain externally accepted B1.1 and explicit future wave approval; no early D execution",
+    "START/AGENTS name separate direct-request R1 and preserve old Devin suspension",
+    "Historical r4 handoff active-root directions explicitly superseded; cannot reopen old writer",
+    "CTO handoff distinguishes65UNKNOWN history from68supervisorPASS/fullsetupFAIL",
+    "KITCHEN correctly distinguishes host Docker CLI timeout from remote child completion; requires durable remote result and owned-process reconciliation",
+    "No models, installs, cleanup, outreach, new feature or acceptance granted by documentation",
+    "Standing private origin/master exact-reviewed checkpoint policy preserved"
+  ],
+  "mechanicalChecks": {
+    "graphUnits": 8,
+    "approvalFlags": true,
+    "dependencies": "valid",
+    "requiredReadPaths": "exist",
+    "localLinksChecked": 34,
+    "brokenLinks": [],
+    "symbolicTemplatePlaceholderExcluded": "relative/path/to/full-briefing.md",
+    "whitespace": "Tracked instructions diff --check passes with command-scoped cr-at-eol; default CRLF warnings are line-ending noise, no global setting changed"
+  },
+  "exclusions": [
+    "Active state.json/waves/W002.json changing during repair; require exact scoped checkpoint review",
+    "New raw recovery evidence/source archives require separate outgoing/privacy selection",
+    "Unfinished B1.1 code not accepted by this review"
+  ],
+  "operations": "Read instructions/diffs and hash computation; only own review receipt written; no product/test/Docker/Git mutation"
+}

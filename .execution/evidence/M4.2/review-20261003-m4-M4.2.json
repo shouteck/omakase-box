@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "reviewer": "opencode-reviewer-subagent-m4-20261003",
+  "reviewedAt": "2026-10-04",
+  "role": "distinct independent reviewer; did not implement M4.1/M4.2; read docs/SECURITY.md (approved-only release, image-provenance paragraphs), docs/COMPOSITION.md (composed runner and package rules), docs/ARCHITECTURE.md (data and hashes), task cards, drafts, milestones/M4.md and evidence before judging; challenged acceptance and re-ran decisive checks on the current tree",
+  "revisionBinding": {
+    "manifest": ".execution/evidence/M4.2/revision-1c2f0bacdcefb8edcee27d39e53e7633151c79817b058c09e52d9af64850fc60.json",
+    "entries": 61,
+    "digestRecomputedMatchesState": true,
+    "manifestDigestRecomputedFromContents": "1c2f0bacdcefb8edcee27d39e53e7633151c79817b058c09e52d9af64850fc60 (matches state.json revision.digest)",
+    "taskDefinitionSha256MatchesCurrentTaskGraph": true,
+    "recomputationMethod": "independent PowerShell recompute of SHA-256 and byte size for every one of the 61 manifest entries against the working tree, plus a disk walk of all four write-path roots to enumerate unbound in-scope files, executed by this reviewer",
+    "mismatches": [
+      { "path": "docs/DECISIONS.md", "classification": "shared", "expected": false, "detail": "FINDING per zero-drift expectation: this shared decisions log (26,488 -> 28,711 bytes) and scripts/execution.mjs (7,503 -> 7,633) changed AFTER this manifest was recorded (manifest mtime 2026-10-03T22:21; M5.3's later manifest at 23:57 binds the current bytes). Same coordinator batch that disclosed the M4.1 drift. Neither file is M4.2 product content and neither is exercised by compiler/security behaviour; all M4.2 product paths are byte-identical." }
+    ],
+    "productPathMismatch": false,
+    "productPathsByteIdentical": true,
+    "missingFiles": 0,
+    "diskFilesUnderWritePathsNotInManifest": [
+      "templates/workspaces/image/.dockerignore"
+    ],
+    "unboundDotfileGap": {
+      "detail": "FINDING (minor): the revision-manifest enumerator's matchesGlob('templates/workspaces/**') does not match dotfiles under '**' (verified: node:path matchesGlob returns false for this exact pair, true for image/Dockerfile), so templates/workspaces/image/.dockerignore is not hash-bound in the M4.2 revision manifest even though it is part of the image build context and is bound in the other direction by the audit: public-image.mjs inventories the exact 8-file context (rejecting links/unexpected files) and computes sourceContextHash over its actual bytes, which is pinned in templates/workspaces/public-image-profile.ts (in the manifest) and asserted against the current context in the release-content rerun below. Recommend the coordinator add an explicit shared/integration path entry or fix dotfile enumeration before the next revision.",
+      "severity": "minor_manifest_coverage",
+      "compensatingControl": "sourceContextHash binding verified today in review-20261003-1-release-content.json"
+    },
+    "classification": "shared_drift_after_recording_no_product_drift"
+  },
+  "acceptanceJudgements": [
+    {
+      "bullet": "Two different private systems with identical approved inputs produce byte-identical packages.",
+      "verdict": "pass",
+      "evidence": "approved-only.test.ts compiles identical approved content twice (and with reversed asset order) to identical byte buffers; Python standard-library zipfile independently validates CRCs, sorted namelist, 1980-01-01 timestamps, ZIP_STORED and 0644 regular-file permissions without extraction; live-fixture.ts compiles the same approved record twice on real synthetic PostgreSQL (replay.sha256 === artifact.sha256); zip.ts is a hand-written stored-format writer with lexicographic ordering, fixed date (33) and fixed permissions, so output depends only on approved input bytes."
+    },
+    {
+      "bullet": "Package excludes private mappings/canaries/history/cache/source maps; compiler has no arbitrary private-path or model access.",
+      "verdict": "pass",
+      "evidence": "compiler safeAssetPath rejects release/-reserved and private/.env/.map/.log paths and path segments .git/.github/.runtime/node_modules/private/secrets/cache/.cache/coverage/logs/dist; staging releasePathAllowed rejects the same plus traversal/drive paths; tests reject signed packages containing ../escape, .git/config, .env, private/secret.txt, node_modules/tool.js, src/file.js.map, case-colliding config/CON.json, duplicate/extra assets and an added symlink field; the compiler module imports only node:crypto plus contracts/templates modules and packages/compiler/{index,zip,workspace,approved-workspace}.ts contain no fs/http/net/pg/path capability - input is data only, and the test proves supplied fetchAssets/repositoryRoot/privatePrompt capabilities are rejected without accessor invocation; PRIVATE_CANARY is asserted absent from package bytes; git history cannot enter because only enumerated approved assets are packaged. scripts/boundaries.mjs (rerun today inside pnpm check by the coordinator sweep and part of the mandated check) enforces the external import boundary."
+    },
+    {
+      "bullet": "Execution image layers/history contain no private files/canaries; images are built exclusively from public/vetted inputs.",
+      "verdict": "pass",
+      "evidence": "Re-ran today by this reviewer: tests/security/release-content/image.test.ts 2/2 (35.5s) - (a) the independently authored scanner-case fixture detects compressed/raw historical canaries, chunk-boundary canaries, 5 private-path kinds and forged image IDs without extraction; (b) the real audit re-verified the pinned image sha256:eb4a84ec... end-to-end: exact 8-file public-only context inventory with symlink/unknown-file rejection, sourceContextHash === PUBLIC_IMAGE_PROFILE.sourceContextHash, docker inspect user=pwuser/amd64, network-none/read-only/cap-drop-ALL/no-new-privileges tooling smoke with candidateExecuted=false, history regex rejecting private provenance, and a full OCI-chain layer scan (config digest, layer manifest binding, compressed layer digests, uncompressed diff-IDs) over all 16 saved layers (31,066 files per the bound report) with empty violations. Vendor public-base provenance remains an honestly recorded trust assumption (actualVmValidation=unverified), not silently upgraded."
+    },
+    {
+      "bullet": "Single-unit, connected full-stack and policy packages compile; schema/toolchain collisions and dangling interfaces fail; changing one unit/interface invalidates whole-package approval.",
+      "verdict": "pass",
+      "evidence": "workspace.test.ts prepares single-unit, full-stack (frontend+api+policy with an owned, unsolved typed client path) and policy workspaces and rejects unsupported edit responsibility, missing policy choices, injected command fields, interface/tooling collisions and altered/missing/duplicated tooling or interface schema bytes via verifyVettedWorkspace; dangling interfaces fail at the contract schema level (tests/contracts/composition.test.ts dangling_interface plus 14 other composition rejections, 144/144 green today in coordinator evidence) and preparePublicWorkspace throws on unknown participants; changing one unit/title changes the whole prepared contractHash and every approval hash binding (approved-only.test.ts re-signed inconsistent bindings rejected; store/approved-store drift rejection), so one unit/interface change invalidates the whole-package approval; compileApprovedWorkspace additionally requires the exact registered public image digest and an authentic approved envelope (live-fixture proves unvetted template/image contracts fail compilation with invalid_approved_workspace)."
+    }
+  ],
+  "reruns": [
+    {
+      "command": "node scripts/evidence.mjs M4.2 review-20261003-1-compiler scripts/pnpm.mjs test:compiler",
+      "evidence": ".execution/evidence/M4.2/review-20261003-1-compiler.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "9 files / 60 tests passed (expectation 60 met), including the real browser approved-workspace download (2.8s), real browser approval review (3.8s) and real synthetic PostgreSQL approved-store persistence (3.3s); runtime up, migrations re-applied idempotently by the reviewer first"
+    },
+    {
+      "command": "node scripts/evidence.mjs M4.2 review-20261003-1-release-content scripts/pnpm.mjs test:security -- --suite release-content",
+      "evidence": ".execution/evidence/M4.2/review-20261003-1-release-content.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "1 file / 2 tests passed; the real public-image layer/history audit re-ran against the pinned image in 35.5s with violations empty and tooling node=24.11.0/playwright=1.63.0"
+    },
+    {
+      "command": "(shared, not re-run per instructions) coordinator same-day evidence",
+      "evidence": ".execution/evidence/M4.2/shared-bootstrap-final.json, shared-contracts-final.json, shared-planner-final.json, shared-e2e-intent-final.json, shared-auth-final.json + shared-auth-final2.json, shared-runtime-separation-final.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "bootstrap 14/14, contracts 144/144, planner 51/51, intent e2e 6/6, runtime separation green; auth 40/40 after one disclosed rate-policy restart of only the identified synthetic private-api; reviewer did not rerun login-heavy suites"
+    }
+  ],
+  "retainedFailures": [
+    { "file": ".execution/evidence/M4.2/shared-auth-final.json", "detail": "39/40: tests/auth/persistence/auth-live.test.ts received 429 from the existing login rate policy after repeated suites; superseded by shared-auth-final2.json (40/40) after restarting only the identified synthetic private-api; disclosed, no policy/data change" },
+    { "file": ".execution/evidence/M4.2/runtime-rebuild-final-argerror.json", "detail": "retained evidence-wrapper argument error during the coordinator's runtime rebuild; superseded by the successful run via the same wrapper semantics" }
+  ],
+  "limitations": "Development-feedback tooling inside the package is explicitly bounded and non-authoritative; authoritative acceptance still requires the dedicated-linux-kvm-fresh-vm supervisor (M5). The public image digest binds today's locally built/pinned image; vendor base-image provenance is a recorded trust assumption and real-VM validation remains unverified. The image audit scans known synthetic canary bytes and private-path patterns; it is not a proof that no prose conceals proprietary meaning. Independent review of this revision is now recorded by this reviewer; milestone completion still requires coordinator acceptance, and draft/state bookkeeping (draft still names revision 3c9fe58a as current) belongs to the coordinator.",
+  "verdict": "approved"
+}

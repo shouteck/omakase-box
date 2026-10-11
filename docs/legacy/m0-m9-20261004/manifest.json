@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-10-04",
+  "purpose": "Immutable documentation and legacy execution snapshot before Box V4 governance rewrite; not a delivery claim.",
+  "files": [
+    {
+      "path": "START.md",
+      "sha256": "dc82566d7ac7eb6806d33557d09ebe88e2ffac5d653cd731bab5dac59b1d7fe9"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "034958d722865b6ce1460fb73af5e7a8b7b72a43f60721cdabf3683764ecdd1e"
+    },
+    {
+      "path": "PLAN.md",
+      "sha256": "66c23388e1ab9cf1ca0c62c01414b964446ef8e3dd743cc79becfc48c8568447"
+    },
+    {
+      "path": "README.md",
+      "sha256": "bf502a1b7dde8715f998fa7998d303b3196487d171aadf3f1335f63509dfdac9"
+    },
+    {
+      "path": "docs/SPEC.md",
+      "sha256": "6055e2dd4113f93f611178fc00e364afad8990cce6467807cced9d8581371720"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "379150d63561acef668cd392dad12e003d4e1574f3a5e6735221635d32bdabe2"
+    },
+    {
+      "path": "docs/COMPOSITION.md",
+      "sha256": "e7e5f063243f3dbcc116c4a19848cefc2675f6d1031a95f15a3f0eb10d42581b"
+    },
+    {
+      "path": "docs/SECURITY.md",
+      "sha256": "894f4a1f4564523055d7530492e634435e8321471456596982c917036843a2cb"
+    },
+    {
+      "path": "docs/EVALUATION.md",
+      "sha256": "f410f8bd3b790c0eecd1ee295a3d331ed58f79018256fcd91a0699221ac2c8cc"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "sha256": "f306bda007b773c575aa1edade8d256a17167b8061387c2e7eb5b86c0f7926cb"
+    },
+    {
+      "path": "tasks/task-graph.json",
+      "sha256": "eb6dc7dee7fce346de1ab237188a2fdd14b99689c8b6f79ff3326b8db6b15101"
+    },
+    {
+      "path": ".execution/state.json",
+      "sha256": "80a58bbef674c24854957f83c3acd2fb263e76f3e89f18f18e9944a094a3b6b3"
+    },
+    {
+      "path": ".execution/PROTOCOL.md",
+      "sha256": "0bc3460e0665ba1189c71ad16015de4959bff709463b6e7e7831ad8c6498efe5"
+    },
+    {
+      "path": "templates/dispatch.md",
+      "sha256": "dd0962ada3deb2dfd4a656c0fa10dcb92f0b28392b3d42ca1f708e0700f5d371"
+    }
+  ]
+}

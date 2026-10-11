@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "<ID>",
+  "revision": "<digest>",
+  "checks": [
+    {
+      "command": "<actually run>",
+      "cwd": "<project root>",
+      "exitCode": null,
+      "observedResult": null,
+      "artifact": "<relative path>",
+      "status": "not_run"
+    }
+  ],
+  "worker": "<identity>",
+  "reviewer": null,
+  "reviewMode": null,
+  "limitations": []
+}

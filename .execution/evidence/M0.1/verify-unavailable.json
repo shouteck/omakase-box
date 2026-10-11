@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "verify:mvp"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T02:56:39.242Z",
+  "finishedAt": "2026-10-02T02:56:42.375Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "\n> private-task-mvp@0.0.0 verify:mvp C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\n> node scripts/verify-mvp.mjs\n\n{\n  \"schemaVersion\": 1,\n  \"assurance\": \"unverified\",\n  \"software\": \"incomplete\",\n  \"mandatoryGates\": \"unavailable\",\n  \"reason\": \"Foundation only: required product, isolated-runner, composition and security gates are not yet implemented.\",\n  \"realIsolatedRunner\": \"unverified\",\n  \"livePrivateModel\": \"unverified\",\n  \"independentReview\": \"unverified\",\n  \"humanPilot\": \"not_conducted\"\n}\n ELIFECYCLE  Command failed with exit code 2.\n"
+}

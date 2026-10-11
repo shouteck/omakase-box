@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_current_environment_ready_r2_h1_attempt3",
+  "status": "ready",
+  "reviewer": "Devin reviewer27f919af (distinct; not implementer worker483988b4)",
+  "environmentId": "w002-b11-env-r4-env2",
+  "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "recordedAtUtc": "2026-10-05T05:07:24.283Z",
+  "currentReview": "independent-review-r2-h1-attempt3-final.json",
+  "independentNarrowProof": "devin-h1-review/reviewer-narrow-r2h1a3/receipt.json (74/74 exit0, no real 305s in tests)",
+  "currentProof": {
+    "stagePostOverlayParity": "456/456 exact sha256 at /stage vs embedded attempt3 candidate map; /stage/.cto-r1-evidence/environment-manifest.json == 61f21cc7 (verified 05:07Z)",
+    "containerIdentities": {
+      "runner": "9161a456732e470d9fea5a5aeb79849f47508644cda8fe2eb6ac03a9747453c2 up OOM=false restarts=0, only sleep infinity",
+      "boxDb": "da55c050fffba59d0b1c3bef8d8e920e598c46b69df4729f8c727e00396f6d86 up OOM=false restarts=0"
+    },
+    "mounts": "same original three mounts unchanged; dependency aliases unchanged",
+    "closureBrowserServiceReuse": "unchanged service-artifact-comparison/closure/browser evidence reused — inputs reconciled current (stage parity, resource IDs, no OOM, idle runner, zero mailbox pending); no helper/browser replay",
+    "relay": {
+      "pid": 201644,
+      "alive": true,
+      "lifecycle": "ready",
+      "leaseExpires": "2026-10-05T06:11:46.138Z",
+      "leaseRemainingMin": 65,
+      "requests": 34,
+      "responses": 34,
+      "allAnswered": true,
+      "old8Untouched": true,
+      "solePoller": true
+    },
+    "fixtureDb": {
+      "used": 8,
+      "cap": 12,
+      "projected": "this batch adds exactly 4 -> 12/12 at cap boundary; support.ts unchanged; no drop/reset/increase; no further mutating batch possible without authority"
+    },
+    "supervisor": "199021cd exact; profile-gated 305000ms idle before test:auth will be durably recorded in cooldowns[]; 8min per-command deadlines unchanged"
+  },
+  "acceptance": false,
+  "note": "supersedes independent-environment-ready-r2-h1.json binding 3555d4dd; all prior ready/review/fail records preserved"
+}

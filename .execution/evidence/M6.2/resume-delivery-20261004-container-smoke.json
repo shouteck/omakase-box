@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    ".execution/m62-delivery-smoke.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T01:44:45.928Z",
+  "finishedAt": "2026-10-04T01:44:47.287Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\n  \"assurance\": \"tested\",\n  \"scope\": \"container-to-container signed assignment delivery\",\n  \"malformedCommand\": \"422 {\\\"error\\\":\\\"invalid_command\\\"}\",\n  \"contributorRouteFromDeliveryNetwork\": \"403 {\\\"error\\\":\\\"forbidden\\\"}\",\n  \"durableRows\": {\n    \"assignments\": [\n      {\n        \"executor_kind\": \"human\",\n        \"contributor_id\": \"da0085f0-01fc-4f23-bdd4-2881758e2ec5\",\n        \"status\": \"open\",\n        \"chosen_by\": \"owner-approved\"\n      }\n    ],\n    \"invitations\": [\n      {\n        \"contributor_id\": \"da0085f0-01fc-4f23-bdd4-2881758e2ec5\",\n        \"revoked\": false,\n        \"redeemed_at\": null\n      }\n    ],\n    \"claims\": [\n      {\n        \"task_version\": 1,\n        \"package_digest\": \"a7e0070f797a400f2ae35bad1c7291c81b23be91f2e3e8e5234370828fe8e68f\",\n        \"payload_hash\": \"2892c369ff768149477b24d74db5447858623ddc8672b460cce615519e5d8200\"\n      }\n    ]\n  }\n}\n"
+}

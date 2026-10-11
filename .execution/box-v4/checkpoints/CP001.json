@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "checkpointId": "CP001",
+  "recordedAt": "2026-10-04",
+  "authority": "docs/box-v4/GIT-CHECKPOINTS.md standing CEO direction (routine reviewed checkpoints)",
+  "commit": "71ecb436ad12c6c55fa1f9b3f77361d5825a6ef1",
+  "branch": "master",
+  "remote": "origin",
+  "remoteUrl": "https://github.com/shouteck/omakase-box.git",
+  "remoteVisibility": "PRIVATE (gh repo view, 2026-10-04)",
+  "pushResult": "confirmed — ls-remote origin master returned 71ecb43",
+  "priorRemoteHead": "2ad7e35c7cebc9141503c3042fb81edbb40cbd0c",
+  "pushMode": "non-force fast-forward",
+  "scope": {
+    "files": 153,
+    "included": [
+      "S001 setup evidence (.execution/box-v4/setup/S001/**, docs/box-v4/DEVIN-SETUP.md, .devin/**)",
+      "W001 accepted outputs (reconciliation/**, profile-contract.md, ARCHITECTURE/REUSE/PSTACK worker edits, evidence/**, handoffs/**)",
+      "W001 governance (briefings incl. r4 + archived r3, wave records, approval record, state.json, checkpoints/CP001-instruction-review.md)",
+      "W002 proposal draft (status proposed — no authority)",
+      "independently reviewed instruction changes (START.md, AGENTS.md, KITCHEN.md, STANDING_ORDERS.md, PROTOCOL.md, rules, briefing/finished-report templates, CEO-SERVICE.md, GIT-CHECKPOINTS.md)"
+    ],
+    "excluded": "no product code paths present in the changeset; .env*/.runtime/secrets ignored; raw *.atif.json session exports ignored per setup/S001/.gitignore"
+  },
+  "independentReview": ".execution/box-v4/checkpoints/CP001-instruction-review.md (box-reviewer ab7da470, PASS)",
+  "waveReviews": "W001 task outputs reviewed per .execution/box-v4/handoffs/B0.1.md and B0.2.md",
+  "bookkeepingNote": "This record is committed in a subsequent scoped commit per GIT-CHECKPOINTS.md — a receipt cannot be inside the commit whose hash it records."
+}

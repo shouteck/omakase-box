@@ -1,0 +1,22 @@
+{
+  "kind": "informative_affected_readiness_recipe",
+  "reviewer": "/root/recovery_assurance",
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "180",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import {mkdir,writeFile} from 'node:fs/promises';import {probeBrowser,probeServiceHealth} from './scripts/box-verification/readiness.mjs';const diagnostics=[];for(const [port,host]of [[4000,'private.localhost:4000'],[4001,'contributor.localhost:4001']]){for(const headers of [{},{host}]){const r=await fetch('http://127.0.0.1:'+port+'/health',{headers,signal:AbortSignal.timeout(3000)});diagnostics.push({port,headers,status:r.status,body:(await r.text()).slice(0,1000)})}}const temp='/tmp/cto-r1-browser-diagnostic';await mkdir(temp+'/config',{recursive:true});await mkdir(temp+'/cache',{recursive:true});const actual=await import('@playwright/test');let closeConfirmed=false;const launcher={launch:async opts=>{const b=await actual.chromium.launch({...opts,env:{...process.env,HOME:temp,XDG_CONFIG_HOME:temp+'/config',XDG_CACHE_HOME:temp+'/cache'}});const close=b.close.bind(b);b.close=async()=>{await close();closeConfirmed=true};return b}};const browser=await probeBrowser({browserPath:'/ms-playwright',expectedRevision:1243,loadChromium:async()=>launcher});const privateHealth=await probeServiceHealth('http://127.0.0.1:4000/health',{fetchImpl:(u,o)=>fetch(u,{...o,headers:{host:'private.localhost:4000'}})});const externalHealth=await probeServiceHealth('http://127.0.0.1:4001/health',{fetchImpl:(u,o)=>fetch(u,{...o,headers:{host:'contributor.localhost:4001'}})});const result={diagnostics,browser,closeConfirmed,privateHealth,externalHealth,status:browser.status==='pass'&&closeConfirmed&&privateHealth.status==='pass'&&externalHealth.status==='pass'?'pass':'failed'};await writeFile('/stage/.cto-r1-evidence/affected-readiness-r2.json',JSON.stringify(result));console.log(JSON.stringify(result));process.exit(result.status==='pass'?0:1)"
+  ],
+  "sourceSha256": "4f5dd9873e075a19b65ff119ce4e6896287c64e6f144f018c9d27d592544b2d8",
+  "hypotheses": [
+    "403 caused by exact Host allowlist and wrong /healthz path; actual declared /health tested",
+    "Crashpad readonly default home; child browser HOME/XDG only under already authorised tmpfs"
+  ],
+  "unchanged": "No source/resources/security settings/dependencies altered; prior helper/build/source/db results reused"
+}

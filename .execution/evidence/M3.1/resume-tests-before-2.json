@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:analysis"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T00:09:59.579Z",
+  "finishedAt": "2026-10-03T00:10:01.180Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n \u001b[31m❯\u001b[39m tests/analysis/private-analysis-journey.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n \u001b[31m❯\u001b[39m tests/analysis/empty-surface.test.ts \u001b[2m(\u001b[22m\u001b[2m0 test\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[31m⎯⎯⎯⎯⎯⎯\u001b[39m\u001b[1m\u001b[41m Failed Suites 2 \u001b[49m\u001b[22m\u001b[31m⎯⎯⎯⎯⎯⎯⎯\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/analysis/empty-surface.test.ts\u001b[2m [ tests/analysis/empty-surface.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../../packages/analyzer/core/boundary-surface.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/analysis/empty-surface.test.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/analysis/empty-surface.test.ts:\u001b[2m6:1\u001b[22m\u001b[39m\n    \u001b[90m  4|\u001b[39m import { join } from 'node:path';\n    \u001b[90m  5|\u001b[39m import { expect, it } from 'vitest';\n    \u001b[90m  6|\u001b[39m import { buildBoundarySurface } from '../../../packages/analyzer/core/…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m  7|\u001b[39m\n    \u001b[90m  8|\u001b[39m it('reports an inert overview for an empty surface without leaking fil…\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\u001b[22m\u001b[39m\n\n\u001b[41m\u001b[1m FAIL \u001b[22m\u001b[49m tests/analysis/private-analysis-journey.test.ts\u001b[2m [ tests/analysis/private-analysis-journey.test.ts ]\u001b[22m\n\u001b[31m\u001b[1mError\u001b[22m: Cannot find module '../../../packages/analyzer/core/boundary-surface.js' imported from C:/Users/shout/Desktop/Projects/private-task-mvp/tests/analysis/private-analysis-journey.test.ts\u001b[39m\n\u001b[36m \u001b[2m❯\u001b[22m tests/analysis/private-analysis-journey.test.ts:\u001b[2m6:1\u001b[22m\u001b[39m\n    \u001b[90m  4|\u001b[39m import { createHash } from 'node:crypto';\n    \u001b[90m  5|\u001b[39m import { expect, it } from 'vitest';\n    \u001b[90m  6|\u001b[39m import { buildBoundarySurface } from '../../../packages/analyzer/core/…\n    \u001b[90m   |\u001b[39m \u001b[31m^\u001b[39m\n    \u001b[90m  7|\u001b[39m\n    \u001b[90m  8|\u001b[39m const files: Record<string, string> = {\n\n\u001b[31m\u001b[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\u001b[22m\u001b[39m\n\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[31m2 failed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[2mno tests\u001b[22m\n\u001b[2m   Start at \u001b[22m 08:10:00\n\u001b[2m   Duration \u001b[22m 414ms\u001b[2m (worker 97%, environment 3%)\u001b[22m\n\n"
+}

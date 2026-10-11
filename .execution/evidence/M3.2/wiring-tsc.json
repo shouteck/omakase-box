@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M3.2",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules\\typescript\\bin\\tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T01:36:32.530Z",
+  "finishedAt": "2026-10-03T01:36:39.896Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "services/private-api/src/bootstrap/server.ts(6,15): error TS2300: Duplicate identifier 'PrivateIntakeStore'.\r\nservices/private-api/src/bootstrap/server.ts(16,15): error TS2300: Duplicate identifier 'PrivateIntakeStore'.\r\n"
+}

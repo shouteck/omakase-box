@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "test:runner",
+    "--",
+    "--suite",
+    "protocol"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:39:25.320Z",
+  "finishedAt": "2026-10-02T17:39:26.735Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  1 passed (1)\n      Tests  27 passed (27)\n   Start at  01:39:26\n   Duration  437ms (import 48%, transform 30%, tests 19%, worker 2%)\n\n"
+}

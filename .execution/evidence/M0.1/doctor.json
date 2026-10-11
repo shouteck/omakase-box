@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "doctor",
+    "--json"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T02:55:47.761Z",
+  "finishedAt": "2026-10-02T02:55:48.141Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": " ERROR  Unknown option: 'json'\nFor help, run: pnpm help doctor\n"
+}

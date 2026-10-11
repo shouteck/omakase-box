@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_phase_release_suspension_scribe_receipt",
+  "writer": {
+    "tool": "devin subagent file write",
+    "profile": "mechanical governance scribe (no independent approval/review authority)",
+    "note": "Governance/evidence files only; no product code, Docker, Git, DB or setup commands run."
+  },
+  "rootDecisionBasis": "Same reviewer a689979b amended attempt2 to PRE-EXECUTION FAIL in harness-review-d1r4-attempt2-dependency-wiring-amendment.json (SHA256 b6f0fbc98f740f810d4cb23834f1c9284653e7521f2f574fbefc93c2fdbfb830, verified by recompute): the verified /workspace/node_modules closure and repo-local pnpm tooling are not mounted/staged/resolvable inside the dedicated /stage runner. Root suspended the previously recorded setup/readiness release before any setup attempt was consumed (setupAttemptsUsed 0, resourcesCreated 0); setup/resources closed pending one scoped in-lease correction and fresh independent PASS. Scribe recorded the decision; B1.1 remains unaccepted; acceptance not reopened; preserved evidence unchanged.",
+  "modifiedPaths": [
+    ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+    ".execution/box-v4/waves/W002.json",
+    ".execution/box-v4/state.json"
+  ],
+  "createdPaths": [
+    ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json",
+    ".execution/box-v4/evidence/B1.1/verification-recovery/root-phase-release-suspension-scribe-d1r4.json"
+  ],
+  "hashes": {
+    "before": {
+      ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json": "25e4e5801aebea6ea8873beff4dda8d2656ed5e1a480bc34b4f2fe135d80250f",
+      ".execution/box-v4/waves/W002.json": "f0f7113e0fbc83f489d3769e6adf4d60a52319903f986074559c244ec6079d8f",
+      ".execution/box-v4/state.json": "25648812c280c5a3659c84a3cbaafbe9132fe8de86db69003f7a5c2409ab26b8",
+      ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json": "absent_before"
+    },
+    "after": {
+      ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json": "201afc8c43529fb030bb8a69a34f4a94e987f5b5d37fb4bf0d6cc40b6aeedf9b",
+      ".execution/box-v4/waves/W002.json": "383c03164a325e70e03b70f051fb0d774523ec134e5b102fe524bf879aec58f9",
+      ".execution/box-v4/state.json": "b69231699d77c4dc952b52dc0e07373d6a3cfda8f1a7ff5cdbbcb94d9f39ef57",
+      ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-suspended.json": "5aba4ca9601b15df7008646350e5a04a80a3619b015b6874155637313eaa1837"
+    }
+  },
+  "reviewAmendmentDigestVerified": "Recomputed harness-review-d1r4-attempt2-dependency-wiring-amendment.json sha256 matches claimed b6f0fbc98f740f810d4cb23834f1c9284653e7521f2f574fbefc93c2fdbfb830.",
+  "beforeHashConsistency": "Before-hashes match the after-hashes recorded in root-phase-release-scribe-d1r4.json (prior release scribe receipt); no drift detected.",
+  "timestampUtc": "2026-10-04T22:32:03Z",
+  "limitations": [
+    "Scribe role only: recorded the root's stated suspension decision; exercised no independent approval or review authority.",
+    "B1.1 not marked accepted; no history deleted; prior phase-release record, original PASS review and all prior evidence preserved.",
+    "No candidate code, Docker, Git, DB, fixture or setup commands were executed by this scribe."
+  ]
+}

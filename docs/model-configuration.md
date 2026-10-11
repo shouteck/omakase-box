@@ -1,0 +1,32 @@
+# Private planning provider configuration
+
+Assurance: tested demo/protocol/transport behaviour on synthetic inputs; live-model verification remains unverified until a separately configured customer-approved model is exercised. Provider proposals are unverified data, never approval, release, execution, assignment or acceptance authority.
+
+## Explicit modes
+
+`DemoPlannerProvider` uses the checked synthetic fixture catalogue without credentials or network access. Goal-only intake returns a reviewable draft with required owner decisions, not an approved intent. Known synthetic single-unit/full-stack/policy/combined goals have connected partition hints; unsupported/unmatched complete goals retain an explicit not_supported reason. Demo is deterministic and labelled `mode=demo`, `modelVerification=not_applicable`; it is not model inference or business/human evidence.
+
+`OllamaPlannerProvider` receives an operator-controlled configuration object with exactly `endpoint`, `model` and optional `timeoutMs`. No requester/model/contributor field selects an endpoint or transport. There is no automatic demo fallback after a model failure.
+
+- Endpoint syntax is exactly `http://127.0.0.1:<decimal-port>/api/chat` or `http://[::1]:<decimal-port>/api/chat`, port 1..65535. Credentials, fragments, queries, alternate numeric spellings, hostnames, remote origins and alternate routes are rejected. Native Node HTTP uses the fixed numeric loopback address without DNS/proxy settings and never follows redirects.
+- Model is an existing operator-approved model name/tag, at most 128 allowed identifier characters. It must match the model identity in the response. The adapter calls only chat, never pull/download/install/model-management operations. Prefer an explicit existing model tag; do not auto-select or download weights on this 16 GB host.
+- Timeout is one shared wall-clock budget across initial request, response validation and at most one repair, default 10,000 ms, allowed 20..30,000 ms. Cancellation aborts transport and returns a typed failure. Timeout does not become success or approval.
+- Request and raw response are each capped at 512 KiB. Evidence text is at most 64 KiB; complete intent input at most 256 KiB, partition input at most 384 KiB, canonical output at most 256 KiB. No binary images, image understanding, provider/session/release credentials or arbitrary root selectors are model inputs.
+
+The endpoint must be in the private API process's trusted network namespace. Docker container loopback is not the Windows host loopback. An existing operator-managed co-located model or separately reviewed private loopback broker is required for a container deployment; the agent does not install/configure one automatically. Remote deployment support is deliberately disabled in this implementation. Adding a remote allowlist requires explicit customer approval, TLS, DNS/address pinning/network routing and data/log-retention review; do not weaken loopback checks to make a deployment test pass.
+
+## Protocol and provenance
+
+Requests use POST, application/json, `stream:false`, a configured model name, application-owned JSON output schema, fixed options and a system policy plus canonical bounded private data. There is no tools array, user-provided command or model-controlled URL. JSON schema export is converted to plain JSON because the pinned Zod exporter adds non-enumerable library metadata; the general canonicalizer still rejects untrusted accessors/non-JSON objects.
+
+Responses require a bounded UTF-8 JSON envelope, assistant role, done=true, matching model and no tool calls. Model content is parsed and validated again against application schemas, exact goal and supplied snapshot/evidence references. Unknown privileged fields, fake tested assurance and model-supplied decision answers are rejected. Schema-invalid content permits one generic repair instruction over the original input; bad response text, private errors and tool instructions are not echoed into that repair. Corrupt/incomplete envelopes, redirects, wire overflow, transport errors, timeout and cancellation do not trigger uncontrolled retries.
+
+Success records input/proposal canonical digests, mode and repair count. Proposals remain assurance=unverified. Injecting any test transport forces `mode=ollama_protocol_mock`, `modelVerification=protocol_mock`, even when the injected transport exercises a synthetic local HTTP server. Default native transport is `mode=ollama_live`, but a response is labelled `live_response_not_validated`, not proof of live deployment readiness or correctness. Failure exposes only a fixed reason, never raw private logs/content. A real configured endpoint is not contacted by the build/tests unless a test explicitly supplies its own synthetic listener.
+
+Partition inputs must come from the authenticated private workflow, not external request assertions. Bind exact immutable approved intent bytes and hash. Existing storage preserves the reviewed ready_for_approval payload while its separate row state advances to approved; that representation supplies the server-owned approval tuple (intent ID/version/hash/approved state). The provider checks the tuple without rewriting the reviewed payload or inventing a different approval hash. This tuple is not a self-authenticating user capability: private workflow session/ownership/owner-approval checks remain mandatory.
+
+## Verification and operational limits
+
+Run `node scripts/pnpm.mjs test:planner -- --suite provider` and `node scripts/pnpm.mjs test:security -- --suite prompt-injection`. Tests cover deterministic demos, graph composition, strict inputs/proposals, one repair, cancellation/timeouts, redirects/stream overflow and actual native HTTP against synthetic servers. They do not query a real model, execute generated code or clear an independent-review/runner gate.
+
+Keep model configuration and any future authentication credentials private and out of source control, external DTOs, contributor processes, model prompts and public logs. This adapter does not log prompt/reply content; model/server logs and retention are operator responsibilities and remain an assumption to review before real customer data. Choose demo explicitly while a model is unavailable. Live verification, independent review, real isolated contribution evaluation and human research remain separately reported. No paid endpoint, rented host, real payment or participant contact is authorized by START.

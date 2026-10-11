@@ -1,0 +1,133 @@
+--- .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/run-verification.mjs	2026-10-05 07:46:36.000000000 +0800
++++ scripts/box-verification/run-verification.mjs	2026-10-05 12:54:34.535101900 +0800
+@@ -16,6 +16,10 @@
+ export const PER_COMMAND_DEADLINE_MS = 8 * 60 * 1000;
+ export const SIGKILL_GRACE_MS = 5000;
+ export const EXIT_CONFIRM_MS = 10000;
++export const REPEATED_AUTH_COMMAND = 'node scripts/pnpm.mjs test:auth';
++export const AUTH_LIMITER_WINDOW_MS = 300000;
++export const REPEATED_AUTH_IDLE_MS = AUTH_LIMITER_WINDOW_MS + 5000;
++export const APPROVED_VERIFICATION_PROFILE = 'w002-b11-environment-first-r4';
+ 
+ export const REQUIRED_SEQUENCE = [
+   'node scripts/pnpm.mjs test:box-contracts',
+@@ -73,7 +77,7 @@
+   return { status: 'ok', compared: Object.keys(declared).length };
+ }
+ 
+-export async function runSequence(manifest, { stateDir, spawnImpl = spawn, clock = () => Date.now(), deadlineMs = PER_COMMAND_DEADLINE_MS, drainMs = EXIT_CONFIRM_MS } = {}) {
++export async function runSequence(manifest, { stateDir, spawnImpl = spawn, clock = () => Date.now(), deadlineMs = PER_COMMAND_DEADLINE_MS, drainMs = EXIT_CONFIRM_MS, profile = process.env.BOX_VERIFICATION_PROFILE, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
+   const sequence = validateSequence(manifest);
+   await mkdir(stateDir, { recursive: true });
+   const record = {
+@@ -82,11 +86,22 @@
+     environmentId: manifest.environmentId,
+     startedAt: new Date().toISOString(),
+     commands: [],
++    cooldowns: [],
+     status: 'running'
+   };
+   const persist = () => writeFile(join(stateDir, 'verification-run.json'), JSON.stringify(record, null, 2));
+ 
+   for (const command of sequence) {
++    if (command === REPEATED_AUTH_COMMAND && profile === APPROVED_VERIFICATION_PROFILE) {
++      const started = clock();
++      const cooldown = { beforeCommand: command, reason: 'repeated_auth_limiter_window', idleMs: REPEATED_AUTH_IDLE_MS, startedAt: new Date().toISOString(), endedAt: null, durationMs: null };
++      record.cooldowns.push(cooldown);
++      await persist();
++      await sleep(REPEATED_AUTH_IDLE_MS);
++      cooldown.endedAt = new Date().toISOString();
++      cooldown.durationMs = clock() - started;
++      await persist();
++    }
+     const entry = { command, status: 'running', startedAt: new Date().toISOString() };
+     record.commands.push(entry);
+     await persist();
+--- .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/relay-lifecycle.test.ts	2026-10-05 12:29:22.000000000 +0800
++++ tests/box/verification/relay-lifecycle.test.ts	2026-10-05 12:56:22.161180300 +0800
+@@ -59,12 +59,13 @@
+   kill(signal?: number | NodeJS.Signals): boolean;
+   pid?: number | undefined;
+ }
+-interface VerificationCommandEntry { code: number | null; exitSignal: string | null; exitObserved: boolean; timedOut: boolean; unconfirmed: boolean; descendants: string; outputDrained: boolean; captureError: string | null; reason: string | null; elapsedMs: number; stdoutPath: string; stderrPath: string; stdout: string; stderr: string }
++interface VerificationCommandEntry { command: string; code: number | null; exitSignal: string | null; exitObserved: boolean; timedOut: boolean; unconfirmed: boolean; descendants: string; outputDrained: boolean; captureError: string | null; reason: string | null; elapsedMs: number; stdoutPath: string; stderrPath: string; stdout: string; stderr: string }
++interface VerificationCooldown { beforeCommand: string; reason: string; idleMs: number; startedAt: string; endedAt: string | null; durationMs: number | null }
+ interface RunVerificationModule {
+   validateSequence(manifest: unknown): string[];
+   gateStart(options: { review: unknown; environmentReceipt: unknown; manifestDigest: string; environmentId: string }): { status: string; reason?: string };
+   REQUIRED_SEQUENCE: string[];
+-  runSequence(manifest: unknown, options: { stateDir: string; spawnImpl?: (bin: string, args: string[], options: SpawnOptions) => SequenceChild; clock?: () => number; deadlineMs?: number; drainMs?: number }): Promise<{ status: string; commands: VerificationCommandEntry[] }>;
++  runSequence(manifest: unknown, options: { stateDir: string; spawnImpl?: (bin: string, args: string[], options: SpawnOptions) => SequenceChild; clock?: () => number; deadlineMs?: number; drainMs?: number; profile?: string | undefined; sleep?: (ms: number) => Promise<unknown> }): Promise<{ status: string; commands: VerificationCommandEntry[]; cooldowns: VerificationCooldown[] }>;
+ }
+ const execHost: FixtureExecHostModule = await import(new URL('../../../scripts/box-verification/fixture-exec-host.mjs', import.meta.url).href);
+ const execRunner: FixtureExecRunnerModule = await import(new URL('../../../scripts/box-verification/fixture-exec-runner.mjs', import.meta.url).href);
+@@ -606,4 +607,49 @@
+     expect(entry.elapsedMs).toBeLessThan(2000);
+     expect(await readFile(entry.stdoutPath, 'utf8')).toBe('captured-before-exit');
+   });
++
++  it('paces the repeated auth command only under the exact approved profile', async () => {
++    const dir = await tmp();
++    const idle: number[] = [];
++    let midWait: VerificationCooldown | undefined;
++    const passSpawn = () => {
++      const child = mockChild();
++      setTimeout(() => { child.emit('exit', 0, null); child.stdout.end(); child.stderr.end(); child.emit('close', 0, null); }, 5);
++      return child;
++    };
++    const result = await runSequence(sequenceManifest, { stateDir: dir, profile: 'w002-b11-environment-first-r4', sleep: async (ms: number) => {
++      idle.push(ms);
++      midWait = JSON.parse(await readFile(join(dir, 'verification-run.json'), 'utf8')).cooldowns[0];
++    }, spawnImpl: passSpawn });
++    expect(idle).toEqual([305000]);
++    expect(result.status).toBe('pass');
++    expect(result.commands.map(entry => entry.command)).toEqual(REQUIRED_SEQUENCE);
++    expect(result.commands).toHaveLength(7);
++    expect(result.cooldowns).toHaveLength(1);
++    expect(result.cooldowns[0]).toMatchObject({ beforeCommand: 'node scripts/pnpm.mjs test:auth', reason: 'repeated_auth_limiter_window', idleMs: 305000 });
++    expect(result.cooldowns[0]?.endedAt).not.toBeNull();
++    expect(result.cooldowns[0]?.durationMs).not.toBeNull();
++    expect(midWait).toMatchObject({ beforeCommand: 'node scripts/pnpm.mjs test:auth', endedAt: null, durationMs: null });
++    const persisted = JSON.parse(await readFile(join(dir, 'verification-run.json'), 'utf8'));
++    expect(persisted.cooldowns).toHaveLength(1);
++    expect(persisted.cooldowns[0].endedAt).not.toBeNull();
++    expect(persisted.commands.map((entry: { command: string }) => entry.command)).toEqual(REQUIRED_SEQUENCE);
++  });
++
++  it('keeps the original immediate ordering for absent or wrong profiles', async () => {
++    const passSpawn = () => {
++      const child = mockChild();
++      setTimeout(() => { child.emit('exit', 0, null); child.stdout.end(); child.stderr.end(); child.emit('close', 0, null); }, 5);
++      return child;
++    };
++    for (const profile of [undefined, 'wrong', 'w002-b11-environment-first-r5']) {
++      const dir = await tmp();
++      let slept = 0;
++      const result = await runSequence(sequenceManifest, { stateDir: dir, profile, sleep: async () => { slept += 1; }, spawnImpl: passSpawn });
++      expect(slept).toBe(0);
++      expect(result.status).toBe('pass');
++      expect(result.cooldowns).toHaveLength(0);
++      expect(result.commands.map(entry => entry.command)).toEqual(REQUIRED_SEQUENCE);
++    }
++  });
+ });
+--- .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/environment-manifest.json	2026-10-05 12:34:06.000000000 +0800
++++ scripts/box-verification/environment-manifest.json	2026-10-05 12:56:26.373867700 +0800
+@@ -551,7 +551,7 @@
+         },
+         {
+           "rel": "scripts/box-verification/run-verification.mjs",
+-          "sha256": "a3a30d326a6e2a2935b9e8f0cd22316f5106855ea1f09919c1a6a88aed86e2e8"
++          "sha256": "199021cd141b613138b0839d61ec195d603f3de4b1975ca4cd813f634aed4094"
+         },
+         {
+           "rel": "scripts/check-startup.mjs",
+@@ -1487,7 +1487,7 @@
+         },
+         {
+           "rel": "tests/box/verification/relay-lifecycle.test.ts",
+-          "sha256": "b7cee05122690fa71077161bb6214327c40cfff10beb335890b802bdd4811306"
++          "sha256": "e4d5fd076c1fb3520aa64c4e72253a3d771131b6b8aa6fddd17909af6d082b7d"
+         },
+         {
+           "rel": "tests/compiler/approval/browser.test.ts",

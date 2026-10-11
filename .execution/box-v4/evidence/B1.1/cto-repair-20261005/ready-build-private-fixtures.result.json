@@ -1,0 +1,22 @@
+{
+  "step": "build-private-fixtures",
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "--workdir",
+    "/stage",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "180",
+    "node",
+    "services/private-api/bootstrap/build.mjs"
+  ],
+  "exit": 0,
+  "elapsedMs": 4984,
+  "recordedAtUtc": "2026-10-05T02:58:38.052445+00:00",
+  "sourcePlan": "ready-command-plan-r1.json",
+  "stdout": "ready-build-private-fixtures.stdout.log",
+  "stderr": "ready-build-private-fixtures.stderr.log"
+}

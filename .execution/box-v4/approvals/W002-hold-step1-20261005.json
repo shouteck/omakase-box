@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "kind": "human_hold_and_governance_only_approval",
+  "waveId": "W002",
+  "recordedAtUtc": "2026-10-04T17:31:05.4601115Z",
+  "timestampMeaning": "Actual host UTC clock sampled during reconciliation; human-message timestamps are not exposed. File date follows the CEO's local 5 October session.",
+  "evidenceSource": "Human messages and the immediately preceding decision card in the current Devin Desktop conversation for this repository.",
+  "hold": {
+    "messageExcerpt": "Read START.md. Keep W002 on Hold and reconcile the existing work.",
+    "prohibitionsExcerpt": "Do not resume workers, rerun tests, create containers or delete anything.",
+    "preservationExcerpt": "Preserve existing progress. Wait for my Approve before executing the proposed plan.",
+    "boundApprovedBrief": ".execution/box-v4/briefings/W002-r2.md",
+    "boundApprovedBriefDigest": "sha256:1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+    "status": "active",
+    "resumeAuthorized": false
+  },
+  "step1Approval": {
+    "message": "Approve",
+    "presentedScope": "Record the Hold, consolidate existing evidence and freeze a bounded recovery brief without changing product bytes.",
+    "presentedBoundary": "Recommendation: reply Approve for step 1 only. W002 remains held; workers, tests, container changes, Git saving and cleanup remain stopped.",
+    "authorized": ["read-only reconciliation", "root-authored hold/state records", "append-only consolidated evidence", "frozen recovery proposal"],
+    "excluded": ["W002 resume", "worker or reviewer dispatch", "product or test source writes", "test or build execution", "process startup", "container creation/start/stop/removal", "browser acquisition", "database mutation", "cleanup/deletion", "Git staging/commit/push", "later wave approval"],
+    "status": "approved_governance_only"
+  },
+  "historyPolicy": "Preserve the original W002 r1/r2 briefs, approvals, candidate manifests, worker receipts and reviewer reports. This record neither revokes historical approvals nor clears the Hold."
+}

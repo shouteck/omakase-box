@@ -1,0 +1,1219 @@
+--- stopped/scripts/box-verification/environment-host.mjs
++++ current/scripts/box-verification/environment-host.mjs
+@@ -8,8 +8,8 @@
+ // execute on the host before distinct reviewer PASS (reviewDigest gate).
+ 
+ import { randomBytes, createHash } from 'node:crypto';
+-import { lstat, mkdir, readdir, readFile, realpath, writeFile } from 'node:fs/promises';
+-import { dirname, join, resolve, sep } from 'node:path';
++import { lstat, mkdir, readdir, readFile, realpath, writeFile, symlink } from 'node:fs/promises';
++import { dirname, join, resolve, sep, relative } from 'node:path';
+ import { docker } from '../docker.mjs';
+ 
+ const EXPECTED_NAMES = ['w002-b11-linux-r4-env2', 'w002-b11-box-db-r4-env2'];
+@@ -314,10 +314,19 @@
+     const seedResult = await resolvePackageAt(join(root, seed), seed);
+     if (seedResult.status !== 'ok') return seedResult;
+   }
++  for (const seed of plan.seedPaths ?? []) {
++    if (typeof seed?.name !== 'string' || typeof seed?.rel !== 'string' || !seed.rel.startsWith('.pnpm/')) return { status: 'unavailable', reason: 'dependency_seed_path_invalid' };
++    try { assertStageableRel(seed.rel); } catch { return { status: 'unavailable', reason: 'dependency_seed_path_invalid' }; }
++    const result = await resolvePackageAt(join(root, seed.rel), seed.name);
++    if (result.status !== 'ok') return result;
++    const pkg = JSON.parse(await readFileImpl(join(root, seed.rel, 'package.json')));
++    if (pkg.name !== seed.name) return { status: 'unavailable', reason: 'dependency_seed_name_mismatch' };
++  }
+   let fileCount = 0;
+   const packages = [];
+   for (const entry of [...roots.values()].sort((a, b) => canonicalRoot(a.root) < canonicalRoot(b.root) ? -1 : (canonicalRoot(a.root) > canonicalRoot(b.root) ? 1 : 0))) {
+     const rows = [];
++    const paths = [];
+     const walk = async dir => {
+       const names = (await readdir(dir)).sort();
+       for (const name of names) {
+@@ -325,22 +334,86 @@
+         const info = await lstat(path);
+         if (info.isSymbolicLink() || (!info.isFile() && !info.isDirectory())) return { status: 'unavailable', reason: 'dependency_link:' + path };
+         if (info.isDirectory()) { const nested = await walk(path); if (nested) return nested; continue; }
+-        rows.push([path.slice(entry.root.length + 1).split(sep).join('/'), sha256(await readFileImpl(path))]);
+-        fileCount += 1;
++        paths.push(path);
+       }
+       return null;
+     };
+     const failure = await walk(entry.root);
+     if (failure) return failure;
++    // Bounded I/O overlap avoids serial bind-mount latency without changing row
++    // order or canonical digest bytes. Each batch has at most 32 file reads.
++    for (let offset = 0; offset < paths.length; offset += 32) {
++      const batch = paths.slice(offset, offset + 32);
++      rows.push(...await Promise.all(batch.map(async path => [path.slice(entry.root.length + 1).split(sep).join('/'), sha256(await readFileImpl(path))])));
++    }
++    fileCount += rows.length;
+     packages.push({ name: entry.name, version: entry.version, root: canonicalRoot(entry.root), files: rows.length, treeSha256: sha256(JSON.stringify(rows)) });
+   }
+   const closureSha256 = sha256(JSON.stringify(packages));
+   if (packages.length !== plan.packageCount || fileCount !== plan.fileCount || closureSha256 !== plan.closureSha256) {
+-    return { status: 'unavailable', reason: 'dependency_closure_mismatch', packageCount: packages.length, fileCount, closureSha256 };
+-  }
+-  const expectedVersions = new Map(plan.packageVersions);
+-  for (const pkg of packages) if (expectedVersions.get(pkg.name) !== pkg.version) return { status: 'unavailable', reason: 'dependency_version_mismatch:' + pkg.name };
++    return { status: 'unavailable', reason: 'dependency_closure_mismatch', packageCount: packages.length, fileCount, closureSha256, packages };
++  }
++  const versionRows = rows => rows.map(row => JSON.stringify(row)).sort();
++  if (JSON.stringify(versionRows(plan.packageVersions)) !== JSON.stringify(versionRows(packages.map(pkg => [pkg.name, pkg.version])))) return { status: 'unavailable', reason: 'dependency_version_mismatch' };
+   return { status: 'ok', packageCount: packages.length, fileCount, closureSha256 };
++}
++
++// Runs only inside the reviewed Linux runner after source staging and its exact
++// readonly dependency mount. Never copies dependency bytes or writes host links.
++export async function stageWorkspaceAliases(manifest, { stageRoot = manifest.stage.rootContainer } = {}) {
++  if (process.platform === 'win32') throw new Error('workspace_alias_linux_only');
++  const base = await realpath(stageRoot);
++  const dependencyRoot = join(base, 'node_modules');
++  const realDependencyRoot = await realpath(dependencyRoot);
++  const plan = manifest.linuxDependencies;
++  const closure = await verifyDependencyClosure({ ...plan, hostRoot: dependencyRoot }, { root: dependencyRoot });
++  if (closure.status !== 'ok') throw new Error('workspace_alias_dependency_closure');
++  const aliases = manifest.stage.workspaceAliases;
++  if (!Array.isArray(aliases)) throw new Error('workspace_alias_plan');
++  const expected = new Map();
++  for (const item of manifest.stage.sourceFilesPlan.files) {
++    if (!/^(apps|services|packages|examples)\/[^/]+\/package\.json$/.test(item.rel)) continue;
++    const bytes = await readFile(join(base, item.rel));
++    if (sha256(bytes) !== item.sha256) throw new Error('workspace_alias_source_drift');
++    const pkg = JSON.parse(bytes);
++    for (const [name, version] of Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })) expected.set(item.rel + ':' + name, { version, sha256: item.sha256 });
++  }
++  if (expected.size !== aliases.length) throw new Error('workspace_alias_incomplete');
++  const operations = [];
++  const seen = new Set();
++  for (const alias of aliases) {
++    if (!/^(apps|services|packages|examples)\/[^/]+\/package\.json$/.test(alias.packageJson ?? '') || !/^(?:@[a-z0-9_.-]+\/)?[a-z0-9_.-]+$/i.test(alias.name ?? '')) throw new Error('workspace_alias_path');
++    const key = alias.packageJson + ':' + alias.name;
++    const declared = expected.get(key);
++    if (seen.has(key) || !declared || declared.version !== alias.version || declared.sha256 !== alias.packageJsonSha256) throw new Error('workspace_alias_declaration');
++    seen.add(key);
++    assertStageableRel(alias.targetRel);
++    if (!alias.targetRel.startsWith('.pnpm/') || !(plan.seedPaths ?? []).some(seed => seed.name === alias.name && seed.rel === alias.targetRel)) throw new Error('workspace_alias_unhashed_target');
++    const target = await realpath(join(dependencyRoot, alias.targetRel));
++    if (!target.startsWith(realDependencyRoot + sep)) throw new Error('workspace_alias_target_escape');
++    const pkg = JSON.parse(await readFile(join(target, 'package.json')));
++    if (pkg.name !== alias.name || pkg.version !== alias.version) throw new Error('workspace_alias_target_version');
++    const destination = join(base, dirname(alias.packageJson), 'node_modules', alias.name);
++    // Check every existing ancestor before mkdir; never follow an escaping or
++    // pre-existing alias-directory symlink, even one apparently pointing inward.
++    const parent = dirname(destination);
++    let cursor = base;
++    for (const component of relative(base, parent).split(sep)) {
++      cursor = join(cursor, component);
++      const info = await lstat(cursor).catch(error => { if (error?.code === 'ENOENT') return null; throw error; });
++      if (info?.isSymbolicLink() || (info && !info.isDirectory())) throw new Error('workspace_alias_ancestor');
++    }
++    if (await lstat(destination).catch(error => { if (error?.code === 'ENOENT') return null; throw error; })) throw new Error('workspace_alias_collision');
++    // Relative link addresses the mounted /stage tree, never the host path.
++    operations.push({ destination, target: join(dependencyRoot, alias.targetRel), name: alias.name });
++  }
++  // All declarations/targets/collisions checked before first mutation. Exclusive
++  // symlink creation refuses a concurrent collision instead of overwriting it.
++  for (const operation of operations) {
++    await mkdir(dirname(operation.destination), { recursive: true });
++    await symlink(relative(dirname(operation.destination), operation.target), operation.destination, 'dir');
++  }
++  return { status: 'staged', count: operations.length, closureSha256: closure.closureSha256 };
+ }
+ 
+ export async function createResources(manifest, { reviewDigest, expectedReviewDigest, reviewPath, stateDir, sourceRoot, expectedDigests, sourceFiles }) {
+--- stopped/scripts/box-verification/run-verification.mjs
++++ current/scripts/box-verification/run-verification.mjs
+@@ -5,6 +5,8 @@
+ // confirmed it is recorded unavailable (descendants unaccounted), never a pass.
+ 
+ import { spawn } from 'node:child_process';
++import { createWriteStream } from 'node:fs';
++import { finished as streamFinished } from 'node:stream/promises';
+ import { createHash } from 'node:crypto';
+ import { mkdir, readFile, writeFile } from 'node:fs/promises';
+ import { join } from 'node:path';
+@@ -71,7 +73,7 @@
+   return { status: 'ok', compared: Object.keys(declared).length };
+ }
+ 
+-export async function runSequence(manifest, { stateDir, spawnImpl = spawn, clock = () => Date.now(), deadlineMs = PER_COMMAND_DEADLINE_MS } = {}) {
++export async function runSequence(manifest, { stateDir, spawnImpl = spawn, clock = () => Date.now(), deadlineMs = PER_COMMAND_DEADLINE_MS, drainMs = EXIT_CONFIRM_MS } = {}) {
+   const sequence = validateSequence(manifest);
+   await mkdir(stateDir, { recursive: true });
+   const record = {
+@@ -88,8 +90,8 @@
+     const entry = { command, status: 'running', startedAt: new Date().toISOString() };
+     record.commands.push(entry);
+     await persist();
+-    const result = await runOne(command, deadlineMs, spawnImpl, clock);
+-    const status = result.code === 0 && !result.timedOut ? 'pass' : (result.unconfirmed ? 'unavailable' : 'failed');
++    const result = await runOne(command, deadlineMs, spawnImpl, clock, join(stateDir, 'command-' + record.commands.length), drainMs);
++    const status = result.unconfirmed ? 'unavailable' : (result.code === 0 && !result.timedOut ? 'pass' : 'failed');
+     Object.assign(entry, result, { status, endedAt: new Date().toISOString() });
+     await persist();
+     if (entry.status !== 'pass') {
+@@ -103,43 +105,92 @@
+   return record;
+ }
+ 
+-function runOne(command, deadlineMs, spawnImpl, clock) {
++function runOne(command, deadlineMs, spawnImpl, clock, logPrefix, drainMs) {
+   return new Promise(resolve => {
+-    const [bin, ...args] = command.split(' ');
+     const started = clock();
+-    const child = spawnImpl(bin, args, { stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
++    const stdoutPath = logPrefix + '.stdout.log';
++    const stderrPath = logPrefix + '.stderr.log';
++    const stdoutLog = createWriteStream(stdoutPath, { flags: 'wx' });
++    const stderrLog = createWriteStream(stderrPath, { flags: 'wx' });
++    // Attach failure handlers before spawning. A failed durable sink never passes.
++    let captureError = null;
++    const sinks = [stdoutLog, stderrLog].map(sink => streamFinished(sink).catch(error => { captureError = String(error?.message ?? error); }));
++    let stdout = ''; let stderr = ''; let timedOut = false; let settling = false;
++    let code = null; let exitSignal = null; let exitObserved = false;
++    let killTimer; let confirmTimer; let drainTimer; let timer;
++    let child;
+     const signal = sig => {
+-      try { if (process.platform !== 'win32' && typeof child.pid === 'number') process.kill(-child.pid, sig); else child.kill(sig); }
+-      catch { try { child.kill(sig); } catch { /* noop */ } }
++      try { if (process.platform !== 'win32' && typeof child?.pid === 'number') process.kill(-child.pid, sig); else child?.kill(sig); }
++      catch { try { child?.kill(sig); } catch { /* only the owned child */ } }
+     };
+-    let stdout = ''; let stderr = ''; let timedOut = false; let finished = false;
+-    let killTimer; let confirmTimer;
+-    // On timeout: signal the supervised child only (never arbitrary PIDs), then
+-    // wait a bounded window for exit confirmation. If exit never arrives the
+-    // outcome is unavailable with descendants unaccounted, not a silent pass or
+-    // an indefinite wait.
+-    const finish = value => { if (!finished) { finished = true; resolve(value); } };
+-    const timer = setTimeout(() => {
+-      timedOut = true;
+-      signal('SIGTERM');
+-      killTimer = setTimeout(() => signal('SIGKILL'), SIGKILL_GRACE_MS);
+-      killTimer.unref?.();
+-      confirmTimer = setTimeout(() => finish({ code: null, timedOut: true, unconfirmed: true, descendants: 'unaccounted', elapsedMs: clock() - started, stdout, stderr: stderr + ' termination_unconfirmed' }), SIGKILL_GRACE_MS + EXIT_CONFIRM_MS);
+-      confirmTimer.unref?.();
+-    }, deadlineMs);
+-    child.stdout?.on('data', chunk => { stdout = (stdout + chunk.toString()).slice(-262144); });
+-    child.stderr?.on('data', chunk => { stderr = (stderr + chunk.toString()).slice(-262144); });
+-    child.on('error', error => { clearTimeout(timer); clearTimeout(killTimer); clearTimeout(confirmTimer); finish({ code: null, timedOut, unconfirmed: true, elapsedMs: clock() - started, stdout: '', stderr: 'spawn_unavailable:' + String(error?.message ?? error) }); });
+-    child.on('exit', code => {
+-      clearTimeout(timer); clearTimeout(killTimer); clearTimeout(confirmTimer);
+-      let unconfirmed = false;
+-      let descendants = 'none';
+-      if (process.platform !== 'win32' && typeof child.pid === 'number') {
++    const settle = async (drained, reason = null) => {
++      if (settling) return;
++      settling = true;
++      clearTimeout(timer); clearTimeout(killTimer); clearTimeout(confirmTimer); clearTimeout(drainTimer);
++      if (!drained) {
++        child?.stdout?.unpipe(stdoutLog); child?.stderr?.unpipe(stderrLog);
++        child?.stdout?.destroy(); child?.stderr?.destroy();
++      }
++      // End the sinks even on unavailable completion, retaining all captured bytes.
++      stdoutLog.end(); stderrLog.end();
++      let captureDrainTimer;
++      const captured = await Promise.race([
++        Promise.all(sinks).then(() => true),
++        new Promise(resolveCapture => { captureDrainTimer = setTimeout(() => resolveCapture(false), drainMs); })
++      ]);
++      clearTimeout(captureDrainTimer);
++      if (!captured) {
++        captureError = 'durable_capture_drain_unconfirmed';
++        stdoutLog.destroy(); stderrLog.destroy();
++        drained = false;
++        reason = 'durable_capture_drain_unconfirmed';
++      }
++      let descendants = 'none'; let unconfirmed = !drained || !exitObserved || captureError !== null;
++      if (process.platform !== 'win32' && typeof child?.pid === 'number') {
+         descendants = 'process_group_confirmed_empty';
+         try { process.kill(-child.pid, 0); unconfirmed = true; descendants = 'unaccounted'; }
+         catch (error) { if (error?.code !== 'ESRCH') { unconfirmed = true; descendants = 'unaccounted'; } }
+       }
+-      finish({ code: code ?? 1, timedOut, unconfirmed, descendants, elapsedMs: clock() - started, stdout, stderr });
++      resolve({ code, exitSignal, exitObserved, timedOut, unconfirmed, descendants,
++        outputDrained: drained, captureError, reason, elapsedMs: clock() - started,
++        stdout, stderr, stdoutPath, stderrPath });
++    };
++    try {
++      const [bin, ...args] = command.split(' ');
++      child = spawnImpl(bin, args, { stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
++    } catch (error) {
++      captureError = 'spawn_unavailable:' + String(error?.message ?? error);
++      void settle(false, 'spawn_unavailable');
++      return;
++    }
++    // Pipe preserves full raw byte streams with backpressure; JSON retains a bounded
++    // convenience summary only. Sink completion is required before recording PASS.
++    for (const [input, sink, label] of [[child.stdout, stdoutLog, 'stdout'], [child.stderr, stderrLog, 'stderr']]) {
++      if (!input) { captureError = 'missing_' + label; continue; }
++      input.on('data', chunk => {
++        if (label === 'stdout') stdout = (stdout + chunk.toString()).slice(-262144);
++        else stderr = (stderr + chunk.toString()).slice(-262144);
++      });
++      input.on('error', error => { captureError = String(error?.message ?? error); void settle(false, 'output_error'); });
++      input.pipe(sink);
++      sink.on('error', () => { signal('SIGTERM'); void settle(false, 'capture_error'); });
++    }
++    timer = setTimeout(() => {
++      timedOut = true;
++      signal('SIGTERM');
++      killTimer = setTimeout(() => signal('SIGKILL'), SIGKILL_GRACE_MS);
++      confirmTimer = setTimeout(() => { void settle(false, 'termination_unconfirmed'); }, SIGKILL_GRACE_MS + drainMs);
++    }, deadlineMs);
++    child.on('error', error => { captureError = 'spawn_unavailable:' + String(error?.message ?? error); void settle(false, 'spawn_unavailable'); });
++    child.on('exit', (literalCode, literalSignal) => {
++      code = literalCode; exitSignal = literalSignal ?? null; exitObserved = true;
++      clearTimeout(timer);
++      // Parent exit does not establish stream drain or descendant completion.
++      drainTimer = setTimeout(() => { signal('SIGTERM'); void settle(false, 'output_drain_unconfirmed'); }, drainMs);
++    });
++    child.on('close', (literalCode, literalSignal) => {
++      if (!exitObserved) { code = literalCode; exitSignal = literalSignal ?? null; }
++      void settle(true);
+     });
+   });
+ }
+--- stopped/tests/box/verification/environment-readiness.test.ts
++++ current/tests/box/verification/environment-readiness.test.ts
+@@ -18,7 +18,7 @@
+   checkRelayRunContract,
+   ENV_EXAMPLE_EXPECTED_SHA256
+ } from '../../../scripts/box-verification/readiness.mjs';
+-import { verifyDependencyClosure, stageFiles, runnerCreateArgv } from '../../../scripts/box-verification/environment-host.mjs';
++import { verifyDependencyClosure, stageFiles, runnerCreateArgv, stageWorkspaceAliases } from '../../../scripts/box-verification/environment-host.mjs';
+ 
+ const tmp = () => mkdtemp(join(tmpdir(), 'w002-b11-r4-readiness-'));
+ const noSleep = () => Promise.resolve();
+@@ -451,3 +451,84 @@
+   });
+ 
+ });
++
++
++describe('environment: reviewed workspace dependency aliases', () => {
++  async function fixture() {
++    const base = await tmp();
++    const nm = join(base, 'node_modules');
++    const aliases = []; const files = []; const seedPaths = [];
++    for (const [workspace, version] of [['services/test-api', '1.0.0'], ['apps/test-ui', '2.0.0']]) {
++      const targetRel = `.pnpm/foo@${version}/node_modules/foo`;
++      await mkdir(join(nm, targetRel), { recursive: true });
++      await writeFile(join(nm, targetRel, 'package.json'), JSON.stringify({ name: 'foo', version }));
++      const bytes = JSON.stringify({ name: workspace, dependencies: { foo: version } });
++      await mkdir(join(base, workspace), { recursive: true });
++      await writeFile(join(base, workspace, 'package.json'), bytes);
++      const digest = createHash('sha256').update(bytes).digest('hex');
++      files.push({ rel: workspace + '/package.json', sha256: digest });
++      aliases.push({ packageJson: workspace + '/package.json', packageJsonSha256: digest, name: 'foo', version, targetRel });
++      seedPaths.push({ name: 'foo', rel: targetRel });
++    }
++    const plan = { hostRoot: nm, containerRoot: '/logical/node_modules', mountTarget: '/stage/node_modules', seeds: [], seedPaths, packageVersions: [['foo', '1.0.0'], ['foo', '2.0.0']], packageCount: 0, fileCount: 0, closureSha256: '0'.repeat(64) };
++    const probe = await verifyDependencyClosure(plan, { root: nm });
++    const frozen = { ...plan, packageCount: probe.packageCount, fileCount: probe.fileCount, closureSha256: probe.closureSha256 };
++    return { base, manifest: { linuxDependencies: frozen, stage: { rootContainer: base, workspaceAliases: aliases, sourceFilesPlan: { files } } } };
++  }
++
++  it('preserves coexistence versions and makes only declared relative workspace aliases', async () => {
++    const { base, manifest } = await fixture();
++    expect((await verifyDependencyClosure(manifest.linuxDependencies, { root: manifest.linuxDependencies.hostRoot })).status).toBe('ok');
++    expect(await stageWorkspaceAliases(manifest)).toMatchObject({ status: 'staged', count: 2 });
++    for (const alias of manifest.stage.workspaceAliases) {
++      const bytes = await readFile(join(base, alias.packageJson.replace(/package.json$/, ''), 'node_modules/foo/package.json'), 'utf8');
++      expect(JSON.parse(bytes).version).toBe(alias.version);
++    }
++    await expect(stageWorkspaceAliases(manifest)).rejects.toThrow('workspace_alias_collision');
++  });
++
++  it('rejects an ancestor symlink before writing any alias', async () => {
++    const { base, manifest } = await fixture();
++    const outside = await tmp();
++    await symlink(outside, join(base, 'apps/test-ui/node_modules'));
++    await expect(stageWorkspaceAliases(manifest)).rejects.toThrow('workspace_alias_ancestor');
++    await expect(readFile(join(base, 'services/test-api/node_modules/foo/package.json'))).rejects.toMatchObject({ code: 'ENOENT' });
++  });
++
++  it('rejects source drift, missing declarations and unhashed targets', async () => {
++    const { base, manifest } = await fixture();
++    await expect(stageWorkspaceAliases({ ...manifest, stage: { ...manifest.stage, workspaceAliases: manifest.stage.workspaceAliases.slice(0, 1) } })).rejects.toThrow('workspace_alias_incomplete');
++    const aliases = manifest.stage.workspaceAliases.map(alias => ({ ...alias }));
++    aliases[0].targetRel = '.pnpm/unreviewed/node_modules/foo';
++    await expect(stageWorkspaceAliases({ ...manifest, stage: { ...manifest.stage, workspaceAliases: aliases } })).rejects.toThrow('workspace_alias_unhashed_target');
++    await writeFile(join(base, 'services/test-api/package.json'), '{}');
++    await expect(stageWorkspaceAliases(manifest)).rejects.toThrow('workspace_alias_source_drift');
++  });
++});
++
++
++describe('environment: bounded dependency hashing', () => {
++  it('keeps sequential canonical bytes with at most 32 reads and fails on missing evidence', async () => {
++    const base = await tmp(); const nm = join(base, 'node_modules'); const pkg = join(nm, 'seed');
++    await mkdir(pkg, { recursive: true });
++    const paths = [];
++    for (let index = 0; index < 65; index += 1) {
++      const name = `file-${String(index).padStart(3, '0')}`;
++      await writeFile(join(pkg, name), String(index)); paths.push(name);
++    }
++    await writeFile(join(pkg, 'package.json'), JSON.stringify({ name: 'seed', version: '1.0.0' })); paths.push('package.json'); paths.sort();
++    const rows = [];
++    for (const name of paths) rows.push([name, createHash('sha256').update(await readFile(join(pkg, name))).digest('hex')]);
++    const canonical = [{ name: 'seed', version: '1.0.0', root: '/logical/node_modules/seed', files: rows.length, treeSha256: createHash('sha256').update(JSON.stringify(rows)).digest('hex') }];
++    const plan = { hostRoot: nm, containerRoot: '/logical/node_modules', seeds: ['seed'], packageVersions: [['seed', '1.0.0']], packageCount: 1, fileCount: rows.length, closureSha256: createHash('sha256').update(JSON.stringify(canonical)).digest('hex') };
++    let active = 0; let maximum = 0;
++    const read = async path => {
++      active += 1; maximum = Math.max(maximum, active);
++      try { await new Promise(resolve => setTimeout(resolve, 2)); return await readFile(path); }
++      finally { active -= 1; }
++    };
++    expect((await verifyDependencyClosure(plan, { root: nm, readFileImpl: read })).status).toBe('ok');
++    expect(maximum).toBeGreaterThan(1); expect(maximum).toBeLessThanOrEqual(32);
++    await expect(verifyDependencyClosure(plan, { root: nm, readFileImpl: async path => { if (path.endsWith('file-032')) throw new Error('evidence_read_failed'); return readFile(path); } })).rejects.toThrow('evidence_read_failed');
++  });
++});
+--- stopped/tests/box/verification/relay-lifecycle.test.ts
++++ current/tests/box/verification/relay-lifecycle.test.ts
+@@ -6,6 +6,9 @@
+ import { mkdtemp, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
+ import { tmpdir } from 'node:os';
+ import { join } from 'node:path';
++import { EventEmitter } from 'node:events';
++import { PassThrough } from 'node:stream';
++import { spawn } from 'node:child_process';
+ import { describe, expect, it } from 'vitest';
+ import {
+   acquireLease, loadLease, loadSeen, setLifecycle, getLifecycle, validateRequest,
+@@ -15,7 +18,7 @@
+   READY_COMMAND_DEADLINE_MS
+ } from '../../../scripts/box-verification/fixture-exec-host.mjs';
+ import { runChild, bindRunnerArgv, resolveEntry } from '../../../scripts/box-verification/fixture-exec-runner.mjs';
+-import { validateSequence, gateStart, REQUIRED_SEQUENCE } from '../../../scripts/box-verification/run-verification.mjs';
++import { validateSequence, gateStart, REQUIRED_SEQUENCE, runSequence } from '../../../scripts/box-verification/run-verification.mjs';
+ 
+ const tmp = () => mkdtemp(join(tmpdir(), 'w002-b11-r4-relay-'));
+ const uuid = () => crypto.randomUUID();
+@@ -469,3 +472,78 @@
+     expect(outcomeRequest.reason).toBe('ambiguous_prior_state');
+   });
+ });
++
++
++describe('verification supervisor durable completion', () => {
++  const sequenceManifest = { environmentId: 'supervision-regression', commands: { sequence: REQUIRED_SEQUENCE.slice() } };
++  const mockChild = () => Object.assign(new EventEmitter(), {
++    stdout: new PassThrough(), stderr: new PassThrough(), kill: () => true
++  });
++
++  it('does not advance after zero parent exit with a surviving owned group', async () => {
++    if (process.platform === 'win32') return;
++    const dir = await tmp();
++    let calls = 0;
++    let child: ReturnType<typeof spawn> | undefined;
++    try {
++      const result = await runSequence(sequenceManifest, { stateDir: dir, spawnImpl: (_bin, _args, options) => {
++        calls += 1;
++        child = spawn(process.execPath, ['-e', 'require("child_process").spawn("sleep",["30"],{stdio:"ignore"});process.exit(0)'], options);
++        return child;
++      } });
++      expect(calls).toBe(1);
++      expect(result.status).toBe('unavailable');
++      expect(result.commands[0]).toMatchObject({ code: 0, exitObserved: true, unconfirmed: true, descendants: 'unaccounted' });
++      expect(JSON.parse(await readFile(join(dir, 'verification-run.json'), 'utf8')).status).toBe('unavailable');
++    } finally {
++      // This test owns the freshly detached group; no unrelated PID is touched.
++      if (child?.pid) { try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already exited */ } }
++    }
++  }, 25000);
++
++  it('waits for late output and retains complete raw bytes beyond the summary cap', async () => {
++    const dir = await tmp();
++    const payload = Buffer.concat([Buffer.from('begin\n'), Buffer.alloc(300000, 120), Buffer.from('\nlate-end\n')]);
++    let calls = 0;
++    const result = await runSequence(sequenceManifest, { stateDir: dir, spawnImpl: () => {
++      const child = mockChild();
++      calls += 1;
++      setTimeout(() => {
++        child.emit('exit', 0, null);
++        setTimeout(() => {
++          child.stdout.end(payload); child.stderr.end('late-warning\n');
++          child.emit('close', 0, null);
++        }, 15);
++      }, 5);
++      return child;
++    } });
++    expect(calls).toBe(7);
++    expect(result.status).toBe('pass');
++    for (const entry of result.commands) {
++      expect(entry).toMatchObject({ code: 0, exitSignal: null, exitObserved: true, outputDrained: true, unconfirmed: false });
++      expect(entry.elapsedMs).toBeGreaterThanOrEqual(15);
++      expect(await readFile(entry.stdoutPath)).toEqual(payload);
++      expect(await readFile(entry.stderrPath, 'utf8')).toBe('late-warning\n');
++      expect(entry.stdout.length).toBeLessThanOrEqual(262144);
++    }
++  });
++
++  it('bounds incomplete drainage, preserves captured bytes and stops the sequence', async () => {
++    const dir = await tmp();
++    let calls = 0;
++    const result = await runSequence(sequenceManifest, { stateDir: dir, drainMs: 40, spawnImpl: () => {
++      const child = mockChild();
++      calls += 1;
++      setTimeout(() => { child.stdout.write('captured-before-exit'); child.emit('exit', 0, null); }, 5);
++      // Neither stream ends and no close arrives: the actual drain timer must fire.
++      return child;
++    } });
++    expect(calls).toBe(1);
++    expect(result.status).toBe('unavailable');
++    const entry = result.commands[0];
++    expect(entry).toMatchObject({ code: 0, outputDrained: false, unconfirmed: true, reason: 'output_drain_unconfirmed' });
++    expect(entry.elapsedMs).toBeGreaterThanOrEqual(40);
++    expect(entry.elapsedMs).toBeLessThan(2000);
++    expect(await readFile(entry.stdoutPath, 'utf8')).toBe('captured-before-exit');
++  });
++});
+--- stopped/scripts/box-verification/environment-manifest.json
++++ current/scripts/box-verification/environment-manifest.json
+@@ -527,7 +527,7 @@
+         },
+         {
+           "rel": "scripts/box-verification/environment-host.mjs",
+-          "sha256": "b74f2ec5953014094f764642fef35eb995fb8a047839f9906d5f5cdac4ef2200"
++          "sha256": "5dee4fdecbffd57fbcc09af16645409b3233e0cd116bad35833302daec02ac43"
+         },
+         {
+           "rel": "scripts/box-verification/fixture-command-manifest.json",
+@@ -551,7 +551,7 @@
+         },
+         {
+           "rel": "scripts/box-verification/run-verification.mjs",
+-          "sha256": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be"
++          "sha256": "a3a30d326a6e2a2935b9e8f0cd22316f5106855ea1f09919c1a6a88aed86e2e8"
+         },
+         {
+           "rel": "scripts/check-startup.mjs",
+@@ -1483,11 +1483,11 @@
+         },
+         {
+           "rel": "tests/box/verification/environment-readiness.test.ts",
+-          "sha256": "7ba24f3d14eac696009f305ed010c7e3d7c1ce93a2e945c225f78df9b5934321"
++          "sha256": "bab5ddf71e83c87b08f2b6e69c3efc5aea5bca512641e75fc1f7383bbc0ef279"
+         },
+         {
+           "rel": "tests/box/verification/relay-lifecycle.test.ts",
+-          "sha256": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
++          "sha256": "316441a44d3769dff88cf3be2a1c4e57469b0d03cb9a601d56846990ca324825"
+         },
+         {
+           "rel": "tests/compiler/approval/browser.test.ts",
+@@ -1866,10 +1866,166 @@
+           "sha256": "c3a2af313d61a6f90c79071bdd058a4220233475c2fb6da9e054add42ade3a52"
+         }
+       ]
+-    }
++    },
++    "workspaceAliases": [
++      {
++        "packageJson": "apps/contributor-portal/package.json",
++        "packageJsonSha256": "e3621f60d062d56bba1b191886b16ea6fe91fff984d8caf59a94064d4307421b",
++        "name": "react",
++        "version": "19.3.0",
++        "targetRel": ".pnpm/react@19.3.0/node_modules/react"
++      },
++      {
++        "packageJson": "apps/contributor-portal/package.json",
++        "packageJsonSha256": "e3621f60d062d56bba1b191886b16ea6fe91fff984d8caf59a94064d4307421b",
++        "name": "react-dom",
++        "version": "19.3.0",
++        "targetRel": ".pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom"
++      },
++      {
++        "packageJson": "apps/private-console/package.json",
++        "packageJsonSha256": "b4b0a37c41fef878fd89f2b478a736bef1b2dadebeb78cac5d2cf4a341600b07",
++        "name": "react",
++        "version": "19.3.0",
++        "targetRel": ".pnpm/react@19.3.0/node_modules/react"
++      },
++      {
++        "packageJson": "apps/private-console/package.json",
++        "packageJsonSha256": "b4b0a37c41fef878fd89f2b478a736bef1b2dadebeb78cac5d2cf4a341600b07",
++        "name": "react-dom",
++        "version": "19.3.0",
++        "targetRel": ".pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom"
++      },
++      {
++        "packageJson": "services/external-api/package.json",
++        "packageJsonSha256": "7a76673b16a9ebf8bf49d04dc72eb2ff583642605e50fa847fc541b480dfb3a3",
++        "name": "drizzle-orm",
++        "version": "0.45.3",
++        "targetRel": ".pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm"
++      },
++      {
++        "packageJson": "services/external-api/package.json",
++        "packageJsonSha256": "7a76673b16a9ebf8bf49d04dc72eb2ff583642605e50fa847fc541b480dfb3a3",
++        "name": "fastify",
++        "version": "5.12.5",
++        "targetRel": ".pnpm/fastify@5.12.5/node_modules/fastify"
++      },
++      {
++        "packageJson": "services/external-api/package.json",
++        "packageJsonSha256": "7a76673b16a9ebf8bf49d04dc72eb2ff583642605e50fa847fc541b480dfb3a3",
++        "name": "pg",
++        "version": "8.23.0",
++        "targetRel": ".pnpm/pg@8.23.0/node_modules/pg"
++      },
++      {
++        "packageJson": "services/external-api/package.json",
++        "packageJsonSha256": "7a76673b16a9ebf8bf49d04dc72eb2ff583642605e50fa847fc541b480dfb3a3",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "services/external-api/package.json",
++        "packageJsonSha256": "7a76673b16a9ebf8bf49d04dc72eb2ff583642605e50fa847fc541b480dfb3a3",
++        "name": "@types/pg",
++        "version": "8.23.1",
++        "targetRel": ".pnpm/@types+pg@8.23.1/node_modules/@types/pg"
++      },
++      {
++        "packageJson": "services/private-api/package.json",
++        "packageJsonSha256": "ffb94d61e0bfbc893eb0354f12b852cbb114b5157eab8314c5df581bf0376a26",
++        "name": "drizzle-orm",
++        "version": "0.45.3",
++        "targetRel": ".pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm"
++      },
++      {
++        "packageJson": "services/private-api/package.json",
++        "packageJsonSha256": "ffb94d61e0bfbc893eb0354f12b852cbb114b5157eab8314c5df581bf0376a26",
++        "name": "fastify",
++        "version": "5.12.5",
++        "targetRel": ".pnpm/fastify@5.12.5/node_modules/fastify"
++      },
++      {
++        "packageJson": "services/private-api/package.json",
++        "packageJsonSha256": "ffb94d61e0bfbc893eb0354f12b852cbb114b5157eab8314c5df581bf0376a26",
++        "name": "pg",
++        "version": "8.23.0",
++        "targetRel": ".pnpm/pg@8.23.0/node_modules/pg"
++      },
++      {
++        "packageJson": "services/private-api/package.json",
++        "packageJsonSha256": "ffb94d61e0bfbc893eb0354f12b852cbb114b5157eab8314c5df581bf0376a26",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "services/private-api/package.json",
++        "packageJsonSha256": "ffb94d61e0bfbc893eb0354f12b852cbb114b5157eab8314c5df581bf0376a26",
++        "name": "@types/pg",
++        "version": "8.23.1",
++        "targetRel": ".pnpm/@types+pg@8.23.1/node_modules/@types/pg"
++      },
++      {
++        "packageJson": "services/runner-controller/package.json",
++        "packageJsonSha256": "7bb37c4f04c8507cd8c897d9982e33fdbc86f0a45a03877f508c752eba03a237",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "packages/box-contracts/package.json",
++        "packageJsonSha256": "d217fac28d8f721f1a6f777b7999dfed38b72fbf52bc8d2776c054e03c32a28c",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "packages/contracts/package.json",
++        "packageJsonSha256": "8b6315fc844d1cae07d3cafb9467e2069898364d0fa27a003c2a1ee7f6fcc6af",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "packages/runner-protocol/package.json",
++        "packageJsonSha256": "6bcea76821c5686c174b30b1ed29d7d30ba5b26847d176fb98385e908c9472d8",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "examples/private-shop/package.json",
++        "packageJsonSha256": "1070238b0c8c3103cedbda86504d8838b321ec4fc6eb48086c137224658fa27b",
++        "name": "react",
++        "version": "19.3.0",
++        "targetRel": ".pnpm/react@19.3.0/node_modules/react"
++      },
++      {
++        "packageJson": "examples/private-shop/package.json",
++        "packageJsonSha256": "1070238b0c8c3103cedbda86504d8838b321ec4fc6eb48086c137224658fa27b",
++        "name": "react-dom",
++        "version": "19.3.0",
++        "targetRel": ".pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom"
++      },
++      {
++        "packageJson": "examples/private-shop/package.json",
++        "packageJsonSha256": "1070238b0c8c3103cedbda86504d8838b321ec4fc6eb48086c137224658fa27b",
++        "name": "zod",
++        "version": "4.6.5",
++        "targetRel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "packageJson": "examples/private-shop/package.json",
++        "packageJsonSha256": "1070238b0c8c3103cedbda86504d8838b321ec4fc6eb48086c137224658fa27b",
++        "name": "fastify",
++        "version": "5.12.5",
++        "targetRel": ".pnpm/fastify@5.12.5/node_modules/fastify"
++      }
++    ]
+   },
+   "linuxDependencies": {
+-    "provenance": "root-fixed r8 input contract review-inputs-r8.json; recomputed from real bytes by environment-host.mjs verifyDependencyClosure at hostRoot before any Docker call, then bind-mounted read-only at mountTarget inside the runner; no generic node_modules copy, installs or host Windows deps",
++    "provenance": "CTO R1 complete Linux installed dependency closure: original tool seeds plus every exact root devDependency/workspace package dependency alias target; canonical root/hash rows independently revalidated on host and Linux before setup. No dependency copies, installs or downloads; existing readonly root mount.",
+     "hostRoot": "C:/Users/shout/AppData/Local/Temp/w002-b11-stage/node_modules",
+     "containerRoot": "/workspace/node_modules",
+     "mountTarget": "/stage/node_modules",
+@@ -1879,15 +2035,59 @@
+       "vite",
+       "typescript"
+     ],
+-    "packageCount": 44,
+-    "fileCount": 1153,
+-    "closureSha256": "6dafd9a0a9156385cbd2cb556c0c375e26ed8e937041d60f14d4084e9539ddb6",
++    "packageCount": 131,
++    "fileCount": 7274,
++    "closureSha256": "d6413531fdfb601a93738990c3e6f8c44e319b7acfc9a1540edecc30f21d66a9",
+     "packageVersions": [
++      [
++        "@drizzle-team/brocli",
++        "0.10.2"
++      ],
++      [
++        "@esbuild/linux-x64",
++        "0.18.20"
++      ],
++      [
++        "@esbuild/linux-x64",
++        "0.25.12"
++      ],
+       [
+         "@esbuild/linux-x64",
+         "0.28.2"
+       ],
+       [
++        "@esbuild-kit/core-utils",
++        "3.3.2"
++      ],
++      [
++        "@esbuild-kit/esm-loader",
++        "2.6.5"
++      ],
++      [
++        "@fastify/ajv-compiler",
++        "4.0.6"
++      ],
++      [
++        "@fastify/error",
++        "4.2.0"
++      ],
++      [
++        "@fastify/fast-json-stringify-compiler",
++        "5.1.0"
++      ],
++      [
++        "@fastify/forwarded",
++        "3.0.2"
++      ],
++      [
++        "@fastify/merge-json-schemas",
++        "0.2.1"
++      ],
++      [
++        "@fastify/proxy-addr",
++        "5.1.1"
++      ],
++      [
+         "@jridgewell/resolve-uri",
+         "3.1.2"
+       ],
+@@ -1904,6 +2104,14 @@
+         "0.151.0"
+       ],
+       [
++        "@pinojs/redact",
++        "0.4.0"
++      ],
++      [
++        "@playwright/test",
++        "1.63.0"
++      ],
++      [
+         "@rolldown/binding-linux-x64-gnu",
+         "1.2.11"
+       ],
+@@ -1928,6 +2136,18 @@
+         "24.13.6"
+       ],
+       [
++        "@types/pg",
++        "8.23.1"
++      ],
++      [
++        "@types/react-dom",
++        "19.3.0"
++      ],
++      [
++        "@types/react",
++        "19.3.0"
++      ],
++      [
+         "@vitest/mocker",
+         "5.0.1"
+       ],
+@@ -1936,23 +2156,75 @@
+         "5.0.1"
+       ],
+       [
++        "abstract-logging",
++        "2.0.1"
++      ],
++      [
++        "ajv-formats",
++        "3.0.1"
++      ],
++      [
++        "ajv",
++        "8.20.0"
++      ],
++      [
+         "assertion-error",
+         "2.0.1"
+       ],
+       [
++        "atomic-sleep",
++        "1.0.0"
++      ],
++      [
++        "avvio",
++        "9.3.0"
++      ],
++      [
++        "buffer-from",
++        "1.1.2"
++      ],
++      [
+         "chai",
+         "6.2.2"
+       ],
+       [
++        "cookie",
++        "1.1.1"
++      ],
++      [
++        "csstype",
++        "3.2.3"
++      ],
++      [
++        "dequal",
++        "2.0.3"
++      ],
++      [
+         "detect-libc",
+         "2.1.2"
+       ],
+       [
++        "drizzle-kit",
++        "0.31.11"
++      ],
++      [
++        "drizzle-orm",
++        "0.45.3"
++      ],
++      [
+         "es-module-lexer",
+         "2.3.2"
+       ],
+       [
+         "esbuild",
++        "0.18.20"
++      ],
++      [
++        "esbuild",
++        "0.25.12"
++      ],
++      [
++        "esbuild",
+         "0.28.2"
+       ],
+       [
+@@ -1964,10 +2236,66 @@
+         "1.4.0"
+       ],
+       [
++        "fast-decode-uri-component",
++        "1.0.1"
++      ],
++      [
++        "fast-deep-equal",
++        "3.1.3"
++      ],
++      [
++        "fast-json-stringify",
++        "7.0.1"
++      ],
++      [
++        "fast-querystring",
++        "1.1.2"
++      ],
++      [
++        "fast-uri",
++        "3.1.8"
++      ],
++      [
++        "fast-uri",
++        "4.2.1"
++      ],
++      [
++        "fastify",
++        "5.12.5"
++      ],
++      [
++        "fastq",
++        "1.20.3"
++      ],
++      [
+         "fdir",
+         "6.5.0"
+       ],
+       [
++        "find-my-way",
++        "9.9.0"
++      ],
++      [
++        "get-tsconfig",
++        "4.14.3"
++      ],
++      [
++        "ipaddr.js",
++        "2.5.0"
++      ],
++      [
++        "json-schema-ref-resolver",
++        "3.0.0"
++      ],
++      [
++        "json-schema-traverse",
++        "1.0.0"
++      ],
++      [
++        "light-my-request",
++        "6.6.0"
++      ],
++      [
+         "lightningcss-linux-x64-gnu",
+         "1.33.0"
+       ],
+@@ -1988,6 +2316,42 @@
+         "2.2.1"
+       ],
+       [
++        "on-exit-leak-free",
++        "2.1.2"
++      ],
++      [
++        "pg-cloudflare",
++        "1.4.0"
++      ],
++      [
++        "pg-connection-string",
++        "2.14.0"
++      ],
++      [
++        "pg-int8",
++        "1.0.1"
++      ],
++      [
++        "pg-pool",
++        "3.14.0"
++      ],
++      [
++        "pg-protocol",
++        "1.16.0"
++      ],
++      [
++        "pg-types",
++        "2.2.0"
++      ],
++      [
++        "pg",
++        "8.23.0"
++      ],
++      [
++        "pgpass",
++        "1.0.5"
++      ],
++      [
+         "picocolors",
+         "1.1.1"
+       ],
+@@ -1996,22 +2360,146 @@
+         "4.0.7"
+       ],
+       [
++        "pino-abstract-transport",
++        "3.0.0"
++      ],
++      [
++        "pino-std-serializers",
++        "7.1.0"
++      ],
++      [
++        "pino",
++        "10.3.1"
++      ],
++      [
++        "playwright-core",
++        "1.63.0"
++      ],
++      [
++        "playwright",
++        "1.63.0"
++      ],
++      [
+         "postcss",
+         "8.5.28"
+       ],
+       [
++        "postgres-array",
++        "2.0.0"
++      ],
++      [
++        "postgres-bytea",
++        "1.0.1"
++      ],
++      [
++        "postgres-date",
++        "1.0.7"
++      ],
++      [
++        "postgres-interval",
++        "1.2.0"
++      ],
++      [
++        "process-warning",
++        "4.0.1"
++      ],
++      [
++        "process-warning",
++        "5.1.0"
++      ],
++      [
++        "quick-format-unescaped",
++        "4.0.4"
++      ],
++      [
++        "react-dom",
++        "19.3.0"
++      ],
++      [
++        "react",
++        "19.3.0"
++      ],
++      [
++        "real-require",
++        "0.2.0"
++      ],
++      [
++        "real-require",
++        "1.0.0"
++      ],
++      [
++        "require-from-string",
++        "2.0.2"
++      ],
++      [
++        "resolve-pkg-maps",
++        "1.0.0"
++      ],
++      [
++        "ret",
++        "0.5.0"
++      ],
++      [
++        "reusify",
++        "1.1.0"
++      ],
++      [
++        "rfdc",
++        "1.4.1"
++      ],
++      [
+         "rolldown",
+         "1.2.11"
+       ],
+       [
++        "safe-regex2",
++        "5.1.1"
++      ],
++      [
++        "safe-stable-stringify",
++        "2.5.0"
++      ],
++      [
++        "scheduler",
++        "0.28.0"
++      ],
++      [
++        "secure-json-parse",
++        "4.1.0"
++      ],
++      [
++        "semver",
++        "7.8.5"
++      ],
++      [
++        "set-cookie-parser",
++        "2.7.2"
++      ],
++      [
+         "siginfo",
+         "2.0.0"
+       ],
+       [
++        "sonic-boom",
++        "4.2.1"
++      ],
++      [
+         "source-map-js",
+         "1.2.1"
+       ],
+       [
++        "source-map-support",
++        "0.5.21"
++      ],
++      [
++        "source-map",
++        "0.6.1"
++      ],
++      [
++        "split2",
++        "4.2.0"
++      ],
++      [
+         "stackback",
+         "0.0.2"
+       ],
+@@ -2020,6 +2508,10 @@
+         "4.2.0"
+       ],
+       [
++        "thread-stream",
++        "4.2.0"
++      ],
++      [
+         "tinybench",
+         "6.1.4"
+       ],
+@@ -2032,6 +2524,10 @@
+         "0.2.17"
+       ],
+       [
++        "toad-cache",
++        "3.7.4"
++      ],
++      [
+         "tsx",
+         "4.23.15"
+       ],
+@@ -2056,9 +2552,83 @@
+         "2.3.0"
+       ],
+       [
++        "xtend",
++        "4.0.2"
++      ],
++      [
+         "yaml",
+         "2.9.1"
++      ],
++      [
++        "zod",
++        "4.6.5"
+       ]
++    ],
++    "seedPaths": [
++      {
++        "name": "@playwright/test",
++        "rel": ".pnpm/@playwright+test@1.63.0/node_modules/@playwright/test"
++      },
++      {
++        "name": "@types/node",
++        "rel": ".pnpm/@types+node@24.13.6/node_modules/@types/node"
++      },
++      {
++        "name": "@types/react",
++        "rel": ".pnpm/@types+react@19.3.0/node_modules/@types/react"
++      },
++      {
++        "name": "@types/react-dom",
++        "rel": ".pnpm/@types+react-dom@19.3.0_@types+react@19.3.0/node_modules/@types/react-dom"
++      },
++      {
++        "name": "drizzle-kit",
++        "rel": ".pnpm/drizzle-kit@0.31.11/node_modules/drizzle-kit"
++      },
++      {
++        "name": "typescript",
++        "rel": ".pnpm/typescript@6.0.3/node_modules/typescript"
++      },
++      {
++        "name": "vite",
++        "rel": ".pnpm/vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1/node_modules/vite"
++      },
++      {
++        "name": "vitest",
++        "rel": ".pnpm/vitest@5.0.1_@types+node@24.13.6_vite@8.3.1_@types+node@24.13.6_esbuild@0.28.2_tsx@4.23.15_yaml@2.9.1_/node_modules/vitest"
++      },
++      {
++        "name": "yaml",
++        "rel": ".pnpm/yaml@2.9.1/node_modules/yaml"
++      },
++      {
++        "name": "react",
++        "rel": ".pnpm/react@19.3.0/node_modules/react"
++      },
++      {
++        "name": "react-dom",
++        "rel": ".pnpm/react-dom@19.3.0_react@19.3.0/node_modules/react-dom"
++      },
++      {
++        "name": "drizzle-orm",
++        "rel": ".pnpm/drizzle-orm@0.45.3_@types+pg@8.23.1_pg@8.23.0/node_modules/drizzle-orm"
++      },
++      {
++        "name": "fastify",
++        "rel": ".pnpm/fastify@5.12.5/node_modules/fastify"
++      },
++      {
++        "name": "pg",
++        "rel": ".pnpm/pg@8.23.0/node_modules/pg"
++      },
++      {
++        "name": "zod",
++        "rel": ".pnpm/zod@4.6.5/node_modules/zod"
++      },
++      {
++        "name": "@types/pg",
++        "rel": ".pnpm/@types+pg@8.23.1/node_modules/@types/pg"
++      }
+     ]
+   },
+   "linuxTooling": {
+@@ -2264,4 +2834,4 @@
+     "supervisoryCheckpointMinutes": 15,
+     "correctionSupervision": "progress-based informative corrections and affected reruns within the eight leased paths; no blanket correction/rerun count, no overall active-minute cutoff, no unchanged no-evidence retry loop"
+   }
+-}+}

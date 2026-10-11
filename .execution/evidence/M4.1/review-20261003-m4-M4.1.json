@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.1",
+  "reviewer": "opencode-reviewer-subagent-m4-20261003",
+  "reviewedAt": "2026-10-04",
+  "role": "distinct independent reviewer; did not implement M4.1/M4.2; read docs/SECURITY.md (approved-only release), docs/COMPOSITION.md, docs/ARCHITECTURE.md (data and hashes), task cards, drafts, milestones/M4.md and evidence before judging; challenged acceptance and re-ran decisive checks on the current tree",
+  "revisionBinding": {
+    "manifest": ".execution/evidence/M4.1/revision-8fc0c0e22152c2ed0fc3117a3550cd8a6fbd8eb2840b72125558dbb068c6b48a.json",
+    "entries": 61,
+    "digestRecomputedMatchesState": true,
+    "manifestDigestRecomputedFromContents": "8fc0c0e22152c2ed0fc3117a3550cd8a6fbd8eb2840b72125558dbb068c6b48a (matches state.json revision.digest)",
+    "taskDefinitionSha256MatchesCurrentTaskGraph": true,
+    "recomputationMethod": "independent PowerShell recompute of SHA-256 and byte size for every one of the 61 manifest entries against the working tree, executed by this reviewer",
+    "mismatches": [
+      { "path": "docs/DECISIONS.md", "classification": "shared", "expected": true, "detail": "disclosed coordinator drift; 26488 -> 28711 bytes; current bytes are bound by M5.3's revision manifest (2026-10-03T23:57)" },
+      { "path": "scripts/execution.mjs", "classification": "shared", "expected": true, "detail": "disclosed coordinator drift; 7503 -> 7633 bytes; current bytes bound by M5.3's revision manifest" },
+      { "path": "services/private-api/db/migrations/meta/_journal.json", "classification": "shared", "expected": false, "detail": "UNDISCLOSED in the coordinator drift set; 964 -> 1074 bytes: one additive journal entry for migration 0007_evaluation_jobs (M5.3 coordinator batch; its manifest binds 0007 and the current journal). M4.1's own migration deliverable is unaffected: services/private-api/db/migrations/0006_immutable_release_content.sql and the releases/schema.sql copy remain byte-identical at 71946d8a...; all SQL in 0006 is CREATE-only guards. The persistence-live rerun below applied all migrations including 0007 to a fresh synthetic DB and passed. Observed bookkeeping oddity in the 0007 journal entry: when=1791962400000 is a round, future-dated timestamp (~2026-10-15), not a real clock value." }
+    ],
+    "productPathMismatch": false,
+    "productPathsByteIdentical": true,
+    "missingFiles": 0,
+    "diskFilesUnderWritePathsNotInManifest": [],
+    "classification": "disclosed_drift_plus_one_additional_shared_file_no_product_drift"
+  },
+  "acceptanceJudgements": [
+    {
+      "bullet": "Editing any approved byte, policy or template requires reapproval.",
+      "verdict": "pass",
+      "evidence": "tests/compiler/approval/staging.test.ts 'invalidates the manifest for one changed asset byte or public policy' flips one asset byte (synthetic=true -> false) and asserts a different manifestHash, then a listing change rebinds listingHash; store.test.ts 'detects stored content drift' mutates one stored asset byte and proves approval is impossible (missing_evidence) without re-review of the actual bytes; approved-only.test.ts re-signs inconsistent contractHash/listingHash/feedbackPolicyHash/paymentTermsHash/templateHash/executionImageDigest and every re-signed forgery is still rejected, so template/policy bytes cannot be swapped under an old approval; live-fixture.ts proves approval fails after the intent revision changes and the browser test asserts 'These approved bytes are immutable.' Migration 0006 DB triggers reject UPDATE/DELETE of objects/links/signatures and non-advancing candidate mutations."
+    },
+    {
+      "bullet": "AI/worker cannot approve; a displayed summary cannot replace review of actual released contents.",
+      "verdict": "pass",
+      "evidence": "store.approve requires a SessionActor whose role/account/session/csrf are re-verified with FOR SHARE row locks inside the same transaction (store.test.ts asserts the exact SQL contains session.expires_at>now() and FOR SHARE OF account, session and that rejected authority writes nothing); requester/operator/contributor roles are rejected in store.test.ts, approved-store.test.ts, live-fixture (403) and the real-browser test (requester GET 403); revocation denies review/approve/compile. The browser test drives the real UI+API and asserts the actual staged source text (SYNTHETIC_RELEASE_BYTES marker), the contract content hash and data_only_policy capability text are shown, the embedded <img src=x onerror> payload is rendered as escaped text (img[src=x] count 0, window.__releaseCanary undefined), and approval stays disabled until the explicit complete-bytes checkbox plus rationale; the API independently rehashes stored bytes and binds exact manifestHash/version rather than trusting the UI summary."
+    },
+    {
+      "bullet": "Ed25519 approval binding is real: signatures over the canonical manifest hash; external side verifies with public key only.",
+      "verdict": "pass",
+      "evidence": "store.ts signs the exact canonicalize(manifest) bytes with the Ed25519 private key loaded from the runtime secret file (PRIVATE_RELEASE_KEY_FILE); packages/compiler/index.ts refuses any key that is not type=public asymmetricKeyType=ed25519 and verifies the signature over canonicalize(manifest) before accepting any bytes; store.test.ts and live-fixture verify the approval signature with keys.publicKey; the synthetic runtime provisions separate private release-key and external release-public-key files; the real-browser approval flows into the runtime compiler (download path) which verifies with the runtime's real public key; the synthetic runtime key is generated at runtime, not source-controlled."
+    },
+    {
+      "bullet": "One owner approval covers the exact whole task (combined meaning/capability union).",
+      "verdict": "pass",
+      "evidence": "staging.test.ts proves the complete ui/api/policy union is one immutable candidate with unitIds/interfaceIds/capabilities enumerated; ApprovalSchema requires combinedDisclosureReviewed literal true plus rationale; the whole-union approval is signed over the manifest that binds contract/listing/feedback/payment/template/image hashes together."
+    }
+  ],
+  "reruns": [
+    {
+      "command": "node scripts/evidence.mjs M4.1 review-20261003-2-approval scripts/pnpm.mjs test:compiler -- --suite approval",
+      "evidence": ".execution/evidence/M4.1/review-20261003-2-approval.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "4 files / 24 tests passed: browser.test.ts through the real private API+browser (3.0s), persistence-live.test.ts real synthetic PostgreSQL with immutable approvals (3.1s), staging 15, store 7; runtime was up and migrations re-applied idempotently by the reviewer before the run (node scripts/migrate-runtime.mjs exit 0, no data reset)"
+    },
+    {
+      "command": "(shared, not re-run per instructions) node scripts/pnpm.mjs test:auth",
+      "evidence": ".execution/evidence/M4.2/shared-auth-final2.json",
+      "exitCode": 0,
+      "assurance": "tested",
+      "observed": "coordinator's same-day 40/40 after one disclosed synthetic private-api restart for the existing 429 rate policy; reviewer did not rerun the login-heavy suite to avoid triggering the rate policy"
+    }
+  ],
+  "retainedFailures": [
+    { "file": ".execution/evidence/M4.1/review-20261003-1-approval.json", "detail": "a prior reviewer attempt recorded an argv-convention error (literal 'node' passed to evidence.mjs -> MODULE_NOT_FOUND, exit 1); task-agnostic invocation error, disclosed here and superseded by review-20261003-2-approval.json; left in place" },
+    { "file": ".execution/evidence/M4.1/release-duplicate-before.json", "detail": "historical worker failure (duplicate candidate 503 instead of 409) retained from implementation and fixed in code; release-duplicate-fixed.json shows 409" }
+  ],
+  "limitations": "Synthetic fixtures/accounts only; approval authority verified on synthetic PostgreSQL/HTTP/Chromium, not a real customer environment. Signature/key provenance assumes the runtime secret file integrity (operator assumption). The prepared-JSON staging input remains a disclosed prototype integration boundary; compiler-driven preparation is M4.2/M9. No package readiness/publication claim is made and none is supported here. Independent review of this revision is now recorded by this reviewer, but milestone completion still requires the coordinator to accept the review; verify:mvp continues to exit 2 honestly.",
+  "verdict": "approved"
+}

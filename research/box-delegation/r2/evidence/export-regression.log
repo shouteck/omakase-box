@@ -1,0 +1,22 @@
+scoped run: 2 file(s) under tests\box\package — this is an inner loop, never suite acceptance
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+ [32m✓[39m tests/box/package/submission.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 8123[2mms[22m[39m
+   [32m✓[39m in-box submit tool [2m(4)[22m
+     [33m[2m✓[22m[39m seals edited editable files into an artifact bound to the box[33m 2139[2mms[22m[39m
+   [32m✓[39m owner-side submission validation [2m(15)[22m
+     [33m[2m✓[22m[39m accepts a request B submission sealed against the generated scaffold baseline[33m 2079[2mms[22m[39m
+     [33m[2m✓[22m[39m verifies the sealed manifest hash against a retained export[33m 407[2mms[22m[39m
+ [32m✓[39m tests/box/package/export.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 4440[2mms[22m[39m
+   [32m✓[39m box export [2m(3)[22m
+     [33m[2m✓[22m[39m exports request A with exactly the declared runnable closure plus scaffold and evaluator[33m 2208[2mms[22m[39m
+     [33m[2m✓[22m[39m exports request B with the generated scaffold and zero owner source disclosed[33m 1749[2mms[22m[39m
+     [33m[2m✓[22m[39m does not count a link inside the source root as an owner file[33m 480[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 11:41:42
+[2m   Duration [22m 14.57s[2m (tests 89%, import 9%, transform 2%)[22m
+
+EXIT=0

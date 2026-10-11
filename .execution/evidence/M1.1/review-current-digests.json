@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--input-type=module",
+    "-e",
+    "import fs from 'node:fs';import crypto from 'node:crypto';import assert from 'node:assert/strict';const s=JSON.parse(fs.readFileSync('.execution/state.json'));const id='M1.1';const m=JSON.parse(fs.readFileSync(s.tasks[id].revision.manifest));const mismatches=m.files.filter(f=>crypto.createHash('sha256').update(fs.readFileSync(f.path)).digest('hex')!==f.sha256);const digest=crypto.createHash('sha256').update(JSON.stringify(m)).digest('hex');console.log(JSON.stringify({taskId:id,digest,fileCount:m.files.length,mismatches}));assert.equal(digest,s.tasks[id].revision.digest);assert.equal(mismatches.length,0);"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T16:50:43.830Z",
+  "finishedAt": "2026-10-02T16:50:44.193Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "{\"taskId\":\"M1.1\",\"digest\":\"14e90ef9c8eee3b10c4bbf3f436bea3a3f5793f6d87b5653258e59aa78ce2d9c\",\"fileCount\":58,\"mismatches\":[{\"path\":\"packages/contracts/hash.ts\",\"bytes\":2049,\"sha256\":\"73aa42b822c8ab3f85b3e12608119b8f46438ff79f15007420176950c92a87c2\"}]}\nnode:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n1 !== 0\r\n\r\n    at file:///C:/Users/shout/Desktop/Projects/private-task-mvp/[eval1]:1:585\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:278:26)\r\n    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:275:20)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 1,\r\n  expected: 0,\r\n  operator: 'strictEqual',\r\n  diff: 'simple'\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

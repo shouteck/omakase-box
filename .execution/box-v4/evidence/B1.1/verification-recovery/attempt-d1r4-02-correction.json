@@ -1,0 +1,16 @@
+{
+  "attempt": "d1-r4-02",
+  "recordedAt": "2026-10-05 worker session, wall clock unverified",
+  "blockerAndHypothesis": "Independent reviewer FAIL on first corrected candidate: environment-manifest.json carries stale revision '2026-10-05-r4-environment-v2', stale briefDigest sha256:f40a0d3b..., and obsolete limits environmentAttempts=2, harnessCorrectionRounds=1, totalActiveMinutes=180 — contradicting operative W002-D1-r4 (brief 13a49058..., one setup attempt <=20min, 10min transfer check, 8min per-command, 15min checkpoint, progress supervision with no blanket counts/cutoff).",
+  "candidateIdentity": "first corrected candidate per candidate-manifest-d1r4.json; before hashes in attempt-d1r4-after-sha256.txt",
+  "priorCommandEvidence": "grep confirms stale fields exist only in environment-manifest.json and the matching revision literal in environment-host.mjs loadEnvironmentManifest; no test file references the old revision/limits.",
+  "whatChanged": "Minimal scoped edit: revision -> 2026-10-05-d1-r4-environment-v3 bound to r4; briefDigest -> sha256:13a490589c2a96a90a798be3520566384045435d9775027ca19b4a85219e5faf; limits block rewritten to r4 policy (setupAttempts 1, activeSetupMinutesPerAttempt 20, transferCheckMinutes 10, minutesPerRequiredCommand 8, supervisoryCheckpointMinutes 15, progress-supervised corrections with no blanket count or overall cutoff); loadEnvironmentManifest revision literal updated coherently; embedded sourceFilesPlan digest for environment-host.mjs re-pinned; candidate manifest re-written.",
+  "whyDistinguishes": "Reviewer FAIL named exact stale fields; correcting only those fields plus the coherent revision check removes the cited defect without touching proven-passing logic; the unchanged test selection rerun proves no regression was introduced by the metadata correction.",
+  "expectedObservations": "JSON parses; node --check passes; Linux three-file vitest selection again exits 0 with same 60-test counts.",
+  "exactCommand": "edits + sha256sum before/after; refresh ONLY the two changed files in /workspace/.d1-r4-worker-review-d1r4w1, re-prove hashes, then 'timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs' via docker exec w002-b11-ws",
+  "safetyGate": "no Docker mutation/resources/setup/fixtures/readiness/acceptance/Git/DB/API/queue/credentials; Linux-only execution in the existing verified review dir",
+  "mutationFootprint": "environment-manifest.json + environment-host.mjs (2 leased paths), refreshed copies in the existing review dir, new evidence records",
+  "outputDestination": "this evidence directory",
+  "commandHangBound": "180s vitest timeout; durable output files under /tmp inside w002-b11-ws then copied out",
+  "status": "in_progress"
+}

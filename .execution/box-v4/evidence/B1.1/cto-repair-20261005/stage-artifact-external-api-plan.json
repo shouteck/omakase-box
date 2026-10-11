@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "exec",
+    "--workdir",
+    "/stage/services/external-api",
+    "w002-b11-linux-r4-env2",
+    "timeout",
+    "30",
+    "node",
+    "-e",
+    "const fs=require('fs'),path=require('path'),crypto=require('crypto');let files={};function walk(dir){for(const name of fs.readdirSync(dir).sort()){const p=path.join(dir,name),s=fs.lstatSync(p);if(s.isSymbolicLink())throw Error('unexpected artifact link');if(s.isDirectory())walk(p);else if(name.endsWith('.js')||name.endsWith('.mjs')||name.endsWith('.cjs'))files[p.replace(/\\\\/g,'/')]=crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex')}}walk('dist');console.log(JSON.stringify({files},null,2))"
+  ],
+  "sourceSha256": "af388b9a1f4d31a4ad9036d0be298519e9fc0f1a1bfcdb3767474a3fe393d1fb"
+}

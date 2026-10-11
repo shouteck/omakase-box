@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact_reviewed_stage_overlay_and_conditional_acceptance_release",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "authority": ".execution/box-v4/approvals/W002-CTO-R2-Devin-H1-request.json",
+  "sourceRelease": "devin-h1-cooldown-correction-release.json",
+  "review": "devin-h1-review/independent-review-r2-h1-attempt3-final.json",
+  "independentNarrowProof": "devin-h1-review/reviewer-narrow-r2h1a3/receipt.json",
+  "independentNarrowResult": "74of74passed_exit0_withcomplete_durable_logs_and_confirmed_empty_descendants",
+  "sourceWriter": "box-worker/483988b4_returned_frozen",
+  "reviewer": "box-reviewer/27f919af",
+  "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "stageOverlay": "Root preserve existing reviewed supervisor/relaytest/manifest and duplicate gate manifest; hashcheck before-copy. Copy only final3reviewedsourcepaths and gate metadata, no mount/resource/helper changes. Reviewer must independently verify post-copy456parity beforeready.",
+  "previousHashes": {"scripts/box-verification/run-verification.mjs": "a3a30d326a6e2a2935b9e8f0cd22316f5106855ea1f09919c1a6a88aed86e2e8", "tests/box/verification/relay-lifecycle.test.ts": "b7cee05122690fa71077161bb6214327c40cfff10beb335890b802bdd4811306", "scripts/box-verification/environment-manifest.json": "3555d4dd7cc32cbd848400da4a710e59ddb4d9fdccd87481c7934bd7fad855ae"},
+  "newHashes": {"scripts/box-verification/run-verification.mjs": "199021cd141b613138b0839d61ec195d603f3de4b1975ca4cd813f634aed4094", "tests/box/verification/relay-lifecycle.test.ts": "e4d5fd076c1fb3520aa64c4e72253a3d771131b6b8aa6fddd17909af6d082b7d", "scripts/box-verification/environment-manifest.json": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f"},
+  "acceptanceRelease": "Only after current independently ready receipt and all exactgates pass, reviewer executes the original complete seven once in fresh outputnamespace using final reviewed supervisor and unchanged R2 launcher settings. 305000ms bounded inter-command idle is accounted separately; actual eachcommanddeadline remains8min. Full output/exit/duration/emptyowneddescendants mandatory. Stop firstFAIL/UNKNOWN, preservehistory.",
+  "fixtureAccounting": "Recount8of12beforebatch; singlefinalbatchadds4to12. Existing relay201644 exclusive/ready/unexpired, requests34responses34noneunknowncurrent. No old8replay, reset/drop/capincrease/restart/leaseextension.",
+  "commands": ["test:box-contracts", "test:box-auth", "check", "build", "test:auth", "test:contracts", "test:planner"],
+  "productAccepted": false,
+  "newFeatureApproved": false,
+  "savingReleased": false
+}

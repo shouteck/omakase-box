@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed_setup_command",
+  "exit": 0,
+  "startedAtUtc": "2026-10-05T02:54:18.5429704Z",
+  "endedAtUtc": "2026-10-05T02:54:23.5863122Z",
+  "elapsedMs": 5046.0661,
+  "reviewSha256": "7db3025b7f747ff41878db554f16b99f0d4aa0496d44be3bb62e474d33e7aeb3",
+  "stdout": "setup.stdout.log",
+  "stderr": "setup.stderr.log"
+}

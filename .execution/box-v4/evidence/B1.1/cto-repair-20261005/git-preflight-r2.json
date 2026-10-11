@@ -1,0 +1,23 @@
+{
+  "kind": "read_only_authorized_git_destination_preflight",
+  "recordedAtUtc": "2026-10-05T03:22:14.140312+00:00",
+  "destination": "shouteck/omakase-box",
+  "isPrivate": true,
+  "branch": "master",
+  "remoteUrl": "https://github.com/shouteck/omakase-box.git",
+  "localHead": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "remoteHead": "f952c73f4eeb8a8032ed01c64a1edbeefca78bb7",
+  "checks": [
+    {
+      "command": "gh repo view shouteck/omakase-box --json nameWithOwner,isPrivate,defaultBranchRef",
+      "exit": 0
+    },
+    {
+      "command": "git scoped ls-remote origin refs/heads/master",
+      "exit": 0
+    }
+  ],
+  "commitPerformed": false,
+  "pushPerformed": false,
+  "note": "Dated observation, recheck before reviewed checkpoint; unfinished product not authorized by this preflight."
+}

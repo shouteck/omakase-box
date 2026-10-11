@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_persisted_attributed_independent_W004_closure_and_W005_proposal_review",
+  "waveId": "W004",
+  "reviewer": "box-reviewer/f3ab3b2f",
+  "lead": "box-product-lead/362e0c60",
+  "attribution": "Faithful excerpt of full independent closure/proposal verdict returned by same reviewer through lead foreground response; root persisted, not child-written. Decorative checkmarks omitted.",
+  "verdict": "PASS",
+  "sourceBaseline": "fd57788663e2867b46f2f3ce06e419c8fb828bfe",
+  "snapshotHashes": {
+    "approvals/W004-approval.json": "89496767b8403c5269dcb4ab1fa8dc50cc18c7f42858d164ea9e973bcd6200ba",
+    "evidence/W004-proposal-binding.json": "8071ee2b9ca4722808c37bc9ab33478a031bb61ceb54ce375eca2a13c096598a",
+    "waves/W004.json": "7c64b8ff4bebe26011edbfca5d51de3b98f70691ce79a3be0140e62d36e8a778",
+    "state.json": "6bd9ebf426f8cbb60ec59a42f7bea778f5e5fb23f1bc31b2589a2d736a05b8c0",
+    "handoffs/W004-C1.md": "e90e1eab269c84adf0858bf5ee3f2741caf1416b2712128b10471e2d6e56ddb6",
+    "evidence/W004-C1/new-file-tool-proof.json": "3f599412119fe2b1240703d66fa7133a882b65e320d7ac203b763e0f34e564ec",
+    "evidence/W004-C1/cto/acceptance.json": "89bb10616b53453a866826baed3011b2186916bed9898c7a94b05a49012f5c9a",
+    "evidence/W004-C1/cto/reviewer-verdict.json": "6d9b598365e615bb5c3604cc5311c3556c91c074025cbf8f355ba6eed4f84314",
+    "evidence/W004-C1/cto/worker-receipt.json": "7e5a97c6c98eaf9f54f3410a8266dcc4b8e8f92a57f8a617aa821be1470d5bb6",
+    "briefings/W005.md": "4564159d6de8f622f20bbf0baaab69991bbccb0e764d563c931f7fa8347f04f9",
+    "evidence/W005-proposal-binding.json": "f3d69cce99ab98e71b35be5a8409efb968bfe3a2c987b9da9b0dd7e0cdbdeada",
+    "waves/W005.json": "8853b76bdbdbb23af59c80009cb9d199e5ad4cb147453eb8dcddbb3dcdc03249"
+  },
+  "checks": ["W004 actual approval/exact brief and creation/readback/hash receipt, corrected SHA256 interpretation", "Exact probe96bytes, no root-created proof or signed-trace claim", "Truthful root attribution/acceptance/source baseline, no product/resource mutation", "D1.1 hashes/Bhistory/W00212cap preserved, D1.2 pending", "Complete bounded W005 next proposal with15new/7sharedpaths and distinct explicit future resource/alias authority", "Checkpoint scope/privacy and unrelated recovery exclusions"],
+  "reportedCommands": "Scoped Git status/cached names/diff/ls-files; sha256sum12records+3design docs; parent directory metadata; dedicated reads; all exits0, exact durations not exposed",
+  "W005Review": "PASS_no_concrete_defect_found; remains awaiting CEO approval and authorizesDispatch:false",
+  "checkpointWhitelist": "W004 state/approval/binding/wave/handoff, owned proof+cto metadata, W005 frozen brief/binding/wave only",
+  "exclusions": "Old relay stdout/result, archives/snapshot/parity outputs and all W003/product/profile/config bytes excluded",
+  "metadataObservation": "lastCompletedWaveW003 and currentRootAcceptanceD1.1 were truthful bookkeeping lag at this snapshot; factual W004 completion update allowed only as observed status",
+  "limitations": ["No staged selection existed during review; staged parity still to verify", "No commit/push by reviewer", "Creation method uses attributed tool receipt plus exact artifact, not signed trace", "W005 semantic design examples checked at structure/scope level, not every line", "Unrelated historical outputs scoped out, not deep-audited"],
+  "notNewWaveApprovalOrCheckpoint": true
+}

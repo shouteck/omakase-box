@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "box": {
+    "id": "a4-npm-cli-paint",
+    "name": "Add ANSI colouring to the a4-npm-cli banner paint helper",
+    "version": 1
+  },
+  "outcome": "In src/paint.js make paint(text, color) wrap the text in the ANSI color code for 'red' (31), 'green' (32) or 'blue' (34) and reset the foreground with code 39. Unknown color names and empty or non-string text keep passing through unchanged. Edit only the declared editable file.",
+  "baseCommit": "4f25db6188fd08c39325158ce01a6633fade740b",
+  "agreementSha256": "70f8b32e3b995b834bd0fdc35f142811c4bd0be11447fbefeb836e67ae86f9e7",
+  "sourceRoot": "examples/a4-npm-cli",
+  "requires": [
+    {
+      "program": "node",
+      "version": ">=24.11.0 <25"
+    }
+  ],
+  "declaredDependencies": {},
+  "files": [
+    {
+      "box": "package.json",
+      "owner": "package.json",
+      "origin": "runnable",
+      "sha256": "08b6b33917bcdfe82a20d5552a00567fd13703e7c9dfee074c48b96b8f226bf5",
+      "bytes": 147
+    },
+    {
+      "box": "README.md",
+      "owner": "README.md",
+      "origin": "runnable",
+      "sha256": "5011eb6e5ce2d104583842fbf292119a63352a6e3d780c445cd100549cc39f21",
+      "bytes": 229
+    },
+    {
+      "box": "checks/guard.mjs",
+      "owner": "checks/guard.mjs",
+      "origin": "runnable",
+      "sha256": "015a8003e14a9f7393bb0c4f888fdaf64b27e9ba4f080409ec7e293434598b92",
+      "bytes": 722
+    },
+    {
+      "box": "checks/outcome.mjs",
+      "owner": "checks/outcome.mjs",
+      "origin": "runnable",
+      "sha256": "99d0b48a7cf02aa3471de5d2edf989d9918afc3da12da99ba00430fa211d3aff",
+      "bytes": 1142
+    },
+    {
+      "box": "src/paint.js",
+      "owner": "src/paint.js",
+      "origin": "editable",
+      "sha256": "3aa9bb1ebf8442c3ba7d84bd7935a23ac4cc1bec30f95ad5849ed7fb1f256c1f",
+      "bytes": 309
+    }
+  ],
+  "editable": [
+    {
+      "box": "src/paint.js",
+      "owner": "src/paint.js"
+    }
+  ],
+  "readContext": [],
+  "checks": [
+    "declared outcome: node checks/outcome.mjs rejects uncolored paint; declared guard: node checks/guard.mjs keeps pass-through behavior green"
+  ],
+  "evaluator": [],
+  "setup": [],
+  "commands": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "args": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "args": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-cli-guard",
+      "program": "node",
+      "args": [
+        "checks/guard.mjs"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "box-cli-outcome",
+      "program": "node",
+      "args": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "timeoutMs": 120000
+    }
+  ],
+  "baseChecks": [
+    {
+      "name": "cli-guard",
+      "program": "node",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-npm-cli guard: base behavior intact",
+      "seconds": 0.083
+    },
+    {
+      "name": "cli-outcome",
+      "program": "node",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": "examples/a4-npm-cli",
+      "context": "owner",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"hi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"ok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"sky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"a b\"\na4-npm-cli outcome: 4 failing case(s)",
+      "seconds": 0.078
+    },
+    {
+      "name": "box-cli-guard",
+      "program": "node",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "guard",
+      "exit": 0,
+      "result": "pass",
+      "log": "a4-npm-cli guard: base behavior intact",
+      "seconds": 0.088
+    },
+    {
+      "name": "box-cli-outcome",
+      "program": "node",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": ".",
+      "context": "recipient",
+      "role": "outcome",
+      "exit": 1,
+      "result": "fail",
+      "log": "OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"hi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"ok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"sky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"a b\"\na4-npm-cli outcome: 4 failing case(s)",
+      "seconds": 0.077
+    }
+  ],
+  "paired": [
+    {
+      "name": "box-cli-guard",
+      "program": "node",
+      "argv": [
+        "checks/guard.mjs"
+      ],
+      "cwd": ".",
+      "owner": {
+        "exit": 0,
+        "result": "pass",
+        "log": "a4-npm-cli guard: base behavior intact",
+        "outputSha256": "b53bae4b7d3c86c1bf134ba4a01a33c24117fdef1b3567d7020123257b780651",
+        "seconds": 0.077
+      },
+      "box": {
+        "exit": 0,
+        "result": "pass",
+        "log": "a4-npm-cli guard: base behavior intact",
+        "outputSha256": "b53bae4b7d3c86c1bf134ba4a01a33c24117fdef1b3567d7020123257b780651",
+        "seconds": 0.088
+      }
+    },
+    {
+      "name": "box-cli-outcome",
+      "program": "node",
+      "argv": [
+        "checks/outcome.mjs"
+      ],
+      "cwd": ".",
+      "owner": {
+        "exit": 1,
+        "result": "fail",
+        "log": "OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"hi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"ok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"sky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"a b\"\na4-npm-cli outcome: 4 failing case(s)",
+        "outputSha256": "5d35fa984ca776daa86d6f52257457f1c444c9f179792c1d1a56a5d47db55b01",
+        "seconds": 0.076
+      },
+      "box": {
+        "exit": 1,
+        "result": "fail",
+        "log": "OUTCOME FAIL paint(\"hi\", \"red\") expected \"\\u001b[31mhi\\u001b[39m\" got \"hi\"\nOUTCOME FAIL paint(\"ok\", \"green\") expected \"\\u001b[32mok\\u001b[39m\" got \"ok\"\nOUTCOME FAIL paint(\"sky\", \"blue\") expected \"\\u001b[34msky\\u001b[39m\" got \"sky\"\nOUTCOME FAIL paint(\"a b\", \"red\") expected \"\\u001b[31ma b\\u001b[39m\" got \"a b\"\na4-npm-cli outcome: 4 failing case(s)",
+        "outputSha256": "5d35fa984ca776daa86d6f52257457f1c444c9f179792c1d1a56a5d47db55b01",
+        "seconds": 0.077
+      }
+    }
+  ],
+  "warnings": [
+    "1 legacy 'checks' entr(ies) are owner-readable descriptions, not runnable descriptors — no base results recorded for them"
+  ],
+  "submission": {
+    "format": "editable-overlay",
+    "tool": "box/submit.mjs",
+    "editable": [
+      {
+        "box": "src/paint.js",
+        "owner": "src/paint.js"
+      }
+    ],
+    "instructions": "Edit only the file listed in box.json editable paths (src/paint.js). It maps back to src/paint.js in the owner repository. Make paint(text, color) wrap text in ANSI color 31/32/34 for red/green/blue and reset with code 39; unknown colors and empty text pass through unchanged. Seal the work with node box/submit.mjs and return submission.json."
+  },
+  "disclosure": {
+    "shippedOwnerFiles": 5,
+    "inventoryFiles": 5,
+    "share": 1
+  }
+}

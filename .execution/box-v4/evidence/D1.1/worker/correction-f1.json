@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "d11_worker_correction_receipt",
+  "waveId": "W003",
+  "revision": "2026-10-05-d1.1-r1",
+  "brief": ".execution/box-v4/briefings/W003.md",
+  "briefSha256": "491074d91dc72f7fc130fd2adabd8dcbf3d6c5a16889a26639b8df8b4455ec8c",
+  "taskId": "D1.1",
+  "actor": "terminal D1.1 design worker (sole writer for the three records)",
+  "reviewFinding": {
+    "reviewer": "c34c32ac",
+    "verdict": "changes_required",
+    "finding": "F1: REUSE-INTERFACES.md line 35 said `supersedesApproval`; actual field in services/private-api/boxes/store/store.ts read() is `supersededApproval`."
+  },
+  "correction": "Single-token rename `supersedesApproval` -> `supersededApproval` on line 35 via exact-string edit tool. Verified against source (store.ts line 106 returns `supersededApproval`). No other byte changed.",
+  "candidateHashes": {
+    "docs/box-v4/delegation/SUPPORTED-CASE.md": "066c7759c9462f01487d2b7fe0595369e0de92440465e722997b71b3a2b80d9c",
+    "docs/box-v4/delegation/REUSE-INTERFACES.md": "8aa7ea0f74218cd99c056733d4cef4b8cbd29b9539c1c6973930002f0b48b042",
+    "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md": "0e106481d62a1f0cc5bfe1d2a169ba30fa632a1129f8367e040ffd1b7dbc5791"
+  },
+  "hashMethod": "node:crypto sha256 over file bytes",
+  "unchanged": "SUPPORTED-CASE.md and FIRST-IMPLEMENTATION-BRIEF.md hashes identical to original candidate; only the named token in REUSE-INTERFACES.md changed.",
+  "scope": "Only docs/box-v4/delegation/REUSE-INTERFACES.md and this receipt touched. No state/approval/handoff/selector/root files modified; no acceptance marked.",
+  "status": "corrected_pending_rereview_not_accepted"
+}

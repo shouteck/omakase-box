@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "root_phase_release_scribe_receipt",
+  "writer": {
+    "tool": "devin subagent exec/python file write",
+    "profile": "mechanical governance scribe (no independent approval/review authority)",
+    "note": "Governance/evidence files only; no product code, Docker, Git, DB or setup commands run."
+  },
+  "rootDecisionBasis": "Root inspected current independent exact-byte review harness-review-d1r4-attempt2.json (verdict pass / phaseVerdict PRE-EXECUTION PASS, receipt SHA256 8da66e664bc71457f7b53216a1f87180ee4d462585e2bc4a39ec335f7da1bab6) and released ONLY the next setup/readiness phase under W002-D1-r4. Scribe recorded the decision; B1.1 remains unaccepted.",
+  "modifiedPaths": [
+    ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json",
+    ".execution/box-v4/waves/W002.json",
+    ".execution/box-v4/state.json"
+  ],
+  "createdPaths": [
+    ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json",
+    ".execution/box-v4/evidence/B1.1/verification-recovery/root-phase-release-scribe-d1r4.json"
+  ],
+  "hashes": {
+    "before": {
+      ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json": "902a3bd702db24a18a83f54a5f961309ae2c0770c01a9b6eb87dc90cd6368ef1",
+      ".execution/box-v4/waves/W002.json": "e36ae70bc790c3cd857c725ce3c24ac8eab07a046c7faadecd1be247d864953f",
+      ".execution/box-v4/state.json": "092a75284339af8be934732228d4ed33ecc32dfe72b06c11d373857e42e5b78f",
+      ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json": "absent_before"
+    },
+    "after": {
+      ".execution/box-v4/evidence/B1.1/verification-recovery/team-lease-d1-r4.json": "25e4e5801aebea6ea8873beff4dda8d2656ed5e1a480bc34b4f2fe135d80250f",
+      ".execution/box-v4/waves/W002.json": "f0f7113e0fbc83f489d3769e6adf4d60a52319903f986074559c244ec6079d8f",
+      ".execution/box-v4/state.json": "25648812c280c5a3659c84a3cbaafbe9132fe8de86db69003f7a5c2409ab26b8",
+      ".execution/box-v4/evidence/B1.1/verification-recovery/phase-release-d1r4-setup-readiness.json": "f6b83494374d2a163a72e065190d6ff815b89674cb9e56a33c0bdd60ed9cc9f2"
+    }
+  },
+  "reviewDigestVerified": "Recomputed harness-review-d1r4-attempt2.json sha256 matches claimed 8da66e664bc71457f7b53216a1f87180ee4d462585e2bc4a39ec335f7da1bab6.",
+  "timestampUtc": "2026-10-04T22:26:22Z",
+  "limitations": [
+    "Scribe role only: recorded the root's stated decision; exercised no independent approval or review authority.",
+    "W002.json historically contained a duplicate r4Assignments key whose later stale occurrence would shadow current values; it was renamed to historicalR4Assignments preserving all content so the current d1-r4 assignment is effective.",
+    "B1.1 not marked accepted; overall independent review not marked passed; state.json status remains blocked and acceptance incomplete.",
+    "No candidate code, Docker, Git, DB, fixture or setup commands were executed by this scribe."
+  ]
+}

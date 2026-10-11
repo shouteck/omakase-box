@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "check"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:25:31.659Z",
+  "finishedAt": "2026-10-02T17:25:56.838Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"status\":\"passed\",\"checkedSourceFiles\":24,\"limitation\":\"Application workspace source-import policy; not a third-party supply-chain audit or runtime ACL proof.\"}\n\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  01:25:38\n   Duration  5.55s (tests 92%, import 5%, transform 2%)\n\n\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  12 passed (12)\n      Tests  36 passed (36)\n   Start at  01:25:44\n   Duration  9.32s (tests 87%, import 10%, transform 2%, worker 1%)\n\n    Isolate  12 workers spawned · ~197ms startup each (spawn + environment, per file)\n             at least ~984ms faster with isolate: false — reuses workers across files instead of one per file\n\n\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  9 passed (9)\n      Tests  122 passed (122)\n   Start at  01:25:53\n   Duration  2.85s (tests 67%, import 25%, transform 6%, worker 2%)\n\n    Isolate  9 workers spawned · ~173ms startup each (spawn + environment, per file)\n             at least ~604ms faster with isolate: false — reuses workers across files instead of one per file\n\n"
+}

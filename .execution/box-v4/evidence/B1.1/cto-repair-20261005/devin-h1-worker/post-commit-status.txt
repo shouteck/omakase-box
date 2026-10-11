@@ -1,0 +1,15 @@
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-git-checkpoint-release.json
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/checkpoint-pathspec.txt
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/index-parity.txt
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/post-commit-status.txt
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-final-source.tar
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-launcher-r2-source.tar
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/independent-source.tar
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-launcher-r2/
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/
+?? .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/
+?? .execution/box-v4/evidence/B1.1/verification-recovery/review-a689979b-attempt3/parity-attempt3-linux.out
+?? parity-attempt3-linux.out

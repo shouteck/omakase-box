@@ -1,0 +1,16 @@
+[
+  {
+    "service": "w002-b11-svc-private-api",
+    "exit": 0,
+    "durationSeconds": 0.39000000001396984,
+    "stdout": "{\n  \"files\": {\n    \"dist/fixture.js\": \"9df142ead3f6bf83488fd6c13cbc60b4697f2611d7649dd4aa449fe312eeab8c\",\n    \"dist/intake-fixture.js\": \"9aec8aa327bb3bfaf3d6b2c5d4560727f5f62313198516953525fa743c34b890\",\n    \"dist/intent-store.js\": \"507438e118f9f5e6c7d72485494d3f6a3fb41c719278f7e31662a0021d7c0a31\",\n    \"dist/main.js\": \"94bd00bb3cdeecdfcc678c5083da375f8c0333b2403bfded19a97ced2faf1e1d\",\n    \"dist/migrate.js\": \"1cac84dc99d5f686d08e7c984683aeb6df8ebd3a2203151a254cd0611f3d2ce7\",\n    \"dist/owner-cli.js\": \"56f7e5e64c6de1596538c352ff5264c88b31cec67294781654921d49579639a9\",\n    \"dist/owner-store.js\": \"67dfd37b3cb6448915d6dcf3cc9f7b5bfda275c6c09c37fbc270deed9877ddab\",\n    \"dist/session-fixture.js\": \"c11a21d2d4f478807bc4d6b88a670077cb2734c37bb2bd165fb7e50deba6c422\"\n  }\n}\n",
+    "stderr": ""
+  },
+  {
+    "service": "w002-b11-svc-external-api",
+    "exit": 0,
+    "durationSeconds": 0.28099999998812564,
+    "stdout": "{\n  \"files\": {\n    \"dist/fixture.js\": \"85307713b125618c473ffae47266ec509150213962c0de123b7ea0c875302793\",\n    \"dist/main.js\": \"300d5aded2464fd87a62285ad8ecced84b18fcb603b803f139dc9ccf9a3b23d6\",\n    \"dist/migrate.js\": \"83272bc9fd59f95b3e3624783bf9cf4e8ea65efe58f5f652d43da7c11702fa4f\",\n    \"dist/reservation-store.js\": \"e4cd52726a41cf8b5aa154792218d94e97ed19f661e4bbef4125739d32947b65\"\n  }\n}\n",
+    "stderr": ""
+  }
+]

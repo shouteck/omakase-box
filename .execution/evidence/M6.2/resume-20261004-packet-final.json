@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/audit-execution.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T23:50:03.247Z",
+  "finishedAt": "2026-10-03T23:50:04.170Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"status\":\"passed\",\"scope\":\"Execution packet content/reference consistency only; not delivery, runtime or independent review.\",\"audited\":[{\"taskId\":\"M0.1\",\"status\":\"done\",\"files\":59},{\"taskId\":\"M0.2\",\"status\":\"done\",\"files\":61},{\"taskId\":\"M0.3\",\"status\":\"done\",\"files\":66},{\"taskId\":\"M1.1\",\"status\":\"done\",\"files\":75},{\"taskId\":\"M1.2\",\"status\":\"done\",\"files\":72},{\"taskId\":\"M1.3\",\"status\":\"done\",\"files\":71},{\"taskId\":\"M2.1\",\"status\":\"done\",\"files\":66},{\"taskId\":\"M2.2\",\"status\":\"done\",\"files\":57},{\"taskId\":\"M2.3\",\"status\":\"done\",\"files\":62},{\"taskId\":\"M3.1\",\"status\":\"done\",\"files\":58},{\"taskId\":\"M3.2\",\"status\":\"done\",\"files\":58},{\"taskId\":\"M3.3\",\"status\":\"done\",\"files\":54},{\"taskId\":\"M3.4\",\"status\":\"done\",\"files\":53},{\"taskId\":\"M4.1\",\"status\":\"done\",\"files\":60},{\"taskId\":\"M4.2\",\"status\":\"done\",\"files\":61},{\"taskId\":\"M5.1\",\"status\":\"done\",\"files\":58},{\"taskId\":\"M5.2\",\"status\":\"blocked\",\"files\":45},{\"taskId\":\"M5.3\",\"status\":\"done\",\"files\":52},{\"taskId\":\"M6.1\",\"status\":\"review\",\"files\":58},{\"taskId\":\"M6.2\",\"status\":\"blocked\",\"files\":22}]}\n"
+}

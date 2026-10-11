@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--input-type=module",
+    "-e",
+    "import {spawnSync} from 'node:child_process'; const result=spawnSync('python',['-B','.execution/evidence/M4.2/scan-public-image.py','.runtime/public-image-audit-rZbcgt/image.tar','sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8'],{encoding:'utf8',timeout:240000,maxBuffer:1048576}); console.log(result.stdout); console.error(result.stderr); process.exitCode=result.status ?? 2;"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T13:22:58.822Z",
+  "finishedAt": "2026-10-03T13:23:34.594Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\": \"bounded\", \"imageDigest\": \"sha256:eb4a84ec3e2948cd47e414fa66054730f10d0c20e5001b895fd58070c81c53f8\", \"configurationDigest\": \"sha256:6452ae90c1f2607d3249c56cb0ddce2aace0a71a34505abba64dd18d06fedfda\", \"layerDigests\": [\"sha256:b9a65b3c65ab22d490085bd0bf5490e2409da8748b406870f2463bdc41cd6795\", \"sha256:05b61f708389aecf2a9b2e058f554db6d84eb17811415f3b34768feebe0bea14\", \"sha256:73a48c91864c16f507959610c8534667ab25537630e84399f31d968661ed94f9\", \"sha256:cd7e6e338465408114835eb137df15785b6ac45c2b8046f78773557fe7c0a51c\", \"sha256:67c5b2ab4bb8dd6c3ece663ece744316ccae0552a54bc2b27e811611cf366472\", \"sha256:cd321a6dc023a72bba4dc6b34cef9892a2112c17860f4225691daa6a333aa005\", \"sha256:656afaafaa812f188da425142df4d594b7639d8918fd42490523da6f151b11a8\", \"sha256:ef922ffa315bcee15133496649b075a5950f6f08806746884e51023d660d4801\", \"sha256:e2e845fa834e85a458755c87a847f94457787df014b47239565c4d5326177ceb\", \"sha256:2142f118bc0a046f533328a4bf7271333fcef55fbf44acff037a9b81e8c91bba\", \"sha256:510cee54c7a6953273eb7ec899746e46b4b464021c96b58e13d93da09a4d855e\", \"sha256:499ee9ae8cbfdd7d3133e4a57e800ba7e066672f56a28cb8d10988d7e08726fc\", \"sha256:0c341d2af9ae814de52b8e8062e000aebf886e5b0af970bf5a21f893434e4049\", \"sha256:d93abb5fa95e2cc78bea16d03db4233c679745b0da0009664873350c3b9ef885\", \"sha256:a3808979982d18159dcdd04083da0d8cd5aa4c26641e0220b962f9fb6fc2b0c0\", \"sha256:144253bc8938b5aea48161858a8801138a2fe0f18060be125143f6c7b2322e6f\"], \"filesScanned\": 31066, \"bytesScanned\": 2779100026, \"violations\": [], \"scope\": \"Every saved layer path and regular-file payload; known synthetic private canaries. Public upstream image provenance remains a vendor trust assumption, not semantic confidentiality or VM proof.\"}\r\n\n\n"
+}

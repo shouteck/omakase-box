@@ -1,0 +1,6 @@
+tests/box/verification/relay-lifecycle.test.ts(626,47): error TS2339: Property 'command' does not exist on type 'VerificationCommandEntry'.
+tests/box/verification/relay-lifecycle.test.ts(648,58): error TS2379: Argument of type '{ stateDir: string; profile: string | undefined; sleep: () => Promise<void>; spawnImpl: () => EventEmitter<DefaultEventMap> & { stdout: PassThrough; stderr: PassThrough; kill: () => true; }; }' is not assignable to parameter of type '{ stateDir: string; spawnImpl?: (bin: string, args: string[], options: SpawnOptions) => SequenceChild; clock?: () => number; deadlineMs?: number; drainMs?: number; profile?: string; sleep?: (ms: number) => Promise<...>; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'profile' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+tests/box/verification/relay-lifecycle.test.ts(652,49): error TS2339: Property 'command' does not exist on type 'VerificationCommandEntry'.

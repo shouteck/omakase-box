@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "kind": "supervisory_checkpoint",
+  "recordedAtUtc": "2026-10-05T02:35:47.444133+00:00",
+  "repairId": "W002-CTO-R1",
+  "progress": [
+    "Stopped candidate preserved456files",
+    "Supervisor falsePASS/logdrain repaired",
+    "Worker68andfinal3regressionPASS",
+    "Independent68checks/456parityPASS",
+    "Independent fullworkspace dependency resolutionFAIL before setup"
+  ],
+  "currentBlocker": "Missing workspace dependency aliases in the planned newrunner; sameworker corrects completeclosure andadditivealiasstaging within existing3paths/3mounts.",
+  "pending": [
+    "Independent finaldependencyreview/resolution",
+    "Single named2resource setup/readiness",
+    "Original7finalacceptance",
+    "Currentcandidate/G1-G5 acceptance",
+    "ReviewedscopedGit saving andnextDfeaturebrief"
+  ],
+  "resourcesCreated": 0,
+  "oldDevinSuspended": true,
+  "overallTimeCap": false,
+  "setupReleased": false,
+  "newFeatureApproved": false
+}

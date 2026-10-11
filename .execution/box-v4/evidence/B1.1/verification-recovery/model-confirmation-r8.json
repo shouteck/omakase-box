@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "current_human_free_child_routing_confirmation",
+  "waveId": "W002",
+  "revision": "2026-10-05-r8-team-replacement",
+  "authority": ".execution/box-v4/approvals/W002-r8-approval.json",
+  "recordedAtUtc": "2026-10-04T19:55:47.851Z",
+  "timestampMeaning": "Recording clock sample from this tool batch, not human-message timestamp; supplied session date differs.",
+  "question": "Does the existing default router for unpinned custom subagents still select SWE-2 marked Free for your account?",
+  "answer": "Still SWE-2 Free",
+  "evidenceSource": "Actual user selection returned by functions.ask_user_question in this r8 approval turn.",
+  "operatingMode": "Free",
+  "configuredAssignment": "Existing unpinned custom-profile default router, currently human-confirmed SWE-2 marked Free; no settings changed.",
+  "observedChildModel": "unobserved, not inferred from main model",
+  "quota": "daily/weekly allowance unknown; no premium fallback or automatic billing-cap claim",
+  "release": "Read-only fresh Platform lead preflight allowed under exact r8 approval. Worker writes and children require subsequent root ownership/source lease. Environment/readiness/acceptance remain excluded."
+}

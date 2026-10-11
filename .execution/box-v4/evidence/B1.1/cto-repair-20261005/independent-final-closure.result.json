@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "exec",
+    "--workdir",
+    "/workspace/.r4-harness-review-cto-r1-independent-final",
+    "w002-b11-ws",
+    "timeout",
+    "300",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import {readFile,writeFile} from 'node:fs/promises';import {verifyDependencyClosure} from './scripts/box-verification/environment-host.mjs';const m=JSON.parse(await readFile('scripts/box-verification/environment-manifest.json'));const deps=await verifyDependencyClosure({...m.linuxDependencies,hostRoot:'/workspace/node_modules'},{root:'/workspace/node_modules'});const tooling=await verifyDependencyClosure({...m.linuxTooling,hostRoot:'/workspace/scripts/tooling/node_modules'},{root:'/workspace/scripts/tooling/node_modules'});const r={deps,tooling};await writeFile('.independent-closure-result.json',JSON.stringify(r));console.log(JSON.stringify(r));process.exit(deps.status==='ok'&&tooling.status==='ok'?0:1)"
+  ],
+  "exit": 0,
+  "elapsedMs": 67610,
+  "recordedAtUtc": "2026-10-05T02:49:46.571063+00:00"
+}

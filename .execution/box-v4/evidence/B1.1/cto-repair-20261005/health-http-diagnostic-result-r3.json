@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stdout": "[{\"port\":4000,\"host\":\"private.localhost:4000\",\"status\":200,\"body\":\"{\\\"service\\\":\\\"private-api\\\",\\\"status\\\":\\\"bootstrap\\\",\\\"assurance\\\":\\\"tested\\\",\\\"productReady\\\":false}\"},{\"port\":4001,\"host\":\"contributor.localhost:4001\",\"status\":200,\"body\":\"{\\\"service\\\":\\\"external-api\\\",\\\"status\\\":\\\"bootstrap\\\",\\\"assurance\\\":\\\"tested\\\",\\\"productReady\\\":false}\"}]\n",
+  "stderr": ""
+}

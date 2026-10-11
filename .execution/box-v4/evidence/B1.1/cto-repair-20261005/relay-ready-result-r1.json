@@ -1,0 +1,6 @@
+{
+  "exit": 0,
+  "durationSeconds": 0.1720000000204891,
+  "stdout": "{\"relay\":{\"status\":\"pass\",\"lease\":{\"schemaVersion\":1,\"runId\":\"w002-b11-r4-env2\",\"environmentId\":\"w002-b11-env-r4-env2\",\"issuedAt\":\"2026-10-05T03:11:46.137Z\",\"expiresAt\":\"2026-10-05T06:11:46.138Z\",\"owner\":\"fixture-exec-host\"}},\"lifecycle\":{\"schemaVersion\":1,\"state\":\"ready\",\"at\":\"2026-10-05T03:11:46.143Z\"},\"responses\":[],\"status\":\"pass\"}\n",
+  "stderr": ""
+}

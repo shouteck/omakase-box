@@ -1,0 +1,46 @@
+{
+ "wave": "W002",
+ "task": "B1.1",
+ "plan": "box-v4-2026-10-04.1",
+ "workerDispatchId": "e44008a7",
+ "revision": "r5-bounded-revert-of-r4-digest-correction",
+ "status": "not_accepted",
+ "authority": {
+  "r1": {
+   "brief": ".execution/box-v4/briefings/W002.md",
+   "sha256": "44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
+  "r2": {
+   "brief": ".execution/box-v4/briefings/W002-r2.md",
+   "sha256": "1ce91643f6b24e0434b49594b5344de54d7d5bb8a351441b7018cbdd93802167",
+   "approval": ".execution/box-v4/approvals/W002-r2-approval.json",
+   "decision": "Approve",
+   "observedAt": "2026-10-04T15:50:36.0926937Z"
+  },
+  "r5Dispatch": "Reviewer 77c88b35 determined r4-supplied runtime digests (5e7ae166/5f6bffd4) were artifacts of their own /tmp instrumentation (patch rewrote './dist/*.js' relative imports inside captured templates); r3 digests were correct. Revert only."
+ },
+ "changeFromR4": {
+  "scripts/box-verification/fixture-command-manifest.json": {
+   "r4": "0f43e93ba9ffc125f30c944d8cbd7d4d4121b0d0063408d05f77953fa3bfc2b2",
+   "r5": "94fa84a95f79132e6808aaebf3a2ee5812142ce517b3b82f571c92da60b6f6c7",
+   "delta": "exact byte revert to r3 file: persistence.private-api.sourceSha256 -> 8ca8183b806def4d76fd48135811a207d33ece39e67e857e18c56cf5783aaaae; persistence.external-api.sourceSha256 -> 63e46a09a824f2496d346e75a0e8c90fb412d5737aece50b078e0c6225b97954",
+   "note": "revert reconciles worker static-template recomputation (r4 receipt disclosure): private template has no interpolation; external expanded-with-singleUnitContract (contract sha256 bcb46146) = 63e46a09"
+  }
+ },
+ "checks": {
+  "manifest self-check (in w002-b11-ws)": {
+   "exit": 0,
+   "result": "13 entries, unique ids, @SOURCE@<->64-hex digest pairing consistent"
+  },
+  "vitest run tests/box/auth/fixture-transport.test.ts (in w002-b11-ws)": {
+   "exit": 0,
+   "result": "1 file, 7 tests passed"
+  },
+  "test:box-auth": {
+   "result": "not rerun; manifest-only revert identical to r3 bytes that already passed 18/18"
+  }
+ },
+ "stageParity": "host file sha256 94fa84a9 == staged copy == in-container sha256sum",
+ "scope": "bounded revert only; no other product/tooling/source changes; no git stage/commit/push/config/reset; host relay NOT executed; no fixture services, browser acquisition, host tests or daemon forwarding; all W002 resources untouched",
+ "readiness": "ready for quick independent confirmation by 77c88b35; candidate manifest bytes now equal r3 (94fa84a9) which previously passed box-auth/box-contracts/build; product remains not_accepted; retry count unchanged (1 of max 2)"
+}

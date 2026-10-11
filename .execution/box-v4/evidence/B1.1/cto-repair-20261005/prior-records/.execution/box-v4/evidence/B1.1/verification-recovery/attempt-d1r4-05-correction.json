@@ -1,0 +1,13 @@
+{
+  "attempt": "d1-r4-05",
+  "recordedStrictlyBeforeCandidateEdits": true,
+  "superseded": "harness-review-d1r4-attempt4.json PRE-EXECUTION FAIL sha256:cf9bc3ce74dc70e1d58ec2fee3298df399dee9819f4196a23714889e2b4cf7e5",
+  "blockerAndHypothesis": "verifyDependencyClosure serializes file rows with host separators (Windows '\') and package root as absolute host path, so host-side recomputation cannot reproduce the reviewed Linux closure digests; canonicalizing rows alone insufficient.",
+  "whatChanged": "verifyDependencyClosure serializes package root as plan.containerRoot + '/'-joined relative path under hostRoot (containerRoot alone when empty), sorts by canonical root, and '/'-canonicalizes per-file rows — identical bytes on Linux, preserving reviewed digests. New coherent root check: hostRoot strict descendant of stage.workspaceBind.host, containerRoot strict descendant of workspaceBind.container, equal relative paths; applied to linuxDependencies and linuxTooling before each closure verification and inside runnerCreateArgv. Test gains canonical-serialization coverage via manually computed canonical digest plus a mismatched-bind rejection; no comments, no modules, no deps.",
+  "whyDistinguishes": "Reviewer named exactly row separators + absolute host root; canonical serialization removes both while keeping 6dafd9a0/b5b8b1d2 digests provably unchanged on Linux.",
+  "expectedObservations": "Linux closure probe still yields 44/1153/6dafd9a0 and 1/1077/b5b8b1d2 (proving canonical=existing format); vitest selection exit 0 with 64+ tests.",
+  "exactCommand": "edits; sha256sum; refresh changed files; node canonicalization/root-validation probe; vitest selection via docker exec w002-b11-ws",
+  "safetyGate": "no Docker create/start, no createResources, no setup/readiness/fixtures/acceptance/Git/DB/API/queue/credentials",
+  "mutationFootprint": "environment-host.mjs, environment-readiness.test.ts, environment-manifest.json digest re-pins; review-dir copies; evidence",
+  "status": "in_progress"
+}

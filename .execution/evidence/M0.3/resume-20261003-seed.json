@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "demo:seed"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T18:03:39.588Z",
+  "finishedAt": "2026-10-02T18:03:40.132Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"kind\":\"synthetic_only\",\"snapshotHash\":\"4c40e9389076ca887cb928db8263dc8fa89bbdc4226628ded0c66a641927c8fd\",\"assetCount\":10,\"referenceSolutionsIncluded\":false}\n"
+}

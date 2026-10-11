@@ -1,0 +1,116 @@
+# Off-machine verify (wave K8): frozen install + the kitchen's acceptance command on a
+# GitHub-hosted Linux runner for every code push to master, logs uploaded for 3 days.
+name: verify
+
+on:
+  push:
+    # Master only — doc-only pushes are skipped by paths-ignore below.
+    branches: [master]
+    # paths-ignore mirrors the "no test reads these" set (INERT) in scripts/suite.mjs: a push
+    # that only touches docs/process files costs nothing. Anything else still runs.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'waves/**'
+      - 'kitchen/**'
+      - 'templates/**'
+      - 'milestones/**'
+      - 'research/**'
+      - 'tasks/**'
+      - '.devin/**'
+      - '.cursor/**'
+      - '.gitignore'
+
+# A newer push to the same ref cancels a stale run, queued or in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# No secrets are referenced or needed anywhere in this workflow.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    # Pinned to a named Ubuntu, not ubuntu-latest: the label moves to a new
+    # Ubuntu on 19 October 2026, and a migration must not change the result
+    # between two pushes. ubuntu-24.04 is the image the label resolves to
+    # today, so nothing under the run changes with this pin.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # fetch-depth: 0 — verify's merge-base and run-history reads need full git history.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      # `python` by name, at the host's 3.12: test:box-trace spawns `python` and
+      # test:box-bounty runs a declared `python -c` check against the snapshot.
+      # Ubuntu ships `python3` but no `python`; setup-python provides the
+      # command and the version (sys.monitoring needs >= 3.12) in one step.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      # Same path as the host: repository-local pnpm 10.34.5 (scripts/tooling, lockfile-pinned).
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Install dependencies (frozen lockfile)
+        run: node scripts/pnpm.mjs install --frozen-lockfile
+
+      # Chromium into the path suite.mjs sets as PLAYWRIGHT_BROWSERS_PATH — needed by
+      # tests/auth/bootstrap/browser-cookie.test.ts (in `check`) and the e2e suite.
+      - name: Install Chromium for browser-backed tests
+        run: node scripts/pnpm.mjs exec playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: .runtime/browsers
+
+      # check's live tests import services/*/dist bundles (e.g. intent-store.js). The host
+      # always has dist/ from earlier builds; a fresh runner checkout does not, and verify
+      # runs check before build — so build once up front. verify's own build step still
+      # runs for real afterwards (idempotent vite rebuild).
+      - name: Build service bundles for check's live tests
+        run: node scripts/pnpm.mjs build
+
+      # Suite-list decision (K8, revised K10 — recorded in waves/K8.md and
+      # waves/K10.md) — never silently narrowed; each exclusion is named here:
+      #  * test:containers — needs a local Docker daemon plus the frozen M-series public
+      #    image (public-task-toolchain:m4-v1, built locally, in no registry); unavailable.
+      #  * test:security — tests/security/output-boundary/output-boundary.test.ts bakes an
+      #    absolute Windows path to this checkout (file:///C:/Users/.../boundaries.mjs)
+      #    into the probe it writes, so it can only run on this exact machine. 2 of its
+      #    284 tests fail for that reason; test content is outside this wave's scope.
+      # K10 added the milestone-BT product suites and un-excluded test:box-package.
+      # What the Linux runner lacked, and how it is provided (no test weakened):
+      #  * `python` by name — test:box-trace spawns it and test:box-bounty runs a
+      #    declared `python` check; setup-python above provides it at 3.12.
+      #  * test:box-bounty has three Windows-bound tests marked host-only beside
+      #    their assertions: the 'npm.cmd' setup recipe (the launcher refuses
+      #    command files off Windows by design) and two junction tests (a
+      #    junction is transparent to git; a Linux symlink stays a visible link
+      #    and is refused under a different named reason — still a refusal).
+      #  * test:box-package has nine Windows-bound tests marked host-only beside
+      #    their assertions: two case-FS tests in review-security-r2 (alias
+      #    spellings only resolve on a case-insensitive filesystem), the whole
+      #    'Windows command-file launch rule' block plus one .cmd probe in
+      #    command-checks, and two a4-multi-pkg tests declaring the host's
+      #    'npm.cmd' recipe — the launcher refuses command files off Windows by
+      #    design. The other 50 of 59 run here.
+      # `check --full` covers bootstrap/auth/contracts/planner; they are still named so the
+      # list reads as the whole suite set (deduped inside one verify run).
+      - name: verify
+        run: node scripts/verify.mjs --full test:bootstrap test:auth test:contracts test:planner test:box-contracts test:box-auth test:box-delegation test:box-trace test:box-bounty test:box-package test:analysis test:compiler test:runner test:portal test:acceptance test:e2e test:kitchen
+
+      - name: Upload verify run logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: kitchen-runs-${{ github.run_id }}
+          path: .kitchen/runs/
+          retention-days: 3
+          if-no-files-found: ignore

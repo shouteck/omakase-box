@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "root/contracts_review",
+  "assurance": "bounded",
+  "requiredReads": [
+    "AGENTS.md",
+    "START.md",
+    "PLAN.md",
+    "docs/SPEC.md",
+    "docs/COMPOSITION.md",
+    "docs/ARCHITECTURE.md",
+    "docs/SECURITY.md",
+    "milestones/M1.md",
+    "tasks/task-graph.json",
+    ".execution/state.json"
+  ],
+  "taskId": "M1.2",
+  "inspection": [
+    "Separate DB schemas/forward migration journals",
+    "Transactional intent-head row locks and optimistic revisions",
+    "Reservation uniqueness, immutable expiry/package and identity guards",
+    "Submission/permit/outbox structural bindings and deferred atomic commit guards",
+    "Evaluation state/immutable binding/supersession rules",
+    "Acceptance exact evaluation hash foreign key and reciprocal payable relationship",
+    "Settlement and outbox immutability"
+  ],
+  "findings": [],
+  "limitations": [
+    "SQL structural fixture values are not authenticated runner verdicts.",
+    "Stored actor IDs require M1.3 server-session authority at API call boundary.",
+    "Cryptographic permit import, all three quotas, authoritative VM evidence, latest base checks and owner acceptance feedback transaction are later gates.",
+    "Live checks and current required suites are still pending; static review alone is not approval."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    ".execution/evidence/M5.1/review-config.test.ts",
+    "--config",
+    ".execution/evidence/M5.1/review-probe.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T17:50:03.338Z",
+  "finishedAt": "2026-10-02T17:50:04.141Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp\n\n\n Test Files  1 passed (1)\n      Tests  11 passed (11)\n   Start at  01:50:03\n   Duration  331ms (import 62%, transform 28%, tests 6%, worker 3%)\n\n"
+}

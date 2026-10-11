@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M0.1",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "install",
+    "--frozen-lockfile"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T16:58:08.169Z",
+  "finishedAt": "2026-10-02T16:58:13.620Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "Scope: all 8 workspace projects\nLockfile is up to date, resolution step is skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages: +131\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 131, reused 131, downloaded 0, added 72\nProgress: resolved 131, reused 131, downloaded 0, added 127\nProgress: resolved 131, reused 131, downloaded 0, added 130\nProgress: resolved 131, reused 131, downloaded 0, added 131, done\n.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js\n.../esbuild@0.18.20/node_modules/esbuild postinstall$ node install.js\n.../esbuild@0.28.2/node_modules/esbuild postinstall$ node install.js\n.../esbuild@0.28.2/node_modules/esbuild postinstall: Done\n.../esbuild@0.25.12/node_modules/esbuild postinstall: Done\n.../esbuild@0.18.20/node_modules/esbuild postinstall: Done\n\ndevDependencies:\n+ @playwright/test 1.63.0\n+ @types/node 24.13.6\n+ @types/react 19.3.0\n+ @types/react-dom 19.3.0\n+ drizzle-kit 0.31.11\n+ typescript 6.0.3\n+ vite 8.3.1\n+ vitest 5.0.1\n+ yaml 2.9.1\n\nDone in 5.3s using pnpm v10.34.5\n"
+}

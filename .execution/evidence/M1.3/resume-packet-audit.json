@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M1.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/audit-execution.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T16:53:16.372Z",
+  "finishedAt": "2026-10-02T16:53:17.175Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "{\"assurance\":\"tested\",\"status\":\"passed\",\"scope\":\"Execution packet content/reference consistency only; not delivery, runtime or independent review.\",\"audited\":[{\"taskId\":\"M0.1\",\"status\":\"review\",\"files\":53},{\"taskId\":\"M0.2\",\"status\":\"review\",\"files\":55},{\"taskId\":\"M0.3\",\"status\":\"review\",\"files\":61},{\"taskId\":\"M1.1\",\"status\":\"review\",\"files\":62},{\"taskId\":\"M1.2\",\"status\":\"review\",\"files\":64}]}\n"
+}

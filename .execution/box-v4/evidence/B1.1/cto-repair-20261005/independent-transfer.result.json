@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "C:/Users/shout/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe",
+    "--context",
+    "desktop-linux",
+    "cp",
+    "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\.execution\\box-v4\\evidence\\B1.1\\cto-repair-20261005\\independent-source.tar",
+    "w002-b11-ws:/tmp/cto-r1-independent-source.tar"
+  ],
+  "exit": 1,
+  "elapsedMs": 781,
+  "recordedAtUtc": "2026-10-05T02:31:56.081724+00:00"
+}

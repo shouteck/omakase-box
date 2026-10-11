@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M4.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T03:12:50.080Z",
+  "finishedAt": "2026-10-03T03:12:53.279Z",
+  "exitCode": 2,
+  "truncated": false,
+  "output": "apps/private-console/src/bootstrap/main.tsx(64,45): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\r\napps/private-console/src/bootstrap/main.tsx(66,3): error TS1005: '}' expected.\r\n"
+}

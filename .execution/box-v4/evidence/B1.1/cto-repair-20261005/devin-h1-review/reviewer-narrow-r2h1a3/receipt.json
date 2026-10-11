@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent_narrow_affected_suite_r2_h1_attempt3",
+  "repairId": "W002-CTO-R2-Devin-H1",
+  "reviewer": "Devin reviewer27f919af (independent of worker483988b4)",
+  "recordedAtUtc": "2026-10-05T05:04:38.446Z",
+  "verdict": "pass",
+  "manifestDigest": "61f21cc7810443fcf959b74ebf4d7e37d4ff24d198092c375e3eea457839275f",
+  "environmentId": "w002-b11-env-r4-env2",
+  "basis": "reviewed exact attempt3 bytes verified in /workspace/.devin-h1-check/src of approved w002-b11-ws: run-verification.mjs 199021cd, relay-lifecycle e4d5fd07, environment-readiness ba30ea28, fixture-transport eea4d8ec, manifest 61f21cc7",
+  "command": "env -u BOX_VERIFICATION_PROFILE timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs",
+  "selection": "exact R1 three-file narrow selection; synthetic harness tests only — no live BoxDB/auth fixtures",
+  "profileChoice": "BOX_VERIFICATION_PROFILE unset deliberately: profile is read inside runSequence default param, so unsetting it is the isolation that prevents real 305s waits in existing profile-less runSequence calls (lines 549/568/594); new cooldown tests pass profile explicitly with injected sleep. Reviewed config keeps declared testTimeout 30000; no skip/timeout/assertion change.",
+  "result": {
+    "exit": 0,
+    "testFiles": "3 passed (3)",
+    "tests": "74 passed (74)",
+    "expected": "67 (two verification files) + 7 fixture-transport = 74 actual",
+    "duration": "25.86s",
+    "started": "05:03:23Z",
+    "ended": "05:03:48Z",
+    "bound": "180s honored",
+    "stderrBytes": 0
+  },
+  "descendants": "none — /proc scan post-run shows zero node processes in w002-b11-ws",
+  "durable": {
+    "dir": "devin-h1-review/reviewer-narrow-r2h1a3/",
+    "stdoutSha256": "b152c853ba3298690b72df7ec16b46240e26296147580551e0c6809b169fb1a2",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "resultSha256": "9331174c5e683f3d0e8bd8d4ce5208ff54017a937bc116cbd21d14868f009e65"
+  },
+  "scopeKept": "no source fix, full batch, fixture mutation, stage overlay, DB/relay/Git/resource changes",
+  "note": "closes the omitted reviewer-run narrow-suite obligation; worker tsc+67-suite evidence separately preserved"
+}

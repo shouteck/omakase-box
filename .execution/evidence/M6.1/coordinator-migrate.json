@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.1",
+  "assurance": "unverified",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "node",
+    "scripts\\migrate-runtime.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-03T21:25:19.650Z",
+  "finishedAt": "2026-10-03T21:25:19.712Z",
+  "exitCode": 1,
+  "truncated": false,
+  "output": "node:internal/modules/cjs/loader:1423\r\n  throw err;\r\n  ^\r\n\r\nError: Cannot find module 'C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\node'\r\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1420:15)\r\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1058:19)\r\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1063:22)\r\n    at Module._load (node:internal/modules/cjs/loader:1226:37)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)\r\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\r\n    at node:internal/main/run_main_module:33:47 {\r\n  code: 'MODULE_NOT_FOUND',\r\n  requireStack: []\r\n}\r\n\r\nNode.js v24.11.0\r\n"
+}

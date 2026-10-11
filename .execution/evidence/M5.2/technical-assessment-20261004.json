@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M5.2",
+  "assurance": "bounded",
+  "kind": "source_assessment",
+  "timestamp": "2026-10-03T18:44:06.224Z",
+  "revision": {
+    "algorithm": "sha256",
+    "digest": "beee5723a1d4213b4754c681729329b3a13d51b46827212f251914e130cf9c65",
+    "manifest": ".execution/evidence/M5.2/revision-beee5723a1d4213b4754c681729329b3a13d51b46827212f251914e130cf9c65.json"
+  },
+  "sources": [
+    {
+      "path": "packages/runner-protocol/index.ts",
+      "bytes": 5499,
+      "sha256": "9042fa80e9b5369050d0820445b5e8811c19d1b81c5b3eb201395dabe397966d"
+    },
+    {
+      "path": "services/runner-controller/controller.ts",
+      "bytes": 1004,
+      "sha256": "93355def6d6b606cd3034e02b330c7111d4965f4310698dc6d7f3c706b07b2d5"
+    },
+    {
+      "path": "services/runner-controller/provider.ts",
+      "bytes": 3474,
+      "sha256": "5b158edddf6bf38bed9d70b2e91cab5582f7f7863dac37046dbd75c694ff16d7"
+    },
+    {
+      "path": "services/runner-controller/transport.ts",
+      "bytes": 3524,
+      "sha256": "57246345c060829150123643288657416862121d5a8ba59a2ec53bfe232581a6"
+    },
+    {
+      "path": "services/runner-controller/config.ts",
+      "bytes": 1912,
+      "sha256": "7650f6b6143a7cd2a1af4a52050a1b5ce714e6856930ff84a587e0ffb0c2ed9a"
+    },
+    {
+      "path": "services/runner-controller/src/bootstrap/index.ts",
+      "bytes": 761,
+      "sha256": "d096a1453f84523ca772bb8cb861620f08b558db32f9c2edb7ddad636c115ee2"
+    },
+    {
+      "path": "infra/runner/broker.py",
+      "bytes": 9863,
+      "sha256": "10cf2b385db20f564aadcb13381809a08205cc2ff79a7612d7eb81c1adae389a"
+    },
+    {
+      "path": "tests/runner/protocol/protocol.test.ts",
+      "bytes": 12688,
+      "sha256": "af5bf923f84844d10e77f2767b708778878550c2b5488cb94610e97f2be56ff9"
+    },
+    {
+      "path": "tests/runner/protocol/broker_cases.py",
+      "bytes": 9159,
+      "sha256": "8c7a9a14bea80fc94cabf0e9ed36cf0c8751ce17e535746eecfff31f5de32d0c"
+    },
+    {
+      "path": "services/private-api/jobs/store.ts",
+      "bytes": 44799,
+      "sha256": "695fcdb34f779f726c46a738d194dc66b98e21cf41625d838f4831e6146d8c00"
+    },
+    {
+      "path": "packages/evaluation/runner-results/index.ts",
+      "bytes": 17831,
+      "sha256": "82cd0fcb2d3fa3c15517eb67d6b86d5f803af3a8c6890eb5520e43b355e9a82a"
+    },
+    {
+      "path": "templates/workspaces/catalogue.ts",
+      "bytes": 17921,
+      "sha256": "8e282c0b5d4325918f138ca3e85c4dfe14f7b17a1b67d95c6c624784f40c592e"
+    },
+    {
+      "path": "scripts/suite.mjs",
+      "bytes": 1413,
+      "sha256": "5a0b28272a06629b24dde782c9b8eaa47098f550357890623b6a2baace663d36"
+    },
+    {
+      "path": "milestones/M5.md",
+      "bytes": 7721,
+      "sha256": "09c6aa9e5ca7d00b160f1cb19ef688fb7f63b62ad673f946e63c92e7cedb4c00"
+    },
+    {
+      "path": "docs/SECURITY.md",
+      "bytes": 12365,
+      "sha256": "894f4a1f4564523055d7530492e634435e8321471456596982c917036843a2cb"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "bytes": 15586,
+      "sha256": "379150d63561acef668cd392dad12e003d4e1574f3a5e6735221635d32bdabe2"
+    },
+    {
+      "path": "docs/runner-setup.md",
+      "bytes": 3861,
+      "sha256": "4b3477385fd7ec71e1936cf34313eff985b16b1f729e00ac84545347408e5dd2"
+    }
+  ],
+  "absentScopes": [
+    "services/runner-controller/isolation",
+    "infra/runner/jobs",
+    "tests/security/runtime"
+  ],
+  "commands": [
+    {
+      "path": ".execution/evidence/M5.2/technical-assessment-20261004-packet.json",
+      "sha256": "f0a5ead300c3cf982216991d6c128ef4a1cdb4f072cac230c53d67a5ed376986",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/audit-execution.mjs"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/technical-assessment-20261004-protocol.json",
+      "sha256": "c21b614043a1d7eb0dc5d48fe525f50d9086002c05968d001daedfd99b823deb",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:runner",
+        "--",
+        "--suite",
+        "protocol"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/technical-assessment-20261004-doctor.json",
+      "sha256": "48c09105013a7baf226dce61bbe37884040badd57d2d07b15566def16169e614",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "doctor",
+        "--json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "path": ".execution/evidence/M5.2/technical-assessment-20261004-real.json",
+      "sha256": "89757f8cc399a2f62b74c0f30127d3e8fc93317bb909a156c0b4055a97c9a783",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:runner",
+        "--",
+        "--real"
+      ],
+      "exitCode": 2
+    },
+    {
+      "path": ".execution/evidence/M5.2/technical-assessment-20261004-security-real.json",
+      "sha256": "780e41325246cf030b7cf61de067737ca77f0ca66a3565d38ac43b9636b6d2d4",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "scripts/pnpm.mjs",
+        "test:security",
+        "--",
+        "--suite",
+        "runtime",
+        "--real"
+      ],
+      "exitCode": 2
+    }
+  ],
+  "protocolTestsPassed": 39,
+  "handoff": {
+    "path": ".execution/drafts/M5.2-technical-assessment-20261004.md",
+    "sha256": "25ef8e112439cadd8a6499950bc2d7b28654a17c344513ee469b89892625a533"
+  },
+  "checkpointScriptSha256": "bde948aded9ff3c98b1f54994810394be3ccf0c3ba29f4306d3ed30fe241a2c3",
+  "previousStateSha256": "32630b1953c6d7f1ce0a144efc8a81eaf45582d9672aaf7bcb5efb2edebe3e52",
+  "existing": [
+    "Closed job/result schemas and fixed harness descriptors.",
+    "Injected-tested replay/SSH/SFTP/VM lifecycle and result verification.",
+    "Checked private job persistence and bounded evidence classification; not a live dispatcher."
+  ],
+  "missing": [
+    "Trusted guest supervisor and actual harness provenance.",
+    "Guest bootstrap and authenticated fixed control channel.",
+    "Candidate container/resource/network enforcement and owned disposal.",
+    "Runtime dispatch/cancellation integration.",
+    "Real runner/security suite dispatch and actual adversarial observations."
+  ],
+  "proposedLocalUnit": {
+    "taskId": "M5.2",
+    "component": "Pure isolation-plan/preflight builder",
+    "paths": [
+      "services/runner-controller/isolation/**",
+      "tests/security/runtime/**"
+    ],
+    "firstProfile": "network-none pure-module",
+    "startsProcesses": false,
+    "buildsContainers": false,
+    "editsRealRunGate": false,
+    "evidenceLimit": "Static/injected tests of plan construction only; not runtime containment or M5.2 acceptance."
+  },
+  "hostRequired": [
+    "Actual fresh guest bootstrap and candidate execution.",
+    "Resource/egress/signing/renderer isolation and adversarial cases.",
+    "Observed cancellation, cross-job separation and guest/disk disposal."
+  ],
+  "productSourceChanged": false,
+  "candidateExecution": false,
+  "realIsolatedRunner": "unverified",
+  "independentReview": "unverified",
+  "humanPilot": "not_conducted"
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M2.3",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts\\pnpm.mjs",
+    "test:e2e",
+    "--",
+    "--suite",
+    "intent"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-02T22:32:29.243Z",
+  "finishedAt": "2026-10-02T22:32:45.084Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n\u001b[90mstdout\u001b[2m | tests/e2e/intent/journey.test.ts\u001b[2m:195\u001b[22m\u001b[2m\u001b[2m > \u001b[22m\u001b[2mdemo intent drafts remain visible to the owner while private details stay out of unauthenticated views\n\u001b[22m\u001b[39m{\"assurance\":\"tested\",\"scope\":\"synthetic private console intent journeys\",\"goalOnlyDraft\":\"reviewable\",\"decisionsBlockPreparation\":\"tested\",\"exactHashApproval\":\"tested\",\"editAfterApproval\":\"new_revision_invalidated\",\"composedOutcome\":\"one_task\",\"previewXss\":\"escaped_not_executed\",\"publicProductFlow\":\"not_implemented\",\"realCustomerData\":false}\n\n \u001b[32m✓\u001b[39m tests/e2e/intent/journey.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 9839\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m a goal entered without technical detail produces a reviewable draft in demo mode with plain-language facts and provenance\u001b[33m 2863\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m required unresolved decisions block preparation, then a decision, readiness, exact-hash owner approval and edit-after-approval invalidation flow correctly\u001b[33m 2625\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m a full-stack plus codebase-policy outcome is described, generated and reviewed as ONE composed task draft\u001b[33m 1531\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m hostile goal content renders as escaped text only and never executes in the private console origin\u001b[33m 1976\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m demo intent drafts remain visible to the owner while private details stay out of unauthenticated views\u001b[33m 841\u001b[2mms\u001b[22m\u001b[39m\n\u001b[90mstdout\u001b[2m | tests/e2e/intent/authorization.test.ts\u001b[2m:4\u001b[22m\u001b[2m\u001b[2m > \u001b[22m\u001b[2mintent authority is server-side: roles, ownership, revoked/expired sessions, safe projections and explicit provider choice\n\u001b[22m\u001b[39m{\"assurance\":\"tested\",\"scope\":\"synthetic private intent authorization and projections\",\"serverAllocatedIdentity\":\"tested\",\"operatorAndStrangerDenials\":\"tested\",\"contributorIsolation\":\"no_private_route\",\"providerChoice\":\"explicit_no_fallback\",\"revokedExpiredDisabledSessions\":\"denied\",\"positiveProjection\":\"allowlist\",\"publicProductFlow\":\"not_implemented\",\"realCustomerData\":false}\n\n \u001b[32m✓\u001b[39m tests/e2e/intent/authorization.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 3196\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m intent authority is server-side: roles, ownership, revoked/expired sessions, safe projections and explicit provider choice\u001b[33m 3195\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m6 passed\u001b[39m\u001b[22m\u001b[90m (6)\u001b[39m\n\u001b[2m   Start at \u001b[22m 06:32:30\n\u001b[2m   Duration \u001b[22m 14.71s\u001b[2m (tests 92%, import 7%, transform 1%)\u001b[22m\n\n"
+}

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewer-manifest",
+  "waveId": "W002",
+  "taskId": "B1.1",
+  "planVersion": "box-v4-2026-10-04.1",
+  "adapter": "devin_portable_pstack_adaptation",
+  "reviewer": "distinct box-reviewer; not the implementing worker e44008a7; no candidate bytes written or repaired",
+  "reviewedAt": "2026-10-04T09:22:16Z",
+  "brief": {
+    "path": ".execution/box-v4/briefings/W002.md",
+    "revision": "2026-10-04-r1",
+    "recomputedDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9",
+    "matchesApprovalAndWave": true
+  },
+  "approval": {
+    "record": ".execution/box-v4/approvals/W002-approval.json",
+    "approver": "CEO (human operator)",
+    "message": "Approve",
+    "observedAt": "2026-10-04T08:35:06.1650860Z",
+    "boundDigest": "sha256:44e984be1e01abfed357945f196f16738e30c43de1e5bb0e2adcdc891d5a7ac9"
+  },
+  "baseRevision": "cd3feaf0c467df6c4b9734974722f8471f0da891",
+  "candidateIdentity": "working-tree diff at review time; byte-identical to staged mount C:/Users/shout/AppData/Local/Temp/w002-b11-stage (cmp-verified per file); recomputed hashes match worker candidate-manifest.txt content",
+  "checksRun": [
+    { "command": "node scripts/pnpm.mjs test:box-contracts", "where": "w002-b11-ws /workspace", "exit": 0, "result": "7/7 tests passed" },
+    { "command": "node scripts/pnpm.mjs test:box-auth", "where": "w002-b11-ws /workspace", "exit": 0, "result": "7/7 passed; real drizzle migrations 0001-0012 on fresh synthetic DBs" },
+    { "command": "node scripts/pnpm.mjs build", "where": "w002-b11-ws /workspace", "exit": 0, "result": "all builds completed" },
+    { "command": "node scripts/pnpm.mjs check", "where": "w002-b11-ws /workspace", "exit": 1, "result": "tsc+boundary+bootstrap pass; auth suite 25/30, 5 environment-dependent failures" },
+    { "command": "node scripts/pnpm.mjs test:auth", "where": "w002-b11-ws /workspace", "exit": 1, "result": "25/30; failures: persistence *-live (no docker socket), browser-cookie (Playwright chromium unavailable, download forbidden)" }
+  ],
+  "files": [
+    { "path": "packages/box-contracts/index.ts", "sha256": "91d7061bcfd36630ce7bae6d9a2329c527e36773ca016f57d4969bedf4c04332", "scope": "worker-exclusive" },
+    { "path": "packages/box-contracts/package.json", "sha256": "d217fac28d8f721f1a6f777b7999dfed38b72fbf52bc8d2776c054e03c32a28c", "scope": "worker-exclusive" },
+    { "path": "services/private-api/boxes/store/schema.ts", "sha256": "9692f18fec4e942e8773c4d335cd26552bbfe1913541d15d8db45054dc8e40ca", "scope": "worker-exclusive" },
+    { "path": "services/private-api/boxes/store/store.ts", "sha256": "f592cb1850b49939eba4e8c09df2a01ab0827feb957a0259d3bf7e81646da44c", "scope": "worker-exclusive" },
+    { "path": "services/private-api/db/migrations/0012_open_box_foundation.sql", "sha256": "f271a6a07dde82db2be33ee0f27a084530ca8afdeac8b0140d1f14910e5a8f84", "scope": "worker-exclusive (migration append)" },
+    { "path": "services/private-api/db/migrations/meta/_journal.json", "sha256": "2762ffd9741fad3cb9025c4f9b5d68ef0a7574f073317d35d5fb5c7ad6bea52d", "scope": "worker-exclusive (idx 12 append; idx 0-11 semantically preserved, whitespace-only reformat noted)" },
+    { "path": "tests/box/contracts/box-schemas.test.ts", "sha256": "5f7ed23c542395d4aad6cd1ba74d489306a6eee3df9595bd025950fb53c1406e", "scope": "worker-exclusive" },
+    { "path": "tests/box/contracts/boundary.test.ts", "sha256": "b1173a2420d47dd8c0750fa693c22650924f4025d8480d9ee2294e5b5bf56ecc", "scope": "worker-exclusive" },
+    { "path": "tests/box/auth/support.ts", "sha256": "5198c739c220064d73333ed0f5f80a10f8ef06eb6255dc6999710d75ecb7f631", "scope": "worker-exclusive" },
+    { "path": "tests/box/auth/box-store.test.ts", "sha256": "498a9c8bb6c23e9b77b6dfbfe6849982bd5a978d5c56063bd45d220ff63f9a74", "scope": "worker-exclusive" },
+    { "path": "tests/box/auth/roles-merge.test.ts", "sha256": "beb3c1433cb9b28491e3096838fc2cb12da135bc5780ca3735f4e7f8201156d2", "scope": "worker-exclusive" },
+    { "path": "tests/box/auth/scopes-idempotency.test.ts", "sha256": "a98198cd70e2c3f5406ef6c29e4ac6b1f5a16003d908505f8824be3ca7912658", "scope": "worker-exclusive" },
+    { "path": "package.json", "sha256": "f58a04e0bdc46efb69e332fb6958d37321c17110cb1848ec44fd89c51cce83ca", "scope": "shared lease tooling-scripts (scripts only)" },
+    { "path": "packages/contracts/auth/policy.ts", "sha256": "5b303861d2a5dab8442c5b4c05984ce1983a2a32344ce1fa8fd8b65dc2ed7522", "scope": "shared lease auth-contracts (box.* actions only)" },
+    { "path": "scripts/boundaries.mjs", "sha256": "947e14ad51573b05da76f62d44599647ef720fef1ab807172954ce92e643be6c", "scope": "shared lease tooling-scripts (packages/box- prefix)" },
+    { "path": "scripts/vitest.config.mjs", "sha256": "bcb91022694fc8c4f9cff9fd82aaaeba986e52538559e73ce880c2a3ea23ec60", "scope": "OUT-OF-SCOPE: not in worker paths or any named lease; adds testTimeout 30000; recorded unchanged-by-reviewer" }
+  ],
+  "unchangedGuardFiles": [
+    { "path": "services/private-api/db/schema.ts", "sha256": "23e68cc67e701147df6e32a642b350efbbd54ce120af4c142bd513ecdd45e14c", "status": "unmodified" },
+    { "path": "pnpm-lock.yaml", "sha256": "d81f530fa0b59f1cb6ebfcfc8a40a0f0cccefc509ba126debd8898db7f52a720", "status": "unmodified" }
+  ],
+  "workerEvidenceObserved": ["workspace-recipe.md", "preflight-receipt.md", "worker-receipt.md", "candidate-manifest.txt"],
+  "workerEvidenceDefect": "required candidate-manifest.json absent; candidate-manifest.txt present instead (hash contents verified correct against recomputation)",
+  "workspaceResourcesPreserved": ["w002-b11-ws", "w002-b11-db", "w002-b11-net", "w002-b11-srcimg", "w002-b11-stage-helper"],
+  "verdict": "not_accepted",
+  "reasons": [
+    "check and test:auth exited 1 (environment-dependent fixtures unavailable in approved isolated workspace; failed/unavailable is not pass)",
+    "out-of-scope write to scripts/vitest.config.mjs",
+    "required worker evidence candidate-manifest.json missing (candidate-manifest.txt only)"
+  ]
+}

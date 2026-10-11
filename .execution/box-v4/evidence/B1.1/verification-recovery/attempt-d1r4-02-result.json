@@ -1,0 +1,28 @@
+{
+  "attempt": "d1-r4-02",
+  "status": "complete_worker_self_check",
+  "reviewerFailAddressed": "revision, briefDigest, and obsolete limits (environmentAttempts 2 / harnessCorrectionRounds 1 / totalActiveMinutes 180) in environment-manifest.json, plus coherent revision literal in loadEnvironmentManifest",
+  "changedLeasedPaths": {
+    "scripts/box-verification/environment-manifest.json": {"before": "c2192eee062b46eb26e06f8eed4dc6e260a7d31423025a75c3f3385ab8f56ee2", "after": "4a46055f1372f336a2671fd573fbc626148e7d72e472b905aee52f307deb5806"},
+    "scripts/box-verification/environment-host.mjs": {"before": "134439ce984f385b8249154778b5abd987d706114eb6453986ac3ec8e2ce5c67", "after": "73402dd181934c66e3c35e445f6d1995477f31a157e6852f95cf4238e70647e3"}
+  },
+  "unchangedLeasedPaths": {
+    "scripts/box-verification/fixture-exec-host.mjs": "d84532ed1d578d6298c5608fa8bc67fdbabd4bd756d114b1be1c47ef70e04608",
+    "scripts/box-verification/fixture-exec-runner.mjs": "8d8ccc65c02a45dd260fe4a7af1504957278036222e171a587c1c36579bf7a95",
+    "scripts/box-verification/run-verification.mjs": "b6553e250a551fdc692e7898e13d3f8f94f06a697cc467938830d97c7b5917be",
+    "scripts/box-verification/fixture-command-manifest.json": "34fd5bc62c5e7a4a0ba51de360e178723b8127aeb850f7250214ecff98ec61e4",
+    "tests/box/verification/environment-readiness.test.ts": "2261a2da74d173e68c62da69783016ff681e3473603ace31b204e7df054358eb",
+    "tests/box/verification/relay-lifecycle.test.ts": "37617438b2a46d779df12d0248f9f4c904b44da336232afb3bb50852d376b219"
+  },
+  "reviewDirectoryRefresh": "only the two changed files copied into /workspace/.d1-r4-worker-review-d1r4w1/scripts/box-verification/; Linux sha256sum matched host digests exactly",
+  "linuxChecks": {
+    "jsonParse": "OK (python json.load)",
+    "nodeCheck": "SYNTAX_OK for environment-host.mjs",
+    "vitestRun": {"command": "timeout 180 node node_modules/vitest/vitest.mjs run tests/box/verification/environment-readiness.test.ts tests/box/verification/relay-lifecycle.test.ts tests/box/auth/fixture-transport.test.ts --config scripts/vitest.config.mjs", "cwd": "/workspace/.d1-r4-worker-review-d1r4w1", "literalExit": 0, "testFiles": "3 passed (3)", "tests": "60 passed (60)", "vitestDuration": "19.71s", "stderrBytes": 0, "stdoutEvidence": "vitest-selection-d1r4-attempt2.stdout.txt", "statusEvidence": "vitest-selection-d1r4-attempt2.stderr-status.txt"}
+  },
+  "backgroundedCommands": "first vitest invocation (6121ac) completed in-container with full summary but exit unreachable after harness backgrounding; rerun persisted EXIT=0 durably; sleep/poll commands (187dd4, 21baff, ffc3ff, 67f2d0, f6e5cb) were harness-backgrounded wrappers superseded by direct docker exec polls",
+  "stillRunning": "none; container /proc scan not available (ps/pgrep absent) but both vitest runs wrote complete summaries and durable exit files",
+  "forbidden": "none performed: no setup/resources/fixtures/readiness/acceptance/Git/DB/API/queue/credential actions",
+  "readyForSameReviewerPreExecutionReview": true,
+  "note": "worker self-check only; not independent review or acceptance; lease active_harness_only still held"
+}

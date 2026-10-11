@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "kind": "ceo_hold_and_bounded_diagnosis",
+  "waveId": "W002",
+  "status": "held",
+  "recordedAt": "2026-10-05T04:39:47.6472432+08:00",
+  "timestampMeaning": "Latest observed recording clock, not human-message timestamp. Environment supplied session date is 2026-10-05.",
+  "approver": "CEO, current direct user message",
+  "messageExcerpt": "Record W002 on Hold. Preserve all code, evidence and databases. Confirm previous writers have stopped before taking ownership. Keep existing model settings.",
+  "diagnosisAuthority": "Diagnose personally within 20 minutes, minimal read-only Linux-access and output-capture probes only. No new subagents, source changes, test-suite reruns, container lifecycle changes, downloads or cleanup. Recovery waits for Approve.",
+  "heldApproval": ".execution/box-v4/approvals/W002-r8-approval.json",
+  "heldBriefDigest": "sha256:7fe770df0d3cfbb176ee5113283bb7e20678bce79d887355a3859790aa4f752f",
+  "resumeAuthorized": false,
+  "productLeaseGranted": false,
+  "ownership": {
+    "historicalEvidence": "harness-review-r8-final.json and team-lease-r8.json record worker/reviewer returned and inactive lease. These are preserved historical reports.",
+    "currentAgentLookup": "read_subagent for 76d471f9, f271fb6b and 9e3fe1a6 each returned No subagent found. This is not shutdown proof.",
+    "currentProcesses": "Docker workspace top showed only sleep twice. Preserved API containers each showed MainThread. Final bounded host process census had 43 visible command lines, zero unavailable and zero non-current-shell W002/project/harness matches. Existing unrelated Codex/Devin runtimes were not killed or modified.",
+    "conclusion": "No active W002 writer command observed; old agent scheduler shutdown cannot be independently confirmed through the current tool surface. No product ownership assumed. Explicit stopped-session confirmation or a supported terminal-status record remains required before a new product lease."
+  },
+  "preservation": "All existing code, source snapshots, approvals, evidence, staging directories, queues, containers and databases preserved. Existing model/profile/security settings unchanged. Governance Hold recording only.",
+  "r9": "Historical unapproved proposal retained unchanged. No extension, execution or model-policy carry-forward approved.",
+  "recoveryApproval": null
+}

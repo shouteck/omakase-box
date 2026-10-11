@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "M6.2",
+  "assurance": "tested",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "scripts/pnpm.mjs",
+    "exec",
+    "vitest",
+    "run",
+    "tests/portal/reservations/assignment-delivery-live.test.ts",
+    "--config",
+    "scripts/vitest.config.mjs"
+  ],
+  "workingDirectory": "C:\\Users\\shout\\Desktop\\Projects\\private-task-mvp\\",
+  "startedAt": "2026-10-04T00:45:35.362Z",
+  "finishedAt": "2026-10-04T00:45:49.017Z",
+  "exitCode": 0,
+  "truncated": false,
+  "output": "\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.1 \u001b[39m\u001b[90mC:/Users/shout/Desktop/Projects/private-task-mvp\u001b[39m\n\n[warn] `inlineDynamicImports` option is deprecated, please use `codeSplitting: false` instead.\n\u001b[90mstdout\u001b[2m | tests/portal/reservations/assignment-delivery-live.test.ts\u001b[2m > \u001b[22m\u001b[2mdurable assignment delivery keeps unknown outcomes pending and rejects stale leases, receipts and changed approvals\n\u001b[22m\u001b[39m\u001b[1mnull\u001b[22m\n\n \u001b[32m✓\u001b[39m tests/portal/reservations/assignment-delivery-live.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 11685\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m durable assignment delivery keeps unknown outcomes pending and rejects stale leases, receipts and changed approvals\u001b[33m 11684\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m   Start at \u001b[22m 08:45:36\n\u001b[2m   Duration \u001b[22m 12.32s\u001b[2m (tests 97%, import 2%, transform 1%)\u001b[22m\n\n"
+}

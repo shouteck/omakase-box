@@ -1,0 +1,12 @@
+{
+  "kind": "owned_live_relay_tool_session",
+  "recordedAtUtc": "2026-10-05T03:12:51.022208+00:00",
+  "toolSessionId": 75109,
+  "stdout": "relay.stdout.log",
+  "stderr": "relay.stderr.log",
+  "completion": "relay-command-result.json",
+  "owner": "Codex /root",
+  "status": "started_completion_pending",
+  "mailbox": "C:/Users/shout/AppData/Local/Temp/w002-b11-r4-env2/mailbox",
+  "drain": "Existing requestDrain only after owned acceptance work completes; retain databases and containers"
+}

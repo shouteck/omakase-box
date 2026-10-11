@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1.2_runtime_run_failure",
+  "waveId": "W005",
+  "taskId": "D1.2",
+  "revision": "2026-10-05-d1.2-r2",
+  "actor": "worker c0c68c39 executing the released lifecycle under setup-release-5.json (sha256 1ff56df271d2444dd176ac457111f97bd3d0818dfae50e74bfec3f7debe16c04); actual returned execution envelope bound externally",
+  "status": "STOPPED_FIRST_FAILURE_CREATE_DEPS_RECEIPT_DESTROOT",
+  "acceptanceClaim": false,
+  "preGates": {
+    "setupRelease5Sha256": "1ff56df271d2444dd176ac457111f97bd3d0818dfae50e74bfec3f7debe16c04 (verified)",
+    "rootSetupRelease": true,
+    "reviewVerdict": "PASS_PREEXECUTION",
+    "hostMjsSha256": "8ee96933c160eba92acd4a6ac222f914d76a975fc6bd75b28bae65513f0b4b7f (verified)",
+    "manifestSha256": "e9e8280022cfe2297c2e01b7ef0968d64b567cec01148d324c463a53a2e8c58d (verified)",
+    "existingResources": "zero w005-d12 containers/networks at start"
+  },
+  "modes": [
+    {"mode": "plan", "exit": 0, "durationMs": 10},
+    {"mode": "ledger", "exit": 0, "durationMs": 3, "result": "existing ledger reused (sha256 f8d48f47...)"},
+    {"mode": "deps", "exit": 0, "durationMs": 14898, "result": "BOTH mounts reported 'already-prepared' via the exact-inventory existing-dest path — dependency-preparation.json rewritten with mounts entries state:'already-prepared', inventorySha256 matching live destination"},
+    {
+      "mode": "create",
+      "exit": 1,
+      "failure": "Error environment_deps_receipt 'dependency-preparation receipt does not record this exact destination closure/inventory' at verifyDependencyMounts (environment-host.mjs:391), hostSubpath node_modules.",
+      "rootCause": "verifyDependencyMounts requires resolve(entry.destRoot) === hostPath, but the deps mode ALREADY-PREPARED receipt entry (environment-host.mjs:1064) omits destRoot entirely — only the fresh-prepare branch (line ~1101-1110) records it. Whenever deps takes the already-prepared path and rewrites the receipt, verifyDependencyMounts fails. Source defect: add destRoot (and ideally sourceRoot/sourceRootReal for parity) to the already-prepared mounts entry.",
+      "receiptEvidence": "dependency-preparation.json mounts[0] keys: hostSubpath,state,packageCount,fileCount,closureSha256,expectedInventorySha256,inventorySha256,inventory — destRoot undefined; closureSha256 d6413531...; inventory 8448 entries"
+    }
+  ],
+  "modesNotRun": ["start", "verify", "stage", "supervise"],
+  "dockerCalls": "None this attempt; zero resources created.",
+  "partialState": {
+    "depsRoot": "Populated correctly, receipt-bound; on fixed re-run deps will report already-prepared and rewrite the (corrected) receipt entry including destRoot — no cleanup needed.",
+    "ledger": "environment-ledger.json f8d48f47... valid."
+  },
+  "requiredAction": "BLOCKED_NEEDS_AMENDMENT (source): include destRoot (resolved plan.destRoot) plus sourceRoot/sourceRootReal in the already-prepared mounts entry so verifyDependencyMounts' binding check passes. Then fresh independent review + re-release; plan->ledger->deps->create resumes cleanly.",
+  "checksRun": [
+    {"command": "sha256sum release-5 + 2 leased files", "exit": 0},
+    {"command": "controller('plan'/'ledger'/'deps')", "exit": "0/0/0"},
+    {"command": "controller('create',{dbPassword: in-memory})", "exit": 1},
+    {"command": "read dependency-preparation.json mount entry keys", "result": "destRoot absent in already-prepared entry"}
+  ],
+  "unperformed": "No start/verify/stage/supervise; password in-memory only, never persisted; no source edits; no Git writes; no teardown."
+}

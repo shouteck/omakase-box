@@ -1,0 +1,7 @@
+diff --git a/textstats/__init__.py b/textstats/__init__.py
+--- a/textstats/__init__.py
++++ b/textstats/__init__.py
+@@ -1,2 +1,2 @@
+ def word_count(text):
+-    return len(text.split(" "))
++    return len(text.split())
