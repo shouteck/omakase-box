@@ -1,8 +1,54 @@
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { chmodSync, copyFileSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { expect } from 'vitest';
 import { BountyRefused, finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot, write } from './support.js';
+import { resolveProgram } from '../../../packages/box-package/commands.js';
+
+export function withoutGh(run: () => void): void {
+  const parentPath = process.env.PATH;
+  const parentExecPath = process.env.GIT_EXEC_PATH;
+  const gitProgram = resolveProgram('git').path;
+  const commandShell = process.platform === 'win32' ? resolveProgram('cmd.exe').path : undefined;
+  const bin = runRoot('BT6a-ci-no-gh');
+  try {
+    if (process.platform === 'win32') {
+      const core = spawnSync(gitProgram, ['--exec-path'], { encoding: 'utf8' });
+      expect(core.status).toBe(0);
+      const corePath = core.stdout.trim();
+      // Git for Windows' PATH executable is a launcher that needs its install
+      // layout. Use the actual binary and its libraries, never its PATH directory.
+      copyFileSync(join(corePath, 'git.exe'), join(bin, 'git.exe'));
+      for (const file of readdirSync(corePath)) {
+        if (file.toLowerCase().endsWith('.dll')) copyFileSync(join(corePath, file), join(bin, file));
+      }
+      copyFileSync(process.execPath, join(bin, 'node.exe'));
+      if (commandShell !== undefined) copyFileSync(commandShell, join(bin, 'cmd.exe'));
+      process.env.GIT_EXEC_PATH = corePath;
+    } else {
+      for (const [name, target] of [['git', gitProgram], ['node', process.execPath]]) {
+        const quoted = "'" + target.replaceAll("'", "'\\''") + "'";
+        write(bin, name, `#!/bin/sh\nexec ${quoted} "$@"\n`);
+        chmodSync(join(bin, name), 0o755);
+      }
+    }
+    process.env.PATH = bin;
+    expect(() => resolveProgram('gh')).toThrow();
+    const toolsWork = () => {
+      expect(spawnSync('git', ['--version'], { encoding: 'utf8' }).status).toBe(0);
+      expect(spawnSync('node', ['-p', '"BT6a-ci-node"'], { encoding: 'utf8' }).stdout.trim()).toBe('BT6a-ci-node');
+    };
+    toolsWork();
+    run();
+    toolsWork();
+    expect(() => resolveProgram('gh')).toThrow();
+  } finally {
+    if (parentPath === undefined) delete process.env.PATH; else process.env.PATH = parentPath;
+    if (parentExecPath === undefined) delete process.env.GIT_EXEC_PATH; else process.env.GIT_EXEC_PATH = parentExecPath;
+    rmSync(bin, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+  }
+}
 
 export interface GhState {
   visibility: string;
