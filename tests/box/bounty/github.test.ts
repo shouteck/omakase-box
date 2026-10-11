@@ -1,16 +1,42 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { delimiter, dirname, join } from 'node:path';
+import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, listGitHubAnswers, loadRecord, planBounty, postBounty, previewGitHub, rejectBounty, renderDescribe, renderHelp, renderOpenLine, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, fingerprint, git, runRoot, write } from './support.js';
 import { answerBounty } from '../../../packages/box-bounty/index.js';
-import { resolveProgram } from '../../../packages/box-package/commands.js';
+import { resolveProgram, runDeclaredCheck } from '../../../packages/box-package/commands.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
-import { fixture, refused } from './github-fixture.js';
+import { fixture, refused, withoutGh } from './github-fixture.js';
 import type { GhState } from './github-fixture.js';
 
 describe('GitHub bounty destination, entirely offline', () => {
+  it('isolates co-located runnable gh, git and node and restores lookup after failure', () => fixture(({ repo, state }) => {
+    const gh = resolveProgram('gh').path;
+    withoutGh(() => {
+      const poison = join(dirname(resolveProgram('git').path), process.platform === 'win32' ? 'gh.cmd' : 'gh');
+      copyFileSync(gh, poison);
+      try {
+        expect(dirname(resolveProgram('gh').path)).toBe(dirname(resolveProgram('git').path));
+        expect(dirname(resolveProgram('node').path)).toBe(dirname(resolveProgram('git').path));
+        const probe = runDeclaredCheck({ name: 'parent gh', program: 'gh', args: ['auth', 'status'], cwd: '.', context: 'owner', timeoutMs: 5000 }, repo);
+        expect(probe.result, probe.log).toBe('pass');
+        expect(state().calls).toEqual([['auth', 'status']]);
+        const parentPath = process.env.PATH;
+        const parentExecPath = process.env.GIT_EXEC_PATH;
+        const failure = new Error('BT6a-ci deliberate failure');
+        expect(() => withoutGh(() => {
+          expect(() => resolveProgram('gh')).toThrow();
+          expect(git(repo, ['rev-parse', 'HEAD'])).toMatch(/^[a-f0-9]{40}$/);
+          throw failure;
+        })).toThrow(failure);
+        expect(process.env.PATH).toBe(parentPath);
+        expect(process.env.GIT_EXEC_PATH).toBe(parentExecPath);
+        expect(resolveProgram('gh').path).toBe(poison);
+        expect(state().calls).toEqual([['auth', 'status']]);
+      } finally { rmSync(poison); }
+    });
+  }));
   it('points the branch at the newest commit the repository already has — no file content is uploaded', () => fixture(({ repo, bare, id, state }) => {
     const before = fingerprint(repo);
     const head = git(repo, ['rev-parse', 'HEAD']);
@@ -81,10 +107,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     write(repo, '.box/limits.json', '{}');
     refused(() => postBounty(repo, id, 'github'), 'destination-not-allowed');
     write(repo, '.box/limits.json', '{"allowedDestinations":["github"]}');
-    const path = process.env.PATH;
-    process.env.PATH = [dirname(resolveProgram('git').path), dirname(process.execPath)].join(delimiter);
-    refused(() => postBounty(repo, id, 'github'), 'github-cli-missing');
-    process.env.PATH = path;
+    expect(resolveProgram('gh').path).toBeTruthy();
+    withoutGh(() => refused(() => postBounty(repo, id, 'github'), 'github-cli-missing'));
     git(repo, ['remote', 'set-url', 'origin', bare]);
     refused(() => postBounty(repo, id, 'github'), 'github-remote-required');
     git(repo, ['remote', 'set-url', 'origin', 'git@github.com:owner/project.git']);
@@ -314,19 +338,21 @@ describe('GitHub bounty destination, entirely offline', () => {
   it('runs the whole folder journey with no gh and no GitHub remote', () => fixture(({ repo, state }) => {
     git(repo, ['remote', 'remove', 'origin']);
     write(repo, '.box/limits.json', '{}');
-    process.env.PATH = [dirname(resolveProgram('git').path), dirname(process.execPath)].join(delimiter);
-    expect(() => resolveProgram('gh')).toThrow();
-    const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty') }));
-    const id = created.id;
-    confirmBounty(repo, id);
-    const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
-    write(destination, 'repo/app.txt', 'fixed\n');
-    expect(answerBounty(repo, id, destination).outcome).toBe('answered');
-    expect(applyBounty(repo, id).outcome).toBe('applied');
-    expect(undoBounty(repo, id).outcome).toBe('undone');
-    expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
-    expect(state().calls).toHaveLength(0);
-    expect(existsSync(join(created.outDir, 'bounty.json'))).toBe(true);
+    expect(resolveProgram('gh').path).toBeTruthy();
+    withoutGh(() => {
+      expect(() => resolveProgram('gh')).toThrow();
+      const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty') }));
+      const id = created.id;
+      confirmBounty(repo, id);
+      const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
+      write(destination, 'repo/app.txt', 'fixed\n');
+      expect(answerBounty(repo, id, destination).outcome).toBe('answered');
+      expect(applyBounty(repo, id).outcome).toBe('applied');
+      expect(undoBounty(repo, id).outcome).toBe('undone');
+      expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
+      expect(state().calls).toHaveLength(0);
+      expect(existsSync(join(created.outDir, 'bounty.json'))).toBe(true);
+    });
   }));
 
   it('routes the built CLI preview, post, status and PR commands through the adapter', () => fixture(({ repo, id, state, pr }) => {
