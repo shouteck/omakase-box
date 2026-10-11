@@ -80,6 +80,19 @@ Once posting needs no yes, no person sees the preview. From BT6a a bounty publis
   - The doc page states plainly what this does and does not prevent: it stops accidents and makes tampering visible; it is not a lock against an agent that sets out to edit a file it can reach.
 - Keeping the rules outside the project is the stronger, simple guarantee this wave builds. Do not add a key or signature scheme on top of it.
 
+**Host agnostic: every agent in the project learns of the tool, whichever host it runs on**
+
+The owner's decision, 11 October 2026: the tool must not depend on one agent host. Hosts load different instruction files at the start of a session, and today the tool keeps its block (the lines saying it exists, and the open-bounties line) in one file the owner named. An owner who uses two hosts gets the tool's memory in one of them.
+
+- At setup, and again whenever `setup` is run with no arguments, the tool looks in the project for the instruction files hosts are known to load and states which it found. The list it looks for is in one place in the code and in the doc page, with the host each belongs to; the worker confirms each against that host's own documentation and lists in the Result what was confirmed and when. As understood on 11 October 2026, not yet confirmed: `AGENTS.md` (Codex and several others, and readable by Cursor), `CLAUDE.md` (Claude Code), files under `.cursor/rules` (Cursor), `GEMINI.md` (Gemini's command line), `.github/copilot-instructions.md` (GitHub Copilot).
+- With the owner's yes, given once at setup, the tool keeps its block in **each** of the files it found, identical in all of them, and updates all of them together whenever the open-bounties line changes. If one of them already pulls in another (as this repository's `CLAUDE.md` pulls in `AGENTS.md`), the tool notices, writes the block once, and says so.
+- It creates no instruction file that does not exist, and changes nothing in any file but its own marked block, byte for byte. A file it cannot update safely is a named refusal for that file only; the others are still updated and the output says which was not.
+- The list of files is a shared fact about the project and is kept in the project, not in the owner's settings. It grants no authority.
+- When a new instruction file appears later, `status` says, once, that a host's file is present without the block and gives the command that adds it. It does not add it by itself.
+- A host that loads none of these is not left out: the owner can name any file, as today.
+- Nothing in the tool's wording, commands or output names or favours a host. A test checks the description, the help and every output for host and vendor names outside the one list above.
+- Tests: a project with two unlinked instruction files gets the block in both and both follow the open-bounties line through a bounty's life; a project where one file pulls in the other gets it once; a file with other content, other tools' blocks and odd line endings round-trips unchanged outside our block.
+
 **The owner can see and stop**
 
 - `summary` (or equivalent) prints what was done under the rules since a given time: bounties posted, solutions merged, anything undone, anything waiting. Facts from the record, nothing else.
@@ -101,7 +114,7 @@ Once posting needs no yes, no person sees the preview. From BT6a a bounty publis
 ## Review lenses
 
 - [x] **Security:** the reviewer plays an agent that wants more authority than it was given, using only what an agent can do. It tries: the normal commands with odd arguments; the owner's commands; editing the file directly and seeing whether that is visible afterwards; a solution that carries a rules file; a junction or case trick on the rules path, or an environment setting that points the tool at a different settings folder; a project file that claims authority; a rules file that is valid JSON but shaped to confuse (duplicate keys, huge numbers, unknown fields). For each it reports whether the action was prevented, or permitted but visible, and whether the doc page's claim matches.
-- [x] **User experience:** two readers. A fresh agent on a repository whose rules allow posting hands off a task from start to posted with nobody asked, and says what it was allowed to do and how it knew. A fresh agent on a repository with no rules reaches the first-use waiting state and says what it is waiting for and who decides; the reviewer, as the owner with only that state's output in front of them, sets the rules with one command and says what they have just allowed. Separately, the reviewer acts as an owner with only the `setup` output and gets from nothing to rules in force.
+- [x] **User experience:** two readers. A fresh agent on a repository whose rules allow posting hands off a task from start to posted with nobody asked, and says what it was allowed to do and how it knew. A fresh agent started under a host other than the one that set the tool up, in a project with two instruction files, says what it knows about the tool and about open bounties before doing anything. A fresh agent on a repository with no rules reaches the first-use waiting state and says what it is waiting for and who decides; the reviewer, as the owner with only that state's output in front of them, sets the rules with one command and says what they have just allowed. Separately, the reviewer acts as an owner with only the `setup` output and gets from nothing to rules in force.
 - [ ] **Measurement fairness:** not applicable.
 
 ## Notes for the worker
