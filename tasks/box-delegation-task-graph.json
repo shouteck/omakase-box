@@ -865,12 +865,12 @@
     {
       "id": "BT10",
       "milestone": "BT",
-      "title": "A reward through a site that funds issues (Algora first)",
+      "title": "The open bounty format",
       "dependencies": [
         "BT9"
       ],
-      "ownerApproval": "Required separately, with a spending limit. The owner creates the account, accepts the terms and adds the payment method.",
-      "proposal": "The tool carries the reward the owner or agent stated and never suggests one; merging and paying are separate actions; payment inside the budget, automatic only where the site allows. Preceded by a reading of what triggers payment, whether it can be held, terms, minimums and refunds. Brief not written."
+      "ownerApproval": "Direction approved 11 October 2026; cooks only when named; no brief yet.",
+      "proposal": "The listing is readable by a program and kept stable (label, identifier, task, where the code is, how to answer, optional stated reward), with a short public page describing it. No adapter to any bounty site: they interface with us. Open: an agentic way to settle a payment."
     },
     {
       "id": "K10",

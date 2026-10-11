@@ -36,6 +36,7 @@ This is the second run of BT6. The first run built and reviewed the GitHub adapt
 **Part B: the adapter, kept from the first run**
 
 - Everything the first run built and the pass attacked still holds on the final commit: posting exactly the shipped set as one parentless commit; the public-only refusal with no override; the limits gate and the confirmed stage; no credential touched; recovery of half-done posts and decisions; `status` reading the outside state with the time it was read; GitHub staying optional. Re-run those tests; do not rebuild.
+- The package file's licence field says Apache-2.0, matching the `LICENSE` file added on 11 October 2026; the listing then states that licence as a fact.
 - Each bounty issue carries the fixed label `box-bounty`, created if the repository lacks it, so every bounty made by this tool can be found with one search.
 
 **Part C: the real post**

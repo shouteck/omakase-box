@@ -17,7 +17,7 @@ Replaced by the CTO on 11 October 2026, at the close of wave K11 (after the BT6 
 
 ## After BT6, in order (PLAN.md, "Remaining waves")
 
-BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 **on hold** (Algora proved nearly inactive and takes no new accounts; a survey of live sites comes before any re-brief, and BT7–BT9 do not depend on it). BT7 to BT9 are approved by the owner and have pre-briefs ([BT7](waves/BT7.md), [BT8](waves/BT8.md), [BT9](waves/BT9.md)), written before BT6's second run; the head chef revises each against the preceding wave's Result before dispatching. Each still cooks only when named.
+BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 the open bounty format. BT7 to BT9 are approved by the owner and have pre-briefs ([BT7](waves/BT7.md), [BT8](waves/BT8.md), [BT9](waves/BT9.md)); the head chef revises each against the preceding wave's Result before dispatching. BT10 has no brief. **No adapter to any bounty site** (owner, 11 October 2026: they interface with us); the earlier reward pre-brief in waves/BT10.md is marked dropped. Open with the owner: an agentic way for payments to be settled. The repository is licensed under Apache 2.0 since 11 October 2026.
 
 ## Next
 
