@@ -106,7 +106,7 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 
 ## What we know and do not know
 
-- **Existing work, named.** ArcAgent lets an agent create a coding bounty and pays out automatically on its own checks: the same core idea, as a marketplace that decides for you. Algora is a payment layer on GitHub issues for people, where the maintainer decides. Tools that pass work to a stronger model on failure exist. What we found nowhere as one tool: the posting side for an agent with the decision left to it, memory across sessions, and bringing the chosen answer home. Any of them could add it.
+- **What exists around us.** Algora is a payment layer on GitHub issues for people, where the maintainer decides; it is where a reward would happen. Tools that pass work to a stronger model on failure exist. What we found nowhere as one tool: the posting side for an agent with the decision left to it, memory across sessions, and bringing the chosen answer home.
 - **Demand is thin everywhere.** The most active site found has paid a few hundred developers in total. There is no crowd of solvers waiting. Early bounties may wait a long time, and the tool says so.
 - **The bet.** Sites are short of tasks, not solvers; a tool in the agent's hand is where tasks come from. If agents hand work off often, that position matters. This is unproven and the owner chose to build and learn from use. The measure that comes free from the record: of the bounties posted, how many got a solution, and how long it took.
 - **Where solvers may come from first:** coding agents that already work from GitHub issues, and people on Algora once a reward is attached. Untested.
