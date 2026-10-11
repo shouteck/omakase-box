@@ -1,12 +1,14 @@
 export { answerBounty, applyBounty, extractAnswerChange, undoBounty } from './answer.js';
+export { answerGitHub, listGitHubAnswers, previewGitHub } from './github.js';
 export type { AnswerChange, AnswerResult, ApplyResult, UndoResult } from './answer.js';
 export { BountyUsage, parseCreateArgs } from './args.js';
 export type { CreateArgs } from './args.js';
-export { finalizeBounty, planBounty, renderListing, renderPreview, resolveRepoRoot, TOOL_VERSION } from './create.js';
+export { finalizeBounty, licenceOf, planBounty, renderListing, renderPreview, resolveRepoRoot, TOOL_VERSION } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome } from './git.js';
-export type { BountyCommand, BountyCommandRun, BountyManifest } from './manifest.js';
+export { NOTHING_RUN } from './answer.js';
+export type { BountyManifest } from './manifest.js';
 export { LIMITS_FILE, loadLimits } from './limits.js';
 export type { BountyLimits } from './limits.js';
 export { BUILTIN_RULES, loadOwnerList, OWNER_LIST_FILE } from './never-ship.js';

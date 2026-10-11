@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyUsage, parseCreateArgs } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, BountyUsage, parseCreateArgs } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, makeRepo, runRoot, write } from './support.js';
 
 // The command line: how a person or agent actually drives it, and the arg shapes
@@ -10,25 +10,30 @@ import { CLI_DIST, makeRepo, runRoot, write } from './support.js';
 
 describe('bounty create argument parsing', () => {
   it('parses the documented form', () => {
-    const parsed = parseCreateArgs(['--why', 'stuck', '--title', 'fix me', '--task', 'TASK.md', '--note', 'NOTE.md', '--setup', '--', 'npm.cmd', 'install', '--check', '--', 'python', 'check.py', '--out', 'dist-bounty', '--repo', '.', '--preview']);
+    const parsed = parseCreateArgs(['--why', 'stuck', '--title', 'fix me', '--task', 'TASK.md', '--note', 'NOTE.md', '--job', 'JOB.md', '--out', 'dist-bounty', '--repo', '.', '--preview']);
     expect(parsed).toEqual({
-      why: 'stuck', title: 'fix me', task: 'TASK.md', note: 'NOTE.md',
-      setup: ['npm.cmd', 'install'], check: ['python', 'check.py'],
+      why: 'stuck', title: 'fix me', task: 'TASK.md', note: 'NOTE.md', job: 'JOB.md',
       out: 'dist-bounty', repo: '.', preview: true
     });
   });
 
-  it('keeps a bare -- inside a command and ends the segment at the next box flag', () => {
-    const parsed = parseCreateArgs(['--out', 'out', '--check', '--', 'npm.cmd', 'test', '--', '--grep', 'x', '--title', 't', '--task', 'T.md']);
-    expect(parsed.check).toEqual(['npm.cmd', 'test', '--', '--grep', 'x']);
-    expect(parsed.out).toBe('out');
-    expect(parsed.title).toBe('t');
+  // Checks were removed on 11 October 2026: each old command flag is a NAMED
+  // refusal that says checks were removed — an agent reusing an old command
+  // line gets the reason, never a silent drop.
+  it.each(['--check', '--setup', '--guard'])('the removed %s flag is a named checks-removed refusal', flag => {
+    try {
+      parseCreateArgs(['--why', 'w', '--task', 'T.md', flag, '--', 'npm', 'test']);
+      expect.unreachable('expected a refusal');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BountyRefused);
+      expect(error).toMatchObject({ reason: 'checks-removed' });
+      expect((error as Error).message).toContain(flag);
+      expect((error as Error).message).toContain('removed');
+    }
   });
 
   it('rejects missing and malformed input with usage wording', () => {
     for (const argv of [
-      ['--check', 'python', 'x.py'],
-      ['--setup', '--'],
       ['--title'],
       ['nonsense'],
       ['--title', 'a', '--title', 'b']
@@ -38,10 +43,10 @@ describe('bounty create argument parsing', () => {
   });
 });
 
-// The real command, against the built CLI: a preview writes nothing, a passing
-// check is refused with a named state and a non-check exit, and a failing check
-// produces the folder and the stage line. Skipped unless the bundle exists —
-// verify builds before suites run.
+// The real command, against the built CLI: a preview writes nothing, and a
+// create produces the folder and the stage line. An old check flag is a named
+// refusal — checks were removed, nothing runs. Skipped unless the bundle
+// exists — verify builds before suites run.
 describe('box bounty create (built cli)', () => {
   const cli = (cwd: string, args: string[]) =>
     spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
@@ -51,7 +56,7 @@ describe('box bounty create (built cli)', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n', 'secrets/k.key': 'fake\n' });
     const out = join(runRoot('out'), 'bounty');
-    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--check', '--', 'python', '-c', 'import sys; sys.exit(1)', '--out', out, '--preview']);
+    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out, '--preview']);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('preview of what would leave');
     expect(run.stdout).toContain('secrets/k.key');
@@ -64,20 +69,21 @@ describe('box bounty create (built cli)', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const out = join(runRoot('out'), 'bounty');
-    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--check', '--', 'python', '-c', 'import sys; sys.exit(7)', '--out', out]);
+    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('stage 1 of 7: drafted');
     expect(run.stdout).toMatch(/bt-[a-f0-9]{12}/);
     expect(existsSync(join(out, 'bounty.json'))).toBe(true);
   });
 
-  it('refuses a passing check with a named state and a non-check exit', () => {
+  it('refuses an old check flag with the named checks-removed state and writes nothing', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const out = join(runRoot('out'), 'bounty');
-    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--check', '--', 'python', '-c', 'import sys; sys.exit(0)', '--out', out]);
+    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--check', '--', 'python', 'check.py', '--out', out]);
     expect(run.status).toBe(3);
-    expect(run.stderr).toContain('check-already-passes');
+    expect(run.stderr).toContain('checks-removed');
+    expect(run.stderr).toContain('removed');
     expect(existsSync(out)).toBe(false);
   });
 

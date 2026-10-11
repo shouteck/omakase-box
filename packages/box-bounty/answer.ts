@@ -1,58 +1,52 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
-import { runDeclaredCheck } from '../box-package/commands.js';
-import type { CheckRecord } from '../box-package/commands.js';
+import { dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { GitFailed, dryMergeOnto, git, gitBlob, gitOutcome, gitWriteBlob, mergeBase, mergeTree } from './git.js';
+import { GitFailed, dryMergeOnto, git, gitOutcome, gitWriteBlob, mergeBase, mergeTree } from './git.js';
 import type { DryMerge } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
-import type { Attempt, AttemptOutcome, BountyRecord } from './record.js';
+import type { Attempt, BountyRecord } from './record.js';
+import { syncGitHubDecision } from './github.js';
 
 // `bounty answer` — the return journey. A solver hands back the whole bounty
-// folder (`bounty.json` + `repo/`); this module binds it, extracts the change,
-// checks it, and writes a report of FACTS — never a verdict. The decision to
-// accept or reject is the agent's or the owner's, and it is recorded:
+// folder (`bounty.json` + `repo/`); this module binds it, extracts the change
+// and writes a report of FACTS — never a verdict. Nothing the answer carries
+// is ever run: checks were removed on 11 October 2026, and the decision to
+// apply, reject or wait is the agent's or the owner's, recorded either way.
 //
 //   bind     — bounty.json must name this id and this snapshot.commit, and its
 //              bytes must hash to the manifestSha256 the record pinned at
 //              create. Anything else is a named refusal, never a crash.
 //   extract  — compare repo/ against the manifest's per-file sha256: changed,
 //              added, deleted. No diff text, no git inside the answer folder.
-//   check    — mechanical bounties recreate the shipped set in a clean
-//              directory, apply the change, and run the declared setup+check
-//              (and --guard, when one was declared) exactly as `create` did.
-//              The check is also re-run on the untouched shipped set: a pass
-//              there means the pass on the answer says nothing, and the report
-//              flags it. Reviewed bounties run nothing but a declared guard.
-//   report   — the check before and after, the guard, the change with counts
-//              and lines, a dry merge-tree read of the current code (worktree,
-//              index and HEAD untouched), eager flags, what was not checked,
-//              and the next command. Every answer is kept as its own attempt.
+//   report   — who sent it and when, the change with counts and lines, a dry
+//              merge-tree read of the current code (worktree, index and HEAD
+//              untouched), eager flags, the nothing-was-run sentence, and the
+//              next command. Every answer is kept as its own numbered attempt.
 //
-// A passing mechanical answer lands at `verified` and STOPS — apply is a
-// separate command. A failing answer is recorded and the bounty returns to
-// `posted`, still open. `apply` merges the named attempt with git's own
-// three-way machinery — foreign bytes never touch the worktree except through
-// `git merge`; a conflict aborts byte-identical and a dirty worktree the merge
-// would overwrite is a named refusal made before the merge can run. `undo`
-// reverses an applied merge as a new commit.
+// Every recorded attempt may be applied, whichever account it came from —
+// nothing is run, so the outside-author barrier is gone. `apply` merges the
+// named attempt with git's own three-way machinery — foreign bytes never
+// touch the worktree except through `git merge`; a conflict aborts
+// byte-identical and a dirty worktree the merge would overwrite is a named
+// refusal made before the merge can run. `undo` reverses an applied merge as
+// a new commit.
 //
-// Failure detail models verify.ts's failure classes: a check or setup that
-// cannot run (environment-failure) is not the same state as a check that ran
-// and failed (implementation-failure); the class, exit and output tail are
-// recorded on the attempt and the event that returns the bounty to `posted`.
+// The merge, the dry merge and the revert are the only places foreign trees
+// meet git machinery, and they are pinned so nothing a solver wrote runs:
+// GIT_ATTR_SOURCE reads attributes from the repository's own HEAD (a returned
+// .gitattributes names no filter or merge driver), hooks come from an empty
+// directory outside the checkout, the answer commit is built by plumbing with
+// no worktree and no filters, and fetch adds --no-recurse-submodules.
 
-const COMMAND_TIMEOUT_MS = 300_000;
 const TAIL = 2000;
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
 const tail = (text: string): string => text.slice(-TAIL);
-const describeCommand = (argv: readonly string[]): string => argv.map(token => (token.includes(' ') ? JSON.stringify(token) : token)).join(' ');
 
 const endedRefusal = (record: BountyRecord): BountyRefused =>
   new BountyRefused('already-ended', `bounty ${record.id} already ended (${record.stage}) — an ended bounty takes no further transitions; the record is its history`);
@@ -71,9 +65,9 @@ interface AnswerFolder {
 
 export interface AnswerResult {
   readonly record: BountyRecord;
-  /** `verified`: the check exits 0 — waits on a decision. `answered`: no check
-      to run. `check-failed`/`check-unrunnable`: recorded, bounty back to open. */
-  readonly outcome: AttemptOutcome;
+  /** Always `answered` — checks were removed, so an answer is a recorded
+      attempt and nothing more. */
+  readonly outcome: 'answered';
   readonly attempt: number;
   readonly report: readonly string[];
   /** Paths the dry merge flagged, when the answer would not merge cleanly onto
@@ -98,7 +92,7 @@ export interface UndoResult {
   readonly reverted: string;
 }
 
-function readAnswerFolder(fromDir: string): AnswerFolder {
+export function readAnswerFolder(fromDir: string): AnswerFolder {
   const folder = resolve(fromDir);
   if (!existsSync(folder) || !statSync(folder).isDirectory()) {
     throw new BountyRefused('answer-malformed', `--from ${fromDir} is not a directory — the answer is the whole bounty folder handed back`);
@@ -213,19 +207,16 @@ function buildAnswerCommit(repoRoot: string, record: BountyRecord, change: Answe
   }
 }
 
-const runOne = (argv: readonly string[], name: string, root: string): CheckRecord => {
-  const [program, ...args] = argv;
-  return runDeclaredCheck({ name, program: program!, args, cwd: '.', context: 'recipient', timeoutMs: COMMAND_TIMEOUT_MS }, root);
-};
-
 // Every uncommitted path in the worktree, read under the repository's own
 // config — the same view the merge uses. `status --porcelain -z` through
 // gitOutcome: the trimming `git()` wrapper would eat the leading space of a
 // first-line `' M path'` entry and silently mis-parse it, and -z removes
 // quoting and rename arrows. Ignored files are invisible to porcelain by
-// design; the ignored-file boundary below covers them.
-function porcelainDirty(repoRoot: string): string[] {
-  const outcome = gitOutcome(repoRoot, ['status', '--porcelain', '-z']);
+// design; the ignored-file boundary below covers them. `env` pins the
+// attribute source — status can run a configured clean filter when it hashes
+// a stat-dirty file, and a foreign .gitattributes must never choose one.
+function porcelainDirty(repoRoot: string, env?: { readonly GIT_ATTR_SOURCE: string }): string[] {
+  const outcome = gitOutcome(repoRoot, ['status', '--porcelain', '-z'], env ?? {});
   if (outcome.status !== 0) {
     throw new GitFailed(`git status failed in ${repoRoot}: ${(outcome.stderr || outcome.stdout).trim()}`);
   }
@@ -293,10 +284,10 @@ function restoreBytes(repoRoot: string, saved: ReadonlyMap<string, Buffer | null
 //  - a file that exists at a touched path but is not in the index — an ignored
 //    file, invisible to porcelain, which git would overwrite silently. That is
 //    clobber, not a merge: refuse first.
-function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], extraTouched: readonly string[]): { blocked: string[]; dirty: string[] } {
+function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], extraTouched: readonly string[], env?: { readonly GIT_ATTR_SOURCE: string }): { blocked: string[]; dirty: string[] } {
   const touched = new Set([...deltaPaths, ...extraTouched].map(path => path.toLowerCase()));
-  const dirty = porcelainDirty(repoRoot);
-  const tracked = new Set(gitOutcome(repoRoot, ['ls-files', '-z']).stdout.split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
+  const dirty = porcelainDirty(repoRoot, env);
+  const tracked = new Set(gitOutcome(repoRoot, ['ls-files', '-z'], env ?? {}).stdout.split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
   const blockedDirty = dirty.filter(path => covers(path, touched));
   const blockedDirtyKeys = new Set(blockedDirty.map(path => path.toLowerCase()));
   const blockedClobber = [...new Set(deltaPaths)].filter(path =>
@@ -314,6 +305,11 @@ function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], extraTo
 // number refuses and names them — the choice is the agent's.
 export function applyBounty(repoRoot: string, id: string, attemptN?: number): ApplyResult {
   const record = loadRecord(repoRoot, id);
+  if (record.stage === 'applied' && record.github !== undefined) {
+    syncGitHubDecision(repoRoot, record);
+    const event = [...record.events].reverse().find(entry => entry.command === 'apply');
+    return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge };
+  }
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
   const attempts = attemptsOf(record);
   if (attempts.length === 0) {
@@ -329,7 +325,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   } else {
     const applicable = applicableAttempts(attempts);
     if (applicable.length === 0) {
-      throw new BountyRefused('no-applicable-attempt', `every recorded attempt on ${id} failed or could not run its check — name one anyway with box bounty apply ${id} <n>, or end the bounty with box bounty reject ${id} --reason "<why>"`);
+      throw new BountyRefused('no-applicable-attempt', `no recorded attempt on ${id} can be applied — name one anyway with box bounty apply ${id} <n>, or end the bounty with box bounty reject ${id} --reason "<why>"`);
     }
     if (applicable.length > 1) {
       throw new BountyRefused('apply-ambiguous', `attempts ${applicable.map(candidate => `#${candidate.n}`).join(', ')} could be applied — pick one: box bounty apply ${id} <n>`);
@@ -339,12 +335,16 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
     throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot} — finish it or run git merge --abort before applying a bounty`);
   }
+  // HEAD is the attribute view for every read and the merge below: the
+  // solver's files have not landed yet, so HEAD is the owner's committed
+  // state — a returned .gitattributes names nothing until the owner applies it.
+  const ownerAttrs = { GIT_ATTR_SOURCE: 'HEAD' };
   const base = mergeBase(repoRoot, 'HEAD', attempt.commit);
   const deltaPaths = base !== null
-    ? gitOutcome(repoRoot, ['diff', '--name-only', '-z', base, attempt.commit]).stdout
+    ? gitOutcome(repoRoot, ['diff', '--name-only', '-z', base, attempt.commit], ownerAttrs).stdout
         .split('\0').filter(name => name !== '')
     : [...attempt.changed, ...attempt.added, ...attempt.deleted];
-  const { blocked, dirty } = worktreeBlocks(repoRoot, deltaPaths, [...attempt.changed, ...attempt.added, ...attempt.deleted]);
+  const { blocked, dirty } = worktreeBlocks(repoRoot, deltaPaths, [...attempt.changed, ...attempt.added, ...attempt.deleted], ownerAttrs);
   if (blocked.length > 0) {
     throw new BountyRefused('apply-worktree-dirty', `uncommitted work in ${blocked.join(', ')} would be overwritten by the merge — commit it, stash it or move it aside, then run box bounty apply ${id} again`);
   }
@@ -360,11 +360,25 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   // the merge and break apply on an ordinary autocrlf checkout. Byte identity
   // on abort is guaranteed by the saved bytes, not by filters: the delta plus
   // every dirty path is captured raw before the merge runs.
+  //
+  // Two pins keep the merge itself from running anything the solver wrote:
+  // GIT_ATTR_SOURCE=HEAD reads attributes only from the repository's own
+  // committed view, so a returned .gitattributes names no filter or merge
+  // driver out of the host's config; and hooks are read from an empty
+  // directory outside the checkout, so no hook fires — a solver cannot plant
+  // one, and a mechanical merge should not fire even an owner-installed one.
+  const hooksOff = mkdtempSync(join(tmpdir(), 'box-bt6-hooks-'));
   const saved = snapshotBytes(repoRoot, new Set([...deltaPaths, ...dirty]));
-  const merged = gitOutcome(repoRoot, [
-    '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
-    'merge', '--no-ff', '-m', message, attempt.commit
-  ]);
+  let merged;
+  try {
+    merged = gitOutcome(repoRoot, [
+      '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
+      '-c', `core.hooksPath=${hooksOff.split('\\').join('/')}`,
+      'merge', '--no-ff', '-m', message, attempt.commit
+    ], ownerAttrs);
+  } finally {
+    rmSync(hooksOff, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+  }
   if (merged.status === 0) {
     const mergeCommit = git(repoRoot, ['rev-parse', 'HEAD']);
     record.conflicts = null;
@@ -372,13 +386,14 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
+    syncGitHubDecision(repoRoot, record);
     return { record, outcome: 'applied', attempt: attempt.n, mergeCommit };
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
   if (mergeHead.status === 0) {
-    const paths = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--diff-filter=U']).stdout
+    const paths = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--diff-filter=U'], ownerAttrs).stdout
       .split('\0').filter(line => line !== '').sort();
-    const aborted = gitOutcome(repoRoot, ['merge', '--abort']);
+    const aborted = gitOutcome(repoRoot, ['merge', '--abort'], ownerAttrs);
     if (aborted.status !== 0) {
       throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
     }
@@ -402,6 +417,12 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
 // is touched). The same worktree boundary as apply protects uncommitted work.
 export function undoBounty(repoRoot: string, id: string): UndoResult {
   const record = loadRecord(repoRoot, id);
+  if (record.stage === 'undone' && record.github !== undefined) {
+    syncGitHubDecision(repoRoot, record);
+    const event = [...record.events].reverse().find(entry => entry.command === 'undo');
+    const applied = [...record.events].reverse().find(entry => entry.command === 'apply');
+    return { record, outcome: 'undone', undoCommit: event?.merge ?? '', reverted: applied?.merge ?? '' };
+  }
   if (record.stage === 'undone') {
     throw new BountyRefused('already-undone', `bounty ${id} was already undone — the reversal is a commit in history; the record keeps both events`);
   }
@@ -432,129 +453,65 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
   // sources), exactly the names rename detection folds away. An ignored file
   // at a folded source is invisible to porcelain — without the source in the
   // touched set the clobber boundary below cannot see it either.
-  const touched = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', first, merge]).stdout
+  // `first` — the merge's first parent — is the attribute view for every read
+  // and write below: HEAD already carries the foreign tree (the merge being
+  // reversed), while `first` is the owner's state as it stood before apply.
+  const ownerAttrs = { GIT_ATTR_SOURCE: first };
+  const touched = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', first, merge], ownerAttrs).stdout
     .split('\0').filter(name => name !== '');
   // The reversal commits from the real index, so staged-but-uncommitted work —
   // which the touched-path boundary cannot see as a threat — would be swept
   // into the undo commit. Refuse while the index differs from HEAD. The same
   // worktree boundary as apply protects uncommitted work at a touched path.
-  if (gitOutcome(repoRoot, ['diff', '--cached', '--quiet', 'HEAD']).status !== 0) {
+  if (gitOutcome(repoRoot, ['diff', '--cached', '--quiet', 'HEAD'], ownerAttrs).status !== 0) {
     throw new BountyRefused('undo-index-staged', `the index holds staged changes — undo builds its commit from it; commit or unstage that work first, then run box bounty undo ${id} again`);
   }
-  const { blocked, dirty } = worktreeBlocks(repoRoot, touched, []);
+  const { blocked, dirty } = worktreeBlocks(repoRoot, touched, [], ownerAttrs);
   if (blocked.length > 0) {
     throw new BountyRefused('undo-worktree-dirty', `uncommitted work in ${blocked.join(', ')} would be overwritten by the reversal — commit it, stash it or move it aside, then run box bounty undo ${id} again`);
   }
   // The reversal applies cleanly? Dry-run the same three-way git would compute
   // for `revert -m 1`: ours = HEAD, theirs = the merge's first parent, base =
   // the merge commit. merge-tree writes only objects — nothing else moves.
-  const dry = mergeTree(repoRoot, merge, 'HEAD', first);
+  // Attributes are pinned to `first`: the base here is the foreign merge, so
+  // the pre-merge owner's view is the only one allowed to name filters.
+  const dry = mergeTree(repoRoot, merge, 'HEAD', first, first);
   if (dry.kind === 'conflict') {
     throw new BountyRefused('undo-conflict', `reversing the merge would conflict in ${dry.paths.join(', ')} — the working tree, index and branch are untouched; resolve those paths and revert ${merge} by hand, or leave it applied`);
   }
   if (dry.kind === 'untestable') {
     throw new BountyRefused('undo-untestable', `the reversal cannot be tested — ${dry.detail}; nothing was changed`);
   }
+  // The same pins as the merge: attributes read only from the pre-merge
+  // owner's tree (`first`), hooks read from an empty directory — the reversal
+  // replays foreign bytes and runs nothing else.
+  const hooksOff = mkdtempSync(join(tmpdir(), 'box-bt6-hooks-'));
   const saved = snapshotBytes(repoRoot, new Set([...touched, ...dirty]));
-  const reverted = gitOutcome(repoRoot, ['revert', '--no-commit', '-m', '1', merge]);
-  if (reverted.status !== 0) {
-    gitOutcome(repoRoot, ['revert', '--quit']);
-    gitOutcome(repoRoot, ['reset', '--hard', 'HEAD']);
-    restoreBytes(repoRoot, saved);
-    throw new GitFailed(`git revert of ${merge} failed in ${repoRoot}: ${(reverted.stderr || reverted.stdout).trim()} — the dry run said clean; inspect the repository by hand`);
+  let undoCommit: string;
+  try {
+    const reverted = gitOutcome(repoRoot, ['revert', '--no-commit', '-m', '1', merge], ownerAttrs);
+    if (reverted.status !== 0) {
+      gitOutcome(repoRoot, ['revert', '--quit'], ownerAttrs);
+      gitOutcome(repoRoot, ['reset', '--hard', 'HEAD'], ownerAttrs);
+      restoreBytes(repoRoot, saved);
+      throw new GitFailed(`git revert of ${merge} failed in ${repoRoot}: ${(reverted.stderr || reverted.stdout).trim()} — the dry run said clean; inspect the repository by hand`);
+    }
+    git(repoRoot, [
+      '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
+      '-c', `core.hooksPath=${hooksOff.split('\\').join('/')}`,
+      'commit', '-q', '-m', `box bounty ${id}: undo — ${record.title}\n\nreverses merge ${merge}${appliedEvent?.attempt !== undefined ? ` (attempt ${appliedEvent.attempt})` : ''}`
+    ]);
+    undoCommit = git(repoRoot, ['rev-parse', 'HEAD']);
+  } finally {
+    rmSync(hooksOff, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
   }
-  git(repoRoot, [
-    '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
-    'commit', '-q', '-m', `box bounty ${id}: undo — ${record.title}\n\nreverses merge ${merge}${appliedEvent?.attempt !== undefined ? ` (attempt ${appliedEvent.attempt})` : ''}`
-  ]);
-  const undoCommit = git(repoRoot, ['rev-parse', 'HEAD']);
   transitionTo(repoRoot, record, 'undone', {
     ...(appliedEvent?.attempt !== undefined ? { attempt: appliedEvent.attempt } : {}),
     command: 'undo', merge: undoCommit,
     reason: `reverses merge ${merge}`
   });
+  syncGitHubDecision(repoRoot, record);
   return { record, outcome: 'undone', undoCommit, reverted: merge };
-}
-
-interface CommandRunFact {
-  readonly argv: readonly string[];
-  readonly exit: number | null;
-  readonly result: 'pass' | 'fail' | 'timeout' | 'error';
-  readonly tail: string;
-}
-
-const runFact = (argv: readonly string[], name: string, root: string): CommandRunFact => {
-  const record = runOne(argv, name, root);
-  return { argv: [...argv], exit: record.exit, result: record.result, tail: tail(record.log) };
-};
-
-interface AnswerProbe {
-  /** null: no setup declared. */
-  readonly setup: CommandRunFact | null;
-  /** null: no check declared, or it never ran because setup did not pass. */
-  readonly check: CommandRunFact | null;
-  /** 'not-run': a guard was declared but setup did not pass first. null: none. */
-  readonly guard: CommandRunFact | 'not-run' | null;
-  /** The check re-run on the untouched shipped set — run only when it passed
-      on the answer. A pass there means the answer's pass says nothing. */
-  readonly baseline: CommandRunFact | null;
-}
-
-// Emits the SHIPPED set — exactly the manifest's file list, raw recorded blob
-// bytes, hash-checked — so a corrupt snapshot names itself instead of running
-// a phantom tree, and never-ship files inside the snapshot commit never
-// materialise for the check.
-function emitShipped(repoRoot: string, record: BountyRecord, manifest: BountyManifest, dir: string): void {
-  mkdirSync(dir, { recursive: true });
-  for (const file of manifest.files) {
-    const blob = gitBlob(repoRoot, record.snapshot.commit, file.path);
-    if (blob === null || sha256(blob) !== file.sha256) {
-      throw new BountyRefused('snapshot-corrupt', `snapshot ${record.snapshot.commit} cannot reproduce ${file.path} at the recorded sha256 — the version this answer was made for is damaged beyond use; end the bounty with box bounty reject ${record.id} --reason "snapshot corrupt"`);
-    }
-    const target = join(dir, ...file.path.split('/'));
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, blob);
-  }
-}
-
-// Runs the declared commands on the shipped set plus the answer, exactly as a
-// solver would see them: setup, then check, then the optional guard. When the
-// check passes on the answer it is run once more on the untouched shipped set
-// — a pass there is a flag, not a judgement.
-function probeAnswer(record: BountyRecord, manifest: BountyManifest, repoRoot: string, change: AnswerChange, repoDir: string): AnswerProbe {
-  const runRoot = mkdtempSync(join(tmpdir(), 'box-bt3a-verify-'));
-  try {
-    const dir = join(runRoot, 'work');
-    emitShipped(repoRoot, record, manifest, dir);
-    for (const path of change.deleted) rmSync(join(dir, ...path.split('/')), { force: true });
-    for (const path of [...change.changed, ...change.added]) {
-      const target = join(dir, ...path.split('/'));
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, readFileSync(join(repoDir, ...path.split('/'))));
-    }
-    const setupArgv = manifest.setup !== null && manifest.setup.argv.length > 0 ? manifest.setup.argv : null;
-    const checkArgv = manifest.check !== null && manifest.check.argv.length > 0 ? manifest.check.argv : null;
-    const guardArgv = manifest.guard !== null && manifest.guard !== undefined && manifest.guard.argv.length > 0 ? manifest.guard.argv : null;
-    let setup: CommandRunFact | null = null;
-    let setupOk = true;
-    if (setupArgv !== null) {
-      setup = runFact(setupArgv, 'setup', dir);
-      setupOk = setup.result === 'pass';
-    }
-    const check = setupOk && checkArgv !== null ? runFact(checkArgv, 'check', dir) : null;
-    const guard: CommandRunFact | 'not-run' | null = guardArgv === null ? null : setupOk ? runFact(guardArgv, 'guard', dir) : 'not-run';
-    let baseline: CommandRunFact | null = null;
-    if (check !== null && check.result === 'pass' && checkArgv !== null) {
-      const clean = join(runRoot, 'baseline');
-      emitShipped(repoRoot, record, manifest, clean);
-      let baselineSetupOk = true;
-      if (setupArgv !== null) baselineSetupOk = runFact(setupArgv, 'setup', clean).result === 'pass';
-      if (baselineSetupOk) baseline = runFact(checkArgv, 'check', clean);
-    }
-    return { setup, check, guard, baseline };
-  } finally {
-    rmSync(runRoot, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
-  }
 }
 
 // The stated test-file rule, for the flag: a path counts as a test when a
@@ -574,21 +531,15 @@ const LARGE_LINES = 400;
 
 // Flags are plain observations, deliberately eager: a false alarm costs a
 // minute, a missed one costs a wrong fix. No flag blocks anything.
-function attemptFlags(manifest: BountyManifest, change: AnswerChange, linesAdded: number, linesRemoved: number, baseline: CommandRunFact | null): string[] {
+function attemptFlags(change: AnswerChange, linesAdded: number, linesRemoved: number): string[] {
   const flags: string[] = [];
   const touched = [...change.changed, ...change.added, ...change.deleted];
-  const checkText = manifest.check !== null ? manifest.check.argv.join(' ') : '';
-  const named = touched.filter(path => checkText !== '' && (checkText.includes(path) || checkText.includes(basename(path))));
-  if (named.length > 0) flags.push(`the answer edits ${named.join(', ')}, which the check command's own text names`);
   const testLike = touched.filter(isTestPath);
   if (testLike.length > 0) flags.push(`the answer touches ${testLike.join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
   if (change.added.length > 0) flags.push(`the answer adds ${change.added.length} file(s)`);
   if (change.deleted.length > 0) flags.push(`the answer deletes ${change.deleted.length} file(s)`);
   if (touched.length > LARGE_FILES || linesAdded + linesRemoved > LARGE_LINES) {
     flags.push(`the change is above the stated size (${LARGE_FILES} files or ${LARGE_LINES} lines): ${touched.length} files, ${linesAdded + linesRemoved} lines`);
-  }
-  if (baseline !== null && baseline.result === 'pass') {
-    flags.push('the check also exits 0 on the untouched snapshot — its pass on this answer says nothing');
   }
   return flags;
 }
@@ -611,33 +562,15 @@ function lineCounts(repoRoot: string, commit: string): { added: number; removed:
   return { added, removed, binary };
 }
 
-// The report of facts. Every line names a command or a comparison it came
-// from; nothing here is a verdict, and the last-but-one line always says what
-// was not checked.
-function renderAttemptReport(record: BountyRecord, manifest: BountyManifest, n: number, change: AnswerChange, probe: AnswerProbe, merge: DryMerge, counts: { added: number; removed: number; binary: number }, stage: BountyRecord['stage'], applicable: readonly Attempt[]): string[] {
+// The report of facts: who sent the answer and when, the change with counts
+// and lines, the dry merge read, and eager flags — never a verdict. The
+// nothing-was-run sentence is always there, verbatim.
+export const NOTHING_RUN = 'nothing in the solution was run and this report says nothing about whether it works';
+
+function renderAttemptReport(record: BountyRecord, n: number, at: string, author: string | undefined, change: AnswerChange, merge: DryMerge, counts: { added: number; removed: number; binary: number }): string[] {
   const lines: string[] = [];
   lines.push(`report — attempt ${n} for ${record.id}`);
-  const checkArgv = manifest.check !== null ? describeCommand(manifest.check.argv) : null;
-  const before = manifest.verification?.check;
-  if (checkArgv === null) {
-    lines.push('  check: none declared — the listing says a person reads the answer');
-  } else if (probe.check === null) {
-    lines.push(`  check: ${checkArgv} — could not run, because setup did not pass (${probe.setup?.result ?? 'not run'}${probe.setup?.exit !== null && probe.setup?.exit !== undefined ? `, exit ${probe.setup.exit}` : ''})`);
-  } else {
-    const beforeText = before === null || before === undefined ? 'no run recorded at create' : `exited ${before.exit} at create`;
-    lines.push(`  check: ${checkArgv} — ${beforeText}; on the answer it ${probe.check.result === 'pass' ? 'exits 0' : probe.check.result === 'fail' ? `exits ${probe.check.exit}` : `could not run (${probe.check.result})`}`);
-    if (probe.check.result !== 'pass' && probe.check.tail !== '') {
-      lines.push('  check output tail:');
-      for (const line of probe.check.tail.split('\n').slice(-6)) lines.push(`    ${line}`);
-    }
-  }
-  if (manifest.guard === null || manifest.guard === undefined) {
-    lines.push('  guard: none declared for this bounty');
-  } else if (probe.guard === 'not-run') {
-    lines.push(`  guard: ${describeCommand(manifest.guard.argv)} — was not run; setup did not pass`);
-  } else if (probe.guard !== null) {
-    lines.push(`  guard: ${describeCommand(manifest.guard.argv)} — ${probe.guard.result === 'pass' ? 'exits 0' : probe.guard.result === 'fail' ? `exits ${probe.guard.exit}` : `could not run (${probe.guard.result})`} on the answer`);
-  }
+  lines.push(`  from: ${author !== undefined ? `GitHub account ${author}` : 'a returned folder — no account was named'} — arrived ${at}`);
   lines.push(`  change: ${change.changed.length} changed, ${change.added.length} added, ${change.deleted.length} deleted — ${counts.added} lines added, ${counts.removed} removed${counts.binary > 0 ? ` (${counts.binary} binary file(s))` : ''}`);
   if (merge.kind === 'clean') {
     lines.push('  current code: the answer would merge cleanly onto the current branch');
@@ -646,30 +579,25 @@ function renderAttemptReport(record: BountyRecord, manifest: BountyManifest, n: 
   } else {
     lines.push(`  current code: cannot tell — ${merge.detail}`);
   }
-  const flags = attemptFlags(manifest, change, counts.added, counts.removed, probe.baseline);
+  const flags = attemptFlags(change, counts.added, counts.removed);
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
-  lines.push("  not checked: this report states the declared commands' exits and a merge read only — it says nothing about behaviour those commands do not cover");
-  if (stage === 'verified' || stage === 'answered') {
-    const pick = applicable.length === 1 ? ` ${applicable[0]!.n}` : ' <n>';
-    lines.push(`  next: box bounty apply ${record.id}${pick} — or box bounty reject ${record.id} --reason "<why>"`);
-  } else {
-    lines.push(`  next: the bounty is open again — box bounty answer ${record.id} --from <dir> when another answer arrives, or box bounty reject ${record.id} --reason "<why>" to end it`);
-  }
+  lines.push(`  ${NOTHING_RUN}`);
+  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty reject ${record.id} --reason "<why>"`);
   return lines;
 }
 
-// `answer <id> --from <dir>`: bind, extract, check, report. The bounty stays
-// open — `posted` waiting, `answered`/`verified` waiting on a decision — and
-// each answer is kept as its own attempt. taken → answered events record the
-// arrival; the resulting stage is derived from the best attempt: verified when
-// a check passed, answered when none was declared, posted again when nothing
-// applies.
-export function answerBounty(repoRoot: string, id: string, fromDir: string): AnswerResult {
+// `answer <id> --from <dir>`: bind, extract, report. The bounty stays open —
+// `posted` waiting, `answered` waiting on a decision — and each answer is kept
+// as its own numbered attempt, whichever account it came from (a GitHub-valid
+// `author` is recorded when the adapter names one; a returned folder names
+// none). taken → answered events record the arrival; the stage lands at
+// `answered`, where the choice — apply, reject or wait — is the agent's.
+export function answerBounty(repoRoot: string, id: string, fromDir: string, author?: string): AnswerResult {
   const record = loadRecord(repoRoot, id);
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
   if (record.stage !== 'posted' && record.stage !== 'taken' && record.stage !== 'answered' && record.stage !== 'verified') {
-    throw new BountyRefused('not-posted', `bounty ${id} is ${record.stage}, not posted — an answer can only come back to a bounty that was delivered (box bounty post ${id} --to <dir>)`);
+    throw new BountyRefused('not-posted', `bounty ${id} is ${record.stage}, not posted — an answer can only come back to a bounty that was delivered (box bounty post ${id} --to <dir> or --github)`);
   }
   const { manifest, manifestBytes, repoDir } = readAnswerFolder(fromDir);
   if (manifest.id !== id) {
@@ -699,54 +627,23 @@ export function answerBounty(repoRoot: string, id: string, fromDir: string): Ans
   transitionTo(repoRoot, record, 'answered', { attempt: n });
   record.conflicts = null;
 
-  const probe = probeAnswer(record, manifest, repoRoot, change, repoDir);
-  let outcome: AttemptOutcome;
-  let detail: string | null = null;
-  if (manifest.check === null || manifest.check.argv.length === 0) {
-    outcome = 'answered'; // reviewed: there is no check to run — nothing claims one
-  } else if (probe.check === null) {
-    outcome = 'check-unrunnable';
-    detail = `environment-failure: setup '${describeCommand(manifest.setup?.argv ?? [])}' ${probe.setup !== null && (probe.setup.result === 'error' || probe.setup.result === 'timeout') ? `could not run (${probe.setup.result})` : `exited ${probe.setup?.exit}`} — ${probe.setup?.tail ?? ''}`;
-  } else if (probe.check.result === 'error' || probe.check.result === 'timeout') {
-    outcome = 'check-unrunnable';
-    detail = `environment-failure: check '${describeCommand(manifest.check.argv)}' could not run (${probe.check.result}) — ${probe.check.tail}`;
-  } else if (probe.check.result !== 'pass') {
-    outcome = 'check-failed';
-    detail = `implementation-failure: check '${describeCommand(manifest.check.argv)}' exited ${probe.check.exit} on the snapshot it was made for — ${probe.check.tail}`;
-  } else {
-    outcome = 'verified';
-  }
-
+  const at = new Date().toISOString();
   const merge = dryMergeOnto(repoRoot, commit);
   const counts = lineCounts(repoRoot, commit);
+  const report = renderAttemptReport(record, n, at, author, change, merge, counts);
   const attempt: Attempt = {
     n,
-    at: new Date().toISOString(),
+    at,
+    ...(author !== undefined ? { author } : {}),
     commit,
     changed: change.changed,
     added: change.added,
     deleted: change.deleted,
-    outcome,
+    outcome: 'answered',
     conflicts: merge.kind === 'conflict' ? merge.paths : null,
-    report: []
+    report
   };
-  const attempts = [...attemptsOf(record), attempt];
-  const applicable = applicableAttempts(attempts);
-  const stage = applicable.length > 0
-    ? (attempts.some(candidate => candidate.outcome === 'verified') ? 'verified' : 'answered')
-    : 'posted';
-  const report = renderAttemptReport(record, manifest, n, change, probe, merge, counts, stage, applicable);
-  record.attempts = [...attempts.slice(0, -1), { ...attempt, report }];
-  // The arrival event already landed the bounty at `answered`; a reviewed
-  // bounty derives `answered` again — the same stage is not a transition.
-  if (stage !== 'answered') {
-    transitionTo(repoRoot, record, stage, {
-      attempt: n,
-      command: 'answer',
-      ...(detail !== null ? { reason: `attempt ${n}: ${detail}` } : {})
-    });
-  } else {
-    persistRecord(repoRoot, record);
-  }
-  return { record, outcome, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
+  record.attempts = [...attemptsOf(record), attempt];
+  persistRecord(repoRoot, record);
+  return { record, outcome: 'answered', attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
 }

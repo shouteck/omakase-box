@@ -1,16 +1,32 @@
 # `box bounty` — a bounty, complete and safe, remembered in the project
 
+GitHub posting is public and free, only to the project's own repository when
+it is already public. Anyone can read the issue and the bounty branch. Nobody
+is known to be watching these issues yet; the wait is unknown and every bounty
+states a reward of $0 — no payment exists. Private repositories and unreadable
+visibility are refused with no override. A local folder remains available on
+every repository.
+
+A bounty is the task, what was tried, the one line of why, and the code —
+nothing else. **Nothing a solver wrote is ever run by the tool:** checks were
+removed on 11 October 2026, so `create` accepts no command flags at all —
+`--setup`, `--check` and `--guard` are each a named refusal (`checks-removed`)
+— and collecting, reporting, applying and undoing an answer runs no script,
+hook, filter, merge driver or submodule fetch the answer carries. An answer
+from any account can be listed, read and merged; choosing is always the
+agent's or the owner's.
+
 ```
 node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>" \
-    [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] \
-    [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]
+    [--title "<one line>"] [--note <file>] [--job <file>] \
+    [--out <dir>] [--repo <path>] [--preview]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty remind [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
-node packages/box-cli/dist/cli.js bounty confirm <id> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty post <id> --to <dir> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty answer <id> --from <dir> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--preview] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
 node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
@@ -22,14 +38,95 @@ node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
 Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
 anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
 bounty's record; nothing else leaves the machine until `confirm` + `post` —
-and `post` only ever copies to a local folder you name. Every outcome is a
+and `post` copies to a local folder you name or publishes the confirmed GitHub
+listing and shipped source. Every outcome is a
 named state: success ends `stage 1 of 7: drafted`; refusals print
 `refused (<name>)` and exit 3; usage errors exit 2; operational failures
 exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
 
+## Post and collect on GitHub
+
+The tool uses Git and `gh` already signed in on the machine. Sign in through
+those programs, outside the tool. It never asks for, reads, stores or prints a
+token. `origin` must have one fetch destination and one push destination, both
+naming the same GitHub repository. Before any push, the tool reads that exact
+repository's visibility and refuses private or unreadable visibility.
+
+For a prepared bounty, show the exact listing before the owner approves it:
+
+```
+node packages/box-cli/dist/cli.js bounty confirm <id> --to github --preview
+```
+
+This changes nothing. It shows the repository, its public visibility, the exact
+issue title and body, and `box-bounty/<id>` as the branch. Once the owner approves
+that text, the owner's `.box/limits.json` must include `"github"` in
+`"allowedDestinations"`. An absent list permits local folders only. Then run:
+
+```
+node packages/box-cli/dist/cli.js bounty confirm <id> --to github
+node packages/box-cli/dist/cli.js bounty post <id> --to github
+```
+
+Confirmation records the listing and repository. Posting checks visibility
+again. The pushed branch has exactly the manifest's shipped files and one
+commit with no parent, so the owner's Git history and excluded files never
+leave. The issue names the task, the hand-off note, the kept-out count, the
+stated reward and licence facts, the branch and the answer instructions, and
+carries the `box-bounty` label — created on the repository when missing — so
+every bounty this tool posted is one search away. The issue address, number
+and branch are kept in the local record and shown by `status` and the
+open-bounties line.
+
+The solver clones that branch alone, works at its root and opens a pull request
+against it in the same repository. Collect from the project's record:
+
+```
+node packages/box-cli/dist/cli.js bounty answer <id>
+node packages/box-cli/dist/cli.js bounty answer <id> --pr <number>
+```
+
+The first command lists open pull request numbers, authors and changed files.
+`status` also reads the current issue state and open pull requests, so a later
+session learns about a new answer from the record alone. It saves the observed
+outside state and its time; the open-bounties line carries those answer facts.
+If GitHub cannot be reached, `github-status-unavailable` names that outcome,
+shows the last recorded outside state and when, and names `status` as the retry.
+The second fetches the selected pull request without changing the working tree,
+index or current branch (`--no-recurse-submodules`, so a carried `.gitmodules`
+fetches nothing). Its target must be the recorded bounty branch. The existing
+answer boundary refuses never-ship additions and unsafe paths, extracts the
+change and records a numbered attempt and a facts report.
+
+**An answer from any account can be collected and applied.** The author is
+recorded on the attempt as a fact — a GitHub-shaped login, nothing more — and
+nothing it wrote is ever run: the fetch pulls objects only, the report reads
+them, and `apply`/`undo` pin attribute lookups to the owner's own tree and read
+hooks from an empty directory, so a returned `.gitattributes`, a merge driver,
+a hook or a submodule declaration names no command on this host. Applying is
+still a decision, not a consequence — `apply <id> <n>` is always the agent's
+call.
+
+`apply`, `reject` and `withdraw` comment the recorded fact on the issue, close it
+and remove the bounty branch. `undo` comments the reversal. If an outside step
+fails, the local decision stands and the record names `github-decision-pending`
+and the command to retry. That retry resumes outside work without repeating the
+local merge or undo. `status` shows pending work even after a bounty has ended.
+An undo after an unfinished apply update preserves both facts and finishes the
+issue closure and branch removal. Retry uses the account that started the post;
+comments or copied listings from other accounts cannot stand in for tool facts.
+
+If a push succeeds but the issue cannot be opened, the refusal is
+`github-post-incomplete`. The record states the known outside state. Repeat
+`post <id> --to github` to finish; it recovers an issue whose response was lost
+and never creates a second listing. To remove a partial post instead, run
+`withdraw <id>`. Nothing here sends money or posts to a bounty site.
+Withdrawal also finds and closes a successfully created issue whose response
+was lost, before it clears the outside work.
+
 `create` asks only for judgement — a task and one line of why; everything
-mechanical has a default:
+else has a default:
 
 - **`--why "<one line>"` is required** — without it the refusal is named
   (`missing-why`), not a usage wall. It lives only in the record (like
@@ -59,9 +156,9 @@ it — and the owner's limits file supplies the facts it needs to choose.
 - **`describe`** prints the canonical description — what the tool does, when
   it is worth using and when it is not — plus the facts for choosing, read
   from `.box/limits.json` and the live records: cost, expected wait, where
-  `post --to` may deliver, whether reminders are on, how an answer is judged
-  (the level in the listing: `mechanical` — the declared check must exit 0;
-  `reviewed` — a person reads it; facts about an answer, never a verdict) and
+  `post --to` may deliver, whether reminders are on, how an answer is treated
+  (each solution arrives as a numbered attempt; the report states facts about
+  the change and runs nothing — choosing is yours) and
   the open-bounties line. It works outside a checkout too: outside one it
   prints the description and says the live facts need a repository. A fact the
   owner has not set says so — describe never prints nothing.
@@ -105,8 +202,9 @@ Written once by the owner, read at the boundary (`.box` never ships):
   that resolves outside is refused (`rules-file-outside-repo`).
 - `cost` / `expectedAnswer` — one free-text line each, shown by `describe` so
   an agent can weigh handing off against doing the work.
-- `allowedDestinations` — optional list of directories (repo-relative or
-  absolute) that `post --to` must land inside; absent means any local folder,
+- `allowedDestinations` — optional list of local directories (repo-relative or
+  absolute) that `post --to` must land inside, plus the literal `"github"` for
+  GitHub posting; absent means any local folder and no GitHub posting,
   as before. Enforced on the canonical destination — a junction trick cannot
   slip past — and the refusal is named `destination-not-allowed`. An empty
   list means no destination is allowed.
@@ -120,24 +218,29 @@ half-written record. Unknown fields are ignored.
 
 `create` also writes `.box/bounties/<id>.json` inside the repository and prints
 its path. The tool writes the file; committing it is the agent's normal flow.
-The record holds the id, title, level, the snapshot identifier
+The record holds the id, title, the snapshot identifier
 (commit + tree + base), the absolute path of the bounty folder, and the stage
 history — one event appended per transition, never rewritten:
 
 ```
-drafted → confirmed → posted → taken → answered → verified → applied
+drafted → confirmed → posted → taken → answered → applied
                 (ended early: rejected, withdrawn, expired;
                  an applied merge can be reversed by undo → undone)
 ```
 
-`verified` is a waiting stage, not an ending: a mechanical answer that passes
-its check stops there and nothing is merged until `apply` runs. A failing
-answer does not end the bounty either — it is kept as a numbered **attempt**
-and the record returns to `posted`, so another answer can come back. Every
-answer is kept: `record.attempts[]` holds each one's commit, change, outcome,
-conflict paths and report; `status` lists them, passing first. Records written
-before attempts existed — a single `answer` on the record — load as attempt
-number 1 and still apply.
+`answered` is a waiting stage, not an ending: every answer lands there —
+nothing is run and nothing is merged until `apply` runs — and an answer that
+is not chosen does not end the bounty either; it stays a numbered **attempt**
+while more can come back. Every answer is kept: `record.attempts[]` holds
+each one's commit, change, outcome, conflict paths and report; `status` lists
+them all. Records written before attempts existed — a single `answer` on the
+record — load as attempt number 1 and still apply.
+
+Records written while checks existed still load. They carry a `level` and
+check outcomes (`verified`, `check-failed`, `check-unrunnable`,
+`check-not-run`); `status` prints each as the history it is — "the declared
+check exited 0 on it (checks were removed on 11 October 2026)" — never as a
+promise about the current code, and no new record writes a level.
 
 A later agent in a later session reads the record — not your conversation — to
 pick the bounty up. An optional `--job <file>` on `create` records the larger
@@ -179,8 +282,8 @@ and all refs exist while the bounty is open. Every ended stage — `applied`,
   `apply` refuses by name (`apply-ambiguous`) and prints the attempt numbers —
   pass one as `<attempt>` (`unknown-attempt` otherwise). On any other stage it
   is a named refusal (`wrong-stage`, `already-ended`).
-- **`reject <id> --reason "<text>"`** ends a `posted`/`taken`/`answered`/
-  `verified` bounty with the reason kept on the record — earlier stages end
+- **`reject <id> --reason "<text>"`** ends a `posted`/`taken`/`answered`
+  bounty with the reason kept on the record — earlier stages end
   through `withdraw` instead (`wrong-stage`).
 - **`withdraw <id>`** ends any open stage → `withdrawn`, removes the durability
   refs, and is safe to repeat: an already-withdrawn bounty is a named state, not
@@ -211,52 +314,32 @@ links of any kind inside `repo/` are refused by name (`answer-never-ship`,
 `answer-unsafe-path`); everything else — including brand-new files — is the
 answer, and it is the merge commit that carries it into history.
 
-For a **`mechanical`** bounty the *shipped set* — exactly the manifest's file
-list, emitted as recorded blob bytes from `refs/box-bounty/<id>` — is recreated
-in a clean directory (a pruned ref is `snapshot-lost`), the change applied,
-and the declared setup+check run exactly as `create` ran them on the folder it
-shipped. Never-ship files and `.box` records inside the snapshot commit never
-materialise for the check — the solver is judged on what they were given. The
-check is then re-run on the *untouched* shipped set too: if it passes there, a
-pass on the answer proves nothing, and the report flags it. When `--guard` was
-declared it runs once more, after the check, on the answered set.
-
-For a **`reviewed`** bounty there is no check to run: the answer lands at
-`answered` and the report's next step names `box bounty apply <id>` or
-`box bounty reject <id> --reason` — nothing claims a verification that did not
-happen.
-
 **`answer` reports facts, never a verdict.** A wrong fact is a bug we can
 find; a wrong verdict misleads and cannot be traced — so the report is policed:
 no "correct", "safe", "good", "recommended", "should accept" or
-"should reject", in any outcome, and a test keeps it that way. Whatever the
-check did, the report states only what was observed:
+"should reject", in any outcome, and a test keeps it that way. The report
+states only what was observed:
 
-- `check:` — the declared command, its exit at `create` (it failed then — that
-  is why the bounty exists) and its exit on the answer, with an output tail
-  when there is any;
-- `guard:` — the declared guard's exit on the answer, or `none declared`;
+- `report — attempt <n> for <id>` — which answer this is;
+- `from:` — who sent it (a GitHub account name, or "a returned folder") and
+  when it arrived;
 - `change:` — changed/added/deleted path counts and lines added/removed;
 - `current code:` — a dry merge read (`git merge-tree --write-tree`) of the
   answer against the current branch, with the conflict paths when it would not
   land — the worktree, index and `HEAD` never move for the read;
-- `flag:` lines — eager observations, never blocks: the answer edits a file the
-  check command's own text names or one the stated rule marks as a test; files
-  were added or deleted; the change is above the stated size; or the check
-  passes on the untouched snapshot;
-- `not checked:` — one always-present sentence saying the report is exits and a
-  merge read only, not a verdict on behaviour the commands do not cover;
+- `flag:` lines — eager observations, never blocks: the answer touches a file
+  the stated rule marks as a test; files were added or deleted; the change is
+  above the stated size;
+- one always-present sentence — `nothing in the solution was run and this
+  report says nothing about whether it works`;
 - `next:` — the exact next command.
 
-A pass on the answer lands the bounty at `verified` and **stops** — nothing is
-merged; `box bounty apply <id>` is the recorded decision. (The owner's limits,
-a later wave, may switch an automatic apply back on for clean mechanical
-passes.) A failing or
-unrunnable check is recorded on the attempt (`implementation-failure` or
-`environment-failure`, with exit and tail) and the bounty returns to `posted`,
-still open — more answers are attempts 2, 3, … and `status` lists them,
-applicable ones first. When several attempts could apply, `apply` names them
-(`apply-ambiguous`) and `apply <id> <n>` picks one.
+Every answer lands at `answered` and **stops** — nothing is merged; `box
+bounty apply <id>` is the recorded decision, or `reject` ends the bounty with
+its reason. More answers are attempts 2, 3, … and `status` lists them all.
+When several attempts could apply, `apply` names them (`apply-ambiguous`) and
+`apply <id> <n>` picks one — any attempt may be named, whichever account it
+came from.
 
 **Applying is a real git merge, never a file write.** The change becomes a
 commit on the snapshot's base commit — the base tree plus the extracted delta
@@ -287,8 +370,7 @@ to what it was before the apply.
 ## The note writes itself
 
 Without `--note`, `create` composes the hand-off note from evidence it
-gathers itself: the declared check with the exit and output tail it recorded
-failing on this snapshot, and the files the working state already changed
+gathers itself: the files the working state already changed
 relative to `snapshot.baseCommit` — named when they are part of the shipped
 set, a moved submodule is labelled `submodule changed`, and a file the working
 state deleted is named when no never-ship rule would have kept it out; a path
@@ -307,19 +389,20 @@ differs only outside the shipped set — never that the tree matches the last
 commit when it does not.
 The composed note is marked `tool-written` in `bounty.json` and says so in
 its first line. Gathering never crashes `create`: a repository with nothing
-to report — no check, a clean tree — gets a plain note saying so. `--note`
+to report — a clean tree — gets a plain note saying so. `--note`
 still wins when given.
 
 ## What the folder contains
 
 ```
 <out>/
-  README.md      the listing: what is wanted, how to set up, how the check is run,
-                 what counts as done — enough for a stranger to act on
-  bounty.json    the manifest: id, title, task, note, setup/check, level, the
-                 snapshot identifier, every shipped file's sha256 + bytes, totals,
-                 the never-ship rules that applied with removal counts (no names),
-                 and the recorded check exit + output tail
+  README.md      the listing: what is wanted, what was already tried, where the
+                 code is, what was kept out, how to answer, the reward ($0) and
+                 the licence fact — enough for a stranger to act on
+  bounty.json    the manifest: id, title, task, note, the licence fact, the
+                 snapshot identifier, every shipped file's sha256 + bytes,
+                 totals, and the never-ship rules that applied with removal
+                 counts (no names) — it carries no command
   repo/…         the snapshot: the repository as it stands — tracked files with
                  uncommitted changes plus untracked files that are not ignored;
                  no .git, no history
@@ -329,36 +412,22 @@ still wins when given.
 
 Before anything is written the command prints exactly what would leave: file and
 byte counts, which never-ship rules removed how many files (locally the removed
-names are listed), the task, the check and its level, and the destination.
+names are listed), the task and the destination.
 `--preview` prints that and writes nothing — except the snapshot objects: the
 preview is computed from the recorded commit, so it already exists unreferenced
 in `.git/objects` when the preview returns.
 
-## The check really fails today
+## Checks were removed
 
-With `--check`, the tool copies the finished snapshot into a clean directory
-outside the checkout and runs `--setup` then `--check` there as a solver would
-(argv verbatim, no shell; `.cmd` shims launch through cmd.exe per the declared-
-command rule). If the check exits 0 there is nothing to solve — refused
-(`check-already-passes`), no folder. A check or setup that cannot run is refused
-with the program named (`check-unrunnable`, `setup-unrunnable`, `setup-failed`).
-The check's exit and output tail are recorded in `bounty.json`.
-
-`--guard -- <command>` declares a second command that must *keep* passing —
-think of it as the property the rest of the work must not break. It runs on the
-shipped set at `create` and must exit 0 there: a failing guard is
-`guard-failed`, one that cannot run is `guard-unrunnable`, both named
-distinctly from the check's refusals, and no folder is written either way. The
-guard is bound into `bounty.json`; `answer` reruns it after the check and
-reports its exit as a fact — a red guard does not flip a verdict, the report
-simply states it.
-
-## Level
-
-`mechanical` — a check exists and fails today; the answer must make it exit 0
-without breaking anything else. `reviewed` — no check; the listing says a person
-reads the answer. (`example` needs the owner to confirm a drafted example; that
-arrives in a later wave.)
+On 11 October 2026 the owner removed checks from the tool: a bounty is the
+task, what was tried, the why and the code, and judging a solution is the
+agent's or the owner's work — never the tool's. `--setup`, `--check` and
+`--guard` are each refused by name (`checks-removed`) so an agent reusing an
+old command line learns why; the `mechanical`/`reviewed` level is gone with
+them, from the manifest, the record and the listing. Manifests and records
+written before that day keep their keys on disk and still load — readers
+ignore what no longer exists, and an old record's check outcome is printed as
+dated history, not as anything about the current code.
 
 ## The snapshot identifier
 

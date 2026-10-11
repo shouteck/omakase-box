@@ -10,7 +10,7 @@ The bounty tool for coding agents: one command for an agent to hand off work it 
 
 <!-- box-bounty -->
 box bounty can hand a task to an outside solver and bring the answer back
-checked — `box bounty describe` says what it does, what it costs and when it
+as facts — `box bounty describe` says what it does, what it costs and when it
 beats doing the work yourself. Using it is always your call; the owner's
 limits apply.
 open bounties: none

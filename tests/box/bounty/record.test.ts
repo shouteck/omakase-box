@@ -43,7 +43,7 @@ describe('the bounty record', () => {
     expect(record.kind).toBe('box-bounty-record');
     expect(record.stage).toBe('drafted');
     expect(record.title).toBe('a task');
-    expect(record.level).toBe('reviewed');
+    expect('level' in record).toBe(false); // records written now carry no level
     expect(record.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(record.snapshot.commit).toBe(result.plan.snapshot.commit);
     expect(record.snapshot.tree).toBe(result.plan.snapshot.tree);

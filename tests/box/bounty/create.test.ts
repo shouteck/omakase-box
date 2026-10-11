@@ -5,8 +5,9 @@ import { BountyRefused, finalizeBounty, planBounty, renderPreview } from '../../
 import type { BountyManifest, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { git, listTree, makeRepo, runRoot, write } from './support.js';
 
-// The create flow end to end: preview first, the check really run inside a clean
-// copy of the snapshot, a passing check refused, and every outcome named.
+// The create flow end to end: preview first, the folder written or a named
+// refusal. Checks were removed on 11 October 2026 — create neither accepts nor
+// runs a command, and the listing carries no check section and no level.
 
 function repoWithTask(files: Record<string, string>): string {
   const repo = makeRepo(files);
@@ -28,110 +29,64 @@ function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOption
 const readManifest = (outDir: string): BountyManifest => JSON.parse(readFileSync(join(outDir, 'bounty.json'), 'utf8')) as BountyManifest;
 
 describe('bounty create end to end', () => {
-  it('creates a complete mechanical bounty on a Python repository', () => {
+  it('creates a complete bounty on a Python repository', () => {
     const repo = repoWithTask({
       'app/main.py': 'def greet():\n    return "hi"\n',
       'check.py': 'import sys\nsys.exit(1)\n',
+      'LICENSE': 'Apache License\nVersion 2.0\n',
+      'package.json': JSON.stringify({ name: 'fixture', license: 'Apache-2.0' }) + '\n',
       'NOTE.md': 'I tried renaming; still red.\n'
     });
     const outDir = join(runRoot('out'), 'bounty');
-    const plan = planBounty(options(repo, { check: ['python', 'check.py'], notePath: join(repo, 'NOTE.md'), outDir }));
+    const plan = planBounty(options(repo, { notePath: join(repo, 'NOTE.md'), outDir }));
     const preview = renderPreview(plan);
     expect(preview).toContain('would ship:');
-    expect(preview).toContain('check: python check.py');
-    expect(preview).toContain('level: mechanical');
     expect(preview).toContain(outDir);
+    expect(preview).not.toContain('setup:');
+    expect(preview).not.toContain('level:');
     const result = finalizeBounty(plan);
     expect(result.id).toMatch(/^bt-[a-f0-9]{12}$/);
     const manifest = readManifest(result.outDir);
     expect(manifest.kind).toBe('box-bounty');
     expect(manifest.title).toBe('make the check pass');
-    expect(manifest.level).toBe('mechanical');
     expect(manifest.task.text).toContain('Make the check pass');
     expect(manifest.note?.text).toContain('still red');
-    expect(manifest.check).toEqual({ argv: ['python', 'check.py'] });
+    // A bounty carries no command: the keys checks lived under are gone from
+    // what create writes, not merely null.
+    const raw = JSON.parse(readFileSync(join(result.outDir, 'bounty.json'), 'utf8')) as Record<string, unknown>;
+    for (const key of ['setup', 'check', 'guard', 'level', 'verification']) expect(key in raw).toBe(false);
     expect(manifest.snapshot.commit).toMatch(/^[a-f0-9]{40}$/);
-    expect(manifest.verification?.check?.result).toBe('fail');
-    expect(manifest.verification?.check?.exit).toBe(1);
+    expect(manifest.licence).toEqual({ file: 'LICENSE', declared: 'Apache-2.0' });
     expect(manifest.files.map(file => file.path)).toContain('app/main.py');
     const entry = manifest.files.find(file => file.path === 'check.py');
     expect(entry?.sha256).toMatch(/^[a-f0-9]{64}$/);
     expect(manifest.counts.files).toBe(manifest.files.length);
     const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
     expect(listing).toContain('# Bounty: make the check pass');
+    expect(listing.match(/^# /gm)).toHaveLength(1); // one title heading, never a duplicated one
     expect(listing).toContain('What is wanted');
     expect(listing).toContain('still red');
-    expect(listing).toContain('exits 1');
+    expect(listing).toContain('## How to answer');
+    expect(listing).toContain('reward: $0');
+    expect(listing).toContain('licence: LICENSE (package.json declares Apache-2.0)');
+    expect(listing).not.toContain('## Set up');
+    expect(listing).not.toContain('## How you know you are done');
+    expect(listing).not.toContain('· level');
     expect(listTree(result.outDir)).toEqual(expect.arrayContaining(['README.md', 'bounty.json', 'repo/check.py', 'repo/app/main.py']));
     // --why lives only in the record — never in bounty.json, the listing or
     // the shipped folder — so the reasons for handing off can be learned.
-    const record = JSON.parse(readFileSync(result.recordPath, 'utf8')) as { why?: string };
+    const record = JSON.parse(readFileSync(result.recordPath, 'utf8')) as { why?: string; level?: string };
     expect(record.why).toBe('stuck after two approaches');
+    expect(record.level).toBeUndefined(); // records carry no level either
     expect(JSON.stringify(manifest)).not.toContain('stuck after two approaches');
     expect(listing).not.toContain('stuck after two approaches');
   });
 
-  // Host-only (K10): the declared setup spells the host's npm recipe 'npm.cmd',
-  // and the command launcher refuses .cmd files off Windows by design — this is
-  // a host-specific recipe, not a portable executable claim (station card, A4).
-  it.skipIf(process.platform !== 'win32')('creates a mechanical bounty on a Node repository with npm setup', () => {
-    const repo = repoWithTask({
-      'package.json': JSON.stringify({ name: 'node-fixture', version: '1.0.0', scripts: { test: 'node check.js' } }) + '\n',
-      'check.js': 'process.exit(1)\n',
-      'src/index.js': 'export const x = 1;\n'
-    });
-    const result = finalizeBounty(planBounty(options(repo, {
-      setup: ['npm.cmd', 'install', '--ignore-scripts'],
-      check: ['node', 'check.js']
-    })));
-    const manifest = readManifest(result.outDir);
-    expect(manifest.verification?.setup).toHaveLength(1);
-    expect(manifest.verification?.setup[0]?.result).toBe('pass');
-    expect(manifest.verification?.check?.result).toBe('fail');
-  });
-
-  it('proves setup runs before the check inside the snapshot copy', () => {
-    // The check fails BECAUSE setup ran: it exits 1 only when the marker setup
-    // wrote exists. If setup had not run, the check would pass and create would
-    // refuse — so a created bounty is proof of ordering.
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    const result = finalizeBounty(planBounty(options(repo, {
-      setup: ['node', '-e', 'require("node:fs").writeFileSync("prepped.txt","1")'],
-      check: ['node', '-e', 'process.exit(require("node:fs").existsSync("prepped.txt") ? 1 : 0)']
-    })));
-    expect(readManifest(result.outDir).verification?.check?.exit).toBe(1);
-  });
-
-  it('refuses a check that already passes and leaves no folder', () => {
-    const repo = repoWithTask({ 'check.py': 'import sys\nsys.exit(0)\n' });
-    const outDir = join(runRoot('out'), 'bounty');
-    const plan = planBounty(options(repo, { check: ['python', 'check.py'], outDir }));
-    try {
-      finalizeBounty(plan);
-      expect.unreachable('expected refusal');
-    } catch (error) {
-      expect(error).toBeInstanceOf(BountyRefused);
-      const refusal = error as BountyRefused;
-      expect(refusal.reason).toBe('check-already-passes');
-      expect(refusal.message).toContain('nothing to solve');
-    }
-    expect(existsSync(outDir)).toBe(false);
-  });
-
-  it('names a setup step that exits non-zero', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    try {
-      finalizeBounty(planBounty(options(repo, {
-        setup: ['node', '-e', 'process.exit(3)'],
-        check: ['node', '-e', 'process.exit(1)']
-      })));
-      expect.unreachable('expected refusal');
-    } catch (error) {
-      expect(error).toBeInstanceOf(BountyRefused);
-      const refusal = error as BountyRefused;
-      expect(refusal.reason).toBe('setup-failed');
-      expect(refusal.message).toContain('exited 3');
-    }
+  it('names a licence file it finds without a package.json declaration', () => {
+    const repo = repoWithTask({ 'src/x.py': 'x\n', 'LICENSE-MIT': 'MIT License\n' });
+    const result = finalizeBounty(planBounty(options(repo)));
+    expect(readManifest(result.outDir).licence).toEqual({ file: 'LICENSE-MIT', declared: null });
+    expect(readFileSync(join(result.outDir, 'README.md'), 'utf8')).toContain('licence: LICENSE-MIT');
   });
 
   it('refuses an out directory that is not empty', () => {
@@ -171,28 +126,19 @@ describe('bounty create end to end', () => {
     }
   });
 
-  it('names the program when the check cannot run', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    try {
-      finalizeBounty(planBounty(options(repo, { check: ['definitely-not-a-real-program-bt1', 'x'] })));
-      expect.unreachable('expected refusal');
-    } catch (error) {
-      expect(error).toBeInstanceOf(BountyRefused);
-      const refusal = error as BountyRefused;
-      expect(refusal.reason).toBe('check-unrunnable');
-      expect(refusal.message).toContain('definitely-not-a-real-program-bt1');
-    }
-  });
-
-  it('creates a reviewed bounty when no check is given, and the listing says a person reads the answer', () => {
+  it('creates a bounty carrying no command — the listing states its facts', () => {
     const repo = repoWithTask({ 'src/x.py': 'x\n' });
     const result = finalizeBounty(planBounty(options(repo)));
     const manifest = readManifest(result.outDir);
-    expect(manifest.level).toBe('reviewed');
-    expect(manifest.verification).toBeNull();
+    expect(manifest.licence).toEqual({ file: null, declared: null });
     const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
-    expect(listing).toContain('a person will read your answer');
-    expect(listing).toContain('no `.git` and no history.\n\n## How you know you are done'); // sections stay separated
+    expect(listing).toContain('licence: no licence file');
+    expect(listing).toContain('reward: $0');
+    expect(listing).toContain('## How to answer');
+    expect(listing).toContain('Nothing in an answer is ever run');
+    expect(listing).not.toContain('## Set up');
+    expect(listing).not.toContain('## How you know you are done');
+    expect(listing).not.toContain('· level');
   });
 });
 
@@ -232,7 +178,7 @@ describe('BT3b — fewer things to supply', () => {
     expect(existsSync(join(expected, 'bounty.json'))).toBe(true);
   });
 
-  it('composes the note from evidence when no --note is given: the failing check and the files changed so far', () => {
+  it('composes the note from evidence when no --note is given: the files changed so far', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n', '.env': 'FAKE=made-up\n', 'TASK.md': 'the task\n' });
     // Uncommitted work is the evidence: a touched source file, a new task file,
     // and a never-ship file that must never be named inside the bounty.
@@ -243,15 +189,12 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      check: ['node', '-e', 'console.log("still red"); process.exit(7)'],
       outDir: join(runRoot('out'), 'bounty')
     }));
     const manifest = readManifest(result.outDir);
     expect(manifest.note?.file).toBe('tool-written');
     const text = manifest.note?.text ?? '';
     expect(text).toContain('written by the tool');
-    expect(text).toContain('exits 7');
-    expect(text).toContain('still red');
     expect(text).toContain('src/app.py');
     expect(text).toContain('NEW.md');
     expect(text).not.toContain('.env'); // removed names never ship, even in the note

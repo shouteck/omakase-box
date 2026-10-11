@@ -1,9 +1,7 @@
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { runDeclaredCheck } from '../box-package/commands.js';
-import type { CheckRecord } from '../box-package/commands.js';
 import { BountyRefused } from './errors.js';
 import { gitBlob, gitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
@@ -17,12 +15,14 @@ import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 // bounty never leaves a folder behind:
 //   planBounty     — resolve the repository, pin the working state in a snapshot
 //                    commit, and classify every file; writes nothing but Git objects.
-//   finalizeBounty — emit the folder into sibling staging, prove the declared check
-//                    really fails on a clean copy of the finished snapshot outside
-//                    the checkout, then rename into place. Refusal = no folder.
+//   finalizeBounty — emit the folder into sibling staging, then rename into
+//                    place. Refusal = no folder.
+//
+// Checks were removed on 11 October 2026: a bounty is the task, the note, the
+// why and the code. Create neither accepts nor runs a command — nothing a
+// solver wrote is ever run by this tool.
 
 export const TOOL_VERSION = 'box-bounty@0.1.0';
-const COMMAND_TIMEOUT_MS = 300_000;
 const PREVIEW_NAMES_PER_RULE = 20;
 
 export interface CreateOptions {
@@ -39,12 +39,6 @@ export interface CreateOptions {
       bounty. Its text lives only in the record; never in bounty.json, the
       listing or the shipped folder. */
   readonly jobPath?: string;
-  readonly setup?: readonly string[];
-  readonly check?: readonly string[];
-  /** `--guard -- <command>`: a command that must keep passing — `create` runs
-      it on the shipped set and refuses if it does not pass today; `answer`
-      runs it after the check and reports the result as a fact. */
-  readonly guard?: readonly string[];
   /** `--out`: absent, the folder goes to a sibling `bounties/<slug>` directory
       next to the repository root — always outside the checkout. */
   readonly outDir?: string;
@@ -61,10 +55,6 @@ export interface BountyPlan {
   readonly task: { readonly file: string; readonly text: string };
   readonly note: { readonly file: string; readonly text: string } | null;
   readonly job: { readonly file: string; readonly text: string } | null;
-  readonly setup: readonly string[] | null;
-  readonly check: readonly string[] | null;
-  readonly guard: readonly string[] | null;
-  readonly level: 'mechanical' | 'reviewed';
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   /** Canonical paths that exist as blobs in the snapshot tree — their emitted
       bytes come from `commit:path`, never the live worktree. */
@@ -89,7 +79,6 @@ export interface BountyResult {
 }
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
-const tail = (text: string): string => text.slice(-2000);
 
 const toPosixPath = (path: string): string => path.split('\\').join('/');
 
@@ -185,10 +174,6 @@ export function planBounty(options: CreateOptions): BountyPlan {
     task,
     note,
     job,
-    setup: options.setup !== undefined && options.setup.length > 0 ? [...options.setup] : null,
-    check: options.check !== undefined && options.check.length > 0 ? [...options.check] : null,
-    guard: options.guard !== undefined && options.guard.length > 0 ? [...options.guard] : null,
-    level: options.check !== undefined && options.check.length > 0 ? 'mechanical' : 'reviewed',
     snapshot: { commit: snapshot.commit, tree: snapshot.tree, baseCommit: snapshot.baseCommit },
     snapshotBlobs: snapshot.blobs,
     snapshotLinks: snapshot.links,
@@ -200,72 +185,25 @@ export function planBounty(options: CreateOptions): BountyPlan {
   };
 }
 
-const describeCommand = (argv: readonly string[]): string => argv.map(token => (token.includes(' ') ? JSON.stringify(token) : token)).join(' ');
+// The licence fact the listing and the manifest state: whether the shipped set
+// carries a licence file at the repository root and its name, plus the licence
+// a shipped package.json declares. A stated fact, never a promise.
+const LICENCE_NAME = /^licen[cs]e([._ -].*)?$/i;
 
-function runOne(argv: readonly string[], name: string, root: string): CheckRecord {
-  const [program, ...args] = argv;
-  return runDeclaredCheck({ name, program: program!, args, cwd: '.', context: 'recipient', timeoutMs: COMMAND_TIMEOUT_MS }, root);
-}
-
-const runRecord = (record: CheckRecord, argv: readonly string[]) => ({ argv: [...argv], exit: record.exit, result: record.result, tail: tail(record.log) });
-
-// Runs setup, the check and the guard on a clean copy of the finished snapshot
-// outside the checkout, exactly as a solver would. The staged folder itself
-// stays pristine. The check must FAIL today — that is what makes the bounty
-// mechanical — while the guard must PASS: it declares what must keep passing,
-// so a guard red today is its own named refusal, never the check's.
-function proveCheckFails(plan: BountyPlan, snapshotDir: string): BountyManifest['verification'] {
-  if (plan.check === null && plan.guard === null) return null;
-  const runRoot = mkdtempSync(join(tmpdir(), 'box-bt1-check-'));
-  try {
-    const work = join(runRoot, 'repo');
-    cpSync(snapshotDir, work, { recursive: true });
-    const setupRuns: { record: CheckRecord; argv: readonly string[] }[] = [];
-    if (plan.setup !== null) {
-      const record = runOne(plan.setup, 'setup', work);
-      setupRuns.push({ record, argv: plan.setup });
-      if (record.result === 'error' || record.result === 'timeout') {
-        throw new BountyRefused('setup-unrunnable', `setup step '${describeCommand(plan.setup)}' cannot run here: ${tail(record.log)} — name a program that exists on PATH or inside the repository`);
-      }
-      if (record.result !== 'pass') {
-        throw new BountyRefused('setup-failed', `setup step '${describeCommand(plan.setup)}' exited ${record.exit}: ${tail(record.log)}`);
-      }
-    }
-    let checkRun: CheckRecord | null = null;
-    if (plan.check !== null) {
-      checkRun = runOne(plan.check, 'check', work);
-      if (checkRun.result === 'error' || checkRun.result === 'timeout') {
-        throw new BountyRefused('check-unrunnable', `check '${describeCommand(plan.check)}' cannot run here: ${tail(checkRun.log)} — name a program that exists on PATH or inside the repository`);
-      }
-      if (checkRun.result === 'pass') {
-        throw new BountyRefused('check-already-passes', `check '${describeCommand(plan.check)}' exits 0 in the snapshot today — there is nothing to solve`);
-      }
-    }
-    let guardRun: CheckRecord | null = null;
-    if (plan.guard !== null) {
-      guardRun = runOne(plan.guard, 'guard', work);
-      if (guardRun.result === 'error' || guardRun.result === 'timeout') {
-        throw new BountyRefused('guard-unrunnable', `guard '${describeCommand(plan.guard)}' cannot run here: ${tail(guardRun.log)} — name a program that exists on PATH or inside the repository`);
-      }
-      if (guardRun.result !== 'pass') {
-        throw new BountyRefused('guard-failed', `guard '${describeCommand(plan.guard)}' exits ${guardRun.exit} on the shipped set today — a guard declares what must keep passing, so it must pass before the bounty exists`);
-      }
-    }
-    return {
-      setup: setupRuns.map(run => runRecord(run.record, run.argv)),
-      check: checkRun !== null && plan.check !== null ? runRecord(checkRun, plan.check) : null,
-      guard: guardRun !== null && plan.guard !== null ? runRecord(guardRun, plan.guard) : null
-    };
-  } finally {
-    rmSync(runRoot, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
-  }
+export function licenceOf(manifest: BountyManifest): { file: string | null; declared: string | null } {
+  if (manifest.licence !== undefined) return manifest.licence;
+  // Manifests written before this wave carry no licence key — derive the file
+  // name from the shipped list; nothing more can be known.
+  const file = manifest.files.find(entry => !entry.path.includes('/') && LICENCE_NAME.test(entry.path))?.path ?? null;
+  return { file, declared: null };
 }
 
 export function renderListing(manifest: BountyManifest, note: { file: string; text: string } | null): string {
+  const licence = licenceOf(manifest);
   const lines: string[] = [];
   lines.push(`# Bounty: ${manifest.title}`);
   lines.push('');
-  lines.push(`id ${manifest.id} · level ${manifest.level} · created ${manifest.createdAt} by ${manifest.tool}`);
+  lines.push(`id ${manifest.id} · created ${manifest.createdAt} by ${manifest.tool}`);
   lines.push('');
   lines.push('## What is wanted');
   lines.push('');
@@ -282,30 +220,6 @@ export function renderListing(manifest: BountyManifest, note: { file: string; te
   lines.push('`repo/` holds a snapshot of the repository as it stood when the bounty was');
   lines.push('created — the full working state, minus files that never ship (secrets, keys,');
   lines.push('anything the owner listed). There is no `.git` and no history.');
-  if (manifest.setup !== null) {
-    lines.push('');
-    lines.push('## Set up');
-    lines.push('');
-    lines.push(`    ${describeCommand(manifest.setup.argv)}`);
-  }
-  lines.push('');
-  lines.push('## How you know you are done');
-  lines.push('');
-  if (manifest.check !== null && manifest.verification !== null && manifest.verification.check !== null) {
-    lines.push(`    ${describeCommand(manifest.check.argv)}`);
-    lines.push('');
-    lines.push(`Run it inside \`repo/\`. Today it exits ${manifest.verification.check.exit}; your answer`);
-    lines.push('is done when it exits 0 and nothing else broke. Existing behaviour must keep working.');
-  } else {
-    lines.push('No automated check decides this bounty: a person will read your answer.');
-    lines.push('Keep every existing test passing and the change small and readable.');
-  }
-  if (manifest.guard !== null && manifest.guard !== undefined) {
-    lines.push('');
-    lines.push('The owner also asked that this keeps passing in your answer:');
-    lines.push('');
-    lines.push(`    ${describeCommand(manifest.guard.argv)}`);
-  }
   lines.push('');
   lines.push('## What was kept out');
   lines.push('');
@@ -316,8 +230,17 @@ export function renderListing(manifest: BountyManifest, note: { file: string; te
     lines.push('rules before packaging. Their names are not listed here by design.');
   }
   lines.push('');
-  lines.push('Answers are returned through the tool that posted this bounty; `bounty.json` in');
-  lines.push('this folder is the machine-readable record of everything above.');
+  lines.push('## How to answer');
+  lines.push('');
+  lines.push('Answers come back through the tool that posted this bounty; `bounty.json` in');
+  lines.push('this folder is the machine-readable record of everything above and must come');
+  lines.push('back untouched. Nothing in an answer is ever run — the poster reads the');
+  lines.push('change and decides.');
+  lines.push('');
+  lines.push('reward: $0');
+  lines.push(licence.file !== null
+    ? `licence: ${licence.file}${licence.declared !== null ? ` (package.json declares ${licence.declared})` : ''}`
+    : 'licence: no licence file was found in the shipped set');
   lines.push('');
   return lines.join('\n');
 }
@@ -343,19 +266,14 @@ export function renderPreview(plan: BountyPlan): string {
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
-  else lines.push('  note: written by the tool from the check run and the changed files (no --note)');
+  else lines.push('  note: written by the tool from the changed files (no --note)');
   if (plan.job !== null) lines.push(`  job: ${plan.job.file} (record only — never shipped)`);
-  lines.push(`  setup: ${plan.setup !== null ? describeCommand(plan.setup) : 'none'}`);
-  lines.push(`  check: ${plan.check !== null ? describeCommand(plan.check) : 'none'}`);
-  lines.push(`  guard: ${plan.guard !== null ? describeCommand(plan.guard) : 'none'}`);
-  lines.push(`  level: ${plan.level}${plan.level === 'mechanical' ? ' (the declared check must fail today — it will be run to prove it)' : ' (no check — a person reads the answer)'}`);
   lines.push(`  out: ${plan.outDir}`);
   return lines.join('\n');
 }
 
 // When no --note was given, the note writes itself from evidence the tool
-// gathers: the declared check with the exit and output tail recorded on this
-// snapshot, and the files the working state already changed relative to the
+// gathers: the files the working state already changed relative to the
 // snapshot's base commit. The note SHIPS — a changed path is named only when it
 // is part of the shipped set or, for a file the working state deleted, when no
 // never-ship rule would have kept it out — so a removed never-ship name can
@@ -363,17 +281,9 @@ export function renderPreview(plan: BountyPlan): string {
 // the same one shipping was decided on — never the diff's tree spelling.
 // Gathering never crashes create: a repository with nothing to report gets a
 // plain note, and a failed read falls back to one too.
-function composeNote(plan: BountyPlan, verification: BountyManifest['verification']): { file: string; text: string } {
+function composeNote(plan: BountyPlan): { file: string; text: string } {
   const lines: string[] = ['written by the tool — no --note was supplied.'];
   try {
-    const check = plan.check !== null ? verification?.check : null;
-    if (check !== null && check !== undefined) {
-      lines.push('', `the declared check exits ${check.exit} on this snapshot:`, `  ${describeCommand(check.argv)}`);
-      if (check.tail.trim() !== '') {
-        lines.push('  output tail:');
-        for (const line of check.tail.trim().split('\n').slice(-8)) lines.push(`    ${line}`);
-      }
-    }
     if (plan.snapshot.baseCommit === null) {
       lines.push('', 'the repository has no commits yet — every shipped file is new work.');
     } else {
@@ -483,7 +393,7 @@ function composeNote(plan: BountyPlan, verification: BountyManifest['verificatio
           : 'other changed paths do not ship and are not named.');
       }
     }
-    if (lines.length === 1) lines.push('', 'nothing else to report — no check was declared and the working state matches the last commit.');
+    if (lines.length === 1) lines.push('', 'nothing else to report — the working state matches the last commit.');
   } catch {
     lines.push('', 'the tool could not gather more — inspect the repository for what was tried.');
   }
@@ -501,6 +411,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     const snapshotDir = join(staging, 'repo');
     mkdirSync(snapshotDir, { recursive: true }); // the folder exists even when nothing ships
     const files: BountyManifest['files'][number][] = [];
+    let packageJson: Buffer | null = null;
     for (const file of plan.files) {
       // Bytes come from the recorded tree, not the live worktree: what ships is
       // exactly what the identifier pins, and a file edited or a directory swapped
@@ -525,11 +436,24 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, bytes);
       files.push({ path: file.path, sha256: sha256(bytes), bytes: bytes.length });
+      if (file.path === 'package.json') packageJson = bytes;
     }
-    const verification = proveCheckFails(plan, snapshotDir);
+    // The licence fact: a licence file at the shipped root gets named, and a
+    // shipped package.json's `license` field is stated as declared.
+    let declared: string | null = null;
+    if (packageJson !== null) {
+      try {
+        const pkg = JSON.parse(packageJson.toString('utf8')) as { license?: unknown };
+        if (typeof pkg.license === 'string' && pkg.license.trim() !== '') declared = pkg.license.trim();
+      } catch { /* an unreadable package.json leaves declared null — a fact, not an error */ }
+    }
+    const licence = {
+      file: files.find(entry => !entry.path.includes('/') && LICENCE_NAME.test(entry.path))?.path ?? null,
+      declared
+    };
     // The note: the agent's file when --note was given, else the tool composes
-    // it here — after the check run, so its exit and output tail are evidence.
-    const note = plan.note ?? composeNote(plan, verification);
+    // it here from the files the working state already changed.
+    const note = plan.note ?? composeNote(plan);
     const createdAt = new Date().toISOString();
     const id = `bt-${sha256(`${plan.snapshot.commit}\n${plan.title}\n${createdAt}`).slice(0, 12)}`;
     const manifest: BountyManifest = {
@@ -541,15 +465,11 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       tool: TOOL_VERSION,
       task: plan.task,
       note,
-      setup: plan.setup !== null ? { argv: [...plan.setup] } : null,
-      check: plan.check !== null ? { argv: [...plan.check] } : null,
-      guard: plan.guard !== null ? { argv: [...plan.guard] } : null,
-      level: plan.level,
+      licence,
       snapshot: plan.snapshot,
       files,
       counts: { files: files.length, bytes: files.reduce((sum, file) => sum + file.bytes, 0), removed: plan.removed.length },
-      neverShip: plan.ruleRemovals.map(entry => ({ rule: entry.rule, removed: entry.removed })),
-      verification
+      neverShip: plan.ruleRemovals.map(entry => ({ rule: entry.rule, removed: entry.removed }))
     };
     const manifestJson = JSON.stringify(manifest, null, 2) + '\n';
     writeFileSync(join(staging, 'bounty.json'), manifestJson);
@@ -563,7 +483,6 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       id,
       title: plan.title,
       why: plan.why,
-      level: plan.level,
       snapshot: plan.snapshot,
       folder: outDir,
       createdAt,

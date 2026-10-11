@@ -19,6 +19,7 @@ import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
+import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision } from './github.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
@@ -31,19 +32,26 @@ export interface StageEvent {
   readonly stage: BountyStage;
   readonly at: string;
   readonly destination?: string; // recorded on the `posted` event
-  readonly reason?: string; // recorded on `rejected` and on a `posted` return: the named failure class plus the check's exit and output tail
+  readonly reason?: string; // recorded on `rejected` and, on older records, on a `posted` return: the named failure class
   readonly attempt?: number; // which attempt this transition was about
   readonly command?: string; // the command that drove it — apply, reject, undo — so history says what ended the bounty
   readonly merge?: string; // the commit the command made (the apply merge, or the undo reversal)
 }
 
-export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable';
+// Attempt outcomes written since checks were removed (11 October 2026) are
+// only ever 'answered'. The other words belong to records written before that
+// day — they stay in the union so those records still load and their attempts
+// still read back honestly.
+export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable' | 'check-not-run';
 
 export interface Attempt {
   /** 1-based, stable within the record — `box bounty apply <id> <n>` names it.
       The answer commit is pinned at refs/box-bounty/<id>-answer-<n>. */
   readonly n: number;
   readonly at: string;
+  /** The GitHub-valid login that sent this answer, when the GitHub adapter
+      collected it. A returned folder names no account and this stays absent. */
+  readonly author?: string;
   readonly commit: string;
   readonly changed: readonly string[];
   readonly added: readonly string[];
@@ -76,7 +84,9 @@ export interface BountyRecord {
       since BT3b and kept only here (never shipped), so the reasons for
       handing off can be learned from use. Absent on older records. */
   readonly why?: string;
-  readonly level: 'mechanical' | 'reviewed';
+  /** Records written before checks were removed carry the declared level.
+      New records do not — a level described a check's role and there is none. */
+  readonly level?: 'mechanical' | 'reviewed';
   /** Owner context from `create --job`: lives only in this record — never in
       bounty.json, the listing or the shipped folder. */
   readonly job?: { readonly file: string; readonly text: string } | null;
@@ -101,6 +111,8 @@ export interface BountyRecord {
       Cleared when a later apply lands. */
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
   events: StageEvent[];
+  github?: import('./github.js').GitHubPublication;
+  githubApproval?: { readonly repository: string; readonly preview: string };
 }
 
 export interface ListedBounty {
@@ -114,7 +126,6 @@ export interface RecordSeed {
   readonly id: string;
   readonly title: string;
   readonly why?: string;
-  readonly level: 'mechanical' | 'reviewed';
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly folder: string;
   readonly createdAt: string;
@@ -148,9 +159,12 @@ export function attemptsOf(record: BountyRecord): Attempt[] {
   return [];
 }
 
-// The attempts a person could apply: the check passed, or there was never a
-// check to run. A failed or unrunnable check is still an attempt — it can be
-// applied only by naming it (`apply <id> <n>`), never by default.
+// The attempts `apply` will take without a number: every attempt recorded
+// since checks were removed is 'answered', so today this is all of them —
+// and any may also be applied by naming it (`apply <id> <n>`). The filter
+// stays so attempts on older records keep the meaning they were recorded
+// with: a check outcome that was never green does not become the default
+// pick just because checks are gone now.
 export const applicableAttempts = (attempts: readonly Attempt[]): Attempt[] =>
   attempts.filter(attempt => attempt.outcome === 'verified' || attempt.outcome === 'answered');
 
@@ -214,7 +228,6 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     id: seed.id,
     title: seed.title,
     ...(seed.why !== undefined ? { why: seed.why } : {}),
-    level: seed.level,
     ...(seed.job !== undefined ? { job: seed.job } : {}),
     ...(seed.manifestSha256 !== undefined ? { manifestSha256: seed.manifestSha256 } : {}),
     stage: 'drafted',
@@ -250,10 +263,13 @@ export function listRecords(repoRoot: string): ListedBounty[] {
 }
 
 const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
-  verified: 'the check exits 0 on it',
-  answered: 'a person reads it — no check was run',
-  'check-failed': 'the check exits nonzero on it',
-  'check-unrunnable': 'the check could not run'
+  answered: 'arrived — nothing in it was run',
+  // Words for attempts recorded while checks existed: the record still says
+  // what the check did back then — history, not a current promise.
+  verified: 'the declared check exited 0 on it (checks were removed on 11 October 2026)',
+  'check-failed': 'the declared check exited nonzero on it (checks were removed on 11 October 2026)',
+  'check-unrunnable': 'the declared check could not run (checks were removed on 11 October 2026)',
+  'check-not-run': 'the declared check was not run on it (checks were removed on 11 October 2026)'
 };
 
 const nextStep = (record: BountyRecord): string => {
@@ -265,7 +281,7 @@ const nextStep = (record: BountyRecord): string => {
       if (count === 0) return `wait for the solver — when the bounty folder comes back, run box bounty answer ${record.id} --from <dir>`;
       return `the bounty is still open with ${count} recorded ${count === 1 ? 'attempt' : 'attempts'} — when another answer comes back run box bounty answer ${record.id} --from <dir>, or end it with box bounty reject ${record.id} --reason "<why>"`;
     }
-    case 'taken': return 'an answer is being verified against the snapshot it was made for — run box bounty status again in a moment';
+    case 'taken': return 'an answer is being read against the snapshot it was made for — run box bounty status again in a moment';
     case 'answered':
     case 'verified': {
       const applicable = applicableAttempts(attemptsOf(record));
@@ -292,6 +308,9 @@ const nextStep = (record: BountyRecord): string => {
 // empty project says so and says what to do. Never prints nothing.
 export function renderStatus(repoRoot: string): string {
   const listed = listRecords(repoRoot);
+  for (const entry of listed) {
+    if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
+  }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
   const corrupt = listed.filter(entry => entry.record === null);
@@ -304,6 +323,13 @@ export function renderStatus(repoRoot: string): string {
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
+      if (record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
+      if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) lines.push(`      github-status-unavailable: could not refresh at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}; retry box bounty status`);
+      if (record.github?.outside !== undefined) {
+        lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
+        for (const line of record.github.outside.answers.split('\n')) lines.push(`      ${line}`);
+        lines.push(`      collect: box bounty answer ${record.id} --pr <number>`);
+      }
       const attempts = attemptsOf(record);
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
@@ -312,9 +338,9 @@ export function renderStatus(repoRoot: string): string {
           const bOk = b.outcome === 'verified' || b.outcome === 'answered' ? 0 : 1;
           return aOk - bOk || a.n - b.n;
         });
-        lines.push(`      attempts (${attempts.length}, passing first):`);
+        lines.push(`      attempts (${attempts.length}):`);
         for (const attempt of ordered) {
-          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.join(', ')}` : ''}`);
+          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.join(', ')}` : ''}`);
         }
         const top = ordered[0]!;
         if (top.report.length > 0) {
@@ -339,6 +365,9 @@ export function renderStatus(repoRoot: string): string {
     if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}`;
   }).join(', ')}`);
+  for (const entry of ended) {
+    if (entry.record?.github?.pending !== null && entry.record?.github?.pending !== undefined) lines.push(`  ${entry.record.id}: ${entry.record.github.pending}`);
+  }
   for (const entry of corrupt) lines.push(`  ! ${entry.file} — not a readable record`);
   return lines.join('\n');
 }
@@ -349,26 +378,31 @@ export function renderStatus(repoRoot: string): string {
 // works outside a checkout too. Keep it in step with BOUNTY.md.
 export function renderHelp(): string {
   return [
-    'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned checked.',
+    'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
+    'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
+    'confirm <id> --to github previews the exact issue and branch; post <id> --to github publishes them. answer <id> lists PRs; answer <id> --pr <n> collects one. Every bounty states a reward of $0.',
     '',
     'the journey (what each command does → the stage it leaves):',
-    '  create    snapshot the repository minus never-ship files, with the task, a note and the check; prints the preview → drafted',
+    '  create    snapshot the repository minus never-ship files, with the task and a note; prints the preview → drafted',
     '  confirm   the owner\'s yes, recorded — the boundary nothing crosses without → confirmed',
-    '  post      first delivery: copies the folder to --to <dir>/<id> → posted',
-    '  answer    a solver\'s return: bound, checked, reported as facts — never a verdict → verified/answered (or back to posted)',
+    '  post      first delivery: copies the folder to --to <dir>/<id>, or publishes the GitHub issue and branch → posted',
+    '  answer    a solver\'s return: bound and reported as facts — never a verdict → answered',
     '  apply     merge an attempt onto the current code — the recorded decision → applied',
     '  undo      reverse an applied merge as a new commit → undone',
     '  reject    end it with --reason "<why>" kept on the record → rejected',
     '  withdraw  end any open stage → withdrawn',
-    '  status    every open bounty with its attempts and the exact next step (changes nothing)',
+    '  status    every open bounty, attempts and next step; GitHub outside state is refreshed and remembered',
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  remind    one line a harness can surface at a moment of difficulty — off unless .box/limits.json sets "reminders": "on"',
     '  help      this screen',
     '',
     '  create needs only judgement: --task <file> and --why "<one line>" — title, place to write and the hand-off note have defaults.',
     '',
+    'nothing a solver wrote is ever run — checks were removed on 11 October 2026: an answer arrives as a',
+    'numbered attempt, the report states facts about the change, and apply/reject is always your call.',
+    '',
     'what ends a bounty: apply, reject, withdraw (undo reverses an applied merge).',
-    'a failed check never ends it — the answer is kept as a numbered attempt and the bounty stays open.',
+    'an answer that does not land never ends it — it is kept as a numbered attempt and the bounty stays open.',
     '',
     'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',
     'the record lives at .box/bounties/<id>.json inside the repository — it outlives the session that made it.'
@@ -376,12 +410,11 @@ export function renderHelp(): string {
 }
 
 // Appends one stage event and persists — history is appended, never rewritten.
-// `reason` records why a `rejected` transition happened or why a `posted` one
-// went back (failure class plus the check's exit and output tail);
-// `destination` records where `posted` went; `attempt`, `command` and `merge`
-// say which attempt a transition was about, which command drove it and which
-// commit it made — so the history alone says what ended the bounty and on
-// which attempt.
+// `reason` records why a `rejected` transition happened (and, on older records,
+// why a `posted` one went back); `destination` records where `posted` went;
+// `attempt`, `command` and `merge` say which attempt a transition was about,
+// which command drove it and which commit it made — so the history alone says
+// what ended the bounty and on which attempt.
 export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string; attempt?: number; command?: string; merge?: string }): void => {
   record.events.push({
     stage,
@@ -396,11 +429,12 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
   persistRecord(repoRoot, record);
 };
 
-export function confirmBounty(repoRoot: string, id: string): BountyRecord {
+export function confirmBounty(repoRoot: string, id: string, destination?: string): BountyRecord {
   const record = loadRecord(repoRoot, id);
-  if (record.stage !== 'drafted') {
+  if (record.stage !== 'drafted' && !(destination === 'github' && record.stage === 'confirmed' && record.githubApproval === undefined)) {
     throw new BountyRefused('not-drafted', `bounty ${id} is ${record.stage}, not drafted — only a drafted bounty can be confirmed`);
   }
+  if (destination === 'github') record.githubApproval = approveGitHub(repoRoot, record);
   transitionTo(repoRoot, record, 'confirmed');
   return record;
 }
@@ -452,7 +486,7 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
   }
   const allowedDestinations = limits.allowedDestinations === undefined
     ? null
-    : limits.allowedDestinations.map(dir => canonicalForNew(resolve(repoRoot, dir)));
+    : limits.allowedDestinations.map(dir => dir === 'github' ? dir : canonicalForNew(resolve(repoRoot, dir)));
   return {
     reminders: limits.reminders,
     cost: limits.cost ?? null,
@@ -467,7 +501,7 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
 export function renderOpenLine(repoRoot: string): string {
   const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   if (open.length === 0) return 'open bounties: none';
-  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})`).join(', ')}`;
+  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})${entry.record!.github !== undefined ? ` ${entry.record!.github!.issue?.url ?? 'github issue pending'} ${entry.record!.github!.branch}${entry.record!.github!.outside !== undefined ? `; ${entry.record!.github!.outside!.answers.replaceAll('\n', ' ')}` : ''}` : ''}`).join(', ')}`;
 }
 
 // The maintained-block writer, deliberately boring: find the markers, replace
@@ -509,6 +543,7 @@ function syncOpenSurfaces(repoRoot: string, limits: ResolvedLimits): void {
 }
 
 export function postBounty(repoRoot: string, id: string, toDir: string): { record: BountyRecord; destination: string } {
+  if (toDir === 'github') return postGitHub(repoRoot, id);
   const record = loadRecord(repoRoot, id);
   // The confirmed gate is the owner's-yes boundary: nothing is delivered before it.
   if (record.stage !== 'confirmed') {
@@ -548,6 +583,7 @@ export function postBounty(repoRoot: string, id: string, toDir: string): { recor
   if (limits.allowedDestinations !== null) {
     const destDirKey = `${toPosix(destReal).toLowerCase()}/`;
     const allowed = limits.allowedDestinations.some(dir => {
+      if (dir === 'github') return false;
       const key = `${toPosix(dir).toLowerCase()}/`;
       return destDirKey === key || destDirKey.startsWith(key);
     });
@@ -575,12 +611,13 @@ export interface WithdrawOutcome {
 
 export function withdrawBounty(repoRoot: string, id: string): WithdrawOutcome {
   const record = loadRecord(repoRoot, id);
-  if (record.stage === 'withdrawn') return { record, outcome: 'already-withdrawn' };
+  if (record.stage === 'withdrawn') { syncGitHubDecision(repoRoot, record); return { record, outcome: 'already-withdrawn' }; }
   if (!isOpenStage(record.stage)) {
     throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — withdraw only ends an open bounty`);
   }
   transitionTo(repoRoot, record, 'withdrawn', { command: 'withdraw' });
   dropDurabilityRefs(repoRoot, record);
+  syncGitHubDecision(repoRoot, record);
   return { record, outcome: 'withdrawn' };
 }
 
@@ -594,6 +631,7 @@ export function rejectBounty(repoRoot: string, id: string, reason: string): Boun
     throw new BountyRefused('missing-reason', `reject needs a reason — box bounty reject ${id} --reason "<why this answer did not land>"`);
   }
   const record = loadRecord(repoRoot, id);
+  if (record.stage === 'rejected' && record.github !== undefined) { syncGitHubDecision(repoRoot, record); return record; }
   if (!isOpenStage(record.stage)) {
     throw new BountyRefused('already-ended', `bounty ${id} already ended (${record.stage}) — there is nothing left to reject`);
   }
@@ -602,5 +640,6 @@ export function rejectBounty(repoRoot: string, id: string, reason: string): Boun
   }
   transitionTo(repoRoot, record, 'rejected', { reason: text, command: 'reject' });
   dropDurabilityRefs(repoRoot, record);
+  syncGitHubDecision(repoRoot, record);
   return record;
 }
