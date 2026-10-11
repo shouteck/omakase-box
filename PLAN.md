@@ -65,7 +65,7 @@ We are merely a tool. It offers actions and states facts. It does not require, f
 
 The only things the tool refuses on its own account. Each protects the owner; none governs the agent's judgement.
 
-1. **Never-ship files** (secrets, keys, credentials, environment files, Git internals, the tool's own state, anything the owner lists) are removed from what goes out and refused in what comes back.
+1. **Never-ship files** (secrets, keys, credentials, environment files, Git internals, the tool's own state, anything the owner lists) are removed from what goes out and refused in what comes back. From BT8, what is about to be posted is also scanned for things shaped like secrets, and a hit makes that bounty wait for the owner.
 2. **A private repository is not posted outside.**
 3. **The owner's standing rules.** Nothing happens outside the authority the owner granted. Until standing rules are built (BT8), that authority is the limits file plus a yes for each bounty.
 
@@ -103,6 +103,8 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **BT9** | **The hook.** On hosts that have the slots: the state of open bounties at the start of a session, then one line when something new arrives, each event announced once, silent otherwise. Off until the owner switches it on. Switching it on shows a plain disclosure: what it does, what it touches, what it costs in the agent's context, how it may affect the agent (including that with standing rules a solution arriving can lead to a merge with nobody asked), what it never does, how to stop it. | Pre-brief: [waves/BT9.md](waves/BT9.md), with a first reading of which hosts offer which slots. Prints only what the tool generated. |
 | **BT10** | **The open bounty format, and the whole journey run once.** Each bounty carries a block a program can read (version, identifier, where the code is, how to answer, state, reward $0), kept stable, with a short public page describing it, and proved by a reader that uses none of our code. Then one real bounty on this repository through every step built in BT6 to BT9, with the kitchen as solver: two solutions, one clashing, chosen, resolved, undone, merged again, closed. | Pre-brief: [waves/BT10.md](waves/BT10.md). We do not interface with bounty sites; they can interface with us. The owner sees the exact issue text and says "go" before it is posted. |
 | **BT11** | **A stated reward, and the solver's own payment link.** The owner's rule may state a reward above $0. The issue tells a solver who wants paying to add one line with their Stripe payment link. Next to each solution the agent sees whether a recognised link was given; one command marks a solver to be paid and shows the amount and the link, one records that the owner says it was paid. | Pre-brief: [waves/BT11.md](waves/BT11.md). Owner's idea, kept deliberately simple. The agent decides who is to be paid; the owner pays by opening the link. The tool never pays or opens the link. An agent paying by itself is in the backlog until agent wallets work without a person. Tested with no real money: a labelled test bounty, the kitchen as solver, a test-mode link. The owner sees the exact issue text and says "go" before it is posted. |
+
+**After BT11, proposed and not approved:** packaging the tool so another owner can install it. Today it runs only from inside this repository. Publishing it is the owner's decision.
 
 ## What we know and do not know
 

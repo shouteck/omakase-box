@@ -44,6 +44,11 @@ A later agent, often a new session, can do the whole second half of a bounty una
 - `status <id>` shows it to the later agent, and the output after a successful `apply` or `finish` repeats it under a plain heading, so the next thing the agent reads is the job it can return to.
 - Records written before this wave load and say that this was not recorded.
 
+**Solvers' questions are not lost**
+
+- A solver who is unsure comments on the issue, and by rule a stranger's text is not put in front of the agent unasked. So `status` states, as a fact, how many comments the issue has from accounts other than the owner's and when the latest was made, and names the command that shows them. That command prints them marked as written by others, not by the tool. The hook (BT9) may count a new comment as an event; it never prints one.
+- Answering is the agent's own choice and its own words; the tool offers a command that posts a reply under the owner's sign-in and records that it did.
+
 **Everything else**
 
 - **Cases that must fail, each a named refusal that changes nothing:** `look` or `apply` for an attempt that does not exist; `apply` while another merge for the same bounty is staged; `finish` and `cancel` with nothing staged; `finish` with markers left; a side-copy path that already exists and is not ours (never overwritten, never deleted).

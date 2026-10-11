@@ -49,6 +49,17 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 - If the owner answers only for the one bounty, the next first-use asks again; the tool does not nag in between and does not treat silence as a yes.
 - A test runs it from nothing: a project with no rules, an agent's first bounty, the waiting state, the owner's one answer, the bounty posted, and a second bounty that goes out with nobody asked. A second test sets only a default for all projects and shows a brand-new project posting with nobody asked; a third sets "ask me each time" and shows the agent asking for a yes without proposing setup.
 
+**What is about to be published is checked before it goes out with nobody asked**
+
+Once posting needs no yes, no person sees the preview. A bounty ships the working state: committed code, uncommitted changes, and untracked files that are not ignored. The never-ship list works on file names and does not look inside files. So, before a bounty is posted under a rule:
+
+- The tool scans the content of what would be shipped for things shaped like secrets: private key blocks, well-known token and key formats, connection strings with a password in them, and long high-randomness strings assigned to names like key, secret, token or password. Use a small, stated list of patterns; say in the doc page what is looked for and that it is not proof of absence.
+- It states as facts how many files being shipped are untracked, and how many differ from the last commit, with their names kept in the record.
+- A hit on the scan, or an untracked file being shipped, makes **that one bounty** wait for the owner, in the same waiting state as anything outside the rules, saying exactly which file and line triggered it (never printing the suspect value itself). The owner allows it once, adds the path to their never-ship list, or withdraws the bounty. Nothing else is held up.
+- An owner who wants untracked files shipped without asking can say so in their rules, as its own explicit field; there is no rule that switches the secret scan off.
+- This is a protection of the owner's, like never-ship, not a judgement on the agent. It runs on every post, including ones the owner confirms by hand, where it is shown as facts in the preview.
+- Tests plant each kind of secret in a tracked file, an uncommitted change and an untracked file, and show each one stops the post; and show that ordinary code with words like token and key in it does not.
+
 **Inside the rules, nothing waits**
 
 - When the rules allow posting, `create` then `post` goes out with no confirm step and no question, stating the reward the rules give ($0). The preview is still produced and kept in the record, so what went out can be read afterwards.
