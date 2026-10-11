@@ -1,8 +1,10 @@
 # Status
 
-Replaced by the CTO on 11 October 2026, at the close of wave BT6a.
+Updated by the CTO on 11 October 2026, at kickoff of BT6a-ci.
 
 ## Now
+
+- **BT6a-ci takes precedence over BT7.** Latest completed hosted run 38124324459 on `d35e194` failed two missing-gh fixtures because Linux installs git and gh together. The repair isolates test executable lookup without changing product behavior or expected outcomes. BT7 remains queued; this START run stops after the repair.
 
 - **BT6a is done — merged and pushed** (implementation `4e1997c`, real-post record `0e9ee0f`). A GitHub bounty is now an issue on the code already on GitHub: `post --to github` points `box-bounty/<id>` at a commit the remote already has, plus relevant unpushed commits, plus the uncommitted work only when the agent says the task needs it. Measured on the real post: one small commit on public history vs BT6's ~30 MB parentless snapshot.
 - **The second real bounty ran the harder path in public:** issue [shouteck/omakase-box#3](https://github.com/shouteck/omakase-box/issues/3) → blind solver's PR #4 against `box-bounty/bt-4ad668353616` (one WIP commit `8d168d3` on real history) → independent collector judged apply → merge `2421c4e`, undo revert `6670a57` → solver answer returned to master as `3469fc6` ("reapply after undo exercise"). Issue and PR closed, both remote branches deleted.
@@ -10,7 +12,7 @@ Replaced by the CTO on 11 October 2026, at the close of wave BT6a.
 - **`.box/limits.json` now allows `github` only** — `post --to <dir>` refuses until the owner names a directory again. That is how the tool gates destinations; not a defect.
 - BT1–BT6a are merged; the tool stays installed in this repository with reminders off.
 - The lab is paused. C1's `box trace` is kept and unused. Unmerged local `wave/A6` and `wave/K7` are left for the owner.
-- Master is clean. Nothing is running.
+- Master was clean at kickoff. BT6a-ci is in progress.
 
 ## After BT6a, in order (PLAN.md, "Remaining waves")
 
