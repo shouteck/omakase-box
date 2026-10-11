@@ -33,7 +33,21 @@ node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
 ```
 
-(If `dist/cli.js` is missing, build first with `node scripts/workspace.mjs build`.)
+A fresh copy — a git clone, or the snapshot a bounty ships — contains no
+`node_modules` and no built output, so `dist/cli.js` is missing until three
+steps run, in this order:
+
+```
+npm ci --prefix scripts/tooling --ignore-scripts
+node scripts/pnpm.mjs install --frozen-lockfile
+node scripts/workspace.mjs build
+```
+
+The first step exists because `scripts/pnpm.mjs` wraps the repository-local
+pnpm in `scripts/tooling`: until `npm ci` restores it, the install cannot
+even start — it fails with "Repository-local pnpm is unavailable". That is
+the step a warm checkout hides. It applies to any fresh copy, not only a
+bounty.
 
 Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
 anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
