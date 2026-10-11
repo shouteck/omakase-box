@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "kind": "box-bounty-record",
+  "id": "bt-6b7b1d15d8f0",
+  "title": "Explain how to bootstrap a cold copy of this repository",
+  "why": "BT6 second run: the one real post approved by the owner",
+  "job": null,
+  "manifestSha256": "9ea610e7217129c1966f0b722fe50a0763b7e0df724a2815ca1beadf5ba6f732",
+  "stage": "applied",
+  "folder": "C:\\Users\\shout\\Desktop\\Projects\\bounties\\explain-how-to-bootstrap-a-cold-copy-of-",
+  "snapshot": {
+    "commit": "2b16f286881c9b8e02eaf13e42dc54038e5e367e",
+    "tree": "8172e693c5523e3eb9d0f2e8d557614631a74658",
+    "baseCommit": "08e4ba633b068e58693f47b35b593d0f5a36891a"
+  },
+  "createdAt": "2026-10-11T03:28:02.311Z",
+  "events": [
+    {
+      "stage": "drafted",
+      "at": "2026-10-11T03:28:02.311Z"
+    },
+    {
+      "stage": "confirmed",
+      "at": "2026-10-11T03:36:56.594Z"
+    },
+    {
+      "stage": "posted",
+      "at": "2026-10-11T03:44:38.802Z",
+      "destination": "https://github.com/shouteck/omakase-box/issues/1"
+    },
+    {
+      "stage": "taken",
+      "at": "2026-10-11T03:49:27.343Z",
+      "attempt": 1,
+      "command": "answer"
+    },
+    {
+      "stage": "answered",
+      "at": "2026-10-11T03:49:27.359Z",
+      "attempt": 1
+    },
+    {
+      "stage": "applied",
+      "at": "2026-10-11T03:49:58.997Z",
+      "attempt": 1,
+      "command": "apply",
+      "merge": "48b461cd30b6424fc16dce3fdf3c66eba424f186"
+    }
+  ],
+  "githubApproval": {
+    "repository": "shouteck/omakase-box",
+    "preview": "GitHub preview: shouteck/omakase-box, public. Anyone can read the issue and branch.\nBranch: box-bounty/bt-6b7b1d15d8f0\nIssue title: [box bounty bt-6b7b1d15d8f0] Explain how to bootstrap a cold copy of this repository\nIssue body:\n# Bounty: Explain how to bootstrap a cold copy of this repository\n\nid bt-6b7b1d15d8f0 · created 2026-10-11T03:28:02.311Z by box-bounty@0.1.0\n\n## What is wanted\n\nExplain how to bootstrap a cold copy of this repository\n\nThis repository is a Node.js + pnpm monorepo. A fresh copy of it — a git\nclone, or the snapshot this tool ships inside a bounty — contains no\n`node_modules` and no built output. The build cannot start until three\nsteps run in order:\n\n    npm ci --prefix scripts/tooling --ignore-scripts\n    node scripts/pnpm.mjs install --frozen-lockfile\n    node scripts/workspace.mjs build\n\nThe first step restores the repository-local pnpm in `scripts/tooling`,\nwhich `scripts/pnpm.mjs` needs before it can even start — the step a warm\ncheckout hides. `docs/box-v4/BOUNTY.md` never says this anywhere: a solver\nworking from a bounty snapshot discovers it only by failing first.\n\nThe job: add the cold-copy bootstrap to `docs/box-v4/BOUNTY.md`, where a\nreader setting up a fresh copy would look — the three commands in order,\nwhy the first one exists, and that they apply to any fresh copy, not only\na bounty. Match the page's existing style. Change nothing else.\n\n## What was already tried\n\nWhat was tried, by the agent that posted this:\n\nThis gap was proven by use, not guessed. A bounty snapshot of this\nrepository was given to a solver that had never seen it; its declared\nsetup failed in the cold copy with \"Repository-local pnpm is unavailable\"\nbecause `scripts/pnpm.mjs` cannot start until `npm ci --prefix\nscripts/tooling --ignore-scripts` has run. The working order is now\nencoded in `kitchen/bt5/setup.mjs` and `kitchen/bt5/TASK.md`, but the\nsolver-facing doc page `docs/box-v4/BOUNTY.md` was never updated — the\nnext cold solver would hit the same wall.\n\n## The code\n\nThe branch root holds a snapshot of the repository as it stood when the bounty was\ncreated — the full working state, minus files that never ship (secrets, keys,\nanything the owner listed). No owner Git history was shipped.\n\n## What was kept out\n\n5 file(s) were removed by built-in and owner-listed never-ship\nrules before packaging. Their names are not listed here by design.\n\n## How to answer\n\nAnswers come back through the tool that posted this bounty; `bounty.json` in\nthis folder is the machine-readable record of everything above and must come\nback untouched. Nothing in an answer is ever run — the poster reads the\nchange and decides.\n\nreward: $0\nlicence: LICENSE (package.json declares Apache-2.0)\n\n\n## Answer on GitHub\n\nRepository: https://github.com/shouteck/omakase-box\nBranch to work from: `box-bounty/bt-6b7b1d15d8f0`\nClone only this branch, make the change, and open a pull request against `box-bounty/bt-6b7b1d15d8f0` in this repository. The branch contains exactly the shipped source, with no owner history.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer. Collecting an answer runs nothing a solver wrote.\n\n<!-- box-bounty:bt-6b7b1d15d8f0 -->\n"
+  },
+  "github": {
+    "repository": "shouteck/omakase-box",
+    "account": "shouteck",
+    "branch": "box-bounty/bt-6b7b1d15d8f0",
+    "title": "[box bounty bt-6b7b1d15d8f0] Explain how to bootstrap a cold copy of this repository",
+    "body": "# Bounty: Explain how to bootstrap a cold copy of this repository\n\nid bt-6b7b1d15d8f0 · created 2026-10-11T03:28:02.311Z by box-bounty@0.1.0\n\n## What is wanted\n\nExplain how to bootstrap a cold copy of this repository\n\nThis repository is a Node.js + pnpm monorepo. A fresh copy of it — a git\nclone, or the snapshot this tool ships inside a bounty — contains no\n`node_modules` and no built output. The build cannot start until three\nsteps run in order:\n\n    npm ci --prefix scripts/tooling --ignore-scripts\n    node scripts/pnpm.mjs install --frozen-lockfile\n    node scripts/workspace.mjs build\n\nThe first step restores the repository-local pnpm in `scripts/tooling`,\nwhich `scripts/pnpm.mjs` needs before it can even start — the step a warm\ncheckout hides. `docs/box-v4/BOUNTY.md` never says this anywhere: a solver\nworking from a bounty snapshot discovers it only by failing first.\n\nThe job: add the cold-copy bootstrap to `docs/box-v4/BOUNTY.md`, where a\nreader setting up a fresh copy would look — the three commands in order,\nwhy the first one exists, and that they apply to any fresh copy, not only\na bounty. Match the page's existing style. Change nothing else.\n\n## What was already tried\n\nWhat was tried, by the agent that posted this:\n\nThis gap was proven by use, not guessed. A bounty snapshot of this\nrepository was given to a solver that had never seen it; its declared\nsetup failed in the cold copy with \"Repository-local pnpm is unavailable\"\nbecause `scripts/pnpm.mjs` cannot start until `npm ci --prefix\nscripts/tooling --ignore-scripts` has run. The working order is now\nencoded in `kitchen/bt5/setup.mjs` and `kitchen/bt5/TASK.md`, but the\nsolver-facing doc page `docs/box-v4/BOUNTY.md` was never updated — the\nnext cold solver would hit the same wall.\n\n## The code\n\nThe branch root holds a snapshot of the repository as it stood when the bounty was\ncreated — the full working state, minus files that never ship (secrets, keys,\nanything the owner listed). No owner Git history was shipped.\n\n## What was kept out\n\n5 file(s) were removed by built-in and owner-listed never-ship\nrules before packaging. Their names are not listed here by design.\n\n## How to answer\n\nAnswers come back through the tool that posted this bounty; `bounty.json` in\nthis folder is the machine-readable record of everything above and must come\nback untouched. Nothing in an answer is ever run — the poster reads the\nchange and decides.\n\nreward: $0\nlicence: LICENSE (package.json declares Apache-2.0)\n\n\n## Answer on GitHub\n\nRepository: https://github.com/shouteck/omakase-box\nBranch to work from: `box-bounty/bt-6b7b1d15d8f0`\nClone only this branch, make the change, and open a pull request against `box-bounty/bt-6b7b1d15d8f0` in this repository. The branch contains exactly the shipped source, with no owner history.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer. Collecting an answer runs nothing a solver wrote.\n\n<!-- box-bounty:bt-6b7b1d15d8f0 -->\n",
+    "commit": "88c466074c07075ba18c7c9e6e42b146b167f71c",
+    "state": "closed",
+    "issue": {
+      "number": 1,
+      "url": "https://github.com/shouteck/omakase-box/issues/1"
+    },
+    "pending": null,
+    "outside": {
+      "at": "2026-10-11T03:46:36.794Z",
+      "issueState": "open",
+      "answers": "GitHub answers for bt-6b7b1d15d8f0 against box-bounty/bt-6b7b1d15d8f0:\n  #2 by shouteck: \"docs/box-v4/BOUNTY.md\""
+    },
+    "unavailableAt": null
+  },
+  "conflicts": null,
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-11T03:49:27.365Z",
+      "author": "shouteck",
+      "commit": "d323d6732ad29976841ba57c5659f295fb9eb2b6",
+      "changed": [
+        "docs/box-v4/BOUNTY.md"
+      ],
+      "added": [],
+      "deleted": [],
+      "outcome": "answered",
+      "conflicts": null,
+      "report": [
+        "report — attempt 1 for bt-6b7b1d15d8f0",
+        "  from: GitHub account shouteck — arrived 2026-10-11T03:49:27.365Z",
+        "  change: 1 changed, 0 added, 0 deleted — 15 lines added, 1 removed",
+        "  current code: the answer would merge cleanly onto the current branch",
+        "  flags: none",
+        "  nothing in the solution was run and this report says nothing about whether it works",
+        "  next: box bounty apply bt-6b7b1d15d8f0 1 — or box bounty reject bt-6b7b1d15d8f0 --reason \"<why>\""
+      ]
+    }
+  ]
+}
