@@ -1,6 +1,6 @@
 # BT7: look, choose, resolve a clash, pick the job back up
 
-Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT6a is merged · Branch: `wave/BT7` · Timebox: 180 minutes; at expiry, report partial findings and stop
+Milestone: BT · Station: packaging (also evidence) · Base: `886a918` · Branch: `wave/BT7` · Timebox: 180 minutes; at expiry, report partial findings and stop
 
 **Brief, written ahead.** By the CTO on 11 October 2026, while BT6's second run was cooking, and rewritten the same day for the way BT6a posts a bounty: an issue on the real history, with an ordinary bounty branch and solutions as ordinary pull requests. The outcome and the acceptance are settled with the owner. Command names, state names and file paths follow the design discussion; the head chef checks them against the Results of BT6 and BT6a before dispatching, corrects names only, and says in the pre-cook card what changed.
 
@@ -70,6 +70,9 @@ A later agent, often a new session, can do the whole second half of a bounty una
 - [ ] **Measurement fairness:** not applicable.
 
 ## Notes for the worker
+
+- Dispatch check, 11 October 2026: BT6a and its missing-gh fixture repair are merged. Existing commands and state names match this brief; no names or outcomes changed. Hosted verification of `886a918` is in progress at kickoff, and its preceding red result is the defect repaired by BT6a-ci. Do not wait for that run. The confirm/post WIP drift and terminal-undone findings remain outside this wave; preserve the existing local-folder behavior.
+- Supply a disposable offline fixture for the two fresh-agent acceptance runs, with three distinguishable GitHub solutions, the best one clashing, a solver question and local resume context. Give the CTO exact creation/cleanup instructions and the built CLI entry point. The recipients get only that repository and tool output, never this brief or source docs. A second fixture must begin halfway through a clash. No real issue, comment or PR is posted by this wave.
 
 - Feature playbook. With real history the merge model is ordinary Git: the commit the bounty named, the solution's commits, current code. A clash is only where the solver and the owner changed the same lines since that commit.
 - Git already has what both copies need (a linked working tree is one way). Prefer that to copying files by hand; say which you chose and why. Whatever it is, the tool creates it, records it, and removes it by exact path.
