@@ -529,6 +529,10 @@ const isTestPath = (path: string): boolean => {
 const LARGE_FILES = 20;
 const LARGE_LINES = 400;
 
+// A solver-supplied path is shown quoted — a filename can carry words,
+// separators or spaces that would read as the tool's own prose.
+const showPath = (path: string): string => JSON.stringify(path);
+
 // Flags are plain observations, deliberately eager: a false alarm costs a
 // minute, a missed one costs a wrong fix. No flag blocks anything.
 function attemptFlags(change: AnswerChange, linesAdded: number, linesRemoved: number): string[] {
@@ -575,7 +579,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   if (merge.kind === 'clean') {
     lines.push('  current code: the answer would merge cleanly onto the current branch');
   } else if (merge.kind === 'conflict') {
-    lines.push(`  current code: merging onto the current branch would conflict in ${merge.paths.join(', ')}`);
+    lines.push(`  current code: merging onto the current branch would conflict in ${merge.paths.map(showPath).join(', ')}`);
   } else {
     lines.push(`  current code: cannot tell — ${merge.detail}`);
   }
