@@ -832,12 +832,12 @@
     {
       "id": "BT7",
       "milestone": "BT",
-      "title": "Look, choose, resolve a clash",
+      "title": "Look, choose, resolve a clash, pick the job back up",
       "dependencies": [
         "BT6"
       ],
       "ownerApproval": "Approved 11 October 2026; cooks only when named.",
-      "proposal": "look gives a solution as the solver saw the code; apply stays one command when clean; a clash is staged in a side copy, resolved by the agent, finished or cancelled by the tool; a half-finished merge is in the record. Brief not written."
+      "proposal": "look gives a solution as the solver saw the code; apply stays one command when clean; a clash is staged in a side copy, resolved by the agent, finished or cancelled by the tool; a half-finished merge is in the record. The record also carries what the posting agent was doing, gathered by the tool plus at most one line from the agent, so a later agent can resume the job. Brief not written."
     },
     {
       "id": "BT8",
