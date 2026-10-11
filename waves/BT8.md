@@ -26,8 +26,10 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 - **With no rules written, nothing gets looser,** and the first use is where the owner is asked (next section).
 - `rules` (or the name BT6 and BT7 leave room for) prints the rules in force, in a few lines, as facts, with the file they came from. An agent can read at any time what it is allowed to do.
 
-**The first time an agent reaches for the tool, the owner is asked to set the rules up, once**
+**Two ways in: the owner sets the rules up beforehand, or the agent asks them to at first use**
 
+- An owner who has already set the rules up (with `setup`, below) is never asked: the agent's first bounty simply goes ahead under them.
+- Otherwise the agent that wants to use the tool is the one who asks. The tool's output is addressed to the agent: it says the rules are not set up, that this is the owner's to decide, and gives the agent the few lines to put to the owner and the command the owner runs.
 - The owner does not have to know the tool exists beforehand. When an agent first tries to hand work off in a project that has no standing rules, the bounty is prepared as usual and then stops in a named state: the rules have not been set up, and the owner decides.
 - That state shows the owner, in a few plain lines, exactly what they are being asked to set and what each choice lets the agent do from then on: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking; the reward each bounty states ($0 is the only amount available). It gives the one command that sets them, written out with those values, and the command that allows only this one bounty and decides nothing else.
 - The agent may propose values (that is its line of why, and the facts of the bounty in front of the owner); it cannot set them. The tool states no preference among the choices.
