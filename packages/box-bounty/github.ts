@@ -127,10 +127,8 @@ function listing(record: BountyRecord, repository: string) {
   const title = `[box bounty ${record.id}] ${manifest.title}`;
   const sourceListing = renderListing(manifest, manifest.note)
     .replace('`repo/` holds', 'The branch root holds')
-    .replace('There is no `.git` and no history.', 'No owner Git history was shipped.')
-    .replace('Run it inside `repo/`.', 'Run it in the branch root.')
-    .replace(/Answers are returned through[\s\S]*$/, '');
-  const body = `${sourceListing}\n\n## Answer on GitHub\n\nRepository: https://github.com/${repository}\nBranch to work from: \`${branch}\`\nClone only this branch, make the change, and open a pull request against \`${branch}\` in this repository. The branch contains exactly the shipped source, with no owner history.\n\nThere is no reward. Posting costs nothing. Nobody is known to be watching these issues yet. Anyone can read this issue and the branch.\n\nAnswers from an account other than the owner's signed-in account are fetched and reported without running setup, checks or guards. A contained run is required before they can be applied; it is not available yet.\n\n<!-- box-bounty:${record.id} -->\n`;
+    .replace('There is no `.git` and no history.', 'No owner Git history was shipped.');
+  const body = `${sourceListing}\n\n## Answer on GitHub\n\nRepository: https://github.com/${repository}\nBranch to work from: \`${branch}\`\nClone only this branch, make the change, and open a pull request against \`${branch}\` in this repository. The branch contains exactly the shipped source, with no owner history.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer. Collecting an answer runs nothing a solver wrote.\n\n<!-- box-bounty:${record.id} -->\n`;
   return { branch, title, body };
 }
 
@@ -175,6 +173,16 @@ function issueNumber(value: unknown, repository: string) {
   return { number: n, url };
 }
 
+// Every bounty issue carries the `box-bounty` label so a reader can find them
+// all. Missing is not an error — the label is created on the repository first.
+function ensureLabel(root: string, repository: string): void {
+  try { api(root, `repos/${repository}/labels/box-bounty`); return; }
+  catch (error) {
+    if (!(error instanceof BountyRefused) || error.reason !== 'github-command-failed') throw error;
+  }
+  api(root, `repos/${repository}/labels`, { name: 'box-bounty' });
+}
+
 function recoverIssue(root: string, publication: GitHubPublication) {
   const existing = pages(root, `repos/${publication.repository}/issues?state=all`);
   const found = existing.find(entry => isObject(entry) && entry['title'] === publication.title
@@ -205,7 +213,13 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
     publication.state = 'branch-pushed';
     persistRecord(root, record);
     if (publication.issue === null) {
-      publication.issue = recoverIssue(root, publication) ?? issueNumber(api(root, `repos/${repository}/issues`, { title: publication.title, body: publication.body }), repository);
+      publication.issue = recoverIssue(root, publication) ?? (() => {
+        ensureLabel(root, repository);
+        const created = api(root, `repos/${repository}/issues`, { title: publication.title, body: publication.body, labels: ['box-bounty'] });
+        const labels = isObject(created) && Array.isArray(created['labels']) ? created['labels'] : [];
+        if (!labels.some(entry => isObject(entry) && entry['name'] === 'box-bounty')) return invalid('github-response-invalid', 'the box-bounty label did not land on the issue');
+        return issueNumber(created, repository);
+      })();
     }
     publication.state = 'posted'; publication.pending = null;
     if (record.stage === 'confirmed') transitionTo(root, record, 'posted', { destination: publication.issue.url });
@@ -261,11 +275,10 @@ export function answerGitHub(root: string, id: string, pr: number) {
   if (!isObject(data) || !isObject(data['base']) || !isObject(data['base']['repo']) || data['base']['ref'] !== branch || data['base']['repo']['full_name'] !== repository) return invalid('github-pr-wrong-branch', 'the pull request targets another branch or repository; nothing was collected');
   if (!isObject(data['head']) || typeof data['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(data['head']['sha']) || !isObject(data['user'])) return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts');
   const author = login(data['user']['login']);
-  const mine = signedAccount(root);
   const work = mkdtempSync(join(tmpdir(), `box-bt6-${id}-pr-`));
   const ref = `refs/box-bounty/${id}-pr-${pr}`;
   try {
-    remoteGit(root, repository, ['fetch', '--no-tags', `refs/pull/${pr}/head:${ref}`]);
+    remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head:${ref}`]);
     const commit = git(root, ['rev-parse', ref]);
     if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
     mkdirSync(join(work, 'repo'));
@@ -284,7 +297,9 @@ export function answerGitHub(root: string, id: string, pr: number) {
       const target = join(work, 'repo', ...path.split('/'));
       mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes);
     }
-    return answerBounty(root, id, work, author.toLowerCase() === mine.toLowerCase() ? 'run' : 'foreign-author');
+    // Any account may answer and any attempt may be applied — nothing a solver
+    // wrote is ever run, so the author is recorded as a fact, not a barrier.
+    return answerBounty(root, id, work, author);
   } finally {
     gitOutcome(root, ['update-ref', '-d', ref]);
     rmSync(work, { recursive: true, force: true });

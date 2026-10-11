@@ -16,12 +16,12 @@
 
 export const DESCRIBE_LINES: readonly string[] = [
   'box bounty hands a piece of work to an outside solver: this repository minus',
-  'never-ship files, the task, what you tried and the check that decides —',
-  'posted so an outside solver can see it; the project keeps the record; the answer',
-  'comes back checked, as facts you judge.',
+  'never-ship files, the task and what you tried — posted so an outside solver',
+  'can see it; the project keeps the record; the answer comes back as facts you',
+  'judge, and nothing a solver wrote is ever run.',
   'GitHub posting is public and free, only to this project\'s already-public',
   'repository. Nobody is known to be watching these issues yet. A local folder',
-  'is still available. Outside authors\' checks require a later contained run.',
+  'is still available. Every bounty states a reward of $0 — no payment exists.',
   '',
   'worth it when: attempts keep failing, the task needs access or knowledge you',
   'lack, it is cheaper or faster solved elsewhere, or a second opinion counts.',
@@ -34,7 +34,7 @@ export const DESCRIBE_LINES: readonly string[] = [
 
 export const RULES_LINES: readonly string[] = [
   'box bounty can hand a task to an outside solver and bring the answer back',
-  'checked — `box bounty describe` says what it does, what it costs and when it',
+  'as facts — `box bounty describe` says what it does, what it costs and when it',
   'beats doing the work yourself. Using it is always your call; the owner\'s',
   'limits apply.'
 ];

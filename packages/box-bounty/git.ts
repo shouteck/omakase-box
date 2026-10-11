@@ -9,8 +9,16 @@ import { spawnSync } from 'node:child_process';
 //    kitchen git call is made.
 // Extra environment (GIT_INDEX_FILE for the snapshot's temporary index) is
 // passed through by callers; it never leaks into the real index.
+//
+// GIT_ATTR_SOURCE pins where attribute lookups read from (git ≥ 2.40). Every
+// merge, revert or merge-tree this tool runs against a foreign answer sets it
+// to the repository's own HEAD: a solver-carried `.gitattributes` can then
+// name nothing — no filter, no merge driver, no text conversion the owner did
+// not already commit. Without it, attributes would be read from the merged
+// result and a returned `.gitattributes` could select commands out of the
+// host's own git config.
 
-export interface GitEnv { readonly GIT_INDEX_FILE?: string }
+export interface GitEnv { readonly GIT_INDEX_FILE?: string; readonly GIT_ATTR_SOURCE?: string }
 
 export interface GitOutcome {
   readonly status: number | null;
@@ -72,8 +80,13 @@ export type DryMerge =
   | { readonly kind: 'conflict'; readonly paths: readonly string[] }
   | { readonly kind: 'untestable'; readonly detail: string };
 
-export function mergeTree(repo: string, base: string, ours: string, theirs: string): DryMerge {
-  const run = gitOutcome(repo, ['merge-tree', '--write-tree', '-z', '--name-only', `--merge-base=${base}`, ours, theirs]);
+// `attrSource` pins which tree attribute lookups read from; it defaults to the
+// merge-base — owner-side history — so a foreign .gitattributes inside
+// `theirs` can pick no merge driver or filter out of the host's config. When
+// the base itself is foreign (undoing a merge), callers pass the pre-merge
+// parent instead.
+export function mergeTree(repo: string, base: string, ours: string, theirs: string, attrSource?: string): DryMerge {
+  const run = gitOutcome(repo, ['merge-tree', '--write-tree', '-z', '--name-only', `--merge-base=${base}`, ours, theirs], { GIT_ATTR_SOURCE: attrSource ?? base });
   const oid = (run.stdout.split('\0')[0] ?? '').trim();
   if (!/^[0-9a-f]{40}$/.test(oid)) {
     return { kind: 'untestable', detail: `git merge-tree could not merge (exit ${run.status}): ${(run.stderr || run.stdout || run.error?.message || '').trim()}` };

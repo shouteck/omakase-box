@@ -1,17 +1,16 @@
 // Argument parsing for `bounty create`, pure and testable.
 //
 //   box bounty create --task <file> --why "<one line>" [--title "<one line>"]
-//       [--note <file>] [--job <file>] [--setup -- <command>]
-//       [--check -- <command>] [--guard -- <command>] [--out <dir>]
+//       [--note <file>] [--job <file>] [--out <dir>]
 //       [--repo <path>] [--preview]
 //
-// --setup and --check take a program plus verbatim argv after a `--` separator;
-// no shell ever runs them. A command segment ends at the next token that names
-// a box flag (so `--check -- node t.js --out dir` parses `--out` as box's flag).
-// A bare `--` inside a command is passed to the program as a literal argument,
-// which keeps `npm test -- --grep x`-style invocations intact. To pass a program
-// an argument spelled exactly like a box flag, order it before the command's
-// `--` is impossible — reorder so box flags come first.
+// Checks were removed on 11 October 2026: a bounty is the task, the note and
+// the code, and nothing a solver wrote is ever run. The old command flags —
+// --setup, --check and --guard — are not accepted at all: each is a NAMED
+// refusal (`checks-removed`), so an agent reusing an old command line gets a
+// reason that says checks were removed, never a silent drop.
+
+import { BountyRefused } from './errors.js';
 
 export class BountyUsage extends Error {
   constructor(message: string) {
@@ -26,21 +25,18 @@ export interface CreateArgs {
   readonly task?: string;
   readonly note?: string;
   readonly job?: string;
-  readonly setup?: readonly string[];
-  readonly check?: readonly string[];
-  readonly guard?: readonly string[];
   readonly out?: string;
   readonly repo?: string;
   readonly preview: boolean;
 }
 
 const VALUE_FLAGS = new Set(['--why', '--title', '--task', '--note', '--job', '--out', '--repo']);
-const COMMAND_FLAGS = new Set(['--setup', '--check', '--guard']);
-const FLAG_NAMES = new Set([...VALUE_FLAGS, ...COMMAND_FLAGS, '--preview']);
+const REMOVED_FLAGS = new Set(['--setup', '--check', '--guard']);
+const FLAG_NAMES = new Set([...VALUE_FLAGS, '--preview']);
 
 export function parseCreateArgs(argv: readonly string[]): CreateArgs {
   const seen = new Set<string>();
-  const parsed: { why?: string; title?: string; task?: string; note?: string; job?: string; setup?: string[]; check?: string[]; guard?: string[]; out?: string; repo?: string; preview: boolean } = { preview: false };
+  const parsed: { why?: string; title?: string; task?: string; note?: string; job?: string; out?: string; repo?: string; preview: boolean } = { preview: false };
   const once = (flag: string): void => {
     if (seen.has(flag)) throw new BountyUsage(`${flag} was given twice`);
     seen.add(flag);
@@ -53,15 +49,8 @@ export function parseCreateArgs(argv: readonly string[]): CreateArgs {
       if (value === undefined) throw new BountyUsage(`${token} needs a value`);
       parsed[token.slice(2) as 'why' | 'title' | 'task' | 'note' | 'job' | 'out' | 'repo'] = value;
       i += 1;
-    } else if (COMMAND_FLAGS.has(token)) {
-      once(token);
-      if (argv[i + 1] !== '--') throw new BountyUsage(`${token} must be followed by -- then the command, e.g. ${token} -- npm test`);
-      const command: string[] = [];
-      let j = i + 2;
-      while (j < argv.length && !FLAG_NAMES.has(argv[j]!)) { command.push(argv[j]!); j += 1; }
-      if (command.length === 0) throw new BountyUsage(`${token} needs a command after --`);
-      parsed[token.slice(2) as 'setup' | 'check' | 'guard'] = command;
-      i = j - 1;
+    } else if (REMOVED_FLAGS.has(token)) {
+      throw new BountyRefused('checks-removed', `${token} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; pass --task <file> and --why "<one line>" (and --note <file> if you have one)`);
     } else if (token === '--preview') {
       once(token);
       parsed.preview = true;

@@ -3,7 +3,7 @@
 //   submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]
 //   verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]
 //   trace --out <dir> -- <the test command, as it would normally be typed>
-//   bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]
+//   bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--out <dir>] [--repo <path>] [--preview]
 //   bounty help
 //   bounty describe [--rules] [--repo <path>]
 //   bounty remind [--repo <path>]
@@ -48,7 +48,7 @@ function usage(message?: string): never {
   console.error('       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]');
   console.error('       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]');
   console.error('       box trace --out <dir> -- <the test command, as it would normally be typed>');
-  console.error('       box bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--setup -- <command>] [--check -- <command>] [--guard -- <command>] [--out <dir>] [--repo <path>] [--preview]');
+  console.error('       box bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--out <dir>] [--repo <path>] [--preview]');
   console.error('       box bounty help');
   console.error('       box bounty describe [--rules] [--repo <path>]');
   console.error('       box bounty remind [--repo <path>]');
@@ -210,9 +210,6 @@ if (command === 'export') {
         taskPath: resolve(parsed.task),
         ...(parsed.note !== undefined ? { notePath: resolve(parsed.note) } : {}),
         ...(parsed.job !== undefined ? { jobPath: resolve(parsed.job) } : {}),
-        ...(parsed.setup !== undefined ? { setup: parsed.setup } : {}),
-        ...(parsed.check !== undefined ? { check: parsed.check } : {}),
-        ...(parsed.guard !== undefined ? { guard: parsed.guard } : {}),
         ...(parsed.out !== undefined ? { outDir: resolve(parsed.out) } : {})
       });
       console.log(renderPreview(plan));
@@ -258,17 +255,7 @@ if (command === 'export') {
       const root = resolveRepoRoot(bountyRepo(), 'answer');
       if (from === undefined && prText === undefined) { console.log(listGitHubAnswers(root, id)); process.exit(0); }
       const result = prText !== undefined ? answerGitHub(root, id, Number(prText)) : answerBounty(root, id, resolve(from!));
-      if (result.outcome === 'verified') {
-        console.log(`${result.record.id} — attempt ${result.attempt} recorded: the check exits 0 on the snapshot it was made for (verified — nothing is applied)`);
-      } else if (result.outcome === 'answered') {
-        console.log(`${result.record.id} — attempt ${result.attempt} recorded: no check was declared (answered — a person reads it)`);
-      } else if (result.outcome === 'check-failed') {
-        console.log(`${result.record.id} — attempt ${result.attempt} recorded: the check exits nonzero on it — the bounty is open again`);
-      } else if (result.outcome === 'check-not-run') {
-        console.log(`${result.record.id} — attempt ${result.attempt} recorded: check not run (foreign-author); a contained run is required`);
-      } else {
-        console.log(`${result.record.id} — attempt ${result.attempt} recorded: the check could not run — the bounty is open again`);
-      }
+      console.log(`${result.record.id} — attempt ${result.attempt} recorded (answered — nothing in it was run)`);
       for (const line of result.report) console.log(line);
     } else if (subcommand === 'apply') {
       const [id, attemptText, ...extraIds] = bountyIds();

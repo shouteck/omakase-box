@@ -45,8 +45,8 @@ describe('box bounty describe (built cli)', () => {
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('each bounty costs real money');
     expect(run.stdout).toContain('usually a day');
-    expect(run.stdout).toContain('mechanical');
-    expect(run.stdout).toContain('never a verdict');
+    expect(run.stdout).toContain('numbered attempt');
+    expect(run.stdout).toContain('facts about the change');
     expect(run.stdout).toContain(`open bounties: ${id} `);
     expect(run.stdout).toContain('(drafted)');
   });

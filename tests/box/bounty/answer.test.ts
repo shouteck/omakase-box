@@ -2,15 +2,15 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerBounty, applyBounty, BountyRefused, confirmBounty, finalizeBounty, planBounty, postBounty, rejectBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
+import { answerBounty, applyBounty, BountyRefused, confirmBounty, finalizeBounty, planBounty, postBounty, rejectBounty, renderStatus, resolveRepoRoot, undoBounty } from '../../../packages/box-bounty/index.js';
 import type { BountyManifest, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, fingerprint, git, listTree, makeRepo, runRoot, write } from './support.js';
 
 // The return journey: a solver hands the bounty folder back; `answer` binds it
-// to this bounty, extracts the change against the recorded hashes, proves it on
-// the recreated snapshot and lands it with git's own merge — or names exactly
-// why not. Every wrong move is a named refusal, never a crash and never
-// silence.
+// to this bounty, extracts the change against the recorded hashes, reports the
+// facts — running nothing — and `apply` lands it with git's own merge, or names
+// exactly why not. Every wrong move is a named refusal, never a crash and
+// never silence.
 
 const readRecord = (repo: string, id: string): BountyRecord =>
   JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
@@ -40,10 +40,6 @@ function returned(delivered: string, mutate?: (dir: string) => void): string {
   return dir;
 }
 
-// A mechanical check: exits 0 only once src/app.py contains 'fixed' — it fails
-// at create time and passes only when the answer lands the right change.
-const FIX_CHECK = ['node', '-e', 'process.exit(require("node:fs").readFileSync("src/app.py", "utf8").includes("fixed") ? 0 : 1)'];
-
 const refGone = (repo: string, id: string): boolean =>
   spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${id}`], { encoding: 'utf8' }).status !== 0;
 
@@ -59,31 +55,33 @@ const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
   throw new Error('unreachable');
 };
 
-describe('answer — a mechanical answer is verified on the snapshot it was made for, then waits', () => {
-  it('a fixing answer lands at verified and stops; apply is a separate command that merges it naming the bounty', () => {
+describe('answer — every solution is a numbered attempt, and nothing in it is run', () => {
+  it('an answer lands at answered and waits; apply is a separate command that merges it naming the bounty', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo, { check: FIX_CHECK });
+    const { id, delivered } = posted(repo);
     const headBefore = git(repo, ['rev-parse', 'HEAD']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('verified');
+    expect(result.outcome).toBe('answered');
     const record = readRecord(repo, id);
     // The events tell the true story: taken is implicit in the answer's arrival.
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified']);
-    expect(record.stage).toBe('verified');
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
+    expect(record.stage).toBe('answered');
     expect(record.attempts?.[0]?.commit).toMatch(/^[a-f0-9]{40}$/);
+    expect(record.attempts?.[0]?.outcome).toBe('answered');
     // Nothing was applied: HEAD and the worktree are untouched.
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore);
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     // The report is stored on the attempt and names the next command.
     expect(result.report.join('\n')).toContain(`box bounty apply ${id} 1`);
+    expect(result.report.join('\n')).toContain('nothing in the solution was run and this report says nothing about whether it works');
 
     const applied = applyBounty(repo, id);
     expect(applied.outcome).toBe('applied');
     const after = readRecord(repo, id);
     expect(after.stage).toBe('applied');
-    expect(after.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified', 'applied']);
+    expect(after.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'applied']);
     // The decision is recorded: which command ended it, on which attempt.
     const appliedEvent = after.events.at(-1)!;
     expect(appliedEvent.command).toBe('apply');
@@ -100,32 +98,29 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id} applied (job: a task)`);
   });
 
-  it('an answer that does not fix it is recorded as an attempt and the bounty returns to posted', () => {
+  it('an answer that does not fix the task is still a numbered attempt — the report states facts, never a verdict', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo, { check: FIX_CHECK });
+    const { id, delivered } = posted(repo);
     const headBefore = git(repo, ['rev-parse', 'HEAD']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'still broken\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('check-failed');
+    expect(result.outcome).toBe('answered'); // nothing is run — an unhelpful answer still waits on a decision
     const record = readRecord(repo, id);
-    expect(record.stage).toBe('posted');
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'posted']);
-    expect(record.events.at(-1)!.reason).toContain('implementation-failure');
-    expect(record.events.at(-1)!.reason).toContain('exited 1');
+    expect(record.stage).toBe('answered');
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
     expect(record.attempts).toHaveLength(1);
-    expect(record.attempts?.[0]?.outcome).toBe('check-failed');
-    expect(result.report.join('\n')).toContain('exits 1');
+    expect(result.report.join('\n')).toContain('nothing in the solution was run');
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore); // nothing was applied
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     // Still open: the durability ref stays, and status says so.
     expect(refGone(repo, id)).toBe(false);
-    expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id}  posted`);
+    expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id}  answered`);
   });
 
   it('a conflicting answer reports the paths dry — no merge ran — and apply still proves the abort boundary', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo, { check: FIX_CHECK });
+    const { id, delivered } = posted(repo);
     // The repository moved on while the bounty was out — on the same lines.
     write(repo, 'src/app.py', 'moved on\n');
     git(repo, ['add', '-A']);
@@ -134,11 +129,11 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('verified'); // the check passed — the conflict is a fact, not an ending
+    expect(result.outcome).toBe('answered'); // the conflict is a fact, not an ending
     expect(result.conflicts).toEqual(['src/app.py']);
     expect(result.report.join('\n')).toContain('src/app.py');
     const record = readRecord(repo, id);
-    expect(record.stage).toBe('verified');
+    expect(record.stage).toBe('answered');
     expect(record.attempts?.[0]?.conflicts).toEqual(['src/app.py']);
     // The dry merge touched nothing: HEAD, the index's staged entries and
     // every worktree byte are exactly what they were.
@@ -164,7 +159,7 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
 
   it('a conflict aborts clean with .box/ untracked — the default state — and the conflict survives on the record', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo, { check: FIX_CHECK });
+    const { id, delivered } = posted(repo);
     // The repository moved on — commit only the conflicting file. `.box/` and
     // TASK.md stay untracked, exactly as they are on a real checkout; an
     // `git add -A` here would track the records and hide the untracked-dir
@@ -176,16 +171,16 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('verified');
+    expect(result.outcome).toBe('answered');
     expect(result.conflicts).toEqual(['src/app.py']);
     const record = readRecord(repo, id);
-    expect(record.stage).toBe('verified');
+    expect(record.stage).toBe('answered');
 
     const applied = applyBounty(repo, id);
     expect(applied.outcome).toBe('conflict'); // the untracked .box/ dir must not crash the abort
     expect(applied.conflicts).toEqual(['src/app.py']);
     const after = readRecord(repo, id);
-    expect(after.stage).toBe('verified');
+    expect(after.stage).toBe('answered');
     expect(after.conflicts?.paths).toEqual(['src/app.py']);
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('moved on\n'); // byte-identical
     expect(git(repo, ['status', '--porcelain'])).toContain('.box/'); // and .box/ itself is still there
@@ -204,8 +199,8 @@ describe('answer — a mechanical answer is verified on the snapshot it was made
   });
 });
 
-describe('answer — a reviewed bounty waits on a person', () => {
-  it('lands at answered with apply/reject as the next step; apply merges it naming the bounty', () => {
+describe('answer — an answered bounty waits on a decision', () => {
+  it('an added-file answer applies and lands its bytes naming the bounty', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/notes.md', 'the answer\n'));
@@ -216,7 +211,7 @@ describe('answer — a reviewed bounty waits on a person', () => {
     expect(record.stage).toBe('answered');
     expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
     expect(record.attempts?.[0]?.added).toEqual(['notes.md']);
-    // Nothing claims a verification that did not happen: no verified event.
+    // No check-only stage ever exists: nothing claims a run that did not happen.
     expect(record.events.some(event => event.stage === 'verified')).toBe(false);
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain(`box bounty apply ${id}`);
@@ -349,7 +344,7 @@ describe('answer — the extracted change', () => {
 
   it('a pruned durability ref is snapshot-lost, not a crash', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo, { check: FIX_CHECK });
+    const { id, delivered } = posted(repo);
     git(repo, ['update-ref', '-d', `refs/box-bounty/${id}`]);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
     expectRefusal(() => answerBounty(repo, id, dir), 'snapshot-lost');
@@ -430,18 +425,37 @@ describe('the boundary the pass proved open', () => {
     expect(existsSync(join(repo, 'credentials.json'))).toBe(false);
   });
 
-  it('the check runs on the shipped set — a never-ship file inside the snapshot commit must not materialise for verification', () => {
-    // .env is tracked, so the snapshot commit contains it — but never-ship
-    // removed it from the bounty the solver saw. Verifying on the whole commit
-    // would resurrect it and reject a correct answer for bytes it never had.
-    const repo = makeRepo({ '.env': 'SECRET=hunter2\n', 'src/app.py': 'x\n' });
-    const check = ['node', '-e', 'const fs=require("node:fs");process.exit(fs.existsSync(".env")||!fs.readFileSync("src/app.py","utf8").includes("fixed")?1:0)'];
-    const { id, delivered } = posted(repo, { check });
-    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
+  it('nothing a solver wrote runs — hostile attributes, a merge driver, a hook and a submodule declaration fire no sentinel through answer, apply or undo', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const marks = join(runRoot('sentinel'), 'marks');
+    mkdirSync(marks, { recursive: true });
+    const mark = (name: string) => join(marks, name).split('\\').join('/');
+    // Armed in the OWNER's git config — the channel a solver's .gitattributes
+    // would select if the merge let it. None of these may ever fire.
+    git(repo, ['config', 'filter.pwn.clean', `node -e "require('node:fs').writeFileSync('${mark('filter')}','x')"`]);
+    git(repo, ['config', 'filter.pwn.smudge', 'cat']);
+    git(repo, ['config', 'merge.pwn.driver', `node -e "require('node:fs').writeFileSync('${mark('driver')}','x')" %O %A %B`]);
+    write(join(repo, '.git', 'hooks'), 'post-merge', `#!/bin/sh\nnode -e "require('node:fs').writeFileSync('${mark('hook')}','x')"\n`);
+    const { id, delivered } = posted(repo);
+    const dir = returned(delivered, root => {
+      write(root, 'repo/.gitattributes', '* filter=pwn merge=pwn\n');
+      write(root, 'repo/.gitmodules', '[submodule "evil"]\n\tpath = evil\n\turl = https://invalid.example/x.git\n');
+      write(root, 'repo/hooks/post-merge', 'solver text\n');
+      write(root, 'repo/src/app.py', 'y\n');
+    });
+
     const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('verified');
+    expect(result.outcome).toBe('answered');
     expect(applyBounty(repo, id).outcome).toBe('applied');
-    expect(readRecord(repo, id).stage).toBe('applied');
+    // The solver's files landed as plain bytes — .gitattributes is data, not authority.
+    expect(readFileSync(join(repo, '.gitattributes'), 'utf8')).toContain('filter=pwn');
+    for (const name of ['filter', 'driver', 'hook']) {
+      expect(existsSync(join(marks, name)), `sentinel ${name} fired`).toBe(false);
+    }
+    expect(undoBounty(repo, id).outcome).toBe('undone');
+    for (const name of ['filter', 'driver', 'hook']) {
+      expect(existsSync(join(marks, name)), `sentinel ${name} fired on undo`).toBe(false);
+    }
   });
 
   it('an autocrlf=true checkout lands an existing-file change — a CRLF-clean file is not a false dirty refusal', () => {
@@ -484,11 +498,11 @@ describe('box bounty answer/apply/reject (built cli)', () => {
   const built = existsSync(CLI_DIST);
   const need = () => { if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first'); };
 
-  it('the whole return journey through the CLI: answer reports and verifies, apply merges, status names the job', () => {
+  it('the whole return journey through the CLI: answer reports facts, apply merges, status names the job', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'fix it\n', 'JOB.md': 'winter launch\n' });
     const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 'fix app', '--task', 'TASK.md', '--job', 'JOB.md', '--check', '--', ...FIX_CHECK, '--out', out]);
+    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 'fix app', '--task', 'TASK.md', '--job', 'JOB.md', '--out', out]);
     expect(create.status).toBe(0);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
     expect(cli(repo, ['bounty', 'confirm', id]).status).toBe(0);
@@ -498,10 +512,11 @@ describe('box bounty answer/apply/reject (built cli)', () => {
     write(delivered, 'repo/src/app.py', 'fixed\n');
     const answer = cli(repo, ['bounty', 'answer', id, '--from', delivered]);
     expect(answer.status).toBe(0);
-    expect(answer.stdout).toContain('verified');
+    expect(answer.stdout).toContain('answered');
     expect(answer.stdout).toContain('report');
     expect(answer.stdout).toContain(`box bounty apply ${id} 1`);
-    // A verified answer stopped: nothing merged yet.
+    expect(answer.stdout).toContain('nothing in the solution was run');
+    // An answered attempt waits: nothing merged yet.
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     const apply = cli(repo, ['bounty', 'apply', id, '1']);
     expect(apply.status).toBe(0);

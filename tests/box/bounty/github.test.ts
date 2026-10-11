@@ -17,9 +17,10 @@ interface State {
   loseIssueResponse?: boolean;
   account: string;
   repository: string;
-  issues: { number: number; html_url: string; title: string; body: string; state: string; user: { login: string } }[];
+  issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
   comments: { body: string; user: { login: string } }[];
   prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[] }[];
+  labels: { name: string }[];
   calls: string[][];
 }
 
@@ -44,7 +45,13 @@ else if (endpoint.includes('/pulls/')) {
   if (!pr) fail();
   result = endpoint.includes('/files') ? pr.files : pr;
 } else if (endpoint.includes('/pulls?')) result = state.prs.filter(pr => endpoint.includes(pr.base.ref));
-else if (endpoint.includes('/comments')) {
+else if (endpoint.includes('/labels/')) {
+  const name = decodeURIComponent(endpoint.split('/labels/')[1].split('?')[0]);
+  result = state.labels.find(label => label.name === name);
+  if (!result) fail();
+} else if (endpoint.includes('/labels')) {
+  if (input) { result = { name: input.name }; state.labels.push(result); } else result = state.labels;
+} else if (endpoint.includes('/comments')) {
   if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = state.comments;
 } else if (endpoint.includes('/issues/')) {
   const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
@@ -52,7 +59,7 @@ else if (endpoint.includes('/comments')) {
   if (input) Object.assign(result, input);
 } else if (endpoint.includes('/issues')) {
   if (input) {
-    result = { number: state.issues.length + 1, html_url: 'https://github.com/' + state.repository + '/issues/' + (state.issues.length + 1), ...input, state: 'open', user: { login: state.account } };
+    result = { number: state.issues.length + 1, html_url: 'https://github.com/' + state.repository + '/issues/' + (state.issues.length + 1), ...input, labels: (input.labels ?? []).map(name => ({ name })), state: 'open', user: { login: state.account } };
     state.issues.push(result);
     if (state.loseIssueResponse) { state.loseIssueResponse = false; fail(); }
   } else result = state.issues;
@@ -60,7 +67,7 @@ else if (endpoint.includes('/comments')) {
 save(); console.log(JSON.stringify(result));
 `;
 
-function fixture(run: (context: { repo: string; bare: string; id: string; folder: string; state: () => State; update: (change: Partial<State>) => void; pr: (author?: string, extra?: Record<string, string>, base?: string) => void; bin: string }) => void, mechanical = true, title = 'Repair app') {
+function fixture(run: (context: { repo: string; bare: string; id: string; folder: string; state: () => State; update: (change: Partial<State>) => void; pr: (author?: string, extra?: Record<string, string>, base?: string) => void; bin: string }) => void, title = 'Repair app') {
   const repo = makeRepo({ 'app.txt': 'broken\n', '.env': 'NEVER_PUBLIC_SECRET\n', 'check.cjs': "process.exit(require('fs').readFileSync('app.txt','utf8') === 'fixed\\n' ? 0 : 1);\n" });
   const scratch = runRoot('bt6');
   const bare = join(scratch, 'remote.git');
@@ -69,9 +76,9 @@ function fixture(run: (context: { repo: string; bare: string; id: string; folder
   git(repo, ['config', `url.${bare.replaceAll('\\', '/')}.insteadOf`, 'https://github.com/owner/project.git']);
   write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: ['github'] }));
   write(repo, 'TASK.md', 'Repair the app.\n');
-  const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', outDir: join(scratch, 'bounty'), ...(mechanical ? { check: [process.execPath, 'check.cjs'] } : {}) }));
+  const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', outDir: join(scratch, 'bounty') }));
   const stateFile = join(scratch, 'state.json');
-  const initial: State = { visibility: 'public', private: false, auth: true, account: 'owner', repository: 'owner/project', issues: [], comments: [], prs: [], calls: [] };
+  const initial: State = { visibility: 'public', private: false, auth: true, account: 'owner', repository: 'owner/project', issues: [], comments: [], prs: [], labels: [], calls: [] };
   writeFileSync(stateFile, JSON.stringify(initial));
   const bin = join(scratch, 'bin');
   write(bin, 'standin.cjs', STANDIN);
@@ -124,9 +131,14 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues).toHaveLength(1);
     expect(state().issues[0]!.body).toContain('Repair the app.');
     expect(state().issues[0]!.body).toContain('What was already tried');
-    expect(state().issues[0]!.body).toContain('level mechanical');
-    expect(state().issues[0]!.body).toContain('There is no reward.');
+    expect(state().issues[0]!.body).toContain('reward: $0');
+    expect(state().issues[0]!.body).toContain('licence: no licence file');
+    expect(state().issues[0]!.body).not.toContain('level');
+    expect(state().issues[0]!.body).not.toContain('There is no reward.');
     expect(state().issues[0]!.body).not.toContain('NEVER_PUBLIC_SECRET');
+    // Every bounty issue carries the box-bounty label — created when missing.
+    expect(state().issues[0]!.labels).toEqual([{ name: 'box-bounty' }]);
+    expect(state().labels).toEqual([{ name: 'box-bounty' }]);
     expect(preview).toContain(state().issues[0]!.body);
     postBounty(repo, id, 'github');
     expect(state().issues).toHaveLength(1);
@@ -230,7 +242,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr();
     expect(listGitHubAnswers(repo, id)).toContain('#1 by owner: "app.txt"');
     const before = fingerprint(repo);
-    expect(answerGitHub(repo, id, 1).outcome).toBe('verified');
+    expect(answerGitHub(repo, id, 1).outcome).toBe('answered');
     expect(fingerprint(repo)).toEqual(before);
     const applied = applyBounty(repo, id);
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
@@ -246,20 +258,23 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
   }));
 
-  it.each(['stranger', 'renovate[bot]'])('fetches but never executes outside author %s, even with an explicit attempt number', author => fixture(({ repo, id, pr }) => {
+  it.each(['stranger', 'renovate[bot]'])('collects and applies an answer from outside author %s — nothing a solver wrote runs', author => fixture(({ repo, id, pr }) => {
     confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
     const sentinel = join(runRoot('bt6-sentinel'), 'ran');
     pr(author, { 'check.cjs': `require('fs').writeFileSync(${JSON.stringify(sentinel)}, 'ran'); process.exit(0);` });
     const before = fingerprint(repo);
     const result = answerGitHub(repo, id, 1);
-    expect(result.outcome).toBe('check-not-run');
-    expect(result.report.join('\n')).toContain('not run (foreign-author)');
-    expect(result.report.join('\n')).toContain('flag:');
+    expect(result.outcome).toBe('answered');
+    expect(result.report.join('\n')).toContain(`GitHub account ${author}`);
+    expect(result.report.join('\n')).toContain('nothing in the solution was run');
     expect(result.report.join('\n')).toContain('current code:');
     expect(existsSync(sentinel)).toBe(false);
     expect(fingerprint(repo)).toEqual(before);
-    refused(() => applyBounty(repo, id, 1), 'foreign-author-not-checked');
-    expect(fingerprint(repo)).toEqual(before);
+    // Any account's answer may be applied — the solver's script lands as bytes,
+    // never as a process.
+    expect(applyBounty(repo, id, 1).outcome).toBe('applied');
+    expect(readFileSync(join(repo, 'check.cjs'), 'utf8')).toContain('process.exit(0)');
+    expect(existsSync(sentinel)).toBe(false);
   }));
 
   it('refuses a pull request with a Git symlink without materializing it or changing local state', () => fixture(({ repo, bare, id, update }) => {
@@ -280,21 +295,15 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
   }));
 
-  it('never treats a reviewed foreign answer as applicable when no check exists', () => fixture(({ repo, id, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr('stranger');
-    expect(answerGitHub(repo, id, 1).outcome).toBe('check-not-run');
-    refused(() => applyBounty(repo, id, 1), 'foreign-author-not-checked');
-  }, false));
-
   it('keeps titles and hostile pull-request text out of shell command arguments', () => fixture(({ repo, id, state, update, pr }) => {
     confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
     expect(state().issues[0]!.title).toContain('$(echo title)&');
     expect(state().calls.every(args => !args.some(arg => arg.includes('$(echo title)')))).toBe(true);
     pr();
     update({ prs: state().prs.map(value => ({ ...value, head: { ...value.head, ref: '$(echo HEAD)&' }, title: 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' })) });
-    expect(answerGitHub(repo, id, 1).outcome).toBe('verified');
+    expect(answerGitHub(repo, id, 1).outcome).toBe('answered');
     expect(JSON.stringify(loadRecord(repo, id))).not.toContain('ghp_');
-  }, true, 'Repair app $(echo title)&'));
+  }, 'Repair app $(echo title)&'));
 
   it('refreshes outside state from the record alone and retains dated facts when GitHub is unavailable', () => fixture(({ repo, id, pr, update }) => {
     confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
@@ -383,10 +392,10 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues[0]!.state).toBe('closed');
   }));
 
-  it('states the public-only, free, unwatched and no outside execution facts before preparation', () => {
+  it('states the public-only, free, unwatched and no-execution facts before preparation', () => {
     const text = renderDescribe(null) + renderHelp();
     expect(text).toContain('already-public'); expect(text).toContain('free'); expect(text).toContain('Nobody is known');
-    expect(text).toContain('contained run');
+    expect(text).toContain('nothing a solver wrote is ever run');
   });
 
   it('runs the whole folder journey with no gh and no GitHub remote', () => fixture(({ repo, state }) => {
@@ -394,12 +403,12 @@ describe('GitHub bounty destination, entirely offline', () => {
     write(repo, '.box/limits.json', '{}');
     process.env.PATH = [dirname(resolveProgram('git').path), dirname(process.execPath)].join(delimiter);
     expect(() => resolveProgram('gh')).toThrow();
-    const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty'), check: [process.execPath, 'check.cjs'] }));
+    const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty') }));
     const id = created.id;
     confirmBounty(repo, id);
     const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
     write(destination, 'repo/app.txt', 'fixed\n');
-    expect(answerBounty(repo, id, destination).outcome).toBe('verified');
+    expect(answerBounty(repo, id, destination).outcome).toBe('answered');
     expect(applyBounty(repo, id).outcome).toBe('applied');
     expect(undoBounty(repo, id).outcome).toBe('undone');
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
@@ -420,7 +429,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(cli('status').stdout).toContain('#1 by owner');
     expect(cli('answer', id).stdout).toContain('#1 by owner');
     const collected = cli('answer', id, '--pr', '1');
-    expect(collected.status).toBe(0); expect(collected.stdout).toContain('verified');
+    expect(collected.status).toBe(0); expect(collected.stdout).toContain('answered');
     expect(cli('apply', id).status).toBe(0);
     expect(state().issues[0]!.state).toBe('closed');
     expect(cli('undo', id).status).toBe(0);
