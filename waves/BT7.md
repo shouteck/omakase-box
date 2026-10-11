@@ -44,6 +44,10 @@ A later agent, often a new session, can do the whole second half of a bounty una
 - A solver who is unsure comments on the issue, and by rule a stranger's text is not put in front of the agent unasked. So `status` states, as a fact, how many comments the issue has from accounts other than the owner's and when the latest was made, and names the command that shows them. That command prints them marked as written by others, not by the tool.
 - Answering is the agent's own choice and its own words. The tool offers a command that posts a reply under the owner's sign-in and records that it did.
 
+**New and seen**
+
+- The record notes, for each solution, when the tool first showed it to an agent. That is all "seen" means, and the agent does nothing to cause it. Every listing marks each solution as new or as seen since a given time. BT8 uses the same fact for the line in the instruction files and BT9 for the hook, so a solution is announced once and never again.
+
 **Pick the job back up**
 
 - `create` records, with nothing asked of the agent, where the work stood: the branch and commit, and the files changed against the last commit. It accepts an optional short note on what the agent was in the middle of. This stays in the project's record and is never published; a test proves it is absent from the issue, the bounty branch and every comment the tool posts.
@@ -55,7 +59,7 @@ A later agent, often a new session, can do the whole second half of a bounty una
 - **Cases that must fail, each a named refusal that changes nothing:** `look` or `apply` for a solution that does not exist; `apply` while another merge for the same bounty is staged; `finish` and `cancel` with nothing staged; `finish` with markers left; a side-copy or look-copy path that already exists and is not ours (never overwritten, never deleted); a reply to an issue that is not this bounty's.
 - Nothing from a solution is executed at any step, including checking it out into a copy: the sentinel tests from BT6 and BT6a are extended to `look`, the staged merge, `finish` and `cancel` (hooks, filters, merge drivers, a submodule, a checkout-time attribute).
 - Every output names the next command. No step is interactive.
-- **Less to carry.** When only one bounty is open, which is the usual case, every command works without its identifier (`look 1`, `apply 1`); with several open, the tool asks which, by name. `status` for a bounty shows first what an agent needs to act (its state, how many solutions, what needs doing, the next command), and the full history and each solution's full report only when asked for.
+- **Less to carry.** When only one bounty is open, which is the usual case, every command works without its identifier (`look 1`, `apply 1`); with several open, the tool asks which, by name. `status` for a bounty shows first what an agent needs to act (its state, how many solutions, which are new and which were seen before and since when, what needs doing, the next command), and the full history and each solution's full report only when asked for.
 - The description and help say no more than they must; the doc page gains the look, clash, questions and resume sections. An agent that never meets a clash never needs to read about one. No line count is enforced (owner, 11 October 2026: a fixed limit could damage the product by cutting what an agent needs). The measure is whether a fresh agent got what it needed without wading: the reviewer judges that, and reports anything shown that the agent did not use.
 - Works on this Windows host from Git Bash and PowerShell, and on the off-machine runner. Long paths on Windows: a separate working copy of this repository has failed to check out when placed deep in the temp folder, so the tool chooses a short location and says where.
 
