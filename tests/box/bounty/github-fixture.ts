@@ -27,7 +27,8 @@ export function withoutGh(run: () => void): void {
       if (commandShell !== undefined) copyFileSync(commandShell, join(bin, 'cmd.exe'));
       process.env.GIT_EXEC_PATH = corePath;
     } else {
-      for (const [name, target] of [['git', gitProgram], ['node', process.execPath]]) {
+      const programs: [string, string][] = [['git', gitProgram], ['node', process.execPath]];
+      for (const [name, target] of programs) {
         const quoted = "'" + target.replaceAll("'", "'\\''") + "'";
         write(bin, name, `#!/bin/sh\nexec ${quoted} "$@"\n`);
         chmodSync(join(bin, name), 0o755);
