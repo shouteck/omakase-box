@@ -36,9 +36,9 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 
 **One small command the host runs**
 
-- `notify` (or the name that fits) has two modes. At session start it prints the state of open bounties: at most one line per bounty and one line naming the next command. During a session it prints only what is new since this project's agents were last told, one line per event, each event once, across sessions.
+- `notify` (or the name that fits) has two modes. At session start it prints the state of open bounties, briefly, and the command that shows more. During a session it prints only what is new since this project's agents were last told, one line per event, each event once, across sessions.
 - **Silent when there is nothing to say.** No open bounties, or nothing new: no output at all, exit 0. This is the one deliberate exception to "no command returns nothing", and the doc page says why: its output is paid for in every session's context. Run by hand with a flag, it says "nothing to report" like any other command.
-- Events worth a line: a solution arrived; a solver commented on the issue (a count, never the text); a merge is staged and unfinished (BT7); a decision is waiting for the owner (BT8); a bounty's issue was closed outside the tool. Nothing else without the owner's approval.
+- **It interrupts as little as it can, at the moments that suit.** It speaks at the start of a session and at the moment an agent is about to finish its work, not in the middle of a task. During a session the only thing worth raising is a solution arriving, and it is raised at the next natural pause, once. Everything else (a solver's comment, a staged merge, a decision waiting for the owner, an issue closed outside the tool) is shown at session start and in `status`, not announced mid-work.
 - **Only what the tool generated.** Counts, numbers, the tool's own identifiers, times. Never a title, description, branch name or account name that a stranger chose. A test feeds hostile text through every outside field and shows none of it reaches the output.
 - **Facts only.** It never says what the agent should do beyond naming the command that shows more. BT3a's banned-words test covers its output.
 - **Fast and never in the way.** It reads the record first. It asks GitHub at most once per stated interval (a few minutes), with a short time limit, and remembers when it last asked. If GitHub cannot be reached it prints the last known state with the time it was recorded, or nothing if nothing is open. It never exits non-zero in a way a host would treat as blocking the session, never waits on input, and a test shows it returns within its limit when the network hangs.
@@ -67,7 +67,7 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 
 - **Cases that must fail, each a named refusal that changes nothing:** an unknown host; a settings file that is not valid; a settings path that resolves outside the project (junction, `..`); `hook on` without the confirming flag (prints the disclosure, exits as a named outcome); `hook off` when it is not on.
 - Works with BT8's withdrawn authority: the hook still reports, and the disclosure line about merges with nobody asked is no longer shown.
-- The description shown to agents does not get longer. The doc page gains one section.
+- The description shown to agents does not change. The doc page gains one section. No line count is enforced (owner, 11 October 2026: a fixed limit could damage the product by cutting what an agent needs). The measure is whether a fresh agent got what it needed without wading: the reviewer judges that, and reports anything shown that the agent did not use.
 - Proved on at least two real hosts available on this machine, in a trial project, not this repository: the start slot and one during-session slot each. Say which were proved and which only read about.
 - Works on this Windows host from Git Bash and PowerShell.
 

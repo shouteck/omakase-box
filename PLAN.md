@@ -75,6 +75,7 @@ The only things the tool refuses on its own account. Each protects the owner; no
 - The tool states facts, never judgements.
 - Text written by a stranger is never shown as if the tool wrote it, and never put in front of an agent that did not ask to look at it.
 - What is merged can be undone.
+- **Memory without demand.** The tool is part of an agent's memory, and must not cost it attention. What an agent sees unasked is only what it needs then: that the tool exists; while a bounty is open, that it is; and a solution arriving, at a natural pause. With nothing to say, nothing is said. Detail is always one command away and never pushed. No line count is enforced; reviewers judge it by watching a fresh agent.
 - **Host agnostic.** The tool does not depend on one agent host. Its lines are kept in every instruction file the project's hosts load, its hook is offered per host with the same content, and nothing in its wording favours one.
 - One real use before many.
 

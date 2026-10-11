@@ -46,7 +46,7 @@ A later agent, often a new session, can do the whole second half of a bounty una
 
 **Pick the job back up**
 
-- `create` records, with nothing asked of the agent, where the work stood: the branch and commit, and the files changed against the last commit. It accepts at most one optional line on what the agent was in the middle of. This stays in the project's record and is never published; a test proves it is absent from the issue, the bounty branch and every comment the tool posts.
+- `create` records, with nothing asked of the agent, where the work stood: the branch and commit, and the files changed against the last commit. It accepts an optional short note on what the agent was in the middle of. This stays in the project's record and is never published; a test proves it is absent from the issue, the bounty branch and every comment the tool posts.
 - `status <id>` shows it to the later agent, and the output after a successful `apply` or `finish` repeats it under a plain heading, so the next thing the agent reads is the job it can return to.
 - Records written before this wave load and say that this was not recorded.
 
@@ -55,7 +55,8 @@ A later agent, often a new session, can do the whole second half of a bounty una
 - **Cases that must fail, each a named refusal that changes nothing:** `look` or `apply` for a solution that does not exist; `apply` while another merge for the same bounty is staged; `finish` and `cancel` with nothing staged; `finish` with markers left; a side-copy or look-copy path that already exists and is not ours (never overwritten, never deleted); a reply to an issue that is not this bounty's.
 - Nothing from a solution is executed at any step, including checking it out into a copy: the sentinel tests from BT6 and BT6a are extended to `look`, the staged merge, `finish` and `cancel` (hooks, filters, merge drivers, a submodule, a checkout-time attribute).
 - Every output names the next command. No step is interactive.
-- The description and help stay as short as they are now; the doc page gains the look, clash, questions and resume sections. An agent that never meets a clash never needs to read about one.
+- **Less to carry.** When only one bounty is open, which is the usual case, every command works without its identifier (`look 1`, `apply 1`); with several open, the tool asks which, by name. `status` for a bounty shows first what an agent needs to act (its state, how many solutions, what needs doing, the next command), and the full history and each solution's full report only when asked for.
+- The description and help say no more than they must; the doc page gains the look, clash, questions and resume sections. An agent that never meets a clash never needs to read about one. No line count is enforced (owner, 11 October 2026: a fixed limit could damage the product by cutting what an agent needs). The measure is whether a fresh agent got what it needed without wading: the reviewer judges that, and reports anything shown that the agent did not use.
 - Works on this Windows host from Git Bash and PowerShell, and on the off-machine runner. Long paths on Windows: a separate working copy of this repository has failed to check out when placed deep in the temp folder, so the tool chooses a short location and says where.
 
 ## Review lenses

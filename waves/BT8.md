@@ -108,7 +108,9 @@ The owner's decision, 11 October 2026: the tool must not depend on one agent hos
 - The three hard stops are not expressible as rules and cannot be switched off by one. A test tries.
 - Records and limits files written before this wave load.
 - This repository's own `.box/limits.json` is left as the owner's: the kitchen does not grant itself posting authority. If the wave needs a rules file to prove the journey, it uses a trial repository of its own.
-- The description shown to agents says in one line that the owner's rules decide what happens without asking and where to read them. It does not get longer than it is.
+- **Quiet when there is nothing.** The block in the instruction files says that the tool exists and how to learn more, and nothing else. The open-bounties line is present only while a bounty is open; with none open it is removed, not written as "none". An agent in a project with no bounty pays for the smallest block that still tells it the option exists.
+- **One command to remember.** `box bounty` with nothing after it prints what an agent arriving cold needs: what is open, what needs attention, and the next command. Every other command is reachable from what that prints, so an agent never has to recall the list.
+- The description shown to agents says briefly that the owner's rules decide what happens without asking and where to read them. No line count is enforced (owner, 11 October 2026: a fixed limit could damage the product by cutting what an agent needs). The measure is whether a fresh agent got what it needed without wading: the reviewer judges that, and reports anything shown that the agent did not use.
 - Works on this Windows host from Git Bash and PowerShell, and on the off-machine runner.
 
 ## Review lenses
