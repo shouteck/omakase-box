@@ -20,7 +20,6 @@ import { dryMergeOnto, git, gitOutcome } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
 import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision } from './github.js';
-import { showPath } from './answer.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
@@ -310,7 +309,7 @@ const nextStep = (record: BountyRecord): string => {
       const applicable = applicableAttempts(attemptsOf(record));
       const conflicts = record.conflicts?.paths;
       const conflictText = conflicts !== undefined && conflicts.length > 0
-        ? ` the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — resolve those paths and commit first, then`
+        ? ` the last merge try conflicted in ${conflicts.join(', ')} — resolve those paths and commit first, then`
         : '';
       if (applicable.length === 0) {
         return `no attempt has a usable result — name one anyway with box bounty apply ${record.id} <n>, or end the bounty with box bounty reject ${record.id} --reason "<why>"`;
@@ -363,7 +362,7 @@ export function renderStatus(repoRoot: string): string {
         });
         lines.push(`      attempts (${attempts.length}):`);
         for (const attempt of ordered) {
-          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.join(', ')}` : ''}`);
         }
         const top = ordered[0]!;
         if (top.report.length > 0) {
@@ -374,7 +373,7 @@ export function renderStatus(repoRoot: string): string {
         }
         if (applicable.length > 0) {
           const fresh = dryMergeOnto(repoRoot, applicable[0]!.commit);
-          lines.push(`      current code now: ${fresh.kind === 'clean' ? 'attempt #' + applicable[0]!.n + ' would merge cleanly onto the current branch' : fresh.kind === 'conflict' ? `attempt #${applicable[0]!.n} would conflict in ${fresh.paths.map(showPath).join(', ')}` : `the merge cannot be tested — ${fresh.detail}`}`);
+          lines.push(`      current code now: ${fresh.kind === 'clean' ? 'attempt #' + applicable[0]!.n + ' would merge cleanly onto the current branch' : fresh.kind === 'conflict' ? `attempt #${applicable[0]!.n} would conflict in ${fresh.paths.join(', ')}` : `the merge cannot be tested — ${fresh.detail}`}`);
         }
       }
       lines.push(`      next: ${nextStep(record)}`);

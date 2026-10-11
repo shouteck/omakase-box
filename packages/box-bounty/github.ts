@@ -4,7 +4,7 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
-import { answerBounty, NOTHING_RUN, readAnswerFolder, showPath } from './answer.js';
+import { answerBounty, NOTHING_RUN, readAnswerFolder } from './answer.js';
 import { renderListing } from './create.js';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitBlob, gitOutcome, gitWriteBlob, mergeBase } from './git.js';
@@ -887,7 +887,7 @@ function pullRequestFlags(change: { changed: readonly string[]; added: readonly 
   const flags: string[] = [];
   const touched = [...change.changed, ...change.added, ...change.deleted];
   const testLike = touched.filter(isTestPath);
-  if (testLike.length > 0) flags.push(`the answer touches ${testLike.map(showPath).join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
+  if (testLike.length > 0) flags.push(`the answer touches ${testLike.join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
   if (change.added.length > 0) flags.push(`the answer adds ${change.added.length} file(s)`);
   if (change.deleted.length > 0) flags.push(`the answer deletes ${change.deleted.length} file(s)`);
   if (touched.length > LARGE_FILES || counts.added + counts.removed > LARGE_LINES) {
@@ -904,7 +904,7 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
   if (merge.kind === 'clean') {
     lines.push('  current code: the answer would merge cleanly onto the current branch');
   } else if (merge.kind === 'conflict') {
-    lines.push(`  current code: merging onto the current branch would conflict in ${merge.paths.map(showPath).join(', ')}`);
+    lines.push(`  current code: merging onto the current branch would conflict in ${merge.paths.join(', ')}`);
   } else {
     lines.push(`  current code: cannot tell — ${merge.detail}`);
   }

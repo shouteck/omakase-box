@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, showPath, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
+import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
 import { answerGitHub, listGitHubAnswers, previewGitHub } from '../../box-bounty/index.js';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
@@ -282,7 +282,7 @@ if (command === 'export') {
         console.log(`${result.record.id} — stage 7 of 7: applied — attempt ${result.attempt} merged as ${result.mergeCommit}, which is on this branch and names the bounty`);
         console.log(`ended — ${jobLine(result.record)}; the durability refs are removed. To reverse it: box bounty undo ${result.record.id}`);
       } else {
-        console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')}`);
+        console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).join(', ')}`);
         console.log('the merge was aborted — the worktree and index are exactly as before; the record stays where it was');
         console.log(`next: resolve those paths and commit, then run box bounty apply ${result.record.id} ${result.attempt} to retry; or end it with box bounty reject ${result.record.id} --reason "<why>"`);
       }

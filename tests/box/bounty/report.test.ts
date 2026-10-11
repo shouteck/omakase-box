@@ -89,7 +89,7 @@ describe('the fact report', () => {
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
     const result = answerBounty(repo, id, dir);
     expect(result.outcome).toBe('answered');
-    expect(result.report.join('\n')).toContain('would conflict in "src/app.py"');
+    expect(result.report.join('\n')).toContain('would conflict in src/app.py');
     expect(result.report.join('\n')).toContain('nothing in the solution was run');
   });
 });
@@ -280,10 +280,6 @@ describe('older records still load', () => {
 
 describe('the words are policed — facts, never verdicts', () => {
   const BANNED = /\b(correct|correctly|safe|safely|good|recommended|recommendation|should accept|should reject)\b/i;
-  // A solver-supplied path reaches the report only inside JSON quoting, so the
-  // rule reads the tool's prose: the text with quoted spans — solver data,
-  // never the tool's statements — blanked out.
-  const prose = (text: string): string => text.replace(/"(?:[^"\\]|\\.)*"/g, '""');
 
   it("no attempt's report carries a verdict word", () => {
     // answered — clean merge read
@@ -317,32 +313,5 @@ describe('the words are policed — facts, never verdicts', () => {
     const conflicted = answerBounty(repo4, posted4.id, returned(posted4.delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
     expect(conflicted.report.join('\n')).not.toMatch(BANNED);
     expect(renderStatus(resolveRepoRoot(repo4))).not.toMatch(BANNED);
-
-    // answered — a solver-named path carrying verdict words stays quoted data
-    const repo5 = makeRepo({ 'src/app.py': 'x\n' });
-    const posted5 = posted(repo5);
-    const named = answerBounty(repo5, posted5.id, returned(posted5.delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')));
-    const namedReport = named.report.join('\n');
-    expect(namedReport).toContain('"tests/should accept.py"');
-    expect(prose(namedReport)).not.toMatch(BANNED);
-    expect(prose(renderStatus(resolveRepoRoot(repo5)))).not.toMatch(BANNED);
-  });
-
-  it('a quoted path cannot break out of the prose — a double quote or a newline shows JSON-escaped, not raw', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo);
-    answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'y\n')));
-    // No filesystem the tests run on can hold this name — the record is the
-    // rendering boundary, so a hostile path is written into it directly, the
-    // same way the pre-attempts record test rewrites history.
-    const hostile = 'tests/say "accept"\n.py';
-    const record = readRecord(repo, id);
-    record.conflicts = { paths: [hostile], at: new Date().toISOString() };
-    record.attempts = attemptsOf(record).map(attempt => ({ ...attempt, conflicts: [hostile] }));
-    writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record, null, 2) + '\n');
-    const status = renderStatus(resolveRepoRoot(repo));
-    expect(status).toContain(JSON.stringify(hostile));
-    expect(status).not.toContain(hostile);
-    expect(prose(status)).not.toMatch(BANNED);
   });
 });
