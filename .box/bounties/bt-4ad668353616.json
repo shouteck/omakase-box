@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "kind": "box-bounty-record",
+  "id": "bt-4ad668353616",
+  "title": "Quote solver-supplied paths in the fact report",
+  "why": "a carried finding from BT6's review; small enough for one solver pass",
+  "job": null,
+  "manifestSha256": "062766961304f7f86ea666302828ed510735cc855af0b8d142858ad1a03b7db2",
+  "stage": "undone",
+  "folder": "C:\\Users\\shout\\Desktop\\Projects\\bounties\\quote-solver-supplied-paths-in-the-fact-",
+  "snapshot": {
+    "commit": "f7c702adf57fc89d852901b2902fb217e1c6d39e",
+    "tree": "e38fc0057bef35ff82db86d742cf2300ea60411f",
+    "baseCommit": "22bb557de7f0792899e2f91d29043f4d3854055c"
+  },
+  "createdAt": "2026-10-11T06:56:50.745Z",
+  "events": [
+    {
+      "stage": "drafted",
+      "at": "2026-10-11T06:56:50.745Z"
+    },
+    {
+      "stage": "confirmed",
+      "at": "2026-10-11T06:59:22.432Z"
+    },
+    {
+      "stage": "posted",
+      "at": "2026-10-11T07:01:59.275Z",
+      "destination": "https://github.com/shouteck/omakase-box/issues/3"
+    },
+    {
+      "stage": "taken",
+      "at": "2026-10-11T07:20:24.460Z",
+      "attempt": 1,
+      "command": "answer"
+    },
+    {
+      "stage": "answered",
+      "at": "2026-10-11T07:20:24.499Z",
+      "attempt": 1
+    },
+    {
+      "stage": "applied",
+      "at": "2026-10-11T07:24:39.134Z",
+      "attempt": 1,
+      "command": "apply",
+      "merge": "2421c4e9b0dc7bc7137213d328c9f2f4283ed758"
+    },
+    {
+      "stage": "undone",
+      "at": "2026-10-11T07:25:28.646Z",
+      "reason": "reverses merge 2421c4e9b0dc7bc7137213d328c9f2f4283ed758",
+      "attempt": 1,
+      "command": "undo",
+      "merge": "6670a5750ac31871e41031187260c21bbcb46a11"
+    }
+  ],
+  "githubApproval": {
+    "repository": "shouteck/omakase-box",
+    "preview": "GitHub preview: shouteck/omakase-box, public. Anyone can read the issue and branch.\nBranch: box-bounty/bt-4ad668353616 → 8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a\nBase: commit bd5fb59e0389d18182297645c17c9ab5c824fff3 — the newest commit on the current branch the repository already has\nWhat becomes public that was not:\n  commits published for the first time (1):\n    8d168d3ea3d9 box bounty bt-4ad668353616: work in progress — the tool's work-in-progress commit\n  files changed in the work-in-progress commit: packages/box-bounty/answer.ts\nUncommitted changes to tracked files: included as one commit on the branch\nUntracked: 0 entries stay home\nAlready public — this tool cannot take it back: 6 never-ship-named path(s) exist in the public history: .box/bounties/OPEN, .box/bounties/bt-6b7b1d15d8f0.json, .box/bounties/bt-e197a6998847.json, .box/limits.json, .env.example, .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/.env.example\nIssue title: [box bounty bt-4ad668353616] Quote solver-supplied paths in the fact report\nIssue body:\n# Bounty: Quote solver-supplied paths in the fact report\n\nid bt-4ad668353616 · created 2026-10-11T06:56:50.745Z by box-bounty@0.1.0\n\n## What is wanted\n\nFinish quoting solver-supplied paths in the fact report.\n\n`packages/box-bounty/answer.ts` builds a report of facts about a returned\nsolution. Solver-controlled filenames reach two lines verbatim, so a filename\nlike `tests/should accept.py` or `tests/safe and correct.py` smuggles the\nwords \"accept\", \"safe\" and \"correct\" into the tool's own prose — lines a later\nagent reads as the tool's statements.\n\nA helper already exists and is already used on the conflict line:\n\n    const showPath = (path: string): string => JSON.stringify(path);\n    // applied at the \"current code: … would conflict in …\" line\n\nThe job: apply `showPath` to every remaining place a solver-supplied path\nreaches a report line — the `flag:` lines built in `attemptFlags` (the\ntest-path flag joins `testLike` verbatim; check the size flag too), and any\nother report surface that embeds a solver path in the tool's prose. Keep the\nquoted form consistent everywhere.\n\nThen prove it: extend the banned-words test in `tests/box/bounty/report.test.ts`\n(the `BANNED` regex block) so an answer touching a solver-named path like\n`tests/should accept.py` still produces a report that does not match —\nand, in the same test or a new one, assert a quoted path cannot break out of\nthe prose (e.g. a filename containing a double quote or a newline shows\nJSON-escaped, not raw). Match the test file's existing style. Change nothing\nelse.\n\n## What was already tried\n\nWhat was tried, by the agent that posted this:\n\nThis gap was found by an independent reviewer attacking the report the tool\nwrites. The banned-words rule polices the tool's own prose, but report lines\nembed solver-controlled paths verbatim — the reviewer verified a returned\n`tests/should accept.py` puts banned words into `flag:` and `current code:`\nlines (recorded in `waves/BT6.md` and `waves/BT6a.md` as a finding).\n\nThe fix was started, not finished: a `showPath` helper was added to\n`packages/box-bounty/answer.ts` and applied to the conflict line only. The\nremaining solver-path sites — chiefly the `flag:` lines — still print names\nraw, and no test pins the quoting. The work-in-progress commit on the bounty\nbranch is that start; it is exactly what the solver continues from.\n\n## The code\n\nBranch from `box-bounty/bt-4ad668353616` — it is the branch pull requests for this bounty target.\nThe branch is based on commit bd5fb59e0389d18182297645c17c9ab5c824fff3, the newest commit this repository already had: it carries the poster's work in progress — 1 commit(s) on top of that commit: `8d168d3ea3d9` box bounty bt-4ad668353616: work in progress.\n\n## How to answer\n\nFork this repository (or push a branch inside it), branch from `box-bounty/bt-4ad668353616`, make the change, and open a pull request against `box-bounty/bt-4ad668353616` in this repository. Collecting an answer runs nothing you wrote — the poster reads the change and decides.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.\n\nreward: $0\nlicence: LICENSE (package.json declares Apache-2.0)\n\n<!-- box-bounty:bt-4ad668353616 -->\n",
+    "base": "bd5fb59e0389d18182297645c17c9ab5c824fff3",
+    "head": "bd5fb59e0389d18182297645c17c9ab5c824fff3",
+    "tip": "8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a",
+    "tipTree": "a0b7d9a4fd2d535b56101b7617a63dcb4bf1c3dd",
+    "title": "[box bounty bt-4ad668353616] Quote solver-supplied paths in the fact report",
+    "body": "# Bounty: Quote solver-supplied paths in the fact report\n\nid bt-4ad668353616 · created 2026-10-11T06:56:50.745Z by box-bounty@0.1.0\n\n## What is wanted\n\nFinish quoting solver-supplied paths in the fact report.\n\n`packages/box-bounty/answer.ts` builds a report of facts about a returned\nsolution. Solver-controlled filenames reach two lines verbatim, so a filename\nlike `tests/should accept.py` or `tests/safe and correct.py` smuggles the\nwords \"accept\", \"safe\" and \"correct\" into the tool's own prose — lines a later\nagent reads as the tool's statements.\n\nA helper already exists and is already used on the conflict line:\n\n    const showPath = (path: string): string => JSON.stringify(path);\n    // applied at the \"current code: … would conflict in …\" line\n\nThe job: apply `showPath` to every remaining place a solver-supplied path\nreaches a report line — the `flag:` lines built in `attemptFlags` (the\ntest-path flag joins `testLike` verbatim; check the size flag too), and any\nother report surface that embeds a solver path in the tool's prose. Keep the\nquoted form consistent everywhere.\n\nThen prove it: extend the banned-words test in `tests/box/bounty/report.test.ts`\n(the `BANNED` regex block) so an answer touching a solver-named path like\n`tests/should accept.py` still produces a report that does not match —\nand, in the same test or a new one, assert a quoted path cannot break out of\nthe prose (e.g. a filename containing a double quote or a newline shows\nJSON-escaped, not raw). Match the test file's existing style. Change nothing\nelse.\n\n## What was already tried\n\nWhat was tried, by the agent that posted this:\n\nThis gap was found by an independent reviewer attacking the report the tool\nwrites. The banned-words rule polices the tool's own prose, but report lines\nembed solver-controlled paths verbatim — the reviewer verified a returned\n`tests/should accept.py` puts banned words into `flag:` and `current code:`\nlines (recorded in `waves/BT6.md` and `waves/BT6a.md` as a finding).\n\nThe fix was started, not finished: a `showPath` helper was added to\n`packages/box-bounty/answer.ts` and applied to the conflict line only. The\nremaining solver-path sites — chiefly the `flag:` lines — still print names\nraw, and no test pins the quoting. The work-in-progress commit on the bounty\nbranch is that start; it is exactly what the solver continues from.\n\n## The code\n\nBranch from `box-bounty/bt-4ad668353616` — it is the branch pull requests for this bounty target.\nThe branch is based on commit bd5fb59e0389d18182297645c17c9ab5c824fff3, the newest commit this repository already had: it carries the poster's work in progress — 1 commit(s) on top of that commit: `8d168d3ea3d9` box bounty bt-4ad668353616: work in progress.\n\n## How to answer\n\nFork this repository (or push a branch inside it), branch from `box-bounty/bt-4ad668353616`, make the change, and open a pull request against `box-bounty/bt-4ad668353616` in this repository. Collecting an answer runs nothing you wrote — the poster reads the change and decides.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.\n\nreward: $0\nlicence: LICENSE (package.json declares Apache-2.0)\n\n<!-- box-bounty:bt-4ad668353616 -->\n",
+    "pushed": [
+      {
+        "sha": "8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a",
+        "subject": "box bounty bt-4ad668353616: work in progress"
+      }
+    ],
+    "wipCommit": "8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a",
+    "wip": {
+      "changed": [
+        "packages/box-bounty/answer.ts"
+      ],
+      "added": [],
+      "deleted": []
+    },
+    "include": [],
+    "withChanges": true,
+    "leftHome": 0,
+    "untracked": 0
+  },
+  "github": {
+    "repository": "shouteck/omakase-box",
+    "account": "shouteck",
+    "kind": "history",
+    "branch": "box-bounty/bt-4ad668353616",
+    "title": "[box bounty bt-4ad668353616] Quote solver-supplied paths in the fact report",
+    "body": "# Bounty: Quote solver-supplied paths in the fact report\n\nid bt-4ad668353616 · created 2026-10-11T06:56:50.745Z by box-bounty@0.1.0\n\n## What is wanted\n\nFinish quoting solver-supplied paths in the fact report.\n\n`packages/box-bounty/answer.ts` builds a report of facts about a returned\nsolution. Solver-controlled filenames reach two lines verbatim, so a filename\nlike `tests/should accept.py` or `tests/safe and correct.py` smuggles the\nwords \"accept\", \"safe\" and \"correct\" into the tool's own prose — lines a later\nagent reads as the tool's statements.\n\nA helper already exists and is already used on the conflict line:\n\n    const showPath = (path: string): string => JSON.stringify(path);\n    // applied at the \"current code: … would conflict in …\" line\n\nThe job: apply `showPath` to every remaining place a solver-supplied path\nreaches a report line — the `flag:` lines built in `attemptFlags` (the\ntest-path flag joins `testLike` verbatim; check the size flag too), and any\nother report surface that embeds a solver path in the tool's prose. Keep the\nquoted form consistent everywhere.\n\nThen prove it: extend the banned-words test in `tests/box/bounty/report.test.ts`\n(the `BANNED` regex block) so an answer touching a solver-named path like\n`tests/should accept.py` still produces a report that does not match —\nand, in the same test or a new one, assert a quoted path cannot break out of\nthe prose (e.g. a filename containing a double quote or a newline shows\nJSON-escaped, not raw). Match the test file's existing style. Change nothing\nelse.\n\n## What was already tried\n\nWhat was tried, by the agent that posted this:\n\nThis gap was found by an independent reviewer attacking the report the tool\nwrites. The banned-words rule polices the tool's own prose, but report lines\nembed solver-controlled paths verbatim — the reviewer verified a returned\n`tests/should accept.py` puts banned words into `flag:` and `current code:`\nlines (recorded in `waves/BT6.md` and `waves/BT6a.md` as a finding).\n\nThe fix was started, not finished: a `showPath` helper was added to\n`packages/box-bounty/answer.ts` and applied to the conflict line only. The\nremaining solver-path sites — chiefly the `flag:` lines — still print names\nraw, and no test pins the quoting. The work-in-progress commit on the bounty\nbranch is that start; it is exactly what the solver continues from.\n\n## The code\n\nBranch from `box-bounty/bt-4ad668353616` — it is the branch pull requests for this bounty target.\nThe branch is based on commit bd5fb59e0389d18182297645c17c9ab5c824fff3, the newest commit this repository already had: it carries the poster's work in progress — 1 commit(s) on top of that commit: `8d168d3ea3d9` box bounty bt-4ad668353616: work in progress.\n\n## How to answer\n\nFork this repository (or push a branch inside it), branch from `box-bounty/bt-4ad668353616`, make the change, and open a pull request against `box-bounty/bt-4ad668353616` in this repository. Collecting an answer runs nothing you wrote — the poster reads the change and decides.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.\n\nreward: $0\nlicence: LICENSE (package.json declares Apache-2.0)\n\n<!-- box-bounty:bt-4ad668353616 -->\n",
+    "commit": "8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a",
+    "base": "bd5fb59e0389d18182297645c17c9ab5c824fff3",
+    "pushed": [
+      {
+        "sha": "8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a",
+        "subject": "box bounty bt-4ad668353616: work in progress"
+      }
+    ],
+    "wipCommit": "8d168d3ea3d9f0a52838bcb0f00d70f64b7c475a",
+    "wip": {
+      "changed": [
+        "packages/box-bounty/answer.ts"
+      ],
+      "added": [],
+      "deleted": []
+    },
+    "state": "closed",
+    "issue": {
+      "number": 3,
+      "url": "https://github.com/shouteck/omakase-box/issues/3"
+    },
+    "pending": null,
+    "outside": {
+      "at": "2026-10-11T07:19:45.591Z",
+      "issueState": "open",
+      "answers": "GitHub answers for bt-4ad668353616 against box-bounty/bt-4ad668353616:\n  #4 by shouteck: \"packages/box-bounty/answer.ts\", \"packages/box-bounty/github.ts\", \"packages/box-bounty/index.ts\", \"packages/box-bounty/record.ts\", \"packages/box-cli/src/cli.ts\", \"tests/box/bounty/report.test.ts\""
+    },
+    "unavailableAt": null,
+    "closedNote": "box-bounty/bt-4ad668353616 carried 1 commit(s) published only there — 8d168d3ea3d9 box bounty bt-4ad668353616: work in progress — and is now removed"
+  },
+  "conflicts": null,
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-11T07:20:24.515Z",
+      "author": "shouteck",
+      "commit": "ea73bff99fe7dca4136bf13baaff3f399608f4c0",
+      "changed": [
+        "packages/box-bounty/answer.ts",
+        "packages/box-bounty/github.ts",
+        "packages/box-bounty/index.ts",
+        "packages/box-bounty/record.ts",
+        "packages/box-cli/src/cli.ts",
+        "tests/box/bounty/report.test.ts"
+      ],
+      "added": [],
+      "deleted": [],
+      "outcome": "answered",
+      "conflicts": null,
+      "report": [
+        "report — attempt 1 for bt-4ad668353616",
+        "  from: GitHub account shouteck — arrived 2026-10-11T07:20:24.515Z",
+        "  change: 1 commit(s) on the bounty branch — 6 changed, 0 added, 0 deleted — 47 lines added, 13 removed",
+        "  current code: the answer would merge cleanly onto the current branch",
+        "  flag: the answer touches tests/box/bounty/report.test.ts, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)",
+        "  nothing in the solution was run and this report says nothing about whether it works",
+        "  next: box bounty apply bt-4ad668353616 1 — or box bounty reject bt-4ad668353616 --reason \"<why>\""
+      ]
+    }
+  ]
+}
