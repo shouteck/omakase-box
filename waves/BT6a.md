@@ -2,7 +2,7 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT6's second run is merged · Branch: `wave/BT6a` · Timebox: 240 minutes; at expiry, report partial findings and stop
 
-**Pre-brief.** Written by the CTO on 11 October 2026, while BT6's second run was cooking. The outcome is settled with the owner. Command names, state names and file paths below follow the design discussion; the head chef revises this file against BT6's Result before dispatching, and says in the pre-cook card what changed.
+**Brief, written ahead.** By the CTO on 11 October 2026, while BT6's second run was cooking. The outcome is settled with the owner. Command names, state names and file paths follow the design discussion; the head chef checks them against BT6's Result before dispatching, corrects names only, and says in the pre-cook card what changed.
 
 ## Why
 

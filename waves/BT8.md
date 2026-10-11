@@ -2,7 +2,7 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT7 is merged · Branch: `wave/BT8` · Timebox: 180 minutes; at expiry, report partial findings and stop
 
-**Pre-brief.** Written by the CTO on 11 October 2026, before BT6's second run. The outcome and the acceptance are settled with the owner. Command names, field names and file paths below follow the design discussion; the head chef revises this file against the Results of BT6 and BT7 before dispatching, and says in the pre-cook card what changed.
+**Brief, written ahead.** By the CTO on 11 October 2026, while BT6's second run was cooking, for the way BT6a posts a bounty: an issue on the real history, with an ordinary bounty branch and solutions as ordinary pull requests. The outcome and the acceptance are settled with the owner. Command names, field names and file paths follow the design discussion; the head chef checks them against the Results of BT6a and BT7 before dispatching, corrects names only, and says in the pre-cook card what changed.
 
 ## Outcome
 
@@ -13,8 +13,8 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 ## Scope
 
 - Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`; `.box/limits.json` in this repository only as the migration below requires. Tests never read or write the real owner settings folder: they point the tool at a temporary one.
-- Read for context: `PLAN.md` ("The design rule", "What is settled", "The three hard stops"); `waves/BT4.md` Result (the limits file as built); `waves/BT2.md` Result (confirm and the stages); `waves/BT6.md` and `waves/BT7.md` Results; `kitchen/stations/packaging.md`.
-- Do not touch: the never-ship table, the snapshot identifier, the manifest binding, the merge boundary. `export`, `submit`, `verify`, `trace`. `.execution/`, `docs/legacy/`.
+- Read for context: `PLAN.md` ("The design rule", "What is settled", "The three hard stops"); `waves/BT4.md` Result (the limits file as built); `waves/BT2.md` Result (confirm and the stages); `waves/BT6.md`, `waves/BT6a.md` (exactly what a post publishes) and `waves/BT7.md` Results; `kitchen/stations/packaging.md`.
+- Do not touch: the never-ship table; the protections of the owner's working tree, index and branch; `export`, `submit`, `verify`, `trace`; `.execution/`, `docs/legacy/`.
 
 ## Done when
 
@@ -51,14 +51,14 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 **What is about to be published is checked before it goes out with nobody asked**
 
-Once posting needs no yes, no person sees the preview. From BT6a a bounty publishes only what is not already public: commits not yet pushed, uncommitted changes the agent chose to include, and any untracked file it named. The scan and the facts below apply to exactly that list. (Before BT6a a bounty shipped the whole working state.) The never-ship list works on file names and does not look inside files. So, before a bounty is posted under a rule:
+Once posting needs no yes, no person sees the preview. From BT6a a bounty publishes only what is not already public: commits not yet pushed, uncommitted changes the agent chose to include, and any untracked file it named. The never-ship list works on file names and does not look inside files. So, before a bounty is posted under a rule:
 
-- The tool scans the content of what would be shipped for things shaped like secrets: private key blocks, well-known token and key formats, connection strings with a password in them, and long high-randomness strings assigned to names like key, secret, token or password. Use a small, stated list of patterns; say in the doc page what is looked for and that it is not proof of absence.
-- It states as facts how many files being shipped are untracked, and how many differ from the last commit, with their names kept in the record.
-- A hit on the scan, or an untracked file being shipped, makes **that one bounty** wait for the owner, in the same waiting state as anything outside the rules, saying exactly which file and line triggered it (never printing the suspect value itself). The owner allows it once, adds the path to their never-ship list, or withdraws the bounty. Nothing else is held up.
-- An owner who wants untracked files shipped without asking can say so in their rules, as its own explicit field; there is no rule that switches the secret scan off.
+- The tool scans the content of everything that would be published for the first time for things shaped like secrets: private key blocks, well-known token and key formats, connection strings with a password in them, and long high-randomness strings assigned to names like key, secret, token or password. Use a small, stated list of patterns; say in the doc page what is looked for and that it is not proof of absence. When nothing new is published, there is nothing to scan and the output says so.
+- It states as facts what is new: how many commits are published for the first time, whether uncommitted changes are included and in how many files, and any untracked file the agent named, with the names kept in the record.
+- A hit on the scan, or an untracked file named for publishing, makes **that one bounty** wait for the owner, in the same waiting state as anything outside the rules, saying exactly which file and line triggered it (never printing the suspect value itself). The owner allows it once, adds the path to their never-ship list, or withdraws the bounty. Nothing else is held up.
+- An owner who wants named untracked files, or uncommitted changes, published without asking can say so in their rules, each as its own explicit field; there is no rule that switches the secret scan off.
 - This is a protection of the owner's, like never-ship, not a judgement on the agent. It runs on every post, including ones the owner confirms by hand, where it is shown as facts in the preview.
-- Tests plant each kind of secret in a tracked file, an uncommitted change and an untracked file, and show each one stops the post; and show that ordinary code with words like token and key in it does not.
+- Tests plant each kind of secret in an unpushed commit, an uncommitted change and a named untracked file, and show each one stops the post; and show that ordinary code with words like token and key in it does not.
 
 **Inside the rules, nothing waits**
 

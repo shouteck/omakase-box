@@ -2,7 +2,7 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT8 is merged · Branch: `wave/BT9` · Timebox: 150 minutes; at expiry, report partial findings and stop
 
-**Pre-brief.** Written by the CTO on 11 October 2026, before BT6's second run. The outcome and the acceptance are settled with the owner. Command names and file paths below follow the design discussion; the head chef revises this file against the Results of BT6 to BT8 before dispatching, and says in the pre-cook card what changed.
+**Brief, written ahead.** By the CTO on 11 October 2026, while BT6's second run was cooking, for the way BT6a posts a bounty: an issue on the real history, with an ordinary bounty branch and solutions as ordinary pull requests. The outcome and the acceptance are settled with the owner. Command names, field names and file paths follow the design discussion; the head chef checks them against the Results of BT6a to BT8 before dispatching, corrects names only, and says in the pre-cook card what changed.
 
 ## Outcome
 
@@ -27,8 +27,8 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 ## Scope
 
 - Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`. Host settings files in this repository are **not** edited by the wave; see "This repository" below.
-- Read for context: `PLAN.md` ("How the agent finds out", the hook row under "Remaining waves", "Other rules of the product"); `waves/BT4.md` Result (reminders, the tool-kept lines, how wording was tested); `waves/BT6.md` Result (how `status` reads GitHub and what it prints); `waves/BT8.md` Result (rules, the waiting state); `kitchen/stations/packaging.md`.
-- Do not touch: the never-ship table, the snapshot identifier, the manifest binding, the merge boundary. `export`, `submit`, `verify`, `trace`. `.execution/`, `docs/legacy/`. Any global or user-level host setting, on any host.
+- Read for context: `PLAN.md` ("How the agent finds out", the hook row under "Remaining waves", "Other rules of the product"); `waves/BT4.md` Result (reminders, the tool-kept lines, how wording was tested); `waves/BT6.md` Result (how `status` reads GitHub and what it prints); `waves/BT7.md` Result (the staged merge, the comment count); `waves/BT8.md` Result (rules, where they live, the waiting state); `kitchen/stations/packaging.md`.
+- Do not touch: the never-ship table; the protections of the owner's working tree, index and branch; `export`, `submit`, `verify`, `trace`; `.execution/`, `docs/legacy/`. Any global or user-level host setting, on any host.
 
 ## Done when
 
@@ -38,11 +38,12 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 
 - `notify` (or the name that fits) has two modes. At session start it prints the state of open bounties: at most one line per bounty and one line naming the next command. During a session it prints only what is new since this project's agents were last told, one line per event, each event once, across sessions.
 - **Silent when there is nothing to say.** No open bounties, or nothing new: no output at all, exit 0. This is the one deliberate exception to "no command returns nothing", and the doc page says why: its output is paid for in every session's context. Run by hand with a flag, it says "nothing to report" like any other command.
-- Events worth a line: a solution arrived; a merge is staged and unfinished (BT7); a decision is waiting for the owner (BT8); a bounty's issue was closed outside the tool. Nothing else without the owner's approval.
+- Events worth a line: a solution arrived; a solver commented on the issue (a count, never the text); a merge is staged and unfinished (BT7); a decision is waiting for the owner (BT8); a bounty's issue was closed outside the tool. Nothing else without the owner's approval.
 - **Only what the tool generated.** Counts, numbers, the tool's own identifiers, times. Never a title, description, branch name or account name that a stranger chose. A test feeds hostile text through every outside field and shows none of it reaches the output.
 - **Facts only.** It never says what the agent should do beyond naming the command that shows more. BT3a's banned-words test covers its output.
 - **Fast and never in the way.** It reads the record first. It asks GitHub at most once per stated interval (a few minutes), with a short time limit, and remembers when it last asked. If GitHub cannot be reached it prints the last known state with the time it was recorded, or nothing if nothing is open. It never exits non-zero in a way a host would treat as blocking the session, never waits on input, and a test shows it returns within its limit when the network hangs.
-- What agents have been told is state in `.box`, never shipped, and safe if two sessions run at once: an event may be announced twice in a race, never lost.
+- **The moment an agent is about to finish its work is a slot of its own,** where the host has one. There the hook shows what this session should not end without saying: a solution that arrived for a bounty this project has open, and a merge this session left staged. Build it so a later wave can add to it; BT11 adds the awards this session made, for the agent's closing summary.
+- What agents have been told is state in `.box`, never published, and safe if two sessions run at once: an event may be announced twice in a race, never lost.
 
 **Switching it on is the owner's act, with full disclosure**
 
