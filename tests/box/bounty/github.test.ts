@@ -1,148 +1,59 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, BountyRefused, confirmBounty, finalizeBounty, listGitHubAnswers, loadRecord, planBounty, postBounty, previewGitHub, rejectBounty, renderDescribe, renderHelp, renderOpenLine, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
+import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, listGitHubAnswers, loadRecord, planBounty, postBounty, previewGitHub, rejectBounty, renderDescribe, renderHelp, renderOpenLine, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
+import { CLI_DIST, fingerprint, git, runRoot, write } from './support.js';
 import { answerBounty } from '../../../packages/box-bounty/index.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
-
-interface State {
-  visibility: string;
-  private: boolean;
-  auth: boolean;
-  malformed?: boolean;
-  fail?: string | undefined;
-  loseIssueResponse?: boolean;
-  account: string;
-  repository: string;
-  issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
-  comments: { body: string; user: { login: string } }[];
-  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[] }[];
-  labels: { name: string }[];
-  calls: string[][];
-}
-
-const STANDIN = String.raw`
-const fs = require('node:fs');
-const args = process.argv.slice(2);
-const path = process.env.BT6_GH_STATE;
-const state = JSON.parse(fs.readFileSync(path, 'utf8'));
-state.calls.push(args);
-const save = () => fs.writeFileSync(path, JSON.stringify(state));
-const fail = () => { save(); console.error('ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890'); process.exit(1); };
-if (args[0] === 'auth') { if (!state.auth) fail(); save(); process.exit(0); }
-const endpoint = args[args.indexOf('--hostname') + 2];
-const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8')) : null;
-if (state.fail && endpoint.includes(state.fail)) fail();
-let result;
-if (endpoint === 'user') result = { login: state.account };
-else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' } : { full_name: state.repository, private: state.private, visibility: state.visibility };
-else if (endpoint.includes('/pulls/')) {
-  const n = Number(endpoint.split('/pulls/')[1].split('/')[0]);
-  const pr = state.prs.find(pr => pr.number === n);
-  if (!pr) fail();
-  result = endpoint.includes('/files') ? pr.files : pr;
-} else if (endpoint.includes('/pulls?')) result = state.prs.filter(pr => endpoint.includes(pr.base.ref));
-else if (endpoint.includes('/labels/')) {
-  const name = decodeURIComponent(endpoint.split('/labels/')[1].split('?')[0]);
-  result = state.labels.find(label => label.name === name);
-  if (!result) fail();
-} else if (endpoint.includes('/labels')) {
-  if (input) { result = { name: input.name }; state.labels.push(result); } else result = state.labels;
-} else if (endpoint.includes('/comments')) {
-  if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = state.comments;
-} else if (endpoint.includes('/issues/')) {
-  const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
-  result = state.issues.find(issue => issue.number === n);
-  if (input) Object.assign(result, input);
-} else if (endpoint.includes('/issues')) {
-  if (input) {
-    result = { number: state.issues.length + 1, html_url: 'https://github.com/' + state.repository + '/issues/' + (state.issues.length + 1), ...input, labels: (input.labels ?? []).map(name => ({ name })), state: 'open', user: { login: state.account } };
-    state.issues.push(result);
-    if (state.loseIssueResponse) { state.loseIssueResponse = false; fail(); }
-  } else result = state.issues;
-} else fail();
-save(); console.log(JSON.stringify(result));
-`;
-
-function fixture(run: (context: { repo: string; bare: string; id: string; folder: string; state: () => State; update: (change: Partial<State>) => void; pr: (author?: string, extra?: Record<string, string>, base?: string) => void; bin: string }) => void, title = 'Repair app') {
-  const repo = makeRepo({ 'app.txt': 'broken\n', '.env': 'NEVER_PUBLIC_SECRET\n', 'check.cjs': "process.exit(require('fs').readFileSync('app.txt','utf8') === 'fixed\\n' ? 0 : 1);\n" });
-  const scratch = runRoot('bt6');
-  const bare = join(scratch, 'remote.git');
-  git(repo, ['init', '--bare', bare]);
-  git(repo, ['remote', 'add', 'origin', 'git@github.com:owner/project.git']);
-  git(repo, ['config', `url.${bare.replaceAll('\\', '/')}.insteadOf`, 'https://github.com/owner/project.git']);
-  write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: ['github'] }));
-  write(repo, 'TASK.md', 'Repair the app.\n');
-  const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', outDir: join(scratch, 'bounty') }));
-  const stateFile = join(scratch, 'state.json');
-  const initial: State = { visibility: 'public', private: false, auth: true, account: 'owner', repository: 'owner/project', issues: [], comments: [], prs: [], labels: [], calls: [] };
-  writeFileSync(stateFile, JSON.stringify(initial));
-  const bin = join(scratch, 'bin');
-  write(bin, 'standin.cjs', STANDIN);
-  if (process.platform === 'win32') write(bin, 'gh.cmd', `@"${process.execPath}" "${join(bin, 'standin.cjs')}" %*\r\n`);
-  else { write(bin, 'gh', `#!/bin/sh\nexec '${process.execPath}' '${join(bin, 'standin.cjs')}' "$@"\n`); chmodSync(join(bin, 'gh'), 0o755); }
-  const oldPath = process.env.PATH;
-  const oldState = process.env['BT6_GH_STATE'];
-  process.env.PATH = `${bin}${delimiter}${oldPath ?? ''}`;
-  process.env['BT6_GH_STATE'] = stateFile;
-  const state = (): State => JSON.parse(readFileSync(stateFile, 'utf8')) as State;
-  const update = (change: Partial<State>) => writeFileSync(stateFile, JSON.stringify({ ...state(), ...change }));
-  const pr = (author = 'owner', extra: Record<string, string> = {}, base = `box-bounty/${created.id}`) => {
-    const solver = join(scratch, `solver-${state().prs.length}`);
-    git(repo, ['clone', '--single-branch', '--branch', `box-bounty/${created.id}`, bare, solver]);
-    write(solver, 'app.txt', 'fixed\n');
-    for (const [path, content] of Object.entries(extra)) write(solver, path, content);
-    git(solver, ['add', '-A']);
-    git(solver, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit', '-qm', 'fix']);
-    const n = state().prs.length + 1;
-    const sha = git(solver, ['rev-parse', 'HEAD']);
-    git(solver, ['push', 'origin', `HEAD:refs/pull/${n}/head`]);
-    update({ prs: [...state().prs, { number: n, user: { login: author }, base: { ref: base, repo: { full_name: 'owner/project' } }, head: { sha }, files: [{ filename: 'app.txt' }, ...Object.keys(extra).map(filename => ({ filename }))] }] });
-  };
-  try { run({ repo, bare, id: created.id, folder: created.outDir, state, update, pr, bin }); }
-  finally {
-    if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
-    if (oldState === undefined) delete process.env['BT6_GH_STATE']; else process.env['BT6_GH_STATE'] = oldState;
-  }
-}
-
-function refused(action: () => unknown, reason: string) {
-  try { action(); expect.unreachable('expected a refusal'); }
-  catch (error) { expect(error).toBeInstanceOf(BountyRefused); expect(error).toMatchObject({ reason }); }
-}
+import { fixture, refused } from './github-fixture.js';
+import type { GhState } from './github-fixture.js';
 
 describe('GitHub bounty destination, entirely offline', () => {
-  it('publishes only the shipped set in one parentless commit, records one issue and is idempotent', () => fixture(({ repo, bare, id, folder, state }) => {
+  it('points the branch at the newest commit the repository already has — no file content is uploaded', () => fixture(({ repo, bare, id, state }) => {
     const before = fingerprint(repo);
+    const head = git(repo, ['rev-parse', 'HEAD']);
+    const objects = git(bare, ['count-objects', '-v']);
     const preview = previewGitHub(repo, id);
     expect(preview).toContain('public. Anyone can read');
+    expect(preview).toContain('nothing new is published');
+    expect(preview).toContain(`Work from: commit ${head}`);
+    // A never-ship-named file in the public history is a fact, not a refusal.
+    expect(preview).toContain('Already public');
+    expect(preview).toContain('.env');
     confirmBounty(repo, id, 'github');
     const result = postBounty(repo, id, 'github');
     const pub = result.record.github!;
-    expect(git(bare, ['rev-list', '--count', `refs/heads/${pub.branch}`])).toBe('1');
-    expect(git(bare, ['rev-list', '--parents', '-n', '1', pub.commit])).toBe(pub.commit);
-    const manifest = JSON.parse(readFileSync(join(folder, 'bounty.json'), 'utf8')) as { files: { path: string }[] };
-    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.commit]).split('\n').sort()).toEqual(manifest.files.map(file => file.path).sort());
-    for (const file of manifest.files) expect(spawnSync('git', ['-C', bare, 'cat-file', 'blob', `${pub.commit}:${file.path}`]).stdout).toEqual(readFileSync(join(folder, 'repo', file.path)));
-    expect(git(bare, ['rev-list', '--all', '--objects'])).not.toContain('.env');
+    expect(pub.kind).toBe('history');
+    expect(pub.base).toBe(head);
+    expect(pub.commit).toBe(head);
+    expect(pub.pushed).toEqual([]);
+    expect(git(bare, ['rev-parse', `refs/heads/${pub.branch}`])).toBe(head);
+    // Zero file content was uploaded: the branch is a name, nothing more.
+    expect(git(bare, ['count-objects', '-v'])).toBe(objects);
     expect(state().issues).toHaveLength(1);
-    expect(state().issues[0]!.body).toContain('Repair the app.');
-    expect(state().issues[0]!.body).toContain('What was already tried');
-    expect(state().issues[0]!.body).toContain('reward: $0');
-    expect(state().issues[0]!.body).toContain('licence: no licence file');
-    expect(state().issues[0]!.body).not.toContain('level');
-    expect(state().issues[0]!.body).not.toContain('There is no reward.');
-    expect(state().issues[0]!.body).not.toContain('NEVER_PUBLIC_SECRET');
+    const issue = state().issues[0]!;
+    expect(issue.body).toContain('Repair the app.');
+    expect(issue.body).toContain('What was already tried');
+    expect(issue.body).toContain(`Work from commit ${head}`);
+    expect(issue.body).toContain(`\`${pub.branch}\``);
+    expect(issue.body).toContain('it points at that commit — nothing new was published');
+    expect(issue.body).toContain('Fork this repository');
+    expect(issue.body).toContain('pull request against');
+    expect(issue.body).toContain('reward: $0');
+    expect(issue.body).toContain('licence: no licence file');
+    expect(issue.body).not.toContain('snapshot');
+    expect(issue.body).not.toContain('NEVER_PUBLIC_SECRET');
+    expect(issue.body).toContain(`<!-- box-bounty:${id} -->`);
     // Every bounty issue carries the box-bounty label — created when missing.
-    expect(state().issues[0]!.labels).toEqual([{ name: 'box-bounty' }]);
+    expect(issue.labels).toEqual([{ name: 'box-bounty' }]);
     expect(state().labels).toEqual([{ name: 'box-bounty' }]);
-    expect(preview).toContain(state().issues[0]!.body);
+    expect(preview).toContain(issue.body);
     postBounty(repo, id, 'github');
     expect(state().issues).toHaveLength(1);
     expect(renderStatus(repo)).toContain(pub.issue!.url);
+    expect(renderStatus(repo)).not.toContain('snapshot-posted');
     expect(renderOpenLine(repo)).toContain(pub.branch);
     expect(fingerprint(repo)).toEqual(before);
   }));
@@ -154,13 +65,13 @@ describe('GitHub bounty destination, entirely offline', () => {
     ['not signed in', 'github-not-signed-in', { auth: false }]
   ])('refuses %s without changing anything', (_label, reason, mutation) => fixture(({ repo, bare, id, update, state }) => {
     confirmBounty(repo, id, 'github');
-    update(mutation as Partial<State>);
+    update(mutation as Partial<GhState>);
     const before = fingerprint(repo);
     const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
     refused(() => postBounty(repo, id, 'github'), String(reason));
     expect(fingerprint(repo)).toEqual(before);
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
-    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toBe('');
+    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
     expect(state().issues).toHaveLength(0);
   }));
 
@@ -182,10 +93,10 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues).toHaveLength(0);
   }));
 
-  it('refuses changed repository or manifest after confirmation', () => fixture(({ repo, id, folder }) => {
-    confirmBounty(repo, id, 'github');
+  it('refuses a manifest tampered with before the GitHub preview is taken', () => fixture(({ repo, id, folder }) => {
     writeFileSync(join(folder, 'bounty.json'), readFileSync(join(folder, 'bounty.json'), 'utf8') + ' ');
-    refused(() => postBounty(repo, id, 'github'), 'manifest-tampered');
+    refused(() => previewGitHub(repo, id), 'manifest-tampered');
+    refused(() => confirmBounty(repo, id, 'github'), 'manifest-tampered');
   }));
 
   it('binds the repository reviewed at confirm, even when a new origin is public', () => fixture(({ repo, id, update }) => {
@@ -218,7 +129,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     confirmBounty(repo, id, 'github'); update({ fail: '/issues' });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     update({ fail: undefined }); withdrawBounty(repo, id);
-    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toBe('');
+    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
+    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toContain('refs/heads/main');
   }));
 
   it('withdraw discovers and closes an issue after its successful creation response was lost', () => fixture(({ repo, bare, id, update, state }) => {
@@ -234,7 +146,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues.find(issue => issue.number === 2)!.state).toBe('open');
     expect(state().comments).toHaveLength(1);
     expect(state().comments[0]!.body).toContain('Withdrawn.');
-    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toBe('');
+    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
     expect(spawnSync('git', ['-C', repo, 'show-ref', '--verify', '--quiet', `refs/box-bounty/${id}-github`]).status).toBe(1);
   }));
 
@@ -248,7 +160,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
     expect(state().issues[0]!.state).toBe('closed');
     expect(state().comments[0]!.body).toContain(applied.mergeCommit);
-    expect(git(bare, ['branch', '--list'])).toBe('');
+    expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
+    expect(git(bare, ['branch', '--list', 'main'])).toBe('main');
     applyBounty(repo, id);
     expect(state().comments).toHaveLength(1);
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(applied.mergeCommit);
@@ -376,7 +289,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().comments[0]!.body).toContain(applied.mergeCommit);
     expect(state().comments[1]!.body).toContain(undone.undoCommit);
     expect(state().issues[0]!.state).toBe('closed');
-    expect(git(bare, ['branch', '--list'])).toBe('');
+    expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
     expect(loadRecord(repo, id).github!.pending).toBeNull();
     expect(loadRecord(repo, id).github!.state).toBe('closed');
   }));

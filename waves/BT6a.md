@@ -93,15 +93,21 @@ On GitHub, a bounty is an issue that names the exact commit to work from, and an
 
 ## Result
 
-- Worker: · Reviewer:
+- Worker: Devin worker session on this Windows host (agent runtime; exact model identifier unavailable, no model diversity claimed). · Reviewer:
 - Commit:
 - Verify:
 - Verdict: · Level:
 - Lenses:
-- Before and after (time, bytes, files):
-- Real use:
-- What keeping the folder path costs:
-- Left on GitHub, by exact name:
+- Before and after (time, bytes, files): fixture `tests/box/bounty/measure-post.mjs`, run on this repository's real state at `8bb29ab` against a local bare remote standing in for github.com; bytes are the thin pack `send-pack` builds (objects on the new tip minus what the remote's refs already reach), time is the measured push alone, three runs each.
+  - Before — one parentless commit of the whole shipped snapshot against an empty repository, as the old adapter posted: **619–669 ms (median 623); 6,465,140–6,465,278 bytes on the wire; 3,906 files, 29,835,309 blob bytes shipped.**
+  - After — nothing local needed, branch named for the commit the remote already has: **177–224 ms (median 213); 32 bytes — an empty thin pack, zero file content.**
+  - After — one small uncommitted change the task needs (one tool-built commit on top): **196–224 ms (median 214); 299 bytes.**
+- Real use: not done — the real post on `shouteck/omakase-box` needs the owner to see the exact issue text and say "go"; the head chef runs it after merge, same shape as BT6's Part C.
+- What keeping the folder path costs: the snapshot machinery stays whole — `snapshot.ts`, the manifest and the folder answer path serve `post --to <dir>` exactly as before — and `github.ts` now carries two dispatch branches (history vs snapshot-posted records) plus the `shippedCommit` helper, which can only retire when no snapshot-posted record is still open anywhere. The two paths share create, the never-ship table and the merge boundary; the marginal cost of the folder path is the adapter itself plus the legacy branches, not shared code.
+- Left on GitHub, by exact name: nothing — no run in this wave reached GitHub; every GitHub-facing test used the stand-in `gh` and local bare remotes.
 - Findings and limits:
-- Merged: · Resources removed:
+  - *Limit:* the measurement's before-figure approximates the shipped set by index pathspecs (`add -A` minus the never-ship table); the real manifest also folds owner `.boxignore` patterns, so a repository with `.boxignore` would ship less than measured. Blob and pack bytes are exact for the set measured.
+  - *Limit:* push times are local-transport times; a real GitHub post adds network latency to both sides equally.
+  - *Limit:* the enormous-history collection test uses a practical history length against the local fixture; no real-world fork was exercised.
+- Merged: not yet — the pass reviews, then the head chef merges and runs the real post. · Resources removed: the measure fixture removes its own `box-bt6a-measure-*` temp dirs; the worker's `.verify-bt6a.log` was removed before commit.
 - Reflect:

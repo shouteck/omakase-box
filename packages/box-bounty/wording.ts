@@ -15,13 +15,14 @@
 // pack for candidates B (minimal pointer) and C (trigger list).
 
 export const DESCRIBE_LINES: readonly string[] = [
-  'box bounty hands a piece of work to an outside solver: this repository minus',
-  'never-ship files, the task and what you tried — posted so an outside solver',
-  'can see it; the project keeps the record; the answer comes back as facts you',
-  'judge, and nothing a solver wrote is ever run.',
+  'box bounty hands a piece of work to an outside solver: the task and what you',
+  'tried — on GitHub an issue on the repository\'s real history, in a folder a',
+  'snapshot minus never-ship files — the project keeps the record; the answer',
+  'comes back as facts you judge, and nothing a solver wrote is ever run.',
   'GitHub posting is public and free, only to this project\'s already-public',
-  'repository. Nobody is known to be watching these issues yet. A local folder',
-  'is still available. Every bounty states a reward of $0 — no payment exists.',
+  'repository — the preview says exactly what becomes public that was not.',
+  'Nobody is known to be watching these issues yet. A local folder is still',
+  'available. Every bounty states a reward of $0 — no payment exists.',
   '',
   'worth it when: attempts keep failing, the task needs access or knowledge you',
   'lack, it is cheaper or faster solved elsewhere, or a second opinion counts.',

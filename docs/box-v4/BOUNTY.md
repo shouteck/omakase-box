@@ -24,7 +24,7 @@ node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty remind [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [--repo <path>]
-node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--preview] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
@@ -61,40 +61,84 @@ rules would remove is refused (`never-ship-input`).
 
 ## Post and collect on GitHub
 
-The tool uses Git and `gh` already signed in on the machine. Sign in through
-those programs, outside the tool. It never asks for, reads, stores or prints a
-token. `origin` must have one fetch destination and one push destination, both
-naming the same GitHub repository. Before any push, the tool reads that exact
-repository's visibility and refuses private or unreadable visibility.
+On GitHub, a bounty is an issue on the code that is already there — it names
+the exact commit to work from, and `box-bounty/<id>` is an ordinary branch
+solvers fork and send pull requests to. The tool uses Git and `gh` already
+signed in on the machine. Sign in through those programs, outside the tool. It
+never asks for, reads, stores or prints a token. `origin` must have one fetch
+destination and one push destination, both naming the same GitHub repository.
+Before any push, the tool reads that exact repository's visibility and refuses
+private or unreadable visibility.
 
-For a prepared bounty, show the exact listing before the owner approves it:
+For a prepared bounty, show exactly what becomes public before the owner
+approves it:
 
 ```
 node packages/box-cli/dist/cli.js bounty confirm <id> --to github --preview
 ```
 
-This changes nothing. It shows the repository, its public visibility, the exact
-issue title and body, and `box-bounty/<id>` as the branch. Once the owner approves
-that text, the owner's `.box/limits.json` must include `"github"` in
-`"allowedDestinations"`. An absent list permits local folders only. Then run:
+This changes nothing. It asks the remote what it already has — fetched refs,
+never a possibly-stale local tracking name — and prints:
+
+- the commit solvers are told to work from: the **newest commit on the current
+  branch the GitHub repository already has**;
+- what becomes public that was not: each unpushed commit with its identifier
+  and subject, and — when the task is said to need uncommitted work — the
+  tool's work-in-progress commit with the files it changes, adds and deletes;
+  or `nothing new is published`;
+- what stays home: uncommitted changes to tracked files that were not said to
+  be needed, and every untracked file not named;
+- never-ship-named paths that are already in the public history, as a fact —
+  this tool cannot take back what is already public;
+- the exact issue title and body a stranger will read.
+
+Two choices, part of saying what the task is, and both visible in the preview:
+
+- `--with-changes` — the task needs every uncommitted change to tracked files.
+  They become **one** commit on the bounty branch, built by the tool through
+  Git plumbing (`read-tree` + `update-index` + `write-tree` + `commit-tree`
+  on a temporary index): the working tree, the index and the current branch
+  never move, and the commit is deterministic — the preview, the record and
+  the push name the same commit. Without the flag they stay home; nothing
+  publishes uncommitted work silently.
+- `--include <file>` — an untracked file the task needs, named one flag per
+  file. A name that resolves to a tracked file, a directory, a link, a path
+  outside the repository, a missing file, a `.box/bounties/` record, or a
+  never-ship path is a named refusal — untracked files are otherwise never
+  published.
+
+Never-ship holds on what is new: a change being published for the first time —
+an unpushed commit or the work-in-progress commit — that touches a never-ship
+path is refused (`github-never-ship`) and publishes nothing. A branch sharing
+no commit with the remote has nothing public to point solvers at
+(`github-no-public-base`); a local folder is still available.
+
+Once the owner approves that text, `.box/limits.json` must include `"github"`
+in `"allowedDestinations"`. An absent list permits local folders only. Then:
 
 ```
-node packages/box-cli/dist/cli.js bounty confirm <id> --to github
+node packages/box-cli/dist/cli.js bounty confirm <id> --to github [--with-changes] [--include <file>]
 node packages/box-cli/dist/cli.js bounty post <id> --to github
 ```
 
-Confirmation records the listing and repository. Posting checks visibility
-again. The pushed branch has exactly the manifest's shipped files and one
-commit with no parent, so the owner's Git history and excluded files never
-leave. The issue names the task, the hand-off note, the kept-out count, the
-stated reward and licence facts, the branch and the answer instructions, and
-carries the `box-bounty` label — created on the repository when missing — so
-every bounty this tool posted is one search away. The issue address, number
-and branch are kept in the local record and shown by `status` and the
+Confirmation records the whole approved plan — base commit, tip commit, the
+first-published commits, the work-in-progress lists and the choices. Posting
+recomputes the plan against live state first: a moved branch, changed working
+state, a moved remote, or a named file that drifted is `github-preview-stale`
+— the preview and the push can never disagree. When nothing local was needed,
+the branch is a name pointing at the existing commit and **zero file content
+is uploaded**; otherwise only the new commits go up, identifiers unchanged.
+The issue says the task, what was tried, the commit to work from, the branch
+for pull requests and whether it carries the poster's work in progress and how
+many commits, how to answer (fork, branch from the bounty branch, pull request
+against it), the reward ($0) and the licence as a fact — and carries the
+`box-bounty` label, created on the repository when missing. The issue address,
+number and branch are kept in the local record and shown by `status` and the
 open-bounties line.
 
-The solver clones that branch alone, works at its root and opens a pull request
-against it in the same repository. Collect from the project's record:
+The solver forks the repository (or pushes a branch inside it), works from the
+bounty branch and opens a pull request against it in the same repository.
+Collect from the project's record:
 
 ```
 node packages/box-cli/dist/cli.js bounty answer <id>
@@ -107,11 +151,26 @@ session learns about a new answer from the record alone. It saves the observed
 outside state and its time; the open-bounties line carries those answer facts.
 If GitHub cannot be reached, `github-status-unavailable` names that outcome,
 shows the last recorded outside state and when, and names `status` as the retry.
-The second fetches the selected pull request without changing the working tree,
-index or current branch (`--no-recurse-submodules`, so a carried `.gitmodules`
-fetches nothing). Its target must be the recorded bounty branch. The existing
-answer boundary refuses never-ship additions and unsafe paths, extracts the
-change and records a numbered attempt and a facts report.
+The second fetches the selected pull request's head without changing the
+working tree, index or current branch (`--no-recurse-submodules`, so a carried
+`.gitmodules` fetches nothing). Its target must be the recorded bounty branch
+(`github-pr-wrong-branch`), its history must descend from the bounty branch's
+tip (`github-pr-not-descended`) — there is nothing sound to compare it with
+otherwise — the remote branch must still be where the tool left it
+(`github-branch-changed`), its tree must hold no link, submodule or unsafe
+name (`answer-unsafe-path`), and no commit it introduces may touch a
+never-ship path (`answer-never-ship`) — a path planted deep in the history and
+removed in the last commit still cannot land. A pull request that changes
+nothing is `answer-empty`.
+
+The report is computed with Git from the real history: the account and the
+time, the commit count, files changed/added/deleted with line counts, whether
+it merges cleanly onto the current branch and which paths clash if not (read
+through `git merge-tree`, so the worktree and index never move), the stated
+flags, and the sentence that nothing was run. `apply <id> <n>` is an ordinary
+`git merge` of the pull request's commits onto the current branch — one merge
+commit naming the bounty and the attempt — under the same working-tree
+protections every merge has. `undo` reverses it as today.
 
 **An answer from any account can be collected and applied.** The author is
 recorded on the attempt as a fact — a GitHub-shaped login, nothing more — and
@@ -123,13 +182,17 @@ still a decision, not a consequence — `apply <id> <n>` is always the agent's
 call.
 
 `apply`, `reject` and `withdraw` comment the recorded fact on the issue, close it
-and remove the bounty branch. `undo` comments the reversal. If an outside step
-fails, the local decision stands and the record names `github-decision-pending`
-and the command to retry. That retry resumes outside work without repeating the
-local merge or undo. `status` shows pending work even after a bounty has ended.
-An undo after an unfinished apply update preserves both facts and finishes the
-issue closure and branch removal. Retry uses the account that started the post;
-comments or copied listings from other accounts cannot stand in for tool facts.
+and remove the bounty branch. If the branch carried work published only there —
+the poster's unpushed commits or the work-in-progress commit — the issue names
+those commits before the branch is removed, so nothing the agent published is
+lost by surprise; the local work was never touched. `undo` comments the
+reversal. If an outside step fails, the local decision stands and the record
+names `github-decision-pending` and the command to retry. That retry resumes
+outside work without repeating the local merge or undo. `status` shows pending
+work even after a bounty has ended. An undo after an unfinished apply update
+preserves both facts and finishes the issue closure and branch removal. Retry
+uses the account that started the post; comments or copied listings from other
+accounts cannot stand in for tool facts.
 
 If a push succeeds but the issue cannot be opened, the refusal is
 `github-post-incomplete`. The record states the known outside state. Repeat
@@ -138,6 +201,12 @@ and never creates a second listing. To remove a partial post instead, run
 `withdraw <id>`. Nothing here sends money or posts to a bounty site.
 Withdrawal also finds and closes a successfully created issue whose response
 was lost, before it clears the outside work.
+
+Records posted before the bounty became an issue on real history — a
+parentless snapshot commit on the branch — still load: `status` marks them
+`snapshot-posted`, and a still-open one can be collected and closed the old
+way. The local-folder post and answer path is unchanged and still uses the
+snapshot.
 
 `create` asks only for judgement — a task and one line of why; everything
 else has a default:
