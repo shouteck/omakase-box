@@ -1,74 +1,97 @@
-# BT6: the first bounty posted outside, as a GitHub issue
+# BT6: the first bounty posted outside, with no checks
 
-Milestone: BT · Station: packaging (also evidence) · Base: `9c9dc9b` · Branch: `wave/BT6` · Timebox: 180 minutes; at expiry, report partial findings and stop
+Milestone: BT · Station: packaging (also evidence) · Base: the reviewed first-run candidate `59d92d4` on `wave/BT6`, with master merged in to pick up this brief · Branch: `wave/BT6` · Timebox: 240 minutes; at expiry, report partial findings and stop
+
+This is the second run of BT6. The first run built and reviewed the GitHub adapter and stopped before posting anything (see "First run" at the end). Between the runs the owner changed the product (11 October 2026, all in `PLAN.md`): **checks are removed.** The tool helps an agent post a problem and bring solutions back; choosing among them is entirely the agent's or the owner's. This run takes the checks out, lets a solution from any account be chosen and merged, and then makes the one real post.
 
 ## Outcome
 
-A confirmed bounty can be published where strangers can see it: `box bounty post <id> --to github` opens an issue on the project's own GitHub repository and pushes exactly what was shipped to a branch beside it. An answer comes back as a pull request against that branch, and the tool treats it as it treats any answer: checked, reported as facts, decided by the agent or the owner. The decision closes the issue.
-
-No money moves in this wave. A GitHub issue was chosen (owner, 11 October 2026) because it is also what the paid sites build on: Algora turns an issue into a paid bounty with one comment, TaskBounty funds an issue. The reading behind the choice: ArcAgent releases money automatically on its own checks (against our rule that the agent or owner decides), TaskBounty showed no way for a program to post, Pinchwork is shut down.
-
-**This repository is public as of 11 October 2026.** What this wave posts is readable by anyone.
+1. A bounty is the task, the note on what was tried, the one line of why, and the code. Nobody is asked for a command, and **nothing a solver wrote is ever run by the tool.**
+2. A solution from any GitHub account can be listed, looked at, and merged onto current code, with a report that describes the change and nothing more.
+3. One real bounty is posted publicly on `shouteck/omakase-box`, answered and collected.
 
 ## Scope
 
 - Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`; `.box/limits.json` and the tool-kept block in `AGENTS.md` only as the tool itself writes them.
-- Read for context: `PLAN.md`; `waves/BT2.md` (post, the record), `waves/BT3.md` and `waves/BT3a.md` Results (the return path and its boundary), `waves/BT5.md` Result (the journey as run); `kitchen/stations/packaging.md`, `kitchen/stations/evidence.md`.
-- Do not touch: the never-ship table, the snapshot identifier, the manifest binding and the merge boundary, except to call them. `export`, `submit`, `verify`, `trace`. `.execution/`, `docs/legacy/`.
+- Read for context: `PLAN.md` (read "What is settled" and "The three hard stops" first); this file's "First run"; `waves/BT3.md` and `waves/BT3a.md` Results (the return path, the report, the merge boundary); `kitchen/stations/packaging.md`, `kitchen/stations/evidence.md`.
+- Do not touch: the never-ship table, the snapshot identifier, the manifest binding and the merge boundary, except to call them. `export`, `submit`, `verify`, `trace` and their packages: the earlier platform keeps its own checks. `.execution/`, `docs/legacy/`.
 
 ## Done when
 
-- `node scripts/verify.mjs test:box-bounty test:box-package` exits 0 on the final commit, and the suites reach no network: they run against a stand-in `gh` and a local bare repository as the remote. They pass on the off-machine runner too.
-- **Posting.** `post <id> --to github` on a confirmed bounty:
-  - pushes one commit with no parent, whose tree is exactly the shipped set, to the branch `box-bounty/<id>` on the repository's GitHub remote. A test shows the pushed tree equals the shipped set file for file, and that nothing else is pushed;
-  - opens one issue whose body is the listing a stranger can act on: the task, the note on what was tried, the check and its level, what is not included, the branch to work from, and how to answer (a pull request against that branch). It says there is no reward;
-  - writes the issue's address, its number and the branch into the record. `status` and the open-bounties line show them.
-- **The tool never touches a credential.** It calls the `gh` and `git` already signed in on the machine. It does not read, ask for, store or print a token. Tests assert no token-shaped value reaches output or the record.
-- **Public repositories only, and the tool says so.** Owner's decision, 11 October 2026: posting outside is not offered for private repositories. The issue and the branch go to the project's own GitHub repository and nowhere else. Before anything is pushed the tool reads that repository's visibility. If it is private, or the visibility cannot be read, the post is a named refusal that changes nothing and says why in one sentence: posting outside would publish the code, so the tool does this only for repositories that are already public, and a local folder is still available. There is no setting that overrides it. `describe`, `help` and the doc page state the same thing up front, so an agent on a private repository learns it before it prepares a bounty, not at the last step. The preview for a public repository says that anyone can read the issue and the branch.
-- **Gated twice, as the product rules require.** The owner's limits must name `github` as an allowed destination; without that the post is a named refusal that changes nothing. The bounty must be confirmed, as today. The preview shown at `confirm` for this destination states the repository, whether it is public, the exact issue title and body, and the branch name.
-- **Half-done posts recover.** If the branch is pushed and the issue fails (or the reverse), the outcome is a named state that says what exists outside and the command that finishes or removes it. Posting twice does not create a second issue or branch.
-- **Answers.** `answer <id>` with a GitHub-posted bounty lists the pull requests open against its branch as facts (number, author, files changed). `answer <id> --pr <n>` fetches that pull request without touching the working tree, the index or the current branch, and hands it to the existing answer path: never-ship refusal, change extraction, the facts report, attempts.
-- **A later agent is up to date without knowing to ask.** `status` on a GitHub-posted bounty reads the outside state and reports it as facts with the time it was read: whether the issue is still open, and how many pull requests are waiting against the branch. The tool-kept open-bounties line says when an answer is waiting, so a new session sees it where it already looks. If GitHub cannot be reached, `status` says so, shows the last state it recorded and when, and still exits as a named outcome. A test starts from the record alone, with a pull request that arrived after the posting session ended.
-- **A stranger's code is not run.** The check executes whatever the answer contains. When the pull request's author is not the account signed in on this machine, the tool fetches it, reports everything it can without executing anything (the change, the flags, the dry merge), records the attempt in a named state that says the check was not run and why, and names the next step. There is no flag in this wave that runs it on the host; a contained run is a later wave. The doc page says this plainly.
-- **Decisions reach the issue.** `apply`, `reject` and `withdraw` each leave one comment stating the fact (applied, with the commit; rejected, with the recorded reason; withdrawn), close the issue and remove the remote branch. `undo` adds a comment and records it. If the outside step fails after the local one succeeded, the local result stands and the record says what is still to do outside.
-- **GitHub stays optional.** Everything that worked before this wave works on a machine with no `gh` and a repository with no GitHub remote: create, the record, confirm, post to a local folder, answer from a folder, the report, apply, undo. A test runs that journey with `gh` absent. The GitHub-specific code sits in one place that the rest does not depend on, so a second destination later is an addition and not a rewrite; do not build a general plug-in system for it now.
-- **Cases that must fail, each a named refusal that changes nothing:** `github` not in the limits; a private repository; a visibility that cannot be read; bounty not confirmed; `gh` missing or not signed in; the remote is not GitHub; a pull request that targets another branch; a pull request that adds a never-ship path; `--pr` naming a pull request that does not exist.
-- **The owner's facts stay honest.** `describe` and the cost and wait lines say what is now true: posting to GitHub costs nothing, is public, and nobody is known to be watching for these issues yet.
-- **One real use, once, on `shouteck/omakase-box`** (see "The real post" below). The Result records the issue address, the pull request address, the report the collector read and the decision.
+- `node scripts/verify.mjs test:box-bounty test:box-package` exits 0 on the final commit; the suites reach no network.
+
+**Part A: checks removed**
+
+- **Creating.** `create` needs the task and the one line of why; the note is optional and the tool still gathers what it can without running anything (the files changed so far). It does not ask for, accept or run a check, a guard or a setup command, and there is no level. Passing one of the old flags is a named refusal that says checks were removed and changes nothing.
+- **The listing** a stranger reads has: the task, what was tried, where the code is, how many files were kept out, how to answer, and that there is no reward. No check section, no level. The title is not repeated as a second heading (the first run's preview did). It states, as a fact and without a promise, whether the repository has a licence file and its name.
+- **An answer from anyone.** `answer` fetches a solution whoever wrote it. The never-ship refusal and the unsafe-path refusal stay exactly as they are. The rule that an outside author's answer cannot be applied is removed, because nothing is run.
+- **The report describes the change and only that:** who sent it and when; files changed, added and deleted, with line counts; whether it would merge cleanly onto the current branch and which paths clash if not, found without touching the working tree or the index; flags as plain observations (adds files, deletes files, large against a stated size, touches a file marked as a test by a stated rule); and always one sentence saying that nothing in the solution was run and the report says nothing about whether it works. The banned-words test from BT3a still holds.
+- **Choosing and merging.** Every solution is a numbered attempt. `apply <id> <n>` merges that one as today; `undo`, `reject` and `withdraw` work as today. A clash still stops cleanly and names the paths; resolving it is the next wave.
+- **States.** The states that only existed for checks are gone. Every outcome is still a named state with a next command. Records written before this wave still load; say in the doc page how an old record that carries a check reads.
+- **Nothing is executed, proven by attack.** Fetching, reporting and merging a hostile solution runs nothing from it: no hook, filter, merge driver, submodule fetch or script it carries. A test plants a sentinel in each and shows none fired.
+- **A stranger's words are not the tool's words.** `status`, the open-bounties line and every summary print only what the tool generated: counts, numbers, its own identifiers, times. An account name is shown only if it has the shape GitHub allows. Text a solver wrote (titles, descriptions, file contents) appears only when the agent asks to look at that solution, and is marked as the solver's.
+- **The description, help and doc page are rewritten to match, and are not longer than before.** They say: what the tool does, that choosing is the agent's, that nothing is run, and that posting outside is for public repositories only.
+- **Tests of removed behaviour are removed, not bent.** Each removed test is listed in the Result with the behaviour it covered. Tests that guard something still present (never-ship, the manifest binding, the merge boundary, undo, the adapter's refusals) stay and pass unchanged.
+
+**Part B: the adapter, kept from the first run**
+
+- Everything the first run built and the pass attacked still holds on the final commit: posting exactly the shipped set as one parentless commit; the public-only refusal with no override; the limits gate and the confirmed stage; no credential touched; recovery of half-done posts and decisions; `status` reading the outside state with the time it was read; GitHub staying optional. Re-run those tests; do not rebuild.
+- Each bounty issue carries the fixed label `box-bounty`, created if the repository lacks it, so every bounty made by this tool can be found with one search.
+
+**Part C: the real post**
+
+- One real use, once, on `shouteck/omakase-box` (below). The Result records the issue address, the pull request address, the report the collector read and what it chose.
 - Works on this Windows host from Git Bash and PowerShell.
 
 ## The real post
 
-Naming BT6 in the START message is the owner's approval for exactly this, and nothing more: one public issue, one branch `box-bounty/<id>` and one pull request on `shouteck/omakase-box`, with comments from the tool's own decision commands. No other repository, no bounty site, no money, no message to anyone.
+Naming BT6 in the START message is the owner's approval for exactly this and nothing more: one public issue, one branch `box-bounty/<id>`, one label and one pull request on `shouteck/omakase-box`, with comments from the tool's own commands. No other repository, no bounty site, no money, no message to anyone.
 
-1. The head chef picks one small real task from STATUS ("Findings for later") that has a mechanical check which fails today.
-2. **Before posting, the head chef shows the owner the issue title and body exactly as they will appear, and waits for "go".** Only then is `github` added to `.box/limits.json` and the bounty posted.
-3. A blind solver, started in an empty folder outside every checkout and given only the issue's address, clones the bounty branch alone, does the work and opens the pull request. It uses the account signed in on this machine, so the check runs. Say so in the Result: no stranger answered, and the stranger path is proven by tests only.
-4. A different session collects from the record alone, reads the report and decides.
-5. Close: the issue is closed and the remote branch removed by the tool's own commands. Anything left outside is listed in the Result by exact name.
+1. The first run's prepared draft (`bt-83106aba72a1`) and its trial folders (`kitchen-BT6-owner`, `kitchen-BT6-bounty`, `kitchen-BT6-preparation`) carry a check and are out of date. The kitchen made them; remove them by exact name and prepare again with the finished tool.
+2. Same task as before: the cold-copy bootstrap gap in `docs/box-v4/BOUNTY.md`. This time supply a real note on what was tried.
+3. **Before posting, show the owner the issue title and body exactly as they will appear, and wait for "go".** Only then is `github` added to `.box/limits.json` and the bounty posted.
+4. A blind solver, started in an empty folder outside every checkout and given only the issue's address, clones the bounty branch alone, does the work and opens the pull request. It uses the account signed in on this machine; say so in the Result. No stranger has answered, and a stranger's path is proven by tests only.
+5. A different session collects from the record alone: reads the report, looks at the solution, chooses, and applies it.
+6. Close with the tool's own commands. Anything left outside is listed in the Result by exact name.
 
-If the owner does not say "go" at step 2, the wave closes with the adapter built and tested, the real post not done, and says so.
+If the owner does not say "go" at step 3, the wave closes with Parts A and B merged if they pass, the real post not done, and says so.
 
 ## Review lenses
 
-- [x] **Security:** the reviewer attacks what crosses the boundary in both directions. Outward: tries to get a private repository posted by any route (a stand-in `gh` that errors or returns nonsense about visibility, a remote that points somewhere other than the repository whose visibility was read, a setting in the limits that claims to allow it), and tries to get a never-ship file, an untracked file or history onto the pushed branch, and a token into output or the record. Inward: a pull request that adds a never-ship path, one whose branch name or title carries shell characters, one from another author whose code would run if the tool ran the check (it must not), and a stand-in `gh` that returns hostile text. It re-runs BT3's attacks through `--pr`.
-- [x] **User experience:** two readers. A fresh agent given only the doc page posts a prepared bounty and says what will become public before it does. A fresh agent given only the issue body, as a stranger would be, says what the task is, where the code is, how to answer and what it is not being paid.
+- [x] **Security:** three attacks. (1) Get something from a solution executed during fetch, report, apply or undo, by any route. (2) Get a solver's text shown as if the tool had written it, or an account name carrying instructions into `status`. (3) Re-run the first run's attacks on the final commit: a private repository posted, a never-ship file or history on the pushed branch, a token in output or the record, a never-ship path in a solution, a hostile stand-in `gh`.
+- [x] **User experience:** three readers, each fresh. One reads only the doc page and says, before posting, what will become public and what the tool will and will not do with solutions. One reads only the issue body, as a stranger would, and says what the task is, where the code is, how to answer and what it is not being paid. One is given a repository with two solutions waiting, one of them from another account, and only the tool's own output; it chooses and merges one unaided and says what was unclear.
 - [ ] **Measurement fairness:** not applicable.
 
 ## Notes for the worker
 
-- Feature playbook. The adapter is a thin layer: `post` already gates and records, `answer` already checks and reports. Add the destination and the way in from a pull request; do not rebuild either.
-- Build the pushed commit without touching the working tree or the index (`commit-tree` on a tree made from the shipped set is one way). The packaging card's notes on saving and restoring bytes apply.
-- Every argument that came from outside (branch names, titles, authors) is passed to `git` and `gh` as an argument, never through a shell string.
-- Issue text is a listing, held to the product rule: facts, no verdicts, no promises about reward or timing.
-- Why public only: a whole-repository bounty in a public place publishes all of the code. Serving private repositories properly means sending only the files a task needs, which is not built and not planned. One clear refusal is better than a half-working private mode.
-- Out of scope, each a later wave: any bounty site, any reward or payment and the rule for a window before payment is final; running an outside author's answer in a container; posting to a repository other than the project's own; private repositories; a smaller set of files.
+- Refactoring playbook for Part A (taking a capability out without disturbing its neighbours), feature playbook for what is new. Delete the check path; do not leave it behind a switch. A tool with fewer parts is the point.
+- The merge boundary took BT3 three rounds. Do not re-open it; the change is which answers reach it, not how it merges.
+- Every argument that came from outside is passed to `git` and `gh` as an argument, never through a shell string.
+- Issue text is a listing: facts, no verdicts, no promises about reward, timing or licence.
+- Out of scope, each a later wave in `PLAN.md`: a place to try a solution and a way to resolve a clash (BT7); standing rules (BT8), so the per-bounty yes stays as it is in this wave; the hook (BT9); any reward, payment or bounty site (BT10).
 - Nothing in this wave happens overnight.
 - Everything the wave creates in the temp folder or on the remote is named for the wave or the bounty and removed at close.
 
 ---
 
 ## Result
+
+- Worker: · Reviewer:
+- Commit:
+- Verify:
+- Verdict: · Level:
+- Lenses:
+- Removed tests:
+- Real post:
+- Findings and limits:
+- Merged: · Resources removed:
+- Reflect:
+
+---
+
+## First run (11 October 2026): adapter built and reviewed, nothing posted
+
+Kept as the kitchen wrote it. The brief it worked to is in Git history (`59256cd`); it required a mechanical check and did not let an outside author's answer be applied, both of which the owner has since removed.
 
 - Worker: Codex, inherited configured model, Windows, `/root/bt6_worker`. Reviewer: independent Codex pass, Windows/PowerShell, `/root/bt6_reviewer`; exact runtime model identifier unavailable, no model diversity claimed.
 - Commit: `59d92d4ca9205502b6a1417e0720c300429d42cb`, parked on `wave/BT6`. Full diff includes `59256cd`, a concurrent session's brief commit that captured some in-progress product edits; history preserved and all code reviewed. Worker commits `02ffe2f` and `59d92d4` contain implementation and correction.

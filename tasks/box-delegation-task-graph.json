@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "planVersion": "bounty-tool-2026-10-11",
+  "planVersion": "bounty-tool-2026-10-11b",
   "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
   "entrypoint": "START.md",
   "target": "BT5",
@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone BT, the bounty tool: BT1 to BT5 are merged. Remaining, only when named: BT6 (first bounty outside, as a GitHub issue on the project's own public repository; no money; one real issue shown to the owner first). The research lab is paused. See PLAN.md.",
+    "sequence": "Milestone BT, the bounty tool: BT1 to BT5 are merged; BT6 had a first run (adapter reviewed, nothing posted) and is re-briefed with checks removed. Remaining, each only when named: BT6 second run, BT7 (look, choose, resolve a clash), BT8 (standing rules), BT9 (the hook), BT10 (a reward through Algora; owner approval and spending limit). The research lab is paused. See PLAN.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -786,7 +786,8 @@
       "dependencies": [
         "BT3"
       ],
-      "handoff": "waves/BT3a.md"
+      "handoff": "waves/BT3a.md",
+      "result": "Done 10 October 2026, merged 5a6456c: the facts report, several answers, undo. Its check parts are removed in BT6. See waves/BT3a.md."
     },
     {
       "id": "BT3b",
@@ -795,8 +796,8 @@
       "dependencies": [
         "BT3a"
       ],
-      "proposal": "create records one line of why (required, short, kept in the record and shown to a later agent); title taken from the task when not given; a sensible default place to write; evidence gathered by the tool for the note (the failing output, files changed so far against the base); box bounty help shows the whole journey on one screen; every success line ends with the exact next command; close the known rough edges (status outside a checkout names the right verb; status repeats conflict paths if BT3a left any gap). The agent still writes the task itself: a badly worded task wastes the bounty.",
-      "handoff": "waves/BT3b.md"
+      "handoff": "waves/BT3b.md",
+      "result": "Done 10 October 2026, merged: one line of why, defaults, help. See waves/BT3b.md."
     },
     {
       "id": "BT4",
@@ -805,8 +806,8 @@
       "dependencies": [
         "BT3b"
       ],
-      "proposal": "Three separate, switchable pieces: (1) the tool description: what it does, when it is worth using, when it is not, in a few lines, with full instructions loaded only on use; (2) lines for a project's agent rules, including an \"open bounties\" line the tool keeps current so a later agent sees it where it already looks; (3) reminders at moments of difficulty, stated as facts, off by default. Plus the owner's limits file (what may leave, what may be spent, whether a clean mechanical pass may be applied without asking), which also gives the agent the facts it needs to choose: cost, limits, expected wait or \"not yet known\", how the answer will be judged. Nothing enforces use. Accepted by the constructed scenarios in PLAN.md (\"How BT4 is accepted\"): better-choice and not-better situations, every alternative listed and accounted for, a few steps not a whole job, scored on reasoning, each scenario attacked by the pass before use. Two or three wordings tried; the best kept.",
-      "handoff": "waves/BT4.md"
+      "handoff": "waves/BT4.md",
+      "result": "Done 10 October 2026, merged: the description, rules-file lines, the limits file, reminders off by default. See waves/BT4.md."
     },
     {
       "id": "BT5",
@@ -821,12 +822,52 @@
     {
       "id": "BT6",
       "milestone": "BT",
-      "title": "The first bounty posted outside, as a GitHub issue",
+      "title": "The first bounty posted outside, with no checks (second run)",
       "dependencies": [
         "BT5"
       ],
-      "ownerApproval": "Required separately, with the choice of site. Sending anything outside is the owner's decision and never happens overnight.",
-      "handoff": "waves/BT6.md"
+      "handoff": "waves/BT6.md",
+      "note": "First run 11 October 2026: GitHub adapter built and reviewed at 59d92d4 on wave/BT6, nothing posted. Re-briefed the same day after the owner removed checks. The owner sees the exact issue text and says go before anything is posted."
+    },
+    {
+      "id": "BT7",
+      "milestone": "BT",
+      "title": "Look, choose, resolve a clash",
+      "dependencies": [
+        "BT6"
+      ],
+      "ownerApproval": "Approved 11 October 2026; cooks only when named.",
+      "proposal": "look gives a solution as the solver saw the code; apply stays one command when clean; a clash is staged in a side copy, resolved by the agent, finished or cancelled by the tool; a half-finished merge is in the record. Brief not written."
+    },
+    {
+      "id": "BT8",
+      "milestone": "BT",
+      "title": "Standing rules: the owner hands over once",
+      "dependencies": [
+        "BT7"
+      ],
+      "ownerApproval": "Approved 11 October 2026; cooks only when named.",
+      "proposal": "One setup. Rules say what the agent may post without asking, and what it may offer and pay and the budget. Outside them the agent asks and the answer can be saved as a rule. Only the owner writes them. Replaces the yes for each bounty. Brief not written."
+    },
+    {
+      "id": "BT9",
+      "milestone": "BT",
+      "title": "The hook",
+      "dependencies": [
+        "BT8"
+      ],
+      "ownerApproval": "Approved 11 October 2026; cooks only when named.",
+      "proposal": "State of open bounties at session start, one line when something new arrives, silent otherwise; off until the owner switches it on, with a plain disclosure of what it does, costs and may cause; prints only what the tool generated. Preceded by a reading of which hosts offer which slots. Brief not written."
+    },
+    {
+      "id": "BT10",
+      "milestone": "BT",
+      "title": "A reward through a site that funds issues (Algora first)",
+      "dependencies": [
+        "BT9"
+      ],
+      "ownerApproval": "Required separately, with a spending limit. The owner creates the account, accepts the terms and adds the payment method.",
+      "proposal": "The tool carries the reward the owner or agent stated and never suggests one; merging and paying are separate actions; payment inside the budget, automatic only where the site allows. Preceded by a reading of what triggers payment, whether it can be held, terms, minimums and refunds. Brief not written."
     },
     {
       "id": "K10",
@@ -840,5 +881,5 @@
       "result": "Done 10 October 2026, merged c0dfdae: the off-machine run covers the bounty, trace and package suites on pinned ubuntu-24.04. See waves/K10.md."
     }
   ],
-  "sequenceRevision": "bounty-tool-2026-10-11"
+  "sequenceRevision": "bounty-tool-2026-10-11b"
 }

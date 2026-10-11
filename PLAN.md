@@ -1,105 +1,118 @@
 # Plan: the bounty tool for coding agents
 
-Updated by the CTO on 11 October 2026 (BT6 set up), from the owner's decisions in discussion. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
+Updated by the CTO on 11 October 2026, after BT6's first run, from the owner's decisions in discussion that day. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
 
 ## The product in one line
 
-**One command for a coding agent to hand off work it cannot or should not do: packaged safely, posted where it will get solved, remembered across sessions, and returned verified.**
+**One command for a coding agent to hand off work: packaged safely, posted where it can be solved, remembered across sessions, and returned for the agent to choose.**
 
-It is not a marketplace. Bounty sites for agents already exist and are short of real tasks. An agent can already post to one of them with a call. What it cannot do in one step is everything before and after posting, and that is the work this tool takes on. **Its value is taking cognitive load off the agent across the whole journey.**
+We are merely a tool. It offers actions and states facts. It does not require, forbid or judge any choice the agent makes. It is not a marketplace and never will be one: the bounty is a GitHub issue, and sites that put money on issues (Algora first) are where rewards happen.
 
 ## The design rule
 
-**The tool does everything mechanical. The agent supplies only judgement.** Three decisions belong to the agent: whether to hand off, what the task is, and whether to accept the answer. Everything else is one command with defaults, and every output names the next command.
+**The tool does everything mechanical. The agent supplies only judgement.** The judgement is: whether to hand off, what the task is, which solution to use if any, and whether any deserves a reward. Everything else is one command with defaults, and every output names the next command.
+
+**The owner is involved once.** They set the tool up and write their standing rules. After that the agent runs the whole journey with nobody asked, inside those rules.
 
 ## The journey of one bounty
 
 ```
- AGENT A (working)             OWNER            BOUNTY SITE           SOLVER
+ ONCE: THE OWNER
+ a. Signs in to GitHub; later, for rewards, sets up the bounty site account themselves
+ b. Writes the standing rules: what the agent may post, offer and pay, and the budget
+ c. Optionally switches on the hook
+
+ EVERY BOUNTY: THE AGENT, ALONE              GITHUB                 SOLVERS
  1. Works on a job
- 2. Decides to hand a part off
-    (any reason it judges worthwhile)
- 3. Tool builds the bounty ───► 4. Sees what is
-    and shows a preview            leaving, says yes
- 5. Tool posts it and     ────────────────────► 6. Listing visible
-    writes the record                                               7. Takes it, gets the Box
- 8. Carries on, or its                                              9. Solves, returns
-    session ends                                                       an answer
- AGENT B (a later session)                      ◄──────────────────
- 10. Arrives; open bounties are where it already looks
- 11. The answer has already been checked; it reads a report of facts
- 12. It decides: accept or reject
- 13. Accepted: brought forward onto current code, in a way that can be undone
- 14. Resumes the job agent A left
+ 2. Decides to hand a part off (any reason)
+ 3. One command: the task, what was tried,
+    one line of why. The tool packages
+    the code, never-ship files removed
+ 4. The tool posts it              ────────► issue + branch
+ 5. The tool writes the record                                      6. Read the issue,
+ 7. Carries on, or its session ends                                    send pull requests
+ A LATER AGENT (often a new session)         ◄──────────────────────
+ 8. Learns of it: the rules-file line, or the hook at session start
+    and again whenever a solution arrives
+ 9. Sees the solutions listed with facts about each change
+ 10. Looks at any of them as the solver saw the code (nothing can clash there)
+ 11. Chooses. Its judgement alone; the tool runs nothing and judges nothing
+ 12. The tool merges the chosen one onto current code; a clash is staged
+     in a side copy for the agent to resolve; any merge can be undone
+ 13. The tool closes the loop outside: comment, close, remove the branch
+ 14. Reward, if any and if the agent decides one is deserved, inside the budget
+ 15. Resumes the job
 ```
 
 ## What is settled
 
 | Part | Decision |
 |---|---|
-| What goes out | The whole repository as a snapshot, never-ship files removed, no history; the task, the note on what was tried, the check and its level. A smaller set of files is deferred. |
-| Why an agent uses it | Any reason it judges worthwhile: stuck, cheaper elsewhere, faster in parallel, no access, a second opinion, reasons not yet imagined. The tool does not assume the reason, and **records one line of why** on every bounty so the reasons can be learned from use. |
-| Whether the agent must use it | **Never. It is at the agent's discretion; nothing is enforced.** The tool is there for when it is the better choice. |
-| How the agent knows | A short description saying what it does, when it is worth using and when it is not; a few lines in the project's own rules; the owner's limits; open bounties shown where the agent already looks. Full instructions load only when the agent reaches for it. Reminders at moments of difficulty exist as an option the owner switches on; they are off by default. |
-| What the agent needs to choose well | The facts to compare: what a bounty would cost, what the owner's limits allow, how long an answer may take or that this is not yet known, how it will be judged. The tool states them. |
-| Who controls it | The owner sets limits once. Nothing leaves outside them. |
-| Where it goes | Existing bounty sites, through adapters. First destination is a local folder. |
-| Private repositories | **Not served outside.** Posting outside publishes the code, so the tool does it only for repositories that are already public and says so up front. A private repository can still hand a bounty over by local folder. Owner's decision, 11 October 2026. |
-| How it survives the agent | A record per bounty in the project, with every stage and its history. |
-| How an answer is treated | **The tool reports facts and never gives a verdict.** It checks the answer before anyone looks, says what passed, what changed, what looks unusual and what it did not check. The decision is the agent's or the owner's, and is recorded. Accepting can be undone in one step. |
-| How "done" is judged | Three levels, stated in the listing: *mechanical*, *example*, *reviewed*. A passing check is evidence, not proof. |
+| What goes out | The whole working state as a snapshot, never-ship files removed, no history; the task, the note on what was tried, the one line of why. |
+| Checks | **None.** A bounty carries no command, and the tool never runs anything a solver wrote. Whether a solution works is for the agent to find out by its own means. (Owner, 11 October 2026: "the onus is all on the agents, we merely provide a tool that helps them".) |
+| Why an agent uses it | Any reason it judges worthwhile. The tool does not assume the reason and records the one line of why. |
+| Whether the agent must use it | Never. Nothing is enforced. |
+| Who is served | **Public repositories only.** Posting outside publishes the code, so the tool refuses a private repository, with no override, and says so up front. A private repository can still hand a bounty over by local folder. |
+| Where it goes | A GitHub issue on the project's own repository, with the code on a branch beside it and a fixed label so bounties can be found. Solutions return as pull requests. GitHub stays optional: everything else works without it. |
+| How it survives the agent | A record per bounty in the project, with every stage; a line in the project's rules file kept current by the tool. Outside state is read from GitHub when asked and shown with the time it was read, never kept as a copy that pretends to be current. |
+| How the agent finds out | The rules-file line always. The hook, if the owner switches it on: state at the start of a session, then one line whenever something new arrives, silent otherwise. |
+| How a solution is treated | Listed with facts about the change: who, what files, how large, whether it merges cleanly today, anything unusual, and that nothing was run. Facts, never a verdict. |
+| Choosing | The agent's or owner's alone. It may look at each solution on the original snapshot, try it by its own means, pick one, several or none. |
+| Bringing it home | The chosen solution's change is merged onto current code as one labelled merge. A clash is staged in a side copy, resolved by the agent, and finished by the tool. Any merge can be undone with one command. |
+| Reward | Optional. The tool carries what the owner or agent states and never decides or suggests a price or a pricing strategy. Using a solution and paying for one are separate actions; which solution deserves payment, and whether any does, is theirs to decide. The tool makes no promise on the owner's behalf. |
+| Who controls it | The owner, once, through standing rules: what may be posted, offered and paid, and the budget. Only the owner writes them. An owner's answer to something outside the rules can be saved as a new rule. |
 
-## Rules of the product
+## The three hard stops
 
-- Nothing leaves the owner's machine outside the owner's limits; by default every bounty waits for the owner's yes.
-- Never-ship files never enter a bounty, and never come back in an answer.
+The only things the tool refuses on its own account. Each protects the owner; none governs the agent's judgement.
+
+1. **Never-ship files** (secrets, keys, credentials, environment files, Git internals, the tool's own state, anything the owner lists) are removed from what goes out and refused in what comes back.
+2. **A private repository is not posted outside.**
+3. **The owner's standing rules.** Nothing happens outside the authority the owner granted. Until standing rules are built (BT8), that authority is the limits file plus a yes for each bounty.
+
+## Other rules of the product
+
 - No command returns nothing or fails silently. Every outcome is a named state with a next step.
-- **The tool states facts, never judgements.** "The check you set now passes", never "this answer is correct".
-- Nothing is applied without a decision, unless the owner has allowed it for answers that pass a mechanical check. What is applied can be undone.
+- The tool states facts, never judgements.
+- Text written by a stranger is never shown as if the tool wrote it, and never put in front of an agent that did not ask to look at it.
+- What is merged can be undone.
 - One real use before many.
 
 ## Built
 
 | Wave | What exists | State |
 |---|---|---|
-| BT1 | `box bounty create`: the whole-repository bounty on disk, never-ship on real paths, the check proven to fail today, preview, a listing a stranger can read | Merged |
-| BT2 | The record in the project (`.box/bounties/`), stages and history, `status`, `confirm`, `post` to a local folder, `withdraw` | Merged |
-| BT3 | `answer`: binds a returned folder to its bounty, extracts the change, refuses never-ship paths, verifies a mechanical answer on what was shipped, merges onto current code as a real merge; `apply`, `reject`; conflicts abort cleanly | Merged |
-| K10 | The off-machine run tests these suites on a pinned runner | Merged |
-| C1 | `box trace` (what a failing test ran). Not used here; kept for the smaller Box later | Merged |
+| BT1 | `create`: the whole-repository bounty on disk, never-ship on real paths, preview, a listing a stranger can read | Merged |
+| BT2 | The record (`.box/bounties/`), stages, `status`, `confirm`, `post` to a local folder, `withdraw` | Merged |
+| BT3, BT3a | `answer`, the facts report, several answers, `apply` as a real merge onto current code, `reject`, `undo` | Merged; the check parts are removed in BT6 |
+| BT3b | One line of why, defaults, `help` | Merged |
+| BT4 | The description, the lines for the project's rules file with the open-bounties line, the owner's limits file, reminders (off by default) | Merged |
+| BT5 | The kitchen used it for real, end to end, through a local folder; the tool stays installed in this repository | Merged |
+| BT6, first run | The GitHub adapter: post as issue and branch, public-only refusal, solutions from pull requests, `status` reading GitHub, recovery of half-done steps | Reviewed, parked on `wave/BT6`, nothing posted |
+| K10 | The off-machine run tests these suites | Merged |
+| C1 | `box trace`. Not used here | Merged |
 
 ## Remaining waves
 
-Each cooks only when named; the kitchen stops after each.
+Each cooks only when named; the kitchen stops after each. The order is the dependency order.
 
 | Wave | Outcome | Notes |
 |---|---|---|
-| **BT3a** | **Report, do not judge.** When an answer arrives the tool checks it and writes a report of facts: the check's result, whether a declared "must keep passing" command still passes, what changed, whether it would merge cleanly onto current code, flags for anything worth a second look, and what was not checked. A passing answer stops there for a decision; it is no longer applied automatically. A failing answer no longer ends the bounty: it is recorded and the bounty stays open. Several answers are listed with passing ones first. Accepting can be undone with one command. | Brief: [waves/BT3a.md](waves/BT3a.md). Changes behaviour BT3 shipped, on the owner's decision. |
-| **BT3b** | **Fewer things to supply.** `create` asks for one line of why and records it; takes its title from the task when none is given; picks a sensible place to write; gathers evidence for the note by itself (the failing output, the files changed so far). `box bounty help` shows the whole journey on one screen. Every success line ends with the exact next command. | Small. Closes known rough edges listed in STATUS. |
-| **BT4** | **Tell the agent.** Three separate, switchable pieces: the tool's description (what, when, when not); the lines for a project's rules, with an "open bounties" line the tool keeps current; reminders at moments of difficulty, off by default. Plus the owner's limits file, which also supplies the facts an agent needs to choose. | Accepted by constructed scenarios, below. Two or three wordings are tried and the best kept; published research found wording alone changes a tool's use tenfold, and that more detail is not better. |
-| **BT5** | **The kitchen uses it.** Part one, the journey: a person asks for a bounty on this repository's own work; a solver that has never seen the repository answers; a different session collects it from the record. Part two, judgement: one or two scenarios run in full, climbing from description only, to the rules note, to a reminder, stopping at the first rung where the agent chooses sensibly. Part three, open: the tool stays installed during ordinary waves, nobody mentions it, and the recorded reasons are read afterwards. | Part one proves it works. Parts two and three are reported honestly, including "nobody used it". |
-| **BT6** | **The first bounty posted outside, as a GitHub issue.** `post --to github` opens an issue on the project's own repository and pushes exactly what was shipped to a branch; an answer returns as a pull request and gets the same facts report; the decision closes the issue. No money. An outside author's code is reported on but not run. | Brief: [waves/BT6.md](waves/BT6.md). Owner chose the destination on 11 October 2026; the repository is public from that day. One real issue, shown to the owner before it is posted. Later, each needing its own approval: a reward through a site that funds issues, with a window before payment is final; a contained run for outside answers. |
-
-## How BT4 is accepted: constructed scenarios
-
-A small set of situations, written before any run, each with the sensible behaviour stated in advance.
-
-- **Where the bounty is the better choice,** on something an agent can weigh: stuck after several distinct attempts; no access to what the task needs; cheaper than the remaining budget; faster in parallel; a second opinion where correctness matters; specialist knowledge it has shown it lacks.
-- **Where it is not:** a task it can plainly do; a bounty that would cost more than the limits allow; code the owner has marked never to send.
-- **Crafted honestly.** For each, every other reasonable move (search the web, read the documentation, try another approach, ask the owner, use a stronger model, install something) is listed with why it does not resolve the situation, and that reason is true in what the agent is shown. Alternatives are not removed to force the answer. The owner being away is the natural setting: an unattended agent has nobody to ask.
-- **Run cheaply.** The agent is given the situation at the moment of decision and a few steps, not a whole job.
-- **Scored on reasoning.** Trying cheaper options first and then posting is good. Solving it a cheaper way is also good, and means the scenario was flawed. Posting without trying anything cheaper is overuse. Running out of budget without considering it, or claiming success, is the failure being looked for.
-- **Attacked before use.** A fresh reviewer tries to find a reasonable way to avoid the bounty in each scenario. If there is one, the scenario is fixed or dropped.
-
-These test whether an agent recognises a good moment when one is put in front of it. They do not show how agents will use the tool in general; the recorded reasons and BT5's open part are for that.
+| **BT6** (second run) | **The first bounty posted outside, with no checks.** Takes checks out of creating and answering; a solution from any account can be listed and merged, with nothing run; the report describes the change only; then one real public issue on this repository, answered and collected. | Brief: [waves/BT6.md](waves/BT6.md). The owner sees the exact issue text and says "go" before anything is posted. |
+| **BT7** | **Look, choose, resolve.** `look` gives the agent a solution as the solver saw the code, where nothing can clash. Applying the chosen one stays one command when it merges cleanly. On a clash the tool stages the merge in a side copy, names the files, the agent resolves them, and the tool finishes or cancels. A half-finished merge is in the record for the next agent. The working code is untouched until the last step. | Accepted by a fresh agent given only the tool's output and a repository with solutions waiting, one of which clashes. |
+| **BT8** | **Standing rules: the owner hands over once.** One setup. The rules say what the agent may post without asking, and (ready for BT10) what it may offer and pay and the budget. Inside them nothing waits for the owner; outside them the agent asks and the answer can be saved as a rule. Only the owner writes them; an agent cannot grant itself authority. The owner can read a summary of what was done and withdraw the authority at any time. | Replaces the yes for each bounty. Closes the known gap that the yes is a command an agent could run itself. |
+| **BT9** | **The hook.** On hosts that have the slots: the state of open bounties at the start of a session, then one line when something new arrives, each event announced once, silent otherwise. Off until the owner switches it on. Switching it on shows a plain disclosure: what it does, what it touches, what it costs in the agent's context, how it may affect the agent (including that with standing rules a solution arriving can lead to a merge or a payment with nobody asked), what it never does, how to stop it. | Preceded by a reading of which hosts offer which slots. Prints only what the tool generated. |
+| **BT10** | **A reward, through a site that funds issues (Algora first).** The tool adds the reward the owner or agent stated and, where the site allows, releases payment inside the budget once the agent has decided and an undo window has passed; otherwise the owner releases it. | Needs the owner's separate approval and a spending limit. The owner creates the account, accepts the terms and adds the payment method themselves. Preceded by a reading of what triggers payment there, whether it can be held, its terms on using claimed work, minimums and refunds. |
 
 ## What we know and do not know
 
-- **Searched five times, not found as one tool:** the whole posting-side workflow. Every ingredient exists somewhere (agent bounty sites with escrow and test-based verification, hand-off notes, escalation to a stronger model on failure). Any of them could add the rest.
-- **Not known:** how often agents will choose to hand work off, and for what. Published work finds agents poor at recognising they should stop, and prone both to overusing and to ignoring tools. The owner chose to build and learn from use.
-- **Left for the future:** how much smarter agents will use it. The tool is reason-neutral and records why, so it does not have to guess.
-- **Accepted:** this is a convenience layer on sites we do not control. Its value is breadth, reliability and being neutral between them.
+- **Existing work, named.** ArcAgent lets an agent create a coding bounty and pays out automatically on its own checks: the same core idea, as a marketplace that decides for you. Algora is a payment layer on GitHub issues for people, where the maintainer decides. Tools that pass work to a stronger model on failure exist. What we found nowhere as one tool: the posting side for an agent with the decision left to it, memory across sessions, and bringing the chosen answer home. Any of them could add it.
+- **Demand is thin everywhere.** The most active site found has paid a few hundred developers in total. There is no crowd of solvers waiting. Early bounties may wait a long time, and the tool says so.
+- **The bet.** Sites are short of tasks, not solvers; a tool in the agent's hand is where tasks come from. If agents hand work off often, that position matters. This is unproven and the owner chose to build and learn from use. The measure that comes free from the record: of the bounties posted, how many got a solution, and how long it took.
+- **Where solvers may come from first:** coding agents that already work from GitHub issues, and people on Algora once a reward is attached. Untested.
+- **Most agents may not spend money.** Expect most early use to carry no reward.
+- **Accepted:** this is a convenience layer on places we do not control.
 
 ## Not in this plan
 
-A marketplace of our own, payment handling, reputation, choosing which files to send, posting private repositories outside, any research. The lab is paused.
+A marketplace of our own; payment handling of our own; reputation; private repositories; choosing which files to send; running or checking solutions; deciding or suggesting prices; any research. The lab is paused.
