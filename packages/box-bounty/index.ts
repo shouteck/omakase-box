@@ -1,4 +1,4 @@
-export { answerBounty, applyBounty, extractAnswerChange, undoBounty } from './answer.js';
+export { answerBounty, applyBounty, extractAnswerChange, showPath, undoBounty } from './answer.js';
 export { answerGitHub, listGitHubAnswers, previewGitHub } from './github.js';
 export type { GitHubChoice, GitHubPlan, GitHubPublication } from './github.js';
 export type { AnswerChange, AnswerResult, ApplyResult, UndoResult } from './answer.js';
