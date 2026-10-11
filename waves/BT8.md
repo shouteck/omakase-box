@@ -51,7 +51,7 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 **What is about to be published is checked before it goes out with nobody asked**
 
-Once posting needs no yes, no person sees the preview. A bounty ships the working state: committed code, uncommitted changes, and untracked files that are not ignored. The never-ship list works on file names and does not look inside files. So, before a bounty is posted under a rule:
+Once posting needs no yes, no person sees the preview. From BT6a a bounty publishes only what is not already public: commits not yet pushed, uncommitted changes the agent chose to include, and any untracked file it named. The scan and the facts below apply to exactly that list. (Before BT6a a bounty shipped the whole working state.) The never-ship list works on file names and does not look inside files. So, before a bounty is posted under a rule:
 
 - The tool scans the content of what would be shipped for things shaped like secrets: private key blocks, well-known token and key formats, connection strings with a password in them, and long high-randomness strings assigned to names like key, secret, token or password. Use a small, stated list of patterns; say in the doc page what is looked for and that it is not proof of absence.
 - It states as facts how many files being shipped are untracked, and how many differ from the last commit, with their names kept in the record.

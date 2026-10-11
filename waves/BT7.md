@@ -2,7 +2,7 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT6's second run is merged · Branch: `wave/BT7` · Timebox: 180 minutes; at expiry, report partial findings and stop
 
-**Pre-brief.** Written by the CTO on 11 October 2026, before BT6's second run. The outcome and the acceptance are settled with the owner. Command names, state names and file paths below follow the design discussion and may not match what BT6 leaves; the head chef revises this file against BT6's Result before dispatching, and says in the pre-cook card what changed.
+**Pre-brief,** written before BT6a was planned. From BT6a a bounty on GitHub is an issue on the real history with an ordinary branch, not a snapshot: where this file says "snapshot", "shipped set" or "as the solver saw the code", read the commit the bounty names and the bounty branch. The head chef revises it against BT6a's Result before dispatching. Looking at a solution and staging a clash both become simpler with real history. Written by the CTO on 11 October 2026, before BT6's second run. The outcome and the acceptance are settled with the owner. Command names, state names and file paths below follow the design discussion and may not match what BT6 leaves; the head chef revises this file against BT6's Result before dispatching, and says in the pre-cook card what changed.
 
 ## Outcome
 
