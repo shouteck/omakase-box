@@ -26,6 +26,13 @@ The station's work is now the bounty tool: creating a bounty (the whole reposito
 - **Mechanical work is the tool's; judgement is the agent's.** Three decisions belong to the agent: hand off or not, what the task is, accept or not. Anything else a command asks the agent to supply is a defect to remove.
 - **Discretion, not enforcement.** Nothing requires an agent to use the tool. How it is described decides whether it is used: published work found wording alone changes use tenfold, that more detail is not better, and that agents both overuse and ignore tools. Say what it does, when it is worth using, and when it is not.
 
+## The product after 11 October 2026
+
+- **Nothing a solver wrote is ever run by the tool.** There are no checks. If a change would execute something from a solution (a command, a hook, a filter, a merge driver), it is wrong.
+- **Three hard stops, nothing else enforced:** never-ship, no private repository outside, the owner's standing rules. Do not add a refusal that polices a choice.
+- **A stranger's words are not the tool's words.** Output that an agent sees without asking carries only what the tool generated. Text from a solver appears only when the agent asks to look, marked as the solver's.
+- **Removing a capability means deleting it,** with the tests that covered only it listed in the Result. Not a switch, not a bent assertion.
+
 ## Tracing a failing test (wave C1, not used by milestone BT; kept for the smaller Box later)
 
 The station now also covers tracing a failing test, choosing a Box's files from the trace, and the hand-off and return. Two product rules apply to every wave here: nothing leaves the owner's machine without the owner's yes, and never-ship files never enter a Box.

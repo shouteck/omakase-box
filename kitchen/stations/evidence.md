@@ -18,6 +18,7 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 - **A blind taster on this machine is not blind by force.** The recipient is told not to look outside the Box folder, but nothing stops it. Say so with every result, and for results that matter run the recipient where the repository is not present.
 - **An agent is not a human participant**, interest is not demand, and a trial is not revenue.
 - **No agent contacts anyone.** Customer conversations are the owner's.
+- **A reader of records must not cost per record.** The stats page spawned one `git` per run record: 252 records meant ~470 processes and a 30s test timeout (K11). Anything that walks `.kitchen/runs` reads its Git facts in a fixed, small number of calls. And pin the property by *counting* external processes behind an env-var seam (`KITCHEN_STATS_GIT_TRACE`), never by timing — a counted bound cannot flake on a busy machine.
 
 ## The pass checks
 

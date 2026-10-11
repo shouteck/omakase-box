@@ -180,6 +180,23 @@ describe('the page itself', () => {
     expect(run.stdout).toContain('not on a wave branch: 2 runs');
   });
 
+  it('stays at a bounded number of Git calls however many run records exist (K11)', () => {
+    const dir = fakeRoot0();
+    // Each record carries a distinct sha, so a page that asks Git one question
+    // per record — as it did before K11 — would spawn about 100 processes here.
+    // The count is measured, not timed, so a busy machine cannot flake it.
+    for (let i = 0; i < 100; i += 1) {
+      const commit = i.toString(16).padStart(7, '0') + 'a'.repeat(33);
+      fakeRun(dir, dirName(NOW + i * 60000, commit));
+    }
+    const run = spawnSync(process.execPath, [statsScript, '--root=' + dir], { encoding: 'utf8', env: { ...process.env, KITCHEN_STATS_GIT_TRACE: '1' } });
+    expect(run.status).toBe(0);
+    expect(run.stdout).toContain('not on a wave branch: 100 runs');
+    const calls = Number((run.stderr.match(/git processes: (\d+)/) || [])[1]);
+    expect(calls).toBeGreaterThan(0);
+    expect(calls).toBeLessThanOrEqual(8); // fixed reads: graph, refs, one batch check
+  });
+
   function fakeRoot0(): string {
     const dir = temp();
     mkdirSync(join(dir, 'docs', 'box-v4'), { recursive: true });
