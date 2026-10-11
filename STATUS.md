@@ -16,7 +16,7 @@ Replaced by the CTO on 11 October 2026, at a checkpoint after BT6's first run.
 
 ## After BT6, in order (PLAN.md, "Remaining waves")
 
-BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 a reward through Algora (needs the owner's separate approval and a spending limit). BT7 to BT9 are approved by the owner; each still cooks only when named, and none has a brief yet.
+BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 a reward through Algora (needs the owner's separate approval and a spending limit). BT7 to BT9 are approved by the owner and have pre-briefs ([BT7](waves/BT7.md), [BT8](waves/BT8.md), [BT9](waves/BT9.md)), written before BT6's second run; the head chef revises each against the preceding wave's Result before dispatching. Each still cooks only when named. BT10 has no brief.
 
 ## Next
 

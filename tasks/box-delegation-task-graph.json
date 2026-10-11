@@ -837,7 +837,8 @@
         "BT6"
       ],
       "ownerApproval": "Approved 11 October 2026; cooks only when named.",
-      "proposal": "look gives a solution as the solver saw the code; apply stays one command when clean; a clash is staged in a side copy, resolved by the agent, finished or cancelled by the tool; a half-finished merge is in the record. The record also carries what the posting agent was doing, gathered by the tool plus at most one line from the agent, so a later agent can resume the job. Brief not written."
+      "proposal": "look gives a solution as the solver saw the code; apply stays one command when clean; a clash is staged in a side copy, resolved by the agent, finished or cancelled by the tool; a half-finished merge is in the record. The record also carries what the posting agent was doing, gathered by the tool plus at most one line from the agent, so a later agent can resume the job. Pre-brief written 11 October 2026; revise against the preceding wave before dispatch.",
+      "handoff": "waves/BT7.md"
     },
     {
       "id": "BT8",
@@ -847,7 +848,8 @@
         "BT7"
       ],
       "ownerApproval": "Approved 11 October 2026; cooks only when named.",
-      "proposal": "One setup. Rules say what the agent may post without asking, and what it may offer and pay and the budget. Outside them the agent asks and the answer can be saved as a rule. Only the owner writes them. Replaces the yes for each bounty. Brief not written."
+      "proposal": "One setup. Rules say what the agent may post without asking, and what it may offer and pay and the budget. Outside them the agent asks and the answer can be saved as a rule. Only the owner writes them. Replaces the yes for each bounty. Pre-brief written 11 October 2026; revise against the preceding wave before dispatch.",
+      "handoff": "waves/BT8.md"
     },
     {
       "id": "BT9",
@@ -857,7 +859,8 @@
         "BT8"
       ],
       "ownerApproval": "Approved 11 October 2026; cooks only when named.",
-      "proposal": "State of open bounties at session start, one line when something new arrives, silent otherwise; off until the owner switches it on, with a plain disclosure of what it does, costs and may cause; prints only what the tool generated. Preceded by a reading of which hosts offer which slots. Brief not written."
+      "proposal": "State of open bounties at session start, one line when something new arrives, silent otherwise; off until the owner switches it on, with a plain disclosure of what it does, costs and may cause; prints only what the tool generated. Preceded by a reading of which hosts offer which slots. Pre-brief written 11 October 2026; revise against the preceding wave before dispatch.",
+      "handoff": "waves/BT9.md"
     },
     {
       "id": "BT10",
