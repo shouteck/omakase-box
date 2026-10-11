@@ -17,7 +17,7 @@ Replaced by the CTO on 11 October 2026, at the close of wave K11 (after the BT6 
 
 ## After BT6, in order (PLAN.md, "Remaining waves")
 
-BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 the open bounty format. BT7 to BT9 are approved by the owner and have pre-briefs ([BT7](waves/BT7.md), [BT8](waves/BT8.md), [BT9](waves/BT9.md)); the head chef revises each against the preceding wave's Result before dispatching. BT10 has no brief. **No adapter to any bounty site** (owner, 11 October 2026: they interface with us); the earlier reward pre-brief in waves/BT10.md is marked dropped. Open with the owner: an agentic way for payments to be settled. The repository is licensed under Apache 2.0 since 11 October 2026.
+BT7 look, choose, resolve a clash · BT8 standing rules · BT9 the hook · BT10 the open bounty format and the whole journey run once. All four have pre-briefs ([BT7](waves/BT7.md), [BT8](waves/BT8.md), [BT9](waves/BT9.md), [BT10](waves/BT10.md)); the head chef revises each against the preceding wave's Result before dispatching, and each cooks only when named. **No payment of any kind is implemented and no bounty site is used** (owner, 11 October 2026): every bounty states a reward of $0, and the kitchen is the solver in every real run. The repository is licensed under Apache 2.0 since 11 October 2026.
 
 ## Next
 

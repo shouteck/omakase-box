@@ -4,7 +4,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
-- **From the owner's design discussion of 11 October 2026, not yet in a wave:** a solution merged locally shows on GitHub as closed, not merged, which is poor credit for the solver; an agentic way to settle a payment without a bounty site is wanted and not designed.
+- **From the owner's design discussion of 11 October 2026, not yet in a wave:** a solution merged locally shows on GitHub as closed, not merged, which is poor credit for the solver. Rewards and payment are out by the owner's decision; if revisited, the options read on that day were GitHub Sponsors one-time payments (the call exists; one-time path reported buggy; terms and fees unread) and a settlement step the owner fills in.
 
 - BT6 fresh-reader findings: the pre-existing BOUNTY.md snapshot restoration examples restore the full snapshot, including excluded files, and Git Bash uses different temporary indexes between its two commands. These are not the safe shipped-set publishing path. Displayed JSON-quoted check commands may need PowerShell quoting adaptation. See waves/BT6.md; no fix added to the adapter wave.
 - BT5 standing findings retained from STATUS: answer-folder setup pollution; no permanent empty-list rendering regression; absent-local-toolchain answer checks; cold-copy bootstrap documentation caveat (BT6 real task pending); leading-# task title; BT3b junction family, forgeable-record convention, secrets basename over-removal, untracked-via-junction bytes, LFS stubs, solver-controlled quoted output and autocrlf cosmetic flags. Prior wave files hold evidence.

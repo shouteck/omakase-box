@@ -51,7 +51,7 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
   - what it does and at which moments on this host;
   - what it touches: the exact project settings file and the exact lines it will add; that it contacts GitHub through the owner's sign-in and how often;
   - what it costs: how many lines can enter the agent's context per session, and that it is nothing when no bounty is open;
-  - how it may affect the agent: it can pull attention from the task in hand; the agent may act on what it sees; **and when standing rules allow it, a solution arriving can lead to a merge, and later a payment, with nobody asked.** That last sentence is shown whenever the rules in force make it true, and says which rule;
+  - how it may affect the agent: it can pull attention from the task in hand; the agent may act on what it sees; **and when standing rules allow it, a solution arriving can lead to a merge with nobody asked.** That last sentence is shown whenever the rules in force make it true, and says which rule;
   - what it never does: act by itself, show a stranger's text, tell the agent what it should do;
   - how to stop it: the exact command.
 - It writes only the project-level settings file for that host, adds only its own marked entry, preserves everything else in the file byte for byte, and refuses by name if the file is malformed or the entry cannot be added safely. `hook off` removes exactly that entry. A test round-trips a settings file with other hooks and comments in it.
@@ -83,7 +83,7 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 - BT4 found, from published work, that wording alone changes how much a tool is used and that more detail is not better. Keep every line the hook prints as short as it can be and still be a fact with a next command.
 - "Told once" matters more than "told immediately". An agent told twice learns to ignore the line.
 - The moment an agent is about to finish its work is the most valuable during-session slot: a solution that arrived should be seen before the agent stops. Use it where the host has it.
-- Out of scope: any reward or payment (BT10); switching the hook on in this repository; a background process, a server or anything that runs when no session does.
+- Out of scope: any reward or payment, which no wave implements; switching the hook on in this repository; a background process, a server or anything that runs when no session does.
 - Everything the wave creates in the temp folder or a trial project is named for the wave and removed at close. Any host setting it changed for a trial is restored and listed in the Result by exact path.
 
 ---

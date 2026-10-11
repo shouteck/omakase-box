@@ -22,7 +22,7 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 **The rules**
 
-- One file the owner writes holds the standing rules, growing from today's limits file. It says, in plain fields: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking (today it may; the field exists so an owner can say no); and, reserved for BT10 and inert until then, what may be offered and paid and the budget. Existing limits files keep working unchanged and mean what they meant.
+- One file the owner writes holds the standing rules, growing from today's limits file. It says, in plain fields: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking (today it may; the field exists so an owner can say no). Nothing about money: no payment is implemented (owner, 11 October 2026), so there is no amount, ceiling or budget field. Existing limits files keep working unchanged and mean what they meant.
 - **With no rules written, nothing gets looser.** The default is today's behaviour: each post waits for the owner.
 - `rules` (or the name BT6 and BT7 leave room for) prints the rules in force, in a few lines, as facts, with the file they came from. An agent can read at any time what it is allowed to do.
 
@@ -75,8 +75,8 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 - Feature playbook. Model the authority first: what actions exist, which are always the agent's, which need a rule, which no rule can allow. Write that table in the doc page before the code.
 - A rule is a fact the owner stated. The tool never infers, widens or suggests one, and never suggests an amount.
 - Keep the field set small. Every field is something an owner must understand to hand over safely; if a field needs a paragraph to explain, it is the wrong field.
-- The reward fields are reserved, validated and inert. Nothing in this wave offers or pays anything.
-- Out of scope, each a later wave: the hook (BT9); any reward, payment or bounty site (BT10); any cryptographic proof of who wrote the rules.
+- No field about rewards, amounts or budgets. A rules file that carries one is refused as naming something the tool does not know.
+- Out of scope, each a later wave: the hook (BT9); the open format (BT10); any reward or payment, which no wave implements; any cryptographic proof of who wrote the rules.
 - Nothing in this wave happens overnight if it would post outside; the trial repository's posts go to a local folder or a stand-in.
 - Everything the wave creates in the temp folder is named for the wave and removed at close.
 

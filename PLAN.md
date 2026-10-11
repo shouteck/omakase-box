@@ -10,7 +10,7 @@ We are merely a tool. It offers actions and states facts. It does not require, f
 
 ## The design rule
 
-**The tool does everything mechanical. The agent supplies only judgement.** The judgement is: whether to hand off, what the task is, which solution to use if any, and whether any deserves a reward. Everything else is one command with defaults, and every output names the next command.
+**The tool does everything mechanical. The agent supplies only judgement.** The judgement is: whether to hand off, what the task is, and which solution to use, if any. Everything else is one command with defaults, and every output names the next command.
 
 **The owner is involved once.** They set the tool up and write their standing rules. After that the agent runs the whole journey with nobody asked, inside those rules.
 
@@ -18,8 +18,8 @@ We are merely a tool. It offers actions and states facts. It does not require, f
 
 ```
  ONCE: THE OWNER
- a. Signs in to GitHub; later, for rewards, sets up the bounty site account themselves
- b. Writes the standing rules: what the agent may post, offer and pay, and the budget
+ a. Signs in to GitHub
+ b. Writes the standing rules: what the agent may do without asking
  c. Optionally switches on the hook
 
  EVERY BOUNTY: THE AGENT, ALONE              GITHUB                 SOLVERS
@@ -40,8 +40,7 @@ We are merely a tool. It offers actions and states facts. It does not require, f
  12. The tool merges the chosen one onto current code; a clash is staged
      in a side copy for the agent to resolve; any merge can be undone
  13. The tool closes the loop outside: comment, close, remove the branch
- 14. Reward, if any and if the agent decides one is deserved, inside the budget
- 15. Resumes the job
+ 14. Resumes the job
 ```
 
 ## What is settled
@@ -59,8 +58,8 @@ We are merely a tool. It offers actions and states facts. It does not require, f
 | How a solution is treated | Listed with facts about the change: who, what files, how large, whether it merges cleanly today, anything unusual, and that nothing was run. Facts, never a verdict. |
 | Choosing | The agent's or owner's alone. It may look at each solution on the original snapshot, try it by its own means, pick one, several or none. |
 | Bringing it home | The chosen solution's change is merged onto current code as one labelled merge. A clash is staged in a side copy, resolved by the agent, and finished by the tool. Any merge can be undone with one command. |
-| Reward | Optional. The bounty states it as a fact a program can read. The tool never decides or suggests a price or a pricing strategy, never decides who is worthy, and makes no promise on the owner's behalf. Which solution deserves payment, and whether any does, is the agent's or owner's decision. No adapter to any bounty site. How a payment is settled by an agent is not designed yet (see BT10). |
-| Who controls it | The owner, once, through standing rules: what may be posted, offered and paid, and the budget. Only the owner writes them. An owner's answer to something outside the rules can be saved as a new rule. |
+| Reward | **None. No payment of any kind is implemented** (owner, 11 October 2026). Every bounty states a reward of $0, as a field a program can read, so the format need not change if that is ever revisited. No adapter to any bounty site, no payment through GitHub or any other route. |
+| Who controls it | The owner, once, through standing rules: what the agent may do without asking. Only the owner writes them. An owner's answer to something outside the rules can be saved as a new rule. |
 
 ## The three hard stops
 
@@ -100,9 +99,9 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 |---|---|---|
 | **BT6** (second run) | **The first bounty posted outside, with no checks.** Takes checks out of creating and answering; a solution from any account can be listed and merged, with nothing run; the report describes the change only; then one real public issue on this repository, answered and collected. | Brief: [waves/BT6.md](waves/BT6.md). The owner sees the exact issue text and says "go" before anything is posted. |
 | **BT7** | **Look, choose, resolve.** `look` gives the agent a solution as the solver saw the code, where nothing can clash. Applying the chosen one stays one command when it merges cleanly. On a clash the tool stages the merge in a side copy, names the files, the agent resolves them, and the tool finishes or cancels. A half-finished merge is in the record for the next agent. The working code is untouched until the last step. **Picking the job back up:** the record carries what the posting agent was doing, gathered by the tool (the branch and commit it was on, the files it had changed, the one line of why) plus at most one line from the agent on what it was in the middle of; `status` shows it to the later agent. No long hand-over is asked for. | Pre-brief: [waves/BT7.md](waves/BT7.md). Accepted by a fresh agent given only the tool's output and a repository with solutions waiting, one of which clashes. |
-| **BT8** | **Standing rules: the owner hands over once.** One setup. The rules say what the agent may post without asking, and (ready for BT10) what it may offer and pay and the budget. Inside them nothing waits for the owner; outside them the agent asks and the answer can be saved as a rule. Only the owner writes them; an agent cannot grant itself authority. The owner can read a summary of what was done and withdraw the authority at any time. | Pre-brief: [waves/BT8.md](waves/BT8.md). Replaces the yes for each bounty. Closes the known gap that the yes is a command an agent could run itself. |
-| **BT9** | **The hook.** On hosts that have the slots: the state of open bounties at the start of a session, then one line when something new arrives, each event announced once, silent otherwise. Off until the owner switches it on. Switching it on shows a plain disclosure: what it does, what it touches, what it costs in the agent's context, how it may affect the agent (including that with standing rules a solution arriving can lead to a merge or a payment with nobody asked), what it never does, how to stop it. | Pre-brief: [waves/BT9.md](waves/BT9.md), with a first reading of which hosts offer which slots. Prints only what the tool generated. |
-| **BT10** | **The open bounty format.** The listing's fields are readable by a program and kept stable: the label, the identifier, the task, where the code is, how to answer, an optional stated reward. A short public page describes the format so anyone can build on it. | Approved in direction by the owner, 11 October 2026; no brief yet. Replaces the reward adapter, which is dropped with every site-specific plan (Algora is nearly inactive and takes no new accounts; Opire and BountyHub are small). The earlier pre-brief is kept at [waves/BT10.md](waves/BT10.md), marked dropped. **Open, to settle before a brief:** the owner wants an agentic way for payments to be settled without depending on a site. |
+| **BT8** | **Standing rules: the owner hands over once.** One setup. The rules say what the agent may do without asking: post a bounty, merge a chosen solution. Inside them nothing waits for the owner; outside them the agent asks and the answer can be saved as a rule. Only the owner writes them; an agent cannot grant itself authority. The owner can read a summary of what was done and withdraw the authority at any time. | Pre-brief: [waves/BT8.md](waves/BT8.md). Replaces the yes for each bounty. Closes the known gap that the yes is a command an agent could run itself. |
+| **BT9** | **The hook.** On hosts that have the slots: the state of open bounties at the start of a session, then one line when something new arrives, each event announced once, silent otherwise. Off until the owner switches it on. Switching it on shows a plain disclosure: what it does, what it touches, what it costs in the agent's context, how it may affect the agent (including that with standing rules a solution arriving can lead to a merge with nobody asked), what it never does, how to stop it. | Pre-brief: [waves/BT9.md](waves/BT9.md), with a first reading of which hosts offer which slots. Prints only what the tool generated. |
+| **BT10** | **The open bounty format, and the whole journey run once.** Each bounty carries a block a program can read (version, identifier, where the code is, how to answer, state, reward $0), kept stable, with a short public page describing it, and proved by a reader that uses none of our code. Then one real bounty on this repository through every step built in BT6 to BT9, with the kitchen as solver: two solutions, one clashing, chosen, resolved, undone, merged again, closed. | Pre-brief: [waves/BT10.md](waves/BT10.md). We do not interface with bounty sites; they can interface with us. The owner sees the exact issue text and says "go" before it is posted. |
 
 ## What we know and do not know
 
@@ -110,9 +109,9 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 - **Demand is thin everywhere.** The most active site found has paid a few hundred developers in total. There is no crowd of solvers waiting. Early bounties may wait a long time, and the tool says so.
 - **The bet.** Sites are short of tasks, not solvers; a tool in the agent's hand is where tasks come from. If agents hand work off often, that position matters. This is unproven and the owner chose to build and learn from use. The measure that comes free from the record: of the bounties posted, how many got a solution, and how long it took.
 - **Where solvers may come from first:** coding agents that already work from GitHub issues, and anyone who reads the open format. Untested.
-- **Most agents may not spend money.** Expect most early use to carry no reward.
+- **Money is out for now.** The best-known bounty site is nearly inactive and the others are small; most agents may not spend money anyway. If rewards are revisited, the stated-reward field is already in the format.
 - **Accepted:** this is a convenience layer on places we do not control.
 
 ## Not in this plan
 
-A marketplace or site of our own; adapters to other people's bounty sites; holding anyone's money; reputation; private repositories; choosing which files to send; running or checking solutions; deciding or suggesting prices; any research. The lab is paused.
+A marketplace or site of our own; adapters to other people's bounty sites; any reward above $0 or payment by any route; reputation; private repositories; choosing which files to send; running or checking solutions; deciding or suggesting prices; any research. The lab is paused.

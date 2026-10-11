@@ -23,7 +23,7 @@ This is the second run of BT6. The first run built and reviewed the GitHub adapt
 **Part A: checks removed**
 
 - **Creating.** `create` needs the task and the one line of why; the note is optional and the tool still gathers what it can without running anything (the files changed so far). It does not ask for, accept or run a check, a guard or a setup command, and there is no level. Passing one of the old flags is a named refusal that says checks were removed and changes nothing.
-- **The listing** a stranger reads has: the task, what was tried, where the code is, how many files were kept out, how to answer, and that there is no reward. No check section, no level. The title is not repeated as a second heading (the first run's preview did). It states, as a fact and without a promise, whether the repository has a licence file and its name.
+- **The listing** a stranger reads has: the task, what was tried, where the code is, how many files were kept out, how to answer, and the reward, which is $0 (the owner's decision of 11 October 2026: no payment is implemented, and every bounty says so as a stated amount). No check section, no level. The title is not repeated as a second heading (the first run's preview did). It states, as a fact and without a promise, whether the repository has a licence file and its name.
 - **An answer from anyone.** `answer` fetches a solution whoever wrote it. The never-ship refusal and the unsafe-path refusal stay exactly as they are. The rule that an outside author's answer cannot be applied is removed, because nothing is run.
 - **The report describes the change and only that:** who sent it and when; files changed, added and deleted, with line counts; whether it would merge cleanly onto the current branch and which paths clash if not, found without touching the working tree or the index; flags as plain observations (adds files, deletes files, large against a stated size, touches a file marked as a test by a stated rule); and always one sentence saying that nothing in the solution was run and the report says nothing about whether it works. The banned-words test from BT3a still holds.
 - **Choosing and merging.** Every solution is a numbered attempt. `apply <id> <n>` merges that one as today; `undo`, `reject` and `withdraw` work as today. A clash still stops cleanly and names the paths; resolving it is the next wave.
@@ -70,7 +70,7 @@ If the owner does not say "go" at step 3, the wave closes with Parts A and B mer
 - The merge boundary took BT3 three rounds. Do not re-open it; the change is which answers reach it, not how it merges.
 - Every argument that came from outside is passed to `git` and `gh` as an argument, never through a shell string.
 - Issue text is a listing: facts, no verdicts, no promises about reward, timing or licence.
-- Out of scope, each a later wave in `PLAN.md`: a place to try a solution and a way to resolve a clash (BT7); standing rules (BT8), so the per-bounty yes stays as it is in this wave; the hook (BT9); any reward, payment or bounty site (BT10).
+- Out of scope, each a later wave in `PLAN.md`: a place to try a solution and a way to resolve a clash (BT7); standing rules (BT8), so the per-bounty yes stays as it is in this wave; the hook (BT9); the program-readable block and public format page (BT10). No reward above $0 and no payment exist in any wave.
 - Nothing in this wave happens overnight.
 - Everything the wave creates in the temp folder or on the remote is named for the wave or the bounty and removed at close.
 

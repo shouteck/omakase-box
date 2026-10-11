@@ -65,7 +65,7 @@ A later agent, often a new session, can do the whole second half of a bounty una
 - The clean path must not get slower or noisier because the clash path exists.
 - On a large repository a side copy costs disk and time: the stopping message says what was created and how big it is.
 - Do not add a third way to look at a solution. Two views (as the solver saw it, on current code) is the limit the owner agreed.
-- Out of scope, each a later wave: standing rules (BT8), the hook (BT9), any reward (BT10). Combining parts of two solutions is the agent's own work and not a feature.
+- Out of scope, each a later wave: standing rules (BT8), the hook (BT9), the open format (BT10). Combining parts of two solutions is the agent's own work and not a feature.
 - Everything the wave creates in the temp folder is named for the wave and removed at close.
 
 ---

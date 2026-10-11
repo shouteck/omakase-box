@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "planVersion": "bounty-tool-2026-10-11b",
+  "planVersion": "bounty-tool-2026-10-11c",
   "valueValidationRevision": "chosen-contributors-total-effort-repeat-use-2026-10-05",
   "entrypoint": "START.md",
   "target": "BT5",
@@ -9,7 +9,7 @@
   "continuity": {
     "foundationGraph": "tasks/box-v4-task-graph.json",
     "history": ".execution/box-v4/ is frozen history for B0-B1.1, D1.1 and D1.2. New work is recorded in waves/<id>.md, STATUS.md and Git.",
-    "sequence": "Milestone BT, the bounty tool: BT1 to BT5 are merged; BT6 had a first run (adapter reviewed, nothing posted) and is re-briefed with checks removed. Remaining, each only when named: BT6 second run, BT7 (look, choose, resolve a clash), BT8 (standing rules), BT9 (the hook), BT10 (a reward through Algora; owner approval and spending limit). The research lab is paused. See PLAN.md.",
+    "sequence": "Milestone BT, the bounty tool: BT1 to BT5 and K11 are merged; BT6 had a first run (adapter reviewed, nothing posted) and is re-briefed with checks removed. Remaining, each only when named: BT6 second run, BT7 (look, choose, resolve a clash, pick the job back up), BT8 (standing rules), BT9 (the hook), BT10 (the open bounty format and the whole journey run once). No payment and no bounty site in any wave; every bounty states a reward of $0. The research lab is paused. See PLAN.md.",
     "implementationAuthorisedByThisFile": false
   },
   "sharedIntegrationPolicy": "Each wave brief names its write paths. One writer per branch; the reviewer checks the diff stays inside them. Globs below are planning scope.",
@@ -848,7 +848,7 @@
         "BT7"
       ],
       "ownerApproval": "Approved 11 October 2026; cooks only when named.",
-      "proposal": "One setup. Rules say what the agent may post without asking, and what it may offer and pay and the budget. Outside them the agent asks and the answer can be saved as a rule. Only the owner writes them. Replaces the yes for each bounty. Pre-brief written 11 October 2026; revise against the preceding wave before dispatch.",
+      "proposal": "One setup. Rules say what the agent may do without asking (post a bounty, merge a chosen solution); nothing about money. Outside them the agent asks and the answer can be saved as a rule. Only the owner writes them. Replaces the yes for each bounty. Pre-brief written 11 October 2026; revise against the preceding wave before dispatch.",
       "handoff": "waves/BT8.md"
     },
     {
@@ -865,12 +865,13 @@
     {
       "id": "BT10",
       "milestone": "BT",
-      "title": "The open bounty format",
+      "title": "The open bounty format, and the whole journey run once",
       "dependencies": [
         "BT9"
       ],
-      "ownerApproval": "Direction approved 11 October 2026; cooks only when named; no brief yet.",
-      "proposal": "The listing is readable by a program and kept stable (label, identifier, task, where the code is, how to answer, optional stated reward), with a short public page describing it. No adapter to any bounty site: they interface with us. Open: an agentic way to settle a payment."
+      "ownerApproval": "Approved 11 October 2026; cooks only when named. The owner sees the exact issue text and says go before it is posted.",
+      "proposal": "Each bounty carries a program-readable block (version, identifier, where the code is, how to answer, state, reward $0), stable and documented on one public page, proved by a reader using none of our code. Then one real bounty through every step of BT6 to BT9 with the kitchen as solver. No payment, no bounty site. Pre-brief written 11 October 2026; revise against the preceding wave before dispatch.",
+      "handoff": "waves/BT10.md"
     },
     {
       "id": "K10",
@@ -891,5 +892,5 @@
       "handoff": "waves/K11.md"
     }
   ],
-  "sequenceRevision": "bounty-tool-2026-10-11b"
+  "sequenceRevision": "bounty-tool-2026-10-11c"
 }
