@@ -59,7 +59,7 @@ We are merely a tool. It offers actions and states facts. It does not require, f
 | Choosing | The agent's or owner's alone. It may look at each solution on the original snapshot, try it by its own means, pick one, several or none. |
 | Bringing it home | The chosen solution's change is merged onto current code as one labelled merge. A clash is staged in a side copy, resolved by the agent, and finished by the tool. Any merge can be undone with one command. |
 | Reward | **None. No payment of any kind is implemented** (owner, 11 October 2026). Every bounty states a reward of $0, as a field a program can read. The amount comes from the owner's standing rules, where it is the owner's pricing rule set once; 0 is the only value accepted today. So neither the format nor the rules need to change shape if that is ever revisited. No adapter to any bounty site, no payment through GitHub or any other route. |
-| Who controls it | The owner, once, through standing rules: what the agent may do without asking. Only the owner writes them. An owner's answer to something outside the rules can be saved as a new rule. |
+| Who controls it | The owner, once, through standing rules: what the agent may do without asking. They live in the owner's own settings, outside the repository, with a rule per project and a default for all projects; the tool checks the project rule, then the default, and otherwise asks. Nothing is allowed unless a written rule says so. Only the owner writes them. An owner's answer to something outside the rules can be saved as a new rule. |
 
 ## The three hard stops
 

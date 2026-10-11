@@ -12,7 +12,7 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 ## Scope
 
-- Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`; `.box/limits.json` in this repository only as the migration below requires.
+- Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`; `.box/limits.json` in this repository only as the migration below requires. Tests never read or write the real owner settings folder: they point the tool at a temporary one.
 - Read for context: `PLAN.md` ("The design rule", "What is settled", "The three hard stops"); `waves/BT4.md` Result (the limits file as built); `waves/BT2.md` Result (confirm and the stages); `waves/BT6.md` and `waves/BT7.md` Results; `kitchen/stations/packaging.md`.
 - Do not touch: the never-ship table, the snapshot identifier, the manifest binding, the merge boundary. `export`, `submit`, `verify`, `trace`. `.execution/`, `docs/legacy/`.
 
@@ -22,7 +22,19 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 **The rules**
 
-- One file the owner writes holds the standing rules, growing from today's limits file. It says, in plain fields: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking (today it may; the field exists so an owner can say no); and **the reward each bounty states**. That last field is the owner's pricing rule, set once so nobody is asked for an amount per bounty. No payment is implemented (owner, 11 October 2026), so today the only value it accepts is 0; any other amount is a named refusal that says payment is not implemented and changes nothing. There is no ceiling or budget field, because nothing can be spent. Existing limits files keep working unchanged and mean what they meant.
+- **Where the rules live: in the owner's own settings, outside the project.** This is the standard split that agent hosts use for their own permissions: what is shared with the project stays in the project; what one person allows their agent to do is personal and stays with that person. So:
+  - **Authority** (may post without asking, may merge without asking, the reward each bounty states) is kept in the owner's settings folder on this machine, outside every repository. It is never committed, never cloned, and cannot be changed by a collaborator or a pull request.
+  - **Shared, harmless facts** stay in the project where BT4 put them: the lines that tell an agent the tool exists, the cost and wait lines, whether reminders are on. Nothing in the project file can grant authority; an authority field found there is refused by name and grants nothing.
+  - Because hosts normally let an agent write only inside its working folder, rules kept outside it are out of the agent's reach by default. Say in the Result how far that holds on the hosts that cook here.
+- **Two levels, both the owner's.** A rule for this project, and a default for all the owner's projects. The tool checks in this order: the rule for this project; otherwise the owner's default; otherwise nothing is set.
+- **Three states, never guessed.** The tool ships with no rules and writes none until the owner answers, so what it finds is always one of:
+  - a written **allowed**: the agent goes ahead with no question;
+  - a written **ask me each time**: the agent asks for a yes on this bounty only and does not propose setup again;
+  - **nothing written** at either level: the owner has never decided, and the agent asks them to set the rules up.
+  A missing entry is never read as allowed. Only a written "allowed" is.
+- **Each rule carries when it was set and at which level.** When the agent goes ahead under a rule, the tool says which: for example, allowed by the owner's default for all projects, set on a given date. An owner surprised by an action can see exactly which answer of theirs caused it.
+- The fields: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking; and **the reward each bounty states**. That last field is the owner's pricing rule, set once so nobody is asked for an amount per bounty. No payment is implemented (owner, 11 October 2026), so today the only value it accepts is 0; any other amount is a named refusal that says payment is not implemented and changes nothing. There is no ceiling or budget field, because nothing can be spent.
+- Existing project limits files keep working for what they still hold. If one carries a destination allowance from before this wave, the tool says once, as a fact, that authority now lives in the owner's settings and gives the command that moves it; it does not move it silently and does not treat it as a grant.
 - **With no rules written, nothing gets looser,** and the first use is where the owner is asked (next section).
 - `rules` (or the name BT6 and BT7 leave room for) prints the rules in force, in a few lines, as facts, with the file they came from. An agent can read at any time what it is allowed to do.
 
@@ -31,11 +43,11 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 - An owner who has already set the rules up (with `setup`, below) is never asked: the agent's first bounty simply goes ahead under them.
 - Otherwise the agent that wants to use the tool is the one who asks. The tool's output is addressed to the agent: it says the rules are not set up, that this is the owner's to decide, and gives the agent the few lines to put to the owner and the command the owner runs.
 - The owner does not have to know the tool exists beforehand. When an agent first tries to hand work off in a project that has no standing rules, the bounty is prepared as usual and then stops in a named state: the rules have not been set up, and the owner decides.
-- That state shows the owner, in a few plain lines, exactly what they are being asked to set and what each choice lets the agent do from then on: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking; the reward each bounty states ($0 is the only amount available). It gives the one command that sets them, written out with those values, and the command that allows only this one bounty and decides nothing else.
+- That state shows the owner, in a few plain lines, exactly what they are being asked to set and what each choice lets the agent do from then on: whether bounties may be posted to GitHub without asking; whether a chosen solution may be merged without asking; the reward each bounty states ($0 is the only amount available). It gives the command that sets them for this project, the same command for all the owner's projects, each written out with those values, and the command that allows only this one bounty and decides nothing else.
 - The agent may propose values (that is its line of why, and the facts of the bounty in front of the owner); it cannot set them. The tool states no preference among the choices.
 - The owner answers once. The rules are written, the waiting bounty goes ahead under them, and no later bounty asks again. `status` and the open-bounties line show the waiting state until then, so the owner or any later agent sees it.
 - If the owner answers only for the one bounty, the next first-use asks again; the tool does not nag in between and does not treat silence as a yes.
-- A test runs it from nothing: a project with no rules, an agent's first bounty, the waiting state, the owner's one answer, the bounty posted, and a second bounty that goes out with nobody asked.
+- A test runs it from nothing: a project with no rules, an agent's first bounty, the waiting state, the owner's one answer, the bounty posted, and a second bounty that goes out with nobody asked. A second test sets only a default for all projects and shows a brand-new project posting with nobody asked; a third sets "ask me each time" and shows the agent asking for a yes without proposing setup.
 
 **Inside the rules, nothing waits**
 
@@ -53,9 +65,9 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 - This is the part the pass attacks hardest, and the worker must say honestly how strong it is. The tool and the agent run as the same user on the same machine, so a file permission alone proves little. The floor that must hold:
   - No `box bounty` command that an agent runs in the normal journey writes or widens the rules. The commands that do are a separate, clearly named group the description never offers to the agent.
   - Every change to the rules is recorded with the time and what changed, and `status` shows when the rules last changed, so a change nobody approved is visible.
-  - The rules file is on the never-ship list (it already is, under `.box`), so a solution cannot change it; a test proves a solution that tries is refused.
+  - The rules are outside the repository, so no solution, pull request or collaborator can change them; a test proves a solution or a commit that adds an authority field to the project file grants nothing.
   - The doc page states plainly what this does and does not prevent: it stops accidents and makes tampering visible; it is not a lock against an agent that sets out to edit a file it can reach.
-- If the worker finds a stronger, simple guarantee on this host (for example the owner's approval living somewhere the agent's session cannot write), propose it in the Result; do not build a key or signature scheme inside this wave.
+- Keeping the rules outside the project is the stronger, simple guarantee this wave builds. Do not add a key or signature scheme on top of it.
 
 **The owner can see and stop**
 
@@ -77,7 +89,7 @@ This replaces the yes for each bounty, and closes the known gap that the yes is 
 
 ## Review lenses
 
-- [x] **Security:** the reviewer plays an agent that wants more authority than it was given, using only what an agent can do. It tries: the normal commands with odd arguments; the owner's commands; editing the file directly and seeing whether that is visible afterwards; a solution that carries a rules file; a junction or case trick on the rules path; a rules file that is valid JSON but shaped to confuse (duplicate keys, huge numbers, unknown fields). For each it reports whether the action was prevented, or permitted but visible, and whether the doc page's claim matches.
+- [x] **Security:** the reviewer plays an agent that wants more authority than it was given, using only what an agent can do. It tries: the normal commands with odd arguments; the owner's commands; editing the file directly and seeing whether that is visible afterwards; a solution that carries a rules file; a junction or case trick on the rules path, or an environment setting that points the tool at a different settings folder; a project file that claims authority; a rules file that is valid JSON but shaped to confuse (duplicate keys, huge numbers, unknown fields). For each it reports whether the action was prevented, or permitted but visible, and whether the doc page's claim matches.
 - [x] **User experience:** two readers. A fresh agent on a repository whose rules allow posting hands off a task from start to posted with nobody asked, and says what it was allowed to do and how it knew. A fresh agent on a repository with no rules reaches the first-use waiting state and says what it is waiting for and who decides; the reviewer, as the owner with only that state's output in front of them, sets the rules with one command and says what they have just allowed. Separately, the reviewer acts as an owner with only the `setup` output and gets from nothing to rules in force.
 - [ ] **Measurement fairness:** not applicable.
 
