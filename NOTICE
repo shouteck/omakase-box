@@ -1,0 +1,10 @@
+omakase-box
+Copyright 2026 shouteck
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+This repository includes third-party material under its own terms:
+
+- .devin/plugins/box-pstack: an adaptation of the pstack skills by Lauren Tan
+  (poteto), under the MIT license. Its LICENSE, NOTICE.md and
+  ADAPTATION-NOTICE.md in that folder apply to it and are kept unchanged.
