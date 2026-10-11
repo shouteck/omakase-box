@@ -99,12 +99,17 @@ and remove the bounty branch. `undo` comments the reversal. If an outside step
 fails, the local decision stands and the record names `github-decision-pending`
 and the command to retry. That retry resumes outside work without repeating the
 local merge or undo. `status` shows pending work even after a bounty has ended.
+An undo after an unfinished apply update preserves both facts and finishes the
+issue closure and branch removal. Retry uses the account that started the post;
+comments or copied listings from other accounts cannot stand in for tool facts.
 
 If a push succeeds but the issue cannot be opened, the refusal is
 `github-post-incomplete`. The record states the known outside state. Repeat
 `post <id> --to github` to finish; it recovers an issue whose response was lost
 and never creates a second listing. To remove a partial post instead, run
 `withdraw <id>`. Nothing here sends money or posts to a bounty site.
+Withdrawal also finds and closes a successfully created issue whose response
+was lost, before it clears the outside work.
 
 `create` asks only for judgement — a task and one line of why; everything
 mechanical has a default:

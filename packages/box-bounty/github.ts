@@ -8,12 +8,12 @@ import { answerBounty, readAnswerFolder } from './answer.js';
 import { renderListing } from './create.js';
 import { BountyRefused } from './errors.js';
 import { git, gitBlob, gitOutcome, gitWriteBlob } from './git.js';
-import { loadLimits } from './limits.js';
-import { loadRecord, persistRecord, transitionTo } from './record.js';
+import { loadRecord, persistRecord, resolveLimits, transitionTo } from './record.js';
 import type { BountyRecord } from './record.js';
 
 export interface GitHubPublication {
   readonly repository: string;
+  readonly account: string;
   readonly branch: string;
   readonly commit: string;
   readonly title: string;
@@ -29,6 +29,7 @@ const PUBLIC_ONLY = 'posting outside would publish the code, so GitHub posting i
 const digest = (bytes: Buffer): string => createHash('sha256').update(bytes).digest('hex');
 const redact = (text: string): string => text.replace(/(?:gh[pousr]_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+|glpat-[A-Za-z0-9_-]+)/g, '[credential redacted]');
 const invalid = (reason: string, message: string): never => { throw new BountyRefused(reason, message); };
+const publicationRef = (id: string): string => `refs/box-bounty/${id}-github`;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 const login = (value: unknown): string => typeof value === 'string' && /^[a-z\d][a-z\d-]{0,38}(?:\[bot\])?$/i.test(value) ? value : invalid('github-response-invalid', 'GitHub returned an unreadable account name; nothing was executed');
 const number = (value: unknown): number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : invalid('github-response-invalid', 'GitHub returned an unreadable number');
@@ -75,6 +76,12 @@ function pages(root: string, endpoint: string): unknown[] {
     entries.push(...data);
     if (data.length < 100) return entries;
   }
+}
+
+function signedAccount(root: string): string {
+  const account = api(root, 'user');
+  if (!isObject(account)) return invalid('github-response-invalid', 'the signed-in account could not be read');
+  return login(account['login']);
 }
 
 function ownRepository(root: string): string {
@@ -168,17 +175,28 @@ function issueNumber(value: unknown, repository: string) {
   return { number: n, url };
 }
 
+function recoverIssue(root: string, publication: GitHubPublication) {
+  const existing = pages(root, `repos/${publication.repository}/issues?state=all`);
+  const found = existing.find(entry => isObject(entry) && entry['title'] === publication.title
+    && typeof entry['body'] === 'string' && entry['body'].includes(`<!-- box-bounty:${publication.branch.slice('box-bounty/'.length)} -->`)
+    && isObject(entry['user']) && entry['user']['login'] === publication.account);
+  return found === undefined ? null : issueNumber(found, publication.repository);
+}
+
 export function postGitHub(root: string, id: string): { record: BountyRecord; destination: string } {
   const record = loadRecord(root, id);
   if (record.stage !== 'confirmed' && !(record.github !== undefined && record.stage === 'posted')) return invalid('not-confirmed', `bounty ${id} must be confirmed before posting to GitHub`);
-  if (!loadLimits(root).allowedDestinations?.includes('github')) return invalid('destination-not-allowed', 'github is not named in the owner\'s allowedDestinations; nothing was posted');
+  if (!resolveLimits(root).allowedDestinations?.includes('github')) return invalid('destination-not-allowed', 'github is not named in the owner\'s allowedDestinations; nothing was posted');
   const repository = publicRepository(root);
   if (record.githubApproval === undefined) return invalid('github-preview-required', `confirm the GitHub preview first with box bounty confirm ${id} --to github`);
   if (record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved at confirmation; nothing was posted');
   if (record.github !== undefined && record.github.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved for this bounty; nothing was posted');
   const text = listing(record, repository);
+  const account = signedAccount(root);
+  if (record.github !== undefined && record.github.account !== account) return invalid('github-account-changed', 'sign in to the account that started this post before retrying; nothing was posted');
   if (record.github === undefined) {
-    record.github = { repository, ...text, commit: shippedCommit(root, record), state: 'preparing', issue: null, pending: null };
+    record.github = { repository, account, ...text, commit: shippedCommit(root, record), state: 'preparing', issue: null, pending: null };
+    git(root, ['update-ref', publicationRef(id), record.github.commit]);
     persistRecord(root, record);
   }
   const publication = record.github;
@@ -187,9 +205,7 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
     publication.state = 'branch-pushed';
     persistRecord(root, record);
     if (publication.issue === null) {
-      const existing = pages(root, `repos/${repository}/issues?state=all`);
-      const found = existing.find((entry: unknown) => isObject(entry) && entry['body'] === publication.body && entry['title'] === publication.title);
-      publication.issue = issueNumber(found ?? api(root, `repos/${repository}/issues`, { title: publication.title, body: publication.body }), repository);
+      publication.issue = recoverIssue(root, publication) ?? issueNumber(api(root, `repos/${repository}/issues`, { title: publication.title, body: publication.body }), repository);
     }
     publication.state = 'posted'; publication.pending = null;
     if (record.stage === 'confirmed') transitionTo(root, record, 'posted', { destination: publication.issue.url });
@@ -245,9 +261,7 @@ export function answerGitHub(root: string, id: string, pr: number) {
   if (!isObject(data) || !isObject(data['base']) || !isObject(data['base']['repo']) || data['base']['ref'] !== branch || data['base']['repo']['full_name'] !== repository) return invalid('github-pr-wrong-branch', 'the pull request targets another branch or repository; nothing was collected');
   if (!isObject(data['head']) || typeof data['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(data['head']['sha']) || !isObject(data['user'])) return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts');
   const author = login(data['user']['login']);
-  const account = api(root, 'user');
-  if (!isObject(account)) return invalid('github-response-invalid', 'the signed-in account could not be read');
-  const mine = login(account['login']);
+  const mine = signedAccount(root);
   const work = mkdtempSync(join(tmpdir(), `box-bt6-${id}-pr-`));
   const ref = `refs/box-bounty/${id}-pr-${pr}`;
   try {
@@ -282,25 +296,36 @@ export function answerGitHub(root: string, id: string, pr: number) {
 export function syncGitHubDecision(root: string, record: BountyRecord): void {
   const publication = record.github;
   if (publication === undefined) return;
-  const event = [...record.events].reverse().find(entry => ['apply', 'reject', 'withdraw', 'undo'].includes(entry.command ?? ''));
+  const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo'].includes(entry.command ?? ''));
+  const event = decisions.at(-1);
   if (event === undefined) return;
   try {
+    if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'sign in to the account that started this post to finish outside work');
+    if (publication.issue === null) {
+      publication.issue = recoverIssue(root, publication);
+      persistRecord(root, record);
+    }
     if (publication.issue !== null) {
       const endpoint = `repos/${publication.repository}/issues/${publication.issue.number}`;
-      const marker = `<!-- box-bounty:${record.id}:${event.command} -->`;
       const comments = pages(root, `${endpoint}/comments`);
-      if (!comments.some(entry => isObject(entry) && typeof entry['body'] === 'string' && entry['body'].includes(marker))) {
-        const fact = event.command === 'apply' ? `Applied as commit ${event.merge}.` : event.command === 'reject' ? `Rejected. Recorded reason: ${event.reason}` : event.command === 'undo' ? `Undo recorded as commit ${event.merge}.` : 'Withdrawn.';
-        api(root, `${endpoint}/comments`, { body: `${fact}\n\n${marker}` });
+      for (const decision of decisions) {
+        const marker = `<!-- box-bounty:${record.id}:${decision.command} -->`;
+        const fact = decision.command === 'apply' ? `Applied as commit ${decision.merge}.` : decision.command === 'reject' ? `Rejected. Recorded reason: ${decision.reason}` : decision.command === 'undo' ? `Undo recorded as commit ${decision.merge}.` : 'Withdrawn.';
+        const body = `${fact}\n\n${marker}`;
+        if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
+          const response = api(root, `${endpoint}/comments`, { body });
+          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment');
+          comments.push(response);
+        }
       }
-      if (event.command !== 'undo') api(root, endpoint, { state: 'closed' }, 'PATCH');
+      const closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
+      if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure');
     }
-    if (event.command !== 'undo') {
-      const exists = gitOutcome(root, ['ls-remote', `https://github.com/${publication.repository}.git`, `refs/heads/${publication.branch}`]);
-      if (exists.status !== 0) return invalid('github-git-failed', 'Git could not read the bounty branch');
-      if (exists.stdout.trim() !== '') remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]);
-      publication.state = 'closed';
-    }
+    const exists = gitOutcome(root, ['ls-remote', `https://github.com/${publication.repository}.git`, `refs/heads/${publication.branch}`]);
+    if (exists.status !== 0) return invalid('github-git-failed', 'Git could not read the bounty branch');
+    if (exists.stdout.trim() !== '') remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]);
+    git(root, ['update-ref', '-d', publicationRef(record.id)]);
+    publication.state = 'closed';
     publication.pending = null;
   } catch {
     publication.pending = `github-decision-pending: local ${event.command} stands; retry box bounty ${event.command} ${record.id}${event.command === 'reject' ? ' --reason "<recorded reason>"' : ''} to comment, close the issue and remove ${publication.branch}`;

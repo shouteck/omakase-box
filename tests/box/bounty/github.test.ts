@@ -17,8 +17,8 @@ interface State {
   loseIssueResponse?: boolean;
   account: string;
   repository: string;
-  issues: { number: number; html_url: string; title: string; body: string; state: string }[];
-  comments: { body: string }[];
+  issues: { number: number; html_url: string; title: string; body: string; state: string; user: { login: string } }[];
+  comments: { body: string; user: { login: string } }[];
   prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[] }[];
   calls: string[][];
 }
@@ -45,14 +45,14 @@ else if (endpoint.includes('/pulls/')) {
   result = endpoint.includes('/files') ? pr.files : pr;
 } else if (endpoint.includes('/pulls?')) result = state.prs.filter(pr => endpoint.includes(pr.base.ref));
 else if (endpoint.includes('/comments')) {
-  if (input) { state.comments.push(input); result = input; } else result = state.comments;
+  if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = state.comments;
 } else if (endpoint.includes('/issues/')) {
   const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
   result = state.issues.find(issue => issue.number === n);
   if (input) Object.assign(result, input);
 } else if (endpoint.includes('/issues')) {
   if (input) {
-    result = { number: state.issues.length + 1, html_url: 'https://github.com/' + state.repository + '/issues/' + (state.issues.length + 1), ...input, state: 'open' };
+    result = { number: state.issues.length + 1, html_url: 'https://github.com/' + state.repository + '/issues/' + (state.issues.length + 1), ...input, state: 'open', user: { login: state.account } };
     state.issues.push(result);
     if (state.loseIssueResponse) { state.loseIssueResponse = false; fail(); }
   } else result = state.issues;
@@ -191,6 +191,10 @@ describe('GitHub bounty destination, entirely offline', () => {
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     expect(loadRecord(repo, id).github!.state).toBe('branch-pushed');
     expect(git(bare, ['show-ref'])).toContain(`refs/heads/box-bounty/${id}`);
+    const publication = loadRecord(repo, id).github!;
+    expect(git(repo, ['rev-parse', `refs/box-bounty/${id}-github`])).toBe(publication.commit);
+    git(repo, ['gc', '--prune=now', '-q']);
+    expect(git(repo, ['cat-file', '-t', publication.commit])).toBe('commit');
     update({ fail: undefined, loseIssueResponse: true });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     expect(state().issues).toHaveLength(1);
@@ -203,6 +207,23 @@ describe('GitHub bounty destination, entirely offline', () => {
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     update({ fail: undefined }); withdrawBounty(repo, id);
     expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toBe('');
+  }));
+
+  it('withdraw discovers and closes an issue after its successful creation response was lost', () => fixture(({ repo, bare, id, update, state }) => {
+    confirmBounty(repo, id, 'github'); update({ loseIssueResponse: true });
+    refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
+    expect(loadRecord(repo, id).github!.issue).toBeNull();
+    expect(state().issues).toHaveLength(1);
+    const actual = state().issues[0]!;
+    update({ issues: [{ ...actual, number: 2, html_url: 'https://github.com/owner/project/issues/2', user: { login: 'stranger' } }, actual] });
+    withdrawBounty(repo, id);
+    expect(loadRecord(repo, id).github!.issue!.number).toBe(1);
+    expect(state().issues.find(issue => issue.number === 1)!.state).toBe('closed');
+    expect(state().issues.find(issue => issue.number === 2)!.state).toBe('open');
+    expect(state().comments).toHaveLength(1);
+    expect(state().comments[0]!.body).toContain('Withdrawn.');
+    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toBe('');
+    expect(spawnSync('git', ['-C', repo, 'show-ref', '--verify', '--quiet', `refs/box-bounty/${id}-github`]).status).toBe(1);
   }));
 
   it('lists facts, collects the signed-in author, applies, closes, removes the branch and records undo', () => fixture(({ repo, bare, id, state, pr }) => {
@@ -330,6 +351,36 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(applied.mergeCommit);
     expect(state().comments).toHaveLength(1);
     expect(loadRecord(repo, id).github!.pending).toBeNull();
+  }));
+
+  it('undo preserves unfinished apply facts and outside cleanup rather than clearing them', () => fixture(({ repo, bare, id, pr, update, state }) => {
+    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr(); answerGitHub(repo, id, 1);
+    update({ fail: '/comments' });
+    const applied = applyBounty(repo, id);
+    const undone = undoBounty(repo, id);
+    expect(loadRecord(repo, id).github!.pending).toContain('local undo stands');
+    expect(state().issues[0]!.state).toBe('open');
+    update({ fail: undefined }); undoBounty(repo, id);
+    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(undone.undoCommit);
+    expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
+    expect(state().comments).toHaveLength(2);
+    expect(state().comments[0]!.body).toContain(applied.mergeCommit);
+    expect(state().comments[1]!.body).toContain(undone.undoCommit);
+    expect(state().issues[0]!.state).toBe('closed');
+    expect(git(bare, ['branch', '--list'])).toBe('');
+    expect(loadRecord(repo, id).github!.pending).toBeNull();
+    expect(loadRecord(repo, id).github!.state).toBe('closed');
+  }));
+
+  it('a stranger comment carrying an exact decision marker cannot suppress the tool fact', () => fixture(({ repo, id, pr, update, state }) => {
+    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr(); answerGitHub(repo, id, 1);
+    update({ fail: '/comments' });
+    const applied = applyBounty(repo, id);
+    const body = `Applied as commit ${applied.mergeCommit}.\n\n<!-- box-bounty:${id}:apply -->`;
+    update({ fail: undefined, comments: [{ body, user: { login: 'stranger' } }] });
+    applyBounty(repo, id);
+    expect(state().comments.filter(comment => comment.user.login === 'owner')).toEqual([{ body, user: { login: 'owner' } }]);
+    expect(state().issues[0]!.state).toBe('closed');
   }));
 
   it('states the public-only, free, unwatched and no outside execution facts before preparation', () => {
