@@ -2,6 +2,8 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT8 is merged · Branch: `wave/BT9` · Timebox: 150 minutes; at expiry, report partial findings and stop
 
+> **Owner decisions, 12 October 2026, to be worked into this brief before it is dispatched.** The merged solution earns the reward, all of it: no split, nothing asked of the agent, nothing published about the other solutions; parts used by hand earn nothing, and the bounty's terms say so up front. The owner sets the terms once in the standing rules and the tool writes them into each issue. The tool owns the life of the bounty and closes it whenever it finds a solution merged, however the merge was made. Commands exist only where the tool is needed; `undo`, `confirm`, `reply`, `unlook` and others are candidates for removal in BT7c, so nothing here should be built on them. See PLAN.md, "Other rules of the product".
+
 **Brief, written ahead.** By the CTO on 11 October 2026, while BT6's second run was cooking, for the way BT6a posts a bounty: an issue on the real history, with an ordinary bounty branch and solutions as ordinary pull requests. The outcome and the acceptance are settled with the owner. Command names, field names and file paths follow the design discussion; the head chef checks them against the Results of BT6a to BT8 before dispatching, corrects names only, and says in the pre-cook card what changed.
 
 ## Outcome
