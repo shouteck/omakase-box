@@ -474,6 +474,10 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
     return key === rootKey || key.startsWith(rootKey);
   };
   const pathy = (token: string): boolean => token.includes('/') || token.includes(BACKSLASH) || DRIVE.test(token);
+  const exists = (token: string): boolean => {
+    try { realpathSync(isAbsolute(token) ? token : resolve(repo, token)); return true; }
+    catch { return false; }
+  };
   const programOnDisk = (name: string): string | null => {
     try { return realpathSync(resolveProgram(name).path); }
     catch { return null; }
@@ -489,7 +493,7 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
       if (detail !== null) found.push({ key, command: value.trim(), detail });
       continue;
     }
-    const detail = unsafeCommandDetail(value, { pathy, inside, programOnDisk });
+    const detail = unsafeCommandDetail(value, { pathy, inside, exists, programOnDisk });
     if (detail !== null) found.push({ key, command: value, detail });
   }
   return found;
@@ -510,7 +514,7 @@ function unsafeDetail(value: string, inside: (token: string) => boolean): string
 // an interpreter or launcher, the next non-option token is the file it loads.
 // Path-bearing arguments are checked everywhere — a program the solution
 // leaves alone can call a file the solution changes.
-function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; programOnDisk: (n: string) => string | null }): string | null {
+function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; programOnDisk: (n: string) => string | null }): string | null {
   const tokens = shellWords(command);
   let first = true;
   let interp = false;
@@ -548,7 +552,16 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
       interp = true; pendingEntry = true;
       continue;
     }
-    if (interp && pendingEntry) return `${token} cannot be placed inside or outside the repository`;
+    if (interp && pendingEntry) {
+      pendingEntry = false;
+      // A bare file name an interpreter loads resolves against the working
+      // directory — inside the tree — when the file is there; when it is
+      // not, the merge could land it or an interpreter could find it
+      // elsewhere, so it cannot be placed either way.
+      return place.exists(token)
+        ? `${token} resolves inside the repository`
+        : `${token} cannot be placed inside or outside the repository`;
+    }
     pendingEntry = false;
   }
   return null;
