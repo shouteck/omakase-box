@@ -1,7 +1,7 @@
 import { realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { git, gitOutcome } from './git.js';
+import { git, gitOutcome, ownerGit } from './git.js';
 import type { NeverShipRule } from './never-ship.js';
 
 // The snapshot is the repository as it stands: tracked files with their uncommitted
@@ -49,9 +49,12 @@ export function createSnapshotCommit(repoRoot: string, workDir: string): { commi
   const head = gitOutcome(repoRoot, ['rev-parse', '--verify', '-q', 'HEAD']);
   const baseCommit = head.status === 0 && /^[a-f0-9]{40}$/.test(head.stdout.trim()) ? head.stdout.trim() : null;
   const env = { GIT_INDEX_FILE: join(workDir, 'snapshot-index') };
-  git(repoRoot, ['read-tree', ...(baseCommit !== null ? [baseCommit] : ['--empty'])], env);
-  git(repoRoot, ['add', '-A'], env);
-  const tree = git(repoRoot, ['write-tree'], env);
+  // The owner's working state and nothing else: the owner's clean filters run,
+  // so what ships is what the owner's own commit would store (a git-lfs pointer,
+  // a git-crypt ciphertext), never the working-tree form.
+  ownerGit(repoRoot, ['read-tree', ...(baseCommit !== null ? [baseCommit] : ['--empty'])], env);
+  ownerGit(repoRoot, ['add', '-A'], env);
+  const tree = ownerGit(repoRoot, ['write-tree'], env);
   const commit = git(repoRoot, [
     '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
     'commit-tree', tree, ...(baseCommit !== null ? ['-p', baseCommit] : []),

@@ -387,7 +387,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const parsed = JSON.parse(readFileSync(file, 'utf8')) as { github: Record<string, unknown> };
     parsed.github = { repository: 'owner/project', account: 'owner', branch: `box-bounty/${id}`, commit: shipped, title, body: state().issues[0]!.body, state: 'posted', issue, pending: null };
     writeFileSync(file, JSON.stringify(parsed));
-    expect(renderStatus(repo)).toContain('snapshot-posted');
+    expect(renderStatus(repo, { full: true })).toContain('snapshot-posted');
     // Still collectible: the solver's snapshot-shaped pull request binds to
     // the shipped manifest like it always did.
     pr('owner');

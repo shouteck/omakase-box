@@ -18,12 +18,12 @@ agent's or the owner's.
 
 ```
 node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>" \
-    [--title "<one line>"] [--note <file>] [--job <file>] \
+    [--title "<one line>"] [--note <file>] [--job <file>] [--resume "<short note>"] \
     [--out <dir>] [--repo <path>] [--preview]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty remind [--repo <path>]
-node packages/box-cli/dist/cli.js bounty status [--repo <path>]
+node packages/box-cli/dist/cli.js bounty status [id] [--full] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]
@@ -31,6 +31,9 @@ node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
 node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty questions [id] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty reply [id] --text "<your own words>" [--repo <path>]
 ```
 
 A fresh copy — a git clone, or the snapshot a bounty ships — contains no
@@ -58,6 +61,62 @@ named state: success ends `stage 1 of 7: drafted`; refusals print
 `refused (<name>)` and exit 3; usage errors exit 2; operational failures
 exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
+
+With one open bounty, omit its identifier: `bounty look 1`, `bounty apply 1`,
+or `bounty questions`. With several, the refusal names them
+so you can choose. `status <id>` shows what needs doing first. `--full` adds
+the history and reports. A listing marks a solution as new the first time the
+tool shows it, then as seen since that time. Seen means only that it was shown.
+
+## Look at a solution
+
+After collecting a pull request with `answer --pr <number>`, `look <n>`
+prints the change the solver made: the diff the pull request makes against
+the commit the bounty named, computed on objects the tool already fetched.
+Nothing is checked out, no folder is made and there is nothing to remove —
+looking touches neither your working tree, index, branch nor configuration,
+and the tool runs nothing of the solver's to print it. The printed lines are
+marked as the solver's words, not the tool's, and the output names the next
+command (`apply <n>` to choose that solution). A large change prints its list
+of changed files first; `look <n> --full` prints the whole diff.
+
+Because the diff is read off objects, what it shows is the form Git stores,
+not the form your working tree shows (git-lfs pointers, git-crypt
+ciphertext). Your filters apply only when the tool lands a merge on your own
+working tree.
+
+## Apply a solution
+
+`apply <n>` merges a clean solution and names `undo` in one command. On your
+own working tree your filters apply as in plain Git: after a clean `apply`,
+filtered files are in their working-tree form and `git status` is clean.
+
+When a solution clashes with current code, `apply` aborts the merge — the
+worktree and index are exactly as before, the record keeps the conflicting
+paths — and names `look <n>` so you can read the solution before deciding
+what to do. Resolving a clash is your own work: resolve the paths in your
+working tree and commit, then run `apply` again.
+
+## Solvers' questions
+
+Status states the number of issue comments from accounts other than the
+owner and the latest time, without displaying their words. `questions`
+shows them with each line marked as written by another account, not by the
+tool. `reply --text "<your own words>"` posts your answer under the owner's
+sign-in and records the action. The tool checks that the issue belongs to
+this bounty before posting. Choosing whether and what to answer is yours.
+
+## Return to the job
+
+Create automatically saves your branch, last commit and changed-file names
+in the project's bounty record. `--resume "<short note>"` optionally records
+what you were doing. This is private job context, distinct from the public
+hand-off `--note <file>`. It is never copied into a bounty branch, issue or
+comment. Status and the output after apply show it under
+`Saved job context`. Older records say that this context was not recorded.
+The automatic folder note stays in the local-folder hand-off; a new GitHub
+history issue includes only an authored public `--note`, so filenames from
+unfinished local work stay home too.
 
 ## Post and collect on GitHub
 
@@ -536,7 +595,10 @@ $env:GIT_INDEX_FILE = (New-TemporaryFile).FullName; git read-tree <commit>; git 
 
 or `git archive <commit> | tar -x -C <target>`.
 
-The bytes in `repo/` are read back **from that commit**, not from the working
+The snapshot commit is made the way your own commit would be: a clean filter
+you configured (git-lfs, git-crypt) runs, so the commit holds what Git stores
+for each file — a pointer, a ciphertext — never the working-tree form. The
+bytes in `repo/` are read back **from that commit**, not from the working
 tree, so what ships is byte-for-byte what the identifier pins (blob bytes —
 Git's eol and attribute filters never apply on the way out, whatever autocrlf
 says) and a file changed between the preview and the write cannot smuggle in

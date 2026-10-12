@@ -78,8 +78,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(preview).toContain(issue.body);
     postBounty(repo, id, 'github');
     expect(state().issues).toHaveLength(1);
-    expect(renderStatus(repo)).toContain(pub.issue!.url);
-    expect(renderStatus(repo)).not.toContain('snapshot-posted');
+    expect(renderStatus(repo, { full: true })).toContain(pub.issue!.url);
+    expect(renderStatus(repo, { full: true })).not.toContain('snapshot-posted');
     expect(renderOpenLine(repo)).toContain(pub.branch);
     expect(fingerprint(repo)).toEqual(before);
   }));
@@ -248,7 +248,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     pr();
     const refreshed = renderStatus(repo);
     expect(refreshed).toContain('#1 by owner: "app.txt"');
-    expect(refreshed).toContain('issue open');
+    expect(renderStatus(repo, { full: true })).toContain('issue open');
     expect(refreshed).toContain(`answer ${id} --pr`);
     expect(renderOpenLine(repo)).toContain('#1 by owner');
     const observedAt = loadRecord(repo, id).github!.outside!.at;

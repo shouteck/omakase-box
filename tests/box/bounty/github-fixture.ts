@@ -61,7 +61,7 @@ export interface GhState {
   account: string;
   repository: string;
   issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
-  comments: { body: string; user: { login: string } }[];
+  comments: { body: string; user: { login: string }; created_at?: string }[];
   prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[] }[];
   labels: { name: string }[];
   calls: string[][];
@@ -127,7 +127,7 @@ export interface GithubFixture {
   readonly bin: string;
 }
 
-export function fixture(run: (context: GithubFixture) => void, title = 'Repair app', files: Record<string, string> = { 'app.txt': 'broken\n', '.env': 'NEVER_PUBLIC_SECRET\n', 'check.cjs': "process.exit(require('fs').readFileSync('app.txt','utf8') === 'fixed\\n' ? 0 : 1);\n" }) {
+export function fixture(run: (context: GithubFixture) => void, title = 'Repair app', files: Record<string, string> = { 'app.txt': 'broken\n', '.env': 'NEVER_PUBLIC_SECRET\n', 'check.cjs': "process.exit(require('fs').readFileSync('app.txt','utf8') === 'fixed\\n' ? 0 : 1);\n" }, resumeNote?: string, publicNote?: string) {
   const repo = makeRepo(files);
   const scratch = runRoot('bt6a');
   const bare = join(scratch, 'remote.git');
@@ -139,7 +139,12 @@ export function fixture(run: (context: GithubFixture) => void, title = 'Repair a
   git(repo, ['push', 'https://github.com/owner/project.git', 'main']);
   write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: ['github'] }));
   write(repo, 'TASK.md', 'Repair the app.\n');
-  const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', outDir: join(scratch, 'bounty') }));
+  if (resumeNote !== undefined) {
+    write(repo, '.box/bt7-local-context.txt', resumeNote);
+    write(repo, 'local-job-context-73c5.txt', 'unfinished local work\n');
+  }
+  if (publicNote !== undefined) write(repo, 'PUBLIC_NOTE.md', publicNote);
+  const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', outDir: join(scratch, 'bounty'), ...(resumeNote === undefined ? {} : { resumeNote }), ...(publicNote === undefined ? {} : { notePath: join(repo, 'PUBLIC_NOTE.md') }) }));
   const stateFile = join(scratch, 'state.json');
   const initial: GhState = { visibility: 'public', private: false, auth: true, account: 'owner', repository: 'owner/project', issues: [], comments: [], prs: [], labels: [], calls: [] };
   writeFileSync(stateFile, JSON.stringify(initial));

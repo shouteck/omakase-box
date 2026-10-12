@@ -23,7 +23,7 @@ afterAll(cleanupOwned);
 process.once('exit', cleanupOwned);
 
 export function git(repo: string, args: string[]): string {
-  const result = spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8' });
+  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll('\\', '/')}`, '-C', repo, ...args], { encoding: 'utf8', env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' } });
   if (result.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
   return result.stdout.trim();
 }

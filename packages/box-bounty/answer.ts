@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { GitFailed, dryMergeOnto, git, gitOutcome, gitWriteBlob, mergeBase, mergeTree } from './git.js';
+import { GitFailed, dryMergeOnto, git, gitOutcome, gitWriteBlob, mergeBase, mergeTree, ownerGit, ownerGitOutcome } from './git.js';
 import type { DryMerge } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
@@ -11,7 +11,6 @@ import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
-
 // `bounty answer` — the return journey. A solver hands back the whole bounty
 // folder (`bounty.json` + `repo/`); this module binds it, extracts the change
 // and writes a report of FACTS — never a verdict. Nothing the answer carries
@@ -216,7 +215,7 @@ function buildAnswerCommit(repoRoot: string, record: BountyRecord, change: Answe
 // attribute source — status can run a configured clean filter when it hashes
 // a stat-dirty file, and a foreign .gitattributes must never choose one.
 function porcelainDirty(repoRoot: string, env?: { readonly GIT_ATTR_SOURCE: string }): string[] {
-  const outcome = gitOutcome(repoRoot, ['status', '--porcelain', '-z'], env ?? {});
+  const outcome = ownerGitOutcome(repoRoot, ['status', '--porcelain', '-z'], env ?? {});
   if (outcome.status !== 0) {
     throw new GitFailed(`git status failed in ${repoRoot}: ${(outcome.stderr || outcome.stdout).trim()}`);
   }
@@ -253,7 +252,7 @@ const covers = (dirty: string, touched: ReadonlySet<string>): boolean => {
 // it is skipped here, not saved as "absent" (restoring that would try to
 // delete a live directory). null means the path was not a file before the
 // merge — anything the merge left there is removed on restore.
-function snapshotBytes(repoRoot: string, paths: ReadonlySet<string>): Map<string, Buffer | null> {
+export function snapshotBytes(repoRoot: string, paths: ReadonlySet<string>): Map<string, Buffer | null> {
   const saved = new Map<string, Buffer | null>();
   for (const path of paths) {
     const target = join(repoRoot, ...path.split('/'));
@@ -264,7 +263,7 @@ function snapshotBytes(repoRoot: string, paths: ReadonlySet<string>): Map<string
   return saved;
 }
 
-function restoreBytes(repoRoot: string, saved: ReadonlyMap<string, Buffer | null>): void {
+export function restoreBytes(repoRoot: string, saved: ReadonlyMap<string, Buffer | null>): void {
   for (const [path, bytes] of saved) {
     const target = join(repoRoot, ...path.split('/'));
     if (bytes === null) rmSync(target, { force: true, recursive: true }); // the merge may have created a directory tree here
@@ -284,10 +283,10 @@ function restoreBytes(repoRoot: string, saved: ReadonlyMap<string, Buffer | null
 //  - a file that exists at a touched path but is not in the index — an ignored
 //    file, invisible to porcelain, which git would overwrite silently. That is
 //    clobber, not a merge: refuse first.
-function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], extraTouched: readonly string[], env?: { readonly GIT_ATTR_SOURCE: string }): { blocked: string[]; dirty: string[] } {
+export function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], extraTouched: readonly string[], env?: { readonly GIT_ATTR_SOURCE: string }): { blocked: string[]; dirty: string[] } {
   const touched = new Set([...deltaPaths, ...extraTouched].map(path => path.toLowerCase()));
   const dirty = porcelainDirty(repoRoot, env);
-  const tracked = new Set(gitOutcome(repoRoot, ['ls-files', '-z'], env ?? {}).stdout.split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
+  const tracked = new Set(ownerGitOutcome(repoRoot, ['ls-files', '-z'], env ?? {}).stdout.split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
   const blockedDirty = dirty.filter(path => covers(path, touched));
   const blockedDirtyKeys = new Set(blockedDirty.map(path => path.toLowerCase()));
   const blockedClobber = [...new Set(deltaPaths)].filter(path =>
@@ -346,7 +345,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
     : [...attempt.changed, ...attempt.added, ...attempt.deleted];
   const { blocked, dirty } = worktreeBlocks(repoRoot, deltaPaths, [...attempt.changed, ...attempt.added, ...attempt.deleted], ownerAttrs);
   if (blocked.length > 0) {
-    throw new BountyRefused('apply-worktree-dirty', `uncommitted work in ${blocked.join(', ')} would be overwritten by the merge — commit it, stash it or move it aside, then run box bounty apply ${id} again`);
+    throw new BountyRefused('apply-worktree-dirty', `uncommitted work in ${blocked.map(showPath).join(', ')} would be overwritten by the merge — commit it, stash it or move it aside, then run box bounty apply ${id} again`);
   }
   const message = [
     `box bounty ${record.id}: ${record.title}`,
@@ -371,7 +370,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   const saved = snapshotBytes(repoRoot, new Set([...deltaPaths, ...dirty]));
   let merged;
   try {
-    merged = gitOutcome(repoRoot, [
+    merged = ownerGitOutcome(repoRoot, [
       '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
       '-c', `core.hooksPath=${hooksOff.split('\\').join('/')}`,
       'merge', '--no-ff', '-m', message, attempt.commit
@@ -391,9 +390,9 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
   if (mergeHead.status === 0) {
-    const paths = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--diff-filter=U'], ownerAttrs).stdout
+    const paths = ownerGitOutcome(repoRoot, ['diff', '--name-only', '-z', '--diff-filter=U'], ownerAttrs).stdout
       .split('\0').filter(line => line !== '').sort();
-    const aborted = gitOutcome(repoRoot, ['merge', '--abort'], ownerAttrs);
+    const aborted = ownerGitOutcome(repoRoot, ['merge', '--abort'], ownerAttrs);
     if (aborted.status !== 0) {
       throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
     }
@@ -463,7 +462,7 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
   // which the touched-path boundary cannot see as a threat — would be swept
   // into the undo commit. Refuse while the index differs from HEAD. The same
   // worktree boundary as apply protects uncommitted work at a touched path.
-  if (gitOutcome(repoRoot, ['diff', '--cached', '--quiet', 'HEAD'], ownerAttrs).status !== 0) {
+  if (ownerGitOutcome(repoRoot, ['diff', '--cached', '--quiet', 'HEAD'], ownerAttrs).status !== 0) {
     throw new BountyRefused('undo-index-staged', `the index holds staged changes — undo builds its commit from it; commit or unstage that work first, then run box bounty undo ${id} again`);
   }
   const { blocked, dirty } = worktreeBlocks(repoRoot, touched, [], ownerAttrs);
@@ -489,14 +488,14 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
   const saved = snapshotBytes(repoRoot, new Set([...touched, ...dirty]));
   let undoCommit: string;
   try {
-    const reverted = gitOutcome(repoRoot, ['revert', '--no-commit', '-m', '1', merge], ownerAttrs);
+    const reverted = ownerGitOutcome(repoRoot, ['revert', '--no-commit', '-m', '1', merge], ownerAttrs);
     if (reverted.status !== 0) {
-      gitOutcome(repoRoot, ['revert', '--quit'], ownerAttrs);
-      gitOutcome(repoRoot, ['reset', '--hard', 'HEAD'], ownerAttrs);
+      ownerGitOutcome(repoRoot, ['revert', '--quit'], ownerAttrs);
+      ownerGitOutcome(repoRoot, ['reset', '--hard', 'HEAD'], ownerAttrs);
       restoreBytes(repoRoot, saved);
       throw new GitFailed(`git revert of ${merge} failed in ${repoRoot}: ${(reverted.stderr || reverted.stdout).trim()} — the dry run said clean; inspect the repository by hand`);
     }
-    git(repoRoot, [
+    ownerGit(repoRoot, [
       '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
       '-c', `core.hooksPath=${hooksOff.split('\\').join('/')}`,
       'commit', '-q', '-m', `box bounty ${id}: undo — ${record.title}\n\nreverses merge ${merge}${appliedEvent?.attempt !== undefined ? ` (attempt ${appliedEvent.attempt})` : ''}`
@@ -529,11 +528,18 @@ const isTestPath = (path: string): boolean => {
 const LARGE_FILES = 20;
 const LARGE_LINES = 400;
 
-// A solver-supplied path is shown quoted — a filename can carry words,
-// separators or spaces that would read as the tool's own prose. Every report
-// surface (the folder report, the pull-request report, status) uses this one
-// helper so a solver's name is always data, never the tool's statement.
-export const showPath = (path: string): string => JSON.stringify(path);
+// A stranger's text — a solver's path, a line of a solver's change, a line of
+// another account's comment — is shown quoted and on one line: it can carry
+// words, separators or spaces that would read as the tool's own prose. JSON
+// quoting escapes the quote, the backslash and the C0 controls (ESC, CR, LF);
+// DEL, the C1 controls and the characters that hide or reorder text on a
+// terminal (zero-width, bidirectional overrides and isolates, line and
+// paragraph separators, the byte-order mark) are escaped the same way, so what
+// is printed is what is there. Every surface uses this one helper.
+const HIDDEN = /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb]/g;
+export const quoteForeign = (text: string): string =>
+  JSON.stringify(text).replace(HIDDEN, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+export const showPath = quoteForeign;
 
 // Flags are plain observations, deliberately eager: a false alarm costs a
 // minute, a missed one costs a wrong fix. No flag blocks anything.
@@ -589,7 +595,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty reject ${record.id} --reason "<why>"`);
+  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read the change first, or box bounty reject ${record.id} --reason "<why>"`);
   return lines;
 }
 

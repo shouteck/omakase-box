@@ -46,6 +46,7 @@ export interface StageEvent {
 export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable' | 'check-not-run';
 
 export interface Attempt {
+  readonly seenAt?: string;
   /** 1-based, stable within the record — `box bounty apply <id> <n>` names it.
       The answer commit is pinned at refs/box-bounty/<id>-answer-<n>. */
   readonly n: number;
@@ -77,6 +78,9 @@ export interface AnswerSpec {
 }
 
 export interface BountyRecord {
+  noteSource?: 'authored' | 'generated' | 'legacy';
+  resume?: ResumeContext;
+  replies?: { readonly at: string; readonly issue: number }[];
   readonly schemaVersion: 1;
   readonly kind: 'box-bounty-record';
   readonly id: string; // bt-<12 hex>, the same id bounty.json carries
@@ -146,6 +150,8 @@ export interface ListedBounty {
 }
 
 export interface RecordSeed {
+  readonly noteSource?: 'authored' | 'generated';
+  readonly resume?: ResumeContext;
   readonly id: string;
   readonly title: string;
   readonly why?: string;
@@ -156,6 +162,10 @@ export interface RecordSeed {
   readonly manifestSha256?: string;
 }
 
+export type ResumeContext = { readonly kind: 'not-recorded' } | {
+  readonly kind: 'recorded'; readonly branch: string; readonly commit: string;
+  readonly changed: readonly string[]; readonly note: string | null;
+};
 export const refName = (id: string): string => `refs/box-bounty/${id}`;
 export const attemptRefName = (id: string, n: number): string => `refs/box-bounty/${id}-answer-${n}`;
 
@@ -219,6 +229,12 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   if (record === null || typeof record !== 'object') return null;
   if (record.kind !== 'box-bounty-record' || typeof record.id !== 'string') return null;
   if (typeof record.stage !== 'string' || !Array.isArray(record.events) || typeof record.folder !== 'string') return null;
+  if (record.noteSource !== undefined && record.noteSource !== 'authored' && record.noteSource !== 'generated' && record.noteSource !== 'legacy') return null;
+  const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
+  const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(entry => typeof entry === 'string');
+  if (record.resume !== undefined && (!object(record.resume) || record.resume.kind !== 'not-recorded' && (record.resume.kind !== 'recorded' || typeof record.resume.branch !== 'string' || typeof record.resume.commit !== 'string' || !strings(record.resume.changed) || record.resume.note !== null && typeof record.resume.note !== 'string'))) return null;
+  record.resume ??= { kind: 'not-recorded' };
+  record.noteSource ??= 'legacy';
   return record;
 };
 
@@ -250,6 +266,8 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     kind: 'box-bounty-record',
     id: seed.id,
     title: seed.title,
+    resume: seed.resume ?? { kind: 'not-recorded' },
+    noteSource: seed.noteSource ?? 'legacy',
     ...(seed.why !== undefined ? { why: seed.why } : {}),
     ...(seed.job !== undefined ? { job: seed.job } : {}),
     ...(seed.manifestSha256 !== undefined ? { manifestSha256: seed.manifestSha256 } : {}),
@@ -285,6 +303,14 @@ export function listRecords(repoRoot: string): ListedBounty[] {
   return listed;
 }
 
+// The saved job context, under the bounty it belongs to: `indent` places it
+// inside that bounty's lines.
+export function renderResume(record: BountyRecord, indent = ''): string {
+  const context = record.resume;
+  if (context?.kind !== 'recorded') return [`${indent}Return to your job`, `${indent}  The branch, commit and changed files were not recorded for this older bounty.`].join('\n');
+  return [`${indent}Saved job context (${record.id}) — where the work stood when the bounty was created`, `${indent}  branch: ${showPath(context.branch)}; commit: ${context.commit}`, `${indent}  changed files: ${context.changed.length === 0 ? 'none' : context.changed.map(showPath).join(', ')}`, ...(context.note === null ? [] : [`${indent}  note: ${JSON.stringify(context.note)}`])].join('\n');
+}
+
 const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
   answered: 'arrived — nothing in it was run',
   // Words for attempts recorded while checks existed: the record still says
@@ -295,11 +321,17 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
   'check-not-run': 'the declared check was not run on it (checks were removed on 11 October 2026)'
 };
 
+// A report was written when its answer arrived and ends with the step that
+// followed then. Replayed inside status, that line is left out: the bounty's
+// own next step is stated once, from what is true now.
+const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
+
 const nextStep = (record: BountyRecord): string => {
   switch (record.stage) {
     case 'drafted': return `the owner's yes comes first — run box bounty confirm ${record.id} once they approve the preview`;
     case 'confirmed': return `deliver it — run box bounty post ${record.id} --to <dir>`;
     case 'posted': {
+      if (record.github !== undefined) return `box bounty answer ${record.id} --pr <number> collects a pull request; box bounty questions ${record.id} reads other accounts' comments`;
       const count = attemptsOf(record).length;
       if (count === 0) return `wait for the solver — when the bounty folder comes back, run box bounty answer ${record.id} --from <dir>`;
       return `the bounty is still open with ${count} recorded ${count === 1 ? 'attempt' : 'attempts'} — when another answer comes back run box bounty answer ${record.id} --from <dir>, or end it with box bounty reject ${record.id} --reason "<why>"`;
@@ -307,10 +339,14 @@ const nextStep = (record: BountyRecord): string => {
     case 'taken': return 'an answer is being read against the snapshot it was made for — run box bounty status again in a moment';
     case 'answered':
     case 'verified': {
-      const applicable = applicableAttempts(attemptsOf(record));
       const conflicts = record.conflicts?.paths;
+      if (record.github !== undefined) {
+        if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>, resolve those paths and commit, then run box bounty apply ${record.id} <n> again`;
+        return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty status ${record.id} --full for reports and history`;
+      }
+      const applicable = applicableAttempts(attemptsOf(record));
       const conflictText = conflicts !== undefined && conflicts.length > 0
-        ? ` the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — resolve those paths and commit first, then`
+        ? ` the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>, resolve those paths and commit, then`
         : '';
       if (applicable.length === 0) {
         return `no attempt has a usable result — name one anyway with box bounty apply ${record.id} <n>, or end the bounty with box bounty reject ${record.id} --reason "<why>"`;
@@ -329,8 +365,9 @@ const nextStep = (record: BountyRecord): string => {
 // attempts (passing first), the top attempt's fact report, a fresh merge read
 // of the current code, and the next step; ended bounties one compact line; an
 // empty project says so and says what to do. Never prints nothing.
-export function renderStatus(repoRoot: string): string {
-  const listed = listRecords(repoRoot);
+export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean } = {}): string {
+  if (options.id !== undefined) loadRecord(repoRoot, options.id);
+  const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
   for (const entry of listed) {
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
   }
@@ -340,20 +377,34 @@ export function renderStatus(repoRoot: string): string {
   const lines: string[] = [];
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
-    lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
+    if (options.id === undefined && ended.length === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
   } else {
     lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
       const record = entry.record!;
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
-      if (record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state}${record.github.kind !== 'history' ? ', snapshot-posted — from before the bounty became an issue on the code that is already there' : ''})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
+      const attempts = attemptsOf(record);
+      const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
+      // What an agent needs to act comes first; this is the bounty's one `next:`.
+      lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
+      if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty questions ${record.id}`);
+      lines.push(renderResume(record, '      '));
+      // The github: facts and the outside-state header are the long form's —
+      // reviews found agents never used them in the short one. What stays
+      // actionable in the short form: a pending outside action, the answers
+      // still waiting (one already collected is under `attempts`), and the
+      // command that collects them.
+      if (options.full && record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state}${record.github.kind !== 'history' ? ', snapshot-posted — from before the bounty became an issue on the code that is already there' : ''})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
+      if (!options.full && record.github?.pending !== null && record.github?.pending !== undefined) lines.push(`      github: ${record.github.pending}`);
       if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) lines.push(`      github-status-unavailable: could not refresh at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}; retry box bounty status`);
       if (record.github?.outside !== undefined) {
-        lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
-        for (const line of record.github.outside.answers.split('\n')) lines.push(`      ${line}`);
-        lines.push(`      collect: box bounty answer ${record.id} --pr <number>`);
+        if (options.full) lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
+        for (const line of record.github.outside.answers.split('\n')) {
+          if (!options.full && (line.startsWith('GitHub answers for ') || line.includes('collected as solution'))) continue;
+          lines.push(`      ${line}`);
+        }
+        if (attemptsOf(record).length === 0) lines.push(`      collect: box bounty answer ${record.id} --pr <number>`);
       }
-      const attempts = attemptsOf(record);
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
         const ordered = [...attempts].sort((a, b) => {
@@ -363,21 +414,27 @@ export function renderStatus(repoRoot: string): string {
         });
         lines.push(`      attempts (${attempts.length}):`);
         for (const attempt of ordered) {
-          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
         }
         const top = ordered[0]!;
-        if (top.report.length > 0) {
+        if ((record.github === undefined || options.full) && top.report.length > 0) {
           lines.push(`      report — attempt #${top.n}, recorded ${top.at}:`);
-          for (const line of top.report) lines.push(`        ${line}`);
-        } else {
+          for (const line of top.report.filter(notNext)) lines.push(`        ${line}`);
+        } else if (record.github === undefined || options.full) {
           lines.push(`      this attempt was recorded before fact reports existed — the commit ${top.commit} is pinned at refs/box-bounty/${record.id}-answer`);
         }
-        if (applicable.length > 0) {
+        if (applicable.length > 0 && (record.github === undefined || options.full)) {
           const fresh = dryMergeOnto(repoRoot, applicable[0]!.commit);
           lines.push(`      current code now: ${fresh.kind === 'clean' ? 'attempt #' + applicable[0]!.n + ' would merge cleanly onto the current branch' : fresh.kind === 'conflict' ? `attempt #${applicable[0]!.n} would conflict in ${fresh.paths.map(showPath).join(', ')}` : `the merge cannot be tested — ${fresh.detail}`}`);
         }
+        record.attempts = attempts.map(attempt => attempt.seenAt === undefined ? { ...attempt, seenAt: new Date().toISOString() } : attempt);
+        persistRecord(repoRoot, record);
+        if (options.full) for (const attempt of ordered.slice(1)) {
+          lines.push(`      report: solution #${attempt.n}, recorded ${attempt.at}`);
+          for (const line of attempt.report.filter(notNext)) lines.push(`        ${line}`);
+        }
       }
-      lines.push(`      next: ${nextStep(record)}`);
+      if (options.full) for (const event of record.events) lines.push(`      history: ${JSON.stringify(event)}`);
     }
   }
   if (ended.length === 0) lines.push('ended: none');
@@ -388,7 +445,20 @@ export function renderStatus(repoRoot: string): string {
     if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}`;
   }).join(', ')}`);
+  // The job to go back to stays on show after a bounty ends: for the bounty that
+  // was asked for by id, or else for the one that ended last.
+  const lastEnded = [...ended].sort((a, b) => (a.record!.events.at(-1)?.at ?? '').localeCompare(b.record!.events.at(-1)?.at ?? '')).at(-1)?.record ?? null;
   for (const entry of ended) {
+    if (entry.record === null) continue;
+    if (options.id !== undefined || entry.record === lastEnded) {
+      lines.push(renderResume(entry.record, '  '));
+      // With a bounty still open, that bounty's line above is the next step.
+      if (open.length === 0) lines.push(`  next: continue the saved job${entry.record.stage === 'applied' ? `; or box bounty undo ${entry.record.id}` : ''}; inspect: box bounty status ${entry.record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`);
+    }
+    if (options.full && entry.record !== null) {
+      for (const event of entry.record.events) lines.push(`  history: ${JSON.stringify(event)}`);
+      for (const attempt of attemptsOf(entry.record)) for (const line of attempt.report.filter(notNext)) lines.push(`  ${line}`);
+    }
     if (entry.record?.github?.pending !== null && entry.record?.github?.pending !== undefined) lines.push(`  ${entry.record.id}: ${entry.record.github.pending}`);
   }
   for (const entry of corrupt) lines.push(`  ! ${entry.file} — not a readable record`);
@@ -410,8 +480,10 @@ export function renderHelp(): string {
     '  confirm   the owner\'s yes, recorded — the boundary nothing crosses without → confirmed',
     '  post      first delivery: copies the folder to --to <dir>/<id>, or publishes the GitHub issue and branch → posted',
     '  answer    a solver\'s return: bound and reported as facts — never a verdict → answered',
+    '  look [id] <n> print solution n\'s change — written by the solver, marked as theirs; --full prints a large change',
     '  apply     merge an attempt onto the current code — the recorded decision → applied',
     '  undo      reverse an applied merge as a new commit → undone',
+    '  questions [id] read comments written by others; reply [id] --text "<your own words>" answers as the owner',
     '  reject    end it with --reason "<why>" kept on the record → rejected',
     '  withdraw  end any open stage → withdrawn',
     '  status    every open bounty, attempts and next step; GitHub outside state is refreshed and remembered',
@@ -420,6 +492,8 @@ export function renderHelp(): string {
     '  help      this screen',
     '',
     '  create needs only judgement: --task <file> and --why "<one line>" — title, place to write and the hand-off note have defaults.',
+    '  create --resume "<short note>" saves private job context. With one open bounty, commands accept no id.',
+    '  status [id] shows the next action; --full adds history and the full reports.',
     '',
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: an answer arrives as a',
     'numbered attempt, the report states facts about the change, and apply/reject is always your call.',
@@ -524,7 +598,11 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
 export function renderOpenLine(repoRoot: string): string {
   const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   if (open.length === 0) return 'open bounties: none';
-  return `open bounties: ${open.map(entry => `${entry.record!.id} "${entry.record!.title}" (${entry.record!.stage})${entry.record!.github !== undefined ? ` ${entry.record!.github!.issue?.url ?? 'github issue pending'} ${entry.record!.github!.branch}${entry.record!.github!.outside !== undefined ? `; ${entry.record!.github!.outside!.answers.replaceAll('\n', ' ')}` : ''}` : ''}`).join(', ')}`;
+  return `open bounties: ${open.map(entry => {
+    const record = entry.record!;
+    const github = record.github;
+    return `${record.id} "${record.title}" (${record.stage})${github !== undefined ? ` ${github.issue?.url ?? 'github issue pending'} ${github.branch}${github.outside !== undefined ? `; ${github.outside.answers.replaceAll('\n', ' ')}` : ''}` : ''}`;
+  }).join(', ')}`;
 }
 
 // The maintained-block writer, deliberately boring: find the markers, replace

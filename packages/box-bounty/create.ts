@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpath
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { gitBlob, gitOutcome } from './git.js';
+import { gitBlob, gitOutcome, ownerGitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
@@ -26,6 +26,7 @@ export const TOOL_VERSION = 'box-bounty@0.1.0';
 const PREVIEW_NAMES_PER_RULE = 20;
 
 export interface CreateOptions {
+  readonly resumeNote?: string;
   readonly repoPath: string;
   /** `--why "<one line>"`: why this is being handed off — required. It lives
       only in the record (like --job), never in bounty.json, the listing or
@@ -48,6 +49,7 @@ export type PlanFile = SnapshotFile;
 export interface RuleRemoval { readonly rule: string; readonly removed: number; readonly paths: readonly string[] }
 
 export interface BountyPlan {
+  readonly resume: import('./record.js').ResumeContext;
   readonly repoRoot: string;
   readonly title: string;
   /** One line of why — record only, never shipped. */
@@ -169,6 +171,16 @@ export function planBounty(options: CreateOptions): BountyPlan {
 
   return {
     repoRoot,
+    resume: {
+      kind: 'recorded',
+      branch: gitOutcome(repoRoot, ['symbolic-ref', '--short', 'HEAD']).stdout.trim() || '(detached HEAD)',
+      commit: snapshot.baseCommit ?? '(no commits yet)',
+      changed: [...new Set([
+        ...ownerGitOutcome(repoRoot, ['diff', '--name-only', '--no-renames', '-z', ...(snapshot.baseCommit === null ? [] : ['HEAD'])]).stdout.split('\0').filter(Boolean),
+        ...ownerGitOutcome(repoRoot, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean)
+      ])].sort(),
+      note: options.resumeNote?.trim() || null
+    },
     title,
     why,
     task,
@@ -487,6 +499,8 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       folder: outDir,
       createdAt,
       job: plan.job,
+      resume: plan.resume,
+      noteSource: plan.note === null ? 'generated' : 'authored',
       // sha256 of the exact bounty.json bytes: the answer's manifest must come
       // back byte-identical, which binds a returned folder to this bounty.
       manifestSha256: sha256(manifestJson)
