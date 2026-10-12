@@ -48,8 +48,8 @@ A later agent, often a new session, can see each solution as its solver made it,
 ## Result
 
 - Worker: cook (Devin session) · Reviewer: pending the pass
-- Commit: `e697354` — the cut lands in `799ad1a`, two test-assumption repairs in `e697354`; this Result is the final commit of the wave
-- Verify: `node scripts/verify.mjs test:box-bounty test:box-package` on the wave's final tree → PASS pending rerun; an earlier run on `799ad1a` took the bounty suite in 621 s with only the two test-assumption failures `e697354` repairs
+- Commit: `da7f18a` code + docs-only Result commits on top — the cut lands in `799ad1a`, test-assumption repairs in `e697354` and `da7f18a`
+- Verify: `node scripts/verify.mjs test:box-bounty test:box-package` → `verify da7f18a PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=embedded 1107s` (`.kitchen/runs/2026-10-12T02-07-31-268Z-da7f18a`): bounty suite 19 files / 224 tests in 852 s, package suite 17 files / 142 tests + 6 skipped in 108 s. Suite cost note: an earlier run of the same bounty suite on `799ad1a` took 621 s; master's 528 s / 188 tests is inside this run's per-test variance, and no timeout above the suite default was added.
 - Verdict: pending · Level: implementation
 - Lenses: security (copy inertness, foreign-folder and bare-layout refusals kept from the reviewed cut); user experience (shorter short-status, one `next:` per command, `look` named at every clash)
 - Method: feature playbook; subtract-before-you-add — master's tree plus only what the "Done when" carried over; the clash path cut, not disabled
@@ -60,5 +60,6 @@ A later agent, often a new session, can see each solution as its solver made it,
   - Reviews found unused output; dropped accordingly: the copy byte count, `stage 7 of 7` on `applied`, the `github:` facts and outside-state header in the short `status` (still in `--full`), and collected answers beside the attempts list.
   - The byte-for-byte index claim is now scoped: `git merge --abort` rewrites index bookkeeping even when staged content is identical; tests assert tree, HEAD, staged content and status, not the index file's checksum.
   - Native pstack is not installed on this host; the playbook and principles were read from the plugin files.
+  - `undo` of an applied merge is master's existing edge when the merge's reversal is empty (Git refuses a no-change commit); the CLI journey now has the solver add a second file so `undo` exercises a real reversal. The edge itself is left as master has it.
 - Merged: no · Resources removed: none (test fixtures are disposable temp dirs; the ux fixture cleans itself)
-- Reflect:
+- Reflect: two of the three post-cut failures were wrong test assumptions, not product bugs — raw index bytes are not stable across a refused merge, and the short status form rightly drops `snapshot-posted`. The cut itself held: the only product change after `799ad1a` was GitHub-side status naming the recorded conflict. Cutting rather than rewriting paid off; the clash path's absence cost nothing because master's abort-and-report behaviour was already the right shape once `record.conflicts` was carried across.
