@@ -19,6 +19,8 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 - **An agent is not a human participant**, interest is not demand, and a trial is not revenue.
 - **No agent contacts anyone.** Customer conversations are the owner's.
 - **A reader of records must not cost per record.** The stats page spawned one `git` per run record: 252 records meant ~470 processes and a 30s test timeout (K11). Anything that walks `.kitchen/runs` reads its Git facts in a fixed, small number of calls. And pin the property by *counting* external processes behind an env-var seam (`KITCHEN_STATS_GIT_TRACE`), never by timing — a counted bound cannot flake on a busy machine.
+- **Audit every consumer before gating a shared resource.** K12's DB-on-demand nearly shipped with `check`'s own `*-live` tests uncounted: the DB audit covered named suites only, and `verify --full` caught it. When a resource is made conditional, enumerate both call paths (direct `verify test:<suite>` and indirect through `check`) and pin the set by *derivation from the files* — a restated list goes silently stale (K12's `k12-db-suites.test.ts` is the pattern; `DB_CHECK_SUITES` remains the known restated literal).
+- **Parallelize by measuring workers, not cores.** Six cores did not mean six workers: measured runs picked three, and an instrumented run at three still timed out once. Prove files share no state first (temp roots, env in `finally`, per-call `-c safe.directory`) and pin the finding — K12's `k12-bounty-parallel.test.ts`.
 
 ## The pass checks
 
