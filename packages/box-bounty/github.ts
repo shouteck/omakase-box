@@ -7,7 +7,7 @@ import { resolveProgram } from '../box-package/commands.js';
 import { answerBounty, NOTHING_RUN, quoteForeign, readAnswerFolder, showPath } from './answer.js';
 import { renderListing } from './create.js';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitBlob, gitBlobs, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, gitWriteBlob, mergeBase, ownerGitOutcome } from './git.js';
+import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, mergeBase, ownerGitOutcome } from './git.js';
 import type { DryMerge, IndexChange } from './git.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
@@ -494,7 +494,17 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
           return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${path} — the tool publishes file contents, not links; nothing was posted`);
         }
       }
-      const blob = gitWriteBlob(root, readFileSync(absolute));
+      // The blob is what `git add` would store for the path — its configured
+      // clean filter, eol and ident applied — so the commit carries the same
+      // filtered bytes `create` ships, never the raw working-tree form. A
+      // filter that cannot produce them is a named refusal before anything is
+      // pushed; the raw bytes are never a fallback.
+      let blob: string;
+      try {
+        blob = gitFilteredBlob(root, path, readFileSync(absolute));
+      } catch (error) {
+        return invalid('github-filter-failed', `the filtered form of ${path} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; fix the configured filter or commit the file, then confirm and post again. Nothing was posted`);
+      }
       pending.push({ mode: modes.get(path) ?? '100644', sha: blob, path });
       return true;
     };

@@ -1,0 +1,285 @@
+import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { fixture } from './github-fixture.js';
+import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
+
+// BT6b: "nothing a solver wrote runs" holds for the tool's own merge whatever
+// the owner's Git configuration is, and a work-in-progress commit holds the
+// same filtered bytes `create` would ship. Both defects were reproduced on
+// master through the built CLI; every run below is `node dist/cli.js bounty`.
+//
+// Defect 1: owner configuration `filter.own.clean/smudge = node
+// tools/filter.cjs`, committed `*.dat filter=own`, tracked tools/filter.cjs.
+// A solution that replaces tools/filter.cjs and changes a .dat file Git
+// writes after it makes the merge run the solver's program on the owner's
+// machine — and `undo` of that merge does the same. The fix: `apply` and
+// `undo` refuse by name whenever a configured command Git could run at
+// merge/checkout resolves inside the repository or cannot be placed, before
+// the working tree, index or branch is touched.
+//
+// Defect 2: `post --to github --with-changes` pushed raw working-tree bytes
+// of a clean-filtered file. The fix hashes each placed file exactly as `git
+// add` would — clean filter applied — and refuses the post when the filtered
+// form cannot be produced.
+
+const cli = (repo: string, ...args: string[]) =>
+  spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8', env: process.env });
+
+// A clean/smudge filter that passes bytes through unchanged and logs every
+// run — the tag says whose program ran (the owner's or the solver's). The log
+// path rides an environment variable so the same script works from the bounty
+// folder copy a solver edits.
+const loggingFilter = (tag: string): string => [
+  "const fs = require('node:fs');",
+  `try { fs.appendFileSync(process.env.BT6B_FILTER_LOG, ${JSON.stringify(tag)} + ' ' + process.argv[2] + '\\n'); } catch {}`,
+  'process.stdout.write(fs.readFileSync(0));'
+].join('\n');
+
+const LOG_ENV = 'BT6B_FILTER_LOG';
+
+// A repository with a committed .gitattributes, a tracked filter program and
+// two .dat files — the tool's filter configuration is set separately so the
+// armed variant can point it outside or inside the tree.
+function filteredRepo(): string {
+  const repo = makeRepo({ 'app.txt': 'broken\n' });
+  write(repo, '.gitattributes', '*.dat filter=own\n');
+  write(repo, 'tools/filter.cjs', loggingFilter('OWNER'));
+  write(repo, 'data.dat', 'first\n');
+  write(repo, 'zz.dat', 'second\n');
+  git(repo, ['add', '-A']);
+  git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'filtered files']);
+  return repo;
+}
+
+const inTreeFilter = (repo: string): void => {
+  git(repo, ['config', 'filter.own.clean', 'node tools/filter.cjs clean']);
+  git(repo, ['config', 'filter.own.smudge', 'node tools/filter.cjs smudge']);
+  git(repo, ['config', 'filter.own.required', 'true']);
+};
+
+const readLog = (logFile: string): string[] =>
+  existsSync(logFile) ? readFileSync(logFile, 'utf8').split('\n').filter(line => line !== '') : [];
+
+// The outbound journey through the CLI: create, confirm, post to a folder —
+// the returned value is the delivered bounty folder a solver edits.
+function delivered(repo: string): { id: string; folder: string } {
+  write(repo, 'TASK.md', 'the task\n');
+  const out = join(runRoot('bt6b-out'), 'bounty');
+  const created = cli(repo, 'create', '--task', join(repo, 'TASK.md'), '--why', 'a reason', '--out', out);
+  expect(created.status).toBe(0);
+  const id = /bt-[a-f0-9]{12}/.exec(created.stdout)![0];
+  expect(cli(repo, 'confirm', id).status).toBe(0);
+  const dest = join(runRoot('bt6b-dest'), 'inbox');
+  expect(cli(repo, 'post', id, '--to', dest).status).toBe(0);
+  return { id, folder: join(dest, id) };
+}
+
+function withLog<T>(run: (logFile: string) => T): T {
+  const logFile = join(runRoot('bt6b-log'), 'runs.log');
+  const before = process.env[LOG_ENV];
+  process.env[LOG_ENV] = logFile;
+  try { return run(logFile); }
+  finally { if (before === undefined) delete process.env[LOG_ENV]; else process.env[LOG_ENV] = before; }
+}
+
+describe('defect 1 — a merge must never run a program the solution can supply or change', () => {
+  it('refuses apply when the filter program lives inside the repository and the solution replaces it — before anything is touched', () => withLog(logFile => {
+    const repo = filteredRepo();
+    inTreeFilter(repo);
+    const { id, folder } = delivered(repo);
+    // The solver's return: a new filter program and a change to a .dat file
+    // Git writes after it — the trap BT7's second pass reproduced.
+    write(folder, 'repo/tools/filter.cjs', loggingFilter('SOLVER'));
+    write(folder, 'repo/zz.dat', 'solver changed\n');
+    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+
+    const before = fingerprint(repo);
+    const applied = cli(repo, 'apply', id, '1');
+    expect(applied.status).toBe(3);
+    expect(applied.stderr).toContain('apply-unsafe-config');
+    expect(applied.stderr).toContain('filter.own.');
+    expect(applied.stderr).toContain('tools/filter.cjs');
+    // Nothing ran the solver's program, and nothing moved.
+    expect(readLog(logFile).filter(line => line.startsWith('SOLVER'))).toEqual([]);
+    expect(fingerprint(repo)).toEqual(before);
+    expect(readFileSync(join(repo, 'tools', 'filter.cjs'), 'utf8')).toBe(loggingFilter('OWNER'));
+  }));
+
+  it('refuses apply when the in-tree program is unchanged but calls a file the solution changes — the indirection case', () => withLog(logFile => {
+    const repo = filteredRepo();
+    write(repo, 'tools/key.txt', 'owner key\n');
+    git(repo, ['add', 'tools/key.txt']);
+    git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'a key the filter reads']);
+    inTreeFilter(repo);
+    const { id, folder } = delivered(repo);
+    // The program itself is untouched; the file it reads is not. What a
+    // program reads cannot be bounded, so any in-tree program refuses.
+    write(folder, 'repo/tools/key.txt', 'solver key\n');
+    write(folder, 'repo/zz.dat', 'solver changed\n');
+    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+
+    const before = fingerprint(repo);
+    const applied = cli(repo, 'apply', id, '1');
+    expect(applied.status).toBe(3);
+    expect(applied.stderr).toContain('apply-unsafe-config');
+    expect(readLog(logFile).filter(line => line.startsWith('SOLVER'))).toEqual([]);
+    expect(fingerprint(repo)).toEqual(before);
+  }));
+
+  it('refuses apply for a merge driver whose program is inside the repository', () => {
+    const repo = filteredRepo();
+    write(repo, '.gitattributes', '*.dat filter=own\n*.drv merge=own\n');
+    write(repo, 'tools/drv.cjs', "// merge driver the owner configures\n");
+    git(repo, ['add', '-A']);
+    git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'a merge driver']);
+    git(repo, ['config', 'merge.own.driver', 'node tools/drv.cjs %O %A %B %L']);
+    const { id, folder } = delivered(repo);
+    write(folder, 'repo/tools/drv.cjs', "// the solver's driver\n");
+    write(folder, 'repo/app.txt', 'fixed\n');
+    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+
+    const before = fingerprint(repo);
+    const applied = cli(repo, 'apply', id, '1');
+    expect(applied.status).toBe(3);
+    expect(applied.stderr).toContain('apply-unsafe-config');
+    expect(applied.stderr).toContain('merge.own.driver');
+    expect(applied.stderr).toContain('tools/drv.cjs');
+    expect(fingerprint(repo)).toEqual(before);
+  });
+
+  it('refuses apply for a configured command the tool cannot place inside or outside the tree', () => {
+    const repo = makeRepo({ 'app.txt': 'broken\n' });
+    git(repo, ['config', 'filter.mystery.clean', 'bt6b-no-such-program %f']);
+    const { id, folder } = delivered(repo);
+    write(folder, 'repo/app.txt', 'fixed\n');
+    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+
+    const before = fingerprint(repo);
+    const applied = cli(repo, 'apply', id, '1');
+    expect(applied.status).toBe(3);
+    expect(applied.stderr).toContain('apply-unsafe-config');
+    expect(applied.stderr).toContain('filter.mystery.clean');
+    expect(fingerprint(repo)).toEqual(before);
+  });
+
+  it('refuses undo for as long as undo exists — the applied merge left the solver\'s program in the tree', () => withLog(logFile => {
+    const repo = filteredRepo();
+    // At apply time the configured program is outside the repository: the
+    // merge lands, and the solver's replacement of tools/filter.cjs lands as
+    // an ordinary file.
+    const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
+    writeFileSync(external, loggingFilter('EXTERNAL'));
+    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${external.replaceAll('\\', '/')}" ${mode}`;
+    git(repo, ['config', 'filter.own.clean', command('clean')]);
+    git(repo, ['config', 'filter.own.smudge', command('smudge')]);
+    const { id, folder } = delivered(repo);
+    write(folder, 'repo/tools/filter.cjs', loggingFilter('SOLVER'));
+    write(folder, 'repo/zz.dat', 'solver changed\n');
+    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    const applied = cli(repo, 'apply', id, '1');
+    expect(applied.status).toBe(0);
+    // The owner then points the filter at the in-tree path — the state a
+    // solver-authored merge leaves behind.
+    inTreeFilter(repo);
+    const before = fingerprint(repo);
+    // The log so far may already hold a SOLVER line: the fixture's own plain
+    // `git status` (the fingerprint above) runs the repository's configured
+    // filter — which is the solver's program now. That is the hazard, seen
+    // from the owner's own shell. What must not run it is the tool: from here
+    // on the log gains nothing.
+    const loggedBeforeUndo = readLog(logFile).length;
+    const undone = cli(repo, 'undo', id);
+    expect(undone.status).toBe(3);
+    expect(undone.stderr).toContain('undo-unsafe-config');
+    expect(undone.stderr).toContain('tools/filter.cjs');
+    expect(readLog(logFile).slice(loggedBeforeUndo)).toEqual([]);
+    expect(fingerprint(repo)).toEqual(before);
+  }));
+
+  it('lands a solution as today when every configured command resolves outside the repository — filters applied', () => withLog(logFile => {
+    const repo = filteredRepo();
+    const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
+    writeFileSync(external, loggingFilter('EXTERNAL'));
+    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${external.replaceAll('\\', '/')}" ${mode}`;
+    git(repo, ['config', 'filter.own.clean', command('clean')]);
+    git(repo, ['config', 'filter.own.smudge', command('smudge')]);
+    git(repo, ['config', 'filter.own.required', 'true']);
+    const { id, folder } = delivered(repo);
+    write(folder, 'repo/new.dat', 'solver new\n');
+    write(folder, 'repo/app.txt', 'fixed\n');
+    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+
+    const applied = cli(repo, 'apply', id, '1');
+    expect(applied.status).toBe(0);
+    expect(applied.stdout).toContain('applied');
+    // The owner's filter ran on the landed file — the external program is the
+    // owner's, so apply behaves exactly as on master.
+    expect(readLog(logFile).some(line => line.startsWith('EXTERNAL smudge'))).toBe(true);
+    expect(readFileSync(join(repo, 'new.dat'), 'utf8')).toBe('solver new\n');
+  }));
+});
+
+describe('defect 2 — a work-in-progress commit holds the filtered bytes create would ship', () => {
+  // The encrypting filter of bt7-filters: clean stores `ENC:` + text, smudge
+  // strips it, and the program lives outside the repository.
+  function cryptFilter(): (mode: string) => string {
+    const script = join(runRoot('bt6b-crypt'), 'crypt.cjs');
+    writeFileSync(script, [
+      "const fs = require('node:fs');",
+      'const mode = process.argv[2];',
+      'const input = fs.readFileSync(0);',
+      "const stored = input.subarray(0, 4).toString() === 'ENC:';",
+      "process.stdout.write(mode === 'clean' ? (stored ? input : Buffer.concat([Buffer.from('ENC:'), input])) : (stored ? input.subarray(4) : input));"
+    ].join('\n'));
+    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${script.replaceAll('\\', '/')}" ${mode}`;
+    return command;
+  }
+
+  function armCrypt(repo: string): void {
+    const command = cryptFilter();
+    git(repo, ['config', 'filter.crypt.clean', command('clean')]);
+    git(repo, ['config', 'filter.crypt.smudge', command('smudge')]);
+    git(repo, ['config', 'filter.crypt.required', 'true']);
+    write(repo, '.gitattributes', '*.dat filter=crypt\n');
+    write(repo, 'secret.dat', 'committed plaintext\n');
+    git(repo, ['add', '.gitattributes', 'secret.dat']);
+    git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'a filtered file']);
+    git(repo, ['push', 'https://github.com/owner/project.git', 'main']);
+  }
+
+  it('pushes the stored form of a clean-filtered file, never the working-tree bytes', () => fixture(context => {
+    armCrypt(context.repo);
+    write(context.repo, 'secret.dat', 'edited plaintext\n');
+    expect(cli(context.repo, 'confirm', context.id, '--to', 'github', '--with-changes').status).toBe(0);
+    expect(cli(context.repo, 'post', context.id, '--to', 'github').status).toBe(0);
+    const remote = 'https://github.com/owner/project.git';
+    const tip = git(context.repo, ['ls-remote', remote, `box-bounty/${context.id}`]).split(/\s/)[0];
+    expect(tip).toMatch(/^[a-f0-9]{40}$/);
+    // The pushed work-in-progress commit carries the filtered bytes — the
+    // same form `create` ships — never the plaintext working-tree form.
+    expect(git(context.repo, ['cat-file', 'blob', `${tip}:secret.dat`])).toBe('ENC:edited plaintext');
+  }, 'Repair app', { 'app.txt': 'broken\n' }));
+
+  it('refuses the post by name when the filtered form cannot be produced — nothing is pushed', () => fixture(context => {
+    armCrypt(context.repo);
+    // An untracked .dat file named --include: it reaches the work-in-progress
+    // build, where its blob is hashed through the clean filter.
+    write(context.repo, 'new.dat', 'FAIL this\n');
+    expect(cli(context.repo, 'confirm', context.id, '--to', 'github', '--include', 'new.dat').status).toBe(0);
+    // The clean filter breaks between approval and post — but only on this
+    // file's bytes, so every earlier read of the uncommitted state still
+    // passes and the refusal lands exactly where the filtered form is built.
+    const picky = join(runRoot('bt6b-picky'), 'picky.cjs');
+    writeFileSync(picky, `let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{if(d.startsWith('FAIL'))process.exit(1);process.stdout.write('ENC:'+d)});\n`);
+    git(context.repo, ['config', 'filter.crypt.clean', `"${process.execPath.replaceAll('\\', '/')}" "${picky.replaceAll('\\', '/')}"`]);
+    const posted = cli(context.repo, 'post', context.id, '--to', 'github');
+    expect(posted.status).toBe(3);
+    expect(posted.stderr).toContain('github-filter-failed');
+    expect(posted.stderr).toContain('new.dat');
+    const remote = 'https://github.com/owner/project.git';
+    expect(git(context.repo, ['ls-remote', remote, 'box-bounty/*'])).toBe('');
+    expect(readFileSync(join(context.repo, 'new.dat'), 'utf8')).toBe('FAIL this\n');
+  }, 'Repair app', { 'app.txt': 'broken\n' }));
+});

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, mergeTree, ownerGit, ownerGitOutcome } from './git.js';
+import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, mergeTree, ownerGit, ownerGitOutcome, unsafeOwnerCommands } from './git.js';
 import type { DryMerge, IndexChange } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
@@ -341,6 +341,17 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
     throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot} — finish it or run git merge --abort before applying a bounty`);
   }
+  // The owner's Git configuration can make this merge run a program a
+  // solution supplies or changes: a filter, merge driver, config include or
+  // attributes file that resolves inside the tree is replaced by whatever the
+  // merge lands, then run on the files written after it — and a program left
+  // alone can call a second file the merge does change. The tool never writes
+  // the configuration, so it does not rewrite it either: it refuses here,
+  // before the working tree, index or branch is touched.
+  const unsafe = unsafeOwnerCommands(repoRoot);
+  if (unsafe.length > 0) {
+    throw new BountyRefused('apply-unsafe-config', `the owner's Git configuration could run a program a solution supplies or changes during this merge — apply refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}. Merge the answer with your own git if you accept those programs — the choice is yours — or point the configured command outside the repository`);
+  }
   // HEAD is the attribute view for every read and the merge below: the
   // solver's files have not landed yet, so HEAD is the owner's committed
   // state — a returned .gitattributes names nothing until the owner applies it.
@@ -454,6 +465,12 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
   }
   if (gitOutcome(repoRoot, ['merge-base', '--is-ancestor', merge, 'HEAD']).status !== 0) {
     throw new BountyRefused('undo-not-on-branch', `the merge ${merge} is not on the current branch's history — undo only reverses an apply that is still part of HEAD; nothing was changed`);
+  }
+  // The revert merge carries the same exposure as apply — the same refusal,
+  // made before the working tree, index or branch is touched.
+  const unsafe = unsafeOwnerCommands(repoRoot);
+  if (unsafe.length > 0) {
+    throw new BountyRefused('undo-unsafe-config', `the owner's Git configuration could run a program the applied solution supplies or changes during this revert — undo refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}. Revert it with your own git if you accept those programs — the choice is yours — or point the configured command outside the repository`);
   }
   // --no-renames: the reversal writes the merge's PRE-images (rename
   // sources), exactly the names rename detection folds away. An ignored file

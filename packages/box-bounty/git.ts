@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { isAbsolute, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
 
 let pinnedGit: string | undefined;
@@ -175,6 +176,26 @@ export function ownerGitOutcome(repo: string, args: readonly string[], env: GitE
 
 export function ownerGit(repo: string, args: readonly string[], env: GitEnv = {}): string {
   return checked(repo, args, run(repo, args, env, 'owner'));
+}
+
+// The blob `git add` would store for `path` from these working-tree bytes —
+// the clean filter, eol and ident rules applied exactly as a real commit
+// applies them. This is owner content hashed under the owner's configuration,
+// so the owner's filters run as in plain Git (GitContent 'owner'): a
+// work-in-progress commit then holds the same filtered bytes `create` ships
+// out of the snapshot commit. A required filter that cannot run fails the
+// hash — the raw working-tree form is never a fallback.
+export function gitFilteredBlob(repo: string, path: string, bytes: Buffer): string {
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['hash-object'], 'owner'), 'hash-object', '-w', '--stdin', `--path=${path}`], {
+    input: bytes,
+    env: gitEnvironment(),
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) {
+    const detail = ((result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`)).trim();
+    throw new GitFailed(`git hash-object --path=${path} failed in ${repo}: ${detail}`);
+  }
+  return result.stdout.toString().trim();
 }
 
 // Write literal bytes as a blob into the object store, returning its sha. stdin
@@ -359,4 +380,176 @@ export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
     const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
     throw new GitFailed(`git update-ref --stdin failed in ${repo}: ${detail}`);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Could a merge or checkout on the owner's tree run a program a solution
+// supplies or changes? The tool never writes Git configuration, but the
+// owner's configuration is theirs to write — and a configured command whose
+// program lives inside the repository is replaced by whatever the merge
+// lands, then run on the files the merge writes after it. What a program
+// reads cannot be bounded (a program the solution leaves alone can call a
+// second file the solution does change), so the rule is positional, not
+// clever: a configured command is unsafe when a token that decides what runs
+// resolves inside the working tree, or when the tool cannot place it at all.
+//
+// The channels are the ones Git's documentation names for merge and checkout:
+//   filter.<name>.clean / .smudge / .process   (gitattributes "filter")
+//   merge.<name>.driver                        (gitattributes "merge")
+//   include.path / includeIf.<cond>.path / core.attributesFile
+//   — not commands, but files that decide which commands and selections
+//     apply; a merge can rewrite them like any other file.
+// Channels Git runs but the tool pins closed on every call are not checked:
+// hooks (core.hooksPath), signing (commit/tag.gpgSign, gpg.program),
+// fsmonitor, external diff and textconv (diff.external, --no-ext-diff,
+// --no-textconv — and a merge's own diffstat runs no driver), maintenance and
+// gc. Editors and pagers never start — every message is -m and output is a
+// pipe, never a tty. ssh, askpass and credential helpers run only for
+// transport, which a merge is not.
+// ---------------------------------------------------------------------------
+export interface UnsafeConfigCommand {
+  /** The configuration key, e.g. filter.own.smudge. */
+  readonly key: string;
+  /** Its configured command line, or the path for include/attributes keys. */
+  readonly command: string;
+  /** The fact that makes it unsafe, e.g. "tools/filter.cjs resolves inside the repository". */
+  readonly detail: string;
+}
+
+const COMMAND_KEYS = '^(filter\\..*\\.(clean|smudge|process)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile)$';
+const PATH_KEYS = /^(include\.path|includeif\..*\.path|core\.attributesfile)$/i;
+// git's own placeholders (%f, %O %A %B %L %P %S %X, %%), never program names.
+const PLACEHOLDER = /^%[a-zA-Z%]/;
+const WINDOWS_ENV = /^%[^%\s]+%$/;
+const ENV_REFERENCE = /\$\{|\$\(|\$[A-Za-z_]/;
+const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=(.*)$/;
+const DRIVE = /^[A-Za-z]:[\\/]/;
+// Programs that load another file or command line — their non-option
+// arguments decide what runs as surely as the program token itself.
+const INTERPRETERS = new Set([
+  'sh', 'bash', 'zsh', 'dash', 'ash', 'ksh', 'csh', 'tcsh', 'fish',
+  'cmd', 'command', 'powershell', 'pwsh', 'cscript', 'wscript', 'mshta',
+  'node', 'nodejs', 'deno', 'bun', 'python', 'python2', 'python3', 'pypy',
+  'perl', 'ruby', 'php', 'lua', 'awk', 'gawk', 'mawk', 'sed', 'julia', 'tclsh',
+  'rscript', 'expect', 'osascript', 'groovy',
+  'env', 'exec', 'xargs', 'nice', 'nohup', 'timeout', 'time', 'ionice',
+  'busybox', 'sudo', 'doas', 'start', 'runas'
+]);
+
+// Shell words with ' and " quoting honoured (the quote characters are
+// dropped). What git hands to the shell is one line; this only needs to find
+// the tokens that name files or programs.
+function shellWords(command: string): string[] {
+  const words: string[] = [];
+  let current = ''; let quote = '';
+  for (const char of command) {
+    if (quote !== '') { if (char === quote) quote = ''; else current += char; continue; }
+    if (char === "'" || char === '"') { quote = char; continue; }
+    if (/\s/.test(char)) { if (current !== '') { words.push(current); current = ''; } continue; }
+    current += char;
+  }
+  if (current !== '') words.push(current);
+  return words;
+}
+
+export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
+  // A raw config read, not an owner/foreign call: the pin layers would hide
+  // exactly the values being asked about (ALWAYS empties diff.external, the
+  // foreign pins empty every filter). `git config` reads files only — nothing
+  // it reads runs.
+  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, 'config', '-z', '--get-regexp', COMMAND_KEYS], {
+    encoding: 'utf8', env: gitEnvironment(), windowsHide: true
+  });
+  if (config.error !== undefined || config.status !== 0 && config.status !== 1) {
+    throw new GitFailed('Git configuration could not be read safely; nothing was run');
+  }
+  let realRoot = resolve(repo);
+  try { realRoot = realpathSync(repo); } catch { /* the checkout exists — a resolve miss keeps the lexical form */ }
+  const rootKey = `${realRoot.split(BACKSLASH).join('/').toLowerCase().replace(/\/+$/, '')}/`;
+  const inside = (token: string): boolean => {
+    const resolved = isAbsolute(token) ? resolve(token) : resolve(repo, token);
+    let real = resolved;
+    try { real = realpathSync(resolved); } catch { /* not there now — a merge could create it */ }
+    const key = `${real.split(BACKSLASH).join('/').toLowerCase()}/`;
+    return key === rootKey || key.startsWith(rootKey);
+  };
+  const pathy = (token: string): boolean => token.includes('/') || token.includes(BACKSLASH) || DRIVE.test(token);
+  const programOnDisk = (name: string): string | null => {
+    try { return realpathSync(resolveProgram(name).path); }
+    catch { return null; }
+  };
+  const found: UnsafeConfigCommand[] = [];
+  for (const entry of (config.stdout ?? '').split('\0')) {
+    if (entry === '') continue;
+    const nl = entry.indexOf('\n');
+    const key = nl === -1 ? entry : entry.slice(0, nl);
+    const value = nl === -1 ? '' : entry.slice(nl + 1);
+    if (PATH_KEYS.test(key)) {
+      const detail = unsafeDetail(value.trim(), inside);
+      if (detail !== null) found.push({ key, command: value.trim(), detail });
+      continue;
+    }
+    const detail = unsafeCommandDetail(value, { pathy, inside, programOnDisk });
+    if (detail !== null) found.push({ key, command: value, detail });
+  }
+  return found;
+}
+
+// The value of an include.* / core.attributesFile key is a path, not a
+// command line: refuse when it lands inside the repository (a merge rewrites
+// what the tool's Git will read next) or when it cannot be placed at all.
+function unsafeDetail(value: string, inside: (token: string) => boolean): string | null {
+  if (value === '') return null;
+  if (/^~[\\/]?/.test(value)) return null; // the owner's home — outside the tree
+  if (WINDOWS_ENV.test(value) || ENV_REFERENCE.test(value)) return `${value} cannot be placed inside or outside the repository`;
+  if (inside(value)) return `${value} resolves inside the repository`;
+  return null;
+}
+
+// Tokens of a configured command line. `first` is the program itself; after
+// an interpreter or launcher, the next non-option token is the file it loads.
+// Path-bearing arguments are checked everywhere — a program the solution
+// leaves alone can call a file the solution changes.
+function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; programOnDisk: (n: string) => string | null }): string | null {
+  const tokens = shellWords(command);
+  let first = true;
+  let interp = false;
+  let pendingEntry = false;
+  for (const token of tokens) {
+    if (token === '' || PLACEHOLDER.test(token)) continue;
+    if (WINDOWS_ENV.test(token) || ENV_REFERENCE.test(token)) return `${token} cannot be placed inside or outside the repository`;
+    const assign = ASSIGNMENT.exec(token);
+    if (assign !== null) {
+      const value = assign[1]!;
+      if (place.pathy(value) && place.inside(value)) return `${value} resolves inside the repository`;
+      continue;
+    }
+    if (/^-{1,2}\S/.test(token) || /^\/[a-zA-Z]+$/.test(token)) continue; // options and cmd-style /c switches
+    const bare = token.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
+    if (place.pathy(token)) {
+      if (place.inside(token)) return `${token} resolves inside the repository`;
+      if (first) { first = false; interp = INTERPRETERS.has(bare); pendingEntry = interp; }
+      else pendingEntry = false;
+      continue;
+    }
+    if (first) {
+      first = false;
+      interp = INTERPRETERS.has(bare);
+      pendingEntry = interp;
+      const resolved = place.programOnDisk(token);
+      if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
+      if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+      continue;
+    }
+    if (INTERPRETERS.has(bare)) {
+      const resolved = place.programOnDisk(token);
+      if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
+      if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+      interp = true; pendingEntry = true;
+      continue;
+    }
+    if (interp && pendingEntry) return `${token} cannot be placed inside or outside the repository`;
+    pendingEntry = false;
+  }
+  return null;
 }

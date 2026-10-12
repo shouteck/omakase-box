@@ -91,6 +91,18 @@ working tree.
 own working tree your filters apply as in plain Git: after a clean `apply`,
 filtered files are in their working-tree form and `git status` is clean.
 
+That same plain-Git behaviour is the one place your own configuration can
+betray the boundary. A filter or merge driver whose command resolves inside
+the repository is replaced by whatever the merge lands and then run; what a
+program reads cannot be bounded, so an unchanged program that calls a file
+the solution changes is the same risk. Before the merge — and before the
+revert `undo` makes — the tool reads your configuration and refuses by name
+(`apply-unsafe-config`, `undo-unsafe-config`), stating the configured command
+and the path involved, when a command resolves inside the tree or cannot be
+placed inside or outside it at all. Nothing is touched: working tree, index
+and branch are exactly as before. The fix is yours — point the command at a
+program outside the repository, or merge the solution with your own git.
+
 When a solution clashes with current code, `apply` aborts the merge — the
 worktree and index are exactly as before, the record keeps the conflicting
 paths — and names `look <n>` so you can read the solution before deciding
@@ -158,7 +170,11 @@ Two choices, part of saying what the task is, and both visible in the preview:
   Git plumbing (`read-tree` + `update-index` + `write-tree` + `commit-tree`
   on a temporary index): the working tree, the index and the current branch
   never move, and the commit is deterministic — the preview, the record and
-  the push name the same commit. Without the flag they stay home; nothing
+  the push name the same commit. Each file goes into the commit through the
+  same clean filter a real `git add` would apply, so what publishes is the
+  filtered form `create` would ship, never the working-tree bytes; a filter
+  that cannot produce it is `github-filter-failed` and nothing is pushed.
+  Without the flag they stay home; nothing
   publishes uncommitted work silently.
 - `--include <file>` — an untracked file the task needs, named one flag per
   file. A name that resolves to a tracked file, a directory, a link, a path
