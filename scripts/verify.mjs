@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { docker } from './docker.mjs';
 import { root } from './process.mjs';
-import { reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
+import { DB_SUITES, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only');
@@ -152,7 +152,13 @@ const stopAndExit = () => db.stop().finally(() => process.exit(130));
 process.on('SIGINT', stopAndExit);
 process.on('SIGTERM', stopAndExit);
 try {
-  db = await database();
+  // K12: the disposable Postgres is started only when a suite this run named
+  // consumes it (DB_SUITES in suite.mjs — keyed like suiteKey). An explicit
+  // --db=embedded|docker still forces one; --db=auto decides from the step
+  // list, so `verify test:box-bounty` pays nothing for a server the bounty
+  // tool never opens. The summary line reports db=none either way.
+  const needsDatabase = dbMode === 'embedded' || dbMode === 'docker' || (dbMode === 'auto' && suites.some(name => DB_SUITES.has(suiteKey(scripts[name]) ?? '')));
+  if (needsDatabase) db = await database();
   const env = { ...process.env, ...(full ? { KITCHEN_CHECK_FULL: '1' } : {}), ...(db.url ? { BOX_TEST_DATABASE_URL: db.url, BOX_DELEGATION_DATABASE_URL: db.url, BOX_TEST_RUN_ID: `v${sha.slice(0, 12)}` } : {}) };
   for (const name of steps) {
     // A suite check already ran this invocation, or a step named twice, costs nothing.

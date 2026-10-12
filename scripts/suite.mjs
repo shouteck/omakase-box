@@ -126,6 +126,14 @@ export function suiteWorkers(suite, subgroup) {
   return suite === 'box' && (subgroup === 'package' || subgroup === 'bounty') ? 3 : 1;
 }
 
+// The suites that consume the disposable Postgres verify provisions — found
+// by who reads BOX_TEST_DATABASE_URL / BOX_DELEGATION_DATABASE_URL (K12 audit,
+// 2026-10-12): box auth and delegation read them directly; compiler, e2e,
+// portal, runner and security reach a database through their *-live tests'
+// scripts/host-test-runtime.mjs. Keyed like suiteKey — 'box --suite auth',
+// plain 'compiler'. A named suite outside this set gets db=none.
+export const DB_SUITES = new Set(['box --suite auth', 'box --suite delegation', 'compiler', 'e2e', 'portal', 'runner', 'security']);
+
 // `test:*` package scripts are `node scripts/suite.mjs <suite> [--suite <sub>]`;
 // the key is the suite's argument list, so verify knows `check` already ran it.
 export function suiteKey(command) {
