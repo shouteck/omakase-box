@@ -95,13 +95,21 @@ That same plain-Git behaviour is the one place your own configuration can
 betray the boundary. A filter or merge driver whose command resolves inside
 the repository is replaced by whatever the merge lands and then run; what a
 program reads cannot be bounded, so an unchanged program that calls a file
-the solution changes is the same risk. Before the merge — and before the
-revert `undo` makes — the tool reads your configuration and refuses by name
-(`apply-unsafe-config`, `undo-unsafe-config`), stating the configured command
-and the path involved, when a command resolves inside the tree or cannot be
-placed inside or outside it at all. Nothing is touched: working tree, index
-and branch are exactly as before. The fix is yours — point the command at a
-program outside the repository, or merge the solution with your own git.
+the solution changes is the same risk. The check follows the configuration
+the same way Git does: a bare interpreter such as `node` or `sh` configured
+as a filter runs the filtered stream itself as its program, so it refuses;
+a command that invokes `git` can reach an `alias.*`, so aliases are expanded
+and each word placed — an alias that cannot be fully placed refuses; and
+`include.path`, `includeIf` and `core.attributesFile` values resolve against
+the file that sets them (`~` expanded), so an include that lands inside the
+tree refuses wherever in the chain it sits. Before the merge — and before
+the revert `undo` makes — the tool reads your configuration and refuses by
+name (`apply-unsafe-config`, `undo-unsafe-config`), stating the configured
+command and the path involved, when a command resolves inside the tree or
+cannot be placed inside or outside it at all. Nothing is touched: working
+tree, index and branch are exactly as before. The fix is yours — point the
+command at a program outside the repository, or merge the solution with
+your own git.
 
 When a solution clashes with current code, `apply` aborts the merge — the
 worktree and index are exactly as before, the record keeps the conflicting

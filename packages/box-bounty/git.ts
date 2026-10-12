@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
-import { isAbsolute, resolve } from 'node:path';
+import { homedir } from 'node:os';
+import { dirname, isAbsolute, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
 
 let pinnedGit: string | undefined;
@@ -95,7 +96,7 @@ export type GitContent = 'owner' | 'foreign';
 // is remembered from one command to the next. A bare call outside any command
 // — a test that edits configuration between two calls — still reads before
 // each call.
-interface ConfigEntry { readonly key: string; readonly value: string }
+interface ConfigEntry { readonly origin: string; readonly key: string; readonly value: string }
 
 let pinsByRepo: Map<string, readonly ConfigEntry[]> | null = null;
 export function readGitPinsOncePerProcess(): void { pinsByRepo ??= new Map(); }
@@ -118,23 +119,30 @@ export function asOneCommand<T>(run: () => T): T {
 const ALWAYS = ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', '-c', 'tag.gpgSign=false', '-c', 'log.showSignature=false', '-c', 'merge.verifySignatures=false', '-c', 'core.fsmonitor=false', '-c', 'submodule.recurse=false', '-c', 'gc.auto=0', '-c', 'maintenance.auto=false', '-c', 'diff.external='];
 
 // The one configuration read a command makes: every key the foreign pins
-// empty, plus the keys the unsafe-command check below evaluates (config
-// includes and the attributes file — values, not only names). `git config`
-// reads files only; nothing it reads runs.
-const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile)$';
+// empty, plus the keys the unsafe-command check below evaluates — config
+// includes, the attributes file, and git aliases (a configured command that
+// runs `git` can reach one). `git config` reads files only; nothing it reads
+// runs. --show-origin makes each entry carry the file it was set in, so a
+// relative include or attributes path can be resolved against the including
+// file's directory exactly as Git resolves it — and the include chain is
+// already followed, to any depth, by git itself.
+const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile|alias\\..*)$';
 const PIN_KEYS = /^(filter\..*\.(clean|smudge|process|required)|merge\..*\.driver)$/;
 
 function commandConfig(repo: string): readonly ConfigEntry[] {
   const remembered = pinsByRepo ?? commandPins;
   const known = remembered?.get(repo);
   if (known !== undefined) return known;
-  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo, 'config', '-z', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true });
+  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo, 'config', '-z', '--show-origin', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true });
   if (config.error !== undefined || config.status !== 0 && config.status !== 1) throw new GitFailed('Git configuration could not be read safely; nothing was run');
+  // With -z each record is `origin\0 key\nvalue\0` — alternating fields.
   const entries: ConfigEntry[] = [];
-  for (const entry of (config.stdout ?? '').split('\0')) {
-    if (entry === '') continue;
-    const nl = entry.indexOf('\n');
-    entries.push({ key: nl === -1 ? entry : entry.slice(0, nl), value: nl === -1 ? '' : entry.slice(nl + 1) });
+  let origin = '';
+  for (const field of (config.stdout ?? '').split('\0')) {
+    if (field === '') continue;
+    if (!field.includes('\n')) { origin = field; continue; }
+    const nl = field.indexOf('\n');
+    entries.push({ origin, key: field.slice(0, nl), value: field.slice(nl + 1) });
   }
   remembered?.set(repo, entries);
   return entries;
@@ -496,42 +504,83 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
     try { return realpathSync(resolveProgram(name).path); }
     catch { return null; }
   };
+  const place = { pathy, inside, exists, programOnDisk };
+  // Aliases come from the same configuration read — a configured command
+  // that invokes `git` can reach one.
+  const aliases = new Map<string, string>();
+  for (const { key, value } of commandConfig(repo)) {
+    const alias = /^alias\.(.+)$/i.exec(key);
+    if (alias !== null) aliases.set(alias[1]!.toLowerCase(), value);
+  }
   const found: UnsafeConfigCommand[] = [];
   const checkKeys = new RegExp(COMMAND_KEYS, 'i');
-  for (const { key, value } of commandConfig(repo)) {
+  for (const { origin, key, value } of commandConfig(repo)) {
     if (!checkKeys.test(key)) continue;
     if (PATH_KEYS.test(key)) {
-      const detail = unsafeDetail(value.trim(), inside);
+      const detail = unsafeDetail(value.trim(), origin, inside, repo);
       if (detail !== null) found.push({ key, command: value.trim(), detail });
       continue;
     }
-    const detail = unsafeCommandDetail(value, { pathy, inside, exists, programOnDisk });
+    const detail = unsafeCommandDetail(value, place, aliases, 0);
     if (detail !== null) found.push({ key, command: value, detail });
   }
   return found;
 }
 
+// The directory a relative include or attributes path resolves against: the
+// directory of the file the entry was set in, exactly as Git resolves it.
+// A file origin can be repo-relative (`file:.git/config`) or absolute; a
+// non-file origin (command line, stdin, blob) has no directory.
+function originDir(origin: string, repo: string): string | null {
+  const file = /^file:(.*)$/.exec(origin)?.[1];
+  if (file === undefined || file === '') return null;
+  return dirname(isAbsolute(file) ? file : resolve(repo, file));
+}
+
 // The value of an include.* / core.attributesFile key is a path, not a
 // command line: refuse when it lands inside the repository (a merge rewrites
 // what the tool's Git will read next) or when it cannot be placed at all.
-function unsafeDetail(value: string, inside: (token: string) => boolean): string | null {
+// `~` expands the way Git expands it — `~/...` into a repository under the
+// owner's home lands inside, it is not waved out. Git itself follows the
+// include chain to any depth and reports each entry's own origin file, so a
+// nested include resolves against its file's directory the same way.
+function unsafeDetail(value: string, origin: string, inside: (token: string) => boolean, repo: string): string | null {
   if (value === '') return null;
-  if (/^~[\\/]?/.test(value)) return null; // the owner's home — outside the tree
   if (WINDOWS_ENV.test(value) || ENV_REFERENCE.test(value)) return `${value} cannot be placed inside or outside the repository`;
-  if (inside(value)) return `${value} resolves inside the repository`;
-  return null;
+  let expanded = value;
+  if (expanded === '~' || /^~[\\/]/.test(expanded)) expanded = resolve(homedir(), expanded.replace(/^~[\\/]?/, ''));
+  else if (expanded.startsWith('~')) return `${value} cannot be placed inside or outside the repository`;
+  if (isAbsolute(expanded)) return inside(expanded) ? `${value} resolves inside the repository` : null;
+  const base = originDir(origin, repo);
+  if (base === null) return `${value} cannot be placed inside or outside the repository`;
+  return inside(resolve(base, expanded)) ? `${value} resolves inside the repository` : null;
 }
 
 // Tokens of a configured command line. `first` is the program itself; after
 // an interpreter or launcher, the next non-option token is the file it loads.
 // Path-bearing arguments are checked everywhere — a program the solution
 // leaves alone can call a file the solution changes.
-function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; programOnDisk: (n: string) => string | null }): string | null {
+//
+// Two shapes need more than placement:
+// - an interpreter left with no file operand reads its program from the
+//   filtered stream itself (pendingEntry still open at the end) — a `node`
+//   or `sh` filter runs the solver's bytes as code;
+// - a `git` program's arguments can name an alias — expanded from the same
+//   configuration read, recursively: `!` aliases are checked as command
+//   lines, other expansions splice back in as git arguments. Anything the
+//   expansion cannot fully place (an unknown alias name, a builtin that can
+//   exec a pager, hooks or filters) is refused.
+function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; programOnDisk: (n: string) => string | null }, aliases: ReadonlyMap<string, string>, depth: number): string | null {
+  if (depth > 8) return 'the command cannot be placed inside or outside the repository';
   const tokens = shellWords(command);
   let first = true;
   let interp = false;
   let pendingEntry = false;
-  for (const token of tokens) {
+  let interpName = '';
+  let gitArgs = false;
+  let expansions = 0;
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i]!;
     if (token === '' || PLACEHOLDER.test(token)) continue;
     if (WINDOWS_ENV.test(token) || ENV_REFERENCE.test(token)) return `${token} cannot be placed inside or outside the repository`;
     const assign = ASSIGNMENT.exec(token);
@@ -544,7 +593,7 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
     const bare = token.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
     if (place.pathy(token)) {
       if (place.inside(token)) return `${token} resolves inside the repository`;
-      if (first) { first = false; interp = INTERPRETERS.has(bare); pendingEntry = interp; }
+      if (first) { first = false; interp = INTERPRETERS.has(bare); pendingEntry = interp; interpName = token; gitArgs = bare === 'git'; }
       else pendingEntry = false;
       continue;
     }
@@ -552,16 +601,35 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
       first = false;
       interp = INTERPRETERS.has(bare);
       pendingEntry = interp;
+      interpName = token;
+      gitArgs = bare === 'git';
       const resolved = place.programOnDisk(token);
       if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
       if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+      continue;
+    }
+    if (gitArgs) {
+      // Every argument to a configured `git` invocation has to name an
+      // alias the same configuration read defines — anything else is a
+      // builtin or external that can reach programs we cannot place.
+      expansions += 1;
+      if (expansions > 8) return `${token} cannot be placed inside or outside the repository`;
+      const expansion = aliases.get(token.toLowerCase());
+      if (expansion === undefined) return `${token} cannot be placed inside or outside the repository`;
+      if (expansion.startsWith('!')) {
+        const nested = unsafeCommandDetail(expansion.slice(1), place, aliases, depth + 1);
+        if (nested !== null) return `${token} → ${nested}`;
+        continue;
+      }
+      tokens.splice(i, 1, ...shellWords(expansion));
+      i -= 1;
       continue;
     }
     if (INTERPRETERS.has(bare)) {
       const resolved = place.programOnDisk(token);
       if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
       if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
-      interp = true; pendingEntry = true;
+      interp = true; pendingEntry = true; interpName = token;
       continue;
     }
     if (interp && pendingEntry) {
@@ -576,5 +644,8 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
     }
     pendingEntry = false;
   }
+  // An interpreter never given a file operand runs what the filter feeds
+  // it: the filtered stream is the program.
+  if (pendingEntry) return `${interpName} is given no file operand — the filtered stream is its program`;
   return null;
 }
