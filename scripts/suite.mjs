@@ -142,7 +142,13 @@ export function suiteWorkers(suite, subgroup) {
 // portal, runner and security reach a database through their *-live tests'
 // scripts/host-test-runtime.mjs. Keyed like suiteKey — 'box --suite auth',
 // plain 'compiler'. A named suite outside this set gets db=none.
-export const DB_SUITES = new Set(['box --suite auth', 'box --suite delegation', 'compiler', 'e2e', 'portal', 'runner', 'security']);
+// K12 correction: auth, contracts, planner and acceptance belong here too —
+// their *-live tests exec scripts/verify-*.mjs into acquireHostRuntime and
+// die without BOX_TEST_DATABASE_URL when invoked directly (the pass's
+// `verify --only test:planner` repro). Pinned in
+// tests/kitchen/k12-db-suites.test.ts, which derives the need from the files
+// rather than restating this list.
+export const DB_SUITES = new Set(['acceptance', 'auth', 'box --suite auth', 'box --suite delegation', 'compiler', 'contracts', 'e2e', 'planner', 'portal', 'runner', 'security']);
 
 // The check suites whose tests reach the same disposable Postgres — `check`
 // is a step, not a named suite, so DB_SUITES alone is not enough: the auth
