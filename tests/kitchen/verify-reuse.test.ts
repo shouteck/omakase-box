@@ -63,6 +63,14 @@ describe('checkSuitesForPaths — the path->suite table', () => {
       expect(pick([path]).suites, path).toEqual([]);
     expect(pick(['packages/box-contracts/index.ts']).suites).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
   });
+
+  it('K12: the check suites whose *-live tests need the disposable database are named exactly', () => {
+    // auth/persistence, contracts intent+publication and planner evidence run
+    // *-live tests that exec scripts/verify-*.mjs into acquireHostRuntime;
+    // bootstrap has none. A `check` reduced to bootstrap or nothing must stay
+    // db=none — every other selection must trigger a database.
+    expect(probe('[...s.DB_CHECK_SUITES].sort()')).toEqual(['auth', 'contracts', 'planner']);
+  });
 });
 
 describe('selectCheckSuites — what check runs this invocation', () => {

@@ -144,6 +144,15 @@ export function suiteWorkers(suite, subgroup) {
 // plain 'compiler'. A named suite outside this set gets db=none.
 export const DB_SUITES = new Set(['box --suite auth', 'box --suite delegation', 'compiler', 'e2e', 'portal', 'runner', 'security']);
 
+// The check suites whose tests reach the same disposable Postgres — `check`
+// is a step, not a named suite, so DB_SUITES alone is not enough: the auth
+// persistence tests exec verify-auth/lifecycles/empty-migrations/persistence,
+// contracts execs verify-intent-sessions/verify-readiness and planner
+// verify-intake, each of which calls acquireHostRuntime and wants
+// BOX_TEST_DATABASE_URL (K12 fix — a --full check failed without it).
+// bootstrap and an empty selection are the only DB-free `check`s.
+export const DB_CHECK_SUITES = new Set(['auth', 'contracts', 'planner']);
+
 // `test:*` package scripts are `node scripts/suite.mjs <suite> [--suite <sub>]`;
 // the key is the suite's argument list, so verify knows `check` already ran it.
 export function suiteKey(command) {

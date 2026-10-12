@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { docker } from './docker.mjs';
 import { root } from './process.mjs';
-import { DB_SUITES, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
+import { DB_CHECK_SUITES, DB_SUITES, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only');
@@ -157,7 +157,13 @@ try {
   // --db=embedded|docker still forces one; --db=auto decides from the step
   // list, so `verify test:box-bounty` pays nothing for a server the bounty
   // tool never opens. The summary line reports db=none either way.
-  const needsDatabase = dbMode === 'embedded' || dbMode === 'docker' || (dbMode === 'auto' && suites.some(name => DB_SUITES.has(suiteKey(scripts[name]) ?? '')));
+  const needsDatabase = dbMode === 'embedded' || dbMode === 'docker' || (dbMode === 'auto' && (
+    suites.some(name => DB_SUITES.has(suiteKey(scripts[name]) ?? ''))
+    // `check` is a step rather than a named suite: its selected check suites
+    // can need the database too (DB_CHECK_SUITES — auth/contracts/planner run
+    // *-live tests through acquireHostRuntime). A check reduced to bootstrap
+    // or nothing stays db=none.
+    || (checkPlan !== null && checkPlan.suites.some(suite => DB_CHECK_SUITES.has(suite)))));
   if (needsDatabase) db = await database();
   const env = { ...process.env, ...(full ? { KITCHEN_CHECK_FULL: '1' } : {}), ...(db.url ? { BOX_TEST_DATABASE_URL: db.url, BOX_DELEGATION_DATABASE_URL: db.url, BOX_TEST_RUN_ID: `v${sha.slice(0, 12)}` } : {}) };
   for (const name of steps) {
