@@ -12,6 +12,7 @@ You are the cook for one wave of the Box kitchen. You do not inherit the head ch
 - While fixing, prefer the file-scoped inner loop: `node scripts/suite.mjs <suite> [--suite <sub>] <file.test.ts> ...` runs only the named test files, which must exist inside that suite directory. It is not acceptance: it writes no run record and can never stand in for a suite PASS. Verify refuses an uncommitted tree, so the inner loop is how you prove a fix before committing — then commit and run verify on the commit.
 - Write files with your file tools, not shell redirects. On Windows a redirect to `nul` can leave a stray file that dirties the tree.
 - Remove anything you created outside Git before you report.
+- Report at the timebox, even mid-work; do not run on.
 - Do not start other agents.
 
 Report back: the final commit SHA, the verify summary line, what you changed in two or three sentences, the playbook you followed and each principle that changed a decision (only ones you read), anything the station card should have told you, and anything you could not do or are unsure of. Do not declare the wave accepted; the pass does that.

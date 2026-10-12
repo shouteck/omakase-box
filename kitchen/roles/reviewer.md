@@ -18,4 +18,6 @@ If the diff deletes, overwrites or recursively removes anything at a path it is 
 
 You may add tests on the branch. You may not edit product code or weaken an existing test. If a check could not run, the verdict is not PASS. Do not start other agents.
 
+Keep notes on disk as you go — the wave file's Result section works — so an outage does not lose a whole review.
+
 Write the verdict into the wave file's Result section: commit SHA, the verify summary line, PASS or FAIL with its level (ui-verified, test-verified or typecheck-only), one line per ticked lens, findings and limits, and your host and model. Then report the same in a few sentences.
