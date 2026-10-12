@@ -11,13 +11,17 @@ import { fixture } from './github-fixture.js';
 import { CLI_DIST, git, runRoot, write } from './support.js';
 
 // The spy, loaded into each CLI process (and inherited by its children):
-// append one JSON line per child_process start to <K14_SPY_DIR>/<pid>.jsonl.
+// append one JSON line per child_process start to <K14_BUDGET_DIR>/<pid>.jsonl.
+// The directory variable is this test's own — an external instrumented run's
+// spy writes under its own name and cannot double a count here — and the
+// loaded-once guard keeps a double --require from hooking spawn twice.
 const SPY = String.raw`
 const fs = require('node:fs');
 const path = require('node:path');
 const cp = require('node:child_process');
-const dir = process.env.K14_SPY_DIR;
-if (dir) {
+const dir = process.env.K14_BUDGET_DIR;
+if (dir && !globalThis.__k14BudgetSpy) {
+  globalThis.__k14BudgetSpy = true;
   const file = path.join(dir, String(process.pid) + '.jsonl');
   const line = (program, args) => {
     try { fs.appendFileSync(file, JSON.stringify([String(program), ...(args ?? []).map(String)]) + '\n'); } catch {}
@@ -96,16 +100,19 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   writeFileSync(spy, SPY);
   const env = {
     ...process.env,
-    // Only this test's spy counts a measured command: an inherited preload
-    // (a suite run under instrumentation) would log each start a second
-    // time into the same directory.
-    NODE_OPTIONS: `--require ${spy.replaceAll('\\', '/')}`
+    // Compose, never replace: the gh stand-in rides this same NODE_OPTIONS
+    // (fixture()'s withGhEnv already put its --require here), so a lone spy
+    // preload would leave gh.exe without its script — every github leg then
+    // refuses not-signed-in and no budget is exercised. The spy listens on
+    // K14_BUDGET_DIR, a name only this test sets, so an inherited preload
+    // still cannot write into the counted directory.
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --require ${spy.replaceAll('\\', '/')}`.trim()
   };
   const runs: { label: string; exit: number | null; git: number; gh: number; other: readonly string[]; stderr: string }[] = [];
   const run = (label: string, ...args: string[]) => {
     const dir = join(runRoot(`k14-spy-${label}`), 'starts');
     mkdirSync(dir, { recursive: true });
-    const r = spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: { ...env, K14_SPY_DIR: dir }, timeout: 120000 });
+    const r = spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: { ...env, K14_BUDGET_DIR: dir }, timeout: 120000 });
     const counted = tally(dir);
     runs.push({ label, exit: r.status, ...counted, stderr: r.stderr ?? '' });
     return r;
