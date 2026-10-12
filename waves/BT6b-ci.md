@@ -34,12 +34,17 @@ The test `hole 3: refuses a `~/`-spelled include that lands inside the tree` (bt
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
-- Lenses:
-- Method:
+- Worker: (box-worker, session ended mid-verify) · Reviewer: box-reviewer, Windows host, Claude Opus 4.5-ish (claude-opus-4-6)
+- Commit: 3fcfcb2966c7b6006a8d186b75dc2c26d6663966
+- Verify: `verify 3fcfcb2 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 362s` — reviewer's own foreground run, `.kitchen/runs/2026-10-12T15-31-58-328Z-3fcfcb2`, exit 0, clean tree. The worker's earlier run (15-13-00-312Z) has no summary.json; nothing was reused.
+- Verdict: PASS · Level: test-verified
+- Lenses: none ticked (all three marked not applicable; agreed — the change is one test file only).
+- Method: prove-it-works — read the diff, ran `bt6b.test.ts` scoped with `TMP`/`TEMP=C:\bt6bci-outside` (outside `homedir()`): 33/33 pass in 95s, the `~/` hole-3 test green at 2381ms, no `bt6bhh-*` left under `~` afterward. Then the full verify above.
 - Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - Scope: `git diff master...3fcfcb2` touches only `tests/box/bounty/bt6b.test.ts` (+42/−17) — fixture placement, exactly the brief.
+  - The attack is still real: repo at `~/bt6bhh-*/repo`, `include.path = ~/…/armed.conf` resolves inside the tree; `apply` exits 3 naming `apply-unsafe-config` and `include.path` with fingerprint byte-identical (nothing written). If `unsafeOwnerCommands` returned nothing, apply would land (status 0) — a real check, not a tautology.
+  - Audit: `homedir()` appears only in this test; the other include tests use `../`-relative and absolute paths — no sibling host assumption.
+  - Master-side red was not re-run (needs the old file, would dirty the tree): statically the old premise `relative(homedir(), repo)` starts `..` whenever tmpdir is outside `~`, and CI run 38267286700 recorded it red.
+  - Minor nits, not blocking: the test cannot distinguish "resolves inside" from "cannot be placed" for `~`-paths (both refuse under `include.path` — the brief only demands refusal by name); a hard-killed test could orphan a `bt6bhh-*` dir under `~` (named, tiny); `filteredRepoUnder` duplicates `makeRepo`'s six steps rather than parameterizing it.
+- Merged: `2465d2c` (--no-ff into master, pushed; the reviewer's verdict rode the close commit — it was left uncommitted on the branch) · Resources removed: `wave/BT6b-ci` branch deleted; reviewer's `C:\bt6bci-outside` scratch and the test's own `bt6bhh-*` fixtures gone; `box-k6-*` stats swept
+- Reflect: the fix matches the wave's own review history — the fourth-pass attack used `~/bt6bhh-*` dirs, so building the fixture under `~` is the same shape the check was proven against.
