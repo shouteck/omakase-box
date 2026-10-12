@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, confirmBounty, loadRecord, postBounty, previewGitHub, rejectBounty, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
 import { fingerprint, git, runRoot, write } from './support.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
-import { fixture, refused } from './github-fixture.js';
+import { fixture, postedFixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 
 // BT6a: the bounty branch is real history — the newest commit GitHub already
@@ -214,9 +214,9 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     refused(() => postBounty(repo, id, 'github'), 'github-preview-stale');
   }));
 
-  it('refuses a pull request whose history does not descend from the bounty branch', () => fixture(({ repo, id, prCommit }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('refuses a pull request whose history does not descend from the bounty branch', () => postedFixture(({ repo, id, prCommit }) => {
     // A commit on unrelated history — a fork that never saw the repository.
+    // The master's own pull request waits at #1; this one registers at #2.
     const env = { GIT_INDEX_FILE: join(runRoot('bt6a-orphan'), 'index') };
     objectGit(repo, ['read-tree', '--empty'], env);
     const blob = gitWriteBlob(repo, Buffer.from('unrelated\n'));
@@ -224,11 +224,10 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const tree = objectGit(repo, ['write-tree'], env);
     const sha = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-m', 'unrelated']);
     prCommit(sha);
-    refused(() => answerGitHub(repo, id, 1), 'github-pr-not-descended');
+    refused(() => answerGitHub(repo, id, 2), 'github-pr-not-descended');
   }));
 
-  it('refuses a pull request that hides a never-ship path deep in its history but not in its final tree', () => fixture(({ repo, id, prCommit }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('refuses a pull request that hides a never-ship path deep in its history but not in its final tree', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     // Commit 1 plants a never-ship path; commit 2 removes it and fixes the
     // app. The union over the whole new history still refuses it.
@@ -245,13 +244,12 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const t2 = objectGit(repo, ['write-tree'], env);
     const c2 = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', t2, '-p', c1, '-m', 'fix'], env);
     prCommit(c2, 'solver', ['app.txt']);
-    refused(() => answerGitHub(repo, id, 1), 'answer-never-ship');
+    refused(() => answerGitHub(repo, id, 2), 'answer-never-ship');
     // The refusal changed nothing: no attempt was pinned.
     expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
   }));
 
-  it('refuses a pull request that drops a never-ship path planted inside a root commit it merges', () => fixture(({ repo, id, prCommit }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('refuses a pull request that drops a never-ship path planted inside a root commit it merges', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     // A solver merges an orphan root carrying payload/.env, dropped in the
     // merge's own tree: no 'D' exists anywhere in the inbound range, so the
@@ -268,15 +266,14 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const tree = objectGit(repo, ['write-tree'], env);
     const head = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-p', pub.commit, '-p', orphan, '-m', 'fix with a hitchhiker'], env);
     prCommit(head);
-    refused(() => answerGitHub(repo, id, 1), 'answer-never-ship');
+    refused(() => answerGitHub(repo, id, 2), 'answer-never-ship');
     expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
   }));
 
-  it('refuses a pull request that changes nothing and one whose tree holds a submodule', () => fixture(({ repo, id, prCommit }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('refuses a pull request that changes nothing and one whose tree holds a submodule', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     prCommit(pub.commit, 'solver', []);
-    refused(() => answerGitHub(repo, id, 1), 'answer-empty');
+    refused(() => answerGitHub(repo, id, 2), 'answer-empty');
     // A gitlink entry (mode 160000) is a submodule — never materialized.
     const env = { GIT_INDEX_FILE: join(runRoot('bt6a-sub'), 'index') };
     objectGit(repo, ['read-tree', pub.commit], env);
@@ -286,11 +283,10 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const tree = objectGit(repo, ['write-tree'], env);
     const sha = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-p', pub.commit, '-m', 'sub']);
     prCommit(sha);
-    refused(() => answerGitHub(repo, id, 2), 'answer-unsafe-path');
+    refused(() => answerGitHub(repo, id, 3), 'answer-unsafe-path');
   }));
 
-  it('collects an answer on an enormous pull-request history without running any of it', () => fixture(({ repo, id, prCommit }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('collects an answer on an enormous pull-request history without running any of it', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     // 100 solver commits chained on the bounty branch — fetched, read and
     // merged as history, with nothing in them ever executed.
@@ -305,23 +301,22 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     }
     const sentinel = join(runRoot('bt6a-huge-sentinel'), 'ran');
     prCommit(parent, 'solver', ['counter.txt']);
-    const result = answerGitHub(repo, id, 1);
+    const result = answerGitHub(repo, id, 2);
     expect(result.outcome).toBe('answered');
     expect(result.report.join('\n')).toContain('100 commit(s)');
     expect(existsSync(sentinel)).toBe(false);
   }), 120000);
 
-  it('a returned .gitattributes names no filter or hook — nothing solver-carried executes on fetch, report, merge or undo', () => fixture(({ repo, id, scratch, pr }) => {
+  it('a returned .gitattributes names no filter or hook — nothing solver-carried executes on fetch, report, merge or undo', () => postedFixture(({ repo, id, scratch, pr }) => {
     // The owner checkout HAS a filter configured that writes a sentinel if it
     // ever runs: only a foreign .gitattributes could select it for the answer.
     const sentinel = join(scratch, 'filter-ran');
     const trigger = join(scratch, 'trigger.cjs');
     writeFileSync(trigger, `require('fs').writeFileSync(${JSON.stringify(sentinel.replaceAll('\\', '/'))}, 'ran'); process.stdin.pipe(process.stdout);`);
     git(repo, ['config', 'filter.hostile.clean', `node ${trigger.replaceAll('\\', '/')}`]);
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
     pr('solver', { '.gitattributes': '* filter=hostile\n', 'hostile-hook.sh': `#!/bin/sh\ntouch ${sentinel.replaceAll('\\', '/')}\n` });
     const before = fingerprint(repo);
-    const result = answerGitHub(repo, id, 1);
+    const result = answerGitHub(repo, id, 2);
     expect(result.outcome).toBe('answered');
     expect(existsSync(sentinel)).toBe(false);
     expect(applyBounty(repo, id, 1).outcome).toBe('applied');
@@ -331,14 +326,13 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(fingerprint(repo).files['.gitattributes']).toBeUndefined(); // undo removed it as bytes — it never ran
   }));
 
-  it('refuses to collect when the bounty branch was changed outside the tool', () => fixture(({ repo, bare, id, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('refuses to collect when the bounty branch was changed outside the tool', () => postedFixture(({ repo, bare, id, pr }) => {
     const prSha = pr();
     // Someone moves the remote branch — collection must stop, not compare
     // against whatever it points at now.
     const pub = loadRecord(repo, id).github!;
     git(bare, ['update-ref', `refs/heads/${pub.branch}`, prSha]);
-    refused(() => answerGitHub(repo, id, 1), 'github-branch-changed');
+    refused(() => answerGitHub(repo, id, 2), 'github-branch-changed');
     // Closing too: the branch is not this tool's to remove, so the local
     // decision stands and the record names why the outside work is pending.
     rejectBounty(repo, id, 'not wanted');

@@ -16,7 +16,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitOutcome } from './git.js';
+import { dryMergeOnto, git, gitOutcome, gitRefsWrite } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
 import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision } from './github.js';
@@ -207,10 +207,17 @@ export const applicableAttempts = (attempts: readonly Attempt[]): Attempt[] =>
 // not keep the snapshot alive on its own). Every end stage deletes them all.
 // Best-effort: a missing ref is exactly the state left behind.
 export function dropDurabilityRefs(repoRoot: string, record: BountyRecord): void {
-  gitOutcome(repoRoot, ['update-ref', '-d', refName(record.id)]);
-  gitOutcome(repoRoot, ['update-ref', '-d', `${refName(record.id)}-answer`]);
-  for (const attempt of attemptsOf(record)) {
-    gitOutcome(repoRoot, ['update-ref', '-d', attemptRefName(record.id, attempt.n)]);
+  // One update-ref --stdin drops the snapshot ref, the legacy answer ref and
+  // every attempt ref — a delete of a missing ref is a no-op, so this is as
+  // best-effort as the per-ref calls were.
+  try {
+    gitRefsWrite(repoRoot, [
+      { delete: refName(record.id) },
+      { delete: `${refName(record.id)}-answer` },
+      ...attemptsOf(record).map(attempt => ({ delete: attemptRefName(record.id, attempt.n) }))
+    ]);
+  } catch {
+    // Best-effort: refs that stay are exactly the state left behind.
   }
 }
 export const recordDir = (repoRoot: string): string => join(repoRoot, '.box', 'bounties');

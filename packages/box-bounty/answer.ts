@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { GitFailed, dryMergeOnto, git, gitOutcome, gitWriteBlob, mergeBase, mergeTree, ownerGit, ownerGitOutcome } from './git.js';
-import type { DryMerge } from './git.js';
+import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, mergeTree, ownerGit, ownerGitOutcome } from './git.js';
+import type { DryMerge, IndexChange } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
@@ -186,15 +186,22 @@ function buildAnswerCommit(repoRoot: string, record: BountyRecord, change: Answe
   try {
     const env = { GIT_INDEX_FILE: join(work, 'index') };
     git(repoRoot, ['read-tree', base], env);
-    for (const path of change.deleted) {
-      if (gitOutcome(repoRoot, ['cat-file', '-e', `${base}:${path}`]).status === 0) {
-        git(repoRoot, ['update-index', '--force-remove', '--', path], env);
+    const changes: IndexChange[] = [];
+    // Deletions apply only where the base tree holds the path: one ls-tree
+    // over the deleted names answers every `cat-file -e base:path` at once.
+    if (change.deleted.length > 0) {
+      const present = new Set(gitOutcome(repoRoot, ['ls-tree', '-z', base, '--', ...change.deleted]).stdout
+        .split('\0').map(entry => entry.slice(entry.indexOf('\t') + 1)).filter(name => name !== ''));
+      for (const path of change.deleted) {
+        if (present.has(path)) changes.push({ mode: '0', sha: null, path });
       }
     }
     for (const path of [...change.changed, ...change.added]) {
       const blob = gitWriteBlob(repoRoot, readFileSync(join(repoDir, ...path.split('/'))));
-      git(repoRoot, ['update-index', '--add', '--cacheinfo', `100644,${blob},${path}`], env);
+      changes.push({ mode: '100644', sha: blob, path });
     }
+    // One index write lands the removals and the new blobs in listed order.
+    gitIndexWrite(repoRoot, env.GIT_INDEX_FILE, changes);
     const tree = git(repoRoot, ['write-tree'], env);
     return git(repoRoot, [
       '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
@@ -559,13 +566,15 @@ function attemptFlags(change: AnswerChange, linesAdded: number, linesRemoved: nu
 // Added/removed line counts for the report, from the answer commit's own diff —
 // git's read of the solver's delta, not a text diff handed in. A root answer
 // (a snapshot with no base commit) diffs against the empty tree.
-const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+// One `diff-tree -r --root --numstat -z <commit>` answers what rev-list
+// --parents plus a diff asked separately: the output leads with the commit's
+// own id, then one entry per touched path — a root commit diffs against the
+// empty tree under --root, exactly the EMPTY_TREE fallback it replaces.
 function lineCounts(repoRoot: string, commit: string): { added: number; removed: number; binary: number } {
-  const parents = gitOutcome(repoRoot, ['rev-list', '--parents', '-n', '1', commit]).stdout.trim().split(' ');
-  const parent = parents.length >= 2 ? parents[1]! : EMPTY_TREE;
-  const run = gitOutcome(repoRoot, ['diff', '--numstat', '-z', parent, commit]);
+  const run = gitOutcome(repoRoot, ['diff-tree', '-r', '--root', '--numstat', '-z', commit]);
   let added = 0; let removed = 0; let binary = 0;
-  for (const entry of run.stdout.split('\0')) {
+  // The output leads with the commit's own id — it is not a numstat entry.
+  for (const entry of run.stdout.split('\0').slice(1)) {
     if (entry === '') continue;
     const [a, d] = entry.split('\t');
     if (a === '-') binary += 1;

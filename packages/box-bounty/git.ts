@@ -236,10 +236,11 @@ export function mergeBase(repo: string, a: string, b: string): string | null {
 // Would `theirs` merge cleanly onto the current branch as it stands? The same
 // merge-base `git merge` would compute — the dry read mirrors the real merge.
 export function dryMergeOnto(repo: string, theirs: string): DryMerge {
-  if (gitOutcome(repo, ['rev-parse', '--verify', '-q', 'HEAD']).status !== 0) {
+  const found = gitObjectCheck(repo, ['HEAD', theirs]);
+  if (found.get('HEAD') === null) {
     return { kind: 'untestable', detail: 'the branch has no commits yet' };
   }
-  if (gitOutcome(repo, ['cat-file', '-e', theirs]).status !== 0) {
+  if (found.get(theirs) === null) {
     return { kind: 'untestable', detail: `commit ${theirs} is not in the object store` };
   }
   const base = mergeBase(repo, 'HEAD', theirs);
@@ -261,4 +262,101 @@ export function gitBlob(repo: string, commit: string, path: string, env: GitEnv 
   });
   if (result.status !== 0 || result.error !== undefined) return null;
   return result.stdout;
+}
+
+// One `cat-file --batch` reads every commit:path blob asked for; a path that is
+// not a blob in the tree maps to null, exactly as one `cat-file blob` would.
+export function gitBlobs(repo: string, commit: string, paths: readonly string[]): Map<string, Buffer | null> {
+  const found = new Map<string, Buffer | null>();
+  if (paths.length === 0) return found;
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', '--batch'], {
+    input: paths.map(path => `${commit}:${path}`).join('\n') + '\n',
+    env: gitEnvironment(),
+    maxBuffer: 512 * 1024 * 1024,
+    windowsHide: true
+  });
+  if (result.error !== undefined) throw result.error;
+  const stdout = Buffer.isBuffer(result.stdout) ? result.stdout : Buffer.from(result.stdout ?? '');
+  let at = 0;
+  for (const path of paths) {
+    const headerEnd = stdout.indexOf(10, at);
+    const header = headerEnd === -1 ? '' : stdout.toString('utf8', at, headerEnd);
+    if (headerEnd === -1 || header.endsWith(' missing')) {
+      found.set(path, null);
+      at = headerEnd + 1;
+      continue;
+    }
+    const fields = header.trim().split(' ');
+    const size = Number(fields[2]);
+    const start = headerEnd + 1;
+    found.set(path, fields[1] === 'blob' ? stdout.subarray(start, start + size) : null);
+    at = start + size + 1; // the content block is followed by one line feed
+  }
+  return found;
+}
+
+// One `cat-file --batch-check` resolves every name — like one `cat-file -e` or
+// `rev-parse --verify -q` per name, batched. Missing names map to null; present
+// ones to the resolved sha.
+export function gitObjectCheck(repo: string, names: readonly string[]): Map<string, string | null> {
+  const found = new Map<string, string | null>();
+  if (names.length === 0) return found;
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', '--batch-check'], {
+    input: names.join('\n') + '\n',
+    env: gitEnvironment(),
+    encoding: 'utf8',
+    windowsHide: true
+  });
+  const lines = (result.stdout ?? '').split('\n');
+  names.forEach((name, index) => {
+    const line = lines[index] ?? '';
+    found.set(name, line === '' || line.endsWith(' missing') ? null : line.split(' ')[0] ?? null);
+  });
+  return found;
+}
+
+export interface IndexChange {
+  /** The entry's mode, or 0 — a zero mode with a null sha removes the path. */
+  readonly mode: string;
+  readonly sha: string | null;
+  readonly path: string;
+}
+
+const NO_SHA = '0000000000000000000000000000000000000000';
+
+// One `update-index --index-info -z` applies every listed change to the given
+// index file — adds, replaces and removals in the order listed. It is the
+// batch form of the per-path `update-index --force-remove` / `--cacheinfo`
+// calls; the real index is never in play because callers pin GIT_INDEX_FILE.
+export function gitIndexWrite(repo: string, index: string, changes: readonly IndexChange[]): void {
+  if (changes.length === 0) return;
+  const input = changes.map(change => `${change.sha === null ? `0 ${NO_SHA}` : `${change.mode} ${change.sha}`}\t${change.path}\0`).join('');
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['update-index'], 'foreign'), 'update-index', '-z', '--index-info'], {
+    input,
+    env: gitEnvironment({ GIT_INDEX_FILE: index }),
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) {
+    const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
+    throw new GitFailed(`git update-index --index-info failed in ${repo}: ${detail}`);
+  }
+}
+
+// One `update-ref --stdin` applies every listed ref update or delete — the
+// batch form of per-ref `update-ref` / `update-ref -d` calls. A delete of a
+// missing ref is a no-op, matching `update-ref -d` on an absent name.
+export type RefWrite = { readonly delete: string } | { readonly update: string; readonly sha: string };
+
+export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
+  if (writes.length === 0) return;
+  const input = writes.map(write => 'delete' in write ? `delete ${write.delete}` : `update ${write.update} ${write.sha}`).join('\n') + '\n';
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['update-ref'], 'foreign'), 'update-ref', '--stdin'], {
+    input,
+    env: gitEnvironment(),
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) {
+    const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
+    throw new GitFailed(`git update-ref --stdin failed in ${repo}: ${detail}`);
+  }
 }

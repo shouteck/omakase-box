@@ -4,7 +4,7 @@ import { cpSync, existsSync, realpathSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, relative, resolve } from 'node:path';
 import type { CommandCheck, SetupCommand } from './agreement.js';
 import { ExportFailed } from './errors.js';
-import { toPosix } from './selection.js';
+import { toPosix } from './paths.js';
 
 // Runs the agreement's declared command checks. Commands are data parsed at the
 // agreement boundary — a pinned tool (node, pnpm, tsc, vitest via the declared
