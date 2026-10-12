@@ -2,6 +2,14 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at the time this cooks, after BT7 is merged · Branch: `wave/BT8` · Timebox: 180 minutes; at expiry, report partial findings and stop
 
+> **Changed by the owner's decisions of 12 October 2026. Where the text below differs, this wins; the head chef folds it in when revising the brief at dispatch.**
+> - **The rules carry the bounty's terms.** One fixed sentence, written by the tool into every issue: one solution is merged and earns the reward, all of it; other solutions earn nothing, including where parts of them are used. The owner sets the reward; the terms are not editable per bounty and nothing about them is asked of the agent.
+> - **`confirm` is removed in this wave.** Inside the rules a post needs no yes; outside them the agent asks and the owner answers with the owner's own command, as below. No command an agent can run stands in for the owner's yes.
+> - **"Merge a chosen solution" in the rules now also covers closing.** Since BT7b the tool closes a bounty when it finds a solution merged, however the merge was made. If the rules do not allow that without asking, the tool states the merge as a fact, closes nothing, and the closing waits for the owner like anything else outside the rules.
+> - **No `undo`.** The summary lists bounties posted, solutions merged, bounties closed with none, and anything waiting. "Anything undone" is dropped.
+> - **Commands that no longer exist** (BT7a to BT7c): `answer`, `questions`, `reply`, `unlook`, `finish`, `cancel`, `undo`, and one closing command in place of `reject` and `withdraw`. Check every command this brief names against master.
+> - **Git and the GitHub command line are required** and refused by name when missing (BT7b); setup states both.
+
 **Brief, written ahead.** By the CTO on 11 October 2026, while BT6's second run was cooking, for the way BT6a posts a bounty: an issue on the real history, with an ordinary bounty branch and solutions as ordinary pull requests. The outcome and the acceptance are settled with the owner. Command names, field names and file paths follow the design discussion; the head chef checks them against the Results of BT6a and BT7 before dispatching, corrects names only, and says in the pre-cook card what changed.
 
 ## Outcome
