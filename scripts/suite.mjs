@@ -26,6 +26,16 @@ const CHECK_PATH_SUITES = [
   ['packages/contracts/', ['auth', 'contracts', 'planner']],
   ['packages/planner/', ['contracts', 'planner']],
   ['examples/private-shop/', ['contracts']],
+  ['tests/box/', []],
+  // K12: the milestone-BT product packages nothing in `check` can reach —
+  // an import scan on 2026-10-12 found them referenced only from tests/box
+  // and from each other. packages/box-contracts is deliberately not here:
+  // services/private-api imports it, so the every-suite fallback below is
+  // its honest reach.
+  ['packages/box-bounty/', []],
+  ['packages/box-cli/', []],
+  ['packages/box-package/', []],
+  ['packages/box-trace/', []],
   ...CHECK_SUITES.map(suite => [`tests/${suite}/`, [suite]])
 ];
 // Prose and process only: no test reads these.
@@ -116,9 +126,38 @@ export function reusableStep(runsDir, sha, stepName, { suites = null } = {}) {
 // K7a: the packaging suite's test files run in parallel; every other suite
 // keeps one worker. Each packaging file owns its temp folders and its own
 // stats id, so workers never share mutable state.
+// K12: the bounty suite joins at 3 workers — the audit that says its files
+// share no state is pinned in tests/kitchen/k12-bounty-parallel.test.ts
+// (mkdtemp roots, env mutations restored in finally, nothing written under
+// the checkout, no global config, no sockets). The count is measured, not
+// assumed: on this host the five biggest files took 212s at 3 workers and
+// 241s at 6 — spawn contention wins past 3 (waves/K12.md).
 export function suiteWorkers(suite, subgroup) {
-  return suite === 'box' && subgroup === 'package' ? 3 : 1;
+  return suite === 'box' && (subgroup === 'package' || subgroup === 'bounty') ? 3 : 1;
 }
+
+// The suites that consume the disposable Postgres verify provisions — found
+// by who reads BOX_TEST_DATABASE_URL / BOX_DELEGATION_DATABASE_URL (K12 audit,
+// 2026-10-12): box auth and delegation read them directly; compiler, e2e,
+// portal, runner and security reach a database through their *-live tests'
+// scripts/host-test-runtime.mjs. Keyed like suiteKey — 'box --suite auth',
+// plain 'compiler'. A named suite outside this set gets db=none.
+// K12 correction: auth, contracts, planner and acceptance belong here too —
+// their *-live tests exec scripts/verify-*.mjs into acquireHostRuntime and
+// die without BOX_TEST_DATABASE_URL when invoked directly (the pass's
+// `verify --only test:planner` repro). Pinned in
+// tests/kitchen/k12-db-suites.test.ts, which derives the need from the files
+// rather than restating this list.
+export const DB_SUITES = new Set(['acceptance', 'auth', 'box --suite auth', 'box --suite delegation', 'compiler', 'contracts', 'e2e', 'planner', 'portal', 'runner', 'security']);
+
+// The check suites whose tests reach the same disposable Postgres — `check`
+// is a step, not a named suite, so DB_SUITES alone is not enough: the auth
+// persistence tests exec verify-auth/lifecycles/empty-migrations/persistence,
+// contracts execs verify-intent-sessions/verify-readiness and planner
+// verify-intake, each of which calls acquireHostRuntime and wants
+// BOX_TEST_DATABASE_URL (K12 fix — a --full check failed without it).
+// bootstrap and an empty selection are the only DB-free `check`s.
+export const DB_CHECK_SUITES = new Set(['auth', 'contracts', 'planner']);
 
 // `test:*` package scripts are `node scripts/suite.mjs <suite> [--suite <sub>]`;
 // the key is the suite's argument list, so verify knows `check` already ran it.
