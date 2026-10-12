@@ -116,8 +116,14 @@ export function reusableStep(runsDir, sha, stepName, { suites = null } = {}) {
 // K7a: the packaging suite's test files run in parallel; every other suite
 // keeps one worker. Each packaging file owns its temp folders and its own
 // stats id, so workers never share mutable state.
+// K12: the bounty suite joins at 3 workers — the audit that says its files
+// share no state is pinned in tests/kitchen/k12-bounty-parallel.test.ts
+// (mkdtemp roots, env mutations restored in finally, nothing written under
+// the checkout, no global config, no sockets). The count is measured, not
+// assumed: on this host the five biggest files took 212s at 3 workers and
+// 241s at 6 — spawn contention wins past 3 (waves/K12.md).
 export function suiteWorkers(suite, subgroup) {
-  return suite === 'box' && subgroup === 'package' ? 3 : 1;
+  return suite === 'box' && (subgroup === 'package' || subgroup === 'bounty') ? 3 : 1;
 }
 
 // `test:*` package scripts are `node scripts/suite.mjs <suite> [--suite <sub>]`;
