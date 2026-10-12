@@ -39,9 +39,9 @@ A solution that clashes with current code is no longer a dead end and needs noth
 - Never-ship still holds at the door: a solution is checked when the tool collects it, as today. If the merge the tool finds carries a never-ship path that the collected solution did not, the tool says which, as a fact, and still closes the bounty; it does not rewrite the owner's history.
 - Run again after closing, every command is quiet about it: closing happens once.
 
-**A program the tool needs is missing**
+**Git is required**
 
-- With Git absent, too old for what the tool uses, or the GitHub command line absent or not signed in, every `bounty` command that needs it refuses by name, changes nothing, and prints the full commands that install it and sign in on that machine (Windows, macOS, Linux each get their own; the tool prints only the ones for the machine it is on). It runs none of them. The tests control executable lookup rather than relying on what the host has installed.
+- The tool rests on Git and on GitHub issues and pull requests; it offers no way of working without them. With Git absent, older than the least version the tool uses, or the GitHub command line absent or not signed in, every `bounty` command that needs it refuses by name before doing anything else, changes nothing, and states what is required and the least version. It installs nothing and prints no installation steps. The check adds no Git process start to a command that would have run Git anyway. The tests control executable lookup rather than relying on what the host has installed.
 
 **Cases that must fail, each a named refusal that changes nothing**
 
@@ -54,7 +54,7 @@ A solution that clashes with current code is no longer a dead end and needs noth
 
 ## Review lenses
 
-- [x] **Security:** the reviewer tries to make the tool close a bounty that was not merged (a commit with the same message, the same tree, a cherry-pick, a merge on another branch, a rewritten branch, a record edited to name another branch or commit), to make it close the wrong one of two, and to make a comment or solution text steer the closing. It checks that the refusal for a missing program cannot be made to print a command taken from anything a stranger wrote.
+- [x] **Security:** the reviewer tries to make the tool close a bounty that was not merged (a commit with the same message, the same tree, a cherry-pick, a merge on another branch, a rewritten branch, a record edited to name another branch or commit), to make it close the wrong one of two, and to make a comment or solution text steer the closing. It checks that a missing or old Git is refused by every command, with nothing written first.
 - [x] **User experience:** a fresh agent given a repository with three solutions waiting, the best of which clashes, and only the tool's output. It must look, choose, get the chosen solution into the current branch its own way, and say what job it would go back to. The head chef runs it and gives the reviewer the transcript. The reviewer reports what the agent did after the refusal (merged with Git, copied by hand, gave up), whether the bounty ended closed, and every hesitation.
 - [ ] **Measurement fairness:** not applicable.
 
