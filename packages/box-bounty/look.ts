@@ -1,0 +1,44 @@
+import { BountyRefused } from './errors.js';
+import { gitOutcome } from './git.js';
+import { attemptsOf, loadRecord, persistRecord } from './record.js';
+import type { Attempt, BountyRecord } from './record.js';
+
+// `look` is a print path: the change the solver's pull request makes against
+// the commit the bounty named, computed on objects the tool already fetched.
+// Nothing is checked out, no folder is made, nothing is left to remove and
+// nothing a solver wrote runs — the reads below are diffs over objects, and
+// --no-ext-diff/--no-textconv keep solver-selected programs out of them.
+// A large change lists its files first; --full prints the whole diff.
+
+const refuse = (reason: string, detail: string, next = 'box bounty status'): never => { throw new BountyRefused(reason, `${detail}; next: ${next}`); };
+
+// A diff longer than this is large: `look` prints the changed-file list and
+// names `box bounty look <id> <n> --full` for the whole change instead of
+// flooding the agent's context with hundreds of lines it may not need.
+export const LOOK_DIFF_LIMIT = 200;
+
+export interface LookResult {
+  readonly record: BountyRecord;
+  readonly attempt: Attempt;
+  /** Every path the change touches, in Git's own name order. */
+  readonly files: readonly string[];
+  /** The full diff — null when the change is large and `full` was not asked for. */
+  readonly diff: string | null;
+  readonly large: boolean;
+}
+
+export function lookBounty(root: string, id: string, n: number, options: { readonly full?: boolean } = {}): LookResult {
+  const record = loadRecord(root, id);
+  const attempt = attemptsOf(record).find(entry => entry.n === n);
+  if (attempt === undefined) return refuse('unknown-attempt', `solution ${n} does not exist on ${record.id}`);
+  // Shown means seen: status marks the attempt seen-since from this run.
+  record.attempts = attemptsOf(record).map(entry => entry.n === n && entry.seenAt === undefined ? { ...entry, seenAt: new Date().toISOString() } : entry);
+  persistRecord(root, record);
+  const base = record.github?.kind === 'history' ? record.github.commit : record.snapshot.baseCommit;
+  const from = base ?? '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+  const diffArgs = ['--no-ext-diff', '--no-textconv', '--no-renames'];
+  const files = gitOutcome(root, ['diff', ...diffArgs, '--name-only', '-z', from, attempt.commit]).stdout.split('\0').filter(Boolean);
+  const diff = gitOutcome(root, ['diff', ...diffArgs, from, attempt.commit]).stdout;
+  const large = diff.split('\n').length > LOOK_DIFF_LIMIT;
+  return { record, attempt, files, large, diff: large && options.full !== true ? null : diff };
+}

@@ -971,7 +971,7 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read it in a copy first, or box bounty reject ${record.id} --reason "<why>"`);
+  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read the change first, or box bounty reject ${record.id} --reason "<why>"`);
   return lines;
 }
 

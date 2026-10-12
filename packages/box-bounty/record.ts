@@ -21,7 +21,6 @@ import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
 import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision } from './github.js';
 import { showPath } from './answer.js';
-import { renderCopies, renderResume } from './copies.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
@@ -81,7 +80,6 @@ export interface AnswerSpec {
 export interface BountyRecord {
   noteSource?: 'authored' | 'generated' | 'legacy';
   resume?: ResumeContext;
-  copies?: SolutionCopy[];
   replies?: { readonly at: string; readonly issue: number }[];
   readonly schemaVersion: 1;
   readonly kind: 'box-bounty-record';
@@ -168,8 +166,6 @@ export type ResumeContext = { readonly kind: 'not-recorded' } | {
   readonly kind: 'recorded'; readonly branch: string; readonly commit: string;
   readonly changed: readonly string[]; readonly note: string | null;
 };
-export interface SolutionCopy { readonly path: string; readonly branch: string | null; readonly key: string; readonly n: number; readonly bytes: number }
-
 export const refName = (id: string): string => `refs/box-bounty/${id}`;
 export const attemptRefName = (id: string, n: number): string => `refs/box-bounty/${id}-answer-${n}`;
 
@@ -236,11 +232,8 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   if (record.noteSource !== undefined && record.noteSource !== 'authored' && record.noteSource !== 'generated' && record.noteSource !== 'legacy') return null;
   const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
   const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(entry => typeof entry === 'string');
-  const copy = (value: unknown): boolean => object(value) && typeof value['path'] === 'string' && typeof value['key'] === 'string' && (value['branch'] === null || typeof value['branch'] === 'string') && Number.isSafeInteger(value['n']) && Number(value['n']) > 0 && typeof value['bytes'] === 'number' && Number.isFinite(value['bytes']) && value['bytes'] >= 0;
   if (record.resume !== undefined && (!object(record.resume) || record.resume.kind !== 'not-recorded' && (record.resume.kind !== 'recorded' || typeof record.resume.branch !== 'string' || typeof record.resume.commit !== 'string' || !strings(record.resume.changed) || record.resume.note !== null && typeof record.resume.note !== 'string'))) return null;
-  if (record.copies !== undefined && (!Array.isArray(record.copies) || !record.copies.every(copy))) return null;
   record.resume ??= { kind: 'not-recorded' };
-  record.copies ??= [];
   record.noteSource ??= 'legacy';
   return record;
 };
@@ -275,7 +268,6 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     title: seed.title,
     resume: seed.resume ?? { kind: 'not-recorded' },
     noteSource: seed.noteSource ?? 'legacy',
-    copies: [],
     ...(seed.why !== undefined ? { why: seed.why } : {}),
     ...(seed.job !== undefined ? { job: seed.job } : {}),
     ...(seed.manifestSha256 !== undefined ? { manifestSha256: seed.manifestSha256 } : {}),
@@ -309,6 +301,14 @@ export function listRecords(repoRoot: string): ListedBounty[] {
   }
   listed.sort((a, b) => (a.record?.createdAt ?? a.file).localeCompare(b.record?.createdAt ?? b.file));
   return listed;
+}
+
+// The saved job context, under the bounty it belongs to: `indent` places it
+// inside that bounty's lines.
+export function renderResume(record: BountyRecord, indent = ''): string {
+  const context = record.resume;
+  if (context?.kind !== 'recorded') return [`${indent}Return to your job`, `${indent}  The branch, commit and changed files were not recorded for this older bounty.`].join('\n');
+  return [`${indent}Saved job context (${record.id}) — where the work stood when the bounty was created`, `${indent}  branch: ${showPath(context.branch)}; commit: ${context.commit}`, `${indent}  changed files: ${context.changed.length === 0 ? 'none' : context.changed.map(showPath).join(', ')}`, ...(context.note === null ? [] : [`${indent}  note: ${JSON.stringify(context.note)}`])].join('\n');
 }
 
 const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
@@ -387,7 +387,6 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       // What an agent needs to act comes first; this is the bounty's one `next:`.
       lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
-      lines.push(...renderCopies(record, '      '));
       if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty questions ${record.id}`);
       lines.push(renderResume(record, '      '));
       // The github: facts and the outside-state header are the long form's —
@@ -447,13 +446,10 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     return `${record.id} ${record.stage}`;
   }).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
-  // was asked for by id, or else for the one that ended last. Copies the tool
-  // made stay listed until they are removed, whatever the bounty's stage.
+  // was asked for by id, or else for the one that ended last.
   const lastEnded = [...ended].sort((a, b) => (a.record!.events.at(-1)?.at ?? '').localeCompare(b.record!.events.at(-1)?.at ?? '')).at(-1)?.record ?? null;
   for (const entry of ended) {
     if (entry.record === null) continue;
-    const copies = renderCopies(entry.record, '  ');
-    if (copies.length > 0) lines.push(`  ${entry.record.id} ${entry.record.stage} — copies the tool made are still there:`, ...copies.map(line => `  ${line}`));
     if (options.id !== undefined || entry.record === lastEnded) {
       lines.push(renderResume(entry.record, '  '));
       // With a bounty still open, that bounty's line above is the next step.
@@ -484,7 +480,7 @@ export function renderHelp(): string {
     '  confirm   the owner\'s yes, recorded — the boundary nothing crosses without → confirmed',
     '  post      first delivery: copies the folder to --to <dir>/<id>, or publishes the GitHub issue and branch → posted',
     '  answer    a solver\'s return: bound and reported as facts — never a verdict → answered',
-    '  look [id] <n> read solution n in its solver copy; unlook [id] <n> removes that copy',
+    '  look [id] <n> print solution n\'s change — written by the solver, marked as theirs; --full prints a large change',
     '  apply     merge an attempt onto the current code — the recorded decision → applied',
     '  undo      reverse an applied merge as a new commit → undone',
     '  questions [id] read comments written by others; reply [id] --text "<your own words>" answers as the owner',

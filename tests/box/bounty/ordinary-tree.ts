@@ -3,10 +3,10 @@ import { utimesSync } from 'node:fs';
 import { git as safeGit } from '../../../packages/box-bounty/git.js';
 
 // An ordinary linked working tree of the owner's repository at `commit` — what
-// `git worktree add` gives, and what a look copy must not be: it
-// reads the owner repository's configuration. It is checked out with nothing
-// configured run, so that a test can then run plain Git in it and show that a
-// trap is live outside the tool's copies before asserting it is silent inside.
+// `git worktree add` gives: it reads the owner repository's configuration. It
+// is checked out with nothing configured run, so that a test can then run
+// plain Git in it and show that a trap is live in an ordinary tree before
+// asserting the tool's own reads of the same objects run nothing.
 export function ordinaryTree(repo: string, commit: string, path: string): { readonly path: string; readonly remove: () => void } {
   safeGit(repo, ['worktree', 'add', '--detach', path, commit]);
   return { path, remove: () => { safeGit(repo, ['worktree', 'remove', '--force', path]); } };

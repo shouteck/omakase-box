@@ -1,14 +1,14 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, loadRecord, lookBounty, persistRecord, planBounty, postBounty, questionsBounty, renderStatus, replyBounty, unlookBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, questionsBounty, renderStatus, replyBounty } from '../../../packages/box-bounty/index.js';
 import { fixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
 
-// Three "Done when" cases of BT7 that had no test of their own: a record from
-// before the wave, a copy location somebody else already holds, and a reply
+// "Done when" cases of BT7 that had no test of their own: a record from
+// before the wave, master's clashing-apply behaviour, and a reply
 // aimed at an issue that exists but is not this bounty's.
 
 function arrived(context: GithubFixture): void {
@@ -30,41 +30,14 @@ it('a record written before this wave loads and says the job context was not rec
   expect(current).not.toContain('not recorded');
   const file = join(repo, '.box', 'bounties', `${made.id}.json`);
   const older = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
-  for (const key of ['resume', 'copies', 'noteSource']) delete older[key];
+  for (const key of ['resume', 'noteSource']) delete older[key];
   writeFileSync(file, JSON.stringify(older));
   const loaded = loadRecord(repo, made.id);
   expect(loaded.resume).toEqual({ kind: 'not-recorded' });
-  expect(loaded.copies).toEqual([]);
   const status = renderStatus(repo, { id: made.id });
   expect(status).toContain('not recorded');
   expect(status).not.toContain('CURRENT_NOTE_73c5');
 });
-
-it('never overwrites or deletes a folder that already sits where a look copy would go', () => fixture(context => {
-  arrived(context);
-  // Learn the tool's own location for this solution, then give it away.
-  const lookPath = lookBounty(context.repo, context.id, 1).copy.path;
-  unlookBounty(context.repo, context.id, 1);
-  expect(existsSync(lookPath)).toBe(false);
-  mkdirSync(lookPath); writeFileSync(join(lookPath, 'keep.txt'), 'KEEP');
-  try {
-    const bytes = fingerprint(context.repo);
-    const record = loadRecord(context.repo, context.id);
-    const worktrees = git(context.repo, ['worktree', 'list', '--porcelain']);
-    refused(() => lookBounty(context.repo, context.id, 1), 'copy-path-exists');
-    expect(readFileSync(join(lookPath, 'keep.txt'), 'utf8')).toBe('KEEP');
-    expect(fingerprint(context.repo)).toEqual(bytes);
-    expect(loadRecord(context.repo, context.id)).toEqual(record);
-    expect(git(context.repo, ['worktree', 'list', '--porcelain'])).toBe(worktrees);
-    expect(git(context.repo, ['branch', '--list', 'box-bt7/*'])).toBe('');
-  } finally {
-    rmSync(lookPath, { recursive: true, force: true });
-  }
-  // With the folder gone the same command makes the copy at that very place.
-  expect(lookBounty(context.repo, context.id, 1).copy.path).toBe(lookPath);
-  unlookBounty(context.repo, context.id, 1);
-  expect(existsSync(lookPath)).toBe(false);
-}, 'Repair app', files));
 
 it('a clashing apply aborts the merge, keeps the worktree and index byte-identical, and names look', () => fixture(context => {
   arrived(context);

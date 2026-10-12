@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, undoBounty, unlookBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, undoBounty } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
-import { ahead, ordinaryTree, plainGit } from './ordinary-tree.js';
+import { ahead } from './ordinary-tree.js';
 import { fingerprint, git, makeRepo, runRoot, write } from './support.js';
 
 // BT7 Correction 1, item 1: filters follow whose content it is. A repository
@@ -12,8 +12,8 @@ import { fingerprint, git, makeRepo, runRoot, write } from './support.js';
 // file in the working tree and another in Git. Where only the owner's content
 // is in play the owner's filter runs as in plain Git: `create` ships what Git
 // stores, and a landed merge leaves the working-tree form and a clean status.
-// Where a solver's content is checked out — the look copy — nothing configured
-// runs, so the copy holds the stored form.
+// `look` reads the solver's change off objects — the stored form is what the
+// printed diff shows, and no filter runs to print it.
 //
 // The stand-in filter is `required`, lives outside the repository, and writes
 // down every run with the folder it ran in: clean stores `ENC:` + text, smudge
@@ -90,28 +90,14 @@ function filteredBounty(context: GithubFixture): Armed {
 
 const files = { 'app.txt': 'broken\n', 'untouched.txt': 'owner bytes\n' };
 
-it('a clean apply leaves the working-tree form and a clean status; the look copy holds the stored form and the filter never runs there; undo is clean too', () => fixture(context => {
+it('a clean apply leaves the working-tree form and a clean status; look prints the stored form and runs no filter; undo is clean too', () => fixture(context => {
   const filter = filteredBounty(context);
   filter.clear();
+  // `look` reads the change off objects: the printed diff shows the stored
+  // form (ENC:), and no filter runs to produce it.
   const looked = lookBounty(context.repo, context.id, 1);
-  try {
-    expect(readFileSync(join(looked.copy.path, 'new.dat'), 'utf8')).toBe('ENC:solver new\n');
-    expect(readFileSync(join(looked.copy.path, 'secret.dat'), 'utf8')).toBe('ENC:committed plaintext\n');
-    expect(filter.log()).toEqual([]);
-    // The trap is live: plain Git, in an ordinary working tree of the same commit,
-    // runs the filter the moment it reads a file again. In the copy it does not
-    // (BT7 Correction 2: a copy takes nothing from the repository's configuration).
-    const ordinary = ordinaryTree(context.repo, looked.record.attempts?.[0]?.commit ?? 'missing', join(context.scratch, 'ordinary'));
-    try {
-      ahead(join(ordinary.path, 'new.dat'));
-      plainGit(ordinary.path, ['status']);
-      expect(filter.ranIn(ordinary.path).length).toBeGreaterThan(0);
-    } finally { ordinary.remove(); }
-    filter.clear();
-    ahead(join(looked.copy.path, 'new.dat'));
-    plainGit(looked.copy.path, ['status']);
-    expect(filter.log()).toEqual([]);
-  } finally { unlookBounty(context.repo, context.id, 1); }
+  expect(looked.diff).toContain('+ENC:solver new');
+  expect(filter.log()).toEqual([]);
 
   filter.clear();
   expect(applyBounty(context.repo, context.id, 1).outcome).toBe('applied');

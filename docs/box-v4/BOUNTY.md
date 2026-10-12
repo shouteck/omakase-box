@@ -31,8 +31,7 @@ node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
 node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
 node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty look [id] <n> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty unlook [id] <n> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty questions [id] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty reply [id] --text "<your own words>" [--repo <path>]
 ```
@@ -71,43 +70,20 @@ tool shows it, then as seen since that time. Seen means only that it was shown.
 
 ## Look at a solution
 
-After collecting a pull request with `answer --pr <number>`, `look <n>` gives
-you a working copy at that solution's commit, outside your working tree, and
-its change against the bounty's named commit. The copy contains the solver's
-files. The tool runs nothing in it. Running a file from it is your own
-choice. Output names the copy and `unlook <n>` to remove it. Looking again reuses the copy; status lists it for as long as the record
-does, also after the bounty has ended, and `apply` names any that
-remain. Neither looking nor removing a look copy touches your working tree,
-index or branch. A copy deleted by hand is not a dead end: `look` makes it
-anew and `unlook` clears what was registered for it.
+After collecting a pull request with `answer --pr <number>`, `look <n>`
+prints the change the solver made: the diff the pull request makes against
+the commit the bounty named, computed on objects the tool already fetched.
+Nothing is checked out, no folder is made and there is nothing to remove —
+looking touches neither your working tree, index, branch nor configuration,
+and the tool runs nothing of the solver's to print it. The printed lines are
+marked as the solver's words, not the tool's, and the output names the next
+command (`apply <n>` to choose that solution). A large change prints its list
+of changed files first; `look <n> --full` prints the whole diff.
 
-### What Git does inside a copy
-
-You work in a look copy with ordinary Git (`status`, `diff`,
-`add`, `commit`, `log`), so a copy is built to be safe for that, not only for
-the tool's own calls. Each copy is a Git repository of its own. It reads this
-repository's objects in place and takes none of its configuration: this
-repository's configuration and format are not changed, and it gains no
-branch and no registered working tree. Inside a copy, Git run by anyone runs
-no hook, filter, merge driver, diff driver or file-system monitor — whatever
-`.gitattributes` in the solution or in your own commits select and whatever
-configuration defines the names.
-
-So the files in a copy are in the form Git stores, not the form your working
-tree shows (git-lfs pointers, git-crypt ciphertext), and line endings follow
-this repository's `core.autocrlf`, `core.eol` and `core.safecrlf`. Your
-filters apply again only when the tool lands a merge on your own working
-tree.
-
-What a copy does not change: your user-level and system Git settings that
-attributes do not select. An alias, an editor, a pager, a signing program or a
-credential helper named there is yours and still applies inside a copy.
-Branch names of this repository are not present in a copy; commits are, by
-their identifiers.
-
-A solution carrying a folder Git reads as a repository of its own — HEAD,
-objects and refs together — is refused before any copy exists: plain Git
-inside such a folder would read configuration the solver wrote.
+Because the diff is read off objects, what it shows is the form Git stores,
+not the form your working tree shows (git-lfs pointers, git-crypt
+ciphertext). Your filters apply only when the tool lands a merge on your own
+working tree.
 
 ## Apply a solution
 

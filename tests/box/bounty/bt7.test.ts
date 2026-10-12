@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, loadRecord, lookBounty, persistRecord, postBounty, questionsBounty, renderStatus, replyBounty, undoBounty, unlookBounty, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, confirmBounty, loadRecord, lookBounty, persistRecord, postBounty, questionsBounty, renderStatus, replyBounty, undoBounty, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { fingerprint, git, write, makeRepo } from './support.js';
@@ -18,7 +18,7 @@ function arrived(context: GithubFixture): void {
 
 const files = { 'app.txt': 'broken\n', 'untouched.txt': 'owner bytes\n' };
 
-describe('BT7a look copies', () => {
+describe('BT7a look', () => {
   it('fingerprints do not refresh the index and still detect an explicit index change', () => {
     const repo = makeRepo({ 'app.txt': 'original\n' });
     write(repo, 'app.txt', 'changed\n');
@@ -29,30 +29,32 @@ describe('BT7a look copies', () => {
     git(repo, ['add', 'app.txt']);
     expect(fingerprint(repo).indexSha256).not.toBe(before.indexSha256);
   });
-  it('looks at the solver commit without touching owner bytes and reuses then removes its copy', () => fixture(context => {
+  it('prints the solver\'s change without touching owner bytes, makes nothing, and marks the solution seen', () => fixture(context => {
     arrived(context);
     write(context.repo, 'untouched.txt', 'dirty owner bytes\n');
     const before = fingerprint(context.repo);
+    const worktrees = git(context.repo, ['worktree', 'list', '--porcelain']);
+    const branches = git(context.repo, ['branch', '--list']);
     expect(() => lookBounty(context.repo, context.id, 99)).toThrow(/unknown|does not exist/);
     const looked = lookBounty(context.repo, context.id, 1);
-    try {
-      expect(readFileSync(join(looked.copy.path, 'app.txt'), 'utf8')).toBe('fixed\n');
-      expect(git(looked.copy.path, ['rev-parse', 'HEAD'])).toBe(loadRecord(context.repo, context.id).attempts?.[0]?.commit);
-      expect(looked.diff).toContain('+fixed');
-      expect(fingerprint(context.repo)).toEqual(before);
-      expect(lookBounty(context.repo, context.id, 1).copy.path).toBe(looked.copy.path);
-      expect(renderStatus(context.repo)).toContain('seen since');
-      expect(renderStatus(context.repo)).toContain('unlook');
-    } finally { unlookBounty(context.repo, context.id, 1); }
-    expect(existsSync(looked.copy.path)).toBe(false);
+    expect(looked.diff).toContain('+fixed');
+    expect(looked.files).toEqual(['app.txt']);
+    expect(looked.large).toBe(false);
+    // A print path: the worktree, index, branches and configuration are
+    // untouched and nothing new exists on disk to remove.
     expect(fingerprint(context.repo)).toEqual(before);
+    expect(git(context.repo, ['worktree', 'list', '--porcelain'])).toBe(worktrees);
+    expect(git(context.repo, ['branch', '--list'])).toBe(branches);
+    expect(existsSync(join(context.repo, '.git', 'box-bt7-copies'))).toBe(false);
+    expect(lookBounty(context.repo, context.id, 1).diff).toBe(looked.diff);
+    expect(renderStatus(context.repo)).toContain('seen since');
   }, 'Repair app', files));
 
   // Two configurations. In the first the attributes that select the programs
   // are only the solver's. In the second the owner committed them too, with a
   // program of the owner's own at the path the commands name — which the
   // solution replaces: there the programs are selected by the owner's side, and
-  // only what a copy is keeps the solver's file from being what runs.
+  // only the tool's own reads keep the solver's file from being what runs.
   const ownerScript = "if (process.argv[2] === 'clean' || process.argv[2] === 'smudge') process.stdin.pipe(process.stdout); else process.exit(1);\n";
   it.each([
     ['the solver alone supplies the attributes', false],
@@ -80,13 +82,13 @@ describe('BT7a look copies', () => {
     for (const name of ['post-checkout', 'pre-merge-commit', 'post-merge', 'pre-commit', 'pre-push', 'pre-auto-gc']) { write(hooks, name, `#!/bin/sh\nnode trip.cjs\n`); chmodSync(join(hooks, name), 0o755); }
     git(context.repo, ['config', 'core.hooksPath', hooks]);
     const looked = lookBounty(context.repo, context.id, 1);
-    expect(readFileSync(join(looked.copy.path, '.gitattributes'), 'utf8')).toContain('filter=trip');
-    expect(readFileSync(join(looked.copy.path, 'trip.cjs'), 'utf8')).toBe(script);
     expect(looked.diff).toContain('+fixed');
     expect(looked.diff).toContain('+*.cjs -filter');
+    expect(looked.files).toContain('trip.cjs');
     expect(existsSync(sentinel)).toBe(false);
     // The trap is live: plain Git, reading one changed file in an ordinary
-    // working tree of that commit, runs the solver's program.
+    // working tree of that commit, runs the solver's program — the tool's own
+    // diff over the same objects above ran nothing.
     const ordinary = ordinaryTree(context.repo, loadRecord(context.repo, context.id).attempts?.[0]?.commit ?? 'missing', join(context.scratch, 'ordinary'));
     try {
       expect(existsSync(sentinel)).toBe(false);
@@ -94,14 +96,6 @@ describe('BT7a look copies', () => {
       spawnSync('git', ['-c', 'core.hooksPath=/dev/null', '-C', ordinary.path, 'diff'], { encoding: 'utf8' });
       expect(existsSync(sentinel)).toBe(true);
     } finally { ordinary.remove(); rmSync(sentinel, { force: true }); }
-    // In the copy the same read by plain Git, hooks and all, runs nothing
-    // (BT7 Correction 2).
-    writeFileSync(join(looked.copy.path, 'app.txt'), 'read again\n');
-    spawnSync('git', ['-C', looked.copy.path, 'diff'], { encoding: 'utf8' });
-    spawnSync('git', ['-C', looked.copy.path, 'checkout', '--', '.'], { encoding: 'utf8' });
-    expect(existsSync(sentinel)).toBe(false);
-    unlookBounty(context.repo, context.id, 1);
-    expect(existsSync(sentinel)).toBe(false);
     if (ownerSelects) {
       // Landing the merge is where the carried exposure lives: the owner
       // program lives inside the owner's tree and the solution replaces it —
@@ -126,51 +120,6 @@ describe('BT7a look copies', () => {
     expect(undoBounty(context.repo, context.id).outcome).toBe('undone');
     expect(existsSync(sentinel)).toBe(false);
   }, 'Repair app', ownerSelects ? { ...files, '.gitattributes': '*.txt filter=trip merge=trip diff=trip\n', 'trip.cjs': ownerScript } : files));
-
-  it('refuses gitlinks, reserved Windows names and directory case collisions before creating either copy', () => fixture(context => {
-    arrived(context);
-    const record = loadRecord(context.repo, context.id);
-    const attempt = record.attempts?.[0];
-    if (attempt === undefined) throw new Error('missing solution');
-    const blob = git(context.repo, ['rev-parse', `${attempt.commit}:app.txt`]);
-    const index = join(context.repo, '.git', 'bt7-unsafe.index');
-    const env = { GIT_INDEX_FILE: index };
-    const cases: readonly (readonly [string, string, string])[][] = [
-      [['160000', attempt.commit, 'trap']],
-      [['100644', blob, 'aux.txt']],
-      [['100644', blob, 'Folder/one.txt'], ['100644', blob, 'folder/two.txt']]
-    ];
-    try {
-      for (const entries of cases) {
-        safeGit(context.repo, ['read-tree', attempt.commit], env);
-        for (const [mode, object, path] of entries) safeGit(context.repo, ['-c', 'core.protectNTFS=false', 'update-index', '--add', '--cacheinfo', mode, object, path], env);
-        const tree = safeGit(context.repo, ['write-tree'], env);
-        const commit = safeGit(context.repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@example.invalid', 'commit-tree', tree, '-p', attempt.commit, '-m', 'foreign tree']);
-        record.attempts = [{ ...attempt, commit }]; persistRecord(context.repo, record);
-        const before = fingerprint(context.repo);
-        expect(() => lookBounty(context.repo, context.id, 1)).toThrow(/unsafe|case-colliding/);
-        expect(() => applyBounty(context.repo, context.id, 1)).toThrow(/unsafe|case-colliding/);
-        expect(fingerprint(context.repo)).toEqual(before);
-        expect(loadRecord(context.repo, context.id).copies).toEqual([]);
-      }
-    } finally { rmSync(index, { force: true }); }
-  }, 'Repair app', files));
-
-  it('refuses ownership forgery and corrupt state without deleting somebody else\'s folder', () => fixture(context => {
-    arrived(context);
-    const looked = lookBounty(context.repo, context.id, 1);
-    const record = loadRecord(context.repo, context.id);
-    record.copies = [{ ...looked.copy, path: context.scratch }];
-    persistRecord(context.repo, record);
-    expect(() => unlookBounty(context.repo, context.id, 1)).toThrow(/not the tool location/);
-    expect(existsSync(context.scratch)).toBe(true);
-    record.copies = [looked.copy]; persistRecord(context.repo, record);
-    unlookBounty(context.repo, context.id, 1);
-    const file = join(context.repo, `.box/bounties/${context.id}.json`);
-    const parsed: unknown = JSON.parse(readFileSync(file, 'utf8'));
-    writeFileSync(file, JSON.stringify({ ...(typeof parsed === 'object' ? parsed : {}), copies: 'not an array' }));
-    expect(() => loadRecord(context.repo, context.id)).toThrow(/not a readable/);
-  }, 'Repair app', files));
 });
 
 describe('BT7 questions', () => {
@@ -226,5 +175,24 @@ describe('BT7 questions', () => {
     const before = context.state().comments.length;
     expect(() => replyBounty(context.repo, context.id, 'must not post')).toThrow();
     expect(context.state().comments).toHaveLength(before);
+  }, 'Repair app', files));
+  it('a comment from an account whose name cannot be read is still counted and shown, with the name left out', () => fixture(context => {
+    confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
+    context.pr('solver');
+    answerGitHub(context.repo, context.id, 1);
+    const name = 'zz bad name';
+    context.update({ comments: [
+      { body: 'Which wording should we use?', user: { login: name }, created_at: '2026-10-10T01:02:03Z' },
+      { body: 'A second question.', user: { login: 'questioner' }, created_at: '2026-10-10T04:05:06Z' }
+    ] });
+    const status = renderStatus(context.repo);
+    expect(status).toContain('comments from other accounts: 2 (1 from an account whose name could not be read); latest: 2026-10-10T04:05:06Z');
+    expect(status).not.toContain('github-status-unavailable');
+    const questions = questionsBounty(context.repo, context.id);
+    expect(questions).toContain('2 comment(s) written by others');
+    expect(questions).toContain('an account whose name could not be read at 2026-10-10T01:02:03Z:');
+    expect(questions).toContain('other account | "Which wording should we use?"');
+    expect(questions).toContain('"questioner" at 2026-10-10T04:05:06Z:');
+    for (const text of [status, questions]) { expect(text).not.toContain('zz bad'); expect(text).not.toContain(''); }
   }, 'Repair app', files));
 });

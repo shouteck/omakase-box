@@ -3,7 +3,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, loadRecord, lookBounty, postBounty, undoBounty, unlookBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, confirmBounty, lookBounty, postBounty, undoBounty } from '../../../packages/box-bounty/index.js';
 import { asOneCommand, git as safeGit, gitOutcome } from '../../../packages/box-bounty/git.js';
 import { fixture } from './github-fixture.js';
 import { git, makeRepo, runRoot, write } from './support.js';
@@ -60,32 +60,27 @@ it('does not invoke a repository-relative signing program for a tool commit', ()
   expect(git(repo, ['config', '--get', 'commit.gpgSign'])).toBe('true');
 });
 
-it('keeps reference hooks disabled through look-copy cleanup, apply and undo', () => fixture(context => {
+it('keeps reference hooks disabled through look, apply and undo', () => fixture(context => {
   confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
   context.pr('solver'); answerGitHub(context.repo, context.id, 1);
   const marker = join(context.scratch, 'reference-ran');
   const hooks = join(context.scratch, 'reference-hooks'); mkdirSync(hooks);
   program(hooks, 'reference-transaction', marker, 0);
   git(context.repo, ['config', 'core.hooksPath', hooks]);
-  try {
-    lookBounty(context.repo, context.id, 1); unlookBounty(context.repo, context.id, 1);
-    expect(applyBounty(context.repo, context.id, 1).outcome).toBe('applied');
-    expect(existsSync(marker)).toBe(false);
-    expect(undoBounty(context.repo, context.id).outcome).toBe('undone');
-    expect(existsSync(marker)).toBe(false);
-    expect(git(context.repo, ['config', '--get', 'core.hooksPath'])).toBe(hooks);
-  } finally {
-    for (const copy of loadRecord(context.repo, context.id).copies ?? []) unlookBounty(context.repo, context.id, copy.n);
-  }
+  lookBounty(context.repo, context.id, 1);
+  expect(applyBounty(context.repo, context.id, 1).outcome).toBe('applied');
+  expect(existsSync(marker)).toBe(false);
+  expect(undoBounty(context.repo, context.id).outcome).toBe('undone');
+  expect(existsSync(marker)).toBe(false);
+  expect(git(context.repo, ['config', '--get', 'core.hooksPath'])).toBe(hooks);
 }, 'Repair app', { 'app.txt': 'broken\n' }));
 
 // The test that stood here asserted that a configured filter never runs when the
 // tool builds a tree from the owner's own files in the owner's own repository.
 // That is what `create` does, and there the owner's filter must run (BT7
 // Correction 1). What it guarded is now two tests in bt7-filters.test.ts:
-// `create` ships the bytes the owner's clean filter stores, and in a look copy
-// — where a solver's content is — building the tree re-reads a file written in
-// the same moment and runs no filter, while plain Git there does.
+// `create` ships the bytes the owner's clean filter stores, and `look` prints
+// the stored form off objects with no filter run.
 
 it('used as a library, reads executable-naming configuration before each call: a filter configured between two calls is still silenced', () => {
   const repo = makeRepo({ 'app.txt': 'owner\n', '.gitattributes': '*.txt filter=trip\n' });

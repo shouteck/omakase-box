@@ -44,11 +44,6 @@ function plainTree(path) {
 if (action === 'cleanup') {
   if (!existsSync(marker) || JSON.parse(readFileSync(marker, 'utf8')).root !== root) throw new Error('not an owned BT7 fixture');
   plainTree(root);
-  const records = join(repo, '.box/bounties');
-  for (const file of readdirSync(records).filter(file => file.endsWith('.json'))) {
-    const record = JSON.parse(readFileSync(join(records, file), 'utf8'));
-    for (const copy of record.copies ?? []) invoke('unlook', record.id, String(copy.n));
-  }
   rmSync(root, { recursive: true, force: true });
   console.log(`removed disposable offline fixture ${root}`);
   process.exit(0);

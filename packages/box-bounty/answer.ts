@@ -11,8 +11,6 @@ import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
-import { validateTree } from './copies.js';
-
 // `bounty answer` — the return journey. A solver hands back the whole bounty
 // folder (`bounty.json` + `repo/`); this module binds it, extracts the change
 // and writes a report of FACTS — never a verdict. Nothing the answer carries
@@ -336,9 +334,6 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
     throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot} — finish it or run git merge --abort before applying a bounty`);
   }
-  // A solution that cannot be checked out safely is refused by name before
-  // the merge runs — the same read look makes before making a copy.
-  if (record.github?.kind === 'history') validateTree(repoRoot, attempt.commit);
   // HEAD is the attribute view for every read and the merge below: the
   // solver's files have not landed yet, so HEAD is the owner's committed
   // state — a returned .gitattributes names nothing until the owner applies it.
@@ -600,7 +595,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read it in a copy first, or box bounty reject ${record.id} --reason "<why>"`);
+  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read the change first, or box bounty reject ${record.id} --reason "<why>"`);
   return lines;
 }
 

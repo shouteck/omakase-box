@@ -11,8 +11,7 @@
 //   bounty confirm [<id>] [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]
 //   bounty post [<id>] --to <dir|github> [--repo <path>]
 //   bounty answer [<id>] [--from <dir> | --pr <n>] [--repo <path>]
-//   bounty look [<id>] <n> [--repo <path>]
-//   bounty unlook [<id>] <n> [--repo <path>]
+//   bounty look [<id>] <n> [--full] [--repo <path>]
 //   bounty apply [<id>] [<n>] [--repo <path>]
 //   bounty questions [<id>] [--repo <path>]
 //   bounty reply [<id>] --text "<your own words>" [--repo <path>]
@@ -30,7 +29,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, showPath, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
 import { answerGitHub, listGitHubAnswers, previewGitHub } from '../../box-bounty/index.js';
-import { COPY_GIT_FACT, lookBounty, unlookBounty, quoteForeign, renderCopies, renderResume, questionsBounty, replyBounty, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
+import { lookBounty, quoteForeign, renderResume, questionsBounty, replyBounty, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
 import type { PnpmInvocation } from '../../box-package/index.js';
 import { trace, TraceRefused } from '../../box-trace/index.js';
@@ -62,8 +61,7 @@ function usage(message?: string): never {
   console.error('       box bounty confirm [<id>] [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]');
   console.error('       box bounty post [<id>] --to <dir|github> [--repo <path>]');
   console.error('       box bounty answer [<id>] [--from <dir> | --pr <n>] [--repo <path>]');
-  console.error('       box bounty look [<id>] <n> [--repo <path>]');
-  console.error('       box bounty unlook [<id>] <n> [--repo <path>]');
+  console.error('       box bounty look [<id>] <n> [--full] [--repo <path>]');
   console.error('       box bounty apply [<id>] [<n>] [--repo <path>]');
   console.error('       box bounty questions [<id>] [--repo <path>]');
   console.error('       box bounty reply [<id>] --text "<your own words>" [--repo <path>]');
@@ -191,11 +189,9 @@ if (command === 'export') {
     if (positional[0]?.startsWith('bt-')) return positional;
     const root = resolveRepoRoot(bountyRepo(), subcommand);
     // The bounties this command can act on: the open ones, plus an ended one
-    // that still has what the command is for — a merge to undo or a look copy
-    // to remove.
+    // that still has what the command is for — a merge to undo.
     const eligible = listRecords(root).flatMap(entry => entry.record !== null && (isOpenStage(entry.record.stage)
-      || subcommand === 'undo' && entry.record.stage === 'applied'
-      || subcommand === 'unlook' && (entry.record.copies ?? []).length > 0) ? [entry.record] : []);
+      || subcommand === 'undo' && entry.record.stage === 'applied') ? [entry.record] : []);
     if (eligible.length !== 1) throw new BountyRefused('bounty-ambiguous', `name a bounty: ${eligible.map(record => `${record.id} ${JSON.stringify(record.title)}`).join(', ') || 'none open'}; next: box bounty status`);
     return [eligible[0]!.id, ...positional];
   };
@@ -309,26 +305,25 @@ if (command === 'export') {
       if (result.outcome === 'applied') {
         console.log(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit}, which is on this branch and names the bounty`);
         console.log(`ended — ${jobLine(result.record)}; the durability refs are removed. To reverse it: box bounty undo ${result.record.id}`);
-        for (const line of renderCopies(result.record)) console.log(line);
         console.log(renderResume(result.record));
       } else {
         console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')}`);
         console.log('the merge was aborted — the worktree and index are exactly as before; the record stays where it was');
         console.log(`next: read the solution with box bounty look ${result.record.id} ${result.attempt}; resolve those paths and commit, then run box bounty apply ${result.record.id} ${result.attempt} to retry; or end it with box bounty reject ${result.record.id} --reason "<why>"`);
       }
-    } else if (subcommand === 'look' || subcommand === 'unlook') {
+    } else if (subcommand === 'look') {
       const [id, text, ...extraIds] = commandIds();
-      if (id === undefined || text === undefined || !/^[1-9]\d*$/.test(text) || extraIds.length > 0) usage(`box bounty ${subcommand} [id] <n>`);
+      if (id === undefined || text === undefined || !/^[1-9]\d*$/.test(text) || extraIds.length > 0) usage('box bounty look [id] <n> [--full]');
       const root = resolveRepoRoot(bountyRepo(), subcommand);
-      if (subcommand === 'unlook') {
-        unlookBounty(root, id, Number(text));
-        console.log(`look copy removed; next: box bounty status ${id}`);
+      const result = lookBounty(root, id, Number(text), { full: bountyArgs.includes('--full') });
+      console.log(`${id} solution ${text} — the change below was written by the solver, not by the tool; the tool ran nothing of the solver's to show it. It is read from fetched objects — nothing is checked out, nothing is left behind.`);
+      if (result.diff === null) {
+        console.log(`${result.files.length} file(s) changed:`);
+        for (const file of result.files) console.log(`solver change | ${quoteForeign(file)}`);
+        console.log(`next: box bounty look ${id} ${text} --full prints the whole change; box bounty apply ${id} ${text} chooses this solution`);
       } else {
-        const result = lookBounty(root, id, Number(text));
-        console.log(`${id} solution ${text}: ${showPath(result.copy.path)} — its Git objects are read from this repository`);
-        console.log(`These contents and the following change were written by the solver, not by the tool. Nothing in this copy was run. ${COPY_GIT_FACT} Running a file from the copy is your own choice.`);
         for (const line of result.diff.split('\n')) console.log(`solver change | ${quoteForeign(line)}`);
-        console.log(`next: read the files there; box bounty apply ${id} ${text} chooses this solution; box bounty unlook ${id} ${text} removes the copy`);
+        console.log(`next: box bounty apply ${id} ${text} chooses this solution; box bounty status ${id} shows what else waits`);
       }
     } else if (subcommand === 'questions' || subcommand === 'reply') {
       const [id, ...extraIds] = commandIds();
