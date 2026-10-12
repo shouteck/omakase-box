@@ -12,7 +12,7 @@ const files = { 'app.txt': 'broken\n', 'unrelated.txt': 'owner\n', 'staged.txt':
 it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files', () => fixture(context => {
   expect(cli(context.repo, 'confirm', '--to', 'github').status).toBe(0);
   expect(cli(context.repo, 'post', '--to', 'github').status).toBe(0);
-  context.pr('solver');
+  context.pr('solver', { 'extra.txt': 'solver added\n' });
   const answer = cli(context.repo, 'answer', '--pr', '1');
   expect(answer.status).toBe(0); expect(answer.stdout).toContain('attempt 1');
   expect(cli(context.repo, 'questions').status).toBe(0);
@@ -41,10 +41,15 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   expect(applied.status).toBe(0); expect(applied.stdout).toContain('applied'); expect(applied.stdout).toContain('Saved job context'); expect(applied.stdout).toContain('box bounty undo');
   expect(readFileSync(join(context.repo, 'unrelated.txt'), 'utf8')).toBe('precious dirty bytes\n');
   expect(readFileSync(join(context.repo, 'staged.txt'), 'utf8')).toBe('precious staged bytes\n');
-  expect(git(context.repo, ['status', '--porcelain', '--', 'staged.txt'])).toBe(' M staged.txt');
+  // Both owner files are modified in the worktree and neither is staged, as
+  // they were before the merges ran.
+  expect(git(context.repo, ['diff', '--name-only']).split('\n').sort()).toEqual(['staged.txt', 'unrelated.txt']);
+  expect(git(context.repo, ['diff', '--cached', '--name-only'])).toBe('');
   expect(cli(context.repo, 'status', context.id).stdout).toContain('applied');
   const undo = cli(context.repo, 'undo');
   expect(undo.status).toBe(0); expect(undo.stdout).toContain('undone');
+  // The merge brought the solver's new file; the undo commit takes it out.
+  expect(git(context.repo, ['ls-files', '--', 'extra.txt'])).toBe('');
 }, 'Repair app', files));
 
 it('names each bounty when omitted ids are ambiguous and keeps explicit ended inspection available', () => fixture(context => {
