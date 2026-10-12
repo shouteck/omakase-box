@@ -88,15 +88,18 @@ function operationIndex(args: readonly string[]): number {
 export type GitContent = 'owner' | 'foreign';
 
 // The tool never writes Git configuration, so within one command the filter and
-// merge-driver names are read once per repository path instead of before every
-// foreign call. The CLI is one command per process and says so for the whole
-// process; a library caller gets the same for the length of each command it
-// calls (asOneCommand), and nothing is remembered from one command to the
-// next. A bare call outside any command — a test that edits configuration
-// between two calls — still reads before each call.
-let pinsByRepo: Map<string, readonly string[]> | null = null;
+// merge-driver names — and every configured command a merge could run — are
+// read once per repository path instead of before every call. The CLI is one
+// command per process and says so for the whole process; a library caller gets
+// the same for the length of each command it calls (asOneCommand), and nothing
+// is remembered from one command to the next. A bare call outside any command
+// — a test that edits configuration between two calls — still reads before
+// each call.
+interface ConfigEntry { readonly key: string; readonly value: string }
+
+let pinsByRepo: Map<string, readonly ConfigEntry[]> | null = null;
 export function readGitPinsOncePerProcess(): void { pinsByRepo ??= new Map(); }
-let commandPins: Map<string, readonly string[]> | null = null;
+let commandPins: Map<string, readonly ConfigEntry[]> | null = null;
 let commandDepth = 0;
 export function asOneCommand<T>(run: () => T): T {
   commandDepth += 1;
@@ -114,6 +117,29 @@ export function asOneCommand<T>(run: () => T): T {
 // changes a byte the tool reads or writes.
 const ALWAYS = ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', '-c', 'tag.gpgSign=false', '-c', 'log.showSignature=false', '-c', 'merge.verifySignatures=false', '-c', 'core.fsmonitor=false', '-c', 'submodule.recurse=false', '-c', 'gc.auto=0', '-c', 'maintenance.auto=false', '-c', 'diff.external='];
 
+// The one configuration read a command makes: every key the foreign pins
+// empty, plus the keys the unsafe-command check below evaluates (config
+// includes and the attributes file — values, not only names). `git config`
+// reads files only; nothing it reads runs.
+const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile)$';
+const PIN_KEYS = /^(filter\..*\.(clean|smudge|process|required)|merge\..*\.driver)$/;
+
+function commandConfig(repo: string): readonly ConfigEntry[] {
+  const remembered = pinsByRepo ?? commandPins;
+  const known = remembered?.get(repo);
+  if (known !== undefined) return known;
+  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo, 'config', '-z', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true });
+  if (config.error !== undefined || config.status !== 0 && config.status !== 1) throw new GitFailed('Git configuration could not be read safely; nothing was run');
+  const entries: ConfigEntry[] = [];
+  for (const entry of (config.stdout ?? '').split('\0')) {
+    if (entry === '') continue;
+    const nl = entry.indexOf('\n');
+    entries.push({ key: nl === -1 ? entry : entry.slice(0, nl), value: nl === -1 ? '' : entry.slice(nl + 1) });
+  }
+  remembered?.set(repo, entries);
+  return entries;
+}
+
 // These read or write objects and refs only — never working-tree content, never
 // the index — so no filter or merge driver can run in them and the foreign pins
 // need no configuration read. A saving only: anything not listed is pinned.
@@ -124,19 +150,14 @@ function safeArgs(repo: string, args: readonly string[], content: GitContent): s
   if (content === 'owner') return prefix;
   const operation = args[operationIndex(args)];
   if (operation !== undefined && OBJECT_AND_REF_ONLY.has(operation)) return prefix;
-  const remembered = pinsByRepo ?? commandPins;
-  const known = remembered?.get(repo);
-  if (known !== undefined) return [...prefix, ...known];
   // Filters and merge drivers are configured by name, so silencing them means
   // reading the names; each is overridden for this invocation, never in shared
-  // configuration.
-  const config = spawnSync(gitProgram(), [...prefix, 'config', '--name-only', '--get-regexp', '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver)$'], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true });
-  if (config.error !== undefined || config.status !== 0 && config.status !== 1) throw new GitFailed('Git configuration could not be read safely; nothing was run');
+  // configuration. The read is the same one the unsafe-command check uses, so
+  // that check costs no extra process start.
   const pins = ['-c', 'merge.default=text'];
-  for (const key of (config.stdout ?? '').split('\n').filter(Boolean)) {
-    pins.push('-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`);
+  for (const { key } of commandConfig(repo)) {
+    if (PIN_KEYS.test(key)) pins.push('-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`);
   }
-  remembered?.set(repo, pins);
   return [...prefix, ...pins];
 }
 
@@ -453,16 +474,9 @@ function shellWords(command: string): string[] {
 }
 
 export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
-  // A raw config read, not an owner/foreign call: the pin layers would hide
-  // exactly the values being asked about (ALWAYS empties diff.external, the
-  // foreign pins empty every filter). `git config` reads files only — nothing
-  // it reads runs.
-  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, 'config', '-z', '--get-regexp', COMMAND_KEYS], {
-    encoding: 'utf8', env: gitEnvironment(), windowsHide: true
-  });
-  if (config.error !== undefined || config.status !== 0 && config.status !== 1) {
-    throw new GitFailed('Git configuration could not be read safely; nothing was run');
-  }
+  // The same configuration read the pin layer makes — one `git config` a
+  // command shares, so the check adds no process start of its own. `git
+  // config` reads files only; nothing it reads runs.
   let realRoot = resolve(repo);
   try { realRoot = realpathSync(repo); } catch { /* the checkout exists — a resolve miss keeps the lexical form */ }
   const rootKey = `${realRoot.split(BACKSLASH).join('/').toLowerCase().replace(/\/+$/, '')}/`;
@@ -483,11 +497,9 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
     catch { return null; }
   };
   const found: UnsafeConfigCommand[] = [];
-  for (const entry of (config.stdout ?? '').split('\0')) {
-    if (entry === '') continue;
-    const nl = entry.indexOf('\n');
-    const key = nl === -1 ? entry : entry.slice(0, nl);
-    const value = nl === -1 ? '' : entry.slice(nl + 1);
+  const checkKeys = new RegExp(COMMAND_KEYS, 'i');
+  for (const { key, value } of commandConfig(repo)) {
+    if (!checkKeys.test(key)) continue;
     if (PATH_KEYS.test(key)) {
       const detail = unsafeDetail(value.trim(), inside);
       if (detail !== null) found.push({ key, command: value.trim(), detail });
