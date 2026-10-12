@@ -49,3 +49,6 @@ export { readGitPinsOncePerProcess } from './git.js';
 export { DESCRIBE_LINES, REMINDER_OFF, REMINDER_ON, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
+export { checkMergedSolutions, noticeMergedSolutions, setMergeNoticeListener } from './merged.js';
+export { GIT_LEAST } from './git.js';
+export { GH_LEAST } from './github.js';

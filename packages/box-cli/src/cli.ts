@@ -27,7 +27,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, showPath, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
+import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, showPath, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
 import { answerGitHub, listGitHubAnswers, previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, questionsBounty, replyBounty, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -181,6 +181,10 @@ if (command === 'export') {
   const [subcommand, ...bountyArgs] = rest;
   if (subcommand === undefined) usage('expected a bounty command — run box bounty help for the whole journey');
   readGitPinsOncePerProcess(); // this process runs one command and exits
+  // A reading command can recognise a solution the agent merged itself and
+  // close the bounty — the one line saying so belongs to whichever command
+  // noticed, printed the moment it happens.
+  setMergeNoticeListener(line => console.log(line));
   // Subcommand-local parsing: positional ids, plus --repo and --to as box flags.
   const bountyRepo = (): string => {
     const index = bountyArgs.indexOf('--repo');
@@ -312,9 +316,21 @@ if (command === 'export') {
         console.log(`ended — ${jobLine(result.record)}; the durability refs are removed. To reverse it: box bounty undo ${result.record.id}`);
         console.log(renderResume(result.record));
       } else {
+        const branch = result.record.resume?.kind === 'recorded' ? result.record.resume.branch : 'the branch the bounty was created on';
         console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')}`);
         console.log('the merge was aborted — the worktree and index are exactly as before; the record stays where it was');
-        console.log(`next: read the solution with box bounty look ${result.record.id} ${result.attempt}; resolve those paths and commit, then run box bounty apply ${result.record.id} ${result.attempt} to retry; or end it with box bounty reject ${result.record.id} --reason "<why>"`);
+        const clean = result.clean ?? [];
+        console.log(clean.length === 0
+          ? 'none of the solution\'s files would merge cleanly'
+          : `of the solution's files, these would merge cleanly: ${clean.map(showPath).join(', ')}`);
+        const commits = result.commits ?? [];
+        if (commits.length === 0) console.log(`no commit on this branch since ${result.base ?? 'the shared commit'} touches the clashing files`);
+        else {
+          console.log(`commits on this branch since ${result.base} that touch the clashing files:`);
+          for (const line of commits) console.log(`  ${line}`);
+        }
+        console.log('a merge the agent performs itself runs under the owner\'s own Git settings — the tool\'s pins are not part of it');
+        console.log(`next: read the solution with box bounty look ${result.record.id} ${result.attempt}; once the solution's commit is merged on ${branch} the next bounty command closes the bounty, or end it with box bounty reject ${result.record.id} --reason "<why>"`);
       }
     } else if (subcommand === 'look') {
       const [id, text, ...extraIds] = commandIds();

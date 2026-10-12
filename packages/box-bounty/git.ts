@@ -3,12 +3,31 @@ import { realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
+import { BountyRefused } from './errors.js';
+
+// The least Git the tool runs on: merges and dry merges pin GIT_ATTR_SOURCE
+// (git 2.40) so a solver-carried .gitattributes can name nothing, and the dry
+// merge itself is `merge-tree --write-tree` (git 2.38). The pin is the
+// binding requirement. Probed once per process — `git version` is the only
+// way to ask, and it is one spawn a command pays only when it uses Git.
+export const GIT_LEAST = '2.40';
 
 let pinnedGit: string | undefined;
 export function gitProgram(): string {
   if (pinnedGit !== undefined) return pinnedGit;
-  try { pinnedGit = resolve(resolveProgram('git').path); }
-  catch { throw new GitFailed('Git is not available on PATH; nothing was run'); }
+  let program: string;
+  try { program = resolve(resolveProgram('git').path); }
+  catch { throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — none was found on PATH. Get it at https://git-scm.com`); }
+  const probe = spawnSync(program, ['version'], { encoding: 'utf8', windowsHide: true });
+  const found = /git version (\d+)\.(\d+)/.exec(probe.stdout ?? '');
+  if (probe.error !== undefined || probe.status !== 0 || found === null) {
+    throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — the program at ${program} did not answer 'git version'. Get it at https://git-scm.com`);
+  }
+  const major = Number(found[1]); const minor = Number(found[2]);
+  if (major < 2 || major === 2 && minor < 40) {
+    throw new BountyRefused('git-too-old', `Git ${GIT_LEAST} or later is required — found git ${found[1]}.${found[2]}. Get it at https://git-scm.com`);
+  }
+  pinnedGit = program;
   return pinnedGit;
 }
 
@@ -172,7 +191,12 @@ function safeArgs(repo: string, args: readonly string[], content: GitContent): s
 function run(repo: string, args: readonly string[], env: GitEnv, content: GitContent): GitOutcome {
   let program: string;
   try { program = gitProgram(); }
-  catch (error) { return { status: null, stdout: '', stderr: '', error: error instanceof Error ? error : new GitFailed(String(error)) }; }
+  catch (error) {
+    // A named refusal (git missing or too old) stays a refusal — the command
+    // exits 3 with its name, not a generic failure.
+    if (error instanceof BountyRefused) throw error;
+    return { status: null, stdout: '', stderr: '', error: error instanceof Error ? error : new GitFailed(String(error)) };
+  }
   const safe = args.map((arg, index) => arg === 'diff' && index === operationIndex(args) ? [arg, '--no-ext-diff', '--no-textconv'] : [arg]).flat();
   const result = spawnSync(program, [...safeArgs(repo, args, content), ...safe], {
     encoding: 'utf8',

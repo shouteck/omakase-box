@@ -60,6 +60,8 @@ export interface GhState {
   visibility: string;
   private: boolean;
   auth: boolean;
+  /** The version `gh --version` reports — the tool asks once per process. */
+  ghVersion?: string;
   malformed?: boolean;
   fail?: string | undefined;
   loseIssueResponse?: boolean;
@@ -80,6 +82,9 @@ const state = JSON.parse(fs.readFileSync(path, 'utf8'));
 state.calls.push(args);
 const save = () => fs.writeFileSync(path, JSON.stringify(state));
 const fail = () => { save(); console.error('ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890'); process.exit(1); };
+// The probe asks "gh version" (never "gh --version"): the Windows stand-in
+// is node.exe itself and node would eat "--version" before the preload ran.
+if (args[0] === 'version' || args[0] === '--version') { save(); console.log('gh version ' + (state.ghVersion ?? '2.40.0')); process.exit(0); }
 if (args[0] === 'auth') { if (!state.auth) fail(); save(); process.exit(0); }
 const endpoint = args[args.indexOf('--hostname') + 2];
 const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8')) : null;

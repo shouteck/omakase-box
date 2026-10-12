@@ -16,10 +16,11 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitOutcome, gitRefsWrite } from './git.js';
+import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
-import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision } from './github.js';
+import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision, GH_LEAST } from './github.js';
+import { noticeMergedSolutions } from './merged.js';
 import { showPath } from './answer.js';
 
 export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
@@ -246,6 +247,9 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
 };
 
 export function loadRecord(repoRoot: string, id: string): BountyRecord {
+  // Reading a record is the moment a solution merged outside the tool can be
+  // recognised: every open bounty is checked first, once per command.
+  noticeMergedSolutions(repoRoot);
   const path = recordPath(repoRoot, id);
   if (!existsSync(path)) {
     throw new BountyRefused('unknown-bounty', `no bounty ${id} — .box/bounties/${id}.json does not exist. Run box bounty status to list the bounties this project knows`);
@@ -293,6 +297,9 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
 }
 
 export function listRecords(repoRoot: string): ListedBounty[] {
+  // Same check as loadRecord: whichever a command touches first runs the
+  // merged-solution scan before the records are read.
+  noticeMergedSolutions(repoRoot);
   const dir = recordDir(repoRoot);
   if (!existsSync(dir)) return [];
   const listed: ListedBounty[] = [];
@@ -348,21 +355,21 @@ const nextStep = (record: BountyRecord): string => {
     case 'verified': {
       const conflicts = record.conflicts?.paths;
       if (record.github !== undefined) {
-        if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>, resolve those paths and commit, then run box bounty apply ${record.id} <n> again`;
+        if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty reject ${record.id} --reason "<why>"`;
         return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty status ${record.id} --full for reports and history`;
       }
+      if (conflicts !== undefined && conflicts.length > 0) {
+        return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next command closes it, or end it with box bounty reject ${record.id} --reason "<why>"`;
+      }
       const applicable = applicableAttempts(attemptsOf(record));
-      const conflictText = conflicts !== undefined && conflicts.length > 0
-        ? ` the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>, resolve those paths and commit, then`
-        : '';
       if (applicable.length === 0) {
         return `no attempt has a usable result — name one anyway with box bounty apply ${record.id} <n>, or end the bounty with box bounty reject ${record.id} --reason "<why>"`;
       }
       if (applicable.length === 1) {
         const n = applicable[0]!.n;
-        return `attempt ${n} waits on a decision —${conflictText} run box bounty apply ${record.id} ${n} to merge it onto the current code, or box bounty reject ${record.id} --reason "<why>"`;
+        return `attempt ${n} waits on a decision — run box bounty apply ${record.id} ${n} to merge it onto the current code, or box bounty reject ${record.id} --reason "<why>"`;
       }
-      return `attempts ${applicable.map(attempt => `#${attempt.n}`).join(' and ')} could be applied —${conflictText} pick one with box bounty apply ${record.id} <n>, or end it with box bounty reject ${record.id} --reason "<why>"`;
+      return `attempts ${applicable.map(attempt => `#${attempt.n}`).join(' and ')} could be applied — pick one with box bounty apply ${record.id} <n>, or end it with box bounty reject ${record.id} --reason "<why>"`;
     }
     default: return 'ended — nothing to do';
   }
@@ -505,9 +512,11 @@ export function renderHelp(): string {
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: an answer arrives as a',
     'numbered attempt, the report states facts about the change, and apply/reject is always your call.',
     '',
-    'what ends a bounty: apply, reject, withdraw (undo reverses an applied merge).',
+    'what ends a bounty: apply, reject, withdraw (undo reverses an applied merge) — or a solution',
+    `merged onto the bounty's branch with your own Git, which the next bounty command recognises.`,
     'an answer that does not land never ends it — it is kept as a numbered attempt and the bounty stays open.',
     '',
+    `needs: git ${GIT_LEAST} or later; GitHub bounties also need GitHub CLI gh ${GH_LEAST} or later, signed in.`,
     'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',
     'the record lives at .box/bounties/<id>.json inside the repository — it outlives the session that made it.'
   ].join('\n');

@@ -80,6 +80,13 @@ export interface ApplyResult {
   readonly attempt: number;
   readonly mergeCommit?: string | undefined;
   readonly conflicts?: readonly string[] | undefined;
+  /** On a conflict: the solution's files that would have merged cleanly. */
+  readonly clean?: readonly string[] | undefined;
+  /** On a conflict: commits on this branch since the shared commit that
+      touched the clashing files — `sha subject`, oldest last. */
+  readonly commits?: readonly string[] | undefined;
+  /** On a conflict: the shared commit the facts are measured from. */
+  readonly base?: string | undefined;
 }
 
 export interface UndoResult {
@@ -313,7 +320,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   const record = loadRecord(repoRoot, id);
   if (record.stage === 'applied' && record.github !== undefined) {
     syncGitHubDecision(repoRoot, record);
-    const event = [...record.events].reverse().find(entry => entry.command === 'apply');
+    const event = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged');
     return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge };
   }
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
@@ -417,7 +424,17 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
     restoreBytes(repoRoot, saved);
     record.conflicts = { paths, at: new Date().toISOString() };
     persistRecord(repoRoot, record);
-    return { record, outcome: 'conflict', attempt: attempt.n, conflicts: paths };
+    // The facts a clashing apply owes: which of the solution's files would
+    // have merged cleanly, and which commits on this branch touched the
+    // clashing files since the shared commit. Nothing was changed — the
+    // resolution is the agent's own merge, under the owner's own Git.
+    const conflicted = new Set(paths.map(path => path.toLowerCase()));
+    const clean = deltaPaths.filter(path => !conflicted.has(path.toLowerCase())).sort();
+    const commits = base !== null
+      ? gitOutcome(repoRoot, ['log', '--format=%h%x09%s', `${base}..HEAD`, '--', ...paths]).stdout
+          .split('\n').map(line => line.trim()).filter(line => line !== '')
+      : [];
+    return { record, outcome: 'conflict', attempt: attempt.n, conflicts: paths, clean, commits, base: base ?? undefined };
   }
   restoreBytes(repoRoot, saved);
   const detail = tail(`${merged.stderr}\n${merged.stdout}`.trim());
@@ -437,7 +454,7 @@ export function undoBounty(repoRoot: string, id: string): UndoResult {
   if (record.stage === 'undone' && record.github !== undefined) {
     syncGitHubDecision(repoRoot, record);
     const event = [...record.events].reverse().find(entry => entry.command === 'undo');
-    const applied = [...record.events].reverse().find(entry => entry.command === 'apply');
+    const applied = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged');
     return { record, outcome: 'undone', undoCommit: event?.merge ?? '', reverted: applied?.merge ?? '' };
   }
   if (record.stage === 'undone') {

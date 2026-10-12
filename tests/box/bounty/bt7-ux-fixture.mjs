@@ -69,6 +69,7 @@ const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.in
 const save=()=>fs.writeFileSync(file,JSON.stringify(state,null,2));
 const fail=()=>{save();process.exit(1)};
 let result;
+if(args[0]==='version'||args[0]==='--version'){console.log('gh version 2.40.0');process.exit(0)}
 if(args[0]==='auth'){process.exit(0)}
 if(endpoint==='user') result={login:'owner'};
 else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public'};
