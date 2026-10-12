@@ -17,6 +17,12 @@ const readRecord = (repo: string, id: string): BountyRecord =>
 
 const readManifest = (dir: string): BountyManifest => JSON.parse(readFileSync(join(dir, 'bounty.json'), 'utf8')) as BountyManifest;
 
+// The refusal reason a command carries, or '' when it did not refuse.
+const refusalOf = (run: () => unknown): string => {
+  try { run(); } catch (error) { return error instanceof BountyRefused ? error.reason : String(error); }
+  return '';
+};
+
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
   return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
@@ -446,13 +452,18 @@ describe('the boundary the pass proved open', () => {
 
     const result = answerBounty(repo, id, dir);
     expect(result.outcome).toBe('answered');
-    expect(applyBounty(repo, id).outcome).toBe('applied');
-    // The solver's files landed as plain bytes — .gitattributes is data, not authority.
-    expect(readFileSync(join(repo, '.gitattributes'), 'utf8')).toContain('filter=pwn');
+    // Since BT6b the merge refuses before anything is touched: `node -e` is a
+    // wrapper whose payload the tool cannot place inside or outside the
+    // repository, and a configured command it cannot place is refused by
+    // name. The solver's files never land — and no sentinel can fire.
+    expect(refusalOf(() => applyBounty(repo, id))).toBe('apply-unsafe-config');
+    expect(existsSync(join(repo, '.gitattributes'))).toBe(false);
     for (const name of ['filter', 'driver', 'hook']) {
       expect(existsSync(join(marks, name)), `sentinel ${name} fired`).toBe(false);
     }
-    expect(undoBounty(repo, id).outcome).toBe('undone');
+    // Nothing landed, so undo has nothing to reverse — it refuses the same
+    // way any unapplied bounty does.
+    expect(refusalOf(() => undoBounty(repo, id))).toBe('not-applied');
     for (const name of ['filter', 'driver', 'hook']) {
       expect(existsSync(join(marks, name)), `sentinel ${name} fired on undo`).toBe(false);
     }

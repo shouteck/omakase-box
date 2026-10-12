@@ -25,9 +25,14 @@ export function withoutGh(run: () => void): void {
       }
       copyFileSync(process.execPath, join(bin, 'node.exe'));
       if (commandShell !== undefined) copyFileSync(commandShell, join(bin, 'cmd.exe'));
+      // The host's global Git configuration can name other programs the
+      // merge preflight must place — filter.lfs.* names git-lfs on this
+      // machine. The stub is resolved, never run: the test removes gh, not
+      // every tool the owner's configuration happens to mention.
+      copyFileSync(process.execPath, join(bin, 'git-lfs.exe'));
       process.env.GIT_EXEC_PATH = corePath;
     } else {
-      const programs: [string, string][] = [['git', gitProgram], ['node', process.execPath]];
+      const programs: [string, string][] = [['git', gitProgram], ['node', process.execPath], ['git-lfs', process.execPath]];
       for (const [name, target] of programs) {
         const quoted = "'" + target.replaceAll("'", "'\\''") + "'";
         write(bin, name, `#!/bin/sh\nexec ${quoted} "$@"\n`);

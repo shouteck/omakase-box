@@ -3,12 +3,18 @@ import { existsSync, readFileSync, rmSync, writeFileSync, mkdirSync, chmodSync }
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, confirmBounty, loadRecord, lookBounty, persistRecord, postBounty, questionsBounty, renderStatus, replyBounty, undoBounty, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
+import { BountyRefused } from '../../../packages/box-bounty/errors.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, write, makeRepo } from './support.js';
-import { git as safeGit } from '../../../packages/box-bounty/git.js';
 import { ordinaryTree } from './ordinary-tree.js';
 
 const files = { 'app.txt': 'broken\n', 'untouched.txt': 'owner bytes\n' };
+
+// The refusal reason a command carries, or '' when it did not refuse.
+const refusalOf = (run: () => unknown): string => {
+  try { run(); } catch (error) { return error instanceof BountyRefused ? error.reason : String(error); }
+  return '';
+};
 
 describe('BT7a look', () => {
   it('fingerprints do not refresh the index and still detect an explicit index change', () => {
@@ -111,28 +117,25 @@ describe('BT7a look', () => {
       expect(existsSync(sentinel)).toBe(true);
     } finally { ordinary.remove(); rmSync(sentinel, { force: true }); }
     if (ownerSelects) {
-      // Landing the merge is where the carried exposure lives: the owner
-      // program lives inside the owner's tree and the solution replaces it —
-      // once such a merge runs on the owner's tree, the owner's own filter
-      // command runs the file the solution replaced. That behaviour is
-      // master's own, carried to the owner and not this wave's to change, so
-      // this configuration ends here.
+      // Landing the merge is where the carried exposure lived: the owner's
+      // program is inside the owner's tree and the solution replaces it —
+      // once such a merge ran, the owner's own filter command ran the file
+      // the solution replaced. Since BT6b the tool refuses that merge by
+      // name, before the working tree, index or branch is touched.
       expect(readFileSync(join(context.repo, 'trip.cjs'), 'utf8')).toBe(ownerScript);
+      expect(refusalOf(() => applyBounty(context.repo, context.id, 1))).toBe('apply-unsafe-config');
+      expect(existsSync(sentinel)).toBe(false);
       return;
     }
-    // The apply merge on the owner's content pins .gitattributes to the first
-    // parent, so nothing the solution selected runs inside it.
-    write(context.repo, 'untouched.txt', 'owner moved\n'); safeGit(context.repo, ['add', 'untouched.txt']);
-    safeGit(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'owner']);
-    expect(applyBounty(context.repo, context.id, 1).outcome).toBe('applied');
+    // The solver supplies the attributes AND the program every configured
+    // command names — `node trip.cjs` resolves inside the tree the merge
+    // fills — so apply refuses by name before it can land anything.
+    expect(refusalOf(() => applyBounty(context.repo, context.id, 1))).toBe('apply-unsafe-config');
     expect(existsSync(sentinel)).toBe(false);
-    // The solver's files are then plain owner content on disk: reading them is
-    // ours, running them remains your choice.
-    expect(readFileSync(join(context.repo, 'trip.cjs'), 'utf8')).toBe(script);
-    // Undo pins attributes to the first parent — where the solution's
-    // .gitattributes is not yet landed — so its selections run nothing.
-    expect(undoBounty(context.repo, context.id).outcome).toBe('undone');
-    expect(existsSync(sentinel)).toBe(false);
+    // Nothing landed: the solver's files never reached the working tree, so
+    // undo has nothing to reverse.
+    expect(existsSync(join(context.repo, 'trip.cjs'))).toBe(false);
+    expect(refusalOf(() => undoBounty(context.repo, context.id))).toBe('not-applied');
   }, { files: ownerSelects ? { ...files, '.gitattributes': '*.txt filter=trip merge=trip diff=trip\n', 'trip.cjs': ownerScript } : files }));
 });
 
