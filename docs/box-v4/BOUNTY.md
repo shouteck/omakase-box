@@ -97,24 +97,34 @@ the repository is replaced by whatever the merge lands and then run; what a
 program reads cannot be bounded, so an unchanged program that calls a file
 the solution changes is the same risk. The check parses each line the way
 Git will run it — through `sh -c` — so a program reached after a `|`, `;`,
-`&&`, subshell or substitution is checked as a command of its own. A bare
-interpreter such as `node` or `sh` configured as a filter runs the filtered
-stream itself as its program, so it refuses; a `git` program's arguments
-can reach an `alias.*` — including one injected by a `-c` operand — so
-aliases are expanded, recursively, and an expansion that cannot be fully
-placed refuses; a launcher like `npm`, `make`, `just`, `task` or `rake`
-reads its program from a manifest in the working tree, so it refuses unless
-an explicit operand places that file outside; and `include.path`,
-`includeIf` and `core.attributesFile` values resolve against the file that
-sets them (`~` expanded), so an include that lands inside the tree refuses
-wherever in the chain it sits. Before the merge — and before
-the revert `undo` makes — the tool reads your configuration and refuses by
-name (`apply-unsafe-config`, `undo-unsafe-config`), stating the configured
-command and the path involved, when a command resolves inside the tree or
-cannot be placed inside or outside it at all. Nothing is touched: working
-tree, index and branch are exactly as before. The fix is yours — point the
-command at a program outside the repository, or merge the solution with
-your own git.
+`&&`, subshell or substitution is checked as a command of its own, while a
+separator inside `'…'` or `"…"` is data, not a command. Once a program
+places outside the tree, every operand that decides what executes must
+itself place: a path operand inside the tree refuses, a bare operand that
+resolves to a program is a program reached through an operand —
+`find -exec`, `xargs`, `env`, `ssh <host> <cmd>`, `wsl` or `stdbuf`
+operands, and every other program like them, are checked as command lines —
+a bare operand that exists inside the tree refuses, and an option's own
+value (`--use-compress-program=…`, `-I…` and spellings like them) is a word
+the program reads, so it is checked the same way. A quoted operand that
+holds a whole line is checked as a line; a quoted word without a space is
+data. A bare interpreter such as `node` or `sh` configured as a filter runs
+the filtered stream itself as its program, so it refuses; a `git`
+program's arguments can reach an `alias.*` — including one injected by a
+`-c` operand — so aliases are expanded, recursively, and an expansion that
+cannot be fully placed refuses; a launcher like `npm`, `make`, `just`,
+`task` or `rake` reads its program from a manifest in the working tree, so
+it refuses unless a flag that names that launcher's manifest places the
+file outside; and `include.path`, `includeIf` and `core.attributesFile`
+values resolve against the file that sets them (`~` expanded), so an
+include that lands inside the tree refuses wherever in the chain it sits.
+Before the merge — and before the revert `undo` makes — the tool reads
+your configuration and refuses by name (`apply-unsafe-config`,
+`undo-unsafe-config`), stating the configured command and the path
+involved, when a command resolves inside the tree or cannot be placed
+inside or outside it at all. Nothing is touched: working tree, index and
+branch are exactly as before. The fix is yours — point the command at a
+program outside the repository, or merge the solution with your own git.
 
 When a solution clashes with current code, `apply` aborts the merge — the
 worktree and index are exactly as before, the record keeps the conflicting

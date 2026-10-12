@@ -421,6 +421,11 @@ export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
 // second file the solution does change), so the rule is positional, not
 // clever: a configured command is unsafe when a token that decides what runs
 // resolves inside the working tree, or when the tool cannot place it at all.
+// That includes the operands a program runs, not only the program word —
+// a command can be reached through another program's operand (find -exec,
+// xargs, env, ssh, wsl, stdbuf, …) or carried inside an option's value
+// (--use-compress-program=, tar -I, git -c), and the set of such programs
+// is unbounded, so the check sits on the operand, not on a program table.
 //
 // The channels are the ones Git's documentation names for merge and checkout:
 //   filter.<name>.clean / .smudge / .process   (gitattributes "filter")
@@ -462,7 +467,10 @@ const INTERPRETERS = new Set([
   'perl', 'ruby', 'php', 'lua', 'awk', 'gawk', 'mawk', 'sed', 'julia', 'tclsh',
   'rscript', 'expect', 'osascript', 'groovy',
   'env', 'exec', 'xargs', 'nice', 'nohup', 'timeout', 'time', 'ionice',
-  'busybox', 'sudo', 'doas', 'start', 'runas'
+  'busybox', 'sudo', 'doas', 'start', 'runas',
+  // Remote and cross-environment shells: the next operand is a host, not a
+  // file, so the file-operand rule refuses them outright — the safe side.
+  'ssh', 'wsl', 'plink'
 ]);
 
 // Shell words with ' and " quoting honoured (the quote characters are
@@ -500,6 +508,11 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
     try { realpathSync(isAbsolute(token) ? token : resolve(repo, token)); return true; }
     catch { return false; }
   };
+  // A bare operand word that exists inside the tree can be the program a
+  // launcher execs — the working directory is in Windows' own search order
+  // and `.exe`/`.cmd` spellings resolve too — so existence places it inside.
+  const existsInTree = (token: string): boolean =>
+    exists(token) || ['.exe', '.com', '.bat', '.cmd'].some(ext => exists(token + ext));
   const programOnDisk = (name: string): string | null => {
     try { return realpathSync(resolveProgram(name).path); }
     catch { return null; }
@@ -507,7 +520,7 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
   // A configured path inside a `git -c name=value` operand has no origin
   // file — a relative one cannot be placed.
   const pathDetail = (value: string): string | null => unsafeDetail(value, '', inside, repo);
-  const place = { pathy, inside, exists, programOnDisk, pathDetail };
+  const place = { pathy, inside, exists, existsInTree, programOnDisk, pathDetail };
   // Aliases come from the same configuration read — a configured command
   // that invokes `git` can reach one.
   const aliases = new Map<string, string>();
@@ -569,12 +582,22 @@ const LAUNCHERS = new Map([
   ['npm', 'package.json'], ['npx', 'package.json'], ['pnpm', 'package.json'], ['yarn', 'package.json'],
   ['make', 'Makefile'], ['just', 'justfile'], ['task', 'Taskfile.yml'], ['rake', 'Rakefile']
 ]);
-// The option spellings that give a launcher an explicit operand: the file
-// (or, for --prefix/--cwd/--directory, the directory) it reads its program
-// from instead of the working directory's manifest.
-const OPERAND_FLAGS = new Set([
-  '-f', '-t', '-C', '--file', '--makefile', '--justfile', '--taskfile', '--rakefile',
-  '--prefix', '--cwd', '--directory'
+// The option spellings that give a launcher an explicit manifest operand —
+// the file (or the directory holding it) it reads its program from instead
+// of the working directory's. The table is per launcher: one generic set
+// already drifted once (`-f` is make's makefile flag but npm's --force),
+// and a flag wrongly treated as manifest-locating lands a launcher that
+// still reads the in-tree manifest. A missing real flag refuses instead —
+// the safe direction.
+const LAUNCHER_MANIFEST_FLAGS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
+  ['npm', new Set(['--prefix', '--cwd'])],
+  ['npx', new Set(['--prefix', '--cwd'])],
+  ['pnpm', new Set(['-C', '--dir'])],
+  ['yarn', new Set(['--cwd'])],
+  ['make', new Set(['-f', '--file', '--makefile', '-C', '--directory'])],
+  ['just', new Set(['--justfile', '--working-directory'])],
+  ['task', new Set(['-t', '--taskfile', '-d', '--dir'])],
+  ['rake', new Set(['-f', '--rakefile'])]
 ]);
 // `git` flags whose next word is an operand, not an option: -c/--config/
 // --config-env inject a `name=value` config entry (an alias can be armed
@@ -587,8 +610,8 @@ const GIT_OPERAND_FLAGS = new Set(['-c', '-C', '--config', '--config-env']);
 // these is a first token again and gets the full check. Redirection
 // targets (>, <) are split the same way so their paths are placed; the
 // fd-duplication forms >& and <& are not separators. Quotes are honoured:
-// a separator inside '…' is literal, inside "…" only $() and ` still
-// substitute.
+// inside '…' everything is literal; inside "…" a separator is data too —
+// only $() and ` still substitute, so only they can open a new command.
 function shellCommands(command: string): string[] {
   const commands: string[] = [];
   let current = '';
@@ -598,10 +621,21 @@ function shellCommands(command: string): string[] {
     const next = command[i + 1];
     const prev = command[i - 1];
     if (quote === "'") { current += ch; if (ch === "'") quote = ''; continue; }
-    if (ch === "'" && quote === '') { quote = "'"; current += ch; continue; }
-    if (quote === '"' && ch === '\\' && next !== undefined && '"\\'.includes(next)) { current += ch + next; i += 1; continue; }
-    if (quote === '"' && ch === '"') { quote = ''; current += ch; continue; }
-    if (ch === '"' && quote === '') { quote = '"'; current += ch; continue; }
+    if (quote === '"') {
+      current += ch;
+      if (ch === '"') quote = '';
+      else if (ch === '\\' && next !== undefined && '"\\'.includes(next)) { current += next; i += 1; }
+      else if (ch === '`' || (ch === '$' && next === '(')) {
+        // The substitution still runs inside double quotes — surface its
+        // command as a segment of its own.
+        commands.push(current);
+        current = '';
+        quote = '';
+        if (ch === '$') i += 1; // swallow the opening (
+      }
+      continue;
+    }
+    if (ch === "'" || ch === '"') { quote = ch; current += ch; continue; }
     const substitution = ch === '`' || ((ch === '$' || ch === '<' || ch === '>') && next === '(');
     const separator = substitution || ch === ';' || ch === '\n' || ch === '|' || ch === '(' || ch === ')'
       || (ch === '&' && next !== '>' && prev !== '>' && prev !== '<')
@@ -616,42 +650,93 @@ function shellCommands(command: string): string[] {
   return commands;
 }
 
-// Tokens of a configured command line. `first` is the program itself; after
-// an interpreter or launcher, the next non-option token is the file it loads.
-// Path-bearing arguments are checked everywhere — a program the solution
-// leaves alone can call a file the solution changes.
+// Tokens of a configured command line, one rule per token class. The first
+// word is the program and must place outside the tree; the converse then
+// holds for every later word — once the program places outside, every
+// operand that decides what executes must itself place or recurse, because
+// the program can exec it (find -exec, xargs, env, wsl, stdbuf,
+// ssh <host> <cmd> and every program like them — the set is unbounded, so
+// the rule is on the operand, not the program):
+// - an option's value is a word the program reads itself
+//   (--use-compress-program=, tar -I…, git -c): an `=` value or an
+//   attached tail is analyzed like an operand word;
+// - a quoted word holding a whole line is analyzed as one — a program
+//   that re-parses its operand reaches every command inside it;
+// - a path-bearing word inside the tree refuses anywhere it stands;
+// - a bare word that resolves to a program is a program reached through
+//   an operand and arms the checks its own operands need: a `git`'s
+//   words name aliases (expanded recursively, `!` expansions as command
+//   lines, `-c` operands injected), an interpreter's next word is the
+//   file it loads, a launcher's program lives in a manifest;
+// - a bare word that exists inside the tree refuses — a Windows exec
+//   finds it in the working directory;
+// - anything else is data to the command that names it.
 //
-// Four shapes need more than placement:
-// - the line is parsed the way Git runs it — `sh -c` — so every command
-//   reached after a separator is a first token, including inside `!`-alias
-//   expansions, which recurse through this same check;
+// Three armed modes carry the rest:
 // - an interpreter left with no file operand reads its program from the
-//   filtered stream itself (pendingEntry still open at the end) — a `node`
-//   or `sh` filter runs the solver's bytes as code;
-// - a `git` program's arguments can name an alias — expanded from the same
-//   configuration read plus any `-c`-injected entries, recursively: `!`
-//   aliases are checked as command lines, other expansions splice back in
-//   as git arguments. Anything the expansion cannot fully place (an
-//   unknown alias name, a builtin that can exec a pager, hooks or
-//   filters) is refused;
+//   filtered stream itself (pendingEntry still open at the end) — a
+//   `node` or `sh` filter runs the solver's bytes as code;
+// - a `git` program's arguments must each name an alias the same
+//   configuration read defines — anything else is a builtin or external
+//   that can reach programs we cannot place;
 // - a launcher (npm, make, just, task, rake…) reads its program from a
 //   manifest in the working directory — inside the tree the solution
-//   writes — unless an explicit operand places it outside.
-function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; programOnDisk: (n: string) => string | null; pathDetail: (value: string) => string | null }, aliases: ReadonlyMap<string, string>, depth: number): string | null {
+//   writes — unless a manifest-locating flag for that launcher places
+//   the file outside.
+function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; existsInTree: (t: string) => boolean; programOnDisk: (n: string) => string | null; pathDetail: (value: string) => string | null }, aliases: ReadonlyMap<string, string>, depth: number): string | null {
   if (depth > 8) return 'the command cannot be placed inside or outside the repository';
   const injected = new Map<string, string>();
   let expansions = 0;
+  // An option value glued on by `=` or an attached tail is a word the
+  // program parses itself. When it could be a command — more than one
+  // word, a path, or a name that resolves to a program — it is checked as
+  // a command line; a plain word that names nothing executable is data.
+  const operandValue = (value: string): string | null => {
+    if (value === '') return null;
+    // A value holding a whole line is checked as one — but a quoted path
+    // with spaces (C:\Program Files\…) is still a single program path:
+    // when it exists it places, it is not split on its spaces.
+    if (place.pathy(value) && place.exists(value)) {
+      if (place.inside(value)) return `${value} resolves inside the repository`;
+      const bare = value.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
+      if (INTERPRETERS.has(bare)) return `${value} is given no file operand — the filtered stream is its program`;
+      if (LAUNCHERS.has(bare)) return `${bare} reads its program from ${LAUNCHERS.get(bare)}, which resolves inside the repository`;
+      return unsafeCommandDetail(value, place, aliases, depth + 1);
+    }
+    if (/\s/.test(value) || /[;|&<>`()]/.test(value)) return unsafeCommandDetail(value, place, aliases, depth + 1);
+    if (place.pathy(value)) return unsafeCommandDetail(value, place, aliases, depth + 1);
+    if (place.programOnDisk(value) !== null || place.existsInTree(value)) return unsafeCommandDetail(value, place, aliases, depth + 1);
+    return null;
+  };
   for (const segment of shellCommands(command)) {
     const tokens = shellWords(segment);
-    let first = true;
-    let interp = false;
+    let sawProgram = false;
     let pendingEntry = false;
     let interpName = '';
     let gitArgs = false;
     let pendingGitOperand: string | null = null;
     let launcher: string | null = null;
-    let launcherFlag = false;
+    let pendingManifest = false;
     let launcherPlaced = false;
+    // A word that is itself a program — the command's first token or one
+    // reached through an operand — arms the checks its own operands need.
+    const arm = (bare: string, shown: string): void => {
+      gitArgs = bare === 'git';
+      launcher = LAUNCHERS.has(bare) ? bare : null;
+      pendingEntry = INTERPRETERS.has(bare);
+      if (pendingEntry) interpName = shown;
+    };
+    // A launcher's manifest-locating flag operand, attached or separate.
+    const placeManifest = (value: string): string | null => {
+      if (place.pathy(value)) {
+        if (place.inside(value)) return `${value} resolves inside the repository`;
+        launcherPlaced = true;
+        return null;
+      }
+      return place.exists(value)
+        ? `${value} resolves inside the repository`
+        : `${value} cannot be placed inside or outside the repository`;
+    };
     for (let i = 0; i < tokens.length; i += 1) {
       const token = tokens[i]!;
       if (token === '' || PLACEHOLDER.test(token)) continue;
@@ -693,46 +778,80 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
         if (place.pathy(value) && place.inside(value)) return `${value} resolves inside the repository`;
         continue;
       }
-      if (gitArgs && GIT_OPERAND_FLAGS.has(token)) { pendingGitOperand = token; continue; }
-      if (launcher !== null) {
-        if (OPERAND_FLAGS.has(token)) { launcherFlag = true; continue; }
-        if (launcherFlag) {
-          launcherFlag = false;
-          if (place.pathy(token)) {
-            if (place.inside(token)) return `${token} resolves inside the repository`;
-            launcherPlaced = true;
-            continue;
-          }
-          return place.exists(token)
-            ? `${token} resolves inside the repository`
-            : `${token} cannot be placed inside or outside the repository`;
-        }
+      if (pendingManifest) {
+        pendingManifest = false;
+        const detail = placeManifest(token);
+        if (detail !== null) return detail;
+        continue;
       }
+      if (gitArgs && GIT_OPERAND_FLAGS.has(token)) { pendingGitOperand = token; continue; }
       const assign = ASSIGNMENT.exec(token);
       if (assign !== null) {
         const value = assign[1]!;
         if (place.pathy(value) && place.inside(value)) return `${value} resolves inside the repository`;
         continue;
       }
-      if (/^-{1,2}\S/.test(token) || /^\/[a-zA-Z]+$/.test(token)) continue; // options and cmd-style /c switches
-      const bare = token.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
-      if (place.pathy(token)) {
-        if (place.inside(token)) return `${token} resolves inside the repository`;
-        if (first) {
-          first = false;
-          interp = INTERPRETERS.has(bare); pendingEntry = interp; interpName = token;
-          gitArgs = bare === 'git';
-          launcher = LAUNCHERS.has(bare) ? bare : null;
-        } else pendingEntry = false;
+      if (/^-{1,2}\S/.test(token) || /^\/[a-zA-Z]+$/.test(token)) {
+        // An option token: a launcher's manifest flag, or a value glued to
+        // the option by `=` or an attached tail — the program reads it, so
+        // it is analyzed like an operand word.
+        if (launcher !== null) {
+          const flags = LAUNCHER_MANIFEST_FLAGS.get(launcher)!;
+          const eq = token.indexOf('=');
+          const name = eq === -1 ? token : token.slice(0, eq);
+          if (flags.has(name)) {
+            if (eq === -1) { pendingManifest = true; continue; }
+            const detail = placeManifest(token.slice(eq + 1));
+            if (detail !== null) return detail;
+            continue;
+          }
+          if (token.length > 2 && !token.startsWith('--') && token[0] === '-' && flags.has(token.slice(0, 2))) {
+            const detail = placeManifest(token.slice(2));
+            if (detail !== null) return detail;
+            continue;
+          }
+        }
+        const eq = token.indexOf('=');
+        if (token.startsWith('--') && eq > 2) {
+          const detail = operandValue(token.slice(eq + 1));
+          if (detail !== null) return detail;
+          continue;
+        }
+        if (token[0] === '-' && token[1] !== '-' && token.length > 2) {
+          const detail = operandValue(token.slice(2));
+          if (detail !== null) return detail;
+        }
         continue;
       }
-      if (first) {
-        first = false;
-        interp = INTERPRETERS.has(bare);
-        pendingEntry = interp;
-        interpName = token;
-        gitArgs = bare === 'git';
-        launcher = LAUNCHERS.has(bare) ? bare : null;
+      const bare = token.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
+      // Quoting makes one word of a whole line — a program that re-parses
+      // the operand reaches every command inside it, so it is checked as
+      // one. But a quoted path with spaces (C:\Program Files\…) is a single
+      // program path when it exists: it is placed, never split.
+      if (/\s/.test(token)) {
+        if (place.pathy(token) && place.exists(token)) {
+          if (place.inside(token)) return `${token} resolves inside the repository`;
+          sawProgram = true;
+          if (INTERPRETERS.has(bare) || bare === 'git' || LAUNCHERS.has(bare)) arm(bare, token);
+          else pendingEntry = false;
+          continue;
+        }
+        const detail = unsafeCommandDetail(token, place, aliases, depth + 1);
+        if (detail !== null) return detail;
+        continue;
+      }
+      if (place.pathy(token)) {
+        if (place.inside(token)) return `${token} resolves inside the repository`;
+        // An outside path operand can still be the program the current one
+        // execs — arm what its name says it is.
+        sawProgram = true;
+        if (INTERPRETERS.has(bare) || bare === 'git' || LAUNCHERS.has(bare)) arm(bare, token);
+        else pendingEntry = false;
+        continue;
+      }
+      if (!sawProgram) {
+        sawProgram = true;
+        arm(bare, token);
         const resolved = place.programOnDisk(token);
         if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
         if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
@@ -756,21 +875,7 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
         i -= 1;
         continue;
       }
-      if (INTERPRETERS.has(bare)) {
-        const resolved = place.programOnDisk(token);
-        if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
-        if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
-        interp = true; pendingEntry = true; interpName = token;
-        continue;
-      }
-      if (LAUNCHERS.has(bare)) {
-        const resolved = place.programOnDisk(token);
-        if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
-        if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
-        launcher = bare;
-        continue;
-      }
-      if (interp && pendingEntry) {
+      if (pendingEntry) {
         pendingEntry = false;
         // A bare file name an interpreter loads resolves against the
         // working directory — inside the tree — when the file is there;
@@ -780,7 +885,18 @@ function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boo
           ? `${token} resolves inside the repository`
           : `${token} cannot be placed inside or outside the repository`;
       }
-      pendingEntry = false;
+      // A bare word that resolves to a program is a program the current
+      // one can exec through its operand — arm what it is.
+      const resolved = place.programOnDisk(token);
+      if (resolved !== null) {
+        if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+        if (INTERPRETERS.has(bare) || bare === 'git' || LAUNCHERS.has(bare)) arm(bare, token);
+        continue;
+      }
+      // A bare word that exists inside the tree can be the program a
+      // launcher finds in the working directory.
+      if (place.existsInTree(token)) return `${token} resolves inside the repository`;
+      // Otherwise the word is data to the command that names it.
     }
     // A launcher never given an outside operand reads its program from the
     // manifest in the working directory — inside the tree the merge writes.
