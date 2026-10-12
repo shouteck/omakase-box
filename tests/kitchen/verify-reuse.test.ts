@@ -57,6 +57,12 @@ describe('checkSuitesForPaths — the path->suite table', () => {
     for (const path of ['scripts/verify.mjs', 'package.json', 'pnpm-lock.yaml', 'vitest.config.mjs', 'unknown-dir/file.ts', 'tests/kitchen/x.test.ts'])
       expect(pick([path]).suites, path).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
   });
+
+  it('K12: milestone-BT product paths reach no check suite — except box-contracts, which private-api imports', () => {
+    for (const path of ['tests/box/bounty/x.test.ts', 'tests/box/package/support.ts', 'packages/box-bounty/index.ts', 'packages/box-cli/src/cli.ts', 'packages/box-package/index.ts', 'packages/box-trace/index.ts'])
+      expect(pick([path]).suites, path).toEqual([]);
+    expect(pick(['packages/box-contracts/index.ts']).suites).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
+  });
 });
 
 describe('selectCheckSuites — what check runs this invocation', () => {

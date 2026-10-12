@@ -26,6 +26,16 @@ const CHECK_PATH_SUITES = [
   ['packages/contracts/', ['auth', 'contracts', 'planner']],
   ['packages/planner/', ['contracts', 'planner']],
   ['examples/private-shop/', ['contracts']],
+  ['tests/box/', []],
+  // K12: the milestone-BT product packages nothing in `check` can reach —
+  // an import scan on 2026-10-12 found them referenced only from tests/box
+  // and from each other. packages/box-contracts is deliberately not here:
+  // services/private-api imports it, so the every-suite fallback below is
+  // its honest reach.
+  ['packages/box-bounty/', []],
+  ['packages/box-cli/', []],
+  ['packages/box-package/', []],
+  ['packages/box-trace/', []],
   ...CHECK_SUITES.map(suite => [`tests/${suite}/`, [suite]])
 ];
 // Prose and process only: no test reads these.
