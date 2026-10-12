@@ -39,9 +39,14 @@ A solution that clashes with current code is no longer a dead end and needs noth
 - Never-ship still holds at the door: a solution is checked when the tool collects it, as today. If the merge the tool finds carries a never-ship path that the collected solution did not, the tool says which, as a fact, and still closes the bounty; it does not rewrite the owner's history.
 - Run again after closing, every command is quiet about it: closing happens once.
 
-**Git is required**
+**What the tool requires, the conventional way**
 
-- The tool rests on Git and on GitHub issues and pull requests; it offers no way of working without them. With Git absent, older than the least version the tool uses, or the GitHub command line absent or not signed in, every `bounty` command that needs it refuses by name before doing anything else, changes nothing, and states what is required and the least version. It installs nothing and prints no installation steps. The check adds no Git process start to a command that would have run Git anyway. The tests control executable lookup rather than relying on what the host has installed.
+- The tool needs two programs it does not ship: Git, and the GitHub command line (`gh`) signed in. It offers no way of working without them. (It runs on Node; stating that belongs to installing the tool, BT12.)
+- **Stated:** `help` and `docs/box-v4/BOUNTY.md` list both as requirements with the least version of each that the tool really uses. The cook finds those versions from the code and proves each with a test, not from memory.
+- **Checked where needed, before anything else:** a command checks only for the programs it will use (a command that never reaches GitHub does not demand `gh`), and does so before it writes or changes anything.
+- **Refused the usual way:** missing, too old, or not signed in is a named refusal on the error stream with a non-zero exit. One short message: the program, the least version, what was found, and the program's official page (`https://git-scm.com`, `https://cli.github.com`). No step-by-step installation, nothing run, nothing installed.
+- The check adds no process start to a command that would have run that program anyway.
+- The tests control executable lookup rather than relying on what the host has installed.
 
 **Cases that must fail, each a named refusal that changes nothing**
 
