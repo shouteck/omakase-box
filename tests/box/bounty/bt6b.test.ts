@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -44,7 +44,24 @@ const LOG_ENV = 'BT6B_FILTER_LOG';
 // two .dat files — the tool's filter configuration is set separately so the
 // armed variant can point it outside or inside the tree.
 function filteredRepo(): string {
-  const repo = makeRepo({ 'app.txt': 'broken\n' });
+  return armFilter(makeRepo({ 'app.txt': 'broken\n' }));
+}
+
+// The same fixture, built at a path the caller picks instead of the run
+// root — a `~/`-spelled include reaches the tree only while the repository
+// itself lives under the home directory.
+function filteredRepoUnder(parent: string): string {
+  const repo = join(parent, 'repo');
+  mkdirSync(repo, { recursive: true });
+  git(repo, ['init', '-b', 'main', '-q']);
+  git(repo, ['config', 'core.autocrlf', 'false']);
+  write(repo, 'app.txt', 'broken\n');
+  git(repo, ['add', '-A']);
+  git(repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'base']);
+  return armFilter(repo);
+}
+
+function armFilter(repo: string): string {
   write(repo, '.gitattributes', '*.dat filter=own\n');
   write(repo, 'tools/filter.cjs', loggingFilter('OWNER'));
   write(repo, 'data.dat', 'first\n');
@@ -406,22 +423,30 @@ describe('pass holes — configured commands that still reached a solver program
     expect(fingerprint(repo)).toEqual(before);
   });
 
-  it('hole 3: refuses a `~/`-spelled include that lands inside the tree — the repo is under the home directory', () => {
-    const repo = filteredRepo();
-    const fromHome = relative(homedir(), repo).split(sep).join('/');
-    expect(fromHome.startsWith('..')).toBe(false); // this host keeps fixture repos under ~
-    write(repo, 'armed.conf', '[filter "arm"]\n\tclean = node tools/pwn.cjs\n');
-    git(repo, ['config', 'include.path', `~/${fromHome}/armed.conf`]);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+  it('hole 3: refuses a `~/`-spelled include that lands inside the tree — the test places the repo under the home directory', () => {
+    // A `~/…` include can only land inside a repository that lives under ~,
+    // so this test builds its fixture under the home directory itself rather
+    // than assuming the host's temp root is there.
+    const home = mkdtempSync(join(homedir(), 'bt6bhh-'));
+    try {
+      const repo = filteredRepoUnder(home);
+      const fromHome = relative(homedir(), repo).split(sep).join('/');
+      expect(fromHome.startsWith('..')).toBe(false); // the test places the repo under ~
+      write(repo, 'armed.conf', '[filter "arm"]\n\tclean = node tools/pwn.cjs\n');
+      git(repo, ['config', 'include.path', `~/${fromHome}/armed.conf`]);
+      const { id, folder } = delivered(repo);
+      write(folder, 'repo/app.txt', 'fixed\n');
+      expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
 
-    const before = fingerprint(repo);
-    const applied = cli(repo, 'apply', id, '1');
-    expect(applied.status).toBe(3);
-    expect(applied.stderr).toContain('apply-unsafe-config');
-    expect(applied.stderr).toContain('include.path');
-    expect(fingerprint(repo)).toEqual(before);
+      const before = fingerprint(repo);
+      const applied = cli(repo, 'apply', id, '1');
+      expect(applied.status).toBe(3);
+      expect(applied.stderr).toContain('apply-unsafe-config');
+      expect(applied.stderr).toContain('include.path');
+      expect(fingerprint(repo)).toEqual(before);
+    } finally {
+      rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+    }
   });
 
   it('hole 3: follows a nested include — a relative path inside an outside file can still land in the tree', () => {
