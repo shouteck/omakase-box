@@ -47,12 +47,18 @@ A later agent, often a new session, can see each solution as its solver made it,
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
-- Lenses:
-- Method:
+- Worker: cook (Devin session) · Reviewer: pending the pass
+- Commit: `e697354` — the cut lands in `799ad1a`, two test-assumption repairs in `e697354`; this Result is the final commit of the wave
+- Verify: `node scripts/verify.mjs test:box-bounty test:box-package` on the wave's final tree → PASS pending rerun; an earlier run on `799ad1a` took the bounty suite in 621 s with only the two test-assumption failures `e697354` repairs
+- Verdict: pending · Level: implementation
+- Lenses: security (copy inertness, foreign-folder and bare-layout refusals kept from the reviewed cut); user experience (shorter short-status, one `next:` per command, `look` named at every clash)
+- Method: feature playbook; subtract-before-you-add — master's tree plus only what the "Done when" carried over; the clash path cut, not disabled
 - Findings and limits:
-- Merged: · Resources removed:
+  - Taken from `wave/BT7` at `e1920ca`: `look`/`unlook` and their inert per-copy Git repositories (own repo, borrowed objects, no inherited configuration, ownership proof before any delete, recreation after a hand removal); `questions`/`reply`; `seenAt`/`seenPullRequests` new-vs-seen marking; the saved job context (`resume` on the record, `Saved job context`/`Return to your job` lines); identifier-less commands when one bounty is open; the shorter `status` (short form keeps only actionable lines — pending outside action, uncollected answers, the collect command); one `next:` per command; the named refusals for unknown attempt, foreign or occupied copy path, edited-record redirect, junction/link, hostile tree paths (`git~1`, reserved names, case tricks), bare repository layout, and reply on an issue that is not this bounty's; the owner/foreign split in `git.ts`; and `record.conflicts` so a clashing apply is remembered.
+  - Left behind: side copies, `finish`, `cancel`, staged-merge/`MergeState`, `clashNext`, `renderClash`, the `--mid-clash` fixture mode, and every test and doc line that existed only for them.
+  - `apply` on a clash is master's own path: a live `git merge`, abort on conflict, saved bytes restored, `conflicts` recorded; the one `next:` names `box bounty look <id> <n>` first. A staged index makes plain Git refuse the merge before it runs — that refusal (`apply-worktree-dirty`) is master's and is now tested as such.
+  - Reviews found unused output; dropped accordingly: the copy byte count, `stage 7 of 7` on `applied`, the `github:` facts and outside-state header in the short `status` (still in `--full`), and collected answers beside the attempts list.
+  - The byte-for-byte index claim is now scoped: `git merge --abort` rewrites index bookkeeping even when staged content is identical; tests assert tree, HEAD, staged content and status, not the index file's checksum.
+  - Native pstack is not installed on this host; the playbook and principles were read from the plugin files.
+- Merged: no · Resources removed: none (test fixtures are disposable temp dirs; the ux fixture cleans itself)
 - Reflect:
