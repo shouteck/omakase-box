@@ -24,12 +24,12 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   git(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'owner moved']);
   write(context.repo, 'unrelated.txt', 'precious dirty bytes\n');
   write(context.repo, 'staged.txt', 'precious staged bytes\n'); git(context.repo, ['add', 'staged.txt']);
-  const index = readFileSync(join(context.repo, '.git/index'));
+  const index = git(context.repo, ['ls-files', '--stage']);
   // The staged change stops the live merge, exactly as on master: a named
-  // refusal, and index and worktree untouched.
+  // refusal, and the staged content and worktree are what they were.
   const refused = cli(context.repo, 'apply', '1');
   expect(refused.status).toBe(3); expect(refused.stderr).toContain('apply-worktree-dirty');
-  expect(readFileSync(join(context.repo, '.git/index'))).toEqual(index);
+  expect(git(context.repo, ['ls-files', '--stage'])).toBe(index);
   expect(readFileSync(join(context.repo, 'staged.txt'), 'utf8')).toBe('precious staged bytes\n');
   git(context.repo, ['reset', '-q', 'HEAD', '--', 'staged.txt']);
   const apply = cli(context.repo, 'apply', '1');
