@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { answerGitHub, applyBounty, confirmBounty, loadRecord, lookBounty, persistRecord, postBounty, questionsBounty, renderStatus, replyBounty, undoBounty, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
-import { fingerprint, git, write, makeRepo } from './support.js';
+import { CLI_DIST, fingerprint, git, write, makeRepo } from './support.js';
 import { git as safeGit } from '../../../packages/box-bounty/git.js';
 import { ordinaryTree } from './ordinary-tree.js';
 
@@ -48,6 +48,29 @@ describe('BT7a look', () => {
     expect(existsSync(join(context.repo, '.git', 'box-bt7-copies'))).toBe(false);
     expect(lookBounty(context.repo, context.id, 1).diff).toBe(looked.diff);
     expect(renderStatus(context.repo)).toContain('seen since');
+  }, 'Repair app', files));
+
+  it('a large change lists its files first and prints the whole change only on request', () => fixture(context => {
+    confirmBounty(context.repo, context.id, 'github');
+    postBounty(context.repo, context.id, 'github');
+    const big = Array.from({ length: 250 }, (_, index) => `line ${index}`).join('\n') + '\n';
+    context.pr('solver', { 'big.txt': big });
+    answerGitHub(context.repo, context.id, 1);
+    const looked = lookBounty(context.repo, context.id, 1);
+    expect(looked.large).toBe(true);
+    expect(looked.diff).toBeNull();
+    expect(looked.files).toEqual(['app.txt', 'big.txt']);
+    expect(lookBounty(context.repo, context.id, 1, { full: true }).diff).toContain('+line 249');
+    // The CLI prints the file list, never the diff, and names the --full route.
+    const out = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'look', context.id, '1', '--repo', context.repo], { encoding: 'utf8' });
+    expect(out.status).toBe(0);
+    expect(out.stdout).toContain('2 file(s) changed');
+    expect(out.stdout).toContain('written by the solver');
+    expect(out.stdout).toContain(`box bounty look ${context.id} 1 --full`);
+    expect(out.stdout).not.toContain('+line 249');
+    const full = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'look', context.id, '1', '--full', '--repo', context.repo], { encoding: 'utf8' });
+    expect(full.status).toBe(0);
+    expect(full.stdout).toContain('+line 249');
   }, 'Repair app', files));
 
   // Two configurations. In the first the attributes that select the programs
