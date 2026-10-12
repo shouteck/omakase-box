@@ -77,26 +77,50 @@ const READABLE_LOGIN = /^[a-z\d][a-z\d-]{0,38}(?:\[bot\])?$/i;
 const login = (value: unknown): string => typeof value === 'string' && READABLE_LOGIN.test(value) ? value : invalid('github-response-invalid', 'GitHub returned an unreadable account name; nothing was executed');
 const number = (value: unknown): number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : invalid('github-response-invalid', 'GitHub returned an unreadable number');
 
+// The least GitHub CLI the tool runs on — every GitHub call is `gh api` or
+// `gh auth status`, carried verbatim; the tool is only proven against gh
+// 2.x. The probe is one `version` spawn per program per process, paid only
+// by commands that reach GitHub — `gh` output is the only place its own
+// version exists.
+export const GH_LEAST = '2.0';
+const probedGh = new Set<string>();
+
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
 function gh(root: string, args: readonly string[]): string {
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
-  catch { return invalid('github-cli-missing', 'GitHub CLI gh is missing; install and sign in to gh, or post to a local folder'); }
-  let result;
+  catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com). A local folder is still available`); }
+  if (!probedGh.has(program.path)) {
+    // `gh version`, never `gh --version`: a gh.exe that is a wrapped program
+    // may see the double-dash flag eaten by its own runtime before the
+    // subcommand ever runs — a wrapped `gh` has no such flag of its own.
+    const probe = launch(program, root, ['version']);
+    const found = /gh version (\d+)\.(\d+)/.exec(probe.stdout ?? '');
+    if (probe.error !== undefined || probe.status !== 0 || found === null) {
+      return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — the program at ${program.path} did not answer 'gh version' (https://cli.github.com). A local folder is still available`);
+    }
+    if (Number(found[1]) < 2) {
+      return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com). A local folder is still available`);
+    }
+    probedGh.add(program.path);
+  }
+  const result = launch(program, root, args);
+  if (result.error !== undefined || result.status !== 0) return invalid('github-command-failed', 'GitHub CLI could not complete the requested operation; check gh sign-in and access, then retry');
+  return result.stdout ?? '';
+}
+
+function launch(program: ReturnType<typeof resolveProgram>, root: string, args: readonly string[]) {
   if (program.kind === 'command-file') {
     for (const token of [program.path, ...args]) {
-      if (/["%!\r\n]/.test(token) || /\\$/.test(token)) return invalid('github-cli-unsafe', 'this gh command file cannot carry these arguments safely; use the gh executable');
+      if (/["%!\r\n]/.test(token) || /\\$/.test(token)) throw new BountyRefused('github-cli-unsafe', 'this gh command file cannot carry these arguments safely; use the gh executable');
     }
     const line = `"${[program.path, ...args].map(token => `"${token}"`).join(' ')}"`;
     let interpreter: string;
     try { interpreter = resolveProgram('cmd.exe').path; }
-    catch { return invalid('github-cli-missing', 'the command-file interpreter is missing; use the gh executable'); }
-    result = spawnSync(interpreter, ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
-  } else {
-    result = spawnSync(program.path, [...args], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
+    catch { throw new BountyRefused('github-cli-missing', 'the command-file interpreter is missing; use the gh executable'); }
+    return spawnSync(interpreter, ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
   }
-  if (result.error !== undefined || result.status !== 0) return invalid('github-command-failed', 'GitHub CLI could not complete the requested operation; check gh sign-in and access, then retry');
-  return result.stdout ?? '';
+  return spawnSync(program.path, [...args], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
 }
 
 function api(root: string, endpoint: string, payload?: object, method?: string): unknown {
@@ -149,8 +173,10 @@ function publicRepository(root: string): string {
   const repository = ownRepository(root);
   try { gh(root, ['auth', 'status', '--hostname', 'github.com']); }
   catch (error) {
-    if (error instanceof BountyRefused && error.reason === 'github-cli-missing') throw error;
-    return invalid('github-not-signed-in', 'gh is not signed in to GitHub; sign in outside the tool or use a local folder');
+    // CLI presence/version refusals keep their own names — only the auth
+    // call's failure means not-signed-in.
+    if (error instanceof BountyRefused && error.reason.startsWith('github-cli-')) throw error;
+    return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com). A local folder is still available`);
   }
   let info: unknown;
   try { info = api(root, `repos/${repository}`); }
@@ -1194,7 +1220,7 @@ function collectSnapshotPullRequest(root: string, record: BountyRecord, id: stri
 export function syncGitHubDecision(root: string, record: BountyRecord): void {
   const publication = record.github;
   if (publication === undefined) return;
-  const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo'].includes(entry.command ?? ''));
+  const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged'].includes(entry.command ?? ''));
   const event = decisions.at(-1);
   if (event === undefined) return;
   try {
@@ -1208,7 +1234,9 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
       const comments = pages(root, `${endpoint}/comments`);
       for (const decision of decisions) {
         const marker = `<!-- box-bounty:${record.id}:${decision.command} -->`;
-        const fact = decision.command === 'apply' ? `Applied as commit ${decision.merge}.` : decision.command === 'reject' ? `Rejected. Recorded reason: ${decision.reason}` : decision.command === 'undo' ? `Undo recorded as commit ${decision.merge}.` : 'Withdrawn.';
+        const fact = decision.command === 'apply' ? `Applied as commit ${decision.merge}.`
+          : decision.command === 'merged' ? `Solution${decision.attempt !== undefined ? ` #${decision.attempt}` : ''} is merged on the bounty's branch as commit ${decision.merge} (${decision.reason ?? decision.merge}).`
+          : decision.command === 'reject' ? `Rejected. Recorded reason: ${decision.reason}` : decision.command === 'undo' ? `Undo recorded as commit ${decision.merge}.` : 'Withdrawn.';
         const body = `${fact}\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
@@ -1246,7 +1274,8 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
     publication.pending = null;
   } catch (error) {
     const detail = error instanceof BountyRefused ? ` (${error.reason}: ${error.message})` : '';
-    publication.pending = `github-decision-pending${detail}: local ${event.command} stands; retry box bounty ${event.command} ${record.id}${event.command === 'reject' ? ' --reason "<recorded reason>"' : ''} to comment, close the issue and remove ${publication.branch}`;
+    const retry = event.command === 'merged' ? 'apply' : event.command;
+    publication.pending = `github-decision-pending${detail}: local ${event.command} stands; retry box bounty ${retry} ${record.id}${event.command === 'reject' ? ' --reason "<recorded reason>"' : ''} to comment, close the issue and remove ${publication.branch}`;
   }
   persistRecord(root, record);
 }

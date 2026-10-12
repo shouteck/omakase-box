@@ -52,6 +52,21 @@ even start — it fails with "Repository-local pnpm is unavailable". That is
 the step a warm checkout hides. It applies to any fresh copy, not only a
 bounty.
 
+Two programs are external requirements, checked where they are needed and
+nowhere else: **Git 2.40 or later** (merges and the dry-merge read pin
+`GIT_ATTR_SOURCE`, a git 2.40 feature, and the dry merge itself is
+`merge-tree --write-tree`, git 2.38 — get it at https://git-scm.com) and, only
+for commands that reach GitHub, the **GitHub CLI `gh` 2.0 or later, signed
+in** (https://cli.github.com). A command that never touches a program never
+demands it — `help` runs with neither installed. A program missing, too old
+or not signed in is a named refusal on the error stream (`git-missing`,
+`git-too-old`, `github-cli-missing`, `github-cli-too-old`,
+`github-not-signed-in`): the program, the least version, what was found and
+the program's official page — never an install attempt or instructions.
+Checking a version costs one `git version` or `gh --version` per command,
+only in commands that would run that program anyway; presence checks are
+PATH lookups, never a spawned probe.
+
 Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
 anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
 bounty's record; nothing else leaves the machine until `confirm` + `post` —
@@ -128,9 +143,26 @@ program outside the repository, or merge the solution with your own git.
 
 When a solution clashes with current code, `apply` aborts the merge — the
 worktree and index are exactly as before, the record keeps the conflicting
-paths — and names `look <n>` so you can read the solution before deciding
-what to do. Resolving a clash is your own work: resolve the paths in your
-working tree and commit, then run `apply` again.
+paths — and states the facts: which files clash, which of the solution's
+files would merge cleanly, and which commits on this branch touched the
+clashing files since the shared commit. It names `look <n>` so you can read
+the solution before deciding what to do, and says once that a merge you make
+yourself runs under the owner's own Git settings — the tool's pins are not
+part of it.
+
+Resolving a clash is your own merge — the tool offers no command that
+merges, stages or resolves, and keeps no merge state of its own. However the
+solution lands on the branch the bounty was created on — your own merge, the
+pull request merged directly — the next bounty command that reads a record
+recognises it by Git ancestry and ends the bounty exactly as a clean `apply`
+does: the record goes `applied` with the landed commit named, the closing
+comment and issue close go out, and the durability refs drop. A merge on any
+other branch closes nothing and is never mentioned; if two solutions are on
+the branch, the one merged first in its first-parent history is the one the
+bounty names. A record that names no branch it was created on, or whose
+branch is gone, cannot be checked — the command says so and nothing closes.
+If the recognised merge carries a never-ship path the collected solution did
+not, the path is named as a fact — the history stays as you made it.
 
 ## Solvers' questions
 
@@ -280,7 +312,8 @@ still a decision, not a consequence — `apply <id> <n>` is always the agent's
 call.
 
 `apply`, `reject` and `withdraw` comment the recorded fact on the issue, close it
-and remove the bounty branch. If the branch carried work published only there —
+and remove the bounty branch — a merge the next command recognises on the
+bounty's branch does the same, naming the solution and the commit. If the branch carried work published only there —
 the poster's unpushed commits or the work-in-progress commit — the issue names
 those commits before the branch is removed, so nothing the agent published is
 lost by surprise; the local work was never touched. `undo` comments the

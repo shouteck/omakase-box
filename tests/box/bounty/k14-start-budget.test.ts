@@ -64,34 +64,39 @@ function tally(dir: string): Starts {
 }
 
 // The counts this wave reaches, one entry per command in the journey below.
+// BT7b adds one `git version` probe per process to every command that uses
+// Git, one `gh --version` per process to every command that reaches the
+// stand-in, and one `rev-list` to every command that runs while an open
+// bounty has a recorded solution commit (attempt or seen pull-request head)
+// — the merged-solution check.
 const BUDGET: Record<string, { git: number; gh: number }> = {
   'help': { git: 0, gh: 0 },
-  'describe': { git: 1, gh: 0 },
-  'describe-rules': { git: 1, gh: 0 },
-  'remind': { git: 1, gh: 0 },
-  'create-preview': { git: 10, gh: 0 },
-  'create': { git: 17, gh: 0 },
-  'status-drafted': { git: 1, gh: 0 },
-  'withdraw-draft': { git: 2, gh: 0 },
-  'confirm-preview': { git: 17, gh: 2 },
-  'confirm-github': { git: 17, gh: 2 },
-  'post-github': { git: 20, gh: 7 },
-  'status-posted': { git: 1, gh: 4 },
-  'answers-list': { git: 1, gh: 2 },
-  'questions': { git: 1, gh: 2 },
-  'reply': { git: 1, gh: 3 },
-  'answer-pr': { git: 15, gh: 1 },
-  'look': { git: 4, gh: 0 },
-  'look-full': { git: 4, gh: 0 },
-  'apply': { git: 13, gh: 4 },
-  'status-applied': { git: 1, gh: 0 },
-  'undo': { git: 14, gh: 4 },
-  'create-local': { git: 17, gh: 0 },
-  'confirm-local': { git: 1, gh: 0 },
-  'post-dir': { git: 1, gh: 0 },
-  'answer-from': { git: 13, gh: 0 },
-  'reject': { git: 2, gh: 0 },
-  'status-end': { git: 1, gh: 0 }
+  'describe': { git: 2, gh: 0 },
+  'describe-rules': { git: 2, gh: 0 },
+  'remind': { git: 2, gh: 0 },
+  'create-preview': { git: 11, gh: 0 },
+  'create': { git: 18, gh: 0 },
+  'status-drafted': { git: 2, gh: 0 },
+  'withdraw-draft': { git: 3, gh: 0 },
+  'confirm-preview': { git: 18, gh: 3 },
+  'confirm-github': { git: 18, gh: 3 },
+  'post-github': { git: 21, gh: 8 },
+  'status-posted': { git: 2, gh: 5 },
+  'answers-list': { git: 3, gh: 3 },
+  'questions': { git: 3, gh: 3 },
+  'reply': { git: 3, gh: 4 },
+  'answer-pr': { git: 17, gh: 2 },
+  'look': { git: 6, gh: 0 },
+  'look-full': { git: 6, gh: 0 },
+  'apply': { git: 15, gh: 5 },
+  'status-applied': { git: 2, gh: 0 },
+  'undo': { git: 15, gh: 5 },
+  'create-local': { git: 18, gh: 0 },
+  'confirm-local': { git: 2, gh: 0 },
+  'post-dir': { git: 2, gh: 0 },
+  'answer-from': { git: 14, gh: 0 },
+  'reject': { git: 4, gh: 0 },
+  'status-end': { git: 2, gh: 0 }
 };
 
 it('every bounty command stays within its Git and gh start budget', () => fixture(context => {

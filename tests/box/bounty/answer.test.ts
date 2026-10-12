@@ -193,7 +193,10 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
 
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain('src/app.py');
-    expect(status).toContain(`box bounty apply ${id}`);
+    expect(status).toContain(`box bounty look ${id}`);
+    // BT7b: a clash names the manual path — the owner's own merge lands it,
+    // never "resolve the paths and run apply again".
+    expect(status).toContain(`box bounty reject ${id}`);
 
     // Retry still conflicts; after the owner resolves the file by hand it lands.
     expect(applyBounty(repo, id).outcome).toBe('conflict');
