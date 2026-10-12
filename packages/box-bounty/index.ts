@@ -1,22 +1,51 @@
-export { answerBounty, applyBounty, extractAnswerChange, showPath, undoBounty } from './answer.js';
-export { answerGitHub, listGitHubAnswers, previewGitHub } from './github.js';
+import { asOneCommand } from './git.js';
+import { answerBounty as answerBountyCommand, applyBounty as applyBountyCommand, undoBounty as undoBountyCommand } from './answer.js';
+import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand, previewGitHub as previewGitHubCommand, questionsBounty as questionsBountyCommand, replyBounty as replyBountyCommand } from './github.js';
+import { finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
+import { confirmBounty as confirmBountyCommand, postBounty as postBountyCommand, rejectBounty as rejectBountyCommand, renderStatus as renderStatusCommand, withdrawBounty as withdrawBountyCommand } from './record.js';
+import { lookBounty as lookBountyCommand, unlookBounty as unlookBountyCommand } from './copies.js';
+
+// Each command the package offers is one command to Git's pins: the names of
+// configured filters and merge drivers are read once per repository path for
+// its length and forgotten when it returns (see asOneCommand in git.ts).
+const command = <A extends unknown[], R>(run: (...args: A) => R) => (...args: A): R => asOneCommand(() => run(...args));
+export const answerBounty = command(answerBountyCommand);
+export const applyBounty = command(applyBountyCommand);
+export const undoBounty = command(undoBountyCommand);
+export const answerGitHub = command(answerGitHubCommand);
+export const listGitHubAnswers = command(listGitHubAnswersCommand);
+export const previewGitHub = command(previewGitHubCommand);
+export const questionsBounty = command(questionsBountyCommand);
+export const replyBounty = command(replyBountyCommand);
+export const finalizeBounty = command(finalizeBountyCommand);
+export const planBounty = command(planBountyCommand);
+export const confirmBounty = command(confirmBountyCommand);
+export const postBounty = command(postBountyCommand);
+export const rejectBounty = command(rejectBountyCommand);
+export const renderStatus = command(renderStatusCommand);
+export const withdrawBounty = command(withdrawBountyCommand);
+export const lookBounty = command(lookBountyCommand);
+export const unlookBounty = command(unlookBountyCommand);
+export { extractAnswerChange, quoteForeign, showPath } from './answer.js';
 export type { GitHubChoice, GitHubPlan, GitHubPublication } from './github.js';
 export type { AnswerChange, AnswerResult, ApplyResult, UndoResult } from './answer.js';
 export { BountyUsage, parseCreateArgs } from './args.js';
 export type { CreateArgs } from './args.js';
-export { finalizeBounty, licenceOf, planBounty, renderListing, renderPreview, resolveRepoRoot, TOOL_VERSION } from './create.js';
+export { licenceOf, renderListing, renderPreview, resolveRepoRoot, TOOL_VERSION } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
-export { GitFailed, git, gitOutcome } from './git.js';
+export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';
 export { NOTHING_RUN } from './answer.js';
 export type { BountyManifest } from './manifest.js';
 export { LIMITS_FILE, loadLimits } from './limits.js';
 export type { BountyLimits } from './limits.js';
 export { BUILTIN_RULES, loadOwnerList, OWNER_LIST_FILE } from './never-ship.js';
 export type { NeverShipRule } from './never-ship.js';
-export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, confirmBounty, isOpenStage, listRecords, loadRecord, persistRecord, postBounty, recordDir, recordPath, refName, rejectBounty, renderHelp, renderOpenLine, renderStatus, resolveLimits, transitionTo, withdrawBounty, writeNewRecord } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, recordPath, refName, renderHelp, renderOpenLine, resolveLimits, transitionTo, writeNewRecord } from './record.js';
 export type { AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, ResolvedLimits, StageEvent, WithdrawOutcome } from './record.js';
 export { renderDescribe, renderRemind, renderRules } from './tell.js';
+export { COPY_GIT_FACT, renderCopies, renderResume } from './copies.js';
+export { readGitPinsOncePerProcess } from './git.js';
 export { DESCRIBE_LINES, REMINDER_OFF, REMINDER_ON, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';

@@ -3,7 +3,7 @@ import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { answerBounty, applyBounty, attemptsOf, BountyRefused, confirmBounty, finalizeBounty, planBounty, postBounty, renderStatus, resolveRepoRoot, undoBounty } from '../../../packages/box-bounty/index.js';
-import type { BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
+import type { Attempt, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { fingerprint, git, makeRepo, runRoot, write } from './support.js';
 
 // Report, do not judge. `answer` binds the returned folder and writes a report
@@ -113,6 +113,19 @@ describe('flags — observations, never blocks', () => {
 });
 
 describe('several answers — each is its own attempt', () => {
+  it('full status includes every report once when a later acceptable attempt sorts first', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const { id, delivered } = posted(repo);
+    answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'first\n')));
+    answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')));
+    const record = readRecord(repo, id);
+    record.attempts = attemptsOf(record).map((attempt): Attempt => ({ ...attempt, outcome: attempt.n === 1 ? 'check-failed' : 'answered', report: [attempt.n === 1 ? 'FIRST_FAILED_REPORT_73c5' : 'SECOND_ANSWERED_REPORT_73c5'] }));
+    writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record));
+    const status = renderStatus(repo, { id, full: true });
+    expect(status.split('FIRST_FAILED_REPORT_73c5')).toHaveLength(2);
+    expect(status.split('SECOND_ANSWERED_REPORT_73c5')).toHaveLength(2);
+  });
+
   it('each answer is its own numbered attempt — refs pinned, status lists both', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);

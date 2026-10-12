@@ -4,10 +4,10 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
-import { answerBounty, NOTHING_RUN, readAnswerFolder, showPath } from './answer.js';
+import { answerBounty, NOTHING_RUN, quoteForeign, readAnswerFolder, showPath } from './answer.js';
 import { renderListing } from './create.js';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitBlob, gitOutcome, gitWriteBlob, mergeBase } from './git.js';
+import { dryMergeOnto, git, gitBlob, gitOutcome, gitProgram, gitWriteBlob, mergeBase, ownerGitOutcome } from './git.js';
 import type { DryMerge } from './git.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
@@ -29,6 +29,9 @@ export interface GitHubPublication {
   readonly commit: string;
   readonly title: string;
   readonly body: string;
+  /** `unnamed`: how many of them carry an account name GitHub returned in a form the tool will not print. */
+  questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number };
+  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string }[];
   /** 'history' on posts made since the bounty became an issue on the code that
       is already there; absent on snapshot posts made before. */
   readonly kind?: 'history';
@@ -70,7 +73,8 @@ const redact = (text: string): string => text.replace(/(?:gh[pousr]_[A-Za-z0-9_]
 const invalid = (reason: string, message: string): never => { throw new BountyRefused(reason, message); };
 const publicationRef = (id: string): string => `refs/box-bounty/${id}-github`;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
-const login = (value: unknown): string => typeof value === 'string' && /^[a-z\d][a-z\d-]{0,38}(?:\[bot\])?$/i.test(value) ? value : invalid('github-response-invalid', 'GitHub returned an unreadable account name; nothing was executed');
+const READABLE_LOGIN = /^[a-z\d][a-z\d-]{0,38}(?:\[bot\])?$/i;
+const login = (value: unknown): string => typeof value === 'string' && READABLE_LOGIN.test(value) ? value : invalid('github-response-invalid', 'GitHub returned an unreadable account name; nothing was executed');
 const number = (value: unknown): number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : invalid('github-response-invalid', 'GitHub returned an unreadable number');
 
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
@@ -84,7 +88,10 @@ function gh(root: string, args: readonly string[]): string {
       if (/["%!\r\n]/.test(token) || /\\$/.test(token)) return invalid('github-cli-unsafe', 'this gh command file cannot carry these arguments safely; use the gh executable');
     }
     const line = `"${[program.path, ...args].map(token => `"${token}"`).join(' ')}"`;
-    result = spawnSync('cmd.exe', ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
+    let interpreter: string;
+    try { interpreter = resolveProgram('cmd.exe').path; }
+    catch { return invalid('github-cli-missing', 'the command-file interpreter is missing; use the gh executable'); }
+    result = spawnSync(interpreter, ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
   } else {
     result = spawnSync(program.path, [...args], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
   }
@@ -264,7 +271,7 @@ function scanRemote(root: string, repository: string, id: string): string[] {
 // git with a stdin payload — the exclusion list for `rev-list --stdin` can be
 // longer than a command line allows on this host.
 function gitStdin(repo: string, args: readonly string[], input: string): string {
-  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll(BS, '/')}`, '-C', repo, ...args], {
+  const result = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BS, '/')}`, '-c', 'core.hooksPath=/dev/null', '-C', repo, ...args], {
     input,
     encoding: 'utf8',
     env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
@@ -334,18 +341,18 @@ function commitStatuses(root: string, sha: string, consequence: string): NamedSt
 // not, as the working tree stands: M (modified), A (staged new), D (deleted),
 // T (type change). Untracked files are invisible to it by design.
 function trackedChanges(root: string): NamedStatus[] {
-  const unmerged = gitOutcome(root, ['ls-files', '-u', '-z']);
+  const unmerged = ownerGitOutcome(root, ['ls-files', '-u', '-z']);
   if (unmerged.status === 0 && unmerged.stdout.split('\0').some(entry => entry !== '')) {
     return invalid('github-unmerged-paths', 'the repository has unmerged paths — finish or abort the merge before posting to GitHub');
   }
-  const diff = gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD']);
+  const diff = ownerGitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD']);
   if (diff.status !== 0) return invalid('github-git-failed', `Git could not read the uncommitted state: ${(diff.stderr || diff.stdout).trim()}`);
   return parseNameStatus(diff.stdout);
 }
 
 // Untracked entries (`??` porcelain) — counted, never published unless named.
 function untrackedEntries(root: string): string[] {
-  const status = gitOutcome(root, ['status', '--porcelain', '-z']);
+  const status = ownerGitOutcome(root, ['status', '--porcelain', '-z']);
   if (status.status !== 0) return invalid('github-git-failed', `Git could not read the working state: ${(status.stderr || status.stdout).trim()}`);
   const entries = status.stdout.split('\0');
   const untracked: string[] = [];
@@ -386,7 +393,7 @@ function validateIncludes(root: string, names: readonly string[], rules: readonl
     if (rule !== undefined) {
       return invalid('github-include-never-ship', `--include ${name} resolves to ${offset}, which the never-ship rule '${rule.name}' covers — it cannot be published; nothing was posted`);
     }
-    const tracked = gitOutcome(root, ['ls-files', '--error-unmatch', '-z', '--', offset]);
+    const tracked = ownerGitOutcome(root, ['ls-files', '--error-unmatch', '-z', '--', offset]);
     if (tracked.status === 0) {
       return invalid('github-include-invalid', `--include ${name} resolves to ${offset}, which is already tracked — it is published through the uncommitted-changes choice, not named by hand`);
     }
@@ -416,7 +423,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
     git(root, ['read-tree', 'HEAD'], env);
     // Modes the index already knows, so an executable file stays executable.
     const modes = new Map<string, string>();
-    for (const entry of gitOutcome(root, ['ls-files', '-s', '-z']).stdout.split('\0')) {
+    for (const entry of ownerGitOutcome(root, ['ls-files', '-s', '-z']).stdout.split('\0')) {
       const match = /^(\d+) [a-f\d]{40} 0\t(.+)$/.exec(entry);
       if (match !== null) modes.set(match[2]!, match[1]!);
     }
@@ -607,6 +614,9 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
 // kept out — the code is the repository's real history.
 function listingHistory(record: BountyRecord, repository: string, plan: GitHubPlan): { branch: string; title: string; body: string } {
   const { manifest } = boundFolder(record);
+  // Generated folder notes describe the local snapshot, including work left home.
+  // An authored --note is public by choice; automatic job context stays local.
+  const note = record.noteSource === 'generated' ? null : manifest.note;
   const branch = `box-bounty/${record.id}`;
   const title = `[box bounty ${record.id}] ${manifest.title}`;
   const onTop = plan.pushed.length === 0
@@ -621,7 +631,7 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     '',
     manifest.task.text.trim(),
     '',
-    ...(manifest.note !== null ? ['## What was already tried', '', manifest.note.text.trim(), ''] : []),
+    '## What was already tried', '', note !== null ? note.text.trim() : 'No public note was supplied.', '',
     '## The code',
     '',
     `Branch from \`${branch}\` — it is the branch pull requests for this bounty target.`,
@@ -805,8 +815,7 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
   }
 }
 
-export function listGitHubAnswers(root: string, id: string): string {
-  const record = loadRecord(root, id);
+export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id)): string {
   if (record.github === undefined) return invalid('not-github-posted', 'this bounty has no GitHub post; answer from a local folder');
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
@@ -814,11 +823,18 @@ export function listGitHubAnswers(root: string, id: string): string {
   for (const entry of data) {
     if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
     const n = number(entry['number']);
+    if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit');
+    const commit = entry['head']['sha'];
+    const seen = record.github.seenPullRequests?.find(entry => entry.n === n && entry.commit === commit);
     const files = pages(root, `repos/${repository}/pulls/${n}/files`);
-    const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(JSON.stringify(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files'));
-    lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}`);
+    const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files'));
+    const collected = record.attempts?.find(attempt => attempt.commit === commit);
+    const next = collected === undefined ? `collect: box bounty answer ${id} --pr ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
+    lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}`);
+    if (seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n, commit, at: new Date().toISOString() }];
   }
   if (data.length === 0) lines.push('  none open; wait for an answer or withdraw the bounty');
+  persistRecord(root, record);
   return lines.join('\n');
 }
 
@@ -828,13 +844,56 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
   try {
     const issue = api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
     if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state');
-    const answers = listGitHubAnswers(root, record.id);
+    const answers = listGitHubAnswers(root, record.id, record);
+    const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
+    const unnamed = comments.filter(comment => comment.author === null).length;
+    publication.questions = { count: comments.length, latestAt: comments.map(comment => comment.at).sort().at(-1) ?? null, ...(unnamed > 0 ? { unnamed } : {}) };
     publication.outside = { at: new Date().toISOString(), issueState: issue['state'], answers };
     publication.unavailableAt = null;
   } catch {
     publication.unavailableAt = new Date().toISOString();
   }
   persistRecord(root, record);
+}
+
+// `author` is null when GitHub returned an account name the tool will not
+// print: the comment still counts and is still shown, marked as such.
+type IssueComment = { readonly author: string | null; readonly body: string; readonly at: string };
+
+function boundIssue(root: string, record: BountyRecord, fetched?: unknown): { repository: string; number: number; account: string } {
+  const publication = record.github;
+  if (publication === undefined || publication.issue === null) return invalid('not-github-posted', `this bounty has no GitHub issue; next: box bounty status`);
+  const issue = fetched ?? api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
+  if (!isObject(issue) || issue['number'] !== publication.issue.number || typeof issue['body'] !== 'string' || !issue['body'].includes(`<!-- box-bounty:${record.id} -->`) || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', `the issue is not this bounty's; no reply was posted; next: box bounty status`);
+  return { repository: publication.repository, number: publication.issue.number, account: publication.account };
+}
+
+function issueComments(root: string, record: BountyRecord, fetched?: unknown): IssueComment[] {
+  const issue = boundIssue(root, record, fetched);
+  return pages(root, `repos/${issue.repository}/issues/${issue.number}/comments`).flatMap(entry => {
+    if (!isObject(entry) || !isObject(entry['user']) || entry['user']['login'] === issue.account) return [];
+    if (typeof entry['body'] !== 'string' || typeof entry['created_at'] !== 'string' || !Number.isFinite(Date.parse(entry['created_at']))) return invalid('github-response-invalid', 'GitHub returned an unreadable comment; next: box bounty status');
+    const author = entry['user']['login'];
+    return [{ author: typeof author === 'string' && READABLE_LOGIN.test(author) ? author : null, body: redact(entry['body']), at: entry['created_at'] }];
+  });
+}
+
+export function questionsBounty(root: string, id: string): string {
+  const record = loadRecord(root, id);
+  const comments = issueComments(root, record);
+  return [`${id}: ${comments.length} comment(s) written by others, not by the tool.`, ...comments.flatMap(comment => [`  ${comment.author === null ? 'an account whose name could not be read' : JSON.stringify(comment.author)} at ${comment.at}:`, ...comment.body.split('\n').map(line => `    other account | ${quoteForeign(line)}`)]), `next: box bounty reply ${id} --text "<your own words>"; or box bounty status ${id}`].join('\n');
+}
+
+export function replyBounty(root: string, id: string, text: string): BountyRecord {
+  const record = loadRecord(root, id);
+  const issue = boundIssue(root, record);
+  if (signedAccount(root) !== issue.account) return invalid('github-account-changed', 'sign in as the owner who posted this bounty; next: box bounty status');
+  if (text.trim() === '' || text.length > 65536) return invalid('reply-invalid', 'supply your own nonempty reply, at most 65536 characters; next: box bounty questions');
+  const result = api(root, `repos/${issue.repository}/issues/${issue.number}/comments`, { body: text });
+  if (!isObject(result) || result['body'] !== text || !isObject(result['user']) || result['user']['login'] !== issue.account) return invalid('github-response-invalid', 'GitHub did not confirm the reply; next: box bounty status');
+  record.replies = [...record.replies ?? [], { at: new Date().toISOString(), issue: issue.number }];
+  persistRecord(root, record);
+  return record;
 }
 
 // A pull request's change on the real history: the diff against the bounty
@@ -912,7 +971,7 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty reject ${record.id} --reason "<why>"`);
+  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read it in a copy first, or box bounty reject ${record.id} --reason "<why>"`);
   return lines;
 }
 
@@ -935,7 +994,12 @@ export function answerGitHub(root: string, id: string, pr: number) {
     const commit = git(root, ['rev-parse', ref]);
     if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
     if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author);
-    return collectHistoryPullRequest(root, record, publication, commit, author);
+    const result = collectHistoryPullRequest(root, record, publication, commit, author);
+    if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
+      publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
+      persistRecord(root, result.record);
+    }
+    return result;
   } finally {
     gitOutcome(root, ['update-ref', '-d', ref]);
   }
@@ -995,6 +1059,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   const attempt: Attempt = {
     n,
     at,
+    seenAt: publication.seenPullRequests?.find(entry => entry.commit === commit)?.at ?? at,
     author,
     commit,
     changed: change.changed,

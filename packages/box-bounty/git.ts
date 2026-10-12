@@ -1,4 +1,14 @@
 import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
+import { resolveProgram } from '../box-package/commands.js';
+
+let pinnedGit: string | undefined;
+export function gitProgram(): string {
+  if (pinnedGit !== undefined) return pinnedGit;
+  try { pinnedGit = resolve(resolveProgram('git').path); }
+  catch { throw new GitFailed('Git is not available on PATH; nothing was run'); }
+  return pinnedGit;
+}
 
 // Git entry point for the bounty tool. Two rules differ from a casual call:
 //  - GIT_OPTIONAL_LOCKS=0 on every invocation, so reads (status, ls-files,
@@ -40,17 +50,109 @@ export class GitFailed extends Error {
 
 const BACKSLASH = String.fromCharCode(92);
 
-export function gitOutcome(repo: string, args: readonly string[], env: GitEnv = {}): GitOutcome {
-  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, ...args], {
+function gitEnvironment(env: GitEnv = {}): NodeJS.ProcessEnv {
+  const inherited = { ...process.env };
+  for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) delete inherited[key];
+  return { ...inherited, GIT_OPTIONAL_LOCKS: '0', ...env };
+}
+
+function operationIndex(args: readonly string[]): number {
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i] === '-c') { i += 1; continue; }
+    return i;
+  }
+  return -1;
+}
+
+// Whose content a call works on decides which configured programs may run —
+// not which Git operation it is.
+//
+//   'foreign' (the default)  A solver's content is, or may be, in play: a look
+//             copy, or any call that does not say otherwise.
+//             Nothing the configuration names is run — no filter, no merge
+//             driver — whatever the attributes select. A call added later
+//             lands here.
+//   'owner'   Only the owner's own content is in play, in the owner's own
+//             repository: the snapshot create ships, reads of the owner's
+//             working tree, and the merge that lands on it. The owner's
+//             configured filters and merge drivers behave as in plain Git, so
+//             create ships filtered bytes and a landed merge leaves the
+//             working tree as the owner's own checkout would. Which names can
+//             be selected there is still decided by the owner's committed
+//             attributes (GIT_ATTR_SOURCE at the call).
+//
+// Said with ownerGit / ownerGitOutcome. An unmarked call that should have been
+// 'owner' gives wrong bytes, which a test can see; the opposite mistake could
+// run something, so 'foreign' is what an unmarked call gets.
+export type GitContent = 'owner' | 'foreign';
+
+// The tool never writes Git configuration, so within one command the filter and
+// merge-driver names are read once per repository path instead of before every
+// foreign call. The CLI is one command per process and says so for the whole
+// process; a library caller gets the same for the length of each command it
+// calls (asOneCommand), and nothing is remembered from one command to the
+// next. A bare call outside any command — a test that edits configuration
+// between two calls — still reads before each call.
+let pinsByRepo: Map<string, readonly string[]> | null = null;
+export function readGitPinsOncePerProcess(): void { pinsByRepo ??= new Map(); }
+let commandPins: Map<string, readonly string[]> | null = null;
+let commandDepth = 0;
+export function asOneCommand<T>(run: () => T): T {
+  commandDepth += 1;
+  commandPins ??= new Map();
+  try { return run(); }
+  finally {
+    commandDepth -= 1;
+    if (commandDepth === 0) commandPins = null;
+  }
+}
+
+// Never content, so never a question of whose: hooks, signing programs, the
+// file-system monitor, background maintenance, submodule recursion and an
+// external diff program are off for every call the tool makes. None of them
+// changes a byte the tool reads or writes.
+const ALWAYS = ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', '-c', 'tag.gpgSign=false', '-c', 'log.showSignature=false', '-c', 'merge.verifySignatures=false', '-c', 'core.fsmonitor=false', '-c', 'submodule.recurse=false', '-c', 'gc.auto=0', '-c', 'maintenance.auto=false', '-c', 'diff.external='];
+
+// These read or write objects and refs only — never working-tree content, never
+// the index — so no filter or merge driver can run in them and the foreign pins
+// need no configuration read. A saving only: anything not listed is pinned.
+const OBJECT_AND_REF_ONLY = new Set(['rev-parse', 'cat-file', 'ls-tree', 'merge-base', 'rev-list', 'for-each-ref', 'show-ref', 'symbolic-ref', 'update-ref', 'ls-remote', 'remote', 'commit-tree', 'hash-object', 'branch', 'log']);
+
+function safeArgs(repo: string, args: readonly string[], content: GitContent): string[] {
+  const prefix = ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo];
+  if (content === 'owner') return prefix;
+  const operation = args[operationIndex(args)];
+  if (operation !== undefined && OBJECT_AND_REF_ONLY.has(operation)) return prefix;
+  const remembered = pinsByRepo ?? commandPins;
+  const known = remembered?.get(repo);
+  if (known !== undefined) return [...prefix, ...known];
+  // Filters and merge drivers are configured by name, so silencing them means
+  // reading the names; each is overridden for this invocation, never in shared
+  // configuration.
+  const config = spawnSync(gitProgram(), [...prefix, 'config', '--name-only', '--get-regexp', '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver)$'], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true });
+  if (config.error !== undefined || config.status !== 0 && config.status !== 1) throw new GitFailed('Git configuration could not be read safely; nothing was run');
+  const pins = ['-c', 'merge.default=text'];
+  for (const key of (config.stdout ?? '').split('\n').filter(Boolean)) {
+    pins.push('-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`);
+  }
+  remembered?.set(repo, pins);
+  return [...prefix, ...pins];
+}
+
+function run(repo: string, args: readonly string[], env: GitEnv, content: GitContent): GitOutcome {
+  let program: string;
+  try { program = gitProgram(); }
+  catch (error) { return { status: null, stdout: '', stderr: '', error: error instanceof Error ? error : new GitFailed(String(error)) }; }
+  const safe = args.map((arg, index) => arg === 'diff' && index === operationIndex(args) ? [arg, '--no-ext-diff', '--no-textconv'] : [arg]).flat();
+  const result = spawnSync(program, [...safeArgs(repo, args, content), ...safe], {
     encoding: 'utf8',
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', ...env },
+    env: gitEnvironment(env),
     windowsHide: true
   });
   return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', ...(result.error !== undefined ? { error: result.error } : {}) };
 }
 
-export function git(repo: string, args: readonly string[], env: GitEnv = {}): string {
-  const result = gitOutcome(repo, args, env);
+function checked(repo: string, args: readonly string[], result: GitOutcome): string {
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr || result.stdout || result.error?.message || `exit ${result.status}`).trim();
     throw new GitFailed(`git ${args.join(' ')} failed in ${repo}: ${detail}`);
@@ -58,14 +160,31 @@ export function git(repo: string, args: readonly string[], env: GitEnv = {}): st
   return result.stdout.trim();
 }
 
+export function gitOutcome(repo: string, args: readonly string[], env: GitEnv = {}): GitOutcome {
+  return run(repo, args, env, 'foreign');
+}
+
+export function git(repo: string, args: readonly string[], env: GitEnv = {}): string {
+  return checked(repo, args, run(repo, args, env, 'foreign'));
+}
+
+// The owner's repository and only the owner's own content: see GitContent.
+export function ownerGitOutcome(repo: string, args: readonly string[], env: GitEnv = {}): GitOutcome {
+  return run(repo, args, env, 'owner');
+}
+
+export function ownerGit(repo: string, args: readonly string[], env: GitEnv = {}): string {
+  return checked(repo, args, run(repo, args, env, 'owner'));
+}
+
 // Write literal bytes as a blob into the object store, returning its sha. stdin
 // hashing applies no filters, so the blob is exactly the bytes handed in — used
 // by the answer commit, which is built on a temporary index and never the
 // worktree.
 export function gitWriteBlob(repo: string, bytes: Buffer): string {
-  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, 'hash-object', '-t', 'blob', '-w', '--stdin'], {
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['hash-object'], 'foreign'), 'hash-object', '-t', 'blob', '-w', '--stdin'], {
     input: bytes,
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
+    env: gitEnvironment(),
     windowsHide: true
   });
   if (result.status !== 0 || result.error !== undefined) {
@@ -90,7 +209,9 @@ export type DryMerge =
 // the base itself is foreign (undoing a merge), callers pass the pre-merge
 // parent instead.
 export function mergeTree(repo: string, base: string, ours: string, theirs: string, attrSource?: string): DryMerge {
-  const run = gitOutcome(repo, ['merge-tree', '--write-tree', '-z', '--name-only', `--merge-base=${base}`, ours, theirs], { GIT_ATTR_SOURCE: attrSource ?? base });
+  // The owner's repository: the dry read answers what the landing merge there
+  // would do, so it runs as that merge does.
+  const run = ownerGitOutcome(repo, ['merge-tree', '--write-tree', '-z', '--name-only', `--merge-base=${base}`, ours, theirs], { GIT_ATTR_SOURCE: attrSource ?? base });
   const oid = (run.stdout.split('\0')[0] ?? '').trim();
   if (!/^[0-9a-f]{40}$/.test(oid)) {
     return { kind: 'untestable', detail: `git merge-tree could not merge (exit ${run.status}): ${(run.stderr || run.stdout || run.error?.message || '').trim()}` };
@@ -133,8 +254,8 @@ export function dryMergeOnto(repo: string, theirs: string): DryMerge {
 // exactly what the identifier records. Returns null when the path is not a blob
 // in the tree (a link's target that was never itself tracked).
 export function gitBlob(repo: string, commit: string, path: string, env: GitEnv = {}): Buffer | null {
-  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, '-C', repo, 'cat-file', 'blob', `${commit}:${path}`], {
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', ...env },
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', 'blob', `${commit}:${path}`], {
+    env: gitEnvironment(env),
     maxBuffer: 512 * 1024 * 1024,
     windowsHide: true
   });
