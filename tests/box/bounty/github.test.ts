@@ -7,14 +7,14 @@ import { CLI_DIST, fingerprint, git, runRoot, write } from './support.js';
 import { answerBounty } from '../../../packages/box-bounty/index.js';
 import { resolveProgram, runDeclaredCheck } from '../../../packages/box-package/commands.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
-import { fixture, refused, withoutGh } from './github-fixture.js';
+import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
 import type { GhState } from './github-fixture.js';
 
 describe('GitHub bounty destination, entirely offline', () => {
   it('isolates co-located runnable gh, git and node and restores lookup after failure', () => fixture(({ repo, state }) => {
     const gh = resolveProgram('gh').path;
     withoutGh(() => {
-      const poison = join(dirname(resolveProgram('git').path), process.platform === 'win32' ? 'gh.cmd' : 'gh');
+      const poison = join(dirname(resolveProgram('git').path), process.platform === 'win32' ? 'gh.exe' : 'gh');
       copyFileSync(gh, poison);
       try {
         expect(dirname(resolveProgram('gh').path)).toBe(dirname(resolveProgram('git').path));
@@ -174,8 +174,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(spawnSync('git', ['-C', repo, 'show-ref', '--verify', '--quiet', `refs/box-bounty/${id}-github`]).status).toBe(1);
   }));
 
-  it('lists facts, collects the signed-in author, applies, closes, removes the branch and records undo', () => fixture(({ repo, bare, id, state, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr();
+  it('lists facts, collects the signed-in author, applies, closes, removes the branch and records undo', () => postedFixture(({ repo, bare, id, state }) => {
     expect(listGitHubAnswers(repo, id)).toContain('#1 by owner: "app.txt"');
     const before = fingerprint(repo);
     expect(answerGitHub(repo, id, 1).outcome).toBe('answered');
@@ -263,18 +262,18 @@ describe('GitHub bounty destination, entirely offline', () => {
     ['wrong base', 'github-pr-wrong-branch', {}, 'main'],
     ['never-ship addition', 'answer-never-ship', { '.env': 'bad' }, undefined],
     ['hostile author', 'github-response-invalid', {}, undefined]
-  ])('refuses %s without changing the record or worktree', (label, reason, extra, base) => fixture(({ repo, id, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  ])('refuses %s without changing the record or worktree', (label, reason, extra, base) => postedFixture(({ repo, id, pr }) => {
+    // A second pull request carries the shape under test; the master's own PR
+    // waits beside it, uncollected.
     pr(label === 'hostile author' ? 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' : 'owner', extra, base);
     const before = fingerprint(repo);
     const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
-    refused(() => answerGitHub(repo, id, 1), reason);
+    refused(() => answerGitHub(repo, id, 2), reason);
     expect(fingerprint(repo)).toEqual(before);
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
   }));
 
-  it('refuses a missing PR and leaks no credential from gh errors or fields', () => fixture(({ repo, id, state, update, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+  it('refuses a missing PR and leaks no credential from gh errors or fields', () => postedFixture(({ repo, id, state, update, pr }) => {
     refused(() => answerGitHub(repo, id, 999), 'github-pr-missing');
     pr('owner', { 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890.txt': 'data' });
     expect(listGitHubAnswers(repo, id)).not.toContain('ghp_');
@@ -288,8 +287,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().comments[0]!.body).toContain('not wanted');
   }));
 
-  it('keeps the local apply when the outside update fails, and resumes without another merge', () => fixture(({ repo, id, pr, update, state }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr(); answerGitHub(repo, id, 1);
+  it('keeps the local apply when the outside update fails, and resumes without another merge', () => postedFixture(({ repo, id, update, state }) => {
     update({ fail: '/comments' });
     const applied = applyBounty(repo, id);
     expect(loadRecord(repo, id).github!.pending).toContain('local apply stands');
@@ -297,10 +295,9 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(applied.mergeCommit);
     expect(state().comments).toHaveLength(1);
     expect(loadRecord(repo, id).github!.pending).toBeNull();
-  }));
+  }, { collected: true }));
 
-  it('undo preserves unfinished apply facts and outside cleanup rather than clearing them', () => fixture(({ repo, bare, id, pr, update, state }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr(); answerGitHub(repo, id, 1);
+  it('undo preserves unfinished apply facts and outside cleanup rather than clearing them', () => postedFixture(({ repo, bare, id, update, state }) => {
     update({ fail: '/comments' });
     const applied = applyBounty(repo, id);
     const undone = undoBounty(repo, id);
@@ -316,10 +313,9 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
     expect(loadRecord(repo, id).github!.pending).toBeNull();
     expect(loadRecord(repo, id).github!.state).toBe('closed');
-  }));
+  }, { collected: true }));
 
-  it('a stranger comment carrying an exact decision marker cannot suppress the tool fact', () => fixture(({ repo, id, pr, update, state }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github'); pr(); answerGitHub(repo, id, 1);
+  it('a stranger comment carrying an exact decision marker cannot suppress the tool fact', () => postedFixture(({ repo, id, update, state }) => {
     update({ fail: '/comments' });
     const applied = applyBounty(repo, id);
     const body = `Applied as commit ${applied.mergeCommit}.\n\n<!-- box-bounty:${id}:apply -->`;
@@ -327,7 +323,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     applyBounty(repo, id);
     expect(state().comments.filter(comment => comment.user.login === 'owner')).toEqual([{ body, user: { login: 'owner' } }]);
     expect(state().issues[0]!.state).toBe('closed');
-  }));
+  }, { collected: true }));
 
   it('states the public-only, free, unwatched and no-execution facts before preparation', () => {
     const text = renderDescribe(null) + renderHelp();

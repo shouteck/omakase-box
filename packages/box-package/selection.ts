@@ -1,7 +1,10 @@
 import { readFileSync, realpathSync, statSync } from 'node:fs';
-import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, normalize, relative, resolve } from 'node:path';
 import ts from 'typescript';
 import type { BoxAgreement } from './agreement.js';
+import { toPosix } from './paths.js';
+
+export { toPosix } from './paths.js';
 
 // Compiler-derived closure: walk the TypeScript compiler's module resolution from the
 // agreement's entrypoints (and module-valued editable files). Every owner source file the
@@ -58,10 +61,6 @@ function specifiersOf(source: ts.SourceFile): { specifiers: string[]; dynamic: t
 function packageName(specifier: string): string {
   const parts = specifier.split('/');
   return specifier.startsWith('@') ? parts.slice(0, 2).join('/') : (parts[0] ?? specifier);
-}
-
-export function toPosix(path: string): string {
-  return path.split(sep).join('/');
 }
 
 export function proposeSelection(agreement: BoxAgreement, sourceRootAbs: string): Selection {

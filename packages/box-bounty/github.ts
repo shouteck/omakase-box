@@ -7,8 +7,8 @@ import { resolveProgram } from '../box-package/commands.js';
 import { answerBounty, NOTHING_RUN, quoteForeign, readAnswerFolder, showPath } from './answer.js';
 import { renderListing } from './create.js';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitBlob, gitOutcome, gitProgram, gitWriteBlob, mergeBase, ownerGitOutcome } from './git.js';
-import type { DryMerge } from './git.js';
+import { dryMergeOnto, git, gitBlob, gitBlobs, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, gitWriteBlob, mergeBase, ownerGitOutcome } from './git.js';
+import type { DryMerge, IndexChange } from './git.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { attemptRefName, attemptsOf, isOpenStage, loadRecord, persistRecord, resolveLimits, transitionTo } from './record.js';
@@ -182,16 +182,28 @@ function listingSnapshot(record: BountyRecord, repository: string) {
 
 function shippedCommit(root: string, record: BountyRecord): string {
   const { manifest } = boundFolder(record);
+  // One ls-tree names each shipped blob's own object id and one cat-file
+  // --batch reads every blob for the digest check — the ids the snapshot
+  // recorded are placed verbatim, so no per-file hash-object round trips.
+  const listing = gitOutcome(root, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objectname) %(path)', record.snapshot.commit]);
+  if (listing.status !== 0) return invalid('snapshot-corrupt', 'the snapshot cannot reproduce the shipped set; nothing was posted');
+  const objectIds = new Map<string, string>();
+  for (const entry of listing.stdout.split('\0')) {
+    const space = entry.indexOf(' ');
+    if (space !== -1) objectIds.set(entry.slice(space + 1), entry.slice(0, space));
+  }
+  const blobs = gitBlobs(root, record.snapshot.commit, manifest.files.map(file => file.path));
+  const changes: IndexChange[] = [];
+  for (const file of manifest.files) {
+    const bytes = blobs.get(file.path);
+    const oid = objectIds.get(file.path);
+    if (bytes === null || bytes === undefined || oid === undefined || digest(bytes) !== file.sha256) return invalid('snapshot-corrupt', 'the snapshot cannot reproduce the shipped set; nothing was posted');
+    changes.push({ mode: '100644', sha: oid, path: file.path });
+  }
   const work = mkdtempSync(join(tmpdir(), 'box-bt6-index-'));
   try {
+    gitIndexWrite(root, join(work, 'index'), changes);
     const env = { GIT_INDEX_FILE: join(work, 'index') };
-    git(root, ['read-tree', '--empty'], env);
-    for (const file of manifest.files) {
-      const bytes = gitBlob(root, record.snapshot.commit, file.path);
-      if (bytes === null || digest(bytes) !== file.sha256) return invalid('snapshot-corrupt', 'the snapshot cannot reproduce the shipped set; nothing was posted');
-      const oid = gitWriteBlob(root, bytes);
-      git(root, ['update-index', '--add', '--cacheinfo', `100644,${oid},${file.path}`], env);
-    }
     const tree = git(root, ['write-tree'], env);
     return git(root, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-m', `box bounty ${record.id}`], env);
   } finally { rmSync(work, { recursive: true, force: true }); }
@@ -250,8 +262,10 @@ const scanRoot = (id: string): string => `refs/box-bt6a-scan/${id}`;
 function dropScanRefs(root: string, id: string): void {
   const refs = gitOutcome(root, ['for-each-ref', '--format=%(refname)', scanRoot(id)]);
   if (refs.status !== 0) return;
-  for (const ref of refs.stdout.split('\n')) {
-    if (ref !== '') gitOutcome(root, ['update-ref', '-d', ref]);
+  try {
+    gitRefsWrite(root, refs.stdout.split('\n').filter(ref => ref !== '').map(ref => ({ delete: ref })));
+  } catch {
+    // Best-effort, as the per-ref deletes were: leftovers are the state found.
   }
 }
 
@@ -328,10 +342,17 @@ const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 // the empty tree when it has none: every path a commit introduces shows up in
 // its own diff, so a never-ship file cannot hide in a root commit or in the
 // tree of a merge that drops it. A failed diff is a refusal, never "no paths".
-function commitStatuses(root: string, sha: string, consequence: string): NamedStatus[] {
-  const parents = gitOutcome(root, ['rev-list', '--parents', '-n', '1', sha]);
-  if (parents.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
-  const parent = parents.stdout.trim().split(/\s+/).slice(1)[0] ?? EMPTY_TREE;
+// `firstParent` is the commit's first parent when the caller's own rev-list
+// --parents already printed it — the per-commit `rev-list --parents -n 1`
+// question is then asked zero extra times. null means "read it", the empty
+// tree covers the no-parent case a present map produces.
+function commitStatuses(root: string, sha: string, consequence: string, knownParent?: string): NamedStatus[] {
+  let parent = knownParent;
+  if (parent === undefined) {
+    const parents = gitOutcome(root, ['rev-list', '--parents', '-n', '1', sha]);
+    if (parents.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
+    parent = parents.stdout.trim().split(/\s+/).slice(1)[0] ?? EMPTY_TREE;
+  }
   const diff = gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', parent, sha]);
   if (diff.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
   return parseNameStatus(diff.stdout);
@@ -340,9 +361,34 @@ function commitStatuses(root: string, sha: string, consequence: string): NamedSt
 // `git diff HEAD --name-status` — every change to tracked files, staged or
 // not, as the working tree stands: M (modified), A (staged new), D (deleted),
 // T (type change). Untracked files are invisible to it by design.
-function trackedChanges(root: string): NamedStatus[] {
-  const unmerged = ownerGitOutcome(root, ['ls-files', '-u', '-z']);
-  if (unmerged.status === 0 && unmerged.stdout.split('\0').some(entry => entry !== '')) {
+// One `ls-files -s` read answers both questions the index gets asked in a
+// GitHub plan: are any paths unmerged (a stage number above 0), and what mode
+// does each tracked path carry (kept so a wip commit preserves executables).
+interface StagedIndex {
+  readonly unmerged: boolean;
+  readonly modes: ReadonlyMap<string, string>;
+}
+
+function stagedIndex(root: string): StagedIndex {
+  const listed = ownerGitOutcome(root, ['ls-files', '-s', '-z']);
+  const modes = new Map<string, string>();
+  // Failed reads keep the old meaning too: `ls-files -u` nonzero meant "not
+  // checked", and a failed `-s` left modes empty — the diff read below reports
+  // the failure as it did.
+  let unmerged = false;
+  for (const entry of listed.stdout.split('\0')) {
+    const match = /^(\d+) [a-f\d]{40} (\d)\t(.+)$/.exec(entry);
+    if (match === null) continue;
+    if (match[2] !== '0') unmerged = true;
+    else modes.set(match[3]!, match[1]!);
+  }
+  return { unmerged, modes };
+}
+
+// `unmergedKnown` comes from the stagedIndex read the plan already made —
+// the same index `ls-files -u` would have listed.
+function trackedChanges(root: string, unmergedKnown: boolean): NamedStatus[] {
+  if (unmergedKnown) {
     return invalid('github-unmerged-paths', 'the repository has unmerged paths — finish or abort the merge before posting to GitHub');
   }
   const diff = ownerGitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD']);
@@ -369,6 +415,7 @@ function untrackedEntries(root: string): string[] {
 // and not be on the never-ship list — each violation is a named refusal that
 // publishes nothing.
 function validateIncludes(root: string, names: readonly string[], rules: readonly NeverShipRule[]): string[] {
+  if (names.length === 0) return []; // no names — the toplevel question is never asked
   const realRoot = git(root, ['rev-parse', '--show-toplevel']).trim();
   const included: string[] = [];
   for (const name of names) {
@@ -416,25 +463,23 @@ interface WipBuild {
 // dates are pinned to the record's creation time, so the same inputs always
 // produce the same commit: the preview, the record and the push can never
 // disagree about what the commit is.
-function buildWip(root: string, record: BountyRecord, tracked: readonly NamedStatus[], include: readonly string[]): WipBuild | null {
+// `modes` and `headTree` come from reads the plan already made — the index has
+// not moved since (nothing between them writes it), so the facts are still true.
+function buildWip(root: string, record: BountyRecord, tracked: readonly NamedStatus[], include: readonly string[], modes: ReadonlyMap<string, string>, headTree: string): WipBuild | null {
   const work = mkdtempSync(join(tmpdir(), `box-bt6a-${record.id}-wip-`));
   try {
     const env = { GIT_INDEX_FILE: join(work, 'index') };
     git(root, ['read-tree', 'HEAD'], env);
-    // Modes the index already knows, so an executable file stays executable.
-    const modes = new Map<string, string>();
-    for (const entry of ownerGitOutcome(root, ['ls-files', '-s', '-z']).stdout.split('\0')) {
-      const match = /^(\d+) [a-f\d]{40} 0\t(.+)$/.exec(entry);
-      if (match !== null) modes.set(match[2]!, match[1]!);
-    }
     const changed: string[] = [];
     const added: string[] = [];
     const deleted: string[] = [];
+    const pending: IndexChange[] = [];
     // Every component the commit places is checked with lstat, links NOT
     // followed: a link or junction at the path — or at any directory above
     // it — resolves to bytes elsewhere, so publishing it would ship what the
     // path never named. Non-plain entries are refused, not recorded as link
-    // blobs: the stricter of the two fixes, and the simpler.
+    // blobs: the stricter of the two fixes, and the simpler. Removals are
+    // queued like placements and land in the same order in one index write.
     const place = (path: string): boolean => {
       const parts = path.split('/');
       let absolute = root;
@@ -442,7 +487,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
         absolute = join(absolute, part);
         const stat = lstatSync(absolute, { throwIfNoEntry: false });
         if (stat === undefined) {
-          git(root, ['update-index', '--force-remove', '--', path], env);
+          pending.push({ mode: '0', sha: null, path });
           return false;
         }
         if (stat.isSymbolicLink() || (index < parts.length - 1 && !stat.isDirectory()) || (index === parts.length - 1 && !stat.isFile())) {
@@ -450,12 +495,12 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
         }
       }
       const blob = gitWriteBlob(root, readFileSync(absolute));
-      git(root, ['update-index', '--add', '--cacheinfo', `${modes.get(path) ?? '100644'},${blob},${path}`], env);
+      pending.push({ mode: modes.get(path) ?? '100644', sha: blob, path });
       return true;
     };
     for (const { status, path } of tracked) {
       if (status === 'D') {
-        git(root, ['update-index', '--force-remove', '--', path], env);
+        pending.push({ mode: '0', sha: null, path });
         deleted.push(path);
         continue;
       }
@@ -470,8 +515,9 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
     for (const path of include) {
       if (place(path)) added.push(path);
     }
+    // One index write lands every removal and placement in listed order.
+    gitIndexWrite(root, env.GIT_INDEX_FILE, pending);
     const tree = git(root, ['write-tree'], env);
-    const headTree = git(root, ['rev-parse', 'HEAD^{tree}']);
     if (tree === headTree) return null; // the choices resolved to no change
     const commit = git(root, [
       '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
@@ -515,9 +561,13 @@ function neverShipRules(root: string): readonly NeverShipRule[] {
 }
 
 function planGitHub(root: string, repository: string, record: BountyRecord, rules: readonly NeverShipRule[], choice: GitHubChoice): GitHubPlan {
-  const head = gitOutcome(root, ['rev-parse', '--verify', '-q', 'HEAD']);
-  const headSha = head.status === 0 ? head.stdout.trim() : '';
-  if (!/^[a-f\d]{40}$/.test(headSha)) {
+  // One rev-parse answers both HEAD questions the plan asks: the branch tip
+  // and its tree — used for the no-commits refusal, the wip comparison and
+  // the plan's head/tipTree fields.
+  const headLines = gitOutcome(root, ['rev-parse', 'HEAD', 'HEAD^{tree}']).stdout.split('\n').map(line => line.trim());
+  const headSha = headLines[0] ?? '';
+  const headTree = headLines[1] ?? '';
+  if (!/^[a-f\d]{40}$/.test(headSha) || !/^[a-f\d]{40}$/.test(headTree)) {
     return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have; a local folder is still available');
   }
   const tips = scanRemote(root, repository, record.id);
@@ -527,9 +577,16 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
     }
     // The commits on the current branch the remote lacks, newest first — read
     // from what the remote itself reports, never a local tracking name.
+    // --parents rides the same walk: each line's second field is the commit's
+    // first parent, so no per-commit `rev-list --parents` is needed below.
     const stdin = `HEAD\n${tips.map(sha => `^${sha}`).join('\n')}\n`;
-    const unpushed = gitStdin(root, ['rev-list', '--stdin', '--topo-order'], stdin)
-      .split('\n').map(line => line.trim()).filter(sha => /^[a-f\d]{40}$/.test(sha));
+    const firstParents = new Map<string, string>();
+    const unpushed = gitStdin(root, ['rev-list', '--stdin', '--topo-order', '--parents'], stdin)
+      .split('\n').map(line => line.trim().split(/\s+/)).filter(fields => /^[a-f\d]{40}$/.test(fields[0] ?? ''))
+      .map(fields => {
+        if (fields[1] !== undefined) firstParents.set(fields[0]!, fields[1]!);
+        return fields[0]!;
+      });
     const unpushedSet = new Set(unpushed);
     // The newest commit the repository already has: the first commit in
     // topological order on the current branch that is not in the unpushed set.
@@ -538,17 +595,21 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
     if (base === undefined) {
       return invalid('github-no-public-base', 'the current branch shares no commit with the GitHub repository — there is nothing public to point solvers at; a local folder is still available');
     }
+    // One staged-index read answers "any unmerged paths" for trackedChanges
+    // and "what modes does the index know" for the wip commit — the index is
+    // not written between those two questions.
+    const staged = stagedIndex(root);
     // The tool's own records under .box/bounties/ are bookkeeping, not work —
     // they carry owner-only context (`job`, `why`) documented as never
     // shipped, so they can no more land on the bounty branch than a
     // never-ship file can.
-    const tracked = trackedChanges(root).filter(change => !change.path.startsWith('.box/bounties/'));
+    const tracked = trackedChanges(root, staged.unmerged).filter(change => !change.path.startsWith('.box/bounties/'));
     const untracked = untrackedEntries(root).filter(entry => !entry.startsWith('.box/bounties/'));
     const include = validateIncludes(root, choice.include, rules);
     const needsWip = (choice.withChanges && tracked.length > 0) || include.length > 0;
-    const wip = needsWip ? buildWip(root, record, choice.withChanges ? tracked : [], include) : null;
+    const wip = needsWip ? buildWip(root, record, choice.withChanges ? tracked : [], include, staged.modes, headTree) : null;
     const tip = wip?.commit ?? headSha;
-    const tipTree = wip?.tree ?? git(root, ['rev-parse', 'HEAD^{tree}']);
+    const tipTree = wip?.tree ?? headTree;
     // Never-ship on what is new only: every commit first published here,
     // judged by what it lands versus its first parent — a root commit versus
     // the empty tree, so a planted path cannot hide. A never-ship-named file
@@ -556,7 +617,7 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
     // cannot take it back, so the preview says so instead.
     const violations: { path: string; rule: string }[] = [];
     for (const sha of unpushed) {
-      violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was posted'), rules));
+      violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was posted', firstParents.get(sha) ?? EMPTY_TREE), rules));
     }
     if (wip !== null) {
       const statuses = parseNameStatus(gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD', wip.tree]).stdout);
@@ -576,17 +637,22 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
     const rootEntries = gitOutcome(root, ['-c', 'core.quotepath=false', 'ls-tree', '-z', '--name-only', tipTree]).stdout.split('\0');
     const licenceFile = rootEntries.find(entry => LICENCE_NAME.test(entry)) ?? null;
     let declared: string | null = null;
-    const packageJson = gitBlob(root, tipTree, 'package.json');
+    // The root listing already answered whether package.json is there — the
+    // blob is read only when it is.
+    const packageJson = rootEntries.includes('package.json') ? gitBlob(root, tipTree, 'package.json') : null;
     if (packageJson !== null) {
       try {
         const pkg = JSON.parse(packageJson.toString('utf8')) as { license?: unknown };
         if (typeof pkg.license === 'string' && pkg.license.trim() !== '') declared = pkg.license.trim();
       } catch { /* an unreadable package.json leaves declared null — a fact, not an error */ }
     }
-    const pushed = [...unpushed].reverse().map(sha => ({
-      sha,
-      subject: git(root, ['show', '-s', '--format=%s', sha])
-    }));
+    // One log --no-walk answers every commit-subject question, in the same
+    // oldest-first order the pushed list is built in.
+    const subjectShas = [...unpushed].reverse();
+    const subjects = unpushed.length === 0
+      ? []
+      : git(root, ['log', '--no-walk=unsorted', '--format=%s', ...subjectShas]).split('\n');
+    const pushed = subjectShas.map((sha, index) => ({ sha, subject: subjects[index] ?? '' }));
     if (wip !== null) pushed.push({ sha: wip.commit, subject: `box bounty ${record.id}: work in progress` });
     return {
       base,
@@ -988,21 +1054,18 @@ export function answerGitHub(root: string, id: string, pr: number) {
   if (!isObject(data) || !isObject(data['base']) || !isObject(data['base']['repo']) || data['base']['ref'] !== branch || data['base']['repo']['full_name'] !== repository) return invalid('github-pr-wrong-branch', 'the pull request targets another branch or repository; nothing was collected');
   if (!isObject(data['head']) || typeof data['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(data['head']['sha']) || !isObject(data['user'])) return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts');
   const author = login(data['user']['login']);
-  const ref = `refs/box-bounty/${id}-pr-${pr}`;
-  try {
-    remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head:${ref}`]);
-    const commit = git(root, ['rev-parse', ref]);
-    if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
-    if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author);
-    const result = collectHistoryPullRequest(root, record, publication, commit, author);
-    if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
-      publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
-      persistRecord(root, result.record);
-    }
-    return result;
-  } finally {
-    gitOutcome(root, ['update-ref', '-d', ref]);
+  // The pull request's head lands on FETCH_HEAD alone — no scratch ref to
+  // create and delete around the read.
+  remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`]);
+  const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
+  if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
+  if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author);
+  const result = collectHistoryPullRequest(root, record, publication, commit, author);
+  if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
+    publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
+    persistRecord(root, result.record);
   }
+  return result;
 }
 
 // The history path: the pull request's commits are the answer. Refusals, each
@@ -1030,11 +1093,18 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   // so a file planted deep in the history and removed in the last commit
   // still cannot land.
   const rules = neverShipRules(root);
-  const newCommits = gitOutcome(root, ['rev-list', '--topo-order', `${publication.commit}..${commit}`]).stdout
-    .split('\n').map(line => line.trim()).filter(sha => /^[a-f\d]{40}$/.test(sha));
+  // --parents rides the same walk: each new commit's first parent comes back
+  // in the same line, so no per-commit `rev-list --parents` is needed.
+  const firstParents = new Map<string, string>();
+  const newCommits = gitOutcome(root, ['rev-list', '--topo-order', '--parents', `${publication.commit}..${commit}`]).stdout
+    .split('\n').map(line => line.trim().split(/\s+/)).filter(fields => /^[a-f\d]{40}$/.test(fields[0] ?? ''))
+    .map(fields => {
+      if (fields[1] !== undefined) firstParents.set(fields[0]!, fields[1]!);
+      return fields[0]!;
+    });
   const violations: { path: string; rule: string }[] = [];
   for (const sha of newCommits) {
-    violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was collected'), rules));
+    violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was collected', firstParents.get(sha) ?? EMPTY_TREE), rules));
   }
   if (violations.length > 0) {
     const named = [...new Map(violations.map(v => [v.path, v])).values()];
@@ -1084,14 +1154,20 @@ function collectSnapshotPullRequest(root: string, record: BountyRecord, id: stri
     writeFileSync(join(work, 'bounty.json'), manifestBytes);
     const tree = gitOutcome(root, ['ls-tree', '-rz', commit]);
     if (tree.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request tree');
+    const paths: string[] = [];
     for (const entry of tree.stdout.split('\0')) {
       if (entry === '') continue;
       const match = /^(100644|100755) blob ([a-f\d]{40})\t(.+)$/s.exec(entry);
       if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', 'the pull request tree holds a link or unsafe path; nothing was collected');
       const path = match[3];
       if (redact(path) !== path) return invalid('github-response-invalid', 'a pull request path contains credential-shaped text; nothing was collected');
-      const bytes = gitBlob(root, commit, path);
-      if (bytes === null) return invalid('github-pr-unreadable', 'a pull request blob could not be read');
+      paths.push(path);
+    }
+    // One cat-file --batch reads every blob the tree named.
+    const blobs = gitBlobs(root, commit, paths);
+    for (const path of paths) {
+      const bytes = blobs.get(path);
+      if (bytes === null || bytes === undefined) return invalid('github-pr-unreadable', 'a pull request blob could not be read');
       const target = join(work, 'repo', ...path.split('/'));
       mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes);
     }

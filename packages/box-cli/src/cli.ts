@@ -30,9 +30,10 @@ import { fileURLToPath } from 'node:url';
 import { answerBounty, applyBounty, BountyRefused, BountyUsage, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, rejectBounty, renderDescribe, renderHelp, renderPreview, renderRemind, renderRules, renderStatus, resolveRepoRoot, showPath, undoBounty, withdrawBounty } from '../../box-bounty/index.js';
 import { answerGitHub, listGitHubAnswers, previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, questionsBounty, replyBounty, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
-import { describeGap, exportBox, PreparationGap, validateSubmission, verifySubmission } from '../../box-package/index.js';
+// box-package and box-trace load behind the commands that need them: their
+// dependency weight (typescript, zod) is paid once by export/submit/verify/
+// trace, never by every `box bounty` spawn.
 import type { PnpmInvocation } from '../../box-package/index.js';
-import { trace, TraceRefused } from '../../box-trace/index.js';
 
 function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
   const flagIndex = argv.indexOf('--pnpm');
@@ -83,6 +84,7 @@ const [target, ...extra] = positional;
 if (command !== 'trace' && command !== 'bounty' && extra.length > 0) usage(`unexpected argument ${extra[0]}`);
 
 if (command === 'export') {
+  const { describeGap, exportBox, PreparationGap } = await import('../../box-package/index.js');
   const repoPath = flag('--repo');
   const outDir = flag('--out');
   if (target === undefined || repoPath === undefined || outDir === undefined) usage();
@@ -109,6 +111,7 @@ if (command === 'export') {
     process.exit(1);
   }
 } else if (command === 'submit') {
+  const { validateSubmission } = await import('../../box-package/index.js');
   const agreementPath = flag('--agreement');
   const repoPath = flag('--repo');
   const boxDir = flag('--box');
@@ -129,6 +132,7 @@ if (command === 'export') {
     process.exit(1);
   }
 } else if (command === 'verify') {
+  const { verifySubmission } = await import('../../box-package/index.js');
   const agreementPath = flag('--agreement');
   const repoPath = flag('--repo');
   const boxDir = flag('--box');
@@ -152,6 +156,7 @@ if (command === 'export') {
     process.exit(1);
   }
 } else if (command === 'trace') {
+  const { trace, TraceRefused } = await import('../../box-trace/index.js');
   // Everything after `--` is the command's own argv, verbatim — no shell runs
   // it, so pipes or redirection belong inside a shell the caller invokes.
   const separator = rest.indexOf('--');
