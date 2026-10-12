@@ -60,7 +60,7 @@ describe('DB_SUITES — every named suite that needs the disposable database is 
       if (!name.startsWith('test:')) continue;
       const match = command.match(/suite\.mjs\s+(.+)$/);
       if (!match) continue;
-      const key = match[1].trim(); // same shape suiteKey produces
+      const key = match[1]!.trim(); // same shape suiteKey produces
       const directory = key.startsWith('box --suite ') ? join(root, 'tests', 'box', key.slice(12)) : join(root, 'tests', key);
       if (suiteNeedsDatabase(directory) && !dbSuites.has(key)) missing.push(key);
     }
