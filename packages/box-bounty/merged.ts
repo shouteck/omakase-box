@@ -131,7 +131,7 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
   const chain = gitOutcome(repoRoot, ['rev-list', '--first-parent', `refs/heads/${branch}`]).stdout
     .split('\n').map(line => line.trim()).filter(line => line !== '');
   const chainIndex = new Map<string, number>(chain.map((sha, index) => [sha, index]));
-  const entries = merged.map(candidate => ({ candidate, merge: entryCommit(repoRoot, branch, candidate.commit, chainIndex) }));
+  const entries = merged.map(candidate => ({ candidate, merge: entryCommit(repoRoot, chain, candidate.commit, chainIndex) }));
   // Several landed solutions: the one merged first in the branch's
   // first-parent history wins — the deepest entry, furthest from the tip.
   entries.sort((a, b) => (chainIndex.get(b.merge) ?? chain.length) - (chainIndex.get(a.merge) ?? chain.length));
@@ -139,13 +139,29 @@ function checkOne(repoRoot: string, record: BountyRecord, candidates: readonly M
 }
 
 // The commit that carried a solution onto the branch: the commit itself when
-// it sits on the first-parent chain (a fast-forward land), else the oldest
-// first-parent commit that descends from it — the merge that brought it in.
-function entryCommit(repoRoot: string, branch: string, commit: string, chainIndex: ReadonlyMap<string, number>): string {
+// it sits on the first-parent chain (a fast-forward land), else the deepest
+// first-parent commit that has it as an ancestor — the merge that brought it
+// in, however it got there. A solution merged into a side branch first still
+// lands where that branch was merged in: `rev-list --first-parent
+// --ancestry-path` cannot see that (the candidate is no first-parent
+// descendant), so the landing point is found by asking the ancestry question
+// directly — `merge-base --is-ancestor` on a binary search of the chain.
+// Containment is monotone along the chain (everything tip-ward of the
+// landing contains the candidate, nothing root-ward does), so the search
+// needs log2(chain length) probes, and only ever runs when a candidate has
+// actually landed — the steady-state scan stays at one git start per open
+// bounty.
+function entryCommit(repoRoot: string, chain: readonly string[], commit: string, chainIndex: ReadonlyMap<string, number>): string {
   if (chainIndex.has(commit)) return commit;
-  const path = gitOutcome(repoRoot, ['rev-list', '--first-parent', '--ancestry-path', `${commit}..refs/heads/${branch}`]);
-  const commits = path.stdout.split('\n').map(line => line.trim()).filter(line => line !== '');
-  return commits.length > 0 ? commits[commits.length - 1]! : commit;
+  const contains = (index: number): boolean =>
+    gitOutcome(repoRoot, ['merge-base', '--is-ancestor', commit, chain[index]!]).status === 0;
+  let lo = 0; // contains(chain[lo]) — the tip always contains a landed candidate
+  let hi = chain.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (contains(mid)) lo = mid; else hi = mid;
+  }
+  return contains(hi) ? chain[hi]! : chain[lo]!;
 }
 
 // The bounty ends exactly as a clean apply ends it: `applied`, refs dropped,
