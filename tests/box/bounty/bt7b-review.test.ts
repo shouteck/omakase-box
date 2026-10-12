@@ -108,13 +108,11 @@ it('a record edited to name the branch the merge went to closes on that branch',
   expect(noticedLines.some(line => line.includes('side') && line.includes('closed'))).toBe(true);
 }, { collected: false }));
 
-// Attack: of two merged solutions, one merged into a side branch first must
-// NOT win over the one that reached the recorded branch first.
-// FAILING — review finding BT7b-1: rev-list --first-parent --ancestry-path
-// S2..main is empty when S2 entered via a nested merge, so entryCommit falls
-// back to the candidate sha itself; chainIndex misses and the `?? chain.length`
-// fallback sorts it as the DEEPEST entry — the tool names attempt 2 (last onto
-// the branch) instead of attempt 1 (merged onto it first).
+// Regression for review finding BT7b-1 (fixed at 4524abc): a solution merged
+// into a side branch first must lose to the one merged onto the recorded
+// branch first. The old --ancestry-path probe was empty for second-parent
+// entries and sorted the candidate as deepest; the binary search now finds
+// the true landing — the deepest first-parent commit containing it.
 it('a solution merged via a side branch loses to the one merged onto the branch first', () => postedFixture((context) => {
   const { repo, id, waitingPr } = context;
   answerGitHub(repo, id, 1);
@@ -177,3 +175,116 @@ it('git 2.39.9 is refused as too old, naming what was found', () => postedFixtur
   // Nit: the message reports major.minor only — a 2.39.9 binary reads '2.39'.
   expect(run.stderr).toContain('2.39');
 }, { collected: false }), 60000);
+
+// The recorded merge must be the landing commit, not the candidate sha — and
+// the never-ship extras diff must read the real merge's first-parent diff.
+it('a nested merge names the real landing commit and diffs it for extras', () => postedFixture(({ repo, id, waitingPr }) => {
+  answerGitHub(repo, id, 1);
+  git(repo, ['checkout', '-qb', 'side']);
+  git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'sol onto side', waitingPr]);
+  write(repo, 'prod.env', 'AGENT_OWNED=1\n'); // a never-ship path inside the side branch
+  git(repo, ['add', 'prod.env']);
+  git(repo, ['-c', 'user.name=rv', '-c', 'user.email=rv@test.invalid', 'commit', '-qm', 'side carries .env']);
+  git(repo, ['checkout', '-q', 'main']);
+  const landing = git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'bring side in', 'side']) && git(repo, ['rev-parse', 'HEAD']);
+  noticedLines.length = 0;
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.attempt).toBe(1);
+  expect(event.merge).toBe(landing); // the merge on main, never the solution sha
+  expect(noticedLines.some(line => line.includes('is merged on main') && line.includes(landing.slice(0, 12)))).toBe(true);
+  expect(noticedLines.some(line => line.includes('prod.env') && line.includes('dot-env'))).toBe(true);
+}, { collected: false }));
+
+// A solution whose commit lands directly on the first-parent chain (fast-
+// forward land) is its own landing point — recorded merge == the commit.
+it('a fast-forward-landed solution records the commit itself', () => postedFixture(({ repo, id, waitingPr }) => {
+  answerGitHub(repo, id, 1);
+  // waitingPr descends from the post-time main tip (nothing moved since): ff.
+  git(repo, ['merge', '--ff-only', waitingPr]);
+  noticedLines.length = 0;
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.merge).toBe(waitingPr);
+}, { collected: false }));
+
+// A candidate entering twice via two different side branches: the deepest
+// containing commit — its FIRST entry into the first-parent chain — wins.
+it('a solution landed twice is recognised at its first first-parent entry', () => postedFixture(({ repo, id, waitingPr }) => {
+  answerGitHub(repo, id, 1);
+  git(repo, ['checkout', '-qb', 'sideA']);
+  git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'sol onto sideA', waitingPr]);
+  git(repo, ['checkout', '-q', 'main']);
+  git(repo, ['checkout', '-qb', 'sideB']);
+  git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'sol onto sideB', waitingPr]);
+  git(repo, ['checkout', '-q', 'main']);
+  const first = git(repo, ['rev-parse', 'HEAD']) && mergeSolution(repo, 'sideA');
+  git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'bring sideB in', 'sideB']);
+  noticedLines.length = 0;
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.merge).toBe(first); // first entry, not the later second landing
+}, { collected: false }));
+
+// Octopus: two solutions land in ONE merge commit — same first-parent index.
+// The tool must still close, deterministically, on one solution.
+it('two solutions landed by one octopus merge still close the bounty once', () => postedFixture((context) => {
+  const { repo, id, waitingPr } = context;
+  answerGitHub(repo, id, 1);
+  const second = context.pr('solver2');
+  answerGitHub(repo, id, 2);
+  git(repo, ['checkout', '-qb', 'sa']);
+  git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'sol1 onto sa', waitingPr]);
+  git(repo, ['checkout', '-q', 'main']);
+  git(repo, ['checkout', '-qb', 'sb']);
+  git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'sol2 onto sb', second]);
+  git(repo, ['checkout', '-q', 'main']);
+  const octo = git(repo, ['merge', '--no-ff', '-X', 'theirs', '-m', 'octopus', 'sa', 'sb']) && git(repo, ['rev-parse', 'HEAD']);
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.merge).toBe(octo);
+}, { collected: false }), 60000);
+
+// Boundary probe for the binary search: a solution landed at the deepest
+// non-root chain position, with a long chain tip-ward of it.
+it('a solution landed deep in a long chain is found at its merge commit', () => postedFixture(({ repo, id, waitingPr }) => {
+  answerGitHub(repo, id, 1);
+  const landing = mergeSolution(repo, waitingPr);
+  for (let i = 0; i < 25; i += 1) {
+    write(repo, `f${i}.txt`, `${i}\n`);
+    git(repo, ['add', `f${i}.txt`]);
+    git(repo, ['-c', 'user.name=rv', '-c', 'user.email=rv@test.invalid', 'commit', '-qm', `later ${i}`]);
+  }
+  noticedLines.length = 0;
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.merge).toBe(landing);
+}, { collected: false }), 60000);
+
+// Boundary probe the other way: the landing IS the tip — chain index 0.
+it('a solution landed at the very tip is found', () => postedFixture(({ repo, id, waitingPr }) => {
+  answerGitHub(repo, id, 1);
+  const landing = mergeSolution(repo, waitingPr);
+  noticedLines.length = 0;
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.merge).toBe(landing);
+}, { collected: false }));
+
+// Shallowest case: the fixture's main is one base commit, so the landing
+// merge is both the tip and a direct child of the root — search bounds.
+it('a merge landing on the shallowest chain is found', () => postedFixture(({ repo, id, waitingPr }) => {
+  answerGitHub(repo, id, 1);
+  const landing = mergeSolution(repo, waitingPr);
+  noticedLines.length = 0;
+  checkMergedSolutions(repo);
+  const event = loadRecord(repo, id).events.at(-1)!;
+  expect(event.command).toBe('merged');
+  expect(event.merge).toBe(landing);
+}, { collected: false }));
