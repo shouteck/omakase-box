@@ -504,7 +504,10 @@ export function unsafeOwnerCommands(repo: string): UnsafeConfigCommand[] {
     try { return realpathSync(resolveProgram(name).path); }
     catch { return null; }
   };
-  const place = { pathy, inside, exists, programOnDisk };
+  // A configured path inside a `git -c name=value` operand has no origin
+  // file — a relative one cannot be placed.
+  const pathDetail = (value: string): string | null => unsafeDetail(value, '', inside, repo);
+  const place = { pathy, inside, exists, programOnDisk, pathDetail };
   // Aliases come from the same configuration read — a configured command
   // that invokes `git` can reach one.
   const aliases = new Map<string, string>();
@@ -556,96 +559,235 @@ function unsafeDetail(value: string, origin: string, inside: (token: string) => 
   return inside(resolve(base, expanded)) ? `${value} resolves inside the repository` : null;
 }
 
+// Programs that read what to run from a manifest file rather than from an
+// argument — package.json scripts, Makefile, justfile, Taskfile, Rakefile.
+// The manifest is the operand; when it resolves inside the repository (its
+// default always does — the working directory is the merge's tree) or
+// cannot be placed, the line refuses. Only an explicit file operand placed
+// outside the tree lets it land.
+const LAUNCHERS = new Map([
+  ['npm', 'package.json'], ['npx', 'package.json'], ['pnpm', 'package.json'], ['yarn', 'package.json'],
+  ['make', 'Makefile'], ['just', 'justfile'], ['task', 'Taskfile.yml'], ['rake', 'Rakefile']
+]);
+// The option spellings that give a launcher an explicit operand: the file
+// (or, for --prefix/--cwd/--directory, the directory) it reads its program
+// from instead of the working directory's manifest.
+const OPERAND_FLAGS = new Set([
+  '-f', '-t', '-C', '--file', '--makefile', '--justfile', '--taskfile', '--rakefile',
+  '--prefix', '--cwd', '--directory'
+]);
+// `git` flags whose next word is an operand, not an option: -c/--config/
+// --config-env inject a `name=value` config entry (an alias can be armed
+// inline); -C changes the directory a subcommand runs against.
+const GIT_OPERAND_FLAGS = new Set(['-c', '-C', '--config', '--config-env']);
+
+// Split a configured line into the individual commands Git hands to
+// `sh -c`. An unquoted ;, |, &&, &, (, ), backtick, newline, $(), <() or
+// >() starts a new command — a `git` (or any program) reached after one of
+// these is a first token again and gets the full check. Redirection
+// targets (>, <) are split the same way so their paths are placed; the
+// fd-duplication forms >& and <& are not separators. Quotes are honoured:
+// a separator inside '…' is literal, inside "…" only $() and ` still
+// substitute.
+function shellCommands(command: string): string[] {
+  const commands: string[] = [];
+  let current = '';
+  let quote = '';
+  for (let i = 0; i < command.length; i += 1) {
+    const ch = command[i]!;
+    const next = command[i + 1];
+    const prev = command[i - 1];
+    if (quote === "'") { current += ch; if (ch === "'") quote = ''; continue; }
+    if (ch === "'" && quote === '') { quote = "'"; current += ch; continue; }
+    if (quote === '"' && ch === '\\' && next !== undefined && '"\\'.includes(next)) { current += ch + next; i += 1; continue; }
+    if (quote === '"' && ch === '"') { quote = ''; current += ch; continue; }
+    if (ch === '"' && quote === '') { quote = '"'; current += ch; continue; }
+    const substitution = ch === '`' || ((ch === '$' || ch === '<' || ch === '>') && next === '(');
+    const separator = substitution || ch === ';' || ch === '\n' || ch === '|' || ch === '(' || ch === ')'
+      || (ch === '&' && next !== '>' && prev !== '>' && prev !== '<')
+      || ((ch === '>' || ch === '<') && next !== '&');
+    if (!separator) { current += ch; continue; }
+    if (ch === '`') { commands.push(current); current = ''; continue; }
+    commands.push(current);
+    current = '';
+    if (ch === '$' || (ch === '<' || ch === '>') && next === '(') i += 1; // swallow the opening (
+  }
+  commands.push(current);
+  return commands;
+}
+
 // Tokens of a configured command line. `first` is the program itself; after
 // an interpreter or launcher, the next non-option token is the file it loads.
 // Path-bearing arguments are checked everywhere — a program the solution
 // leaves alone can call a file the solution changes.
 //
-// Two shapes need more than placement:
+// Four shapes need more than placement:
+// - the line is parsed the way Git runs it — `sh -c` — so every command
+//   reached after a separator is a first token, including inside `!`-alias
+//   expansions, which recurse through this same check;
 // - an interpreter left with no file operand reads its program from the
 //   filtered stream itself (pendingEntry still open at the end) — a `node`
 //   or `sh` filter runs the solver's bytes as code;
 // - a `git` program's arguments can name an alias — expanded from the same
-//   configuration read, recursively: `!` aliases are checked as command
-//   lines, other expansions splice back in as git arguments. Anything the
-//   expansion cannot fully place (an unknown alias name, a builtin that can
-//   exec a pager, hooks or filters) is refused.
-function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; programOnDisk: (n: string) => string | null }, aliases: ReadonlyMap<string, string>, depth: number): string | null {
+//   configuration read plus any `-c`-injected entries, recursively: `!`
+//   aliases are checked as command lines, other expansions splice back in
+//   as git arguments. Anything the expansion cannot fully place (an
+//   unknown alias name, a builtin that can exec a pager, hooks or
+//   filters) is refused;
+// - a launcher (npm, make, just, task, rake…) reads its program from a
+//   manifest in the working directory — inside the tree the solution
+//   writes — unless an explicit operand places it outside.
+function unsafeCommandDetail(command: string, place: { pathy: (t: string) => boolean; inside: (t: string) => boolean; exists: (t: string) => boolean; programOnDisk: (n: string) => string | null; pathDetail: (value: string) => string | null }, aliases: ReadonlyMap<string, string>, depth: number): string | null {
   if (depth > 8) return 'the command cannot be placed inside or outside the repository';
-  const tokens = shellWords(command);
-  let first = true;
-  let interp = false;
-  let pendingEntry = false;
-  let interpName = '';
-  let gitArgs = false;
+  const injected = new Map<string, string>();
   let expansions = 0;
-  for (let i = 0; i < tokens.length; i += 1) {
-    const token = tokens[i]!;
-    if (token === '' || PLACEHOLDER.test(token)) continue;
-    if (WINDOWS_ENV.test(token) || ENV_REFERENCE.test(token)) return `${token} cannot be placed inside or outside the repository`;
-    const assign = ASSIGNMENT.exec(token);
-    if (assign !== null) {
-      const value = assign[1]!;
-      if (place.pathy(value) && place.inside(value)) return `${value} resolves inside the repository`;
-      continue;
-    }
-    if (/^-{1,2}\S/.test(token) || /^\/[a-zA-Z]+$/.test(token)) continue; // options and cmd-style /c switches
-    const bare = token.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
-    if (place.pathy(token)) {
-      if (place.inside(token)) return `${token} resolves inside the repository`;
-      if (first) { first = false; interp = INTERPRETERS.has(bare); pendingEntry = interp; interpName = token; gitArgs = bare === 'git'; }
-      else pendingEntry = false;
-      continue;
-    }
-    if (first) {
-      first = false;
-      interp = INTERPRETERS.has(bare);
-      pendingEntry = interp;
-      interpName = token;
-      gitArgs = bare === 'git';
-      const resolved = place.programOnDisk(token);
-      if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
-      if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
-      continue;
-    }
-    if (gitArgs) {
-      // Every argument to a configured `git` invocation has to name an
-      // alias the same configuration read defines — anything else is a
-      // builtin or external that can reach programs we cannot place.
-      expansions += 1;
-      if (expansions > 8) return `${token} cannot be placed inside or outside the repository`;
-      const expansion = aliases.get(token.toLowerCase());
-      if (expansion === undefined) return `${token} cannot be placed inside or outside the repository`;
-      if (expansion.startsWith('!')) {
-        const nested = unsafeCommandDetail(expansion.slice(1), place, aliases, depth + 1);
-        if (nested !== null) return `${token} → ${nested}`;
+  for (const segment of shellCommands(command)) {
+    const tokens = shellWords(segment);
+    let first = true;
+    let interp = false;
+    let pendingEntry = false;
+    let interpName = '';
+    let gitArgs = false;
+    let pendingGitOperand: string | null = null;
+    let launcher: string | null = null;
+    let launcherFlag = false;
+    let launcherPlaced = false;
+    for (let i = 0; i < tokens.length; i += 1) {
+      const token = tokens[i]!;
+      if (token === '' || PLACEHOLDER.test(token)) continue;
+      if (WINDOWS_ENV.test(token) || ENV_REFERENCE.test(token)) return `${token} cannot be placed inside or outside the repository`;
+      if (pendingGitOperand !== null) {
+        const flag = pendingGitOperand;
+        pendingGitOperand = null;
+        if (flag === '-C') {
+          // A directory operand: a relative one resolves in the working
+          // directory — inside the tree when the directory exists, and
+          // unplaceable when it does not.
+          if (place.pathy(token)) {
+            if (place.inside(token)) return `${token} resolves inside the repository`;
+            continue;
+          }
+          return place.exists(token)
+            ? `${token} resolves inside the repository`
+            : `${token} cannot be placed inside or outside the repository`;
+        }
+        // A `name=value` configuration operand: an alias arms itself
+        // inline, a path key resolves like any configured path, a command
+        // key is checked as a command line, anything else pathy-inside
+        // refuses.
+        const eq = token.indexOf('=');
+        if (eq === -1) return `${token} cannot be placed inside or outside the repository`;
+        const name = token.slice(0, eq).toLowerCase();
+        const value = token.slice(eq + 1);
+        if (name.startsWith('alias.')) { injected.set(name.slice('alias.'.length), value); continue; }
+        if (PATH_KEYS.test(name)) {
+          const detail = place.pathDetail(value);
+          if (detail !== null) return `${name} = ${detail}`;
+          continue;
+        }
+        if (PIN_KEYS.test(name)) {
+          const detail = unsafeCommandDetail(value, place, aliases, depth + 1);
+          if (detail !== null) return `${name} = ${detail}`;
+          continue;
+        }
+        if (place.pathy(value) && place.inside(value)) return `${value} resolves inside the repository`;
         continue;
       }
-      tokens.splice(i, 1, ...shellWords(expansion));
-      i -= 1;
-      continue;
-    }
-    if (INTERPRETERS.has(bare)) {
-      const resolved = place.programOnDisk(token);
-      if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
-      if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
-      interp = true; pendingEntry = true; interpName = token;
-      continue;
-    }
-    if (interp && pendingEntry) {
+      if (gitArgs && GIT_OPERAND_FLAGS.has(token)) { pendingGitOperand = token; continue; }
+      if (launcher !== null) {
+        if (OPERAND_FLAGS.has(token)) { launcherFlag = true; continue; }
+        if (launcherFlag) {
+          launcherFlag = false;
+          if (place.pathy(token)) {
+            if (place.inside(token)) return `${token} resolves inside the repository`;
+            launcherPlaced = true;
+            continue;
+          }
+          return place.exists(token)
+            ? `${token} resolves inside the repository`
+            : `${token} cannot be placed inside or outside the repository`;
+        }
+      }
+      const assign = ASSIGNMENT.exec(token);
+      if (assign !== null) {
+        const value = assign[1]!;
+        if (place.pathy(value) && place.inside(value)) return `${value} resolves inside the repository`;
+        continue;
+      }
+      if (/^-{1,2}\S/.test(token) || /^\/[a-zA-Z]+$/.test(token)) continue; // options and cmd-style /c switches
+      const bare = token.split(/[\\/]/).pop()!.replace(/\.(exe|cmd|bat|com|ps1)$/i, '').toLowerCase();
+      if (place.pathy(token)) {
+        if (place.inside(token)) return `${token} resolves inside the repository`;
+        if (first) {
+          first = false;
+          interp = INTERPRETERS.has(bare); pendingEntry = interp; interpName = token;
+          gitArgs = bare === 'git';
+          launcher = LAUNCHERS.has(bare) ? bare : null;
+        } else pendingEntry = false;
+        continue;
+      }
+      if (first) {
+        first = false;
+        interp = INTERPRETERS.has(bare);
+        pendingEntry = interp;
+        interpName = token;
+        gitArgs = bare === 'git';
+        launcher = LAUNCHERS.has(bare) ? bare : null;
+        const resolved = place.programOnDisk(token);
+        if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
+        if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+        continue;
+      }
+      if (gitArgs) {
+        // Every argument to a configured `git` invocation has to name an
+        // alias the configuration defines — from the same read, or
+        // injected by a -c operand — anything else is a builtin or
+        // external that can reach programs we cannot place.
+        expansions += 1;
+        if (expansions > 8) return `${token} cannot be placed inside or outside the repository`;
+        const expansion = injected.get(token.toLowerCase()) ?? aliases.get(token.toLowerCase());
+        if (expansion === undefined) return `${token} cannot be placed inside or outside the repository`;
+        if (expansion.startsWith('!')) {
+          const nested = unsafeCommandDetail(expansion.slice(1), place, aliases, depth + 1);
+          if (nested !== null) return `${token} → ${nested}`;
+          continue;
+        }
+        tokens.splice(i, 1, ...shellWords(expansion));
+        i -= 1;
+        continue;
+      }
+      if (INTERPRETERS.has(bare)) {
+        const resolved = place.programOnDisk(token);
+        if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
+        if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+        interp = true; pendingEntry = true; interpName = token;
+        continue;
+      }
+      if (LAUNCHERS.has(bare)) {
+        const resolved = place.programOnDisk(token);
+        if (resolved === null) return `${token} cannot be placed inside or outside the repository`;
+        if (place.inside(resolved)) return `${token} resolves inside the repository at ${resolved}`;
+        launcher = bare;
+        continue;
+      }
+      if (interp && pendingEntry) {
+        pendingEntry = false;
+        // A bare file name an interpreter loads resolves against the
+        // working directory — inside the tree — when the file is there;
+        // when it is not, the merge could land it or an interpreter could
+        // find it elsewhere, so it cannot be placed either way.
+        return place.exists(token)
+          ? `${token} resolves inside the repository`
+          : `${token} cannot be placed inside or outside the repository`;
+      }
       pendingEntry = false;
-      // A bare file name an interpreter loads resolves against the working
-      // directory — inside the tree — when the file is there; when it is
-      // not, the merge could land it or an interpreter could find it
-      // elsewhere, so it cannot be placed either way.
-      return place.exists(token)
-        ? `${token} resolves inside the repository`
-        : `${token} cannot be placed inside or outside the repository`;
     }
-    pendingEntry = false;
+    // A launcher never given an outside operand reads its program from the
+    // manifest in the working directory — inside the tree the merge writes.
+    if (launcher !== null && !launcherPlaced) return `${launcher} reads its program from ${LAUNCHERS.get(launcher)}, which resolves inside the repository`;
+    // An interpreter never given a file operand runs what the filter feeds
+    // it: the filtered stream is the program.
+    if (pendingEntry) return `${interpName} is given no file operand — the filtered stream is its program`;
   }
-  // An interpreter never given a file operand runs what the filter feeds
-  // it: the filtered stream is the program.
-  if (pendingEntry) return `${interpName} is given no file operand — the filtered stream is its program`;
   return null;
 }

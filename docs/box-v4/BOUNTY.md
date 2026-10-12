@@ -95,14 +95,19 @@ That same plain-Git behaviour is the one place your own configuration can
 betray the boundary. A filter or merge driver whose command resolves inside
 the repository is replaced by whatever the merge lands and then run; what a
 program reads cannot be bounded, so an unchanged program that calls a file
-the solution changes is the same risk. The check follows the configuration
-the same way Git does: a bare interpreter such as `node` or `sh` configured
-as a filter runs the filtered stream itself as its program, so it refuses;
-a command that invokes `git` can reach an `alias.*`, so aliases are expanded
-and each word placed — an alias that cannot be fully placed refuses; and
-`include.path`, `includeIf` and `core.attributesFile` values resolve against
-the file that sets them (`~` expanded), so an include that lands inside the
-tree refuses wherever in the chain it sits. Before the merge — and before
+the solution changes is the same risk. The check parses each line the way
+Git will run it — through `sh -c` — so a program reached after a `|`, `;`,
+`&&`, subshell or substitution is checked as a command of its own. A bare
+interpreter such as `node` or `sh` configured as a filter runs the filtered
+stream itself as its program, so it refuses; a `git` program's arguments
+can reach an `alias.*` — including one injected by a `-c` operand — so
+aliases are expanded, recursively, and an expansion that cannot be fully
+placed refuses; a launcher like `npm`, `make`, `just`, `task` or `rake`
+reads its program from a manifest in the working tree, so it refuses unless
+an explicit operand places that file outside; and `include.path`,
+`includeIf` and `core.attributesFile` values resolve against the file that
+sets them (`~` expanded), so an include that lands inside the tree refuses
+wherever in the chain it sits. Before the merge — and before
 the revert `undo` makes — the tool reads your configuration and refuses by
 name (`apply-unsafe-config`, `undo-unsafe-config`), stating the configured
 command and the path involved, when a command resolves inside the tree or
