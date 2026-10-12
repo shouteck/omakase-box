@@ -37,7 +37,7 @@ Milestone: BT · Station: packaging · Base: master at dispatch, after BT7a · B
 - A work-in-progress commit made by `post --with-changes` holds, for every file under a clean filter, the same bytes `create` would ship. A test with a required clean/smudge filter reads the pushed commit and compares.
 - If the filtered form cannot be produced (the filter fails or is missing), the post is refused by name and nothing is pushed.
 
-**Cases that must fail, each a named refusal that changes nothing:** the reproduction of defect 1; the indirection case; a merge driver in the tree that the solution changes; a configured command the tool cannot place inside or outside the tree; defect 2 with a failing filter.
+**Cases that must fail, each a named refusal that changes nothing:** the reproduction of defect 1; the indirection case; a merge driver in the tree that the solution changes; a configured command the tool cannot place inside or outside the tree; defect 2 with a failing filter. Added after the second pass: a dangerous command anywhere in a shell line — Git runs these values through `sh -c`, so `|`, `;`, `&&`, `||`, `&`, `()`, `<(`, `>(`, backtick and newline each start a new command to check, including inside `!`-alias expansions and `git -c` inline aliases; and a config-file launcher (`npm`, `make`, `just`, `task`, `rake`, …) whose program file lives in the tree.
 
 ## Review lenses
 
