@@ -18,7 +18,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { instructionNotices, syncInstructions } from './instructions.js';
-import { planGitHub, postGitHub, refreshGitHubStatus, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
+import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { publishListed, publishLists, shipRules } from './never-ship.js';
 import { requireRepository } from './repository.js';
 import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
@@ -52,6 +52,7 @@ export interface StageEvent {
 export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable' | 'check-not-run';
 
 export interface Attempt {
+  readonly pullRequest?: number;
   readonly seenAt?: string;
   /** 1-based, stable within the record — `box bounty apply <id> <n>` names it.
       A solution collected from a pull request is numbered by the pull
@@ -359,17 +360,30 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   const printable = /^[\x21-\x7e]{1,120}$/; // printable ASCII, no space — the shape Git refnames share
   const safeBranch = (branch: string) => branch === '(detached HEAD)' || printable.test(branch) && !branch.includes('..');
   if (!/^bt-[a-f\d]{12}$/.test(record.id)) return null;
+  if (typeof record.createdAt !== 'string' || !stamp.test(record.createdAt)) return null;
+  for (const event of record.events) {
+    if (event === null || typeof event !== 'object') return null;
+    if (event.merge !== undefined && (typeof event.merge !== 'string' || !sha.test(event.merge))) return null;
+    if (event.attempt !== undefined && (!Number.isSafeInteger(event.attempt) || event.attempt < 1)) return null;
+    if (event.reason !== undefined && typeof event.reason !== 'string') return null;
+  }
   if (!OPEN_STAGES.has(record.stage) && !ENDED_STAGES.has(record.stage)) return null;
   if (record.resume.kind === 'recorded' && !safeBranch(record.resume.branch)) return null;
   if (record.attempts !== undefined && !Array.isArray(record.attempts)) return null;
   for (const attempt of record.attempts ?? []) {
     if (attempt === null || typeof attempt !== 'object' || !Number.isInteger(attempt.n) || attempt.n < 1 || typeof attempt.commit !== 'string' || !sha.test(attempt.commit)) return null;
+    if (attempt.pullRequest !== undefined && (!Number.isSafeInteger(attempt.pullRequest) || attempt.pullRequest < 1)) return null;
   }
   if (record.answer !== undefined && record.answer !== null && (typeof record.answer !== 'object' || typeof record.answer.commit !== 'string' || !sha.test(record.answer.commit))) return null;
   if (record.conflicts !== undefined && record.conflicts !== null && (typeof record.conflicts !== 'object' || !strings(record.conflicts.paths) || typeof record.conflicts.at !== 'string' || !stamp.test(record.conflicts.at))) return null;
   const github = record.github;
   if (github !== undefined) {
     if (github === null || typeof github !== 'object') return null;
+    if (typeof github.repository !== 'string' || !/^[A-Za-z\d_.-]+\/[A-Za-z\d_.-]+$/.test(github.repository) || typeof github.commit !== 'string' || !sha.test(github.commit)) return null;
+    if (github.formatRead !== undefined && !['absent', 'invalid', 'matches-record', 'differs-from-record'].includes(github.formatRead)) return null;
+    if (github.formatRepair !== undefined && !['updated', 'preserved-invalid', 'update-failed'].includes(github.formatRepair)) return null;
+    if (github.formatReadAt !== undefined && (typeof github.formatReadAt !== 'string' || !stamp.test(github.formatReadAt))) return null;
+    if (github.formatUnavailableAt !== undefined && github.formatUnavailableAt !== null && (typeof github.formatUnavailableAt !== 'string' || !stamp.test(github.formatUnavailableAt))) return null;
     if (github.branch !== undefined && (typeof github.branch !== 'string' || !safeBranch(github.branch))) return null;
     for (const list of [github.seenPullRequests, github.availablePullRequests]) {
       if (list === undefined) continue;
@@ -628,11 +642,21 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
   for (const entry of listed) {
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
+    else if (entry.record !== null && options.full) refreshGitHubFormat(repoRoot, entry.record);
   }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
+  for (const entry of listed) {
+    const record = entry.record;
+    if (record?.github === undefined) continue;
+    const publication = record.github;
+    if (publication.formatUnavailableAt !== undefined && publication.formatUnavailableAt !== null) lines.push(`${record.id} current GitHub format read unavailable at ${publication.formatUnavailableAt}; cached last comparison ${publication.formatRead ?? 'not read'} at ${publication.formatReadAt ?? 'time not recorded'}; local record governs`);
+    else if (publication.formatRead !== undefined) lines.push(`${record.id} GitHub format block: ${publication.formatRead} (last issue-body observation ${publication.formatReadAt ?? 'time not recorded'}; local record governs)`);
+    if (!isOpenStage(record.stage) && !options.full) lines.push(`${record.id} compact status uses the cached last observation; current comparison: box bounty status ${record.id} --full`);
+  }
+  for (const entry of listed) if (entry.record?.github?.formatRepair !== undefined) lines.push(`${entry.record.id} GitHub format update: ${entry.record.github.formatRepair}`);
   lines.push(ownerStatusLine(repoRoot));
   const localMerge = localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);

@@ -66,6 +66,8 @@ export interface GhState {
   malformed?: boolean;
   fail?: string | undefined;
   loseIssueResponse?: boolean;
+  failBodyUpdate?: boolean;
+  graphqlMode?: 'empty-next' | 'repeat-next' | 'bad-edge';
   account: string;
   repository: string;
   issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
@@ -95,9 +97,21 @@ if (args[0] === 'version' || args[0] === '--version') { save(); console.log('gh 
 if (args[0] === 'auth') { if (!state.auth) fail(); save(); process.exit(0); }
 const endpoint = args[args.indexOf('--hostname') + 2];
 const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8')) : null;
+if (state.failBodyUpdate && input && typeof input.body === 'string' && endpoint.includes('/issues/') && !endpoint.includes('/comments')) fail();
 if (state.fail && endpoint.includes(state.fail)) fail();
 let result;
-if (endpoint === 'user') result = { login: state.account };
+if (endpoint === 'graphql') {
+  const issue = state.issues.find(issue => issue.number === input.variables.number);
+  if (!issue || state.fail && ('/issues/' + issue.number + '/comments').includes(state.fail)) fail();
+  const offset = Number(input.variables.after ?? 0);
+  const next = offset + 100;
+  const edges = state.comments.slice(offset, next).map((comment, index) => ({ cursor: String(offset + index + 1), node: { body: comment.body, author: comment.user } }));
+  if (state.graphqlMode === 'empty-next') edges.length = 0;
+  if (state.graphqlMode === 'repeat-next') for (const edge of edges) edge.cursor = '1';
+  if (state.graphqlMode === 'bad-edge') edges.push({ cursor: 5, node: null });
+  result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < state.comments.length } } } } } };
+}
+else if (endpoint === 'user') result = { login: state.account };
 else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility };
 else if (endpoint.includes('/pulls/')) {
   const n = Number(endpoint.split('/pulls/')[1].split('/')[0]);
