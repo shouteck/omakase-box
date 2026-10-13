@@ -175,7 +175,7 @@ export function renderSummary(repoRoot: string, since?: string): string {
     if (!Number.isFinite(Date.parse(since))) throw new BountyRefused('summary-time-invalid', `--since ${since} is not a readable time; pass an ISO time`);
     from = new Date(since).toISOString();
   }
-  const posted: string[] = [], merged: string[] = [], closed: string[] = [], waiting: string[] = [];
+  const posted: string[] = [], merged: string[] = [], closed: string[] = [], waiting: string[] = [], findings: string[] = [];
   for (const entry of listRecords(repoRoot)) {
     const record = entry.record;
     if (record === null) continue;
@@ -186,7 +186,13 @@ export function renderSummary(repoRoot: string, since?: string): string {
       else if (['rejected', 'withdrawn', 'expired', 'undone'].includes(event.stage)) closed.push(`${record.id} ${event.stage} at ${event.at}`);
     }
     if (record.waiting !== undefined) waiting.push(`${record.id} (${record.waiting.reason}, since ${record.waiting.at})`);
+    // Scan findings are standing facts, not events — a settled one carries no
+    // time of its own, so every finding on the record is reported, whatever
+    // --since says about the events around it.
+    for (const finding of record.scanFindings ?? []) {
+      for (const hit of finding.hits) findings.push(`${record.id}: ${hit.path}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+    }
   }
   const read = readDecision(repoRoot);
-  return [`what was done since ${since === undefined ? 'the beginning' : from}: facts from the record`, `  bounties posted: ${posted.length}: ${posted.join('; ')}`, `  solutions merged: ${merged.length}: ${merged.join('; ')}`, `  bounties closed with none: ${closed.length}: ${closed.join('; ')}`, `  waiting now: ${waiting.length}: ${waiting.join('; ')}`, `the owner's decision is ${read.decision ?? 'nothing written'}`].join('\n');
+  return [`what was done since ${since === undefined ? 'the beginning' : from}: facts from the record`, `  bounties posted: ${posted.length}: ${posted.join('; ')}`, `  solutions merged: ${merged.length}: ${merged.join('; ')}`, `  bounties closed with none: ${closed.length}: ${closed.join('; ')}`, `  waiting now: ${waiting.length}: ${waiting.join('; ')}`, `  scan findings: ${findings.length}: ${findings.join('; ')}`, `the owner's decision is ${read.decision ?? 'nothing written'}`].join('\n');
 }

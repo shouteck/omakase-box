@@ -1,9 +1,9 @@
-import { writeFileSync, symlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { changeConfig, changePublishList, closeBounty, finalizeBounty, loadRecord, allowBounty, planBounty, postBounty, previewGitHub, renderConfig, renderPreview, renderStatus, scanText } from '../../../packages/box-bounty/index.js';
+import { changeConfig, changePublishList, closeBounty, finalizeBounty, loadRecord, allowBounty, planBounty, postBounty, previewGitHub, renderConfig, renderPreview, renderStatus, renderSummary, scanText } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, runRoot, write } from './support.js';
+import { git, makeRepo, ownerSays, runRoot, write } from './support.js';
 import { fixture, refused } from './github-fixture.js';
 
 // BT8c: the owner tightens the secret scan. A hit always waits for the owner
@@ -226,5 +226,52 @@ describe('create previews the scan — a hit holds nothing and is recorded the s
     closeBounty(repo, id);
     expect(loadRecord(repo, id).scanFindings?.[0]?.settled).toContain('ended');
   });
+});
+
+describe('a settled finding claims only what was verified, and stays visible', () => {
+  it('a folder post runs no scan — the record says the flagged content went out unchecked, and it did', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    write(repo, 'keys.txt', 'key = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');
+    const { id } = finalizeBounty(planBounty(options(repo)));
+    expect(loadRecord(repo, id).scanFindings?.[0]?.settled).toBeNull();
+    ownerSays(repo, 'allowed');
+    const { destination } = postBounty(repo, id, join(runRoot('delivered'), 'inbox'));
+    const settled = loadRecord(repo, id).scanFindings?.[0]?.settled;
+    expect(settled).toContain('not re-checked');
+    expect(settled).not.toContain('content changed');
+    // The flagged bytes really did go out in the folder — nothing prettier is claimed.
+    expect(readFileSync(join(destination, 'repo', 'keys.txt'), 'utf8')).toContain('IOSFODNN');
+  });
+
+  it('a safe-listed path settles by the list\'s state — the record does not claim who acted', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    write(repo, 'keys.txt', 'key = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');
+    const { id } = finalizeBounty(planBounty(options(repo)));
+    changeConfig(repo, 'add', 'safe-to-publish', 'keys.txt');
+    ownerSays(repo, 'allowed');
+    postBounty(repo, id, join(runRoot('delivered-safe'), 'inbox'));
+    const settled = loadRecord(repo, id).scanFindings?.[0]?.settled;
+    expect(settled).toContain('on safe to publish');
+    expect(settled).not.toContain('owner marked');
+  });
+
+  it('an ended bounty still shows the finding — bare status, status <id>, --full and --since', () => fixture(({ repo, id }) => {
+    write(repo, 'keys.txt', 'key = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');
+    git(repo, ['add', 'keys.txt']);
+    git(repo, ['commit', '-qm', 'keys']);
+    refused(() => postBounty(repo, id, 'github'), 'publish-held');
+    closeBounty(repo, id);
+    for (const status of [renderStatus(repo), renderStatus(repo, { id }), renderStatus(repo, { id, full: true })]) {
+      expect(status).toContain('scan finding');
+      expect(status).toContain('keys.txt:1');
+      expect(status).toContain('ended — nothing was published');
+    }
+    // The compact ended line marks the fact so the owner knows to look.
+    expect(renderStatus(repo)).toContain('scan finding recorded');
+    // The summary the owner reads carries it whatever --since says — a
+    // settled finding is a standing fact, not an event.
+    expect(renderSummary(repo)).toContain('keys.txt:1');
+    expect(renderSummary(repo, '2099-01-01T00:00:00.000Z')).toContain('keys.txt:1');
+  }));
 });
 

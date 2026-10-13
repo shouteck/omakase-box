@@ -473,7 +473,12 @@ A hit makes **that one bounty** wait for the owner in a named waiting
 state, naming the file and line — and the commit when the content sits in
 one not yet pushed, since an ordinary push would publish it too — **never
 printing the value**. The hold is recorded on the record: what was flagged
-and what happened. The agent's own moves are to remove the flagged content
+and what happened — and it stays in `status` (bare, `status <id>` and
+`--full`) after the bounty ends. The record claims only what was verified:
+a GitHub post ran the scan again, so it can say the flagged content changed
+or sits on `safe to publish`; a folder post runs no scan, so a finding
+settled that way says the flagged content went out without being
+re-checked. The agent's own moves are to remove the flagged content
 and post again — that sends the bounty — or to stop it; the hit message
 offers no owner command, because no owner answer can release a scan hold:
 `allow <id>` on one is a named refusal (`allow-scan-held`). The owner
