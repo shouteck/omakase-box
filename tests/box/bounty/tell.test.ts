@@ -17,9 +17,11 @@ it('describe retains the BT4 choice sentences and supplies facts with no history
   const repo = makeRepo({ 'TASK.md': 'task\n' });
   const result = cli(repo, ['bounty', 'describe']);
   expect(result.status).toBe(0);
-  // Frozen from dispatch b5b4880's BT4 choice sentences, with LF separators.
+  // Frozen from dispatch b5b4880's BT4 choice sentences, with LF separators —
+  // re-pinned for BT11a, which adds the reward sentence where the text ended
+  // its thought (the amount is generated from the owner's setting, not typed).
   const choice = result.stdout.split('\n\nthe facts for choosing')[0] ?? '';
-  expect(createHash('sha256').update(choice).digest('hex')).toBe('ec537cc3d1a4b704c61ef7dfa29de474de570e425b6b5fd31be09ea080eb931f');
+  expect(createHash('sha256').update(choice).digest('hex')).toBe('24d82fee44c5720851f2b0f7fc49fd325b450f2dbb68469b49df6d2ac4609d3f');
   expect(result.stdout).toContain('worth it when: attempts keep failing');
   expect(result.stdout).toContain('not worth it when: you can plainly do the work');
   expect(result.stdout).toContain('create a draft any time');

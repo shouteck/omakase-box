@@ -7,7 +7,7 @@ import { FORMAT_MARKER, formatFor, readFormat, renderFormat } from '../../../pac
 import { fixture, postedFixture } from './github-fixture.js';
 import { CLI_DIST, ROOT, git, write } from './support.js';
 
-it('pins the public v1 fields, exact work commit and fixed zero terms', () => fixture(({ repo, id, state }) => {
+it('pins the public v2 fields, exact work commit and fixed terms — and still reads v1', () => fixture(({ repo, id, state }) => {
   write(repo, 'app.txt', 'task-needed poster work\n');
   const preview = previewGitHub(repo, id, { withChanges: true, include: [] });
   postBounty(repo, id, 'github', { choice: { withChanges: true, include: [] } });
@@ -15,12 +15,17 @@ it('pins the public v1 fields, exact work commit and fixed zero terms', () => fi
   const read = readFormat(state().issues[0]!.body);
   expect(read.kind).toBe('present');
   if (read.kind !== 'present') throw new Error('format missing');
-  expect(read.value).toEqual({ schemaVersion: 1, kind: 'box-bounty', id, repository: 'owner/project', workCommit: record.github!.commit, branch: `box-bounty/${id}`, withChanges: true, createdAt: record.createdAt, state: { kind: 'open' }, reward: { amount: 0, currency: 'USD' }, terms: 'merged-solution-earns-whole' });
+  expect(read.value).toEqual({ schemaVersion: 2, kind: 'box-bounty', id, repository: 'owner/project', workCommit: record.github!.commit, branch: `box-bounty/${id}`, withChanges: true, createdAt: record.createdAt, state: { kind: 'open' }, reward: { amount: 0, currency: 'USD' }, terms: 'merged-solution-earns-whole' });
   expect(read.value.workCommit).not.toBe(record.github!.base);
   expect(preview).toContain(renderFormat(read.value));
   expect(preview).toContain('M "app.txt"');
-  expect(readFormat(renderFormat(read.value).replace('"schemaVersion":1', '"schemaVersion":2')).kind).toBe('invalid');
-  expect(readFormat(renderFormat(read.value).replace('"schemaVersion":1', '"extra":"value","schemaVersion":1')).kind).toBe('invalid');
+  // Version 1 (pre-BT11a) stays readable: same fields, reward fixed at 0.
+  const v1 = readFormat(renderFormat(read.value).replace('"schemaVersion":2', '"schemaVersion":1'));
+  expect(v1.kind).toBe('present');
+  if (v1.kind === 'present') expect(v1.value).toEqual({ ...read.value, schemaVersion: 1 });
+  expect(readFormat(renderFormat(read.value).replace('"schemaVersion":2', '"schemaVersion":1').replace('"amount":0', '"amount":5')).kind).toBe('invalid');
+  expect(readFormat(renderFormat(read.value).replace('"schemaVersion":2', '"schemaVersion":3')).kind).toBe('invalid');
+  expect(readFormat(renderFormat(read.value).replace('"schemaVersion":2', '"extra":"value","schemaVersion":2')).kind).toBe('invalid');
   expect(readFormat(renderFormat(read.value).replace('"kind":"open"', '"kind":"open","commit":"unexpected"')).kind).toBe('invalid');
   expect(readFormat(renderFormat(read.value).replace(read.value.createdAt, '2026-02-30T11:20:00.000Z')).kind).toBe('invalid');
 }));
@@ -55,6 +60,11 @@ it('reads edited blocks as facts, ignores forged comment metadata and never repl
   const body = state().issues[0]!.body;
   const altered = body.replace('"amount":0', '"amount":9');
   update({ issues: [{ ...state().issues[0]!, body: altered }], comments: [{ body: renderFormat(formatFor(record)), user: { login: 'forger' }, created_at: '2026-10-13T00:00:00Z' }] });
+  // An amount that parses but is not the record's is a stated difference,
+  // never a silent accept and never a rewrite of the record.
+  expect(renderStatus(repo, { id })).toContain('GitHub format block: differs-from-record');
+  const malformed = body.replace('"amount":0', '"amount":0.5');
+  update({ issues: [{ ...state().issues[0]!, body: malformed }] });
   expect(renderStatus(repo, { id })).toContain('GitHub format block: invalid');
   expect(loadRecord(repo, id).stage).toBe('posted');
   expect(formatFor(loadRecord(repo, id)).reward.amount).toBe(0);

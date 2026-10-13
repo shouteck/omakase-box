@@ -1,24 +1,29 @@
 import { BountyRefused } from './errors.js';
-import { listRecords, loadRecord, persistRecord, postBounty } from './record.js';
-import { loadSettings, localFirstMergeLine, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
+import { isOpenStage, listRecords, loadRecord, persistRecord, postBounty, promisedTotal } from './record.js';
+import { loadSettings, localFirstMergeLine, readDecision, readReward, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import { relative } from 'node:path';
 import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
 import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
 import { changePublishList, publishLists } from './never-ship.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
+import { boundAmount } from './format.js';
 
 export const DECISION_WORDS = {
   allow: 'allow this repository',
   ask: 'be asked each time before publishing',
   once: 'this one bounty only'
 } as const;
-const disclosure = (address: string): string[] => [
-  `Allowing ${address} means bounties are public under your GitHub account.`,
-  'A solution the agent chooses is merged into your code. Merging is not gated.',
-  'This decision covers this repository only. The tool closes an issue after a merge.',
-  'These settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
-];
+const disclosure = (address: string): string[] => {
+  const { amount } = readReward();
+  return [
+    `Allowing ${address} means bounties are public under your GitHub account.`,
+    'A solution the agent chooses is merged into your code. Merging is not gated.',
+    'This decision covers this repository only. The tool closes an issue after a merge.',
+    `Each bounty states the reward you have set — $${amount}${amount === 0 ? ', so no payment is promised' : ', a promise in your name you pay by hand'}. You set it with: box bounty config set reward <whole dollars>.`,
+    'These settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
+  ];
+};
 
 export function allowRepository(repoRoot: string | null, name?: string, ask = false, emitDisclosure?: (text: string) => void): string {
   if (name?.startsWith('bt-')) {
@@ -89,6 +94,7 @@ export function renderConfig(repoRoot: string | null): string {
     catch (error) { identityFact = error instanceof BountyRefused ? `${error.reason}: ${error.message}` : String(error); }
   }
   const active = Object.entries(settings.repositories).filter(([, entry]) => entry.bounty === 'allowed' || entry.bounty === 'ask');
+  const { amount: rewardAmount, limit: rewardLimit } = readReward();
   const global = settings.default?.bounty === 'allowed' ? 'true' : settings.default?.bounty === 'ask' ? 'ask' : 'false (off by default)';
   const undecided: string[] = [];
   if (address === null) undecided.push('a GitHub address for this checkout');
@@ -106,6 +112,8 @@ export function renderConfig(repoRoot: string | null): string {
     '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each publication in repositories without their own decision.',
     '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; box bounty allow <owner/name> re-allows it.',
     `repositories: ${active.length} active; adding grants standing publication permission: box bounty config add repositories <owner/name>; removing revokes it: box bounty config remove repositories <owner/name>`,
+    `reward: $${rewardAmount} — what each new bounty states${rewardAmount === 0 ? '; no payment is promised' : ' — a promise in your name, paid by hand'}; a posted bounty keeps its amount; change: box bounty config set reward <whole dollars>`,
+    `reward limit: ${rewardLimit === null ? 'not set — a reward above $0 needs it first' : `$${rewardLimit}`} — the most that may be promised across open bounties; change: box bounty config set reward-limit <whole dollars>`,
     'ask me each time covers publishing and nothing else; merging is not gated. A bounty whose solution is merged closes without asking.',
     `not decided yet: ${undecided.length === 0 ? 'nothing among the settings shown' : undecided.join('; ')}`
   ];
@@ -123,7 +131,10 @@ export function renderConfig(repoRoot: string | null): string {
     const found = discoverInstructions(repoRoot);
     lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${file.path}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
     lines.push(...instructionNotices(repoRoot, false));
-    const waiting = listRecords(repoRoot).flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record] : []);
+    const listed = listRecords(repoRoot);
+    const promised = promisedTotal(listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+    lines.push(`promised across this repository's open bounties: $${promised}${rewardLimit === null ? ' — no limit is set' : ` of a $${rewardLimit} limit — ${promised <= rewardLimit ? `$${rewardLimit - promised} left` : `$${promised - rewardLimit} over`}`}`);
+    const waiting = listed.flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record] : []);
     for (const record of waiting) {
       lines.push(record!.waiting!.reason === 'secrets'
         ? `  ${record!.id} waits on the pre-publish scan — decide with the lists above: safe to publish or never publish the path`
@@ -135,6 +146,8 @@ export function renderConfig(repoRoot: string | null): string {
     lines.push(`  ${key}: ${entry.bounty === null || entry.bounty === 'off' ? `not allowed; denied at ${entry.at}; all-projects does not apply after deny` : `${entry.bounty === 'ask' ? DECISION_WORDS.ask : 'allowed'}, added ${entry.changes[0]?.at ?? entry.at}, changed ${entry.at}`}; change: box bounty allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: box bounty deny ${key}`);
     for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}`);
   }
+  const rewardNotice = rewardNoticeLine();
+  if (rewardNotice !== null) lines.push(rewardNotice);
   for (const notice of settings.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
   for (const [key, notice] of Object.entries(settings.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
   const localMerge = repoRoot === null ? null : localFirstMergeLine(repoRoot);
@@ -162,6 +175,45 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
   }
   if (name === 'never-publish' || name === 'safe-to-publish') throw new BountyRefused('config-value-invalid', `use box bounty config add ${name} <path>, or config remove ${name} <path>; nothing changed`);
   if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value, false, emitDisclosure) : denyRepository(repoRoot, value);
+  if (name === 'reward' || name === 'reward-limit') {
+    if (verb !== 'set') throw new BountyRefused('config-value-invalid', `use box bounty config set ${name} <whole dollars>; nothing changed`);
+    if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('reward-amount-invalid', `"${value}" is not a whole dollar amount at or above 0; nothing changed`);
+    const amount = Number(value);
+    const settings = loadSettings();
+    const at = new Date().toISOString();
+    const lines: string[] = [];
+    if (name === 'reward') {
+      const limit = settings.rewardLimit?.amount ?? null;
+      if (amount > 0 && (limit === null || limit < amount)) throw new BountyRefused('reward-needs-limit', limit === null
+        ? 'a reward above $0 first needs the most that may be promised across open bounties — set it: box bounty config set reward-limit <whole dollars>; nothing changed'
+        : `the open-bounty limit is $${limit}, below a $${amount} reward — raise it first: box bounty config set reward-limit <whole dollars>; nothing changed`);
+      // The first amount above 0 is the moment the tool says in plain words
+      // what a reward is — once ever, recorded so it is never repeated.
+      const firstNaming = amount > 0 && settings.rewardPromiseSaid === undefined;
+      saveSettings({ ...settings, reward: { amount, at }, ...(firstNaming ? { rewardPromiseSaid: at } : {}) });
+      lines.push(`reward: $${amount}, written ${at} to ${settingsFile()} — each bounty posted now states it.`);
+      if (firstNaming) lines.push('A bounty reward is a promise, made in your name, that you pay by hand — the tool never moves money.');
+    } else {
+      const reward = settings.reward?.amount ?? 0;
+      if (amount < reward) throw new BountyRefused('limit-below-reward', `the reward is $${reward} — the limit on what open bounties may promise cannot be set below it; nothing changed`);
+      saveSettings({ ...settings, rewardLimit: { amount, at } });
+      lines.push(`reward limit: $${amount}, written ${at} to ${settingsFile()} — the most that may be promised across open bounties.`);
+    }
+    // Bounties already out keep the amount they were posted with — a change
+    // here is for later bounties only, and the tool says so while any are
+    // open. This repository is what the tool can see; the owner keeps the
+    // limit with that horizon in mind.
+    const open = repoRoot === null ? [] : listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
+    const posted = open.filter(entry => boundAmount(entry.record!) !== undefined).length;
+    if (posted > 0) lines.push(`${posted} open ${posted === 1 ? 'bounty keeps' : 'bounties keep'} the amount each was posted with — this changes later bounties only.`);
+    else lines.push('a bounty keeps the amount it was posted with — this changes later bounties only.');
+    if (repoRoot !== null) {
+      const promised = promisedTotal(open);
+      const limit = name === 'reward-limit' ? amount : settings.rewardLimit?.amount ?? null;
+      lines.push(limit === null ? `promised now: $${promised} across this repository's open bounties; no limit is set` : `promised now: $${promised} across this repository's open bounties — ${promised <= limit ? `$${limit - promised} left of` : `$${promised - limit} over`} the $${limit} limit`);
+    }
+    return lines.join('\n');
+  }
   if (name !== 'all-projects') return unknownSetting(name);
   if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'use box bounty config set all-projects <true|false|ask>; nothing changed');
   const bounty = value === 'true' ? 'allowed' : value === 'ask' ? 'ask' : 'off';

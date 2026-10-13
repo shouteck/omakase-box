@@ -22,7 +22,7 @@ export const DESCRIBE_LINES: readonly string[] = [
   'GitHub posting is public and free, only to this project\'s already-public',
   'repository — the preview says exactly what becomes public that was not.',
   'Nobody is known to be watching these issues yet. A local folder is still',
-  'available. Every bounty states a reward of $0 — no payment exists.',
+  'available.',
   '',
   'worth it when: attempts keep failing, the task needs access or knowledge you',
   'lack, it is cheaper or faster solved elsewhere, or a second opinion counts.',
@@ -33,6 +33,12 @@ export const DESCRIBE_LINES: readonly string[] = [
   'owner to have allowed the tool once — a post that finds none waits and',
   'prints the few lines to put to them. box bounty help shows the journey.'
 ];
+
+// The money side of `describe`, generated from the owner's setting (BT11a) —
+// the amount is never hard-coded, so the text cannot outlive what is set.
+export const describeRewardLine = (amount: number): string => amount === 0
+  ? 'Every bounty states a reward of $0 — no payment exists.'
+  : `Every bounty states a reward of $${amount} — a promise in the owner's name, paid by hand; posting an answer does not guarantee it.`;
 
 export const RULES_LINES: readonly string[] = [
   'box bounty can hand a task to an outside solver and bring solutions back',

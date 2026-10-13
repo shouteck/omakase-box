@@ -153,9 +153,13 @@ export const publishListed = (entries: readonly string[], path: string): boolean
 // JSON that names them. `.boxignore` is not a claim — it is the project's own
 // never-ship list and every pattern in it can only ever remove files.
 const CLAIM_KEY = /^(?:never[-_ ]?publish|safe[-_ ]?to[-_ ]?publish|safe[-_ ]?list|never[-_ ]?ship)$/i;
+// Money is the owner's to set, exactly like the publish boundary: a project
+// file — solver-written or agent-written — can claim a reward or a limit all
+// it likes; the claim is refused by name and grants nothing (BT11a).
+const REWARD_CLAIM_KEY = /^(?:reward|bounty[-_ ]?reward|reward[-_ ]?amount|reward[-_ ]?limit|bounty[-_ ]?limit|payment|payment[-_ ]?limit|promised[-_ ]?limit)$/i;
 const CLAIM_FILES = ['never-publish', 'safe-to-publish', 'never-ship', 'safe-list'];
 
-function checkProjectClaims(repoRoot: string): void {
+export function checkProjectClaims(repoRoot: string): void {
   const candidates = [...CLAIM_FILES, ...CLAIM_FILES.map(name => join('.box', name)), 'settings.json', join('.box', 'settings.json'), join('.box', 'limits.json')];
   for (const name of candidates) {
     const file = join(repoRoot, name);
@@ -164,6 +168,8 @@ function checkProjectClaims(repoRoot: string): void {
       let parsed: unknown;
       try { parsed = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; } // unreadable is not a claim the tool can read
       if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const rewardClaim = Object.keys(parsed).find(key => REWARD_CLAIM_KEY.test(key));
+        if (rewardClaim !== undefined) throw new BountyRefused('project-claims-reward', `${name} claims "${rewardClaim}" — the reward and its limit live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it or rename the key; nothing was read from it`);
         const claim = Object.keys(parsed).find(key => CLAIM_KEY.test(key));
         if (claim !== undefined) throw new BountyRefused('project-claims-list', `${name} claims "${claim}" — the owner's publish lists live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it or rename the key; nothing was read from it`);
       }
