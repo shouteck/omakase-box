@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 13 October 2026, at the close of wave BT7c.
+Updated by the CTO on 13 October 2026 — master is RED off-machine; fix wave in flight before anything named.
 
 ## Now
+
+- **Off-machine verify is red.** The BT7b and BT7c merge runs each failed the same 17 tests (`bt7b.test.ts`, `bt7b-review.test.ts`): fixture `git merge` calls carry no `user.name`/`user.email`, which this host supplies globally and the Linux runner does not. Fix wave **BT7b-ci** is cooking first — a test-environment defect, not product.
 
 - **BT7c is done — merged and pushed** (`1ce6cc7`; PASS ui-verified on `54eaf5b`, one correction round). The bounty command surface is halved — 14 to 9: `undo`, `reply`, `remind` removed; `answer` folded into `look <n>`/`apply <n>` (they collect a PR or `--from` folder themselves, every former `answer` refusal firing before any write); `questions` folded into `status --comments`; `reject`+`withdraw` are one `close`. Every removed name refuses `command-removed` exit 3 naming the replacement; an enumeration test scans every print surface for removed names. The one real hole found in review — a legacy record's stored `outside.answers` replaying a removed name verbatim — is scrubbed in `asRecord`. Measured journeys (3 fresh agents × 2 journeys × before/after): post went 6→5–6 commands, collect 11–12→7–9; all 12 runs finished, nobody reached for a removed command. `confirm` stays until BT8.
 - Master green off-machine after BT6b-ci (`2465d2c`). Earlier: BT7b `bd31c77`, BT6b `af7b4e6`.
