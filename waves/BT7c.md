@@ -94,9 +94,9 @@ Identical fixtures and cards both sides; each run counted including failures. `c
 | before: commands | 6 | 6 | 6 | 0 |
 | before: output_chars | 6268 | 6270 | 6270 | 2 |
 | before: finished | yes | yes | yes | — |
-| after: commands | | | | |
-| after: output_chars | | | | |
-| after: finished | | | | |
+| after: commands | 5 | 6 | 5 | 1 |
+| after: output_chars | 5424 | 5427 | 5427 | 3 |
+| after: finished | yes | yes | yes | — |
 
 **Journey B — collect one bounty with three returned solutions**
 
@@ -105,8 +105,8 @@ Identical fixtures and cards both sides; each run counted including failures. `c
 | before: commands | 11 | 12 | 12 | 1 |
 | before: output_chars | 8170 | 9636 | 11274 | 3104 |
 | before: finished | yes | yes | yes | — |
-| after: commands | | | | |
-| after: output_chars | | | | |
-| after: finished | | | | |
+| after: commands | 9 | 7 | 9 | 2 |
+| after: output_chars | 9378 | 6313 | 9378 | 3065 |
+| after: finished | yes | yes | yes | — |
 
-Hesitations observed (before side): every agent needed one retry when an unquoted Windows backslash path to `cli.js` was mangled by the shell (harness artifact, identical prompt both sides); journey A agents also had to learn relative `--task` resolves against the repository root, not their shell CWD. Transcripts: `%TEMP%/bt7c-measure/runs/{a,b}{1..3}/transcript.md` before, `…{a,b}after{1..3}` after.
+Hesitations observed (both sides): agents needed a retry when an unquoted Windows backslash path to `cli.js` was mangled by the shell (harness artifact, identical prompt both sides); journey A agents also had to learn `--task` resolves against their shell's CWD — the refusal named it and an absolute path fixed it. Transcripts: `%TEMP%/bt7c-measure/runs/{a,b}{1..3}/transcript.md` before, `…{a,b}after{1..3}` after.
