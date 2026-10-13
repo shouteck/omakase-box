@@ -4,6 +4,8 @@ Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch 
 
 **Written by the CTO on 13 October 2026**, the first half of the old BT11, rewritten clean against the tool as it stands after BT10. The decisions are the owner's (11 to 13 October 2026). The second half, the solver's payment link, is [BT11b](BT11b.md). The head chef checks names against master at dispatch.
 
+> **Dispatch, 13 October 2026 (Devin host).** Owner named BT11a after K15. Base `a15c60d`. Names checked against master: `format.ts` pins `schemaVersion: 1`, `reward: {amount:0,currency:'USD'}`, `terms:'merged-solution-earns-whole'` — the version bump lives there; `create.ts:280` and `github.ts:936` emit the `reward: $0` listing line; owner `config` surface exists per BT8a. No real-GitHub step; the sandbox exists for BT11b. The two-agent relay check (K15's standing method) is the UX lens — 5 runs, relayed sentences word for word in the Result (learned at K15 review: persist them, do not summarize).
+
 ## What is true today
 
 Every bounty states $0. The public format's version 1 accepts no other amount. The owner's settings hold their allowed repositories and two lists, shown and changed through `config`; nothing about money.
