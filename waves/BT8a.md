@@ -1,6 +1,6 @@
 # BT8a: the owner's side is three words and a list
 
-Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch · Branch: `wave/BT8a` · Timebox: 150 minutes; at expiry the cook stops and reports where it is, whatever state that is
+Milestone: BT · Station: packaging (also evidence) · Base: `3a159c2` at dispatch · Branch: `wave/BT8a` · Timebox: 150 minutes; at expiry the cook stops and reports where it is, whatever state that is
 
 **Rewritten by the CTO on 13 October 2026 against BT8's Result (merged `e8e1038`).** The owner made these decisions in conversation while BT8 cooked. The earlier draft of this brief also carried the secret scan; that is now its own wave, [BT8c](BT8c.md), so each can be reviewed once. Order: BT8a, then [BT8b](BT8b.md), then BT8c.
 
@@ -85,6 +85,7 @@ After tools people already know: `direnv allow` and `direnv deny` for trust; `gi
 
 ## Notes for the worker
 
+- Dispatch, 13 October: owner said "go" after the removal card. Hosted master verification of BT7b-ci2 passed. Start at 03:13 UTC; stop by 05:43 UTC. Use disposable offline GitHub stand-ins and a temporary owner settings folder for every trial; do not post a real issue, change real authority or spend money. Supply exact built-CLI fixture creation and cleanup instructions for the fresh relay/config readers. Keep the candidate clean while acceptance runs. The CTO owns kitchen docs and dispatches fresh reviewers/readers.
 - Refactoring playbook: BT8's behaviour is reviewed and right; this wave changes its shape. Migrate callers, then delete the old spellings. Subtract before adding.
 - The owner rejected requiring a real terminal for the owner's commands. Do not add it, a typed confirmation, a key or a signature. The honest position stays: this stops accidents and makes changes visible.
 - A message has one reader. A line for the owner belongs in bare `config` or `status`, not in what an agent is shown, except the three facts it is asked to pass on.
