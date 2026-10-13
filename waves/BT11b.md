@@ -18,7 +18,7 @@ No bounty site in the middle. A bounty can state a reward. The issue tells the s
 
 ## Scope
 
-- Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`, `docs/box-v4/BOUNTY-FORMAT.md`. On GitHub: the sandbox repository only (K15).
+- Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`, `docs/box-v4/BOUNTY-FORMAT.md`, `kitchen/demo/**` (the replay and its transcript). On GitHub: the sandbox repository only (K15).
 - Read for context: the Results of `waves/BT11a.md` (the reward, the limit, the format's version), `waves/BT7b.md` (how the tool recognises a merge and closes), `waves/BT9.md` (the hook's slot for the moment an agent is about to finish), `waves/BT6a.md` (how a pull request and its text are handled), `waves/K15.md` (the sandbox and how a wave uses it); `kitchen/stations/packaging.md`.
 - Do not touch: the reward and limit settings (BT11a); the never-ship table; `shouteck/omakase-box` on GitHub; `.execution/`, `docs/legacy/`.
 
@@ -70,6 +70,12 @@ The owner's instruction for testing: prove the flow, spend nothing, the kitchen 
 2. Two blind solvers each open a pull request. One carries a `pay-to:` line with the **test-mode** Stripe link the owner made for this on 11 October 2026: `https://buy.stripe.com/test_28E7sLbHrbu70eC5C5afS00`. Use exactly that; it moves no real money and is safe in a public pull request. The other carries hostile text on the line. No agent creates a Stripe account, signs in to one or makes a link. If the link has stopped working, say so in the Result and prove the rest with the fact "a test-mode payment link was given"; do not substitute another and do not stop to ask.
 3. A collecting session, new and told nothing, sees the fact next to each solution, merges the one with the link, and passes on the message the tool gives when it closes the bounty. **No agent opens the link, enters any payment detail or completes any checkout.**
 4. The Result quotes the message as the agent passed it on, and lists by exact name what is left on GitHub.
+5. **Something the owner can watch (owner, 14 October 2026).** The host cooking this wave is a terminal agent and cannot record a screen, so the wave leaves a replay the owner records themselves:
+   - `kitchen/demo/bt11b-replay.mjs`, one command, run from this checkout against the sandbox. It walks the same journey step by step: before each step it prints one plain line saying what is about to happen and who is doing it (the posting agent, a solver, the collecting agent, the tool), runs the real command, shows its real output, and pauses for Enter. At the points where a public page is the thing to look at (the issue, the pull request with its `pay-to:` line, the closed issue) it prints the address and waits.
+   - It posts a fresh test bounty each time it is run, worded as in step 1, and cleans up what it opened at the end or on Ctrl+C: it closes its bounty and says by exact name what it left on GitHub.
+   - It asks the owner nothing except Enter to go on, opens no payment link, and needs no input beyond what the sandbox already allows.
+   - A full transcript of one run, commands and complete output in order, is committed beside it, with the addresses of the real pages from that run.
+   - The Result says how long one run takes at reading pace. The owner records it with whatever their machine has (on Windows, Win+Alt+R).
 
 What this proves: every step the tool takes around a reward, on real GitHub. What it does not prove: that a real stranger will supply a link, that a real payment completes, or anything about an agent paying by itself. The Result says exactly that. Whether the owner ever opens the test link is the owner's own business and is not part of the wave.
 
@@ -99,6 +105,7 @@ What this proves: every step the tool takes around a reward, on real GitHub. Wha
 - Lenses:
 - Stripe link shapes accepted, and where they were confirmed:
 - Real use in the sandbox, step by step:
+- The replay: command, time for one run, transcript:
 - The pay message as relayed:
 - Left on GitHub, by exact name:
 - Findings and limits:
