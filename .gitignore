@@ -11,6 +11,7 @@ secrets/
 *.pem
 playwright-report/
 test-results/
+kitchen/demo/runs/
 __pycache__/
 *.pyc
 .kitchen/

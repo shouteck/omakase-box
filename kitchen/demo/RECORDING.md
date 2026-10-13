@@ -1,5 +1,11 @@
 # Recording prompt — the BT11b demo
 
+**The usual way is `node kitchen/demo/record.mjs`** — it runs the same replay
+for real in the sandbox and leaves one video a person can play (plus a still
+per step, the transcript and an index), with no screen, no cloud session and
+no recording by hand. The cloud session below is only for someone who wants a
+filmed desktop.
+
 Paste the block below into a fresh Devin Cloud session **in desktop mode** (it
 needs a screen, a browser and the recorder). It is the whole job.
 
