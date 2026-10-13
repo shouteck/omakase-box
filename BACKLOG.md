@@ -41,7 +41,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 - Kitchen findings carried at BT8a close: DB_CHECK_SUITES can drift from bootstrap live checks and child_process.fork remains outside start instrumentation. The K14 positive-count anchor is now delivered; its prior <=-only finding is closed. See [BT8a](waves/BT8a.md).
 
 
-- **Off-machine run does not cover milestone BT** (10 October 2026): `test:box-trace`, `test:box-bounty` and `test:box-package` are outside its list; runner label and action versions are about to change. Wave K10 fixes it. A later owner decision: whether to stop running the earlier-platform suites off-machine at all.
+- **Off-machine run coverage of milestone BT** (entry stale since K10; partly corrected 13 October 2026): the hosted verify workflow now includes `test:box-trace`, `test:box-bounty` and `test:box-package`, with runner and action versions pinned. The remaining exclusions and Windows-only marks still need writing down properly. A later owner decision: whether to stop running the earlier-platform suites off-machine at all.
 - The optional Node helper (generated package manifest, compiler configuration, lockfile resolution, generated evaluators) still lives inside `export.ts` and `verify.ts`, behind an opt-in. A3 made it unnecessary for a neutral agreement but did not move it out of the core files as its brief asked. Move it to its own module when those files are next touched. From the CTO's review of A3.
 - Master kitchen-stats still cannot attribute A3/A4/K7-ci/K7-ci2 from varied prose/deleted branches. Parked wave/K7 contains an independently checked merge-parentage fix, not integrated; retain this deliverable on resume.
 
