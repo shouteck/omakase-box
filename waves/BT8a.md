@@ -98,14 +98,116 @@ After tools people already know: `direnv allow` and `direnv deny` for trust; `gi
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
-- Lenses:
-- What identifies a repository:
-- Exit status for waiting states:
-- The relay, three runs, word for word:
-- Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+- Workers: original `/root/bt8a_cook`, then fresh correction cook `/root/bt8a_correction_cook`. Reviewer: `/root/bt8a_pass`. All used Codex on this Windows host with inherited model settings; fresh agents, not independent humans or claimed model diversity.
+- Final candidate: `7534f3b964cc4524cc6186ec7c8de72e7f56eece`.
+- Repository permission uses normalized GitHub owner/name, with letter case and a trailing .git normalized. It resolves effective fetch and push destinations, including Git rewrites. A fork is separate; divergent remotes, lookalikes and ambiguous legacy paths refuse. Legacy folder entries migrate only when one readable address can be established. Unresolved entries do not turn an all-projects setting into a silent yes.
+- `deny` removes the active entry and keeps a dated inactive entry and history. That explicit removal blocks blanket authority until reallowed. All-projects remains an extra configuration setting, off by default.
+- Waiting exits 0, with waiting on the first line. This is a completed request waiting for authority, not a host crash. Repeated post preserves its original wait time; first-post permission precedes GitHub calls. One-bounty allow posts directly. Ask covers publishing only; a merged bounty closes without another owner question.
+- Disclosure is emitted to stdout before authority writes for allow, including conversion to ask and configuration additions. Validation precedes those effects. Bare config derives its permission summary from actual state and includes undecided settings and dated history.
+- The final first-merge correction records the actual receiving repository, not the bounty's publication repository. With no determinable GitHub address, it records a private fact in existing excluded bounty bookkeeping at `.box/bounties/FIRST_MERGE`. Ordinary-parent checks and exclusive creation preserve malformed or foreign bytes; an unreadable marker is reported without undoing an already landed merge. The marker does not enter shipped snapshots, resume context or the public WIP commit. The never-ship table and scan rules are unchanged.
+
+### Verification and correction record
+
+- `aa0ad4ba722ca48a6de16ca03f902abc626e6e85`: full acceptance failed in 411s. Typecheck/build passed, bounty had 314 passes, eight failures and one skip; package did not run. Five failures lacked the retained external cat helper, two disposable-home/link fixtures were blocked by the default host sandbox, and one BT7 transport fixture still used the removed rewrite setup.
+- `6c7e4668a1ea341a847f5e8c1c11b5603b07bd6d`: grouped correction, then 427s acceptance failed solely on the package color-banner assertion with inherited NO_COLOR. The process-local retry removed NO_COLOR and added Git usr/bin to PATH; disposable fixture execution used approved elevation. It completed PASS in 427s at `.kitchen/runs/2026-10-13T04-17-38-110Z-6c7e466`: 326 bounty passes; 142 package passes and six skips. Failed overall runs were not reused.
+- Independent pass still rejected that green candidate. After collection from owner/project, changing the receiving repository to fork/project and merging locally incorrectly announced and recorded owner/project. The fresh correction cook reproduced five initial failures against the old build, then added nine real-CLI notice/privacy cases. Its four-file scoped run passed 38/38. Final acceptance and review evidence follow below.
+- Test environment changes were invocation-local. No global tool settings, real owner authority, real GitHub issue or payment changed. The named suites were offline; db=none.
+
+### Tests removed for changed behavior
+
+Seven obsolete owner-group checks were replaced: off/on history; owner-held close under ask; allow requiring --yes; allow --all; owner allow releasing waiting; setup/summary; and the old record compound expectation for posting nothing with exit 3. One obsolete rendered owner-allow assertion was removed from a retained waiting-stage check. Replacements assert observable disclosure before writing, deny/default/reallow history, direct one-bounty post, publishing-only ask, truthful config, waiting exit 0 and stable time, permission-before-GitHub, and retained double-close terminal behavior. Scan, Git safety, merge and transport safety expectations were not weakened.
+
+### Security review
+
+The pass independently exercised 20 built-CLI probes on the preceding candidate: folder reuse, fork, renamed and second remotes, fetch/push mismatch, both Git rewrite forms, lookalike addresses, malformed and unknown settings, and conflicting or unresolved legacy entries under blanket authority. Refusals left settings unchanged. Same-user settings edits and a settings junction are permitted but visible, as the owner required: an accident stop, not a lock. Populated foreign fixture cleanup refused and preserved bytes. The final correction receives an additional exact-commit review below.
+
+### Fresh reader trials
+
+The first relay round shifted choice to the owner in all three paraphrases. The message was corrected to name the agent explicitly, and three new agents read only captured first-use output. The pass played the owner using only their conversation messages and understood all three required facts in every final run. The final first-use and bare configuration choice wording is unchanged by the first-merge correction.
+
+- `f636d1b4c2147254ed4687f18de1eed752fc9142`: completed clean PASS in 509s at `.kitchen/runs/2026-10-13T04-41-59-042Z-f636d1b`, with 335 bounty passes and 142 package passes plus six existing skips. The pass confirmed both fork paths now name the receiving fork and malformed/linked marker preservation works. It then found the same local checkout repeated the notice after adding a readable GitHub remote. The cook independently reproduced notice flags true/false/true across three independent bounties.
+- `7534f3b964cc4524cc6186ec7c8de72e7f56eece`: the transition correction suppresses the repeat using the existing private local fact. It does not infer a permission entry or historical GitHub-address attribution. The three independent bounty regression now gives true/false/false; 39 scoped tests passed, including ten correction cases. The same-user marker remains an observable accident-stop convention, not an authenticity lock.
+
+#### Relay 1
+
+> Bounty bt-87932fb185f2 is waiting for your permission to post to GitHub. Bounties are public under your GitHub account, and a solution chosen by the agent is merged into your code.
+>
+> For this repository, you can choose:
+>
+> - Allow the tool: `box bounty allow`
+> - Require approval before each publication: `box bounty allow --ask` — merging does not require approval.
+> - Allow only this bounty: `box bounty allow bt-87932fb185f2`
+>
+> Which option do you want?
+
+#### Relay 2
+
+> The tool is waiting for your permission to publish bounties publicly under your GitHub account. Solutions chosen by the agent are merged into your code. This decision applies only to this repository.
+>
+> You can choose:
+>
+> - Allow this repository: `box bounty allow`
+> - Require approval before each publication: `box bounty allow --ask` — merging does not require approval.
+> - Allow only bounty `bt-87932fb185f2`: `box bounty allow bt-87932fb185f2`
+>
+> Which option do you want?
+
+#### Relay 3
+
+> Do you want to allow the tool to publish bounties publicly under your GitHub account? Any solution the agent chooses is merged into your code. This permission applies only to this repository.
+>
+> Choose one:
+>
+> - Allow this repository: `box bounty allow`
+> - Ask before each publication: `box bounty allow --ask` — merging does not require approval.
+> - Allow only this bounty: `box bounty allow bt-87932fb185f2`
+>
+> Publishing is currently waiting for your approval.
+
+#### Bare configuration
+
+Two further fresh agents received only bare config and an owner's request. For "Stop bounties on this repo", `/root/bt8a_config_final_stop` first ran `deny owner/project`, exited 0, and confirmed status said not allowed. For "Allow owner/shop too", `/root/bt8a_config_final_shop` first ran `config add repositories owner/shop`, exited 0, and received the dated allowed entry. Neither reported hesitation or misreading. Both used only the offline fixture wrapper and temporary settings.
+
+The pass played the owner using only bare config. It understood the actual current entry, the default being off when undecided, true/false/ask blanket behavior, entry overrides, deny overriding blanket permission, dated history, and publishing-only ask. Nonblocking unused lines included blanket settings, unrelated ask examples, removal/reallow alternatives and status for the add request. The settings filepath and timestamps were operator detail; "dated deny removal" was awkward. Earlier exploratory config readers got the right first command, but build overlap made those trials nongating. The final captures were frozen on clean 6c7e466 before the retry build.
+
+### Final acceptance and close
+
+- Verdict: **PASS, ui-verified**, from fresh pass `/root/bt8a_pass` on `7534f3b964cc4524cc6186ec7c8de72e7f56eece`. Both required lenses, security and user experience, passed. Measurement fairness was not applicable.
+- Executed worker record: `.kitchen/runs/2026-10-13T04-55-02-950Z-7534f3b`. Summary: `verify 7534f3b PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 494s`. Clean at start and finish, no omitted steps. Bounty: 336 passed across 27 files, no skips. Packaging: 142 passed, six skipped across 17 passed files and one skipped file. The six skips are the existing A3 R2 replay tests guarded by BOX_A3_REPLAY.
+- Completed reviewer invocation: `.kitchen/runs/2026-10-13T05-04-52-857Z-7534f3b`. Summary: `verify 7534f3b PASS check=reused build=reused test:box-bounty=reused test:box-package=reused db=none 1s`. Exit 0, exact SHA, clean tree. The reviewer read the underlying completed logs and used recorded reuse, not a second executed full suite.
+- On 7534f3b964cc4524cc6186ec7c8de72e7f56eece the pass independently replayed three separate local bounties and got notice flags true/false/false after adding the remote before the third. Original marker bytes stayed unchanged, were absent from all delivered repositories, and did not create permission or address-level notice entries. Status retained the first local commit. The reviewer inspected the small transition diff and carried unchanged fork/protection checks from f636d1b and explicitly attributed reader trials from 6c7e466. Its newly created transition fixture and helper were removed.
+- Latest hosted master read before merge remained green, run `38340167522`. New pushed verification is not claimed complete at close.
+- Merged with no fast-forward as `4d35a81afd6b3f7ef22e064b42303d0bcf1464e0`. Final product changes were reviewed before the merge; only kitchen records changed afterwards.
+- Resources removed: both registered relay/config fixture trees and registries; four owned count artifacts; all pass-created fixture worlds, probe helpers and evidence files. No BT8a-named temporary artifact remains. Verification logs and the normal compiled build remain. No database or container was created by acceptance. Older owner-held branches and unrelated temp folders were preserved. The merged wave branch is deleted at close.
+- The interruption ended the correction cook after its completed acceptance record. The pass resumed and completed its own gate. No result is inferred from the interrupted turn.
+
+### Final K14 starts
+
+| Command | Git starts | gh starts |
+|---|---:|---:|
+| help | 0 | 0 |
+| describe / describe-rules | 2 | 0 |
+| create-preview | 11 | 0 |
+| create / create-local | 18 | 0 |
+| status-drafted / status-applied / status-end | 2 | 0 |
+| close-draft | 3 | 0 |
+| post-preview | 16 | 3 |
+| post-github | 19 | 8 |
+| status-posted | 2 | 5 |
+| status-comments | 3 | 7 |
+| look-pr | 19 | 2 |
+| look / look-full | 6 | 0 |
+| apply | 15 | 5 |
+| close-ended | 4 | 4 |
+| post-dir | 2 | 0 |
+| look-from | 16 | 0 |
+| close-reason | 4 | 0 |
+
+Measured on final 7534f3b, not inferred from upper bounds. Positive-count anchors now reject a dead spy for expected nonzero paths. No budget increased. The uninstrumented child_process.fork seam remains a stated limit.
+
+### Principles and reflection
+
+The original cook and pass read the refactoring playbook and the applicable installed TypeScript guidance. Model the domain and foundational thinking changed the core key from a folder to a normalized repository address with explicit dated inactive entries. Boundary discipline placed destination and settings validation before authority effects. Subtract before adding and migrate callers then delete legacy APIs removed the old owner commands instead of keeping aliases. Minimize reader load changed bare config to summarize actual state. Prove it works drove stdout-before-write checks, real fork merges, independent local bounties and private-marker shipping probes. Type system discipline parsed external settings rather than trusting their shapes. The CTO's experience-first review required actor-explicit wording after the blind relay failure.
+
+Reflect: the same-bounty terminal reapply check missed once-only notices across independent bounties, receiving forks and a newly readable address. It becomes the real-CLI first-merge regression file, including the three-bounty transition.
+Reflect: repository attribution and owner understanding need observable flows, not prose review. The packaging station now calls for independent first merges in the actual receiving repository and a cold relay naming who chooses.
