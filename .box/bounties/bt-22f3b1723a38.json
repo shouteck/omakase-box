@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "kind": "box-bounty-record",
+  "id": "bt-22f3b1723a38",
+  "title": "Correct the stale off-machine verification backlog entry for milestone BT",
+  "resume": {
+    "kind": "recorded",
+    "branch": "master",
+    "commit": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3",
+    "changed": [
+      "BACKLOG.md"
+    ],
+    "note": "Was in the middle of finishing the BT10 real bounty journey: record each step, replace STATUS.md, return the checkout to master, stop after BT10."
+  },
+  "noteSource": "authored",
+  "why": "stale hosted-verification backlog entry handed to an outside solver — the BT10 real journey wave",
+  "job": {
+    "file": "job.txt",
+    "text": "Complete BT10's real bounty journey, record what happened for every step, replace STATUS.md, return the checkout to master and stop after BT10. BT11 is outside this run.\r\n"
+  },
+  "manifestSha256": "11be05c6b231c3528b60bf48d3009ca6851ee94c3e7a53b6a04d2955f03da444",
+  "stage": "posted",
+  "folder": "C:\\Users\\shout\\Desktop\\Projects\\bounties\\correct-the-stale-off-machine-verificati",
+  "snapshot": {
+    "commit": "48695c85a3e5f67a34b65c43874c2bd489bddf17",
+    "tree": "4153b9ba6887741faf9d7d752ae39ab9733f6733",
+    "baseCommit": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3"
+  },
+  "createdAt": "2026-10-13T12:48:51.187Z",
+  "scanFindings": [
+    {
+      "at": "2026-10-13T12:48:51.187Z",
+      "where": "create",
+      "hits": [
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 385,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 394,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 397,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 403,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff",
+          "line": 134,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff",
+          "line": 139,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff",
+          "line": 134,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff",
+          "line": 139,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-launcher-r2/scripts/box-verification/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/gate-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/source-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 385,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 394,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 397,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 403,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/gate-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/source-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/metadata-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/scripts/box-verification/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/scripts/box-verification/environment-manifest.json",
+          "line": 2171,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts",
+          "line": 8,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts",
+          "line": 9,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/cookie-policy.test.ts",
+          "line": 5,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/owner.test.ts",
+          "line": 6,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 385,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 394,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 397,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 403,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/scripts/box-verification/environment-manifest.json",
+          "line": 2171,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/preflight-receipt.md",
+          "line": 17,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/workspace-recipe.md",
+          "line": 29,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md",
+          "line": 114,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": "scripts/verify.mjs",
+          "line": 67,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": "scripts/verify.mjs",
+          "line": 107,
+          "rule": "passworded-connection-string"
+        }
+      ],
+      "settled": "the flagged content changed — the bounty went out"
+    }
+  ],
+  "events": [
+    {
+      "stage": "drafted",
+      "at": "2026-10-13T12:48:51.187Z"
+    },
+    {
+      "stage": "waiting",
+      "at": "2026-10-13T12:49:08.821Z"
+    },
+    {
+      "stage": "posted",
+      "at": "2026-10-13T13:11:17.831Z",
+      "destination": "https://github.com/shouteck/omakase-box/issues/5"
+    }
+  ],
+  "allowedBy": {
+    "decision": "once",
+    "level": "this-bounty",
+    "decisionAt": null,
+    "usedAt": "2026-10-13T13:11:12.502Z"
+  },
+  "github": {
+    "repository": "shouteck/omakase-box",
+    "account": "shouteck",
+    "kind": "history",
+    "branch": "box-bounty/bt-22f3b1723a38",
+    "title": "[box bounty bt-22f3b1723a38] Correct the stale off-machine verification backlog entry for milestone BT",
+    "body": "# Bounty: Correct the stale off-machine verification backlog entry for milestone BT\n\nid bt-22f3b1723a38 · created 2026-10-13T12:48:51.187Z by box-bounty@0.1.0\n\n## What is wanted\n\nUpdate the stale hosted verification backlog note\n\nIn BACKLOG.md, correct the Kitchen and environment entry dated 10 October 2026 that still says milestone BT is outside the off-machine verification list and K10 will fix it.\n\nUse .github/workflows/verify.yml and waves/K10.md as the source of truth. The current workflow includes test:box-trace, test:box-bounty and test:box-package and pins its runner and action versions. Retain the distinction between current coverage, deliberate exclusions and Windows-only tests. Keep the later owner decision about older-platform suites as a decision, without inventing an answer.\n\nChange only this backlog entry. Keep the rest of BACKLOG.md intact. Make the correction useful to someone deciding which hosted checks actually run today.\n\n## What was already tried\n\nI compared the stale backlog entry with the current workflow and K10 result. K10 added the BT suites, and the latest completed hosted master run, 38388939538, passed. The task is a documentation correction, not a request to change the workflow or test expectations.\n\n## The code\n\nBranch from `box-bounty/bt-22f3b1723a38` — it is the branch pull requests for this bounty target.\nThe branch is based on commit dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3, the newest commit this repository already had: it carries the poster's work in progress — 1 commit(s) on top of that commit: `3eedab735772` box bounty bt-22f3b1723a38: work in progress.\n\n## How to answer\n\nFork this repository (or push a branch inside it), branch from `box-bounty/bt-22f3b1723a38`, make the change, and open a pull request against `box-bounty/bt-22f3b1723a38` in this repository. Collecting an answer runs nothing you wrote — the poster reads the change and decides.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.\n\nreward: $0\nThe merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.\nlicence: LICENSE (package.json declares Apache-2.0)\n\n<!-- box-bounty:bt-22f3b1723a38 -->\n<!-- box-bounty-format\n{\"schemaVersion\":1,\"kind\":\"box-bounty\",\"id\":\"bt-22f3b1723a38\",\"repository\":\"shouteck/omakase-box\",\"workCommit\":\"3eedab735772f77bc82794c57ee048d2b22bafca\",\"branch\":\"box-bounty/bt-22f3b1723a38\",\"withChanges\":true,\"createdAt\":\"2026-10-13T12:48:51.187Z\",\"state\":{\"kind\":\"open\"},\"reward\":{\"amount\":0,\"currency\":\"USD\"},\"terms\":\"merged-solution-earns-whole\"}\n-->\n",
+    "commit": "3eedab735772f77bc82794c57ee048d2b22bafca",
+    "base": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3",
+    "pushed": [
+      {
+        "sha": "3eedab735772f77bc82794c57ee048d2b22bafca",
+        "subject": "box bounty bt-22f3b1723a38: work in progress"
+      }
+    ],
+    "wipCommit": "3eedab735772f77bc82794c57ee048d2b22bafca",
+    "wip": {
+      "changed": [
+        "BACKLOG.md"
+      ],
+      "added": [],
+      "deleted": []
+    },
+    "state": "posted",
+    "issue": {
+      "number": 5,
+      "url": "https://github.com/shouteck/omakase-box/issues/5"
+    },
+    "pending": null,
+    "formatRead": "matches-record",
+    "formatReadAt": "2026-10-13T13:11:47.986Z",
+    "formatUnavailableAt": null,
+    "availablePullRequests": [],
+    "questions": {
+      "count": 0,
+      "latestAt": null
+    },
+    "outside": {
+      "at": "2026-10-13T13:11:48.924Z",
+      "issueState": "open",
+      "answers": "GitHub answers for bt-22f3b1723a38 against box-bounty/bt-22f3b1723a38:\n  none open; wait for one or close the bounty"
+    },
+    "unavailableAt": null,
+    "seenPullRequests": []
+  }
+}

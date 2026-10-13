@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "kind": "box-bounty-record",
+  "id": "bt-26bb9883d6b2",
+  "title": "Clarify the unresolved BT9 real-host hook evidence in BACKLOG",
+  "resume": {
+    "kind": "recorded",
+    "branch": "master",
+    "commit": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3",
+    "changed": [
+      "BACKLOG.md"
+    ],
+    "note": "Running the BT10 real bounty journey"
+  },
+  "noteSource": "generated",
+  "why": "second open bounty for the BT10 outside-reader check — a real small clarification",
+  "job": null,
+  "manifestSha256": "dbae29b4d3295ecb63ab83137dbe50b8d03747bea080ac04528de4956f4b63bf",
+  "stage": "posted",
+  "folder": "C:\\Users\\shout\\Desktop\\Projects\\bounties\\clarify-the-unresolved-bt9-real-host-hoo",
+  "snapshot": {
+    "commit": "729e04e06b4d3aac056ee73b4b2d557f3be1090e",
+    "tree": "5f10952dd33102ee1ad0cf557e33c1a26c6757fa",
+    "baseCommit": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3"
+  },
+  "createdAt": "2026-10-13T12:54:57.037Z",
+  "scanFindings": [
+    {
+      "at": "2026-10-13T12:54:57.037Z",
+      "where": "create",
+      "hits": [
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 385,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 394,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 397,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts",
+          "line": 403,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff",
+          "line": 134,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff",
+          "line": 139,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff",
+          "line": 134,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff",
+          "line": 139,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-launcher-r2/scripts/box-verification/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/gate-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/source-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 385,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 394,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 397,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts",
+          "line": 403,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/gate-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/source-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/metadata-environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/scripts/box-verification/environment-manifest.json",
+          "line": 2741,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/scripts/box-verification/environment-manifest.json",
+          "line": 2171,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts",
+          "line": 8,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts",
+          "line": 9,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/cookie-policy.test.ts",
+          "line": 5,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/owner.test.ts",
+          "line": 6,
+          "rule": "assigned-secret"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 385,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 394,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 397,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts",
+          "line": 403,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/scripts/box-verification/environment-manifest.json",
+          "line": 2171,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/preflight-receipt.md",
+          "line": 17,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": ".execution/box-v4/evidence/B1.1/workspace-recipe.md",
+          "line": 29,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": "docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md",
+          "line": 114,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": "scripts/verify.mjs",
+          "line": 67,
+          "rule": "passworded-connection-string"
+        },
+        {
+          "path": "scripts/verify.mjs",
+          "line": 107,
+          "rule": "passworded-connection-string"
+        }
+      ],
+      "settled": "the flagged content changed — the bounty went out"
+    }
+  ],
+  "events": [
+    {
+      "stage": "drafted",
+      "at": "2026-10-13T12:54:57.037Z"
+    },
+    {
+      "stage": "waiting",
+      "at": "2026-10-13T12:55:33.311Z"
+    },
+    {
+      "stage": "posted",
+      "at": "2026-10-13T13:11:31.743Z",
+      "destination": "https://github.com/shouteck/omakase-box/issues/6"
+    }
+  ],
+  "allowedBy": {
+    "decision": "once",
+    "level": "this-bounty",
+    "decisionAt": null,
+    "usedAt": "2026-10-13T13:11:26.291Z"
+  },
+  "github": {
+    "repository": "shouteck/omakase-box",
+    "account": "shouteck",
+    "kind": "history",
+    "branch": "box-bounty/bt-26bb9883d6b2",
+    "title": "[box bounty bt-26bb9883d6b2] Clarify the unresolved BT9 real-host hook evidence in BACKLOG",
+    "body": "# Bounty: Clarify the unresolved BT9 real-host hook evidence in BACKLOG\n\nid bt-26bb9883d6b2 · created 2026-10-13T12:54:57.037Z by box-bounty@0.1.0\n\n## What is wanted\n\nClarify the unresolved BT9 real-host hook evidence\n\nIn BACKLOG.md, add a short factual note distinguishing BT9's tested hook adapters and file/command wiring from its unmet acceptance requirement that two actual agent hosts fire the hook. Read waves/BT9.md and preserve its stated evidence limits. Do not claim that installation or a manually invoked command proves an actual host fired a hook.\n\nChange only BACKLOG.md. Do not change any hook, setting, instruction file or test. This second zero-reward bounty is also the second open issue for BT10's public-format reader check and may close with no solution after that check.\n\n## What was already tried\n\nNo public note was supplied.\n\n## The code\n\nBranch from `box-bounty/bt-26bb9883d6b2` — it is the branch pull requests for this bounty target.\nThe branch is based on commit dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3, the newest commit this repository already had: it points at that commit — nothing new was published.\n\n## How to answer\n\nFork this repository (or push a branch inside it), branch from `box-bounty/bt-26bb9883d6b2`, make the change, and open a pull request against `box-bounty/bt-26bb9883d6b2` in this repository. Collecting an answer runs nothing you wrote — the poster reads the change and decides.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.\n\nreward: $0\nThe merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.\nlicence: LICENSE (package.json declares Apache-2.0)\n\n<!-- box-bounty:bt-26bb9883d6b2 -->\n<!-- box-bounty-format\n{\"schemaVersion\":1,\"kind\":\"box-bounty\",\"id\":\"bt-26bb9883d6b2\",\"repository\":\"shouteck/omakase-box\",\"workCommit\":\"dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3\",\"branch\":\"box-bounty/bt-26bb9883d6b2\",\"withChanges\":false,\"createdAt\":\"2026-10-13T12:54:57.037Z\",\"state\":{\"kind\":\"open\"},\"reward\":{\"amount\":0,\"currency\":\"USD\"},\"terms\":\"merged-solution-earns-whole\"}\n-->\n",
+    "commit": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3",
+    "base": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3",
+    "pushed": [],
+    "wip": null,
+    "state": "posted",
+    "issue": {
+      "number": 6,
+      "url": "https://github.com/shouteck/omakase-box/issues/6"
+    },
+    "pending": null,
+    "formatRead": "matches-record",
+    "formatReadAt": "2026-10-13T13:11:49.519Z",
+    "formatUnavailableAt": null,
+    "availablePullRequests": [],
+    "questions": {
+      "count": 0,
+      "latestAt": null
+    },
+    "outside": {
+      "at": "2026-10-13T13:11:50.551Z",
+      "issueState": "open",
+      "answers": "GitHub answers for bt-26bb9883d6b2 against box-bounty/bt-26bb9883d6b2:\n  none open; wait for one or close the bounty"
+    },
+    "unavailableAt": null,
+    "seenPullRequests": []
+  }
+}
