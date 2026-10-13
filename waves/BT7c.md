@@ -76,6 +76,20 @@ Kept: `create`, `post`, `status`, `look`, `apply`, the one closing command, `hel
 - Merged: · Resources removed:
 - Reflect:
 
+### Tests removed and guarantees moved (the done-when accounting the pass asked for)
+
+| Removed command | Tests deleted with it | Where each guarantee's tests went |
+|---|---|---|
+| `undo` | bt6b.test.ts — "refuses undo for as long as undo exists", "hole 1: refuses undo under a bare interpreter filter", "hole A: refuses undo the same way", "hole C: refuses undo under an exec operand" (the revert no longer exists, so nothing tool-side runs it); github.test.ts — "…records undo" leg and "undo preserves unfinished apply facts and outside cleanup" | no tool guarantee remained: an applied merge is one ordinary commit and plain `git reset`/`git revert` reverses it without running solver code — that is the agent's own Git, not the tool's. What survived is `apply` naming the merge commit (answer.test.ts "an answer lands at answered and waits…") and the `undone` legacy stage loading cleanly (record.test.ts, bt7c-review.test.ts). `apply`'s merge preflight keeps its refusals — the bt6b filter/driver holes are still tested on `apply` |
+| `reply` | bt7-refusals.test.ts — the reply half of "refuses to read or reply on an existing issue that is not this bounty's"; bt7.test.ts — the "records owner replies" leg | no guarantee remained: posting a comment is `gh issue comment` under the agent's own account. The issue-binding refusal (a foreign issue is never read or posted to) moved to bt7.test.ts "…owner replies post through gh" and the `github-issue-mismatch` refusal in bt7-refusals.test.ts |
+| `remind` | tell.test.ts — the `box bounty remind (built cli)` describe, including "prints the reminder line only when the limits file switches it on" | none — nothing consumed the output; the owner `reminders` limits field stays a known field (limits resolution unchanged) |
+| `answer` | none as a command — every `answer` describe in answer.test.ts was re-pointed, not dropped | collection and every collection refusal now sit behind `look <n>`/`apply <n>`/`--from`: answer.test.ts keeps the full matrix (`answer-mismatch`, `snapshot-mismatch`, `manifest-tampered`, `answer-malformed`, `answer-empty`, `answer-unsafe-path`, `answer-never-ship`, `snapshot-lost`, dirty-worktree aborts), bt7-cli.test.ts covers `look <n>` collection end to end, k14-start-budget.test.ts carries the start budgets |
+| `questions` | none — the `BT7 questions` describe was rewritten, not dropped | bt7.test.ts "shows only question metadata in status, quotes others with --comments, and owner replies post through gh"; the count/`other account` quoting refusals in bt7-refusals.test.ts; the CLI path in bt7-git-channels.test.ts; the budget entry in k14-start-budget.test.ts (`status-comments`) |
+| `reject` | none as a command — re-pointed inside answer.test.ts and record.test.ts | `close --reason` carries it: answer.test.ts "close --reason ends an answered bounty with the reason kept on the event" and the rejected-stage cases; the empty-reason refusal is `missing-reason` in closeBounty (record.test.ts/CLI close tests) |
+| `withdraw` | none as a command — the `withdraw` describes were renamed `close` | record.test.ts "close — ends an open bounty cleanly" (both closing forms, double-close `already-ended`); github.test.ts keeps the outside-cleanup cases as close: branch removal after a failed issue post and issue close after a lost creation response |
+
+Every removed name typed at the built CLI refuses `command-removed` (exit 3) naming the replacement — bt7-cli.test.ts, and the correction's corpus scan in bt7c-review.test.ts.
+
 ### Command audit (cook A, read in code before the cut)
 
 | Command | What it did that an agent could not | Disposition |

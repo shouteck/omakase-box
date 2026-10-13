@@ -255,6 +255,19 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
       .replace(/local (?:undo|reject|withdraw) stands/g, 'local close stands')
       .replace(/box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `box bounty close ${record.id}`);
   }
+  // `outside.answers` is the same kind of stored tool text — the listing
+  // listGitHubAnswers printed — replayed verbatim by status and by the
+  // open-bounties line while GitHub cannot refresh. Its old collect line
+  // named `answer <id> --pr <n>`: point it at the pair that collects that
+  // pull request now; any other removed name points back at status.
+  if (record.github?.outside !== undefined && typeof record.github.outside.answers === 'string') {
+    const answers = record.github.outside.answers
+      .replace(/box bounty answer (\S+) --pr (\d+)/g, 'box bounty look $1 $2 or box bounty apply $1 $2')
+      .replace(/box bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b[^\n;]*/g, `box bounty status ${record.id}`);
+    if (answers !== record.github.outside.answers) {
+      record.github = { ...record.github, outside: { ...record.github.outside, answers } };
+    }
+  }
   return record;
 };
 
