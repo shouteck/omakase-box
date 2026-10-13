@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, loadRecord, postBounty, previewGitHub, rejectBounty, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
+import { applyBounty, closeBounty, confirmBounty, loadRecord, lookBounty, postBounty, previewGitHub, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fingerprint, git, runRoot, write } from './support.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
@@ -224,7 +224,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const tree = objectGit(repo, ['write-tree'], env);
     const sha = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-m', 'unrelated']);
     prCommit(sha);
-    refused(() => answerGitHub(repo, id, 2), 'github-pr-not-descended');
+    refused(() => lookBounty(repo, id, 2), 'github-pr-not-descended');
   }));
 
   it('refuses a pull request that hides a never-ship path deep in its history but not in its final tree', () => postedFixture(({ repo, id, prCommit }) => {
@@ -244,7 +244,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const t2 = objectGit(repo, ['write-tree'], env);
     const c2 = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', t2, '-p', c1, '-m', 'fix'], env);
     prCommit(c2, 'solver', ['app.txt']);
-    refused(() => answerGitHub(repo, id, 2), 'answer-never-ship');
+    refused(() => lookBounty(repo, id, 2), 'answer-never-ship');
     // The refusal changed nothing: no attempt was pinned.
     expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
   }));
@@ -266,14 +266,14 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const tree = objectGit(repo, ['write-tree'], env);
     const head = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-p', pub.commit, '-p', orphan, '-m', 'fix with a hitchhiker'], env);
     prCommit(head);
-    refused(() => answerGitHub(repo, id, 2), 'answer-never-ship');
+    refused(() => lookBounty(repo, id, 2), 'answer-never-ship');
     expect(loadRecord(repo, id).attempts ?? []).toHaveLength(0);
   }));
 
   it('refuses a pull request that changes nothing and one whose tree holds a submodule', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     prCommit(pub.commit, 'solver', []);
-    refused(() => answerGitHub(repo, id, 2), 'answer-empty');
+    refused(() => lookBounty(repo, id, 2), 'answer-empty');
     // A gitlink entry (mode 160000) is a submodule — never materialized.
     const env = { GIT_INDEX_FILE: join(runRoot('bt6a-sub'), 'index') };
     objectGit(repo, ['read-tree', pub.commit], env);
@@ -283,7 +283,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const tree = objectGit(repo, ['write-tree'], env);
     const sha = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-p', pub.commit, '-m', 'sub']);
     prCommit(sha);
-    refused(() => answerGitHub(repo, id, 3), 'answer-unsafe-path');
+    refused(() => lookBounty(repo, id, 3), 'answer-unsafe-path');
   }));
 
   it('collects an answer on an enormous pull-request history without running any of it', () => postedFixture(({ repo, id, prCommit }) => {
@@ -301,13 +301,13 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     }
     const sentinel = join(runRoot('bt6a-huge-sentinel'), 'ran');
     prCommit(parent, 'solver', ['counter.txt']);
-    const result = answerGitHub(repo, id, 2);
-    expect(result.outcome).toBe('answered');
-    expect(result.report.join('\n')).toContain('100 commit(s)');
+    const result = lookBounty(repo, id, 2);
+    expect(result.attempt.outcome).toBe('answered');
+    expect(result.attempt.report.join('\n')).toContain('100 commit(s)');
     expect(existsSync(sentinel)).toBe(false);
   }), 120000);
 
-  it('a returned .gitattributes names no filter or hook — nothing solver-carried executes on fetch, report, merge or undo', () => postedFixture(({ repo, id, scratch, pr }) => {
+  it('a returned .gitattributes names no filter or hook — nothing solver-carried executes on fetch, report or merge', () => postedFixture(({ repo, id, scratch, pr }) => {
     // The owner checkout HAS a filter configured that writes a sentinel if it
     // ever runs: only a foreign .gitattributes could select it for the answer.
     const sentinel = join(scratch, 'filter-ran');
@@ -316,14 +316,13 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     git(repo, ['config', 'filter.hostile.clean', `node ${trigger.replaceAll('\\', '/')}`]);
     pr('solver', { '.gitattributes': '* filter=hostile\n', 'hostile-hook.sh': `#!/bin/sh\ntouch ${sentinel.replaceAll('\\', '/')}\n` });
     const before = fingerprint(repo);
-    const result = answerGitHub(repo, id, 2);
-    expect(result.outcome).toBe('answered');
+    const result = lookBounty(repo, id, 2);
+    expect(result.attempt.outcome).toBe('answered');
     expect(existsSync(sentinel)).toBe(false);
-    expect(applyBounty(repo, id, 1).outcome).toBe('applied');
+    expect(applyBounty(repo, id, 2).outcome).toBe('applied');
     expect(existsSync(sentinel)).toBe(false);
-    expect(undoBounty(repo, id).outcome).toBe('undone');
-    expect(existsSync(sentinel)).toBe(false);
-    expect(fingerprint(repo).files['.gitattributes']).toBeUndefined(); // undo removed it as bytes — it never ran
+    // It landed as ordinary bytes — it never ran anywhere in between.
+    expect(readFileSync(join(repo, '.gitattributes'), 'utf8')).toBe('* filter=hostile\n');
   }));
 
   it('refuses to collect when the bounty branch was changed outside the tool', () => postedFixture(({ repo, bare, id, pr }) => {
@@ -332,10 +331,10 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     // against whatever it points at now.
     const pub = loadRecord(repo, id).github!;
     git(bare, ['update-ref', `refs/heads/${pub.branch}`, prSha]);
-    refused(() => answerGitHub(repo, id, 2), 'github-branch-changed');
+    refused(() => lookBounty(repo, id, 2), 'github-branch-changed');
     // Closing too: the branch is not this tool's to remove, so the local
     // decision stands and the record names why the outside work is pending.
-    rejectBounty(repo, id, 'not wanted');
+    closeBounty(repo, id, 'not wanted');
     expect(loadRecord(repo, id).github!.pending).toContain('github-branch-changed');
   }));
 
@@ -345,7 +344,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     postBounty(repo, id, 'github');
     const pub = loadRecord(repo, id).github!;
     expect(pub.wipCommit).toBeDefined();
-    withdrawBounty(repo, id);
+    closeBounty(repo, id);
     // The removal comment names every commit that existed only on that branch.
     const removal = state().comments.find(comment => comment.body.includes('is removed'));
     expect(removal).toBeDefined();
@@ -354,7 +353,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
     expect(loadRecord(repo, id).github!.closedNote).toContain(pub.wipCommit!.slice(0, 12));
     // Retrying the close does not comment twice.
-    withdrawBounty(repo, id);
+    closeBounty(repo, id);
     expect(state().comments.filter(comment => comment.body.includes('is removed'))).toHaveLength(1);
   }));
 
@@ -385,10 +384,10 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     // Still collectible: the solver's snapshot-shaped pull request binds to
     // the shipped manifest like it always did.
     pr('owner');
-    const result = answerGitHub(repo, id, 1);
-    expect(result.outcome).toBe('answered');
+    const result = lookBounty(repo, id, 1);
+    expect(result.attempt.outcome).toBe('answered');
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
-    rejectBounty(repo, id, 'done looking');
+    closeBounty(repo, id, 'done looking');
     expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
     expect(loadRecord(repo, id).github!.state).toBe('closed');
   }));

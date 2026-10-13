@@ -15,10 +15,11 @@ import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.
 // tools/filter.cjs`, committed `*.dat filter=own`, tracked tools/filter.cjs.
 // A solution that replaces tools/filter.cjs and changes a .dat file Git
 // writes after it makes the merge run the solver's program on the owner's
-// machine — and `undo` of that merge does the same. The fix: `apply` and
-// `undo` refuse by name whenever a configured command Git could run at
-// merge/checkout resolves inside the repository or cannot be placed, before
-// the working tree, index or branch is touched.
+// machine. The fix: `apply` refuses by name whenever a configured command
+// Git could run at merge/checkout resolves inside the repository or cannot
+// be placed, before the working tree, index or branch is touched. Reversing
+// a landed merge is plain `git revert` — the owner's own Git on the owner's
+// own configuration — so there is no tool-side undo to guard.
 //
 // Defect 2: `post --to github --with-changes` pushed raw working-tree bytes
 // of a clean-filtered file. The fix hashes each placed file exactly as `git
@@ -111,7 +112,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     // Git writes after it — the trap BT7's second pass reproduced.
     write(folder, 'repo/tools/filter.cjs', loggingFilter('SOLVER'));
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -136,7 +137,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     // program reads cannot be bounded, so any in-tree program refuses.
     write(folder, 'repo/tools/key.txt', 'solver key\n');
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -156,7 +157,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/drv.cjs', "// the solver's driver\n");
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -172,7 +173,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     git(repo, ['config', 'filter.mystery.clean', 'bt6b-no-such-program %f']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -181,40 +182,6 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     expect(applied.stderr).toContain('filter.mystery.clean');
     expect(fingerprint(repo)).toEqual(before);
   });
-
-  it('refuses undo for as long as undo exists — the applied merge left the solver\'s program in the tree', () => withLog(logFile => {
-    const repo = filteredRepo();
-    // At apply time the configured program is outside the repository: the
-    // merge lands, and the solver's replacement of tools/filter.cjs lands as
-    // an ordinary file.
-    const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
-    writeFileSync(external, loggingFilter('EXTERNAL'));
-    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${external.replaceAll('\\', '/')}" ${mode}`;
-    git(repo, ['config', 'filter.own.clean', command('clean')]);
-    git(repo, ['config', 'filter.own.smudge', command('smudge')]);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/tools/filter.cjs', loggingFilter('SOLVER'));
-    write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
-    const applied = cli(repo, 'apply', id, '1');
-    expect(applied.status).toBe(0);
-    // The owner then points the filter at the in-tree path — the state a
-    // solver-authored merge leaves behind.
-    inTreeFilter(repo);
-    const before = fingerprint(repo);
-    // The log so far may already hold a SOLVER line: the fixture's own plain
-    // `git status` (the fingerprint above) runs the repository's configured
-    // filter — which is the solver's program now. That is the hazard, seen
-    // from the owner's own shell. What must not run it is the tool: from here
-    // on the log gains nothing.
-    const loggedBeforeUndo = readLog(logFile).length;
-    const undone = cli(repo, 'undo', id);
-    expect(undone.status).toBe(3);
-    expect(undone.stderr).toContain('undo-unsafe-config');
-    expect(undone.stderr).toContain('tools/filter.cjs');
-    expect(readLog(logFile).slice(loggedBeforeUndo)).toEqual([]);
-    expect(fingerprint(repo)).toEqual(before);
-  }));
 
   it('lands a solution as today when every configured command resolves outside the repository — filters applied', () => withLog(logFile => {
     const repo = filteredRepo();
@@ -227,7 +194,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/new.dat', 'solver new\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -303,8 +270,9 @@ describe('defect 2 — a work-in-progress commit holds the filtered bytes create
 });
 
 // BT6b pass holes — three ways the first refusal layer still let a solver's
-// program run, each proven live through the built CLI. The check is shared
-// by apply and undo, so undo coverage here proves the sharing once.
+// program run, each proven live through the built CLI. `undo` is gone since
+// BT7c; its cases here ran the same shared check through apply instead, so
+// what remains is apply's coverage alone.
 describe('pass holes — configured commands that still reached a solver program', () => {
   it('hole 1: refuses a bare interpreter filter — the filtered stream itself is the program', () => {
     const repo = filteredRepo();
@@ -315,7 +283,7 @@ describe('pass holes — configured commands that still reached a solver program
     const marker = join(runRoot('bt6b-pwn'), 'pwned.txt');
     write(folder, 'repo/zz.dat', `require('node:fs').writeFileSync(${JSON.stringify(marker.replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -334,34 +302,12 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'filter.lfs.process', 'git-lfs filter-process']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
     expect(applied.stdout).toContain('applied');
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
-  });
-
-  it('hole 1: refuses undo under a bare interpreter filter the same way', () => {
-    const repo = filteredRepo();
-    const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
-    writeFileSync(external, loggingFilter('EXTERNAL'));
-    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${external.replaceAll('\\', '/')}" ${mode}`;
-    git(repo, ['config', 'filter.own.clean', command('clean')]);
-    git(repo, ['config', 'filter.own.smudge', command('smudge')]);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
-    expect(cli(repo, 'apply', id, '1').status).toBe(0);
-    // The filter is re-pointed after the merge — undo must refuse too.
-    git(repo, ['config', 'filter.own.smudge', 'node']);
-
-    const before = fingerprint(repo);
-    const undone = cli(repo, 'undo', id);
-    expect(undone.status).toBe(3);
-    expect(undone.stderr).toContain('undo-unsafe-config');
-    expect(undone.stderr).toContain('node');
-    expect(fingerprint(repo)).toEqual(before);
   });
 
   it('hole 2: refuses a `git` filter command whose alias lands inside the tree', () => {
@@ -374,7 +320,7 @@ describe('pass holes — configured commands that still reached a solver program
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'alias.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -394,7 +340,7 @@ describe('pass holes — configured commands that still reached a solver program
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -412,7 +358,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'include.path', '../armed.conf']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -436,7 +382,7 @@ describe('pass holes — configured commands that still reached a solver program
       git(repo, ['config', 'include.path', `~/${fromHome}/armed.conf`]);
       const { id, folder } = delivered(repo);
       write(folder, 'repo/app.txt', 'fixed\n');
-      expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+      expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
       const before = fingerprint(repo);
       const applied = cli(repo, 'apply', id, '1');
@@ -458,7 +404,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'include.path', outside.replaceAll('\\', '/')]);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -476,7 +422,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'include.path', join(dir, 'outside.conf').replaceAll('\\', '/')]);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -499,7 +445,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'pipe.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -517,7 +463,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     // The injected alias runs the file `x` the solution carries.
     write(folder, 'repo/x', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'injected.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -538,7 +484,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'nested.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -560,35 +506,13 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', '// the solver\'s driver\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(3);
     expect(applied.stderr).toContain('apply-unsafe-config');
     expect(applied.stderr).toContain('merge.drv.driver');
-    expect(fingerprint(repo)).toEqual(before);
-  });
-
-  it('hole A: refuses undo the same way — the shared preflight covers the revert', () => {
-    const repo = filteredRepo();
-    const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
-    writeFileSync(external, loggingFilter('EXTERNAL'));
-    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${external.replaceAll('\\', '/')}" ${mode}`;
-    git(repo, ['config', 'filter.own.clean', command('clean')]);
-    git(repo, ['config', 'filter.own.smudge', command('smudge')]);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
-    expect(cli(repo, 'apply', id, '1').status).toBe(0);
-    // The smudge is re-pointed at a piped `git` after the merge landed.
-    git(repo, ['config', 'filter.own.smudge', 'cat | git pwn']);
-    git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
-
-    const before = fingerprint(repo);
-    const undone = cli(repo, 'undo', id);
-    expect(undone.status).toBe(3);
-    expect(undone.stderr).toContain('undo-unsafe-config');
     expect(fingerprint(repo)).toEqual(before);
   });
 
@@ -601,7 +525,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -618,7 +542,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     // The solver carries the manifest npm would read its program from.
     write(folder, 'repo/package.json', JSON.stringify({ scripts: { bt6bpwn: `node ${join(runRoot('bt6b-pwn'), 'x.cjs').replaceAll('\\', '/')}` } }));
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -641,7 +565,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -667,7 +591,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     const marker = join(runRoot('bt6b-pwn'), 'exec.txt');
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(marker.replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     for (const command of ['find . -exec git pwn {} +', 'find . -execdir git pwn {} +']) {
       git(repo, ['config', 'filter.own.smudge', command]);
@@ -691,7 +615,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -701,34 +625,12 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     expect(fingerprint(repo)).toEqual(before);
   });
 
-  it('hole C: refuses undo under an exec operand the same way — the shared preflight covers the revert', () => {
-    const repo = filteredRepo();
-    const external = join(runRoot('bt6b-ext'), 'crypt.cjs');
-    writeFileSync(external, loggingFilter('EXTERNAL'));
-    const command = (mode: string): string => `"${process.execPath.replaceAll('\\', '/')}" "${external.replaceAll('\\', '/')}" ${mode}`;
-    git(repo, ['config', 'filter.own.clean', command('clean')]);
-    git(repo, ['config', 'filter.own.smudge', command('smudge')]);
-    const { id, folder } = delivered(repo);
-    write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
-    expect(cli(repo, 'apply', id, '1').status).toBe(0);
-    // The smudge is re-pointed at a find -exec after the merge landed.
-    git(repo, ['config', 'filter.own.smudge', 'find . -exec git pwn {} +']);
-    git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
-
-    const before = fingerprint(repo);
-    const undone = cli(repo, 'undo', id);
-    expect(undone.status).toBe(3);
-    expect(undone.stderr).toContain('undo-unsafe-config');
-    expect(fingerprint(repo)).toEqual(before);
-  });
-
   it('hole C: refuses a host/exec wrapper (ssh, wsl, stdbuf) whose operand is a command', () => {
     const repo = filteredRepo();
     git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     for (const command of ['ssh localhost git pwn', 'wsl git pwn', 'stdbuf git pwn']) {
       git(repo, ['config', 'filter.own.smudge', command]);
@@ -749,7 +651,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     for (const command of [
       `tar -cf "${join(runRoot('bt6b-tar'), 'x.tar').replaceAll('\\', '/')}" --use-compress-program='git pwn' zz.dat`,
@@ -775,7 +677,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     // The solver carries the manifest npm actually reads — `-f` moves nothing.
     write(folder, 'repo/package.json', JSON.stringify({ scripts: { bt6bpwn: `node ${join(runRoot('bt6b-pwn'), 'x.cjs').replaceAll('\\', '/')}` } }));
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     for (const command of [
       `npm run bt6bpwn -f "${outside.replaceAll('\\', '/')}"`,
@@ -799,7 +701,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -815,7 +717,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'answer', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);

@@ -3,19 +3,21 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, mergeTree, ownerGit, ownerGitOutcome, unsafeOwnerCommands } from './git.js';
+import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, ownerGitOutcome, unsafeOwnerCommands } from './git.js';
 import type { DryMerge, IndexChange } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
-import { syncGitHubDecision } from './github.js';
-// `bounty answer` — the return journey. A solver hands back the whole bounty
-// folder (`bounty.json` + `repo/`); this module binds it, extracts the change
-// and writes a report of FACTS — never a verdict. Nothing the answer carries
-// is ever run: checks were removed on 11 October 2026, and the decision to
-// apply, reject or wait is the agent's or the owner's, recorded either way.
+import { resolveAttempt, syncGitHubDecision } from './github.js';
+// Collecting a solution — the return journey. A solver hands back the whole
+// bounty folder (`bounty.json` + `repo/`); this module binds it, extracts the
+// change and writes a report of FACTS — never a verdict. Nothing the solution
+// carries is ever run: checks were removed on 11 October 2026, and the
+// decision to apply, close or wait is the agent's or the owner's, recorded
+// either way. `look <id> --from <dir>` collects and shows the change; `apply
+// <id> --from <dir>` collects and merges — the same gate either way.
 //
 //   bind     — bounty.json must name this id and this snapshot.commit, and its
 //              bytes must hash to the manifestSha256 the record pinned at
@@ -32,11 +34,11 @@ import { syncGitHubDecision } from './github.js';
 // named attempt with git's own three-way machinery — foreign bytes never
 // touch the worktree except through `git merge`; a conflict aborts
 // byte-identical and a dirty worktree the merge would overwrite is a named
-// refusal made before the merge can run. `undo` reverses an applied merge as
-// a new commit.
+// refusal made before the merge can run. The merge is one ordinary commit —
+// ordinary Git reverses it, no tool command needed.
 //
-// The merge, the dry merge and the revert are the only places foreign trees
-// meet git machinery, and they are pinned so nothing a solver wrote runs:
+// The merge and the dry merge are the only places foreign trees meet git
+// machinery, and they are pinned so nothing a solver wrote runs:
 // GIT_ATTR_SOURCE reads attributes from the repository's own HEAD (a returned
 // .gitattributes names no filter or merge driver), hooks come from an empty
 // directory outside the checkout, the answer commit is built by plumbing with
@@ -89,27 +91,18 @@ export interface ApplyResult {
   readonly base?: string | undefined;
 }
 
-export interface UndoResult {
-  readonly record: BountyRecord;
-  readonly outcome: 'undone';
-  /** The new commit that reverses the merge — on the current branch. */
-  readonly undoCommit: string;
-  /** The merge commit it reverses. */
-  readonly reverted: string;
-}
-
 export function readAnswerFolder(fromDir: string): AnswerFolder {
   const folder = resolve(fromDir);
   if (!existsSync(folder) || !statSync(folder).isDirectory()) {
-    throw new BountyRefused('answer-malformed', `--from ${fromDir} is not a directory — the answer is the whole bounty folder handed back`);
+    throw new BountyRefused('answer-malformed', `--from ${fromDir} is not a directory — the solution is the whole bounty folder handed back`);
   }
   const manifestPath = join(folder, 'bounty.json');
   const repoDir = join(folder, 'repo');
   if (!existsSync(manifestPath)) {
-    throw new BountyRefused('answer-malformed', `${manifestPath} does not exist — the answer is the whole bounty folder with its original bounty.json`);
+    throw new BountyRefused('answer-malformed', `${manifestPath} does not exist — the solution is the whole bounty folder with its original bounty.json`);
   }
   if (!existsSync(repoDir) || !statSync(repoDir).isDirectory()) {
-    throw new BountyRefused('answer-malformed', `${repoDir} does not exist — the answer folder must contain the bounty.json it shipped with and a repo/ tree`);
+    throw new BountyRefused('answer-malformed', `${repoDir} does not exist — the solution folder must contain the bounty.json it shipped with and a repo/ tree`);
   }
   const manifestBytes = readFileSync(manifestPath);
   let manifest: BountyManifest | null = null;
@@ -145,19 +138,19 @@ export function extractAnswerChange(manifest: BountyManifest, repoDir: string, r
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const relPath = rel === '' ? entry.name : `${rel}/${entry.name}`;
       if (entry.isSymbolicLink()) {
-        throw new BountyRefused('answer-unsafe-path', `the returned repo/ holds a link at ${relPath} — an answer carries plain files only; replace it with real content`);
+        throw new BountyRefused('answer-unsafe-path', `the returned repo/ holds a link at ${relPath} — a solution carries plain files only; replace it with real content`);
       }
       if (entry.isDirectory()) {
         walk(join(dir, entry.name), relPath);
         continue;
       }
       if (!entry.isFile()) {
-        throw new BountyRefused('answer-unsafe-path', `the returned repo/ holds a non-file entry at ${relPath} — an answer carries plain files only`);
+        throw new BountyRefused('answer-unsafe-path', `the returned repo/ holds a non-file entry at ${relPath} — a solution carries plain files only`);
       }
       const lower = relPath.toLowerCase();
       const rule = rules.find(candidate => candidate.match(lower));
       if (rule !== undefined) {
-        throw new BountyRefused('answer-never-ship', `the returned repo/ contains ${relPath}, which the never-ship rule '${rule.name}' removes — an answer cannot reintroduce what the boundary strips`);
+        throw new BountyRefused('answer-never-ship', `the returned repo/ contains ${relPath}, which the never-ship rule '${rule.name}' removes — a solution cannot reintroduce what the boundary strips`);
       }
       const bytes = readFileSync(join(dir, entry.name));
       const hit = expected.get(lower);
@@ -170,7 +163,7 @@ export function extractAnswerChange(manifest: BountyManifest, repoDir: string, r
   const deleted = [...expected.keys()].filter(lower => !seen.has(lower)).map(lower => expected.get(lower)!.path);
   const change = { changed: changed.sort(), added: added.sort(), deleted: deleted.sort() };
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {
-    throw new BountyRefused('answer-empty', `the returned repo/ is byte-identical to what the bounty shipped — a return that changes nothing is no answer. Edit repo/ and hand it back`);
+    throw new BountyRefused('answer-empty', `the returned repo/ is byte-identical to what the bounty shipped — a return that changes nothing is no solution. Edit repo/ and hand it back`);
   }
   return change;
 }
@@ -213,7 +206,7 @@ function buildAnswerCommit(repoRoot: string, record: BountyRecord, change: Answe
     return git(repoRoot, [
       '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
       'commit-tree', tree, '-p', base,
-      '-m', `box-bounty answer ${record.id}\n\nmade against snapshot ${record.snapshot.commit}\n${change.changed.length} changed, ${change.added.length} added, ${change.deleted.length} deleted`
+      '-m', `box-bounty solution ${record.id}\n\nmade against snapshot ${record.snapshot.commit}\n${change.changed.length} changed, ${change.added.length} added, ${change.deleted.length} deleted`
     ], env);
   } finally {
     rmSync(work, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
@@ -309,6 +302,12 @@ export function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], 
   return { blocked: [...blockedDirty, ...blockedClobber].sort(), dirty };
 }
 
+// A number, or a returned folder: `apply <id> <n>` applies attempt n — or
+// collects pull request n first when the bounty is posted on GitHub and no
+// attempt carries that number — and `apply <id> --from <dir>` collects a
+// returned folder and applies the attempt it lands.
+export type ApplyTarget = number | { readonly from: string };
+
 // `apply`: git's own three-way merge lands the chosen attempt's answer commit
 // onto the repository as it stands — never raw writes into the worktree. A
 // conflict aborts the merge (worktree and index come back byte-identical) and
@@ -316,29 +315,42 @@ export function worktreeBlocks(repoRoot: string, deltaPaths: readonly string[], 
 // Uncommitted changes the merge would overwrite are a named refusal, not
 // damage. With several attempts that could be applied, `apply` without a
 // number refuses and names them — the choice is the agent's.
-export function applyBounty(repoRoot: string, id: string, attemptN?: number): ApplyResult {
-  const record = loadRecord(repoRoot, id);
+export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget): ApplyResult {
+  let record = loadRecord(repoRoot, id);
   if (record.stage === 'applied' && record.github !== undefined) {
     syncGitHubDecision(repoRoot, record);
     const event = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged');
     return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge };
   }
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
-  const attempts = attemptsOf(record);
-  if (attempts.length === 0) {
-    throw new BountyRefused('wrong-stage', `bounty ${id} is ${record.stage} — apply merges an answer that has come back; nothing has arrived for this bounty yet`);
+  let attemptN: number | undefined;
+  if (typeof target === 'object' && target !== undefined) {
+    // A returned folder collects exactly like `look --from`, then the new
+    // attempt is the one the merge proceeds with.
+    const collected = answerBounty(repoRoot, id, target.from, undefined, { via: 'apply' });
+    record = collected.record;
+    attemptN = collected.attempt;
+  } else if (typeof target === 'number') {
+    attemptN = target;
   }
   let attempt: Attempt;
   if (attemptN !== undefined) {
-    const found = attempts.find(candidate => candidate.n === attemptN);
-    if (found === undefined) {
-      throw new BountyRefused('unknown-attempt', `bounty ${id} has attempts ${attempts.map(candidate => `#${candidate.n}`).join(', ')} — apply names one of those: box bounty apply ${id} <n>`);
-    }
-    attempt = found;
+    // An attempt first; on a GitHub-posted bounty a number it does not know
+    // is a pull request — it collects itself under every refusal the old
+    // `answer` enforced, before anything is written.
+    const resolved = resolveAttempt(repoRoot, record, attemptN, 'apply');
+    record = resolved.record;
+    attempt = resolved.attempt;
   } else {
+    const attempts = attemptsOf(record);
+    if (attempts.length === 0) {
+      throw new BountyRefused('wrong-stage', record.github?.state === 'posted'
+        ? `bounty ${id} is ${record.stage} — nothing has been collected yet; name a pull request by its number: box bounty apply ${id} <n>`
+        : `bounty ${id} is ${record.stage} — apply merges a solution that has come back; nothing has arrived for this bounty yet`);
+    }
     const applicable = applicableAttempts(attempts);
     if (applicable.length === 0) {
-      throw new BountyRefused('no-applicable-attempt', `no recorded attempt on ${id} can be applied — name one anyway with box bounty apply ${id} <n>, or end the bounty with box bounty reject ${id} --reason "<why>"`);
+      throw new BountyRefused('no-applicable-attempt', `no recorded attempt on ${id} can be applied — name one anyway with box bounty apply ${id} <n>, or end the bounty with box bounty close ${id} --reason "<why>"`);
     }
     if (applicable.length > 1) {
       throw new BountyRefused('apply-ambiguous', `attempts ${applicable.map(candidate => `#${candidate.n}`).join(', ')} could be applied — pick one: box bounty apply ${id} <n>`);
@@ -376,7 +388,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
     `box bounty ${record.id}: ${record.title}`,
     '',
     `attempt: ${attempt.n}`,
-    `answer: ${attempt.commit}`,
+    `solution: ${attempt.commit}`,
     `snapshot: ${record.snapshot.commit}`
   ].join('\n');
   // The merge runs under the repository's own config — pinning eol filters off
@@ -441,117 +453,7 @@ export function applyBounty(repoRoot: string, id: string, attemptN?: number): Ap
   if (/local changes|untracked working tree files|would be overwritten/i.test(detail)) {
     throw new BountyRefused('apply-worktree-dirty', `git merge refused: ${detail}`);
   }
-  throw new BountyRefused('merge-failed', `git merge could not land answer ${attempt.commit} on ${repoRoot}: ${detail}`);
-}
-
-// `undo`: reverses the merge `apply` made, as a NEW commit that names the
-// bounty — history is appended, never rewritten. Two named refusals change
-// nothing: the merge is no longer on the current branch's history, or the
-// reversal would not apply cleanly (proven dry with merge-tree before anything
-// is touched). The same worktree boundary as apply protects uncommitted work.
-export function undoBounty(repoRoot: string, id: string): UndoResult {
-  const record = loadRecord(repoRoot, id);
-  if (record.stage === 'undone' && record.github !== undefined) {
-    syncGitHubDecision(repoRoot, record);
-    const event = [...record.events].reverse().find(entry => entry.command === 'undo');
-    const applied = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged');
-    return { record, outcome: 'undone', undoCommit: event?.merge ?? '', reverted: applied?.merge ?? '' };
-  }
-  if (record.stage === 'undone') {
-    throw new BountyRefused('already-undone', `bounty ${id} was already undone — the reversal is a commit in history; the record keeps both events`);
-  }
-  if (record.stage !== 'applied') {
-    if (!isOpenStage(record.stage)) throw endedRefusal(record);
-    throw new BountyRefused('not-applied', `bounty ${id} is ${record.stage} — undo reverses the merge apply made; nothing has been applied to this bounty`);
-  }
-  const appliedEvent = [...record.events].reverse().find(event => event.stage === 'applied');
-  let merge = appliedEvent?.merge;
-  if (merge === undefined) {
-    // Records applied before this wave name no merge commit — find the merge
-    // the same way a person would: the merge commit whose subject names it.
-    const found = gitOutcome(repoRoot, ['log', '--merges', '--format=%H', '-n', '20', `--grep=box bounty ${id}:`]);
-    merge = found.status === 0 ? found.stdout.split('\n').map(line => line.trim()).find(line => /^[0-9a-f]{40}$/.test(line)) : undefined;
-  }
-  if (merge === undefined) {
-    throw new BountyRefused('undo-unknown-merge', `bounty ${id} was applied but no merge commit can be found for it — find it with git log --grep "bounty ${id}" and revert it by hand`);
-  }
-  const parents = gitOutcome(repoRoot, ['rev-list', '--parents', '-n', '1', merge]).stdout.trim().split(' ');
-  const first = parents.length === 3 ? parents[1] : undefined;
-  if (first === undefined) {
-    throw new BountyRefused('undo-not-merge', `${merge} is not a merge commit — it cannot be the merge apply made; inspect it by hand`);
-  }
-  if (gitOutcome(repoRoot, ['merge-base', '--is-ancestor', merge, 'HEAD']).status !== 0) {
-    throw new BountyRefused('undo-not-on-branch', `the merge ${merge} is not on the current branch's history — undo only reverses an apply that is still part of HEAD; nothing was changed`);
-  }
-  // The revert merge carries the same exposure as apply — the same refusal,
-  // made before the working tree, index or branch is touched.
-  const unsafe = unsafeOwnerCommands(repoRoot);
-  if (unsafe.length > 0) {
-    throw new BountyRefused('undo-unsafe-config', `the owner's Git configuration could run a program the applied solution supplies or changes during this revert — undo refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}. Revert it with your own git if you accept those programs — the choice is yours — or point the configured command outside the repository`);
-  }
-  // --no-renames: the reversal writes the merge's PRE-images (rename
-  // sources), exactly the names rename detection folds away. An ignored file
-  // at a folded source is invisible to porcelain — without the source in the
-  // touched set the clobber boundary below cannot see it either.
-  // `first` — the merge's first parent — is the attribute view for every read
-  // and write below: HEAD already carries the foreign tree (the merge being
-  // reversed), while `first` is the owner's state as it stood before apply.
-  const ownerAttrs = { GIT_ATTR_SOURCE: first };
-  const touched = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', first, merge], ownerAttrs).stdout
-    .split('\0').filter(name => name !== '');
-  // The reversal commits from the real index, so staged-but-uncommitted work —
-  // which the touched-path boundary cannot see as a threat — would be swept
-  // into the undo commit. Refuse while the index differs from HEAD. The same
-  // worktree boundary as apply protects uncommitted work at a touched path.
-  if (ownerGitOutcome(repoRoot, ['diff', '--cached', '--quiet', 'HEAD'], ownerAttrs).status !== 0) {
-    throw new BountyRefused('undo-index-staged', `the index holds staged changes — undo builds its commit from it; commit or unstage that work first, then run box bounty undo ${id} again`);
-  }
-  const { blocked, dirty } = worktreeBlocks(repoRoot, touched, [], ownerAttrs);
-  if (blocked.length > 0) {
-    throw new BountyRefused('undo-worktree-dirty', `uncommitted work in ${blocked.join(', ')} would be overwritten by the reversal — commit it, stash it or move it aside, then run box bounty undo ${id} again`);
-  }
-  // The reversal applies cleanly? Dry-run the same three-way git would compute
-  // for `revert -m 1`: ours = HEAD, theirs = the merge's first parent, base =
-  // the merge commit. merge-tree writes only objects — nothing else moves.
-  // Attributes are pinned to `first`: the base here is the foreign merge, so
-  // the pre-merge owner's view is the only one allowed to name filters.
-  const dry = mergeTree(repoRoot, merge, 'HEAD', first, first);
-  if (dry.kind === 'conflict') {
-    throw new BountyRefused('undo-conflict', `reversing the merge would conflict in ${dry.paths.join(', ')} — the working tree, index and branch are untouched; resolve those paths and revert ${merge} by hand, or leave it applied`);
-  }
-  if (dry.kind === 'untestable') {
-    throw new BountyRefused('undo-untestable', `the reversal cannot be tested — ${dry.detail}; nothing was changed`);
-  }
-  // The same pins as the merge: attributes read only from the pre-merge
-  // owner's tree (`first`), hooks read from an empty directory — the reversal
-  // replays foreign bytes and runs nothing else.
-  const hooksOff = mkdtempSync(join(tmpdir(), 'box-bt6-hooks-'));
-  const saved = snapshotBytes(repoRoot, new Set([...touched, ...dirty]));
-  let undoCommit: string;
-  try {
-    const reverted = ownerGitOutcome(repoRoot, ['revert', '--no-commit', '-m', '1', merge], ownerAttrs);
-    if (reverted.status !== 0) {
-      ownerGitOutcome(repoRoot, ['revert', '--quit'], ownerAttrs);
-      ownerGitOutcome(repoRoot, ['reset', '--hard', 'HEAD'], ownerAttrs);
-      restoreBytes(repoRoot, saved);
-      throw new GitFailed(`git revert of ${merge} failed in ${repoRoot}: ${(reverted.stderr || reverted.stdout).trim()} — the dry run said clean; inspect the repository by hand`);
-    }
-    ownerGit(repoRoot, [
-      '-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost',
-      '-c', `core.hooksPath=${hooksOff.split('\\').join('/')}`,
-      'commit', '-q', '-m', `box bounty ${id}: undo — ${record.title}\n\nreverses merge ${merge}${appliedEvent?.attempt !== undefined ? ` (attempt ${appliedEvent.attempt})` : ''}`
-    ]);
-    undoCommit = git(repoRoot, ['rev-parse', 'HEAD']);
-  } finally {
-    rmSync(hooksOff, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
-  }
-  transitionTo(repoRoot, record, 'undone', {
-    ...(appliedEvent?.attempt !== undefined ? { attempt: appliedEvent.attempt } : {}),
-    command: 'undo', merge: undoCommit,
-    reason: `reverses merge ${merge}`
-  });
-  syncGitHubDecision(repoRoot, record);
-  return { record, outcome: 'undone', undoCommit, reverted: merge };
+  throw new BountyRefused('merge-failed', `git merge could not land solution ${attempt.commit} on ${repoRoot}: ${detail}`);
 }
 
 // The stated test-file rule, for the flag: a path counts as a test when a
@@ -588,9 +490,9 @@ function attemptFlags(change: AnswerChange, linesAdded: number, linesRemoved: nu
   const flags: string[] = [];
   const touched = [...change.changed, ...change.added, ...change.deleted];
   const testLike = touched.filter(isTestPath);
-  if (testLike.length > 0) flags.push(`the answer touches ${testLike.map(showPath).join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
-  if (change.added.length > 0) flags.push(`the answer adds ${change.added.length} file(s)`);
-  if (change.deleted.length > 0) flags.push(`the answer deletes ${change.deleted.length} file(s)`);
+  if (testLike.length > 0) flags.push(`the solution touches ${testLike.map(showPath).join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
+  if (change.added.length > 0) flags.push(`the solution adds ${change.added.length} file(s)`);
+  if (change.deleted.length > 0) flags.push(`the solution deletes ${change.deleted.length} file(s)`);
   if (touched.length > LARGE_FILES || linesAdded + linesRemoved > LARGE_LINES) {
     flags.push(`the change is above the stated size (${LARGE_FILES} files or ${LARGE_LINES} lines): ${touched.length} files, ${linesAdded + linesRemoved} lines`);
   }
@@ -628,7 +530,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   lines.push(`  from: ${author !== undefined ? `GitHub account ${author}` : 'a returned folder — no account was named'} — arrived ${at}`);
   lines.push(`  change: ${change.changed.length} changed, ${change.added.length} added, ${change.deleted.length} deleted — ${counts.added} lines added, ${counts.removed} removed${counts.binary > 0 ? ` (${counts.binary} binary file(s))` : ''}`);
   if (merge.kind === 'clean') {
-    lines.push('  current code: the answer would merge cleanly onto the current branch');
+    lines.push('  current code: the solution would merge cleanly onto the current branch');
   } else if (merge.kind === 'conflict') {
     lines.push(`  current code: merging onto the current branch would conflict in ${merge.paths.map(showPath).join(', ')}`);
   } else {
@@ -638,31 +540,35 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read the change first, or box bounty reject ${record.id} --reason "<why>"`);
+  lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
   return lines;
 }
 
-// `answer <id> --from <dir>`: bind, extract, report. The bounty stays open —
-// `posted` waiting, `answered` waiting on a decision — and each answer is kept
-// as its own numbered attempt, whichever account it came from (a GitHub-valid
-// `author` is recorded when the adapter names one; a returned folder names
-// none). taken → answered events record the arrival; the stage lands at
-// `answered`, where the choice — apply, reject or wait — is the agent's.
-export function answerBounty(repoRoot: string, id: string, fromDir: string, author?: string): AnswerResult {
+// Collecting a returned folder — what `look <id> --from <dir>` and `apply
+// <id> --from <dir>` pass through, and what the GitHub adapter's snapshot path
+// calls after materialising a pull request's tree. Bind, extract, report. The
+// bounty stays open — `posted` waiting, `answered` waiting on a decision —
+// and each return is kept as its own numbered attempt, whichever account it
+// came from (a GitHub-valid `author` is recorded when the adapter names one;
+// a returned folder names none). taken → answered events record the arrival;
+// the stage lands at `answered`, where the choice — apply, close or wait — is
+// the agent's. `collect.attemptN` lets the adapter land a pull request under
+// its own number; `collect.via` names the driving command on the event.
+export function answerBounty(repoRoot: string, id: string, fromDir: string, author?: string, collect?: { readonly attemptN?: number; readonly via?: string }): AnswerResult {
   const record = loadRecord(repoRoot, id);
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
   if (record.stage !== 'posted' && record.stage !== 'taken' && record.stage !== 'answered' && record.stage !== 'verified') {
-    throw new BountyRefused('not-posted', `bounty ${id} is ${record.stage}, not posted — an answer can only come back to a bounty that was delivered (box bounty post ${id} --to <dir> or --github)`);
+    throw new BountyRefused('not-posted', `bounty ${id} is ${record.stage}, not posted — a solution can only come back to a bounty that was delivered (box bounty post ${id} --to <dir> or --github)`);
   }
   const { manifest, manifestBytes, repoDir } = readAnswerFolder(fromDir);
   if (manifest.id !== id) {
-    throw new BountyRefused('answer-mismatch', `the returned bounty.json names ${manifest.id}, not ${id} — this answer belongs to a different bounty`);
+    throw new BountyRefused('answer-mismatch', `the returned bounty.json names ${manifest.id}, not ${id} — this solution belongs to a different bounty`);
   }
   if (manifest.snapshot.commit !== record.snapshot.commit) {
-    throw new BountyRefused('snapshot-mismatch', `the returned bounty.json pins snapshot ${manifest.snapshot.commit} but ${id} was made for ${record.snapshot.commit} — the answer does not match the version it must land on`);
+    throw new BountyRefused('snapshot-mismatch', `the returned bounty.json pins snapshot ${manifest.snapshot.commit} but ${id} was made for ${record.snapshot.commit} — the solution does not match the version it must land on`);
   }
   if (record.manifestSha256 !== undefined && sha256(manifestBytes) !== record.manifestSha256) {
-    throw new BountyRefused('manifest-tampered', `the returned bounty.json is not byte-identical to the one this bounty shipped — it binds the answer and must come back unmodified; edit repo/ only`);
+    throw new BountyRefused('manifest-tampered', `the returned bounty.json is not byte-identical to the one this bounty shipped — it binds the solution and must come back unmodified; edit repo/ only`);
   }
   // Never-ship applies to the return exactly as it did outbound: built-ins plus
   // the owner's .boxignore. An answer cannot smuggle a path create would have
@@ -671,14 +577,14 @@ export function answerBounty(repoRoot: string, id: string, fromDir: string, auth
   const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
   const change = extractAnswerChange(manifest, repoDir, rules);
   if (gitOutcome(repoRoot, ['rev-parse', '--verify', '-q', refName(id)]).status !== 0) {
-    throw new BountyRefused('snapshot-lost', `refs/box-bounty/${id} is gone — the snapshot this answer was made for can no longer be recreated or merged from. Nothing can come back to this bounty; end it with box bounty reject ${id} --reason "snapshot lost"`);
+    throw new BountyRefused('snapshot-lost', `refs/box-bounty/${id} is gone — the snapshot this solution was made for can no longer be recreated or merged from. Nothing can come back to this bounty; end it with box bounty close ${id} --reason "snapshot lost"`);
   }
   const commit = buildAnswerCommit(repoRoot, record, change, repoDir);
-  const n = attemptsOf(record).length + 1;
+  const n = collect?.attemptN ?? (attemptsOf(record).reduce((max, attempt) => Math.max(max, attempt.n), 0) + 1);
   // Pin the attempt commit before recording anything — a crash between loses
   // nothing the record names.
   git(repoRoot, ['update-ref', attemptRefName(id, n), commit]);
-  transitionTo(repoRoot, record, 'taken', { attempt: n, command: 'answer' });
+  transitionTo(repoRoot, record, 'taken', { attempt: n, ...(collect?.via !== undefined ? { command: collect.via } : {}) });
   transitionTo(repoRoot, record, 'answered', { attempt: n });
   record.conflicts = null;
 

@@ -1,4 +1,4 @@
-// Telling the agent — the three switchable pieces of wave BT4:
+// Telling the agent — the two switchable pieces of wave BT4:
 //
 //   describe         the canonical description (wording.ts) plus the facts an
 //                    agent needs to choose: cost, expected wait, the limits and
@@ -7,14 +7,12 @@
 //                    description and says the live facts need a repository.
 //   describe --rules the block an owner pastes into a project's rules file,
 //                    markers included, with the current open-bounties line.
-//   remind           the one line a harness can surface at a moment of
-//                    difficulty — off unless the limits file switches it on.
 //
-// None of them ever prints nothing: facts that are not set say so, an absent
+// Neither ever prints nothing: facts that are not set say so, an absent
 // limits file means defaults, and a broken one is a named refusal.
 
 import { renderOpenLine, resolveLimits } from './record.js';
-import { DESCRIBE_LINES, REMINDER_OFF, REMINDER_ON, renderRulesBlock } from './wording.js';
+import { DESCRIBE_LINES, renderRulesBlock } from './wording.js';
 
 export function renderDescribe(repoRoot: string | null): string {
   const lines: string[] = [...DESCRIBE_LINES, ''];
@@ -27,7 +25,7 @@ export function renderDescribe(repoRoot: string | null): string {
   lines.push('  GitHub cost: nothing; public repositories only. Expected wait: unknown; nobody is known to be watching these issues yet.');
   lines.push(`  cost: ${limits.cost ?? 'not stated — the owner sets "cost" in .box/limits.json'}`);
   lines.push(`  expected wait: ${limits.expectedAnswer ?? 'not stated — the owner sets "expectedAnswer" in .box/limits.json'}`);
-  lines.push('  how an answer is treated: each solution arrives as a numbered attempt; the report states facts about the change and runs nothing — choosing is yours.');
+  lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing — choosing is yours.');
   // An empty list still means what it means — no destination is allowed — so
   // it says so plainly rather than dangling "only inside" with nothing after.
   const destinations = limits.allowedDestinations === null
@@ -36,7 +34,6 @@ export function renderDescribe(repoRoot: string | null): string {
       ? 'nowhere — the owner\'s "allowedDestinations" is an empty list, so no destination is allowed'
       : `only inside ${limits.allowedDestinations.join(', ')}`;
   lines.push(`  where post --to may deliver: ${destinations}`);
-  lines.push(`  reminders at moments of difficulty: ${limits.reminders}`);
   lines.push(renderOpenLine(repoRoot));
   lines.push('');
   lines.push('next: box bounty create --task <file> --why "<one line>" — or box bounty help for the whole journey');
@@ -54,11 +51,4 @@ export function renderRules(repoRoot: string | null): string {
     '',
     renderRulesBlock(openLine)
   ].join('\n');
-}
-
-// The switch the harness reads: off by default, on only when the limits file
-// says "reminders": "on". Either way it prints exactly one line — the trigger
-// moment (a failed attempt, budget running low) belongs to the harness.
-export function renderRemind(repoRoot: string): string {
-  return resolveLimits(repoRoot).reminders === 'on' ? REMINDER_ON : REMINDER_OFF;
 }

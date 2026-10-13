@@ -2,9 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, listGitHubAnswers, loadRecord, planBounty, postBounty, previewGitHub, rejectBounty, renderDescribe, renderHelp, renderOpenLine, renderStatus, undoBounty, withdrawBounty } from '../../../packages/box-bounty/index.js';
+import { applyBounty, closeBounty, confirmBounty, finalizeBounty, listGitHubAnswers, loadRecord, lookBounty, planBounty, postBounty, previewGitHub, renderDescribe, renderHelp, renderOpenLine, renderStatus } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, fingerprint, git, runRoot, write } from './support.js';
-import { answerBounty } from '../../../packages/box-bounty/index.js';
 import { resolveProgram, runDeclaredCheck } from '../../../packages/box-package/commands.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
@@ -149,22 +148,22 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues).toHaveLength(1);
   }));
 
-  it('withdraw removes a branch after a failed issue post', () => fixture(({ repo, bare, id, update }) => {
+  it('close removes a branch after a failed issue post', () => fixture(({ repo, bare, id, update }) => {
     confirmBounty(repo, id, 'github'); update({ fail: '/issues' });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
-    update({ fail: undefined }); withdrawBounty(repo, id);
+    update({ fail: undefined }); closeBounty(repo, id);
     expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
     expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).toContain('refs/heads/main');
   }));
 
-  it('withdraw discovers and closes an issue after its successful creation response was lost', () => fixture(({ repo, bare, id, update, state }) => {
+  it('close discovers and closes an issue after its successful creation response was lost', () => fixture(({ repo, bare, id, update, state }) => {
     confirmBounty(repo, id, 'github'); update({ loseIssueResponse: true });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     expect(loadRecord(repo, id).github!.issue).toBeNull();
     expect(state().issues).toHaveLength(1);
     const actual = state().issues[0]!;
     update({ issues: [{ ...actual, number: 2, html_url: 'https://github.com/owner/project/issues/2', user: { login: 'stranger' } }, actual] });
-    withdrawBounty(repo, id);
+    closeBounty(repo, id);
     expect(loadRecord(repo, id).github!.issue!.number).toBe(1);
     expect(state().issues.find(issue => issue.number === 1)!.state).toBe('closed');
     expect(state().issues.find(issue => issue.number === 2)!.state).toBe('open');
@@ -177,7 +176,7 @@ describe('GitHub bounty destination, entirely offline', () => {
   it('lists facts, collects the signed-in author, applies, closes, removes the branch and records undo', () => postedFixture(({ repo, bare, id, state }) => {
     expect(listGitHubAnswers(repo, id)).toContain('#1 by owner: "app.txt"');
     const before = fingerprint(repo);
-    expect(answerGitHub(repo, id, 1).outcome).toBe('answered');
+    expect(lookBounty(repo, id, 1).attempt.outcome).toBe('answered');
     expect(fingerprint(repo)).toEqual(before);
     const applied = applyBounty(repo, id);
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
@@ -188,10 +187,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     applyBounty(repo, id);
     expect(state().comments).toHaveLength(1);
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(applied.mergeCommit);
-    undoBounty(repo, id); const head = git(repo, ['rev-parse', 'HEAD']); undoBounty(repo, id);
-    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(head);
-    expect(state().comments).toHaveLength(2);
-    expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
+    expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
   }));
 
   it.each(['stranger', 'renovate[bot]'])('collects and applies an answer from outside author %s — nothing a solver wrote runs', author => fixture(({ repo, id, pr }) => {
@@ -199,11 +195,11 @@ describe('GitHub bounty destination, entirely offline', () => {
     const sentinel = join(runRoot('bt6-sentinel'), 'ran');
     pr(author, { 'check.cjs': `require('fs').writeFileSync(${JSON.stringify(sentinel)}, 'ran'); process.exit(0);` });
     const before = fingerprint(repo);
-    const result = answerGitHub(repo, id, 1);
-    expect(result.outcome).toBe('answered');
-    expect(result.report.join('\n')).toContain(`GitHub account ${author}`);
-    expect(result.report.join('\n')).toContain('nothing in the solution was run');
-    expect(result.report.join('\n')).toContain('current code:');
+    const result = lookBounty(repo, id, 1);
+    expect(result.attempt.outcome).toBe('answered');
+    expect(result.attempt.report.join('\n')).toContain(`GitHub account ${author}`);
+    expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run');
+    expect(result.attempt.report.join('\n')).toContain('current code:');
     expect(existsSync(sentinel)).toBe(false);
     expect(fingerprint(repo)).toEqual(before);
     // Any account's answer may be applied — the solver's script lands as bytes,
@@ -226,7 +222,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     update({ prs: [{ number: 1, user: { login: 'owner' }, base: { ref: publication.branch, repo: { full_name: publication.repository } }, head: { sha }, files: [{ filename: 'evil-link' }] }] });
     const before = fingerprint(repo);
     const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
-    refused(() => answerGitHub(repo, id, 1), 'answer-unsafe-path');
+    refused(() => lookBounty(repo, id, 1), 'answer-unsafe-path');
     expect(fingerprint(repo)).toEqual(before);
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
   }));
@@ -237,7 +233,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().calls.every(args => !args.some(arg => arg.includes('$(echo title)')))).toBe(true);
     pr();
     update({ prs: state().prs.map(value => ({ ...value, head: { ...value.head, ref: '$(echo HEAD)&' }, title: 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' })) });
-    expect(answerGitHub(repo, id, 1).outcome).toBe('answered');
+    expect(lookBounty(repo, id, 1).attempt.outcome).toBe('answered');
     expect(JSON.stringify(loadRecord(repo, id))).not.toContain('ghp_');
   }, 'Repair app $(echo title)&'));
 
@@ -248,7 +244,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     const refreshed = renderStatus(repo);
     expect(refreshed).toContain('#1 by owner: "app.txt"');
     expect(renderStatus(repo, { full: true })).toContain('issue open');
-    expect(refreshed).toContain(`answer ${id} --pr`);
+    expect(refreshed).toContain(`box bounty look ${id} 1`);
     expect(renderOpenLine(repo)).toContain('#1 by owner');
     const observedAt = loadRecord(repo, id).github!.outside!.at;
     update({ fail: '/issues' });
@@ -268,21 +264,21 @@ describe('GitHub bounty destination, entirely offline', () => {
     pr(label === 'hostile author' ? 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' : 'owner', extra, base);
     const before = fingerprint(repo);
     const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
-    refused(() => answerGitHub(repo, id, 2), reason);
+    refused(() => lookBounty(repo, id, 2), reason);
     expect(fingerprint(repo)).toEqual(before);
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
   }));
 
   it('refuses a missing PR and leaks no credential from gh errors or fields', () => postedFixture(({ repo, id, state, update, pr }) => {
-    refused(() => answerGitHub(repo, id, 999), 'github-pr-missing');
+    refused(() => lookBounty(repo, id, 999), 'github-pr-missing');
     pr('owner', { 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890.txt': 'data' });
     expect(listGitHubAnswers(repo, id)).not.toContain('ghp_');
     update({ fail: '/comments' });
-    rejectBounty(repo, id, 'not wanted');
+    closeBounty(repo, id, 'not wanted');
     expect(JSON.stringify(loadRecord(repo, id))).not.toContain('ghp_');
     expect(renderStatus(repo)).not.toContain('ghp_');
-    expect(loadRecord(repo, id).github!.pending).toContain('local reject stands');
-    update({ fail: undefined }); rejectBounty(repo, id, 'not wanted');
+    expect(loadRecord(repo, id).github!.pending).toContain('local close stands');
+    update({ fail: undefined }); closeBounty(repo, id, 'not wanted');
     expect(state().comments).toHaveLength(1);
     expect(state().comments[0]!.body).toContain('not wanted');
   }));
@@ -295,24 +291,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(applied.mergeCommit);
     expect(state().comments).toHaveLength(1);
     expect(loadRecord(repo, id).github!.pending).toBeNull();
-  }, { collected: true }));
-
-  it('undo preserves unfinished apply facts and outside cleanup rather than clearing them', () => postedFixture(({ repo, bare, id, update, state }) => {
-    update({ fail: '/comments' });
-    const applied = applyBounty(repo, id);
-    const undone = undoBounty(repo, id);
-    expect(loadRecord(repo, id).github!.pending).toContain('local undo stands');
-    expect(state().issues[0]!.state).toBe('open');
-    update({ fail: undefined }); undoBounty(repo, id);
-    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(undone.undoCommit);
-    expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
-    expect(state().comments).toHaveLength(2);
-    expect(state().comments[0]!.body).toContain(applied.mergeCommit);
-    expect(state().comments[1]!.body).toContain(undone.undoCommit);
-    expect(state().issues[0]!.state).toBe('closed');
-    expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
-    expect(loadRecord(repo, id).github!.pending).toBeNull();
-    expect(loadRecord(repo, id).github!.state).toBe('closed');
   }, { collected: true }));
 
   it('a stranger comment carrying an exact decision marker cannot suppress the tool fact', () => postedFixture(({ repo, id, update, state }) => {
@@ -342,10 +320,9 @@ describe('GitHub bounty destination, entirely offline', () => {
       confirmBounty(repo, id);
       const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
       write(destination, 'repo/app.txt', 'fixed\n');
-      expect(answerBounty(repo, id, destination).outcome).toBe('answered');
+      expect(lookBounty(repo, id, { from: destination }).attempt.outcome).toBe('answered');
       expect(applyBounty(repo, id).outcome).toBe('applied');
-      expect(undoBounty(repo, id).outcome).toBe('undone');
-      expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
+      expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
       expect(state().calls).toHaveLength(0);
       expect(existsSync(join(created.outDir, 'bounty.json'))).toBe(true);
     });
@@ -362,11 +339,13 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(cli('post', id, '--to', 'github').status).toBe(0);
     pr();
     expect(cli('status').stdout).toContain('#1 by owner');
-    expect(cli('answer', id).stdout).toContain('#1 by owner');
-    const collected = cli('answer', id, '--pr', '1');
-    expect(collected.status).toBe(0); expect(collected.stdout).toContain('answered');
+    // `answer` is gone: status carries the listing, and look collects the PR.
+    expect(cli('answer', id).status).toBe(3);
+    const collected = cli('look', id, '1');
+    expect(collected.status).toBe(0); expect(collected.stdout).toContain('collected first');
     expect(cli('apply', id).status).toBe(0);
     expect(state().issues[0]!.state).toBe('closed');
-    expect(cli('undo', id).status).toBe(0);
+    // `undo` is gone: the agent's own git revert reverses the merge it named.
+    expect(cli('undo', id).status).toBe(3);
   }));
 });

@@ -5,7 +5,10 @@
 // (junction-safe, repo-relative) happens in record.ts's `resolveLimits`.
 //
 //   {
-//     "reminders": "off" | "on",            // default "off"
+//     "reminders": "off" | "on",            // default "off" — kept since BT7c
+//                                           // removed `remind`: still a known
+//                                           // field, still validated; nothing
+//                                           // in the tool gates on it now
 //     "rulesFile": "AGENTS.md",             // optional — repo-relative path of the
 //                                           // rules file holding the marked block
 //     "cost": "each bounty costs …",        // optional one line, shown by describe

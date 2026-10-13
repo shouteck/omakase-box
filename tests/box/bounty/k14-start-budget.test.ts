@@ -73,29 +73,26 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'help': { git: 0, gh: 0 },
   'describe': { git: 2, gh: 0 },
   'describe-rules': { git: 2, gh: 0 },
-  'remind': { git: 2, gh: 0 },
   'create-preview': { git: 11, gh: 0 },
   'create': { git: 18, gh: 0 },
   'status-drafted': { git: 2, gh: 0 },
-  'withdraw-draft': { git: 3, gh: 0 },
+  'close-draft': { git: 3, gh: 0 },
   'confirm-preview': { git: 18, gh: 3 },
   'confirm-github': { git: 18, gh: 3 },
   'post-github': { git: 21, gh: 8 },
   'status-posted': { git: 2, gh: 5 },
-  'answers-list': { git: 3, gh: 3 },
-  'questions': { git: 3, gh: 3 },
-  'reply': { git: 3, gh: 4 },
-  'answer-pr': { git: 17, gh: 2 },
+  'status-comments': { git: 3, gh: 7 },
+  'look-pr': { git: 19, gh: 2 },
   'look': { git: 6, gh: 0 },
   'look-full': { git: 6, gh: 0 },
   'apply': { git: 15, gh: 5 },
   'status-applied': { git: 2, gh: 0 },
-  'undo': { git: 15, gh: 5 },
+  'close-ended': { git: 4, gh: 5 },
   'create-local': { git: 18, gh: 0 },
   'confirm-local': { git: 2, gh: 0 },
   'post-dir': { git: 2, gh: 0 },
-  'answer-from': { git: 14, gh: 0 },
-  'reject': { git: 4, gh: 0 },
+  'look-from': { git: 16, gh: 0 },
+  'close-reason': { git: 4, gh: 0 },
   'status-end': { git: 2, gh: 0 }
 };
 
@@ -123,31 +120,30 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
     return r;
   };
 
-  // A second drafted bounty gives withdraw its own target; every later call
+  // A second drafted bounty gives close its own target; every later call
   // carries an explicit id so nothing is ambiguous.
   run('help', 'help');
   run('describe', 'describe');
   run('describe-rules', 'describe', '--rules');
-  run('remind', 'remind');
   run('create-preview', 'create', '--task', 'TASK.md', '--why', 'second', '--preview');
   run('create', 'create', '--task', 'TASK.md', '--why', 'second', '--title', 'Second');
   const second = readdirSync(join(repo, '.box', 'bounties')).map(file => file.replace('.json', '')).find(name => name.startsWith('bt-') && name !== id)!;
   run('status-drafted', 'status');
-  run('withdraw-draft', 'withdraw', second);
+  run('close-draft', 'close', second);
   run('confirm-preview', 'confirm', id, '--to', 'github', '--preview');
   run('confirm-github', 'confirm', id, '--to', 'github');
   run('post-github', 'post', id, '--to', 'github');
   context.pr('solver');
   run('status-posted', 'status', id);
-  run('answers-list', 'answer', id);
-  run('questions', 'questions', id);
-  run('reply', 'reply', id, '--text', 'noted');
-  run('answer-pr', 'answer', id, '--pr', '1');
+  run('status-comments', 'status', id, '--comments');
+  // `look <n>` collects the pull request itself — what `answer --pr` did —
+  // then showing the same attempt again is the cheap read.
+  run('look-pr', 'look', id, '1');
   run('look', 'look', id, '1');
   run('look-full', 'look', id, '1', '--full');
   run('apply', 'apply', id, '1');
   run('status-applied', 'status', id);
-  run('undo', 'undo', id);
+  run('close-ended', 'close', id);
 
   // The local-folder leg: the fixture's limits name github only, so the
   // owner grants the deliveries folder before the draft is confirmed there.
@@ -159,9 +155,9 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('post-dir', 'post', third, '--to', deliveries);
   const returned = join(scratch, 'returned');
   cpSync(join(deliveries, third), returned, { recursive: true });
-  write(returned, 'repo/app.txt', 'fixed\n');
-  run('answer-from', 'answer', third, '--from', returned);
-  run('reject', 'reject', third, '--reason', 'not landing');
+  write(returned, 'repo/app.txt', 'fixed differently\n');
+  run('look-from', 'look', third, '--from', returned);
+  run('close-reason', 'close', third, '--reason', 'not landing');
   run('status-end', 'status');
 
   for (const step of runs) {

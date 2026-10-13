@@ -28,7 +28,7 @@ it('drives the post-refusal path: clashing apply, own merge, a later command clo
   write(repo, 'app.txt', 'owner moved on\n');
   git(repo, ['add', 'app.txt']);
   git(repo, ['-c', 'user.name=rv', '-c', 'user.email=rv@test.invalid', 'commit', '-qm', 'owner moved app']);
-  const collect = cli(repo, process.env, 'answer', id, '--pr', '1');
+  const collect = cli(repo, process.env, 'look', id, '1');
   expect(collect.status, collect.stderr).toBe(0);
   const head = git(repo, ['rev-parse', 'HEAD']);
   const conflict = cli(repo, process.env, 'apply', id, '1');

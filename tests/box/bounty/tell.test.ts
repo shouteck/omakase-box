@@ -4,9 +4,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CLI_DIST, makeRepo, runRoot, write } from './support.js';
 
-// BT4 — telling the agent: describe, describe --rules, remind, the limits
-// file, and the open-bounties line the tool keeps current in .box/bounties/OPEN
-// and in the marked block of the owner's rules file.
+// BT4 — telling the agent: describe, describe --rules, the limits file, and
+// the open-bounties line the tool keeps current in .box/bounties/OPEN and in
+// the marked block of the owner's rules file. (`remind` was removed in BT7c —
+// the "reminders" switch stays a known limits field, nothing gates on it.)
 
 const cli = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
@@ -87,7 +88,7 @@ describe('the limits file (built cli)', () => {
     needBuilt();
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     limits(repo, '{ not json');
-    for (const args of [['bounty', 'describe'], ['bounty', 'remind'], ['bounty', 'describe', '--rules']]) {
+    for (const args of [['bounty', 'describe'], ['bounty', 'create', '--task', 'TASK.md', '--why', 'w', '--preview'], ['bounty', 'describe', '--rules']]) {
       const run = cli(repo, args);
       expect(run.status).toBe(3);
       expect(run.stderr).toContain('limits-malformed');
@@ -102,32 +103,10 @@ describe('the limits file (built cli)', () => {
     needBuilt();
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     limits(repo, { reminders: 'yes please' });
-    expect(cli(repo, ['bounty', 'remind']).status).toBe(3);
+    expect(cli(repo, ['bounty', 'describe']).status).toBe(3);
     limits(repo, { reminders: 'on', futureField: { anything: true } });
-    const run = cli(repo, ['bounty', 'remind']);
+    const run = cli(repo, ['bounty', 'describe']);
     expect(run.status).toBe(0);
-  });
-});
-
-describe('box bounty remind (built cli)', () => {
-  it('is off by default and says so in one honest line', () => {
-    needBuilt();
-    const repo = makeRepo({ 'TASK.md': 'task\n' });
-    const run = cli(repo, ['bounty', 'remind']);
-    expect(run.status).toBe(0);
-    expect(run.stdout.trim().split('\n')).toHaveLength(1);
-    expect(run.stdout).toContain('off');
-  });
-
-  it('prints the reminder line only when the limits file switches it on', () => {
-    needBuilt();
-    const repo = makeRepo({ 'TASK.md': 'task\n' });
-    limits(repo, { reminders: 'on' });
-    const run = cli(repo, ['bounty', 'remind']);
-    expect(run.status).toBe(0);
-    expect(run.stdout.trim().split('\n')).toHaveLength(1);
-    expect(run.stdout).toContain('box bounty');
-    expect(run.stdout).not.toContain('are off');
   });
 });
 
@@ -139,7 +118,7 @@ describe('the open-bounties line the tool keeps current', () => {
     expect(openFile(repo)).toBe(`open bounties: ${id} "task" (drafted)`);
     expect(cli(repo, ['bounty', 'confirm', id]).status).toBe(0);
     expect(openFile(repo)).toBe(`open bounties: ${id} "task" (confirmed)`);
-    expect(cli(repo, ['bounty', 'withdraw', id]).status).toBe(0);
+    expect(cli(repo, ['bounty', 'close', id]).status).toBe(0);
     expect(openFile(repo)).toBe('open bounties: none');
   });
 

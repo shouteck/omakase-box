@@ -911,14 +911,14 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
     else persistRecord(root, record);
     return { record, destination: publication.issue.url };
   } catch {
-    publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} --to github or remove with box bounty withdraw ${id}`;
+    publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} --to github or remove with box bounty close ${id}`;
     persistRecord(root, record);
     return invalid('github-post-incomplete', publication.pending);
   }
 }
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id)): string {
-  if (record.github === undefined) return invalid('not-github-posted', 'this bounty has no GitHub post; answer from a local folder');
+  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; collect a returned folder with box bounty look ${id} --from <dir> or box bounty apply ${id} --from <dir>`);
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   const lines = [`GitHub answers for ${id} against ${branch}:`];
@@ -931,11 +931,11 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const files = pages(root, `repos/${repository}/pulls/${n}/files`);
     const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files'));
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
-    const next = collected === undefined ? `collect: box bounty answer ${id} --pr ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
+    const next = collected === undefined ? `collect: box bounty look ${id} ${n} or box bounty apply ${id} ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
     lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}`);
     if (seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n, commit, at: new Date().toISOString() }];
   }
-  if (data.length === 0) lines.push('  none open; wait for an answer or withdraw the bounty');
+  if (data.length === 0) lines.push('  none open; wait for one or close the bounty');
   persistRecord(root, record);
   return lines.join('\n');
 }
@@ -960,17 +960,17 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
 
 // `author` is null when GitHub returned an account name the tool will not
 // print: the comment still counts and is still shown, marked as such.
-type IssueComment = { readonly author: string | null; readonly body: string; readonly at: string };
+export type IssueComment = { readonly author: string | null; readonly body: string; readonly at: string };
 
 function boundIssue(root: string, record: BountyRecord, fetched?: unknown): { repository: string; number: number; account: string } {
   const publication = record.github;
   if (publication === undefined || publication.issue === null) return invalid('not-github-posted', `this bounty has no GitHub issue; next: box bounty status`);
   const issue = fetched ?? api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
-  if (!isObject(issue) || issue['number'] !== publication.issue.number || typeof issue['body'] !== 'string' || !issue['body'].includes(`<!-- box-bounty:${record.id} -->`) || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', `the issue is not this bounty's; no reply was posted; next: box bounty status`);
+  if (!isObject(issue) || issue['number'] !== publication.issue.number || typeof issue['body'] !== 'string' || !issue['body'].includes(`<!-- box-bounty:${record.id} -->`) || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', `the issue is not this bounty's; nothing was read from it; next: box bounty status`);
   return { repository: publication.repository, number: publication.issue.number, account: publication.account };
 }
 
-function issueComments(root: string, record: BountyRecord, fetched?: unknown): IssueComment[] {
+export function issueComments(root: string, record: BountyRecord, fetched?: unknown): IssueComment[] {
   const issue = boundIssue(root, record, fetched);
   return pages(root, `repos/${issue.repository}/issues/${issue.number}/comments`).flatMap(entry => {
     if (!isObject(entry) || !isObject(entry['user']) || entry['user']['login'] === issue.account) return [];
@@ -980,23 +980,9 @@ function issueComments(root: string, record: BountyRecord, fetched?: unknown): I
   });
 }
 
-export function questionsBounty(root: string, id: string): string {
-  const record = loadRecord(root, id);
-  const comments = issueComments(root, record);
-  return [`${id}: ${comments.length} comment(s) written by others, not by the tool.`, ...comments.flatMap(comment => [`  ${comment.author === null ? 'an account whose name could not be read' : JSON.stringify(comment.author)} at ${comment.at}:`, ...comment.body.split('\n').map(line => `    other account | ${quoteForeign(line)}`)]), `next: box bounty reply ${id} --text "<your own words>"; or box bounty status ${id}`].join('\n');
-}
-
-export function replyBounty(root: string, id: string, text: string): BountyRecord {
-  const record = loadRecord(root, id);
-  const issue = boundIssue(root, record);
-  if (signedAccount(root) !== issue.account) return invalid('github-account-changed', 'sign in as the owner who posted this bounty; next: box bounty status');
-  if (text.trim() === '' || text.length > 65536) return invalid('reply-invalid', 'supply your own nonempty reply, at most 65536 characters; next: box bounty questions');
-  const result = api(root, `repos/${issue.repository}/issues/${issue.number}/comments`, { body: text });
-  if (!isObject(result) || result['body'] !== text || !isObject(result['user']) || result['user']['login'] !== issue.account) return invalid('github-response-invalid', 'GitHub did not confirm the reply; next: box bounty status');
-  record.replies = [...record.replies ?? [], { at: new Date().toISOString(), issue: issue.number }];
-  persistRecord(root, record);
-  return record;
-}
+// Reading what other accounts wrote is folded into `status --comments` —
+// issueComments above is what it renders, bound to this bounty's own issue
+// first, so a record pointed at the wrong issue refuses by name.
 
 // A pull request's change on the real history: the diff against the bounty
 // branch tip it descends from, classified changed/added/deleted.
@@ -1048,9 +1034,9 @@ function pullRequestFlags(change: { changed: readonly string[]; added: readonly 
   const flags: string[] = [];
   const touched = [...change.changed, ...change.added, ...change.deleted];
   const testLike = touched.filter(isTestPath);
-  if (testLike.length > 0) flags.push(`the answer touches ${testLike.map(showPath).join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
-  if (change.added.length > 0) flags.push(`the answer adds ${change.added.length} file(s)`);
-  if (change.deleted.length > 0) flags.push(`the answer deletes ${change.deleted.length} file(s)`);
+  if (testLike.length > 0) flags.push(`the solution touches ${testLike.map(showPath).join(', ')}, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)`);
+  if (change.added.length > 0) flags.push(`the solution adds ${change.added.length} file(s)`);
+  if (change.deleted.length > 0) flags.push(`the solution deletes ${change.deleted.length} file(s)`);
   if (touched.length > LARGE_FILES || counts.added + counts.removed > LARGE_LINES) {
     flags.push(`the change is above the stated size (${LARGE_FILES} files or ${LARGE_LINES} lines): ${touched.length} files, ${counts.added + counts.removed} lines`);
   }
@@ -1063,7 +1049,7 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
   lines.push(`  from: GitHub account ${author} — arrived ${at}`);
   lines.push(`  change: ${commits} commit(s) on the bounty branch — ${change.changed.length} changed, ${change.added.length} added, ${change.deleted.length} deleted — ${counts.added} lines added, ${counts.removed} removed${counts.binary > 0 ? ` (${counts.binary} binary file(s))` : ''}`);
   if (merge.kind === 'clean') {
-    lines.push('  current code: the answer would merge cleanly onto the current branch');
+    lines.push('  current code: the solution would merge cleanly onto the current branch');
   } else if (merge.kind === 'conflict') {
     lines.push(`  current code: merging onto the current branch would conflict in ${merge.paths.map(showPath).join(', ')}`);
   } else {
@@ -1073,14 +1059,18 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
   if (flags.length === 0) lines.push('  flags: none');
   else for (const flag of flags) lines.push(`  flag: ${flag}`);
   lines.push(`  ${NOTHING_RUN}`);
-  lines.push(`  next: box bounty apply ${record.id} ${n} — or box bounty look ${record.id} ${n} to read the change first, or box bounty reject ${record.id} --reason "<why>"`);
+  lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
   return lines;
 }
 
-export function answerGitHub(root: string, id: string, pr: number) {
+// Collecting a pull request: the checks the old `answer` command enforced,
+// run before anything is written — the same gate `look <id> <n>` and `apply
+// <id> <n>` pass through for a number no recorded attempt carries. `via` is
+// the driving command's name for the recorded event.
+export function answerGitHub(root: string, id: string, pr: number, via?: 'look' | 'apply') {
   const record = loadRecord(root, id);
   if (record.github === undefined || record.github.state !== 'posted') return invalid('not-github-posted', 'this bounty is not posted to GitHub');
-  if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — an answer can only come back to a bounty that is still open`);
+  if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — a solution can only come back to a bounty that is still open`);
   if (!Number.isSafeInteger(pr) || pr < 1) return invalid('github-pr-missing', 'name an existing pull request number');
   const publication = record.github;
   const { repository, branch } = publication;
@@ -1095,8 +1085,8 @@ export function answerGitHub(root: string, id: string, pr: number) {
   remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`]);
   const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
   if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
-  if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author);
-  const result = collectHistoryPullRequest(root, record, publication, commit, author);
+  if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author, pr, via);
+  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via);
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
     publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
     persistRecord(root, result.record);
@@ -1104,11 +1094,31 @@ export function answerGitHub(root: string, id: string, pr: number) {
   return result;
 }
 
+// `look <id> <n>` and `apply <id> <n>` accept a pull request's number
+// directly: when no recorded attempt carries n and the bounty is posted on
+// GitHub, the number collects the pull request first — every check above —
+// and the attempt it lands is the one the command proceeds with. `via` is
+// the command's own name for the recorded event.
+export function resolveAttempt(root: string, record: BountyRecord, n: number, via: 'look' | 'apply'): { record: BountyRecord; attempt: Attempt; collected: boolean } {
+  const found = attemptsOf(record).find(candidate => candidate.n === n);
+  if (found !== undefined) return { record, attempt: found, collected: false };
+  if (record.github?.state === 'posted' && isOpenStage(record.stage)) {
+    const collected = answerGitHub(root, record.id, n, via);
+    const attempt = attemptsOf(collected.record).find(candidate => candidate.n === collected.attempt);
+    if (attempt !== undefined) return { record: collected.record, attempt, collected: true };
+  }
+  const known = attemptsOf(record).map(candidate => `#${candidate.n}`).join(', ') || 'none yet';
+  const way = record.github === undefined
+    ? `name one of them, or collect a returned folder first: box bounty ${via} ${record.id} --from <dir>`
+    : `name one of them or a pull request number — the pull request collects itself`;
+  return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}`);
+}
+
 // The history path: the pull request's commits are the answer. Refusals, each
 // changing nothing: its history does not descend from the bounty branch; its
 // tree holds a link, a submodule or an unsafe name; a path it carries matches
 // never-ship anywhere in its new history; it changes nothing at all.
-function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string) {
+function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string) {
   if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
     return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected`);
   }
@@ -1148,13 +1158,19 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   }
   const change = pullRequestChange(root, publication.commit, commit);
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {
-    return invalid('answer-empty', 'the pull request changes nothing against the bounty branch — a return that changes nothing is no answer');
+    return invalid('answer-empty', 'the pull request changes nothing against the bounty branch — a return that changes nothing is no solution');
   }
-  const n = attemptsOf(record).length + 1;
+  // A pull request keeps its own number as its solution number — the outside
+  // listing and `look`/`apply <id> <n>` name the same thing. A number already
+  // carried by an attempt (this pull request collected before, or a returned
+  // folder that took it) falls back to the next free number.
+  const n = attemptsOf(record).some(attempt => attempt.n === pr)
+    ? attemptsOf(record).reduce((max, attempt) => Math.max(max, attempt.n), 0) + 1
+    : pr;
   // Pin the attempt commit before recording anything — a crash between loses
   // nothing the record names.
   git(root, ['update-ref', attemptRefName(record.id, n), commit]);
-  transitionTo(root, record, 'taken', { attempt: n, command: 'answer' });
+  transitionTo(root, record, 'taken', { attempt: n, ...(via !== undefined ? { command: via } : {}) });
   transitionTo(root, record, 'answered', { attempt: n });
   record.conflicts = null;
 
@@ -1182,7 +1198,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
 
 // The pre-BT6a path, kept for bounties posted as a snapshot: the pull request
 // tree is materialized into an answer folder bound to the shipped manifest.
-function collectSnapshotPullRequest(root: string, record: BountyRecord, id: string, commit: string, author: string) {
+function collectSnapshotPullRequest(root: string, record: BountyRecord, id: string, commit: string, author: string, pr: number, via?: string) {
   const work = mkdtempSync(join(tmpdir(), `box-bt6-${id}-pr-`));
   try {
     mkdirSync(join(work, 'repo'));
@@ -1209,7 +1225,7 @@ function collectSnapshotPullRequest(root: string, record: BountyRecord, id: stri
     }
     // Any account may answer and any attempt may be applied — nothing a solver
     // wrote is ever run, so the author is recorded as a fact, not a barrier.
-    return answerBounty(root, id, work, author);
+    return answerBounty(root, id, work, author, { attemptN: pr, ...(via !== undefined ? { via } : {}) });
   } finally {
     rmSync(work, { recursive: true, force: true });
   }
@@ -1220,7 +1236,9 @@ function collectSnapshotPullRequest(root: string, record: BountyRecord, id: stri
 export function syncGitHubDecision(root: string, record: BountyRecord): void {
   const publication = record.github;
   if (publication === undefined) return;
-  const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged'].includes(entry.command ?? ''));
+  // 'reject', 'withdraw' and 'undo' stay in the list for records written
+  // while those commands existed; 'close' carries the same work now.
+  const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged', 'close'].includes(entry.command ?? ''));
   const event = decisions.at(-1);
   if (event === undefined) return;
   try {
@@ -1234,9 +1252,11 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
       const comments = pages(root, `${endpoint}/comments`);
       for (const decision of decisions) {
         const marker = `<!-- box-bounty:${record.id}:${decision.command} -->`;
-        const fact = decision.command === 'apply' ? `Applied as commit ${decision.merge}.`
-          : decision.command === 'merged' ? `Solution${decision.attempt !== undefined ? ` #${decision.attempt}` : ''} is merged on the bounty's branch as commit ${decision.merge} (${decision.reason ?? decision.merge}).`
-          : decision.command === 'reject' ? `Rejected. Recorded reason: ${decision.reason}` : decision.command === 'undo' ? `Undo recorded as commit ${decision.merge}.` : 'Withdrawn.';
+        const fact = decision.command === 'merged' ? `Solution${decision.attempt !== undefined ? ` #${decision.attempt}` : ''} is merged on the bounty's branch as commit ${decision.merge} (${decision.reason ?? decision.merge}).`
+          : decision.stage === 'applied' ? `Applied as commit ${decision.merge}.`
+          : decision.stage === 'rejected' ? `Rejected. Recorded reason: ${decision.reason}`
+          : decision.stage === 'undone' ? `Undo recorded as commit ${decision.merge}.`
+          : 'Withdrawn.';
         const body = `${fact}\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
@@ -1274,8 +1294,11 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
     publication.pending = null;
   } catch (error) {
     const detail = error instanceof BountyRefused ? ` (${error.reason}: ${error.message})` : '';
-    const retry = event.command === 'merged' ? 'apply' : event.command;
-    publication.pending = `github-decision-pending${detail}: local ${event.command} stands; retry box bounty ${retry} ${record.id}${event.command === 'reject' ? ' --reason "<recorded reason>"' : ''} to comment, close the issue and remove ${publication.branch}`;
+    // The retry is `close` whatever the local decision was — on an ended
+    // record it retries exactly this outside work. The local word names the
+    // recorded decision with today's vocabulary.
+    const local = ({ undo: 'revert', reject: 'close', withdraw: 'close' } as Record<string, string>)[event.command ?? ''] ?? event.command;
+    publication.pending = `github-decision-pending${detail}: local ${local} stands; retry box bounty close ${record.id} to comment, close the issue and remove ${publication.branch}`;
   }
   persistRecord(root, record);
 }

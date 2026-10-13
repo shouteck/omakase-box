@@ -11,7 +11,7 @@ A bounty is the task, what was tried, the one line of why, and the code —
 nothing else. **Nothing a solver wrote is ever run by the tool:** checks were
 removed on 11 October 2026, so `create` accepts no command flags at all —
 `--setup`, `--check` and `--guard` are each a named refusal (`checks-removed`)
-— and collecting, reporting, applying and undoing an answer runs no script,
+— and collecting, reporting and applying an answer runs no script,
 hook, filter, merge driver or submodule fetch the answer carries. An answer
 from any account can be listed, read and merged; choosing is always the
 agent's or the owner's.
@@ -22,19 +22,17 @@ node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>"
     [--out <dir>] [--repo <path>] [--preview]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty remind [--repo <path>]
-node packages/box-cli/dist/cli.js bounty status [id] [--full] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty answer <id> [--from <dir> | --pr <n>] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty apply <id> [<attempt>] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty reject <id> --reason "<text>" [--repo <path>]
-node packages/box-cli/dist/cli.js bounty withdraw <id> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty undo <id> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty questions [id] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty reply [id] --text "<your own words>" [--repo <path>]
+node packages/box-cli/dist/cli.js bounty look [id] (<n> | --from <dir>) [--full] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty apply [id] [<n> | --from <dir>] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
 ```
+
+The commands BT7c folded away — `answer`, `questions`, `reply`, `undo`,
+`reject`, `withdraw` and `remind` — each refuse by name (`command-removed`)
+and say what took their place; none survives as a hidden alias.
 
 A fresh copy — a git clone, or the snapshot a bounty ships — contains no
 `node_modules` and no built output, so `dist/cli.js` is missing until three
@@ -78,16 +76,19 @@ exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
 
 With one open bounty, omit its identifier: `bounty look 1`, `bounty apply 1`,
-or `bounty questions`. With several, the refusal names them
+or `bounty status --comments`. With several, the refusal names them
 so you can choose. `status <id>` shows what needs doing first. `--full` adds
 the history and reports. A listing marks a solution as new the first time the
 tool shows it, then as seen since that time. Seen means only that it was shown.
 
 ## Look at a solution
 
-After collecting a pull request with `answer --pr <number>`, `look <n>`
-prints the change the solver made: the diff the pull request makes against
+`look <id> <n>` collects pull request `<n>` itself — every check the old
+`answer` command ran first, before anything is written — then prints the
+change the solver made: the diff the pull request makes against
 the commit the bounty named, computed on objects the tool already fetched.
+When `<n>` names an attempt already collected it just shows it. `look
+--from <dir>` does the same for a returned bounty folder.
 Nothing is checked out, no folder is made and there is nothing to remove —
 looking touches neither your working tree, index, branch nor configuration,
 and the tool runs nothing of the solver's to print it. The printed lines are
@@ -102,7 +103,9 @@ working tree.
 
 ## Apply a solution
 
-`apply <n>` merges a clean solution and names `undo` in one command. On your
+`apply <n>` collects like `look` when `<n>` names a pull request, merges a
+clean solution and names `git revert -m 1 <merge>` — one ordinary commit —
+as the way back, in the same output. On your
 own working tree your filters apply as in plain Git: after a clean `apply`,
 filtered files are in their working-tree form and `git status` is clean.
 
@@ -133,9 +136,9 @@ it refuses unless a flag that names that launcher's manifest places the
 file outside; and `include.path`, `includeIf` and `core.attributesFile`
 values resolve against the file that sets them (`~` expanded), so an
 include that lands inside the tree refuses wherever in the chain it sits.
-Before the merge — and before the revert `undo` makes — the tool reads
-your configuration and refuses by name (`apply-unsafe-config`,
-`undo-unsafe-config`), stating the configured command and the path
+Before the merge the tool reads
+your configuration and refuses by name (`apply-unsafe-config`),
+stating the configured command and the path
 involved, when a command resolves inside the tree or cannot be placed
 inside or outside it at all. Nothing is touched: working tree, index and
 branch are exactly as before. The fix is yours — point the command at a
@@ -167,11 +170,12 @@ not, the path is named as a fact — the history stays as you made it.
 ## Solvers' questions
 
 Status states the number of issue comments from accounts other than the
-owner and the latest time, without displaying their words. `questions`
-shows them with each line marked as written by another account, not by the
-tool. `reply --text "<your own words>"` posts your answer under the owner's
-sign-in and records the action. The tool checks that the issue belongs to
-this bounty before posting. Choosing whether and what to answer is yours.
+owner and the latest time, without displaying their words. `status
+--comments` shows them with each line marked as written by another account,
+not by the tool — the issue is bound to this bounty before anything is read
+from it. Answering is your own `gh`: `gh issue comment <number> --body
+"<your own words>"` — the tool no longer writes comments for you. Choosing
+whether and what to answer is yours.
 
 ## Return to the job
 
@@ -271,17 +275,17 @@ bounty branch and opens a pull request against it in the same repository.
 Collect from the project's record:
 
 ```
-node packages/box-cli/dist/cli.js bounty answer <id>
-node packages/box-cli/dist/cli.js bounty answer <id> --pr <number>
+node packages/box-cli/dist/cli.js bounty status <id>
+node packages/box-cli/dist/cli.js bounty look <id> <number>
 ```
 
-The first command lists open pull request numbers, authors and changed files.
-`status` also reads the current issue state and open pull requests, so a later
+`status` lists open pull request numbers, authors and changed files, and
+reads the current issue state too, so a later
 session learns about a new answer from the record alone. It saves the observed
 outside state and its time; the open-bounties line carries those answer facts.
 If GitHub cannot be reached, `github-status-unavailable` names that outcome,
 shows the last recorded outside state and when, and names `status` as the retry.
-The second fetches the selected pull request's head without changing the
+`look <id> <number>` fetches the selected pull request's head without changing the
 working tree, index or current branch (`--no-recurse-submodules`, so a carried
 `.gitmodules` fetches nothing). Its target must be the recorded bounty branch
 (`github-pr-wrong-branch`), its history must descend from the bounty branch's
@@ -300,27 +304,27 @@ through `git merge-tree`, so the worktree and index never move), the stated
 flags, and the sentence that nothing was run. `apply <id> <n>` is an ordinary
 `git merge` of the pull request's commits onto the current branch — one merge
 commit naming the bounty and the attempt — under the same working-tree
-protections every merge has. `undo` reverses it as today.
+protections every merge has. `git revert -m 1 <merge>` reverses it whenever
+you like; no tool command is needed.
 
 **An answer from any account can be collected and applied.** The author is
 recorded on the attempt as a fact — a GitHub-shaped login, nothing more — and
 nothing it wrote is ever run: the fetch pulls objects only, the report reads
-them, and `apply`/`undo` pin attribute lookups to the owner's own tree and read
+them, and `apply` pins attribute lookups to the owner's own tree and reads
 hooks from an empty directory, so a returned `.gitattributes`, a merge driver,
 a hook or a submodule declaration names no command on this host. Applying is
 still a decision, not a consequence — `apply <id> <n>` is always the agent's
 call.
 
-`apply`, `reject` and `withdraw` comment the recorded fact on the issue, close it
+`apply` and `close` comment the recorded fact on the issue, close it
 and remove the bounty branch — a merge the next command recognises on the
 bounty's branch does the same, naming the solution and the commit. If the branch carried work published only there —
 the poster's unpushed commits or the work-in-progress commit — the issue names
 those commits before the branch is removed, so nothing the agent published is
-lost by surprise; the local work was never touched. `undo` comments the
-reversal. If an outside step fails, the local decision stands and the record
-names `github-decision-pending` and the command to retry. That retry resumes
-outside work without repeating the local merge or undo. `status` shows pending
-work even after a bounty has ended. An undo after an unfinished apply update
+lost by surprise; the local work was never touched. If an outside step fails, the local decision stands and the record
+names `github-decision-pending` and `close` as the command to retry. That retry resumes
+outside work without repeating the local merge. `status` shows pending
+work even after a bounty has ended. A `close` after an unfinished apply update
 preserves both facts and finishes the issue closure and branch removal. Retry
 uses the account that started the post; comments or copied listings from other
 accounts cannot stand in for tool facts.
@@ -329,8 +333,8 @@ If a push succeeds but the issue cannot be opened, the refusal is
 `github-post-incomplete`. The record states the known outside state. Repeat
 `post <id> --to github` to finish; it recovers an issue whose response was lost
 and never creates a second listing. To remove a partial post instead, run
-`withdraw <id>`. Nothing here sends money or posts to a bounty site.
-Withdrawal also finds and closes a successfully created issue whose response
+`close <id>`. Nothing here sends money or posts to a bounty site.
+Closing also finds and closes a successfully created issue whose response
 was lost, before it clears the outside work.
 
 Records posted before the bounty became an issue on real history — a
@@ -364,13 +368,13 @@ inside it.
 
 ## Telling the agent
 
-Three switchable pieces put the tool in front of an agent that has never seen
+Two switchable pieces put the tool in front of an agent that has never seen
 it — and the owner's limits file supplies the facts it needs to choose.
 
 - **`describe`** prints the canonical description — what the tool does, when
   it is worth using and when it is not — plus the facts for choosing, read
   from `.box/limits.json` and the live records: cost, expected wait, where
-  `post --to` may deliver, whether reminders are on, how an answer is treated
+  `post --to` may deliver, how an answer is treated
   (each solution arrives as a numbered attempt; the report states facts about
   the change and runs nothing — choosing is yours) and
   the open-bounties line. It works outside a checkout too: outside one it
@@ -379,11 +383,6 @@ it — and the owner's limits file supplies the facts it needs to choose.
 - **`describe --rules`** prints the block an owner pastes into a project's
   rules file — the rules lines and an `open bounties:` line between
   `<!-- box-bounty -->` / `<!-- /box-bounty -->` markers.
-- **`remind`** prints the one line a harness can surface at a moment of
-  difficulty (a failed attempt, budget running low). It is **off by default**
-  — on only when the limits file sets `"reminders": "on"`. When off it says
-  so in one line; it never prints nothing. The trigger belongs to the harness;
-  `remind` only supplies the text and the switch.
 
 ### The open-bounties line the tool keeps current
 
@@ -409,7 +408,9 @@ Written once by the owner, read at the boundary (`.box` never ships):
 }
 ```
 
-- `reminders` — `"off"` (default) or `"on"`; gates `remind`.
+- `reminders` — `"off"` (default) or `"on"`; kept as a known field since
+  `remind` was removed — nothing in the tool gates on it now, so the switch
+  is the owner's own to act on.
 - `rulesFile` — optional path, resolved relative to the repository root, of
   the project rules file holding the marked block. It must land **inside**
   the checkout, judged on the canonical path — a junction or `..` spelling
@@ -439,7 +440,9 @@ history — one event appended per transition, never rewritten:
 ```
 drafted → confirmed → posted → taken → answered → applied
                 (ended early: rejected, withdrawn, expired;
-                 an applied merge can be reversed by undo → undone)
+                 an applied merge is reversed with ordinary git — the record
+                 stays applied; older records carry an `undone` stage and
+                 still load)
 ```
 
 `answered` is a waiting stage, not an ending: every answer lands there —
@@ -468,7 +471,7 @@ the same way: on the record only.
 names. Each answer lands as `refs/box-bounty/<id>-answer-<n>` — the answer is
 parented on the snapshot's *base* commit, so it cannot keep the snapshot alive
 and all refs exist while the bounty is open. Every ended stage — `applied`,
-`rejected`, `withdrawn`, `undone` — removes them all.
+`rejected`, `withdrawn`, and `undone` on older records — removes them all.
 
 ## The commands after create
 
@@ -489,26 +492,32 @@ and all refs exist while the bounty is open. Every ended stage — `applied`,
   existing → `destination-exists`. On success it **copies** the bounty folder to
   `<dir>/<id>/` (the recorded folder stays) and marks the bounty `posted` with
   the destination recorded.
-- **`answer <id> --from <dir>`** takes the returned bounty folder — see *The
-  answer comes back* below.
-- **`apply <id> [<attempt>]`** merges a recorded attempt onto the current
-  code. With one applicable attempt no number is needed; with more than one,
+- **`look <id> (<n> | --from <dir>)`** collects a pull request by number, or a
+  returned bounty folder with `--from` — see *The answer comes back* below —
+  then shows the change. An `<n>` already collected just shows it.
+- **`apply <id> [<n> | --from <dir>]`** merges a recorded attempt onto the
+  current code — collecting first, exactly as `look` does, when `<n>` names a
+  pull request or `--from` a returned folder. With one applicable attempt no
+  number is needed; with more than one,
   `apply` refuses by name (`apply-ambiguous`) and prints the attempt numbers —
-  pass one as `<attempt>` (`unknown-attempt` otherwise). On any other stage it
+  pass one as `<n>` (`unknown-attempt` otherwise). On any other stage it
   is a named refusal (`wrong-stage`, `already-ended`).
-- **`reject <id> --reason "<text>"`** ends a `posted`/`taken`/`answered`
-  bounty with the reason kept on the record — earlier stages end
-  through `withdraw` instead (`wrong-stage`).
-- **`withdraw <id>`** ends any open stage → `withdrawn`, removes the durability
-  refs, and is safe to repeat: an already-withdrawn bounty is a named state, not
-  an error. An unknown id is `unknown-bounty` everywhere.
-- **`undo <id>`** reverses an applied merge — see *Undo an apply* below.
+- **`close <id> [--reason "<text>"]`** ends a bounty with nothing merged:
+  with `--reason` the record lands `rejected` and keeps the reason; without
+  one it lands `withdrawn` — on any open stage, including a draft. Either way
+  the durability refs are removed, and repeating it is a named state, not an
+  error: an ended bounty reports `already-ended` and retries whatever outside
+  work is still owed. An empty `--reason` is `missing-reason`; an unknown id
+  is `unknown-bounty` everywhere.
+- **reversing an apply is plain Git** — `git revert -m 1 <merge>`, the merge
+  being one ordinary commit. There is no `undo` command.
 
 ## The answer comes back
 
 The solver hands back the **whole bounty folder**: the original `bounty.json`
 plus a `repo/` they edited — nothing else to write, no diff format to learn.
-`answer` binds it before anything runs:
+`look <id> --from <dir>` (or `apply <id> --from <dir>`) binds it before
+anything runs:
 
 - `bounty.json` must name this bounty's `id` and this `snapshot.commit` — a
   folder returned for another bounty or another version is refused
@@ -549,8 +558,8 @@ states only what was observed:
 - `next:` — the exact next command.
 
 Every answer lands at `answered` and **stops** — nothing is merged; `box
-bounty apply <id>` is the recorded decision, or `reject` ends the bounty with
-its reason. More answers are attempts 2, 3, … and `status` lists them all.
+bounty apply <id>` is the recorded decision, or `close <id> --reason "<why>"`
+ends the bounty with its reason. More answers are attempts 2, 3, … and `status` lists them all.
 When several attempts could apply, `apply` names them (`apply-ambiguous`) and
 `apply <id> <n>` picks one — any attempt may be named, whichever account it
 came from.
@@ -563,23 +572,19 @@ so the incoming side of the merge is the solver's change alone — and
 names the bounty and the attempt. A conflict aborts the merge — the worktree
 and index come back byte-identical — and the record keeps its stage with the
 conflicting paths as the next step; fix them, commit, and `apply` retries, or
-`reject` ends it. Work the merge would overwrite is refused by name
+`close <id> --reason "<why>"` ends it. Work the merge would overwrite is refused by name
 (`apply-worktree-dirty`) before it can run — uncommitted content on a touched
 path, and any file that exists at a touched path but is not in the index (an
 ignored file the merge would silently clobber) — never damaged. Applying one
 attempt ends the bounty and removes every answer ref.
 
-## Undo an apply
+## Reversing an apply
 
-`box bounty undo <id>` reverses the merge `apply` made as a **new commit** on
-the current branch that names the bounty (`reverses merge <sha>`), then moves
-the record to `undone` — history is appended, never rewritten. Named refusals
-change nothing: the bounty was never applied (`not-applied`), the merge is not
-on this branch's history (`undo-not-on-branch`), staged changes sit in the
-index (`undo-index-staged`), uncommitted work covers a path the reversal would
-touch (`undo-worktree-dirty`), or a dry run of the reversal itself conflicts
-(`undo-conflict`, paths named). After `apply` then `undo`, the tree is equal
-to what it was before the apply.
+The merge `apply` makes is one ordinary commit on the current branch, naming
+the bounty — `git revert -m 1 <merge>` reverses it as a new commit whenever
+you like, under your own Git settings. The tool has no `undo` command; a
+revert is history you own, not a bounty transition, so the record stays
+`applied` and the bounty stays ended.
 
 ## The note writes itself
 

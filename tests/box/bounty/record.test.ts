@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyRefused, confirmBounty, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus, resolveRepoRoot, withdrawBounty } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, closeBounty, confirmBounty, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, git, listTree, makeRepo, runRoot, write } from './support.js';
 
@@ -86,7 +86,7 @@ describe('the bounty record', () => {
     const confirmed = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b2') })));
     confirmBounty(repo, confirmed.id);
     const closed = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b3') })));
-    withdrawBounty(repo, closed.id);
+    closeBounty(repo, closed.id);
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain('2 open');
     expect(status).toContain(`${open.id}  drafted`);
@@ -94,6 +94,25 @@ describe('the bounty record', () => {
     expect(status).toContain(`box bounty confirm ${open.id}`);
     expect(status).toContain(`box bounty post ${confirmed.id} --to <dir>`);
     expect(status).toContain(`ended: ${closed.id} withdrawn`);
+  });
+
+  it('a record left `undone` by the removed command still loads, shows what it is, and names a next step that exists', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const { id } = created(repo);
+    // Only `undo` could leave this stage; the file is rewritten the way an
+    // old record sits on disk, never produced through a live command.
+    const file = join(repo, '.box', 'bounties', `${id}.json`);
+    const older = JSON.parse(readFileSync(file, 'utf8')) as BountyRecord;
+    older.stage = 'undone';
+    older.events = [...older.events, { stage: 'undone' as BountyRecord['stage'], at: new Date().toISOString() }];
+    writeFileSync(file, JSON.stringify(older, null, 2) + '\n');
+    const status = renderStatus(resolveRepoRoot(repo));
+    expect(status).toContain(`ended: ${id} undone`);
+    expect(status).toContain(`box bounty status ${id} --full`);
+    expect(status).toContain('box bounty create --task <file>');
+    for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind']) {
+      expect(status).not.toContain(`bounty ${gone}`);
+    }
   });
 });
 
@@ -195,28 +214,28 @@ describe('post — gated first delivery to a local folder', () => {
   });
 });
 
-describe('withdraw — ends an open bounty cleanly', () => {
+describe('close — ends an open bounty cleanly', () => {
   it('ends any open stage, removes the durability ref, and repeats as a named state', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    const first = withdrawBounty(repo, id);
+    const first = closeBounty(repo, id);
     expect(first.outcome).toBe('withdrawn');
     expect(readRecord(repo, id).stage).toBe('withdrawn');
     expect(readRecord(repo, id).events.map(event => event.stage)).toEqual(['drafted', 'withdrawn']);
     const ref = spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${id}`], { encoding: 'utf8' });
     expect(ref.status).not.toBe(0); // the ref is gone; gc may now prune the snapshot
-    const second = withdrawBounty(repo, id);
-    expect(second.outcome).toBe('already-withdrawn'); // a named state, not an error
+    const second = closeBounty(repo, id);
+    expect(second.outcome).toBe('already-ended'); // a named state, not an error
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain('no open bounties');
     expect(status).toContain(`${id} withdrawn`);
   });
 
-  it('withdraws a confirmed bounty too', () => {
+  it('closes a confirmed bounty too', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
     confirmBounty(repo, id);
-    expect(withdrawBounty(repo, id).outcome).toBe('withdrawn');
+    expect(closeBounty(repo, id).outcome).toBe('withdrawn');
     expect(loadRecord(repo, id).stage).toBe('withdrawn');
   });
 });
@@ -238,7 +257,7 @@ describe('box bounty lifecycle (built cli)', () => {
     expect(run.stdout).toContain('box bounty create');
   });
 
-  it('post before confirm exits 3 with not-confirmed; double-withdraw is a named state', () => {
+  it('post before confirm exits 3 with not-confirmed; double-close is a named state', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
     const out = join(runRoot('out'), 'bounty');
@@ -251,11 +270,11 @@ describe('box bounty lifecycle (built cli)', () => {
     expect(posted.status).toBe(3);
     expect(posted.stderr).toContain('not-confirmed');
 
-    const gone = withdrawBounty(repo, id); // withdraw once through the library…
+    const gone = closeBounty(repo, id); // close once through the library…
     expect(gone.outcome).toBe('withdrawn');
-    const again = cli(repo, ['bounty', 'withdraw', id]); // …then through the CLI
+    const again = cli(repo, ['bounty', 'close', id]); // …then through the CLI
     expect(again.status).toBe(0);
-    expect(again.stdout).toContain('already withdrawn');
+    expect(again.stdout).toContain('already ended');
     expect(again.stdout).toContain('the job it came from: t'); // a terminal state names the job
   });
 
