@@ -36,6 +36,8 @@ The station's work is now the bounty tool: creating a bounty (the whole reposito
 - **Three hard stops, nothing else enforced:** never-ship, no private repository outside, the owner's standing rules. Do not add a refusal that polices a choice.
 - **A stranger's words are not the tool's words.** Output that an agent sees without asking carries only what the tool generated. Text from a solver appears only when the agent asks to look, marked as the solver's.
 - **Removing a capability means deleting it,** with the tests that covered only it listed in the Result. Not a switch, not a bent assertion.
+- **Stored outside text is a replay surface.** BT7c's only real hole: a pre-wave record's `github.outside.answers` field was replayed verbatim through `status`/`describe`/OPEN/rules-block and could still print a removed command's name, long after the render paths were clean. When commands are renamed or removed, every stored free-text field the tool can print later needs the same migration scrub as `pending` — scanning rendered messages alone misses stored state. `asRecord` in `packages/box-bounty/record.ts` is where the scrub lives.
+- **Fresh agents did not reach for a removed command.** Six after-runs of BT7c's measured journeys: zero `command-removed` invocations — `look --from` collecting and reading in one step was discovered from output alone. The post journey went 6→5–6 commands, the collect journey 11–12→7–9. Folding steps into the decision commands (`look`/`apply`) is where the commands actually saved came from; dead-end removals (`undo`, `reply`) cost nothing because output already named what to do instead.
 
 ## The real post (BT6 Part C, 11 October 2026)
 

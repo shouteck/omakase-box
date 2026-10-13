@@ -74,8 +74,8 @@ Kept: `create`, `post`, `status`, `look`, `apply`, the one closing command, `hel
   - Behaviour notes (documented widenings, not defects): `close --reason` lands `rejected` on any open stage including a draft — old `reject` refused pre-posted stages (`wrong-stage`); `close` on any ended record exits 0 with `already ended (<stage>)` where old `withdraw` refused `already-ended` on stages it did not own. Both are stated in help and BOUNTY.md. Pre-existing CLI laxness unchanged: unknown flags are silently ignored (`status --questions`, `close --withdraw`, `apply --pr`).
   - Scope, docs and the rest verified clean: diff touches only the allowed paths (never-ship table, export/submit/verify/trace, AGENTS.md, PLAN.md untouched); `confirm` still gates `post` (`not-confirmed`, `not-drafted` live); help/describe/usage/status name only live commands in the fresh-message paths I exercised; BOUNTY.md names no stale command and describes close's semantics and old-state records honestly.
   - Limit kept from round 1: the scrub covers tool-written stored text (`pending`, `outside.answers`); agent/owner-supplied text (reject reasons, resume notes, event reasons) is the agent's own words shown as facts, not the tool's recommendation — out of the guarantee's scope by design.
-- Merged: · Resources removed:
-- Reflect:
+- Merged: `1ce6cc7` (--no-ff, pushed) · Resources removed: `wave/BT7c` branch deleted; `%TEMP%/bt7c-measure` (templates + all 12 run dirs) and `box-k6-*` stats swept
+- Reflect: **wave-only** — stamped template copies + identical cards made the before/after measurement fair and cheap; unquoted Windows paths and CWD-relative `--task` were the only hesitations and appeared on both sides. **station** — two additions on the packaging card: stored outside text is a replay surface, and fresh agents did not reach for any removed command. **kitchen-wide** — the "search every output" requirement caught a stored-state replay the render-path scan missed; worth remembering when the next removal wave (BT8 takes `confirm`) comes.
 
 ### Tests removed and guarantees moved (the done-when accounting the pass asked for)
 
