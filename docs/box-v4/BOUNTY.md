@@ -435,8 +435,9 @@ absence:
 - private key blocks (`-----BEGIN … PRIVATE KEY-----`);
 - well-known token and key formats (GitHub, GitLab, AWS, Slack, OpenAI,
   Google API keys, and the like);
-- connection strings carrying a password (`postgres://…:…@`,
-  `Password=…` and the like);
+- connection strings carrying a password (a `postgres://` URL whose
+  credentials section contains `user:password@`, `Password=…` and the
+  like);
 - a long random-looking string assigned to a name such as `key`, `secret`,
   `token` or `password`.
 
