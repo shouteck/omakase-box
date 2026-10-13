@@ -84,7 +84,7 @@ export function checkInstructionMarkers(path: string): void { span(readFileSync(
 function proseOutsideCode(text: string): string {
   let fence: string | null = null;
   const prose: string[] = [];
-  for (const line of text.split(/\r?\n/)) {
+  for (const line of text.split(/\r\n|\n|\r/)) {
     const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
     if (fence !== null) {
       if (marker !== null && marker[1] !== undefined && marker[1][0] === fence[0] && marker[1].length >= fence.length && marker[2]?.trim() === '') fence = null;

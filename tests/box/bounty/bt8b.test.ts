@@ -64,16 +64,19 @@ describe('instruction blocks', () => {
     expect(output).not.toContain(`${name}: imports`);
   });
 
-  it.each(['CLAUDE.md', 'GEMINI.md'])('recognizes inline imports in %s and ignores code spans and fences', name => {
+  it.each(['CLAUDE.md', 'GEMINI.md'])('recognizes inline imports in %s and ignores code spans and fences with LF, CRLF or CR', name => {
     const repo = setup({ [name]: 'Read @AGENTS.md for shared instructions.\n', 'AGENTS.md': 'shared\n' });
     const original = bytes(repo, name);
     expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('imports AGENTS.md');
     expect(bytes(repo, name)).toEqual(original);
-    for (const raw of ['`@AGENTS.md`\n', '```markdown\n@AGENTS.md\n```\n', '~~~\n@AGENTS.md\n~~~\n', '    @AGENTS.md\n']) {
-      write(repo, name, raw);
-      changeConfig(repo, 'set', 'instructions', 'true');
-      expect(block(repo, name)).toBeDefined();
-      expect(bytes(repo, name).toString().replace(block(repo, name) ?? 'absent', '')).toBe(raw);
+    for (const eol of ['\n', '\r\n', '\r']) {
+      for (const example of ['`@AGENTS.md`\n', '```markdown\n@AGENTS.md\n```\n', '~~~\n@AGENTS.md\n~~~', '~~~\n@AGENTS.md', '    @AGENTS.md\n']) {
+        const raw = example.replaceAll('\n', eol);
+        write(repo, name, raw);
+        changeConfig(repo, 'set', 'instructions', 'true');
+        expect(block(repo, name)).toBeDefined();
+        expect(bytes(repo, name).toString().replace(block(repo, name) ?? 'absent', '')).toBe(raw);
+      }
     }
   });
 
