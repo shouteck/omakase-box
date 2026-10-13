@@ -58,12 +58,55 @@ Kept: `create`, `post`, `status`, `look`, `apply`, the one closing command, `hel
 
 ## Result
 
-- Worker: · Reviewer:
+- Worker: cook A (`1ed01f9`) · Reviewer:
 - Commit:
 - Verify:
 - Verdict: · Level:
 - Lenses:
-- Method:
+- Method: cook audit per command, then the cut with refusals first; measured journeys below — fresh `subagent_general` agents on stamped template copies, master's `dist` before, the wave's `dist` after
 - Findings and limits:
 - Merged: · Resources removed:
 - Reflect:
+
+### Command audit (cook A, read in code before the cut)
+
+| Command | What it did that an agent could not | Disposition |
+|---|---|---|
+| `undo` | reset the branch to the recorded pre-apply ref — ordinary `git reset` does the same against the commit `apply` names | removed |
+| `reply` | authenticated comment post to the issue — `gh issue comment` does the same | removed |
+| `answer` | collected a returned folder/PR into `.box` — a step, not a decision | folded into `look`/`apply`, which collect themselves with all former `answer` refusals |
+| `questions` | fetched+marked issue comments as foreign text | folded into `status --comments` |
+| `reject` | closed with a recorded reason | merged with `withdraw` into `close` (`--reason` keeps the reject form) |
+| `withdraw` | closed with no reason | same |
+| `remind` | printed owner limits — nothing gates on it; the `reminders` field stays a known owner field | removed |
+| `confirm` | records the owner's yes | stays until BT8 |
+
+Surprises: none reported.
+
+### Measured journeys
+
+Identical fixtures and cards both sides; each run counted including failures. `commands` = box bounty invocations; `output_chars` = `wc -c` of the combined tool output log.
+
+**Journey A — post a bounty**
+
+| | run 1 | run 2 | run 3 | spread |
+|---|---|---|---|---|
+| before: commands | 6 | 6 | 6 | 0 |
+| before: output_chars | 6268 | 6270 | 6270 | 2 |
+| before: finished | yes | yes | yes | — |
+| after: commands | | | | |
+| after: output_chars | | | | |
+| after: finished | | | | |
+
+**Journey B — collect one bounty with three returned solutions**
+
+| | run 1 | run 2 | run 3 | spread |
+|---|---|---|---|---|
+| before: commands | 11 | 12 | 12 | 1 |
+| before: output_chars | 8170 | 9636 | 11274 | 3104 |
+| before: finished | yes | yes | yes | — |
+| after: commands | | | | |
+| after: output_chars | | | | |
+| after: finished | | | | |
+
+Hesitations observed (before side): every agent needed one retry when an unquoted Windows backslash path to `cli.js` was mangled by the shell (harness artifact, identical prompt both sides); journey A agents also had to learn relative `--task` resolves against the repository root, not their shell CWD. Transcripts: `%TEMP%/bt7c-measure/runs/{a,b}{1..3}/transcript.md` before, `…{a,b}after{1..3}` after.
