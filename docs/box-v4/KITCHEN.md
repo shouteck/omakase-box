@@ -32,12 +32,14 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 - A step already PASS on this exact commit with a clean tree is `reused` instead of re-run; the recorded `summary.json` (commit, clean flag, step verdict) is the trust anchor, and `--fresh` forces a real run when anyone doubts the record.
 - `check` runs typecheck, the boundary check and only the suites the branch's diff since master can reach; touching shared tooling or passing `--full` runs them all. A suite named in the invocation never runs twice. `tests/box/` and the milestone-BT packages reach no check suite; `box-contracts` and anything unmapped run all four.
 - The disposable Postgres starts only when a suite about to run needs it — named suites in `DB_SUITES` (derived and pinned by `tests/kitchen/k12-db-suites.test.ts`) or selected check suites in `DB_CHECK_SUITES`; the summary line says `db=embedded` or `db=none`.
-- The bounty test files run three workers in parallel (measured choice, not assumed); isolation is pinned in `tests/kitchen/k12-bounty-parallel.test.ts`. Other suites keep one worker.
-- Measured on this host, 12 October 2026 (K12): the bounty suite runs at about half its prior time (~350 s vs ~700 s for ~215 tests under ambient load), verify's database step costs nothing on db-free runs, and a product-only `check` runs in ~18 s vs ~64–109 s. The `verify --full` all-in is ~120 s. Under saturated host load, per-test 30 s timeouts still occur — K12 did not solve contention, and no timeout was raised.
+- The bounty test files run three workers in parallel, pinned in `tests/kitchen/k12-bounty-parallel.test.ts`; other suites keep one.
+- Measured on this host (K12, 12 October 2026): bounty suite ~350 s, `verify --full` ~120 s, a product-only `check` ~18 s; under saturated load 30 s test timeouts still occur.
 - Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
 - Tests named `*-live.test.ts` shell into the old container stack and are not part of ordinary verification until they are ported to the disposable database.
 - A lost or unclear result is fixed by running it again. Databases are created per run and destroyed after it, so a rerun costs nothing.
 - The reviewer's run is the one that counts. The worker's run is a self-check.
+
+A wave that needs a real GitHub journey runs it in the sandbox `shouteck/box-bounty-sandbox` — the tool is allowed standing there and `kitchen/sandbox.md` has the rules. No live step touches the working repository, and none needing the owner as a test subject is written.
 
 ## Review
 
