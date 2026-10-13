@@ -18,8 +18,10 @@ Closing updates only the final machine block and preserves the visible issue
 body as read from GitHub. Invalid or duplicate blocks stay untouched; issue
 closure and branch removal continue. A failed block write is reported as
 `update-failed`, with the last observed comparison. `close <id>` retries that
-write on an ended bounty. Ended `status` shows the last observation, without a
-fresh GitHub read. `post <id> --to github --preview` shows the exact issue and
+write on an ended bounty. Compact ended `status` shows the cached last
+observation and names `status <id> --full` for a current issue-body comparison.
+A failed current read reports unavailable and labels any cached comparison.
+`post <id> --to github --preview` shows the exact issue and
 publication plan before an owner has allowed posting and grants no authority.
 
 A bounty is the task, what was tried, the one line of why, and the code —

@@ -18,7 +18,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { instructionNotices, syncInstructions } from './instructions.js';
-import { planGitHub, postGitHub, refreshGitHubStatus, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
+import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { publishListed, publishLists, shipRules } from './never-ship.js';
 import { requireRepository } from './repository.js';
 import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
@@ -383,6 +383,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (github.formatRead !== undefined && !['absent', 'invalid', 'matches-record', 'differs-from-record'].includes(github.formatRead)) return null;
     if (github.formatRepair !== undefined && !['updated', 'preserved-invalid', 'update-failed'].includes(github.formatRepair)) return null;
     if (github.formatReadAt !== undefined && (typeof github.formatReadAt !== 'string' || !stamp.test(github.formatReadAt))) return null;
+    if (github.formatUnavailableAt !== undefined && github.formatUnavailableAt !== null && (typeof github.formatUnavailableAt !== 'string' || !stamp.test(github.formatUnavailableAt))) return null;
     if (github.branch !== undefined && (typeof github.branch !== 'string' || !safeBranch(github.branch))) return null;
     for (const list of [github.seenPullRequests, github.availablePullRequests]) {
       if (list === undefined) continue;
@@ -641,12 +642,20 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
   for (const entry of listed) {
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
+    else if (entry.record !== null && options.full) refreshGitHubFormat(repoRoot, entry.record);
   }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
-  for (const entry of listed) if (entry.record?.github?.formatRead !== undefined) lines.push(`${entry.record.id} GitHub format block: ${entry.record.github.formatRead} (last issue-body observation ${entry.record.github.formatReadAt ?? 'time not recorded'}; local record governs)`);
+  for (const entry of listed) {
+    const record = entry.record;
+    if (record?.github === undefined) continue;
+    const publication = record.github;
+    if (publication.formatUnavailableAt !== undefined && publication.formatUnavailableAt !== null) lines.push(`${record.id} current GitHub format read unavailable at ${publication.formatUnavailableAt}; cached last comparison ${publication.formatRead ?? 'not read'} at ${publication.formatReadAt ?? 'time not recorded'}; local record governs`);
+    else if (publication.formatRead !== undefined) lines.push(`${record.id} GitHub format block: ${publication.formatRead} (last issue-body observation ${publication.formatReadAt ?? 'time not recorded'}; local record governs)`);
+    if (!isOpenStage(record.stage) && !options.full) lines.push(`${record.id} compact status uses the cached last observation; current comparison: box bounty status ${record.id} --full`);
+  }
   for (const entry of listed) if (entry.record?.github?.formatRepair !== undefined) lines.push(`${entry.record.id} GitHub format update: ${entry.record.github.formatRepair}`);
   lines.push(ownerStatusLine(repoRoot));
   const localMerge = localFirstMergeLine(repoRoot);

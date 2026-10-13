@@ -25,7 +25,7 @@ function parse(value: unknown): BountyFormat | null {
   if (value.schemaVersion !== 1 || value.kind !== 'box-bounty' || typeof value.id !== 'string' || !/^bt-[a-f\d]{12}$/.test(value.id)
     || typeof value.repository !== 'string' || !/^[A-Za-z\d_.-]+\/[A-Za-z\d_.-]+$/.test(value.repository)
     || !sha(value.workCommit) || value.branch !== `box-bounty/${value.id}` || typeof value.withChanges !== 'boolean'
-    || typeof value.createdAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(value.createdAt) || !Number.isFinite(Date.parse(value.createdAt))
+    || typeof value.createdAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(value.createdAt) || !Number.isFinite(Date.parse(value.createdAt)) || new Date(value.createdAt).toISOString().slice(0, 19) !== value.createdAt.slice(0, 19)
     || value.terms !== 'merged-solution-earns-whole' || !object(value.reward) || !keys(value.reward, ['amount', 'currency']) || value.reward.amount !== 0 || value.reward.currency !== 'USD' || !object(value.state)) return null;
   let state: FormatState;
   if ((value.state.kind === 'open' || value.state.kind === 'closed-none') && keys(value.state, ['kind'])) state = { kind: value.state.kind };

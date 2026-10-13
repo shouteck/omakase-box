@@ -67,6 +67,7 @@ export interface GhState {
   fail?: string | undefined;
   loseIssueResponse?: boolean;
   failBodyUpdate?: boolean;
+  graphqlMode?: 'empty-next' | 'repeat-next' | 'bad-edge';
   account: string;
   repository: string;
   issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
@@ -102,9 +103,13 @@ let result;
 if (endpoint === 'graphql') {
   const issue = state.issues.find(issue => issue.number === input.variables.number);
   if (!issue || state.fail && ('/issues/' + issue.number + '/comments').includes(state.fail)) fail();
-  const offset = Number(input.variables.cursor ?? 0);
+  const offset = Number(input.variables.after ?? 0);
   const next = offset + 100;
-  result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { nodes: state.comments.slice(offset, next).map(comment => ({ body: comment.body, author: comment.user })), pageInfo: { hasNextPage: next < state.comments.length, endCursor: next < state.comments.length ? String(next) : null } } } } } };
+  const edges = state.comments.slice(offset, next).map((comment, index) => ({ cursor: String(offset + index + 1), node: { body: comment.body, author: comment.user } }));
+  if (state.graphqlMode === 'empty-next') edges.length = 0;
+  if (state.graphqlMode === 'repeat-next') for (const edge of edges) edge.cursor = '1';
+  if (state.graphqlMode === 'bad-edge') edges.push({ cursor: 5, node: null });
+  result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < state.comments.length } } } } } };
 }
 else if (endpoint === 'user') result = { login: state.account };
 else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility };

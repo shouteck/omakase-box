@@ -63,6 +63,7 @@ export interface GitHubPublication {
   unavailableAt?: string | null;
   formatRead?: 'absent' | 'invalid' | 'matches-record' | 'differs-from-record';
   formatReadAt?: string;
+  formatUnavailableAt?: string | null;
   formatRepair?: 'updated' | 'preserved-invalid' | 'update-failed';
 }
 
@@ -1240,9 +1241,7 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
   try {
     const issue = api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
     if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state');
-    if (typeof issue['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable issue body');
-    publication.formatRead = formatFact(issue['body'], formatFor(record));
-    publication.formatReadAt = new Date().toISOString();
+    observeIssueFormat(record, publication, issue);
     const answers = listGitHubAnswers(root, record.id, record, false);
     const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
     const unnamed = comments.filter(comment => comment.author === null).length;
@@ -1257,6 +1256,21 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
 
 // `author` is null when GitHub returned an account name the tool will not
 // print: the comment still counts and is still shown, marked as such.
+function observeIssueFormat(record: BountyRecord, publication: GitHubPublication, issue: unknown): void {
+  if (!isObject(issue) || issue['number'] !== publication.issue?.number || typeof issue['body'] !== 'string' || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', 'the issue body or author could not be bound to this bounty');
+  publication.formatRead = formatFact(issue['body'], formatFor(record));
+  publication.formatReadAt = new Date().toISOString();
+  publication.formatUnavailableAt = null;
+}
+
+export function refreshGitHubFormat(root: string, record: BountyRecord): void {
+  const publication = record.github;
+  if (publication === undefined || publication.issue === null) return;
+  try { observeIssueFormat(record, publication, api(root, `repos/${publication.repository}/issues/${publication.issue.number}`)); }
+  catch { publication.formatUnavailableAt = new Date().toISOString(); }
+  persistRecord(root, record);
+}
+
 export type IssueComment = { readonly author: string | null; readonly body: string; readonly at: string };
 
 function boundIssue(root: string, record: BountyRecord, fetched?: unknown): { repository: string; number: number; account: string } {
@@ -1585,6 +1599,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
       const read = readFormat(snapshot.body);
       publication.formatRead = read.kind === 'present' ? 'differs-from-record' : read.kind;
       publication.formatReadAt = new Date().toISOString();
+      publication.formatUnavailableAt = null;
       if (read.kind === 'invalid') publication.formatRepair = 'preserved-invalid';
       let closed: unknown;
       if (read.kind === 'present') {
@@ -1627,13 +1642,13 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
 function closingIssue(root: string, publication: GitHubPublication): { body: string; comments: unknown[] } {
   const [owner, name] = publication.repository.split('/');
   const comments: unknown[] = [];
-  let cursor: string | null = null;
+  let after: string | null = null;
   let body: string | undefined;
-  const cursors = new Set<string>();
+  const seenAfter = new Set<string>();
   for (;;) {
     const data = api(root, 'graphql', {
-      query: 'query($owner:String!,$name:String!,$number:Int!,$cursor:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$cursor){nodes{body author{login}} pageInfo{hasNextPage endCursor}}}}}',
-      variables: { owner, name, number: publication.issue?.number, cursor }
+      query: 'query($owner:String!,$name:String!,$number:Int!,$after:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$after){edges{cursor node{body author{login}}} pageInfo{hasNextPage}}}}}',
+      variables: { owner, name, number: publication.issue?.number, after }
     });
     if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['issue'])) return invalid('github-response-invalid', 'GitHub returned an unreadable closing issue');
     const issue = data['data']['repository']['issue'];
@@ -1641,14 +1656,17 @@ function closingIssue(root: string, publication: GitHubPublication): { body: str
     body ??= issue['body'];
     if (body !== issue['body']) return invalid('github-issue-changed', 'the issue body changed while its comments were read; retry closing');
     const connection = issue['comments'];
-    if (!Array.isArray(connection['nodes']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments');
-    for (const node of connection['nodes']) {
-      if (!isObject(node) || typeof node['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment');
+    if (!Array.isArray(connection['edges']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments');
+    let last: string | null = null;
+    for (const edge of connection['edges']) {
+      if (!isObject(edge) || typeof edge['cursor'] !== 'string' || edge['cursor'] === '' || !isObject(edge['node']) || typeof edge['node']['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment');
+      const node = edge['node'];
       comments.push({ body: node['body'], user: node['author'] });
+      last = edge['cursor'];
     }
     const page = connection['pageInfo'];
     if (page['hasNextPage'] === false) return { body, comments };
-    if (page['hasNextPage'] !== true || typeof page['endCursor'] !== 'string' || cursors.has(page['endCursor'])) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor');
-    cursor = page['endCursor']; cursors.add(cursor);
+    if (page['hasNextPage'] !== true || last === null || seenAfter.has(last)) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor');
+    after = last; seenAfter.add(after);
   }
 }

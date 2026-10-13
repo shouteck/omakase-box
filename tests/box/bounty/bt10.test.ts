@@ -22,6 +22,7 @@ it('pins the public v1 fields, exact work commit and fixed zero terms', () => fi
   expect(readFormat(renderFormat(read.value).replace('"schemaVersion":1', '"schemaVersion":2')).kind).toBe('invalid');
   expect(readFormat(renderFormat(read.value).replace('"schemaVersion":1', '"extra":"value","schemaVersion":1')).kind).toBe('invalid');
   expect(readFormat(renderFormat(read.value).replace('"kind":"open"', '"kind":"open","commit":"unexpected"')).kind).toBe('invalid');
+  expect(readFormat(renderFormat(read.value).replace(read.value.createdAt, '2026-02-30T11:20:00.000Z')).kind).toBe('invalid');
 }));
 
 it('the real CLI previews exact issue bytes before any owner authority and posts nothing', () => fixture(({ repo, id, state }) => {
@@ -150,3 +151,47 @@ it('a failed block write still closes and reports the stale block truthfully', (
   const read = readFormat(state().issues[0]!.body);
   expect(read.kind === 'present' && read.value.state.kind).toBe('closed-merged');
 }));
+
+it('ended full status rereads edited metadata; compact status names its cached observation', () => postedFixture(({ repo, id, state, update }) => {
+  closeBounty(repo, id);
+  const body = state().issues[0]!.body;
+  const before = state().calls.length;
+  update({ issues: [{ ...state().issues[0]!, body: body.replace('"withChanges":false', '"withChanges":true') }] });
+  const compact = renderStatus(repo, { id });
+  expect(state().calls).toHaveLength(before);
+  expect(compact).toContain('cached last observation');
+  expect(compact).toContain(`box bounty status ${id} --full`);
+  expect(renderStatus(repo, { id, full: true })).toContain('differs-from-record');
+  expect(loadRecord(repo, id).stage).toBe('withdrawn');
+  update({ issues: [{ ...state().issues[0]!, body: body + FORMAT_MARKER + '\nforged\n-->\n' }] });
+  expect(renderStatus(repo, { id, full: true })).toContain('GitHub format block: invalid');
+  update({ issues: [{ ...state().issues[0]!, body: body.replaceAll(id, 'bt-abcdef123456') }] });
+  expect(renderStatus(repo, { id, full: true })).toContain('differs-from-record');
+  const read = readFormat(body);
+  if (read.kind !== 'present') throw new Error('format missing');
+  update({ issues: [{ ...state().issues[0]!, body: body.slice(0, read.start) }] });
+  expect(renderStatus(repo, { id, full: true })).toContain('GitHub format block: absent');
+}, { collected: false }));
+
+it('ended full status reports unavailable reads and never claims a current match', () => postedFixture(({ repo, id, state, update }) => {
+  closeBounty(repo, id);
+  update({ fail: '/issues/' });
+  const status = renderStatus(repo, { id, full: true });
+  expect(status).toContain('current GitHub format read unavailable');
+  expect(status).toContain('cached last comparison');
+  expect(status).not.toContain('GitHub format block: matches-record');
+  update({ fail: undefined, issues: [{ ...state().issues[0]!, user: { login: 'foreign' } }] });
+  expect(renderStatus(repo, { id, full: true })).toContain('current GitHub format read unavailable');
+  expect(loadRecord(repo, id).stage).toBe('withdrawn');
+}, { collected: false }));
+
+for (const mode of ['empty-next', 'repeat-next', 'bad-edge'] satisfies NonNullable<import('./github-fixture.js').GhState['graphqlMode']>[]) {
+  it(`refuses ${mode} pagination rather than looping or treating partial comments as complete`, () => postedFixture(({ repo, id, state, update, bare }) => {
+    update({ graphqlMode: mode, comments: [{ body: 'question one', user: { login: 'solver' } }, { body: 'question two', user: { login: 'solver' } }] });
+    closeBounty(repo, id);
+    expect(loadRecord(repo, id).github?.pending).toContain('github-response-invalid');
+    expect(state().issues[0]!.state).toBe('open');
+    expect(state().calls.filter(call => call.includes('graphql')).length).toBeLessThanOrEqual(2);
+    expect(git(bare, ['show-ref'])).toContain(`box-bounty/${id}`);
+  }, { collected: false }));
+}
