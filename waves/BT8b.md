@@ -1,28 +1,8 @@
 # BT8b: every host's agent learns of the tool
 
-Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch, after BT8 · Branch: `wave/BT8b` · Timebox: 90 minutes; at expiry the cook stops and reports where it is, whatever state that is
+Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch, after BT8a · Branch: `wave/BT8b` · Timebox: 90 minutes; at expiry the cook stops and reports where it is, whatever state that is
 
-**Split out of BT8 by the CTO on 13 October 2026** so each wave is small enough to review once. The content is the owner's decision of 11 October 2026, unchanged: the tool must not depend on one agent host. The head chef checks names against master at dispatch.
-
-## Carried in from the owner, 13 October 2026 (decided while BT8 was cooking)
-
-The head chef reads BT8's Result first and keeps here only what BT8 did not already do.
-
-- **Allowing the tool means one repository by default.** The plain allow command covers this repository and nothing else.
-- **All the owner's projects is an extra, never the default.** It needs its own explicit word on the command, is described in `setup` and the doc page, and is **not offered in the first-use message**, which shows only "allow for this repository" and "allow this one bounty". Offered side by side, people pick the wider one to avoid being asked again, and a wide yes covers repositories that do not exist yet.
-- When an action goes ahead under the all-projects answer, the output says so in those words, so an owner who gave it sees where it reached.
-- **"Ask me each time" covers publishing only.** The owner is asked before each post, and before a post the secret scan has held. The tool closes a bounty whose solution is merged without asking, in every mode: by then the merge has happened, and a held close only leaves a stale open issue and solvers without an outcome. `setup` and the doc page say in plain words that this setting covers publishing and nothing else; merging is not gated, since an agent can merge with its own Git. Whether closing should wait once it names who earns money is a question for BT11's dispatch, not here.
-- **The owner's part in the secret scan is set beforehand, not asked at each hit** (owner, 13 October 2026). In the owner's settings, set through `setup`, at the same levels as the yes:
-  - **never publish:** the owner's own additions to never-ship. A file listed here is kept out of every bounty.
-  - **safe to publish:** paths the scan does not hold a bounty over, for known false alarms such as test fixtures with made-up keys. Kept in the owner's settings and never in the project, so a solution, a pull request or a collaborator cannot add to it; a project file that claims it is refused by name.
-- **A hit waits for the owner, and the owner is always told** (owner, 13 October 2026). There is no setting for this. The bounty is held in a named waiting state that `status` and the summary show, and the message tells the agent to tell the owner. While it waits, whoever acts first settles it: the owner marks the file safe or never-publish in `setup`, or the agent removes the content and posts again, or either stops the bounty. A hit stays in the record and in the summary after it is settled, including when the agent fixed it and the bounty went out, with what was flagged (never the value) and what happened: the owner should know a secret was sitting in their working files.
-- **The hit message shows the agent only what an agent may do:** remove it and post again; or stop and not post this bounty at all. The second discards the draft with the ordinary closing command, and the message does not say "close": nothing was posted, so it says nothing was published, nothing will be, and the owner's files are untouched. No approval command appears in it. One line says it is waiting for the owner, who decides in `setup`.
-- **Said plainly in the doc page:** waiting for the owner cannot be enforced. Content reworked until the scan passes goes out. What the tool guarantees is that the owner is told every time and can read what was published.
-- **"Allow it once" is not built.** The safe list replaces it: slower the first time, and not asked again.
-- **The hit says where the secret is, as a fact.** If the flagged content is in a commit not yet pushed, the message names the commit and says an ordinary push would publish it too.
-- The pass checks that removing the flagged content and running `post` again is enough, or says what else is needed if the content was captured earlier; that a safe-list entry cannot be widened from inside the project; and that a path on the safe list still cannot carry a never-ship file.
-- **The agent learns of a hit as early as it can.** `create` states the same facts about what would be published for the first time, and any hit, as a preview, so the agent can fix it before `post` and before the owner is involved.
-- **What counts as "this repository" is stated and tested.** A different repository later placed at the same folder path does not inherit the yes, and a fork or a clone under another address is not silently treated as the same one. The pass tries both.
+**Split out of BT8 by the CTO on 13 October 2026** so each wave is small enough to review once. The content is the owner's decision of 11 October 2026, unchanged: the tool must not depend on one agent host. The head chef checks names against master at dispatch. The corrections to BT8 that were briefly carried here are their own wave, [BT8a](BT8a.md).
 
 ## Outcome
 
@@ -30,7 +10,7 @@ Whichever host an agent runs on, it learns at the start of a session that the to
 
 ## Scope
 
-- Write (the carried items touch the owner's commands and the first-use message from BT8): `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`.
+- Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`.
 - Read for context: `waves/BT4.md` Result (the tool-kept lines and how their wording was chosen); `waves/BT8.md` Result (`setup`); PLAN.md ("Memory without demand", "Host agnostic"); `kitchen/stations/packaging.md`.
 - Do not touch: anything in an instruction file outside the tool's own marked block; the owner's settings; `.execution/`, `docs/legacy/`.
 
