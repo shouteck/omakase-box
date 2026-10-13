@@ -2,6 +2,9 @@ import { BountyRefused } from './errors.js';
 import { listRecords, loadRecord, postBounty } from './record.js';
 import { loadSettings, localFirstMergeLine, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
+import { relative } from 'node:path';
+import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
+import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
 export const DECISION_WORDS = {
@@ -99,6 +102,12 @@ export function renderConfig(repoRoot: string | null): string {
     if (current?.decision !== 'ask') lines.push(`  ${DECISION_WORDS.ask}: box bounty allow ${address} --ask`);
   }
   if (repoRoot !== null) {
+    const choice = readInstructions(repoRoot);
+    lines.push(`instructions: ${choice.enabled ? 'on' : 'off'}; change: box bounty config set instructions <true|false>`);
+    lines.push(`instruction-file: ${choice.file ?? 'none chosen'}; choose any existing file: box bounty config set instruction-file <existing-path>`);
+    const found = discoverInstructions(repoRoot);
+    lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${file.path}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
+    lines.push(...instructionNotices(repoRoot, false));
     const waiting = listRecords(repoRoot).flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record.id] : []);
     for (const id of waiting) lines.push(`  ${DECISION_WORDS.once}: box bounty allow ${id}`);
     if (waiting.length === 0) lines.push('waiting posts: none; see current actions with box bounty status');
@@ -114,6 +123,20 @@ export function renderConfig(repoRoot: string | null): string {
   return lines.join('\n');
 }
 export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string, emitDisclosure?: (text: string) => void): string {
+  if (name === 'instructions' || name === 'instruction-file') {
+    if (repoRoot === null || verb !== 'set') throw new BountyRefused('config-value-invalid', 'instruction settings require a checkout and config set; nothing changed');
+    checkInstructionSettingsWrite(repoRoot);
+    const previous = readInstructions(repoRoot);
+    if (name === 'instructions') {
+      if (value !== 'true' && value !== 'false') throw new BountyRefused('config-value-invalid', 'use box bounty config set instructions <true|false>; nothing changed');
+      writeInstructions(repoRoot, { ...previous, enabled: value === 'true' });
+      return [`instructions: ${value === 'true' ? 'on' : 'off'}; owner's settings outside the repository. Existing blocks remain when off.`, ...syncInstructions(repoRoot, true)].join('\n');
+    }
+    const file = checkInstructionFile(repoRoot, value);
+    checkInstructionMarkers(file);
+    writeInstructions(repoRoot, { ...previous, file: relative(repoRoot, file).replaceAll('\\', '/') });
+    return [`instruction-file: ${value}; saved in the owner's settings. Enable or add the block: box bounty config set instructions true`, ...syncInstructions(repoRoot, true)].join('\n');
+  }
   if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value, false, emitDisclosure) : denyRepository(repoRoot, value);
   if (name !== 'all-projects') return unknownSetting(name);
   if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'use box bounty config set all-projects <true|false|ask>; nothing changed');

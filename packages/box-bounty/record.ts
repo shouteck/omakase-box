@@ -13,12 +13,11 @@
 // commit, so `git gc --prune=now` cannot take the bytes the identifier names.
 // `close` removes the ref.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
-import { loadLimits } from './limits.js';
-import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
+import { instructionNotices, syncInstructions } from './instructions.js';
 import { postGitHub, refreshGitHubStatus, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
@@ -262,11 +261,8 @@ export const recordDir = (repoRoot: string): string => join(repoRoot, '.box', 'b
 export const recordPath = (repoRoot: string, id: string): string => join(recordDir(repoRoot), `${id}.json`);
 
 export const persistRecord = (repoRoot: string, record: BountyRecord): void => {
-  // The owner's limits are a boundary read: a malformed file refuses before
-  // the record moves, so no mutation lands half-written.
-  const limits = resolveLimits(repoRoot);
   writeFileSync(recordPath(repoRoot, record.id), JSON.stringify(record, null, 2) + '\n');
-  syncOpenSurfaces(repoRoot, limits);
+  syncOpenSurfaces(repoRoot);
 };
 
 const asRecord = (parsed: unknown): BountyRecord | null => {
@@ -334,7 +330,6 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
 // record at stage `drafted`. A Git failure here is operational (exit 1) — the
 // folder already exists and the error says so.
 export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: BountyRecord; path: string } {
-  const limits = resolveLimits(repoRoot); // a malformed limits file refuses before anything is pinned or written
   const record: BountyRecord = {
     schemaVersion: 1,
     kind: 'box-bounty-record',
@@ -355,7 +350,7 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
   const path = recordPath(repoRoot, seed.id);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(record, null, 2) + '\n');
-  syncOpenSurfaces(repoRoot, limits);
+  syncOpenSurfaces(repoRoot);
   return { record, path };
 }
 
@@ -523,8 +518,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       lines.push(`first outside solution merged in ${address}: commit ${notice.commit} at ${notice.at}`);
     }
   }
-  const limits = resolveLimits(repoRoot);
-  if (limits.legacyGithubDestination) lines.push(`  ${LEGACY_GITHUB_NOTE}`);
+  lines.push(...instructionNotices(repoRoot));
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
     if (options.id === undefined && ended.length === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
@@ -537,6 +531,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       // What an agent needs to act comes first; this is the bounty's one `next:`.
       lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
+      for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}`);
+      for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}`);
       if (record.waiting !== undefined) {
         for (const hit of record.waiting.hits ?? []) lines.push(`      scan hit: ${hit.path}:${hit.line} (${hit.rule})`);
         lines.push(`      the owner answers this one with: box bounty allow ${record.id}`);
@@ -570,6 +566,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           lines.push(`      ${line}`);
         }
         if (attemptsOf(record).length === 0) lines.push(`      collect: box bounty look ${record.id} <number> or box bounty apply ${record.id} <number>`);
+        record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
+        persistRecord(repoRoot, record);
       }
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
@@ -725,55 +723,6 @@ export function canonicalForNew(target: string): string {
   return join(realpathSync(cursor), ...tail);
 }
 
-// The owner's limits, resolved for use: `rulesFile` and each
-// `allowedDestinations` entry are repo-relative paths canonicalized through
-// canonicalForNew, so a junction spelling names where it really lands. A
-// rules file that resolves outside the repository is refused by name — the
-// tool only ever rewrites the marked block inside the checkout.
-export interface ResolvedLimits {
-  readonly cost: string | null;
-  readonly expectedAnswer: string | null;
-  /** Canonical absolute path inside the repository, or null when unset. */
-  readonly rulesFile: string | null;
-  /** Canonical absolute directories `post --to <dir>` must land inside;
-      null = any. `github` is never a directory entry — before BT8 it named
-      the GitHub allowance; today it is reported once as legacy, never a yes. */
-  readonly allowedDestinations: readonly string[] | null;
-  /** True when the limits file still names "github" — a destination
-      allowance from before the owner's decision moved to the settings
-      folder. Reported once, with the command that moves it; never a yes. */
-  readonly legacyGithubDestination: boolean;
-}
-
-export function resolveLimits(repoRoot: string): ResolvedLimits {
-  const limits = loadLimits(repoRoot);
-  const rootKey = `${toPosix(realpathSync(repoRoot)).toLowerCase()}/`;
-  let rulesFile: string | null = null;
-  if (limits.rulesFile !== undefined) {
-    const resolved = canonicalForNew(resolve(repoRoot, limits.rulesFile));
-    if (!`${toPosix(resolved).toLowerCase()}/`.startsWith(rootKey)) {
-      throw new BountyRefused('rules-file-outside-repo', `.box/limits.json names rulesFile ${limits.rulesFile}, which resolves to ${resolved} — outside the repository. The tool only rewrites a marked block inside the checkout; point rulesFile at a file inside it`);
-    }
-    rulesFile = resolved;
-  }
-  const allowedDestinations = limits.allowedDestinations === undefined
-    ? null
-    : limits.allowedDestinations.map(dir => dir === 'github' ? dir : canonicalForNew(resolve(repoRoot, dir)));
-  return {
-    cost: limits.cost ?? null,
-    expectedAnswer: limits.expectedAnswer ?? null,
-    rulesFile,
-    allowedDestinations,
-    legacyGithubDestination: allowedDestinations?.includes('github') === true
-  };
-}
-
-// The one notice a pre-BT8 "github" destination allowance earns, with the
-// command that moves the decision — printed once where it shows.
-export const LEGACY_GITHUB_NOTE = '`.box/limits.json` still names "github" in allowedDestinations — a destination allowance from before the owner\'s decision moved to the owner\'s own settings folder. It does not allow posting; `box bounty config` shows the decision and the command that moves it. Drop "github" from allowedDestinations to retire this line';
-
-// The line the tool keeps current everywhere open bounties surface:
-// `.box/bounties/OPEN` and the marked block of the rules file the limits name.
 export function renderOpenLine(repoRoot: string): string {
   const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   if (open.length === 0) return 'open bounties: none';
@@ -784,42 +733,20 @@ export function renderOpenLine(repoRoot: string): string {
   }).join(', ')}`;
 }
 
-// The maintained-block writer, deliberately boring: find the markers, replace
-// everything between them with the canonical block (the rules lines plus the
-// current open-bounties line), write back through a temp file + rename so a
-// failed write cannot leave the owner's file truncated. The tool owns the
-// interior of the marked block; every byte outside the markers is untouched.
-// Anything unexpected — missing file, no markers, unreadable — leaves the
-// file exactly as it was.
-function rewriteRulesFile(path: string, openLine: string): void {
-  if (!existsSync(path) || !statSync(path).isFile()) return;
-  let text: string;
-  try {
-    text = readFileSync(path, 'utf8');
-  } catch {
-    return;
-  }
-  const openAt = text.indexOf(RULES_MARKERS.open);
-  if (openAt === -1) return;
-  const afterOpen = openAt + RULES_MARKERS.open.length;
-  const closeAt = text.indexOf(RULES_MARKERS.close, afterOpen);
-  if (closeAt === -1) return;
-  const eol = text.includes('\r\n') ? '\r\n' : '\n';
-  const next = text.slice(0, afterOpen) + eol + rulesBlockInterior(openLine).join(eol) + eol + text.slice(closeAt);
-  if (next === text) return;
-  const staging = `${path}.box-tmp`;
-  writeFileSync(staging, next);
-  renameSync(staging, path);
+// Keep the detailed local listing separate from the fixed instruction block.
+function syncOpenSurfaces(repoRoot: string): void {
+  writeFileSync(join(recordDir(repoRoot), 'OPEN'), `${renderOpenLine(repoRoot)}\n`);
+  for (const line of syncInstructions(repoRoot)) if (line.includes('refused')) instructionNoticeListener?.(line);
 }
-
-// `.box/bounties/OPEN` always mirrors the records — rewritten on every record
-// mutation — and when the limits file names `rulesFile`, the marked block in
-// that file is rewritten to carry the same line. Recordless repos never reach
-// here: only mutations sync.
-function syncOpenSurfaces(repoRoot: string, limits: ResolvedLimits): void {
-  const line = renderOpenLine(repoRoot);
-  writeFileSync(join(recordDir(repoRoot), 'OPEN'), `${line}\n`);
-  if (limits.rulesFile !== null) rewriteRulesFile(limits.rulesFile, line);
+let instructionNoticeListener: ((line: string) => void) | undefined;
+export function setInstructionNoticeListener(listener: (line: string) => void): void { instructionNoticeListener = listener; }
+function seenAge(at: string): string {
+  const minutes = Math.max(0, Math.floor((Date.now() - Date.parse(at)) / 60000));
+  if (!Number.isFinite(minutes)) return 'unknown';
+  return minutes < 60 ? `${minutes} minute(s)` : minutes < 1440 ? `${Math.floor(minutes / 60)} hour(s)` : `${Math.floor(minutes / 1440)} day(s)`;
+}
+export function renderOverview(repoRoot: string): string {
+  return ['box bounty can hand work to an outside solver; box bounty describe says when it is worth using.', renderStatus(repoRoot)].join('\n');
 }
 
 // The decision gate every post and every tool-driven outside close passes.
@@ -875,25 +802,6 @@ export function postBounty(repoRoot: string, id: string, toDir: string, opts?: {
   const destKey = `${toPosix(destination).toLowerCase()}/`;
   if (destKey.startsWith(rootKey)) {
     throw new BountyRefused('destination-inside-repo', `--to ${toDir} would put ${destination} inside the repository — a delivered copy there would ship inside the next bounty. Point --to outside the checkout`);
-  }
-  // The owner's allowedDestinations, enforced on the canonical --to: when the
-  // limits file lists directories, the destination must land inside one of
-  // them — a junction spelling resolves to its real location before the check.
-  const limits = resolveLimits(repoRoot);
-  if (limits.allowedDestinations !== null) {
-    const destDirKey = `${toPosix(destReal).toLowerCase()}/`;
-    const allowed = limits.allowedDestinations.some(dir => {
-      if (dir === 'github') return false;
-      const key = `${toPosix(dir).toLowerCase()}/`;
-      return destDirKey === key || destDirKey.startsWith(key);
-    });
-    if (!allowed) {
-      // An empty list refuses every --to; say so instead of printing the empty
-      // parens where the allowed directories would be named.
-      throw new BountyRefused('destination-not-allowed', limits.allowedDestinations.length === 0
-        ? `--to ${toDir} resolves to ${destReal} — the owner's allowedDestinations is an empty list, so no destination is allowed. The owner widens the list in .box/limits.json`
-        : `--to ${toDir} resolves to ${destReal}, which is not inside the owner's allowedDestinations (${limits.allowedDestinations.join(', ')}) — deliver inside one of them, or the owner widens the list in .box/limits.json`);
-    }
   }
   if (existsSync(destination)) {
     throw new BountyRefused('destination-exists', `${destination} already exists — a delivered copy is never overwritten. Remove it or pick another --to`);

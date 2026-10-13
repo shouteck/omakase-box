@@ -132,29 +132,6 @@ describe('the settings file is a boundary — malformed and unknown names refuse
     });
 });
 
-describe('a project file can never allow the tool', () => {
-  it.each(['authority', 'allowed', 'permission', 'approve', 'permit', 'grant'])(
-    '.box/limits.json carrying "%s" is refused by name', field => {
-      const repo = makeRepo({ 'src/app.py': 'x\n' });
-      const { id } = drafted(repo);
-      writeDecision(repo, 'project', 'allowed');
-      write(repo, '.box/limits.json', JSON.stringify({ [field]: true }));
-      refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'limits-authority');
-    });
-
-  it('a leftover "github" destination allowance is reported once and is never a yes', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id } = drafted(repo);
-    write(repo, '.box/limits.json', '{"allowedDestinations":["github"]}');
-    expect(renderStatus(repo)).toContain('still names "github"');
-    // Not a yes: nothing written still waits for the owner, and the entry
-    // names no folder a post may deliver to.
-    refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
-    writeDecision(repo, 'project', 'allowed');
-    refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'destination-not-allowed');
-  });
-});
-
 describe('the pre-publish scan — secret shapes hold the one bounty that carries them', () => {
   // The stated list, each kind planted as a unit: private key blocks,
   // well-known tokens, passworded connection strings, long random

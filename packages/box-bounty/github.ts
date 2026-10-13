@@ -11,7 +11,7 @@ import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, g
 import type { DryMerge, IndexChange } from './git.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, resolveLimits, transitionTo, waitForOwner } from './record.js';
+import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, transitionTo, waitForOwner } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { requireRepository } from './repository.js';
 
@@ -33,6 +33,7 @@ export interface GitHubPublication {
   /** `unnamed`: how many of them carry an account name GitHub returned in a form the tool will not print. */
   questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number };
   seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string }[];
+  availablePullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string }[];
   /** 'history' on posts made since the bounty became an issue on the code that
       is already there; absent on snapshot posts made before. */
   readonly kind?: 'history';
@@ -1079,11 +1080,12 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   }
 }
 
-export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id)): string {
+export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; collect a returned folder with box bounty look ${id} --from <dir> or box bounty apply ${id} --from <dir>`);
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   const lines = [`GitHub answers for ${id} against ${branch}:`];
+  const available: NonNullable<GitHubPublication['availablePullRequests']> = [];
   for (const entry of data) {
     if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
     const n = number(entry['number']);
@@ -1095,9 +1097,12 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
     const next = collected === undefined ? `collect: box bounty look ${id} ${n} or box bounty apply ${id} ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
     lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}`);
-    if (seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n, commit, at: new Date().toISOString(), author: login(entry['user']['login']) }];
+    const fact = { n, commit, at: seen?.at ?? record.github.availablePullRequests?.find(pr => pr.n === n && pr.commit === commit)?.at ?? new Date().toISOString(), author: login(entry['user']['login']) };
+    available.push(fact);
+    if (shown && seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], fact];
   }
   if (data.length === 0) lines.push('  none open; wait for one or close the bounty');
+  record.github.availablePullRequests = available;
   persistRecord(root, record);
   return lines.join('\n');
 }
@@ -1108,7 +1113,7 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
   try {
     const issue = api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
     if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state');
-    const answers = listGitHubAnswers(root, record.id, record);
+    const answers = listGitHubAnswers(root, record.id, record, false);
     const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
     const unnamed = comments.filter(comment => comment.author === null).length;
     publication.questions = { count: comments.length, latestAt: comments.map(comment => comment.at).sort().at(-1) ?? null, ...(unnamed > 0 ? { unnamed } : {}) };

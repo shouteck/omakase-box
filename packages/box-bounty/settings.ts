@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
@@ -19,11 +19,18 @@ interface Change { readonly bounty: OwnerDecision | null; readonly at: string }
 export interface SettingsLevel extends Change { readonly changes: readonly Change[] }
 interface Migration { readonly path: string; readonly at: string; readonly repository: string | null; readonly detail: string }
 interface MergeNotice { readonly commit: string; readonly at: string }
+export interface InstructionSettings {
+  readonly enabled: boolean;
+  readonly file?: string;
+  readonly notices: readonly string[];
+  readonly retired?: boolean;
+}
 export interface OwnerSettings {
   readonly default?: SettingsLevel;
   readonly repositories: Readonly<Record<string, SettingsLevel>>;
   readonly migrations: readonly Migration[];
   readonly firstMerges: Readonly<Record<string, MergeNotice>>;
+  readonly instructions?: Readonly<Record<string, InstructionSettings>>;
 }
 export const projectKey = requireRepository;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -32,7 +39,7 @@ const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', '
 export function unknownSetting(name: string): never {
   const folded = name.toLowerCase().replace(/[-_]/g, '');
   const hard = HARD_STOP_WORDS.some(word => folded.includes(word));
-  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories'}. Nothing changed`);
+  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file'}. Nothing changed`);
 }
 const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; fix the settings file or remove it`); };
 function change(value: unknown, where: string): Change {
@@ -61,7 +68,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -94,7 +101,17 @@ export function loadSettings(): OwnerSettings {
     }
   }
   const fallback = parsed['default'];
-  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges };
+  const instructions: Record<string, InstructionSettings> = {};
+  const rawInstructions = parsed['instructions'];
+  if (rawInstructions !== undefined) {
+    if (!isObject(rawInstructions)) return bad('instructions must hold an object keyed by repository folder');
+    for (const [key, value] of Object.entries(rawInstructions)) {
+      if (!isAbsolute(key) || !isObject(value) || typeof value['enabled'] !== 'boolean' || !(value['file'] === undefined || typeof value['file'] === 'string') || !Array.isArray(value['notices']) || value['notices'].some(entry => typeof entry !== 'string') || !(value['retired'] === undefined || typeof value['retired'] === 'boolean')) return bad('an instruction maintenance choice is unreadable');
+      for (const name of Object.keys(value)) if (!['enabled', 'file', 'notices', 'retired'].includes(name)) unknownSetting(name);
+      instructions[key] = { enabled: value['enabled'], ...(value['file'] === undefined ? {} : { file: value['file'] }), notices: value['notices'], ...(value['retired'] === undefined ? {} : { retired: value['retired'] }) };
+    }
+  }
+  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }) };
   const legacy = parsed['projects'];
   if (legacy === undefined) return settings;
   if (!isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
@@ -161,6 +178,33 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
   const previous = settings.default;
   persist({ ...settings, default: { bounty, at, changes: [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])] } });
   return { path: settingsFile(), at, key: 'all-projects' };
+}
+export function readInstructions(repoRoot: string): InstructionSettings {
+  return loadSettings().instructions?.[realpathSync(repoRoot)] ?? { enabled: false, notices: [] };
+}
+export function checkInstructionSettingsWrite(repoRoot: string): void {
+  const root = realpathSync(repoRoot);
+  let ancestor = resolve(settingsDir());
+  const tail: string[] = [];
+  while (!existsSync(ancestor)) {
+    const parent = dirname(ancestor);
+    if (parent === ancestor) break;
+    tail.unshift(basename(ancestor));
+    ancestor = parent;
+  }
+  const folder = resolve(realpathSync(ancestor), ...tail);
+  const relativeFolder = folder.toLowerCase().replaceAll('\\', '/');
+  const rootKey = root.toLowerCase().replaceAll('\\', '/');
+  if (relativeFolder === rootKey || relativeFolder.startsWith(`${rootKey}/`)) throw new BountyRefused('settings-inside-repo', 'instruction maintenance settings must live outside the repository; nothing changed');
+  const stat = lstatSync(settingsFile(), { throwIfNoEntry: false });
+  if (stat !== undefined && (stat.isSymbolicLink() || stat.nlink > 1)) throw new BountyRefused('instruction-settings-link', 'instruction-settings-link: instruction configuration cannot write a linked settings file; nothing changed');
+  if (stat !== undefined && !stat.isFile()) throw new BountyRefused('instruction-settings-not-file', 'instruction-settings-not-file: choose an ordinary settings file; nothing changed');
+}
+export function writeInstructions(repoRoot: string, choice: InstructionSettings): void {
+  checkInstructionSettingsWrite(repoRoot);
+  const root = realpathSync(repoRoot);
+  const settings = loadSettings();
+  persist({ ...settings, instructions: { ...settings.instructions, [root]: choice } });
 }
 interface LocalMergeNotice extends MergeNotice { readonly repository: string }
 const localMergeFile = (repoRoot: string): string => join(repoRoot, '.box', 'bounties', 'FIRST_MERGE');

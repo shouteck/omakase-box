@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, showPath } from '../../box-bounty/index.js';
+import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -167,8 +167,10 @@ if (command === 'export') {
     process.exit(1);
   }
 } else if (command === 'bounty') {
-  const [subcommand, ...bountyArgs] = rest;
-  if (subcommand === undefined) usage('expected a bounty command — run box bounty help for the whole journey');
+  const [requested, ...commandArgs] = rest;
+  const subcommand = requested === '--repo' ? undefined : requested;
+  const bountyArgs = requested === '--repo' ? rest : commandArgs;
+  setInstructionNoticeListener(line => console.log(line));
   readGitPinsOncePerProcess(); // this process runs one command and exits
   // A reading command can recognise a solution the agent merged itself and
   // close the bounty — the one line saying so belongs to whichever command
@@ -209,7 +211,7 @@ if (command === 'export') {
       undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it: git revert -m 1 <merge>',
       reject: 'ending a bounty with nothing merged is one command now — box bounty close <id> --reason "<why>" keeps the reason on the record',
       withdraw: 'ending a bounty with nothing merged is one command now — box bounty close <id>',
-      remind: 'the tool no longer supplies a reminder line — the "reminders" switch in .box/limits.json is the owner\'s to act on',
+      remind: 'the tool no longer supplies reminders; box bounty shows the current overview',
       confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --to github --preview, publish with box bounty post <id> --to github; the owner uses box bounty allow, deny and config'
     };
     if (removed[subcommand!] !== undefined) {
@@ -219,7 +221,14 @@ if (command === 'export') {
       const replacements: Record<string, string> = { setup: 'box bounty config', allow: 'box bounty allow', ask: 'box bounty allow --ask', off: 'box bounty deny', on: 'box bounty allow', answer: 'box bounty allow <waiting-bounty-id>', summary: 'box bounty status --since <iso>' };
       throw new BountyRefused('command-removed', `owner ${bountyArgs[0] ?? ''} was removed; use ${replacements[bountyArgs[0] ?? ''] ?? 'box bounty allow, box bounty deny or box bounty config'}. Nothing changed`);
     }
-    if (subcommand === 'help') {
+    if (subcommand === undefined) {
+      if (bountyArgs.length !== 0 && (bountyArgs.length !== 2 || bountyArgs[0] !== '--repo' || bountyArgs[1]?.startsWith('--'))) usage('box bounty [--repo <path>]');
+      try { console.log(renderOverview(resolveRepoRoot(bountyRepo(), 'overview'))); }
+      catch (error) {
+        if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || bountyArgs.includes('--repo')) throw error;
+        console.log(renderDescribe(null));
+      }
+    } else if (subcommand === 'help') {
       // Works outside a checkout too — it reads no repository.
       console.log(renderHelp());
     } else if (subcommand === 'describe') {

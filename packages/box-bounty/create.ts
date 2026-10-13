@@ -7,7 +7,7 @@ import { gitBlob, gitOutcome, ownerGitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { canonicalForNew, resolveLimits, writeNewRecord } from './record.js';
+import { canonicalForNew, writeNewRecord } from './record.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -132,9 +132,6 @@ export function planBounty(options: CreateOptions): BountyPlan {
     throw new BountyRefused('missing-why', 'create needs one line of why — pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
   }
   const repoRoot = resolveRepoRoot(options.repoPath, 'create');
-  // The limits file is a boundary read even for create: a malformed one
-  // refuses here, before the snapshot, so no bounty is left half-written.
-  resolveLimits(repoRoot);
   const ownerList = loadOwnerList(repoRoot);
   const rules: NeverShipRule[] = ownerList === null ? [...BUILTIN_RULES] : [...BUILTIN_RULES, ownerList.rule];
   const task = readTextFile(options.taskPath, 'missing-task', repoRoot, rules);

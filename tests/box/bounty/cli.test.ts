@@ -140,13 +140,10 @@ describe('box bounty help (built cli)', () => {
     expect(run.stdout).toContain('--why');
   });
 
-  it('a bare box bounty is usage pointing at help; a wrong verb names the command run', () => {
+  it('a wrong verb names the command run', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const dir = runRoot('plain');
     mkdirSync(dir, { recursive: true });
-    const bare = cli(dir, ['bounty']);
-    expect(bare.status).toBe(2);
-    expect(bare.stderr).toContain('box bounty help');
     const wrong = cli(dir, ['bounty', 'frobnicate']);
     expect(wrong.status).toBe(2);
     expect(wrong.stderr).toContain('frobnicate');
