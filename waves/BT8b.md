@@ -1,6 +1,6 @@
 # BT8b: every host's agent learns of the tool
 
-Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch, after BT8a · Branch: `wave/BT8b` · Timebox: 90 minutes; at expiry the cook stops and reports where it is, whatever state that is
+Milestone: BT · Station: packaging (also evidence) · Base: `1b25ed6` at dispatch, after BT8a · Branch: `wave/BT8b` · Timebox: 90 minutes; at expiry the cook stops and reports where it is, whatever state that is
 
 **Split out of BT8 by the CTO on 13 October 2026** so each wave is small enough to review once. The content is the owner's decision of 11 October 2026, unchanged: the tool must not depend on one agent host. The head chef checks names against master at dispatch. The corrections to BT8 that were briefly carried here are their own waves, [BT8a](BT8a.md) and [BT8c](BT8c.md). Checked against BT8's Result on 13 October 2026: BT8 left the instruction files and `.box/limits.json` as they were, apart from refusing an authority claim in the limits file and reporting its old destination entry once, so nothing here is already done.
 
@@ -46,6 +46,9 @@ Whichever host an agent runs on, it learns at the start of a session that the to
 
 ## Notes for the worker
 
+- Dispatch, 13 October: owner said go after the removal card. Start 05:11 UTC; stop by 06:41 UTC. Latest hosted BT8a master run is in progress; preceding master run passed. Use disposable offline fixtures and isolated temporary owner settings only. Do not run the new instruction updater against this kitchen checkout, alter real authority or post anything outside. The CTO owns kitchen records and fresh reader dispatch.
+- Confirm host filenames against official documentation, with URLs and date in the handoff. Supply frozen built-CLI fixture/output captures and guarded cleanup for the fresh host-reader and three unrelated-task conditions. No block, idle block and open block each need fresh agents on the same small task. Measure actual steps and received output; report limits without tuning away diversion.
+- Invocation-local acceptance environment from BT8a: prefix Git usr/bin on PATH, remove inherited NO_COLOR, and request approved elevation when disposable home/link fixtures require it. Keep the candidate clean while named acceptance runs, one heavy job at a time; the reviewer reuses a completed exact-SHA PASS.
 - Feature playbook. The block's bytes are the product here: write the round-trip tests first.
 - Report at the timebox. Do not run on.
 - Not in this wave: the hook (BT9); any permission or money.
