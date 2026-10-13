@@ -466,11 +466,12 @@ export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string
     ];
   }
   return [
-    'Ask the owner in your own words. Bounties are public under their GitHub account. A solution you choose is merged into their code. This decision covers this repository only.',
+    'Ask the owner in your own words. Bounties are public under the owner\'s GitHub account. A solution the agent chooses is merged into the owner\'s code. This decision covers this repository only.',
     'These are the same choices shown by bare box bounty config:',
     `  ${DECISION_WORDS.allow}: box bounty allow`,
     `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
     `  ${DECISION_WORDS.once}: box bounty allow ${id}`,
+    'Ask mode covers publishing only; merging is not gated.',
     'box bounty config shows every setting and the command that changes it.'
   ];
 }

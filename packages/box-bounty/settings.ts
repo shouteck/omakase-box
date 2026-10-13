@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { gitOutcome } from './git.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
 export const SETTINGS_FILE_NAME = 'settings.json';
@@ -101,7 +102,12 @@ export function loadSettings(): OwnerSettings {
   const at = new Date().toISOString();
   for (const { key, entry } of entries) {
     let address: string | null = null;
-    try { if (isAbsolute(key) && existsSync(key)) address = repositoryIdentity(key); } catch { /* no safe identity */ }
+    try {
+      if (isAbsolute(key) && existsSync(key)) {
+        const top = gitOutcome(key, ['rev-parse', '--show-toplevel']);
+        if (top.status === 0 && realpathSync(key).toLowerCase() === realpathSync(top.stdout.trim()).toLowerCase()) address = repositoryIdentity(key);
+      }
+    } catch { /* no safe identity */ }
     if (address === null) {
       migrations.push({ path: key, repository: null, at, detail: 'could not read exactly one GitHub address; no permission moved. Re-add with box bounty allow <owner/name>' });
       continue;
@@ -136,7 +142,7 @@ export function readDecision(repoRoot: string): DecisionRead {
   if (settings.default !== undefined) return { decision: settings.default.bounty, level: 'default', at: settings.default.at };
   return { decision: null, level: null, at: null };
 }
-export function writeRepository(address: string, bounty: OwnerDecision | null): { path: string; at: string; key: string } {
+export function writeRepository(address: string, bounty: OwnerDecision | null, beforeWrite?: () => void): { path: string; at: string; key: string } {
   const key = repositoryAddress(address);
   if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address; use owner/name. Nothing changed`);
   const settings = loadSettings();
@@ -144,6 +150,7 @@ export function writeRepository(address: string, bounty: OwnerDecision | null): 
   if (bounty === null && (previous === undefined || previous.bounty === null || previous.bounty === 'off')) throw new BountyRefused('repository-not-listed', `${key} is not listed; nothing changed`);
   const at = new Date().toISOString();
   const changes = [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])];
+  beforeWrite?.();
   persist({ ...settings, repositories: { ...settings.repositories, [key]: { bounty, at, changes } } });
   return { path: settingsFile(), at, key };
 }

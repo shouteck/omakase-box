@@ -389,9 +389,9 @@ if (command === 'export') {
       let root: string | null = null;
       try { root = resolveRepoRoot(bountyRepo(), subcommand); }
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || seen.has('--repo')) throw error; }
-      if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask')));
+      if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask'), text => console.log(text)));
       else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
-      else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!));
+      else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text)));
     } else {
       usage(`box bounty ${subcommand} is not a bounty command — run box bounty help for the journey`);
     }

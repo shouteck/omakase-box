@@ -1,6 +1,7 @@
 import { BountyRefused } from './errors.js';
 import { listRecords, loadRecord, postBounty } from './record.js';
 import { loadSettings, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
+import type { DecisionRead } from './settings.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
 export const DECISION_WORDS = {
@@ -15,7 +16,7 @@ const disclosure = (address: string): string[] => [
   'These settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
 ];
 
-export function allowRepository(repoRoot: string | null, name?: string, ask = false): string {
+export function allowRepository(repoRoot: string | null, name?: string, ask = false, emitDisclosure?: (text: string) => void): string {
   if (name?.startsWith('bt-')) {
     if (ask || repoRoot === null) throw new BountyRefused('allow-arguments', 'a waiting bounty requires a repository and cannot use --ask; nothing changed');
     return allowBounty(repoRoot, name);
@@ -26,8 +27,9 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   if (repoRoot !== null) {
     try { currentAddress = repositoryIdentity(repoRoot); } catch { /* named addresses work outside this checkout */ }
   }
-  const written = writeRepository(address, ask ? 'ask' : 'allowed');
-  const lines = [...disclosure(address), `${ask ? 'ask me each time before publishing' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`];
+  const words = disclosure(address);
+  const written = writeRepository(address, ask ? 'ask' : 'allowed', emitDisclosure === undefined ? undefined : () => emitDisclosure(words.join('\n')));
+  const lines = [...(emitDisclosure === undefined ? words : []), `${ask ? 'ask me each time before publishing' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`];
   if (ask) lines.push('This covers publishing and nothing else. A merged solution closes the bounty without asking.');
   // A named repository may be allowed from outside any checkout. Release
   // waits only when the current checkout has that same address.
@@ -65,37 +67,52 @@ export function allowBounty(repoRoot: string, id: string): string {
 export function renderConfig(repoRoot: string | null): string {
   const settings = loadSettings();
   let address: string | null = null;
+  let current: DecisionRead | null = null;
   let identityFact = 'no checkout selected';
   if (repoRoot !== null) {
-    try { address = repositoryIdentity(repoRoot); identityFact = address ?? 'no GitHub address'; }
+    try { address = repositoryIdentity(repoRoot); identityFact = address ?? 'no GitHub address'; if (address !== null) current = readDecision(repoRoot); }
     catch (error) { identityFact = error instanceof BountyRefused ? `${error.reason}: ${error.message}` : String(error); }
   }
   const active = Object.entries(settings.repositories).filter(([, entry]) => entry.bounty === 'allowed' || entry.bounty === 'ask');
   const global = settings.default?.bounty === 'allowed' ? 'true' : settings.default?.bounty === 'ask' ? 'ask' : 'false (off by default)';
-  const undecided = address === null ? 'a GitHub address for this checkout' : settings.repositories[address] === undefined && settings.default?.bounty !== 'allowed' && settings.default?.bounty !== 'ask'
-    ? 'no repository permission for this repository' : 'none of the current permission choices';
+  const undecided: string[] = [];
+  if (address === null) undecided.push('a GitHub address for this checkout');
+  else if (current?.decision === null && !current.denied) undecided.push('no repository permission for this repository');
+  if (settings.default === undefined) undecided.push('all-projects (nothing written; defaults to off)');
+  const effective = current === null ? 'permission cannot be read without one GitHub address' : current.denied || current.decision === 'off' && current.level === 'project'
+    ? `not allowed; ${current.denied ? 'denied' : 'marked off'} at ${current.at}; the all-projects setting does not override this decision`
+    : current.decision === null || current.decision === 'off' ? 'not allowed; no repository permission is written'
+      : `${current.decision === 'ask' ? DECISION_WORDS.ask : 'allowed'}${current.level === 'default' ? ' by the all-projects setting' : ' by this repository entry'}, changed ${current.at}`;
   const lines = [
     `the owner's settings: ${settingsFile()}`,
     'Allowing a repository means bounties are public under your GitHub account and a solution the agent chooses is merged into your code. Each repository entry covers that repository only.',
-    `this repository: ${identityFact}; add it: box bounty allow${address === null ? ' <owner/name>' : ` ${address}`}`,
-    `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; applies to repositories without their own entry or removal; change: box bounty config set all-projects <true|false|ask>`,
-    `repositories: ${active.length} active; add: box bounty config add repositories <owner/name>; remove: box bounty config remove repositories <owner/name>`,
-    `  ${DECISION_WORDS.allow}: box bounty allow${address === null ? ' <owner/name>' : ` ${address}`}`,
-    `  ${DECISION_WORDS.ask}: box bounty allow${address === null ? ' <owner/name>' : ` ${address}`} --ask`,
-    `  ${DECISION_WORDS.once}: box bounty allow <waiting-bounty-id>`,
+    `this repository: ${identityFact}; ${effective}`,
+    `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; change: box bounty config set all-projects <true|false|ask>`,
+    '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each publication in repositories without their own decision.',
+    '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; box bounty allow <owner/name> re-allows it.',
+    `repositories: ${active.length} active; adding grants standing publication permission: box bounty config add repositories <owner/name>; removing revokes it: box bounty config remove repositories <owner/name>`,
     'ask me each time covers publishing and nothing else; merging is not gated. A bounty whose solution is merged closes without asking.',
-    `not decided yet: ${undecided}; decide with box bounty allow${address === null ? ' <owner/name>' : ` ${address}`}`
+    `not decided yet: ${undecided.length === 0 ? 'nothing among the settings shown' : undecided.join('; ')}`
   ];
+  if (address !== null) {
+    if (current?.decision !== 'allowed') lines.push(`  ${DECISION_WORDS.allow}: box bounty allow ${address}`);
+    if (current?.decision !== 'ask') lines.push(`  ${DECISION_WORDS.ask}: box bounty allow ${address} --ask`);
+  }
+  if (repoRoot !== null) {
+    const waiting = listRecords(repoRoot).flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record.id] : []);
+    for (const id of waiting) lines.push(`  ${DECISION_WORDS.once}: box bounty allow ${id}`);
+    if (waiting.length === 0) lines.push('waiting posts: none; see current actions with box bounty status');
+  }
   for (const [key, entry] of Object.entries(settings.repositories)) {
     lines.push(`  ${key}: ${entry.bounty === null || entry.bounty === 'off' ? `not allowed; denied at ${entry.at}; all-projects does not apply after deny` : `${entry.bounty === 'ask' ? DECISION_WORDS.ask : 'allowed'}, added ${entry.changes[0]?.at ?? entry.at}, changed ${entry.at}`}; change: box bounty allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: box bounty deny ${key}`);
-    for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}; re-allow: box bounty allow ${key}`);
+    for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}`);
   }
   for (const notice of settings.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
   for (const [key, notice] of Object.entries(settings.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
   return lines.join('\n');
 }
-export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string): string {
-  if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value) : denyRepository(repoRoot, value);
+export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string, emitDisclosure?: (text: string) => void): string {
+  if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value, false, emitDisclosure) : denyRepository(repoRoot, value);
   if (name !== 'all-projects') return unknownSetting(name);
   if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'use box bounty config set all-projects <true|false|ask>; nothing changed');
   const bounty = value === 'true' ? 'allowed' : value === 'ask' ? 'ask' : 'off';

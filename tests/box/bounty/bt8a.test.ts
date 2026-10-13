@@ -18,6 +18,59 @@ const cli = (root: string, ...args: string[]) => spawnSync(process.execPath, [CL
 const saved = () => existsSync(settingsFile()) ? readFileSync(settingsFile(), 'utf8') : null;
 const oldLevel = (bounty: string) => ({ bounty, at: '2026-10-13T00:00:00.000Z', changes: [] });
 
+it('the built CLI prints disclosure while authority is unchanged, then writes the decision', () => {
+  const root = repo(), scratch = runRoot('BT8a-order'), preload = join(scratch, 'observe.cjs'), log = join(scratch, 'order.json');
+  writeFileSync(preload, String.raw`
+const fs = require('node:fs');
+const path = require('node:path');
+const settings = path.join(process.env.BOX_BOUNTY_SETTINGS_DIR, 'settings.json');
+const events = [];
+const before = () => fs.existsSync(settings) ? fs.readFileSync(settings, 'utf8') : null;
+const stdout = process.stdout.write;
+process.stdout.write = function(chunk, ...args) {
+  events.push({ kind: 'stdout', text: String(chunk), before: before() });
+  return Reflect.apply(stdout, this, [chunk, ...args]);
+};
+const write = fs.writeFileSync;
+fs.writeFileSync = function(file, data, ...args) {
+  if (path.resolve(String(file)) === path.resolve(settings)) events.push({ kind: 'settings-write', before: before() });
+  return Reflect.apply(write, this, [file, data, ...args]);
+};
+require('node:module').syncBuiltinESMExports();
+process.on('exit', () => write(process.env.BT8A_ORDER_LOG, JSON.stringify(events)));
+`);
+  const observed = (...args: string[]) => {
+    const previous = saved();
+    const run = spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: root, encoding: 'utf8', env: { ...process.env, BT8A_ORDER_LOG: log, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --require ${preload.replaceAll('\\', '/')}`.trim() } });
+    const events: { kind: string; text?: string; before: string | null }[] = JSON.parse(readFileSync(log, 'utf8'));
+    return { previous, run, events };
+  };
+  for (const args of [['allow'], ['allow', '--ask'], ['config', 'add', 'repositories', 'owner/shop']]) {
+    const { previous, run, events } = observed(...args);
+    expect(run.status).toBe(0);
+    const written = events.findIndex(event => event.kind === 'settings-write');
+    expect(written).toBeGreaterThan(0);
+    const printed = events.slice(0, written).filter(event => event.kind === 'stdout');
+    expect(printed.map(event => event.text).join('')).toContain('means bounties are public under your GitHub account');
+    expect(printed.every(event => event.before === previous)).toBe(true);
+    expect(events[written]?.before).toBe(previous);
+    expect(saved()).not.toBe(previous);
+  }
+  for (const args of [['allow', 'owner/shop', 'stray'], ['config', 'set', 'scan', 'false']]) {
+    const { previous, run, events } = observed(...args);
+    expect(run.status).toBe(3);
+    expect(run.stdout).toBe('');
+    expect(events.some(event => event.kind === 'settings-write')).toBe(false);
+    expect(saved()).toBe(previous);
+  }
+  writeFileSync(settingsFile(), '{unreadable');
+  const invalid = observed('allow');
+  expect(invalid.run.status).toBe(3);
+  expect(invalid.run.stdout).toBe('');
+  expect(invalid.events.some(event => event.kind === 'settings-write')).toBe(false);
+  expect(saved()).toBe(invalid.previous);
+});
+
 describe('repository authority replaces path authority', () => {
   it('covers copies and canonical case/.git, remote names can change, and a fork or path replacement gets no yes', () => {
     const root = repo();
@@ -113,6 +166,14 @@ describe('one-time legacy settings migration', () => {
     allowRepository(root);
     expect(readDecision(root).decision).toBe('allowed');
   });
+  it('a legacy subfolder cannot borrow the surrounding repository address', () => {
+    const root = repo();
+    write(root, 'nested/file.txt', 'a file\n');
+    writeFileSync(settingsFile(), JSON.stringify({ kind: 'box-owner-settings', projects: { [join(root, 'nested')]: oldLevel('allowed') } }));
+    expect(loadSettings().repositories).toEqual({});
+    expect(readDecision(root).decision).toBeNull();
+    expect(renderConfig(root)).toContain('no permission moved');
+  });
 });
 
 describe('the three owner words through the built CLI', () => {
@@ -149,6 +210,27 @@ describe('the three owner words through the built CLI', () => {
     expect(cli(root, 'config', 'remove', 'repositories', 'owner/shop').status).toBe(0);
     expect(readDecision(repo('owner/shop')).decision).toBeNull();
   });
+  it('config distinguishes effective authority, undecided defaults and applicable waiting choices', () => {
+    const root = repo();
+    allowRepository(root);
+    const allowed = renderConfig(root);
+    expect(allowed).toContain('this repository: owner/project; allowed by this repository entry');
+    expect(allowed).toContain('not decided yet: all-projects (nothing written; defaults to off)');
+    expect(allowed).toContain('true grants publication permission');
+    expect(allowed).toContain('false grants no blanket permission');
+    expect(allowed).toContain('ask asks before each publication');
+    expect(allowed).toContain('adding grants standing publication permission');
+    expect(allowed).toContain('waiting posts: none');
+    expect(allowed).not.toContain('<waiting-bounty-id>');
+    expect(allowed).not.toContain('add it:');
+    changeConfig(root, 'set', 'all-projects', 'true');
+    denyRepository(root);
+    expect(renderConfig(root)).toContain('this repository: owner/project; not allowed; denied at');
+    expect(renderConfig(root)).toContain('A dated deny removal keeps that repository not allowed even when all-projects is true or ask');
+    const { id } = draft(root);
+    refused(() => postBounty(root, id, join(runRoot('BT8a-choice'), 'inbox')), 'owner-allow-needed');
+    expect(renderConfig(root)).toContain(`this one bounty only: box bounty allow ${id}`);
+  });
 });
 
 it('waiting exits 0, keeps the first time, and permission is read before any gh call', () => fixture(({ repo: root, id, scratch, state }) => {
@@ -158,8 +240,8 @@ it('waiting exits 0, keeps the first time, and permission is read before any gh 
     expect(first.status).toBe(0);
     expect(first.stderr).toBe('');
     expect(first.stdout.split('\n')[0]).toContain('waiting for the owner');
-    expect(first.stdout).toContain('Bounties are public under their GitHub account');
-    expect(first.stdout).toContain('A solution you choose is merged into their code');
+    expect(first.stdout).toContain('Bounties are public under the owner\'s GitHub account');
+    expect(first.stdout).toContain('A solution the agent chooses is merged into the owner\'s code');
     expect(first.stdout).toContain('this repository only');
     const at = loadRecord(root, id).waiting?.at;
     const again = cli(root, 'post', id, '--to', 'github');
