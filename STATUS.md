@@ -15,4 +15,6 @@ Updated by the CTO on 13 October 2026, at the BT11b close.
 
 ## Next
 
+**K16** is briefed and ready when named: a demo video the kitchen makes by itself, with no screen, cloud session or token ([waves/K16.md](waves/K16.md)). It records a real run of the BT11b journey in the sandbox with the project's own Playwright. Send `START.md: K16`.
+
 No wave is named. Ready when wanted: the Devin Cloud recording of the real flow — paste `kitchen/demo/RECORDING.md` into a desktop-mode session with the sandbox-only token as a secret.
