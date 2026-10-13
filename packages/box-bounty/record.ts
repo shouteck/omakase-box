@@ -13,19 +13,24 @@
 // commit, so `git gc --prune=now` cannot take the bytes the identifier names.
 // `close` removes the ref.
 
+import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { instructionNotices, syncInstructions } from './instructions.js';
 import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
-import { publishListed, publishLists, shipRules } from './never-ship.js';
+import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import { requireRepository } from './repository.js';
-import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
+import { renderListing } from './create.js';
+import type { BountyManifest } from './manifest.js';
+import { loadSettings, localFirstMergeLine, readDecision, readReward, rewardNoticeLine } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
 import { quoteForeign, showPath } from './answer.js';
+
+const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
 
 export type OpenStage = 'drafted' | 'confirmed' | 'waiting' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
@@ -198,6 +203,11 @@ export interface BountyRecord {
   /** sha256 of the exact bounty.json bytes `create` wrote: the answer's manifest
       must come back byte-identical, which is what binds it to this bounty. */
   readonly manifestSha256?: string;
+  /** The reward bound at posting (BT11a): the whole-dollar amount in force
+      the moment the bounty went out. A bounty keeps it for life — later
+      changes to the owner's setting are for later bounties. Absent on
+      records posted before BT11a, which read as $0. */
+  reward?: { readonly amount: number };
   stage: BountyStage; // the latest event's stage, denormalized for a one-glance read
   /** Absolute path of the bounty folder `create` wrote. The record lives on the
       machine that made the bounty, so an absolute path is honest. */
@@ -374,6 +384,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (attempt === null || typeof attempt !== 'object' || !Number.isInteger(attempt.n) || attempt.n < 1 || typeof attempt.commit !== 'string' || !sha.test(attempt.commit)) return null;
     if (attempt.pullRequest !== undefined && (!Number.isSafeInteger(attempt.pullRequest) || attempt.pullRequest < 1)) return null;
   }
+  if (record.reward !== undefined && (!object(record.reward) || typeof record.reward.amount !== 'number' || !Number.isSafeInteger(record.reward.amount) || record.reward.amount < 0 || Object.keys(record.reward).some(key => key !== 'amount'))) return null;
   if (record.answer !== undefined && record.answer !== null && (typeof record.answer !== 'object' || typeof record.answer.commit !== 'string' || !sha.test(record.answer.commit))) return null;
   if (record.conflicts !== undefined && record.conflicts !== null && (typeof record.conflicts !== 'object' || !strings(record.conflicts.paths) || typeof record.conflicts.at !== 'string' || !stamp.test(record.conflicts.at))) return null;
   const github = record.github;
@@ -583,8 +594,10 @@ export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string
       `the owner answers this one with: box bounty allow ${id}`
     ];
   }
+  const { amount } = readReward();
   return [
     'Ask the owner in your own words. Bounties are public under the owner\'s GitHub account. A solution the agent chooses is merged into the owner\'s code. This decision covers this repository only.',
+    `Each bounty states the reward the owner has set — $${amount}${amount === 0 ? ', so no payment is promised' : ', a promise in the owner\'s name paid by hand'}. They set it with: box bounty config set reward <whole dollars>`,
     'These are the same choices shown by bare box bounty config:',
     `  ${DECISION_WORDS.allow}: box bounty allow`,
     `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
@@ -602,6 +615,42 @@ export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string
 const EVENT_COMMAND_VIEW: Record<string, string> = { answer: 'look', reject: 'close', withdraw: 'close', undo: 'revert', confirm: 'post', 'owner answer': 'allow', 'owner allow': 'allow', 'owner ask': 'allow --ask', 'owner off': 'deny', 'owner on': 'allow', 'owner setup': 'config', 'owner summary': 'status --since' };
 const historyJson = (event: StageEvent): string =>
   JSON.stringify(event.command === undefined || EVENT_COMMAND_VIEW[event.command] === undefined ? event : { ...event, command: EVENT_COMMAND_VIEW[event.command] });
+
+// What open bounties here promise: the sum of the reward bound into each
+// open record at posting (BT11a). Records from before then carry none and
+// count as $0 — closing a bounty, merged or not, ends its count because the
+// record is no longer open. This repository is what the tool can see; the
+// owner keeps the limit with that horizon in mind.
+export function promisedTotal(open: readonly ListedBounty[]): number {
+  return open.reduce((sum, entry) => sum + (entry.record?.reward?.amount ?? 0), 0);
+}
+
+// The reward side of `status`/`config`: what each new bounty will state, what
+// open bounties here already promise, the owner's limit and what is left of
+// it. A record written before BT11a counts $0 — the amount it was posted with.
+function rewardStatusLine(open: readonly ListedBounty[]): string {
+  const { amount, limit } = readReward();
+  const promised = promisedTotal(open);
+  const stated = amount === 0 ? 'each new bounty states $0 — no payment is promised' : `each new bounty states $${amount} — a promise in the owner's name, paid by hand`;
+  const counted = limit === null ? `open bounties here promise $${promised}; no limit is set` : `open bounties here promise $${promised} of a $${limit} limit — $${limit - promised} left`;
+  return `reward: ${stated}; ${counted}; the owner sets both in box bounty config`;
+}
+
+// The money gate every fresh post passes (BT11a): the reward in force now,
+// checked against the owner's limit on what open bounties promise. Runs
+// before anything is written — a refused post changes nothing. The
+// needs-limit refusal also covers a hand-edited settings file: the shape is
+// checked on load, but reward>limit is a rule about the pair, enforced where
+// it is written and again where it is spent.
+export function rewardForPost(repoRoot: string): { readonly amount: number } {
+  const { amount, limit } = readReward();
+  if (amount > 0) {
+    if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`} — the owner sets the most that may be promised with box bounty config set reward-limit <whole dollars>; nothing was posted`);
+    const promised = promisedTotal(listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+    if (promised + amount > limit) throw new BountyRefused('promise-limit-exceeded', `posting would bring promised rewards to $${promised + amount} across this repository's open bounties — the owner's limit is $${limit}; nothing was posted`);
+  }
+  return { amount };
+}
 
 // Cold-read surface for a fresh agent: every open bounty with id, stage, its
 // attempts (passing first), the top attempt's fact report, a fresh merge read
@@ -658,6 +707,9 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   }
   for (const entry of listed) if (entry.record?.github?.formatRepair !== undefined) lines.push(`${entry.record.id} GitHub format update: ${entry.record.github.formatRepair}`);
   lines.push(ownerStatusLine(repoRoot));
+  lines.push(rewardStatusLine(open));
+  const rewardNotice = rewardNoticeLine();
+  if (rewardNotice !== null) lines.push(rewardNotice);
   const localMerge = localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);
   for (const [address, notice] of Object.entries(loadSettings().firstMerges)) {
@@ -801,7 +853,7 @@ export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
-    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --to github --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states a reward of $0.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --to github --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states the owner\'s reward — $0 until the owner sets one in box bounty config.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    snapshot the repository minus never-ship files, with the task and a note; prints the preview → drafted',
@@ -978,19 +1030,37 @@ export function postBounty(repoRoot: string, id: string, toDir: string, opts?: {
   if (record.stage !== 'confirmed' && record.stage !== 'drafted' && record.stage !== 'waiting') {
     throw new BountyRefused('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted`);
   }
+  // A project file cannot name money or publish lists — claims are refused
+  // by name before anything else, so a refused post writes nothing.
+  checkProjectClaims(repoRoot);
+  // The amount in force at posting is what the record binds and the listing
+  // states (BT11a) — checked before anything else so a refused post writes
+  // nothing: no wait, no record change, no folder copy.
+  const reward = rewardForPost(repoRoot);
   if (!confirmed && opts?.answered !== true) ownerGate(repoRoot, record, { for: 'post', to: toDir });
   if (!existsSync(record.folder) || !statSync(record.folder).isDirectory()) {
     throw new BountyRefused('folder-missing', `the recorded bounty folder ${record.folder} is gone — recreate it with box bounty create, or run box bounty close ${id} to end this bounty`);
   }
+  const manifestBytes = readFileSync(join(record.folder, 'bounty.json'));
   let manifestId: string | null = null;
+  let manifest: BountyManifest | null = null;
   try {
-    const parsed = JSON.parse(readFileSync(join(record.folder, 'bounty.json'), 'utf8')) as { id?: unknown };
+    const parsed = JSON.parse(manifestBytes.toString('utf8')) as { id?: unknown };
     manifestId = typeof parsed.id === 'string' ? parsed.id : null;
+    manifest = parsed as BountyManifest;
   } catch {
     manifestId = null;
   }
   if (manifestId !== id) {
     throw new BountyRefused('folder-mismatch', `${join(record.folder, 'bounty.json')} does not name bounty ${id} — the recorded folder is not the bounty it should deliver`);
+  }
+  record.reward = { amount: reward.amount };
+  // The listing states the amount bound now — rewritten whenever the manifest
+  // parses as this bounty, so an edited bounty.json or README can never ship
+  // a money line the owner did not set. The manifest bytes themselves ship
+  // as found: they carry no reward.
+  if (manifest !== null) {
+    writeFileSync(join(record.folder, 'README.md'), renderListing(manifest, manifest.note ?? null, reward.amount));
   }
   const dest = resolve(toDir);
   const destReal = canonicalForNew(dest);

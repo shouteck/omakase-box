@@ -10,6 +10,7 @@ import type { NeverShipRule } from './never-ship.js';
 import { looksBinary, scanText } from './github.js';
 import type { ScanHit } from './github.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
+import { readReward } from './settings.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -238,7 +239,7 @@ export function licenceOf(manifest: BountyManifest): { file: string | null; decl
   return { file, declared: null };
 }
 
-export function renderListing(manifest: BountyManifest, note: { file: string; text: string } | null): string {
+export function renderListing(manifest: BountyManifest, note: { file: string; text: string } | null, reward: number): string {
   const licence = licenceOf(manifest);
   const lines: string[] = [];
   lines.push(`# Bounty: ${manifest.title}`);
@@ -277,7 +278,8 @@ export function renderListing(manifest: BountyManifest, note: { file: string; te
   lines.push('back untouched. Nothing in an answer is ever run — the poster reads the');
   lines.push('change and decides.');
   lines.push('');
-  lines.push('reward: $0');
+  lines.push(`reward: $${reward}`);
+  if (reward > 0) lines.push('payment is the poster\'s to make by hand — posting an answer does not guarantee it.');
   lines.push(licence.file !== null
     ? `licence: ${licence.file}${licence.declared !== null ? ` (package.json declares ${licence.declared})` : ''}`
     : 'licence: no licence file was found in the shipped set');
@@ -311,6 +313,7 @@ export function renderPreview(plan: BountyPlan): string {
   }
   lines.push(`  title: ${plan.title}`);
   lines.push(`  why: ${plan.why} (record only — never shipped)`);
+  lines.push(`  reward: $${readReward().amount} in force now — a posted bounty states the amount in force at posting`);
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
@@ -520,7 +523,10 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     };
     const manifestJson = JSON.stringify(manifest, null, 2) + '\n';
     writeFileSync(join(staging, 'bounty.json'), manifestJson);
-    writeFileSync(join(staging, 'README.md'), renderListing(manifest, note));
+    // The draft listing states the reward in force at create; a folder post
+    // rewrites it with the amount in force at posting, which is the amount
+    // the record binds (BT11a).
+    writeFileSync(join(staging, 'README.md'), renderListing(manifest, note, readReward().amount));
     if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
     renameSync(staging, outDir);
     // With the folder in place, make it reachable later: pin the snapshot

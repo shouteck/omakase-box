@@ -277,6 +277,10 @@ if (command === 'export') {
       console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: bountyArgs.includes('--full'), comments: bountyArgs.includes('--comments') }));
       if (since !== undefined) console.log(renderSummary(root, since));
     } else if (subcommand === 'post') {
+      // Money is the owner's to set, never the agent's (BT11a): post takes no
+      // amount flag — each spelling an agent might try is a named refusal.
+      const amountFlag = bountyArgs.find(arg => ['--reward', '--amount', '--price', '--pay', '--payment', '--limit', '--budget', '--dollars'].includes(arg));
+      if (amountFlag !== undefined) throw new BountyRefused('reward-agent-set', `${amountFlag} names money — the reward is the owner's to set, never the agent's; post takes no amount. The owner sets it with box bounty config set reward <whole dollars>`);
       const toIndex = bountyArgs.indexOf('--to');
       const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
       const [id, ...extraIds] = commandIds();

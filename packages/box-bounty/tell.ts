@@ -1,9 +1,14 @@
 import { attemptsOf, isOpenStage, listRecords, ownerStatusLine, renderOpenLine } from './record.js';
 import { instructionBlock } from './instructions.js';
-import { DESCRIBE_LINES, renderRulesBlock } from './wording.js';
+import { readReward } from './settings.js';
+import { DESCRIBE_LINES, describeRewardLine, renderRulesBlock } from './wording.js';
 
 export function renderDescribe(repoRoot: string | null): string {
-  const lines: string[] = [...DESCRIBE_LINES, ''];
+  const { amount } = readReward();
+  // The reward sentence sits where the frozen text ended its thought — the
+  // amount is generated from the owner's setting, never hard-coded.
+  const at = DESCRIBE_LINES.indexOf('available.');
+  const lines: string[] = [...DESCRIBE_LINES.slice(0, at + 1), describeRewardLine(amount), ...DESCRIBE_LINES.slice(at + 1), ''];
   if (repoRoot === null) {
     lines.push('the facts for choosing need a repository: run inside a checkout or pass --repo <path>.');
     return lines.join('\n');
@@ -20,7 +25,9 @@ export function renderDescribe(repoRoot: string | null): string {
     return Number.isFinite(hours) && hours >= 0 ? [hours] : [];
   });
   lines.push('the facts for choosing, from this project\'s records:');
-  lines.push('  cost: GitHub posting is public and free; every bounty states a reward of $0. No payment exists. A draft is free; preparing and judging solutions takes your time.');
+  lines.push(amount === 0
+    ? '  cost: GitHub posting is public and free; every bounty states a reward of $0. No payment exists. A draft is free; preparing and judging solutions takes your time.'
+    : `  cost: GitHub posting is public and free; every bounty states a reward of $${amount} — the owner pays it by hand, and posting an answer does not guarantee it. A draft is free; preparing and judging solutions takes your time.`);
   if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet. Nobody is known to be watching these issues yet.');
   else lines.push(`  expected wait: ${waits.length === 0 ? 'no solution wait recorded yet' : `${Math.min(...waits).toFixed(1)} to ${Math.max(...waits).toFixed(1)} hours from posting to the first solution recorded, across ${waits.length} bounty/bounties`}; ${merged.length} of ${ended.length} ended posted bounties had a solution merged. Past waits do not predict the next answer.`);
   lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing. Choosing is yours.');

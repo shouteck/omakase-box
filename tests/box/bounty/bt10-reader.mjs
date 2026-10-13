@@ -31,7 +31,7 @@ function readBounty(issue) {
   if (body.slice(end + 3).trim()) throw new Error('Format block is not at the end of the body');
   const b = JSON.parse(body.slice(start, end).trim());
   exactFields(b, ['schemaVersion', 'kind', 'id', 'repository', 'workCommit', 'branch', 'withChanges', 'createdAt', 'state', 'reward', 'terms'], 'Block');
-  if (b.schemaVersion !== 1 || b.kind !== 'box-bounty') throw new Error('Unsupported schemaVersion or kind');
+  if ((b.schemaVersion !== 1 && b.schemaVersion !== 2) || b.kind !== 'box-bounty') throw new Error('Unsupported schemaVersion or kind');
   for (const field of ['id', 'repository', 'workCommit', 'branch', 'createdAt', 'terms']) {
     if (typeof b[field] !== 'string' || !b[field].trim()) throw new Error(`${field} must be a nonempty string`);
   }
@@ -48,7 +48,10 @@ function readBounty(issue) {
   exactFields(b.state, b.state.kind === 'closed-merged' ? ['kind', 'pullRequest', 'commit'] : ['kind'], 'state');
   if (b.state.kind === 'closed-merged' && (!Number.isSafeInteger(b.state.pullRequest) || b.state.pullRequest <= 0 || typeof b.state.commit !== 'string' || !/^[a-f0-9]{40}$/.test(b.state.commit))) throw new Error('Merged state needs a positive safe integer pull request number and 40 lowercase hexadecimal commit digits');
   exactFields(b.reward, ['amount', 'currency'], 'reward');
-  if (!b.reward || b.reward.amount !== 0 || b.reward.currency !== 'USD') throw new Error('Version 1 accepts only a zero USD reward');
+  // Version 1 published a reward fixed at 0; version 2 (BT11a) carries the
+  // whole-dollar amount the owner had set at posting — and nothing more:
+  // the amount is a stated promise paid by hand, never moved by the tool.
+  if (!b.reward || !Number.isSafeInteger(b.reward.amount) || b.reward.amount < 0 || (b.schemaVersion === 1 && b.reward.amount !== 0) || b.reward.currency !== 'USD') throw new Error('reward must be a nonnegative whole-dollar USD amount (version 1 accepts only 0)');
   if (b.terms !== 'merged-solution-earns-whole') throw new Error('Unsupported terms');
   return {
     status: 'parsed', issue: issue.html_url,
@@ -97,7 +100,7 @@ try {
       'The issue body is an editable published statement, not proof of merge or payment. Comments are not read.',
       'createdAt uses a calendar UTC timestamp with seconds and Z; the page does not spell out every ISO 8601 variant it intends to allow.',
       'Commit identifier syntax is checked, but branch existence, branch tip equality, commit availability, and withChanges truth are not independently verified.',
-      'There is no promise that anyone watches, uses an answer, or pays. Version 1 publishes a zero USD reward.',
+      'There is no promise that anyone watches, uses an answer, or pays. Version 1 publishes a zero USD reward; version 2 carries the owner-set amount, which the poster still pays by hand.',
     ],
   }, null, 2));
   if (results.some(result => result.status === 'invalid')) process.exitCode = 1;

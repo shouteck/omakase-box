@@ -3,12 +3,14 @@
 GitHub posting is public and free, only to the project's own repository when
 it is already public. Anyone can read the issue and the bounty branch. Nobody
 is known to be watching these issues yet; the wait is unknown and every bounty
-states a reward of $0 — no payment exists. Private repositories and unreadable
+states the owner's reward — $0 by default, so no payment is promised. Private
+repositories and unreadable
 visibility are refused with no override. A local folder remains available on
 every repository.
 
 GitHub issues carry the [versioned public format](BOUNTY-FORMAT.md) for readers
-that use none of this tool's code. The reward is fixed at zero USD, and the
+that use none of this tool's code. The block's reward is the amount the owner
+had set when the bounty was posted — zero USD until the owner sets one — and the
 merged solution earns the whole reward. `status` compares the issue body's
 block with the local record and reports absent, invalid, matching, or changed
 metadata. The issue block never overrides the record. Older issues without a
@@ -290,7 +292,8 @@ is uploaded**; otherwise only the new commits go up, identifiers unchanged.
 The issue says the task, what was tried, the branch to branch from and the
 commit it is based on, whether the branch carries the poster's work in progress
 and how and how many commits, how to answer (fork, branch from the bounty branch,
-pull request against it), the reward ($0) and the licence as a fact — and carries the
+pull request against it), the reward (the owner's amount in force at posting)
+and the licence as a fact — and carries the
 `box-bounty` label, created on the repository when missing. The issue address,
 number and branch are kept in the local record and shown by `status` and the
 open-bounties line.
@@ -408,6 +411,23 @@ The owner has three words:
   `ask` asks before publishing in projects with no entry.
   `config add repositories owner/name` and `config remove repositories
   owner/name` change the same list as allow and deny.
+- `config set reward <whole dollars>` is the amount each new bounty states —
+  whole US dollars, 0 by default. `config set reward-limit <whole dollars>`
+  is the most that may be promised across open bounties; a reward above $0
+  cannot be set without a limit at or above it, and a limit cannot sit below
+  the reward. A posted bounty keeps the amount it was posted with; a change
+  while bounties are open says so, and closing a bounty — merged or not —
+  stops its amount counting. `status` and bare `config` show the reward, the
+  limit, what open bounties promise and what is left. The first amount above
+  0 gets one plain sentence: it is a promise, made in the owner's name, that
+  the owner pays by hand — the tool never moves money.
+
+The agent is asked nothing about money. `create` and `post` take no amount
+flag — each money spelling is a named refusal (`reward-agent-set`) — and a
+project file claiming a reward or a limit is refused by name
+(`project-claims-reward`); both live in the owner's settings only. A post
+that would pass the limit refuses by name (`promise-limit-exceeded`) with
+both numbers and changes nothing.
 
 Nothing written grants nothing. A repository entry overrides the default.
 Every change retains the previous value and its time. Legacy folder entries
@@ -560,7 +580,7 @@ inside it.
 attention and the next command. A solution already shown but not decided
 includes its age. `describe` explains what the tool does and when it is worth
 using, then generates cost and wait facts from the project records each time.
-GitHub posting is public and free, and every bounty states a $0 reward.
+GitHub posting is public and free, and every bounty states the owner's reward — $0 by default.
 With no past posted bounty it says there is no history yet. Otherwise it
 reports waits from the recorded posting time to the first recorded solution
 observation and how many ended posted bounties had
@@ -877,7 +897,8 @@ still wins when given.
 ```
 <out>/
   README.md      the listing: what is wanted, what was already tried, where the
-                 code is, what was kept out, how to answer, the reward ($0) and
+                 code is, what was kept out, how to answer, the reward (the
+                 amount in force at posting) and
                  the licence fact — enough for a stranger to act on
   bounty.json    the manifest: id, title, task, note, the licence fact, the
                  snapshot identifier, every shipped file's sha256 + bytes,

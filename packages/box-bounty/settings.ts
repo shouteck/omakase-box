@@ -37,6 +37,20 @@ export interface OwnerSettings {
       a never-ship rule; `safe` paths are the ones the pre-publish scan does
       not hold a bounty over. Both live here and never in the project. */
   readonly publishing?: Readonly<Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }>>;
+  /** The reward each new bounty states (BT11a): whole US dollars, 0 by
+      default. The owner's to set, never the agent's — `config set reward`.
+      `at` is when the setting last changed. */
+  readonly reward?: { readonly amount: number; readonly at: string };
+  /** The most that may be promised across open bounties (BT11a): whole US
+      dollars. A reward above 0 cannot be set without one at or above it. */
+  readonly rewardLimit?: { readonly amount: number; readonly at: string };
+  /** When the tool once said, in plain words, what a reward is — recorded so
+      it is said once ever, at the first amount above 0. */
+  readonly rewardPromiseSaid?: string;
+  /** When the once-only "a reward can now be set" fact was shown to an owner
+      whose settings predate the reward settings — recorded so it is shown
+      once ever. */
+  readonly rewardNoticeAt?: string;
 }
 export const projectKey = requireRepository;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -45,7 +59,7 @@ const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', '
 export function unknownSetting(name: string): never {
   const folded = name.toLowerCase().replace(/[-_]/g, '');
   const hard = HARD_STOP_WORDS.some(word => folded.includes(word));
-  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file'}. Nothing changed`);
+  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit'}. Nothing changed`);
 }
 const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; fix the settings file or remove it`); };
 function change(value: unknown, where: string): Change {
@@ -69,6 +83,18 @@ function persist(settings: OwnerSettings): void {
 // publish lists, which are validated in never-ship.ts before they land here.
 export const saveSettings = persist;
 
+/** A money setting holds {amount, at}: a whole US-dollar amount at or above
+    0 and the time the tool wrote it. A hand-written or malformed entry fails
+    loudly — the tool never guesses what the file means; an unknown key inside
+    it is named like every other unknown setting. */
+function moneySetting(value: unknown, where: string): { readonly amount: number; readonly at: string } {
+  if (!isObject(value)) return bad(`${where} must hold {amount, at} — a whole dollar amount at or above 0`);
+  for (const name of Object.keys(value)) if (!['amount', 'at'].includes(name)) unknownSetting(name);
+  const amount = value['amount'];
+  if (typeof amount !== 'number' || !Number.isSafeInteger(amount) || amount < 0 || typeof value['at'] !== 'string') return bad(`${where} must hold a whole dollar amount at or above 0 with its written time`);
+  return { amount, at: value['at'] };
+}
+
 // Consume legacy paths once. Unresolved paths grant nothing under a blanket
 // default, and conflicting copies require a fresh repository decision.
 export function loadSettings(): OwnerSettings {
@@ -77,7 +103,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'rewardPromiseSaid', 'rewardNoticeAt'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -134,7 +160,7 @@ export function loadSettings(): OwnerSettings {
       publishing[key] = { never: lists(value['never'] ?? []), safe: lists(value['safe'] ?? []) };
     }
   }
-  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }) };
+  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(parsed['reward'] === undefined ? {} : { reward: moneySetting(parsed['reward'], 'reward') }), ...(parsed['rewardLimit'] === undefined ? {} : { rewardLimit: moneySetting(parsed['rewardLimit'], 'rewardLimit') }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}) };
   const legacy = parsed['projects'];
   if (legacy === undefined) return settings;
   if (!isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
@@ -162,6 +188,29 @@ export function loadSettings(): OwnerSettings {
   }
   persist(settings);
   return settings;
+}
+
+/** The reward each new bounty will state and the most that may be promised
+    across open bounties — the owner's two settings, never the agent's. A
+    settings file written before BT11a reads as $0 with no limit, so owners
+    who configured before then are never interrupted. */
+export function readReward(): { readonly amount: number; readonly limit: number | null } {
+  const settings = loadSettings();
+  return { amount: settings.reward?.amount ?? 0, limit: settings.rewardLimit?.amount ?? null };
+}
+
+/** The once-only fact shown to an owner whose settings predate the reward
+    settings: that a reward can now be set, and the command. Returns the line
+    the first time it applies and persists that it was shown — an owner is
+    told once ever, and a fresh settings file (no decisions written yet) is
+    not told at all: first use already carries the reward fact. */
+export function rewardNoticeLine(): string | null {
+  const settings = loadSettings();
+  if (settings.reward !== undefined || settings.rewardNoticeAt !== undefined) return null;
+  if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
+  const at = new Date().toISOString();
+  persist({ ...settings, rewardNoticeAt: at });
+  return `bounties can now state a reward — the owner sets it with box bounty config set reward <whole dollars>. Until then every bounty states $0 (noted ${at})`;
 }
 
 export interface DecisionRead {

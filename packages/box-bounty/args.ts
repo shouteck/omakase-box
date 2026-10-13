@@ -33,6 +33,10 @@ export interface CreateArgs {
 
 const VALUE_FLAGS = new Set(['--why', '--title', '--task', '--note', '--job', '--resume', '--out', '--repo']);
 const REMOVED_FLAGS = new Set(['--setup', '--check', '--guard']);
+// Money is the owner's to set, never the agent's (BT11a): create and post
+// take no amount flag at all, and each spelling an agent might try is a
+// named refusal, not a silent drop.
+const AMOUNT_FLAGS = new Set(['--reward', '--amount', '--price', '--pay', '--payment', '--limit', '--budget', '--dollars']);
 const FLAG_NAMES = new Set([...VALUE_FLAGS, '--preview']);
 
 export function parseCreateArgs(argv: readonly string[]): CreateArgs {
@@ -52,6 +56,8 @@ export function parseCreateArgs(argv: readonly string[]): CreateArgs {
       i += 1;
     } else if (REMOVED_FLAGS.has(token)) {
       throw new BountyRefused('checks-removed', `${token} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; pass --task <file> and --why "<one line>" (and --note <file> if you have one)`);
+    } else if (AMOUNT_FLAGS.has(token)) {
+      throw new BountyRefused('reward-agent-set', `${token} names money — the reward is the owner's to set, never the agent's; create takes no amount. The owner sets it with box bounty config set reward <whole dollars>`);
     } else if (token === '--preview') {
       once(token);
       parsed.preview = true;
