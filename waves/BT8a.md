@@ -18,12 +18,19 @@ The owner's side of the tool is as small and as safe by default as the owner ask
 
 - `node scripts/verify.mjs test:box-bounty test:box-package` exits 0 on the final commit; the suites reach no network.
 
-**One repository by default**
+**A list of allowed repositories (owner, 13 October 2026)**
+
+- The owner's yes is a list of repositories, and the owner can manage it as one: add the repository they are in; add a repository by naming it, without being inside it; show the list, with when each was added and whether it is allowed or "ask me each time"; remove one. First use's "allow this repository" adds it to the list.
+- **A repository is named by its GitHub address** (owner and name), not by its folder. The yes is about bounties being posted publicly to that repository under the owner's account, so that is what is listed. Every copy of the repository on this machine is covered; a different repository at the same folder path is not; a fork is a different repository. The cook may argue for another identity in the Result only by showing this one fails a case below.
+- A repository with no GitHub address cannot be listed, and the refusal says so by name. An entry written by BT8 under a folder path is read once, moved to the address of the repository at that path if there is exactly one and it can be read, and otherwise reported with the command that re-adds it; it is never silently kept as a yes for whatever sits at that path.
+- Removing a repository from the list returns it to "nothing written"; bounties already open are untouched and `status` says the repository is no longer allowed.
+
+**One repository at a time by default**
 
 - The plain allow covers this repository and nothing else.
 - All the owner's projects is an explicit extra: its own word on the command, described in the setup view and the doc page, and **not offered in the first-use message**. Offered side by side, people pick the wider one to avoid being asked again, and a wide yes covers repositories that do not exist yet.
 - When an action goes ahead under the all-projects answer, the output says so in those words.
-- **What counts as "this repository" is stated in the doc page and tested.** A different repository later placed at the same folder path does not inherit the yes. A fork, or a clone under another address, is not silently treated as the same one. The Result says what identifies a repository and why.
+- **What counts as "this repository" is stated in the doc page and tested:** the cases above, plus a remote renamed after the yes, two remotes pointing at different repositories, and an address differing only in letter case or a trailing `.git`.
 
 **The two doors show one decision**
 
@@ -63,11 +70,11 @@ The owner's side of the tool is as small and as safe by default as the owner ask
 
 - A command that leaves a bounty waiting says so in its first line and exits in a way an agent host does not read as a crash; the Result states the exit status chosen for waiting states and why. No command waits for typed input.
 
-**Cases that must fail, each a named refusal that changes nothing:** the all-projects word misspelled or half given; a safe-list or never-publish entry that resolves outside the repository, is a link, or names a never-ship path as safe; either list claimed from a project file; "allow once" typed for a hit, which says what replaced it; an approval for something that is not waiting; an approval after the content changed.
+**Cases that must fail, each a named refusal that changes nothing:** adding a repository with no GitHub address, or a name that is not a repository address; removing one that is not listed; the all-projects word misspelled or half given; a safe-list or never-publish entry that resolves outside the repository, is a link, or names a never-ship path as safe; either list claimed from a project file; "allow once" typed for a hit, which says what replaced it; an approval for something that is not waiting; an approval after the content changed.
 
 ## Review lenses
 
-- [x] **Security:** the reviewer plays an agent that wants a flagged bounty out. It tries: reworking the content so the pattern no longer matches (and reports that it goes out and that the owner is told, as the doc page says); adding to the safe list from the project, through a solution, through a link or a case trick on the path; getting the value printed; making the hit vanish from the record or the summary; discarding and recreating the bounty to lose the hit's trace. It tries to make a yes for one repository apply to another: same path with a different repository, a fork, a clone elsewhere, a renamed remote. For each: prevented, or permitted but visible, and whether the doc page's claim matches.
+- [x] **Security:** the reviewer plays an agent that wants a flagged bounty out. It tries: reworking the content so the pattern no longer matches (and reports that it goes out and that the owner is told, as the doc page says); adding to the safe list from the project, through a solution, through a link or a case trick on the path; getting the value printed; making the hit vanish from the record or the summary; discarding and recreating the bounty to lose the hit's trace. It tries to make a yes for one repository apply to another: same path with a different repository, a fork, a second remote, a remote edited to claim a listed address while the bounty would go elsewhere, a lookalike address. For each: prevented, or permitted but visible, and whether the doc page's claim matches.
 - [x] **User experience:** three readers, each fresh. An agent whose post is held by a hit says what it may do, what it may not, and who decides, then removes the content and posts. An owner, played by the reviewer with only the setup view, allows one repository and adds one entry to each list, and says in their own words what each did. An owner who allowed "this one bounty" last time reads the next first-use message and says what is being asked. The reviewer reports anything shown that was not used, and any line addressed to the wrong reader.
 - [ ] **Measurement fairness:** not applicable.
 
