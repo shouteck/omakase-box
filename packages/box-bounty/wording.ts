@@ -29,8 +29,9 @@ export const DESCRIBE_LINES: readonly string[] = [
   'not worth it when: you can plainly do the work — a bounty has a cost and an',
   'answer takes time.',
   '',
-  'using it is always your call — create a draft any time; the owner\'s yes',
-  '(box bounty confirm) gates posting. box bounty help shows the whole journey.'
+  'using it is always your call — create a draft any time; posting needs the',
+  'owner to have allowed the tool once — a post that finds none waits and',
+  'prints the few lines to put to them. box bounty help shows the journey.'
 ];
 
 export const RULES_LINES: readonly string[] = [

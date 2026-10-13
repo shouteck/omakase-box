@@ -19,15 +19,17 @@ import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
-import { postGitHub, approveGitHub, refreshGitHubStatus, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
+import { postGitHub, refreshGitHubStatus, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
+import { readDecision } from './settings.js';
+import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
 import { quoteForeign, showPath } from './answer.js';
 
-export type OpenStage = 'drafted' | 'confirmed' | 'posted' | 'taken' | 'answered' | 'verified';
+export type OpenStage = 'drafted' | 'confirmed' | 'waiting' | 'posted' | 'taken' | 'answered' | 'verified';
 export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
 export type BountyStage = OpenStage | EndedStage;
 
-const OPEN_STAGES: ReadonlySet<BountyStage> = new Set(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'verified']);
+const OPEN_STAGES: ReadonlySet<BountyStage> = new Set(['drafted', 'confirmed', 'waiting', 'posted', 'taken', 'answered', 'verified']);
 export const isOpenStage = (stage: BountyStage): stage is OpenStage => OPEN_STAGES.has(stage);
 
 export interface StageEvent {
@@ -69,6 +71,32 @@ export interface Attempt {
   /** The fact report, rendered once when the answer came in — `look`/`apply`
       print it on collection and `status` replays it. Facts only, never a verdict. */
   readonly report: readonly string[];
+}
+
+// A held action (BT8): while the owner's decision is "ask"/"off" or nothing
+// is written, a post — and, for the outside close, any decision — becomes a
+// named waiting state instead of running. `for` says what waits; `to` and
+// `choice` keep the intended post so the owner's one answer can complete it;
+// `hits` are the secret-scan findings a publish is held on (file and line,
+// never the value).
+export interface WaitingFor {
+  readonly for: 'post' | 'close';
+  readonly reason: 'owner-allow' | 'owner-ask' | 'owner-off' | 'secrets' | 'untracked-file';
+  readonly at: string;
+  readonly to?: string;
+  readonly choice?: { readonly withChanges: boolean; readonly include: readonly string[] };
+  readonly hits?: readonly { readonly path: string; readonly line: number; readonly rule: string }[];
+}
+
+// Which answer of the owner's allowed a post (BT8): the standing decision
+// ("allowed", at a level) or the owner's one-bounty answer ("once"). The
+// decision's own write time rides along, so the record says which written
+// answer allowed it and when that answer was made.
+export interface AllowedBy {
+  readonly decision: 'allowed' | 'once';
+  readonly level: 'project' | 'default' | 'this-bounty';
+  readonly decisionAt: string | null;
+  readonly usedAt: string;
 }
 
 export interface AnswerSpec {
@@ -120,6 +148,11 @@ export interface BountyRecord {
       Cleared when a later apply lands. */
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
   events: StageEvent[];
+  /** Set while an action is held for the owner — the named waiting state
+      status and the open-bounties line show. Cleared when the action runs. */
+  waiting?: WaitingFor;
+  /** Recorded on the posted event: which answer of the owner's allowed it. */
+  allowedBy?: AllowedBy;
   github?: import('./github.js').GitHubPublication;
   /** The GitHub preview the owner confirmed. Approvals written since BT6a also
       carry the approved plan — the base/tip commits, the commits published
@@ -367,8 +400,9 @@ const notNext = (line: string): boolean => !line.trimStart().startsWith('next:')
 
 const nextStep = (record: BountyRecord): string => {
   switch (record.stage) {
-    case 'drafted': return `the owner's yes comes first — run box bounty confirm ${record.id} once they approve the preview`;
+    case 'drafted': return `deliver it — run box bounty post ${record.id} --to <dir|github> (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`;
     case 'confirmed': return `deliver it — run box bounty post ${record.id} --to <dir>`;
+    case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
     case 'posted': {
       if (record.github !== undefined) return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges; box bounty status ${record.id} --comments reads other accounts' comments`;
       const count = attemptsOf(record).length;
@@ -400,6 +434,43 @@ const nextStep = (record: BountyRecord): string => {
   }
 };
 
+// What a waiting bounty waits on, in one clause — used by status and by the
+// lines a held command prints.
+export function waitingSummary(record: BountyRecord): string {
+  const waiting = record.waiting;
+  if (waiting === undefined) return 'the owner decides';
+  const target = waiting.to === 'github' ? ' to GitHub' : waiting.to !== undefined ? ` to ${waiting.to}` : '';
+  switch (waiting.reason) {
+    case 'owner-allow': return `the owner has not allowed the tool — posting${target} waits for them (since ${waiting.at})`;
+    case 'owner-ask': return `the owner asked to be asked each time — this post${target} waits for them (since ${waiting.at})`;
+    case 'owner-off': return `the owner turned the permission off — this post${target} waits for them (since ${waiting.at})`;
+    case 'secrets': return `the pre-publish scan found ${waiting.hits?.length ?? 0} secret-shaped hit(s) — this post${target} waits for the owner (since ${waiting.at})`;
+    case 'untracked-file': return `an untracked file was named for publishing — this post${target} waits for the owner (since ${waiting.at})`;
+  }
+}
+
+// The lines a held post prints, addressed to the agent: what to put to the
+// owner and the one command they run. Owner commands exist under `box bounty
+// owner`, the plainly named group the description never offers an agent.
+export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string[] {
+  const id = record.id;
+  if (read.decision === 'ask' || read.decision === 'off') {
+    return [
+      `the owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off — it is on file marked off'}.`,
+      `the owner answers this one with: box bounty owner answer ${id}`
+    ];
+  }
+  return [
+    'the owner has not allowed this tool — that is the owner\'s to decide, and nothing else can decide it.',
+    'put this to them: an agent wants to post a bounty for this project. Allowing is one decision, made once:',
+    `  this project only:    box bounty owner allow --project --yes`,
+    `  every project:        box bounty owner allow --all --yes`,
+    `  this one bounty only: box bounty owner answer ${id}`,
+    'an owner who wants to be asked each time runs: box bounty owner ask --project',
+    '`box bounty owner setup` shows where things stand and the exact command for each step.'
+  ];
+}
+
 // History events record the command that drove them, and records written
 // while older commands existed keep those names on disk — history is never
 // rewritten. Status prints the vocabulary the agent can act on, so the view
@@ -414,6 +485,20 @@ const historyJson = (event: StageEvent): string =>
 // of the current code, and the next step; ended bounties one compact line; an
 // empty project says so and says what to do. `--comments` prints the issue's
 // comments marked as written by others. Never prints nothing.
+// The owner-decision line status always carries: what is written for this
+// repository and when it last changed. Nothing written says so — it is
+// never read as allowed.
+export function ownerStatusLine(repoRoot: string): string {
+  const read = readDecision(repoRoot);
+  const where = read.level === 'project' ? 'this project' : 'all projects';
+  switch (read.decision) {
+    case 'allowed': return `owner: allowed for ${where} (changed ${read.at})`;
+    case 'ask': return `owner: ask me each time (${where}, changed ${read.at})`;
+    case 'off': return `owner: off — the tool asks each time (${where}, changed ${read.at})`;
+    case null: return 'owner: nothing written — the first post will wait for the owner';
+  }
+}
+
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
   if (options.id !== undefined) loadRecord(repoRoot, options.id);
   const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
@@ -424,6 +509,9 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
+  lines.push(ownerStatusLine(repoRoot));
+  const limits = resolveLimits(repoRoot);
+  if (limits.legacyGithubDestination) lines.push(`  ${LEGACY_GITHUB_NOTE}`);
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
     if (options.id === undefined && ended.length === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
@@ -436,6 +524,10 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       // What an agent needs to act comes first; this is the bounty's one `next:`.
       lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
+      if (record.waiting !== undefined) {
+        for (const hit of record.waiting.hits ?? []) lines.push(`      scan hit: ${hit.path}:${hit.line} (${hit.rule})`);
+        lines.push(`      the owner answers this one with: box bounty owner answer ${record.id}`);
+      }
       if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
       // by another account — the issue is bound to this bounty first, so a
@@ -534,12 +626,11 @@ export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
-    'confirm <id> --to github previews exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>); post <id> --to github publishes it. status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states a reward of $0.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --to github --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states a reward of $0.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    snapshot the repository minus never-ship files, with the task and a note; prints the preview → drafted',
-    '  confirm   the owner\'s yes, recorded — the boundary nothing crosses without → confirmed',
-    '  post      first delivery: copies the folder to --to <dir>/<id>, or publishes the GitHub issue and branch → posted',
+    '  post      first delivery: copies the folder to --to <dir>/<id>, or publishes the GitHub issue and branch → posted — or waits on the owner',
     '  status    every open bounty, the pull requests waiting, the attempts and the next step; --comments prints comments written by others, marked as theirs',
     '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; a returned folder goes to --from <dir>; --full prints a large change',
     '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request; --from <dir> collects a returned folder — the recorded decision → applied',
@@ -582,18 +673,25 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
     ...(extra?.merge !== undefined ? { merge: extra.merge } : {})
   });
   record.stage = stage;
+  if (stage !== 'waiting') delete record.waiting; // a landed action is no longer held
   persistRecord(repoRoot, record);
 };
 
-export function confirmBounty(repoRoot: string, id: string, destination?: string, githubChoice?: import('./github.js').GitHubChoice): BountyRecord {
-  const record = loadRecord(repoRoot, id);
-  if (record.stage !== 'drafted' && !(destination === 'github' && record.stage === 'confirmed' && record.githubApproval === undefined)) {
-    throw new BountyRefused('not-drafted', `bounty ${id} is ${record.stage}, not drafted — only a drafted bounty can be confirmed`);
-  }
-  if (destination === 'github') record.githubApproval = approveGitHub(repoRoot, record, githubChoice ?? { withChanges: false, include: [] });
-  transitionTo(repoRoot, record, 'confirmed');
-  return record;
+// An action held for the owner: mark the record so status and the
+// open-bounties line show the named waiting state. A bounty already waiting
+// keeps its first wait time — the state does not move just because the same
+// held command ran again.
+export function waitForOwner(repoRoot: string, record: BountyRecord, waiting: WaitingFor): void {
+  record.waiting = waiting;
+  if (record.stage === 'waiting') persistRecord(repoRoot, record);
+  else transitionTo(repoRoot, record, 'waiting');
 }
+
+// `confirm` is removed (BT8): the owner allows the tool once, in the owner's
+// own settings — not once per bounty. Records already `confirmed` still
+// post: the owner's written yes on the record stands, and `post` verifies
+// the approved plan against live state as before (github-preview-stale).
+
 
 const toPosix = (path: string): string => path.split('\\').join('/');
 
@@ -624,8 +722,14 @@ export interface ResolvedLimits {
   readonly expectedAnswer: string | null;
   /** Canonical absolute path inside the repository, or null when unset. */
   readonly rulesFile: string | null;
-  /** Canonical absolute directories `post --to` must land inside; null = any. */
+  /** Canonical absolute directories `post --to <dir>` must land inside;
+      null = any. `github` is never a directory entry — before BT8 it named
+      the GitHub allowance; today it is reported once as legacy, never a yes. */
   readonly allowedDestinations: readonly string[] | null;
+  /** True when the limits file still names "github" — a destination
+      allowance from before the owner's decision moved to the settings
+      folder. Reported once, with the command that moves it; never a yes. */
+  readonly legacyGithubDestination: boolean;
 }
 
 export function resolveLimits(repoRoot: string): ResolvedLimits {
@@ -646,9 +750,14 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
     cost: limits.cost ?? null,
     expectedAnswer: limits.expectedAnswer ?? null,
     rulesFile,
-    allowedDestinations
+    allowedDestinations,
+    legacyGithubDestination: allowedDestinations?.includes('github') === true
   };
 }
+
+// The one notice a pre-BT8 "github" destination allowance earns, with the
+// command that moves the decision — printed once where it shows.
+export const LEGACY_GITHUB_NOTE = '`.box/limits.json` still names "github" in allowedDestinations — a destination allowance from before the owner\'s decision moved to the owner\'s own settings folder. It does not allow posting; `box bounty owner setup` shows the decision and the command that moves it. Drop "github" from allowedDestinations to retire this line';
 
 // The line the tool keeps current everywhere open bounties surface:
 // `.box/bounties/OPEN` and the marked block of the rules file the limits name.
@@ -700,13 +809,33 @@ function syncOpenSurfaces(repoRoot: string, limits: ResolvedLimits): void {
   if (limits.rulesFile !== null) rewriteRulesFile(limits.rulesFile, line);
 }
 
-export function postBounty(repoRoot: string, id: string, toDir: string): { record: BountyRecord; destination: string } {
-  if (toDir === 'github') return postGitHub(repoRoot, id);
+// The decision gate every post and every tool-driven outside close passes.
+// `answered` is true only inside `box bounty owner answer` — the owner's own
+// one command, which completes the held action without writing a standing
+// decision. Allowed or answered returns the read; anything else marks the
+// record waiting and refuses by name with the lines for the owner.
+export function ownerGate(repoRoot: string, record: BountyRecord, action: { for: 'post'; to: string; choice?: WaitingFor['choice'] }): { read: DecisionRead } {
+  const read = readDecision(repoRoot);
+  if (read.decision === 'allowed') return { read };
+  const reason = read.decision === 'ask' ? 'owner-ask' : read.decision === 'off' ? 'owner-off' : 'owner-allow';
+  waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}) });
+  throw new BountyRefused(
+    read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
+    [`${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(record, read)].join('\n')
+  );
+}
+
+export function postBounty(repoRoot: string, id: string, toDir: string, opts?: { answered?: boolean; choice?: import('./github.js').GitHubChoice }): { record: BountyRecord; destination: string } {
+  if (toDir === 'github') return postGitHub(repoRoot, id, opts);
   const record = loadRecord(repoRoot, id);
-  // The confirmed gate is the owner's-yes boundary: nothing is delivered before it.
-  if (record.stage !== 'confirmed') {
-    throw new BountyRefused('not-confirmed', `bounty ${id} is ${record.stage} — only a confirmed bounty may be posted. The owner's yes (box bounty confirm ${id}) is the boundary nothing crosses without`);
+  // A `confirmed` record carries the owner's own written yes from before the
+  // decision moved to the settings folder — it stands. `drafted` and
+  // `waiting` go through the owner gate below.
+  const confirmed = record.stage === 'confirmed';
+  if (record.stage !== 'confirmed' && record.stage !== 'drafted' && record.stage !== 'waiting') {
+    throw new BountyRefused('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted`);
   }
+  if (!confirmed && opts?.answered !== true) ownerGate(repoRoot, record, { for: 'post', to: toDir });
   if (!existsSync(record.folder) || !statSync(record.folder).isDirectory()) {
     throw new BountyRefused('folder-missing', `the recorded bounty folder ${record.folder} is gone — recreate it with box bounty create, or run box bounty close ${id} to end this bounty`);
   }
@@ -758,8 +887,24 @@ export function postBounty(repoRoot: string, id: string, toDir: string): { recor
   }
   mkdirSync(dirname(destination), { recursive: true });
   cpSync(record.folder, destination, { recursive: true }); // copy, not move — the recorded folder stays
+  record.allowedBy = allowedByFor(repoRoot, record, opts?.answered === true, confirmed);
   transitionTo(repoRoot, record, 'posted', { destination });
   return { record, destination };
+}
+
+// Which written answer of the owner's allowed this post: the standing
+// decision (with its level and when it was written), the owner's one-bounty
+// answer, or — for a pre-BT8 confirmed record — the owner's yes recorded on
+// the bounty itself.
+export function allowedByFor(repoRoot: string, record: BountyRecord, answered: boolean, legacyConfirmed: boolean): AllowedBy {
+  const usedAt = new Date().toISOString();
+  if (answered) return { decision: 'once', level: 'this-bounty', decisionAt: null, usedAt };
+  if (legacyConfirmed) {
+    const at = record.events.find(event => event.stage === 'confirmed')?.at ?? null;
+    return { decision: 'once', level: 'this-bounty', decisionAt: at, usedAt };
+  }
+  const read = readDecision(repoRoot);
+  return { decision: 'allowed', level: (read.level ?? 'project') as 'project' | 'default', decisionAt: read.at, usedAt };
 }
 
 export interface CloseOutcome {

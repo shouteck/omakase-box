@@ -23,16 +23,29 @@ node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>"
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty look [id] (<n> | --from <dir>) [--full] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply [id] [<n> | --from <dir>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
 ```
 
-The commands BT7c folded away — `answer`, `questions`, `reply`, `undo`,
-`reject`, `withdraw` and `remind` — each refuse by name (`command-removed`)
-and say what took their place; none survives as a hidden alias.
+The owner-facing group — plainly named, never offered to an agent by the
+description; the only commands that write or widen the owner's decision:
+
+```
+node packages/box-cli/dist/cli.js bounty owner setup [--repo <path>]
+node packages/box-cli/dist/cli.js bounty owner allow [--project|--all] [--yes]
+node packages/box-cli/dist/cli.js bounty owner ask [--project|--all]
+node packages/box-cli/dist/cli.js bounty owner off [--project|--all]
+node packages/box-cli/dist/cli.js bounty owner on [--project|--all] [--yes]
+node packages/box-cli/dist/cli.js bounty owner answer <id> [--repo <path>]
+node packages/box-cli/dist/cli.js bounty owner summary [--since <iso>] [--repo <path>]
+```
+
+The commands folded away — `answer`, `questions`, `reply`, `undo`,
+`reject`, `withdraw`, `remind` (BT7c) and `confirm` (BT8) — each refuse by
+name (`command-removed`) and say what took their place; none survives as a
+hidden alias.
 
 A fresh copy — a git clone, or the snapshot a bounty ships — contains no
 `node_modules` and no built output, so `dist/cli.js` is missing until three
@@ -67,10 +80,10 @@ PATH lookups, never a spawned probe.
 
 Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
 anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
-bounty's record; nothing else leaves the machine until `confirm` + `post` —
-and `post` copies to a local folder you name or publishes the confirmed GitHub
-listing and shipped source. Every outcome is a
-named state: success ends `stage 1 of 7: drafted`; refusals print
+bounty's record; nothing else leaves the machine until `post` —
+and `post` copies to a local folder you name or publishes the GitHub
+listing. Every outcome is a
+named state: refusals print
 `refused (<name>)` and exit 3; usage errors exit 2; operational failures
 exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
@@ -200,11 +213,11 @@ destination and one push destination, both naming the same GitHub repository.
 Before any push, the tool reads that exact repository's visibility and refuses
 private or unreadable visibility.
 
-For a prepared bounty, show exactly what becomes public before the owner
-approves it:
+For a prepared bounty, show exactly what becomes public before anything is
+published:
 
 ```
-node packages/box-cli/dist/cli.js bounty confirm <id> --to github --preview
+node packages/box-cli/dist/cli.js bounty post <id> --to github --preview
 ```
 
 This changes nothing. It asks the remote what it already has — fetched refs,
@@ -247,19 +260,18 @@ path is refused (`github-never-ship`) and publishes nothing. A branch sharing
 no commit with the remote has nothing public to point solvers at
 (`github-no-public-base`); a local folder is still available.
 
-Once the owner approves that text, `.box/limits.json` must include `"github"`
-in `"allowedDestinations"`. An absent list permits local folders only. Then:
+Posting is gated once by the owner's decision, not per bounty — see *The
+owner's one decision* below. With the tool allowed:
 
 ```
-node packages/box-cli/dist/cli.js bounty confirm <id> --to github [--with-changes] [--include <file>]
-node packages/box-cli/dist/cli.js bounty post <id> --to github
+node packages/box-cli/dist/cli.js bounty post <id> --to github [--with-changes] [--include <file>]
 ```
 
-Confirmation records the whole approved plan — base commit, tip commit, the
-first-published commits, the work-in-progress lists and the choices. Posting
-recomputes the plan against live state first: a moved branch, changed working
-state, a moved remote, or a named file that drifted is `github-preview-stale`
-— the preview and the push can never disagree. When nothing local was needed,
+Before the push, the pre-publish scan reads everything that would be
+published for the first time — see *The pre-publish scan* below. A limits
+file that still names `"github"` in `"allowedDestinations"` is a legacy
+allowance: it is reported once, grants nothing, and the command that moves
+the decision is named. When nothing local was needed,
 the branch is a name pointing at the existing commit and **zero file content
 is uploaded**; otherwise only the new commits go up, identifiers unchanged.
 The issue says the task, what was tried, the branch to branch from and the
@@ -343,6 +355,101 @@ parentless snapshot commit on the branch — still load: `status` marks them
 way. The local-folder post and answer path is unchanged and still uses the
 snapshot.
 
+## The owner's one decision
+
+Posting, merging and closing need no approval once the owner has allowed the
+tool — that is what the tool is for, and a separate approval for each would
+show a control the tool does not have: an agent with Git and `gh` could do
+any of it by itself. One decision remains, made once: *"my agents may use
+this tool."*
+
+The decision is kept in the owner's own settings folder on this machine,
+**outside every repository** — never committed, never cloned, out of reach
+of a solution, a pull request or a collaborator:
+
+- Windows: `%APPDATA%\box\settings.json`
+- elsewhere: `$XDG_CONFIG_HOME/box/settings.json`, or `~/.config/box/settings.json`
+- tests and fixtures point `BOX_BOUNTY_SETTINGS_DIR` at a temporary folder.
+
+Two levels, both the owner's: this project (keyed by the repository's
+canonical path) or all the owner's projects. The project level is read
+first, then the default — so `"off"` for one project stands against a wider
+`"allowed"`. Three states, never guessed: written `allowed`; written `ask`
+(ask me each time); **nothing written** — which is never read as allowed. A
+written `off` is the owner turning the permission off: everything returns to
+asking and the answer stays on file marked `off`.
+
+No agent command writes or widens the decision. The commands that do are a
+separate, plainly named group the description never offers an agent —
+`box bounty owner …`. `owner allow` without `--yes` prints what allowing
+means and changes nothing:
+
+- bounties are posted publicly under the owner's GitHub account;
+- a solution an agent chooses is merged into the owner's code on the agent's
+  judgement — the tool runs nothing from it, but the owner's next build will;
+- the tool closes the issue when it finds a solution merged;
+- once rewards exist, money is promised within what the owner sets.
+
+Every write is recorded with the time (the file keeps a `changes` list), and
+`status` says when the decision last changed. With the tool **allowed**,
+`create` then `post` goes out with no question; the record names which of
+the owner's written answers allowed it, with its date and level. Under
+**ask me each time** (and under `off`, which asks) each post and each
+outside close the tool is about to do is a named `waiting` state for that
+one action; `owner answer <id>` answers it once and writes no standing
+decision. With **nothing written**, the first post waits the same way and
+prints the exact commands to put to the owner — for this project, for all
+projects, or for that one bounty only.
+
+The other owner commands: `owner setup` prints where things stand — the
+settings file, the project and default answers, Git and `gh` facts — and the
+exact command for each remaining step (never interactive); `owner off` /
+`owner on` turn the permission off and back on; `owner summary [--since
+<iso>]` prints what was done — bounties posted, solutions merged, bounties
+closed with none, anything waiting — facts from the record.
+
+**This is protection, not a lock.** The file sits where the owner's own
+programs can write it; an agent that sets out to edit a file it can reach —
+or to point `BOX_BOUNTY_SETTINGS_DIR` at a folder it made — could post the
+same things with its own Git anyway. What the file does is stop accidents
+and make every change visible with a time. It does not pretend to be a
+cryptographic boundary.
+
+A malformed settings file, or a name the tool does not know, is a named
+refusal (`settings-malformed`, `settings-unknown-name`) — refused, never
+ignored, on every command that reads it. A name that reaches for a hard stop
+(`settings-hard-stop`) and a project file that claims authority
+(`limits-authority`) are refused the same way: **the three hard stops —
+never-ship files, a private repository, the owner's standing rules — cannot
+be expressed as settings or switched off by one.**
+
+## The pre-publish scan
+
+Because nobody sees a preview any more, everything a GitHub post would
+publish **for the first time** is scanned for secret-shaped content before
+it goes out: the added lines of each commit not yet pushed, the tool's
+work-in-progress commit when `--with-changes` is chosen, and every untracked
+file `--include` names. The patterns are a small stated list, not proof of
+absence:
+
+- private key blocks (`-----BEGIN … PRIVATE KEY-----`);
+- well-known token and key formats (GitHub, GitLab, AWS, Slack, OpenAI,
+  Google API keys, and the like);
+- connection strings carrying a password (`postgres://…:…@`,
+  `Password=…` and the like);
+- a long random-looking string assigned to a name such as `key`, `secret`,
+  `token` or `password`.
+
+Ordinary code that uses the words `token` or `key` — short values, obvious
+placeholders — does not match. A hit, or an untracked file named for
+publishing, makes **that one bounty** wait for the owner, naming the file
+and line and **never printing the value**. The owner allows it once with
+`owner answer <id>`, adds the path to never-ship, or closes the bounty;
+nothing else is held up. An answer clears only what the recorded wait named:
+a post held for the decision alone still runs its scan. No setting switches
+the scan off — it is a protection of the owner's, like never-ship, not a
+judgement on the agent.
+
 `create` asks only for judgement — a task and one line of why; everything
 else has a default:
 
@@ -418,16 +525,21 @@ Written once by the owner, read at the boundary (`.box` never ships):
 - `cost` / `expectedAnswer` — one free-text line each, shown by `describe` so
   an agent can weigh handing off against doing the work.
 - `allowedDestinations` — optional list of local directories (repo-relative or
-  absolute) that `post --to` must land inside, plus the literal `"github"` for
-  GitHub posting; absent means any local folder and no GitHub posting,
-  as before. Enforced on the canonical destination — a junction trick cannot
+  absolute) that `post --to <dir>` must land inside; absent means any local
+  folder. Enforced on the canonical destination — a junction trick cannot
   slip past — and the refusal is named `destination-not-allowed`. An empty
-  list means no destination is allowed.
+  list means no destination is allowed. A literal `"github"` entry written
+  before the owner's decision moved to the settings folder grants nothing:
+  it is reported once, with the command that moves it, and GitHub posting
+  reads only the owner's own settings.
 
 A missing file means defaults. Malformed JSON, a non-object document or a
 known field of the wrong shape is the named refusal `limits-malformed` —
 read before anything mutates or posts, so a broken file never leaves a
-half-written record. Unknown fields are ignored.
+half-written record. Unknown fields are ignored — except a name that claims
+authority (`authority`, `permission`, `allowed`, `approve` and the like): a
+project file can never allow the tool, so that is refused by name
+(`limits-authority`) rather than ignored.
 
 ## The record — the bounty outlives the agent
 
@@ -438,11 +550,16 @@ The record holds the id, title, the snapshot identifier
 history — one event appended per transition, never rewritten:
 
 ```
-drafted → confirmed → posted → taken → answered → applied
-                (ended early: rejected, withdrawn, expired;
-                 an applied merge is reversed with ordinary git — the record
-                 stays applied; older records carry an `undone` stage and
-                 still load)
+drafted → posted → taken → answered → applied
+    ↘ waiting — an action held for the owner: the first post with nothing
+      written or "ask each time" written, a post held by the pre-publish
+      scan or a named untracked file, an outside close held under
+      "ask each time"
+(ended early: rejected, withdrawn, expired;
+ an applied merge is reversed with ordinary git — the record
+ stays applied; older records carry `confirmed` and `undone`
+ stages and still load — a `confirmed` record's written yes
+ stands and the bounty posts)
 ```
 
 `answered` is a waiting stage, not an ending: every answer lands there —
@@ -482,16 +599,17 @@ and all refs exist while the bounty is open. Every ended stage — `applied`,
 - **`status`** lists every open bounty with id, title, stage and the next step —
   and never prints nothing: an empty `.box/bounties/` says so and says what to
   do. Ended bounties are one compact line.
-- **`confirm <id>`** records the owner's yes (drafted → confirmed) with a
-  timestamp. The owner's yes is the boundary: nothing is delivered before it.
-  Confirming a bounty that is not drafted is refused (`not-drafted`).
-- **`post <id> --to <dir>`** is the first delivery, and it is gated: unconfirmed
-  → `not-confirmed`; the recorded folder gone → `folder-missing`; its
+- **`post <id> --to <dir|github>`** is the first delivery, and it is gated
+  once by the owner's decision: nothing written → `owner-allow-needed` (the
+  post waits, and prints the few lines to put to the owner); "ask me each
+  time" or "off" written → `owner-answer-needed`. The recorded folder gone →
+  `folder-missing`; its
   `bounty.json` naming a different id → `folder-mismatch`; the destination
   inside the repository → `destination-inside-repo`; `<dir>/<id>` already
   existing → `destination-exists`. On success it **copies** the bounty folder to
-  `<dir>/<id>/` (the recorded folder stays) and marks the bounty `posted` with
-  the destination recorded.
+  `<dir>/<id>/` (the recorded folder stays) or publishes the GitHub issue,
+  and marks the bounty `posted` with the destination and which of the
+  owner's written answers allowed it.
 - **`look <id> (<n> | --from <dir>)`** collects a pull request by number, or a
   returned bounty folder with `--from` — see *The answer comes back* below —
   then shows the change. An `<n>` already collected just shows it.
@@ -719,5 +837,8 @@ A link or junction inside the repository that resolves **outside** it is refused
 by name (`link-escape`) — never followed. A snapshot path that cannot be read
 (broken link, link to a directory, vanished mid-scan) is `unreadable-path`.
 
-**Limit:** there is no content scanning in this wave — a secret inside an
-ordinary-looking file name ships. `.boxignore` is the catch-all for those.
+**Limit:** never-ship matches names, not contents — a secret inside an
+ordinary-looking file name still ships. The pre-publish scan (above) catches
+secret-shaped content only in what a GitHub post publishes for the first
+time; a local-folder bounty ships the snapshot unchecked, and `.boxignore`
+is the catch-all for those.

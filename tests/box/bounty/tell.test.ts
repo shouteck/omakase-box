@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CLI_DIST, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, makeRepo, ownerSays, runRoot, write } from './support.js';
 
 // BT4 — telling the agent: describe, describe --rules, the limits file, and
 // the open-bounties line the tool keeps current in .box/bounties/OPEN and in
@@ -116,8 +116,9 @@ describe('the open-bounties line the tool keeps current', () => {
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const id = createDraft(repo);
     expect(openFile(repo)).toBe(`open bounties: ${id} "task" (drafted)`);
-    expect(cli(repo, ['bounty', 'confirm', id]).status).toBe(0);
-    expect(openFile(repo)).toBe(`open bounties: ${id} "task" (confirmed)`);
+    ownerSays(repo, 'allowed');
+    expect(cli(repo, ['bounty', 'post', id, '--to', join(runRoot('dest'), 'inbox')]).status).toBe(0);
+    expect(openFile(repo)).toBe(`open bounties: ${id} "task" (posted)`);
     expect(cli(repo, ['bounty', 'close', id]).status).toBe(0);
     expect(openFile(repo)).toBe('open bounties: none');
   });
@@ -134,9 +135,10 @@ describe('the open-bounties line the tool keeps current', () => {
     expect(text).toContain(`open bounties: ${id} "task" (drafted)`);
     expect(text).not.toContain('stale text');
     // a second mutation keeps the line current and the outside byte-identical
-    cli(repo, ['bounty', 'confirm', id]);
+    ownerSays(repo, 'allowed');
+    cli(repo, ['bounty', 'post', id, '--to', join(runRoot('dest'), 'inbox')]);
     const again = readFileSync(join(repo, 'RULES.md'), 'utf8');
-    expect(again).toContain('(confirmed)');
+    expect(again).toContain('(posted)');
     expect(again.startsWith('header line\n')).toBe(true);
     expect(again.endsWith('trailer line\n')).toBe(true);
   });
@@ -166,9 +168,9 @@ describe('the open-bounties line the tool keeps current', () => {
 });
 
 describe('allowedDestinations (built cli)', () => {
-  const draftConfirmed = (repo: string): string => {
+  const draftPostable = (repo: string): string => {
     const id = createDraft(repo);
-    expect(cli(repo, ['bounty', 'confirm', id]).status).toBe(0);
+    ownerSays(repo, 'allowed');
     return id;
   };
 
@@ -177,7 +179,7 @@ describe('allowedDestinations (built cli)', () => {
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const allowed = join(runRoot('allowed'), 'drop');
     limits(repo, { allowedDestinations: [allowed] });
-    const id = draftConfirmed(repo);
+    const id = draftPostable(repo);
     const refused = cli(repo, ['bounty', 'post', id, '--to', join(runRoot('elsewhere'), 'x')]);
     expect(refused.status).toBe(3);
     expect(refused.stderr).toContain('destination-not-allowed');
@@ -197,7 +199,7 @@ describe('allowedDestinations (built cli)', () => {
     write(allowed, '.keep', 'x\n'); // the allowed dir exists so the junction can sit inside it
     symlinkSync(elsewhere, join(allowed, 'sub'), 'junction'); // allowed/sub really is elsewhere
     limits(repo, { allowedDestinations: [allowed] });
-    const id = draftConfirmed(repo);
+    const id = draftPostable(repo);
     const run = cli(repo, ['bounty', 'post', id, '--to', join(allowed, 'sub', 'deeper')]);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('destination-not-allowed');

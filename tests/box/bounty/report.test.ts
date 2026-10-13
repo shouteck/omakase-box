@@ -2,9 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, attemptsOf, BountyRefused, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
+import { applyBounty, attemptsOf, BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { Attempt, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, runRoot, write } from './support.js';
+import { git, makeRepo, ownerSays, runRoot, write } from './support.js';
 
 // Report, do not judge. `look` binds the returned folder and writes a report
 // of facts: who sent it and when, the change with counts and lines, a dry merge
@@ -23,7 +23,7 @@ function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOption
 
 function posted(repo: string, extra: Partial<CreateOptions> = {}): { id: string; delivered: string } {
   const result = finalizeBounty(planBounty(options(repo, extra)));
-  confirmBounty(repo, result.id);
+  ownerSays(repo, 'allowed');
   const { destination } = postBounty(repo, result.id, join(runRoot('dest'), 'inbox'));
   return { id: result.id, delivered: destination };
 }

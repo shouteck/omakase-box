@@ -77,8 +77,7 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'create': { git: 18, gh: 0 },
   'status-drafted': { git: 2, gh: 0 },
   'close-draft': { git: 3, gh: 0 },
-  'confirm-preview': { git: 18, gh: 3 },
-  'confirm-github': { git: 18, gh: 3 },
+  'post-preview': { git: 18, gh: 3 },
   'post-github': { git: 21, gh: 8 },
   'status-posted': { git: 2, gh: 5 },
   'status-comments': { git: 3, gh: 7 },
@@ -89,7 +88,6 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'status-applied': { git: 2, gh: 0 },
   'close-ended': { git: 4, gh: 5 },
   'create-local': { git: 18, gh: 0 },
-  'confirm-local': { git: 2, gh: 0 },
   'post-dir': { git: 2, gh: 0 },
   'look-from': { git: 16, gh: 0 },
   'close-reason': { git: 4, gh: 0 },
@@ -130,8 +128,10 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   const second = readdirSync(join(repo, '.box', 'bounties')).map(file => file.replace('.json', '')).find(name => name.startsWith('bt-') && name !== id)!;
   run('status-drafted', 'status');
   run('close-draft', 'close', second);
-  run('confirm-preview', 'confirm', id, '--to', 'github', '--preview');
-  run('confirm-github', 'confirm', id, '--to', 'github');
+  // BT8: `confirm` is gone — the preview moved to `post --preview`, and the
+  // post itself does the plan, the owner-decision read, the pre-publish
+  // scan and the push in one command.
+  run('post-preview', 'post', id, '--to', 'github', '--preview');
   run('post-github', 'post', id, '--to', 'github');
   context.pr('solver');
   run('status-posted', 'status', id);
@@ -145,13 +145,12 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('status-applied', 'status', id);
   run('close-ended', 'close', id);
 
-  // The local-folder leg: the fixture's limits name github only, so the
-  // owner grants the deliveries folder before the draft is confirmed there.
+  // The local-folder leg: the owner names the deliveries folder in the
+  // limits file — the tool itself is already allowed for this project.
   const deliveries = join(scratch, 'deliveries');
   write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: ['github', deliveries] }));
   run('create-local', 'create', '--task', 'TASK.md', '--why', 'third', '--title', 'Third');
   const third = readdirSync(join(repo, '.box', 'bounties')).map(file => file.replace('.json', '')).find(name => name.startsWith('bt-') && name !== id && name !== second)!;
-  run('confirm-local', 'confirm', third);
   run('post-dir', 'post', third, '--to', deliveries);
   const returned = join(scratch, 'returned');
   cpSync(join(deliveries, third), returned, { recursive: true });
@@ -160,12 +159,16 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('close-reason', 'close', third, '--reason', 'not landing');
   run('status-end', 'status');
 
+  const overs: string[] = [];
   for (const step of runs) {
     const budget = BUDGET[step.label];
     if (budget === undefined) { expect.unreachable(`${step.label} has no budget entry`); }
     expect(step.exit, `${step.label} itself failed: ${step.stderr.slice(0, 300)}`).toBe(0);
     expect(step.other, `${step.label} started stray processes`).toEqual([]);
-    expect(step.git, `${step.label} Git starts (budget ${budget.git})`).toBeLessThanOrEqual(budget.git);
-    expect(step.gh, `${step.label} gh starts (budget ${budget.gh})`).toBeLessThanOrEqual(budget.gh);
+    // Every overage is named in one message, so a wave that moves a count
+    // reads the whole new row from a single run.
+    if (step.git > budget.git) overs.push(`${step.label} Git starts ${step.git} (budget ${budget.git})`);
+    if (step.gh > budget.gh) overs.push(`${step.label} gh starts ${step.gh} (budget ${budget.gh})`);
   }
+  expect(overs).toEqual([]);
 }, 'Repair app'), 180000);

@@ -21,7 +21,10 @@
 // known field of the wrong shape is the named refusal `limits-malformed` —
 // the file exists but the tool cannot understand what the owner set, and
 // silently ignoring a limit would not be a safe default. Unknown fields are
-// ignored.
+// ignored — except a name that claims authority: a project file can never
+// allow the tool, so a field named `authority` or the like is refused by
+// name (`limits-authority`) rather than ignored. The owner's yes lives in
+// the owner's own settings folder outside every repository.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -52,6 +55,15 @@ export function loadLimits(repoRoot: string): BountyLimits {
     throw new BountyRefused('limits-malformed', `${path} must hold a JSON object — fix it or remove it`);
   }
   const raw = parsed as Record<string, unknown>;
+  // A project file that claims to allow anything grants nothing: the
+  // decision lives in the owner's own settings folder, outside every
+  // repository. A field reaching for it is refused by name — never ignored,
+  // never treated as a yes.
+  const CLAIM = /^(?:authority|authori[sz]e|allowed?|permission|permissions|permit|permits|grants?|approve|approved|allownevership|nevershipallowed)$/i;
+  const claims = Object.keys(raw).filter(name => CLAIM.test(name.replace(/[-_]/g, '')));
+  if (claims.length > 0) {
+    throw new BountyRefused('limits-authority', `${path}: "${claims[0]}" claims authority a project file cannot hold — the owner allows the tool once, in the owner's own settings outside every repository (box bounty owner setup shows it). Remove "${claims[0]}"; it grants nothing`);
+  }
   const bad = (field: string, wants: string): never => {
     throw new BountyRefused('limits-malformed', `${path}: "${field}" must be ${wants} — fix it or remove it`);
   };

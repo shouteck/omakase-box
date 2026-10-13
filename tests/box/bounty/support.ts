@@ -4,7 +4,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll } from 'vitest';
+import { afterAll, beforeEach } from 'vitest';
+import { readDecision, writeDecision } from '../../../packages/box-bounty/index.js';
+import type { OwnerDecision } from '../../../packages/box-bounty/index.js';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const CLI_DIST = join(ROOT, 'packages', 'box-cli', 'dist', 'cli.js');
@@ -21,6 +23,25 @@ function cleanupOwned(): void {
 }
 afterAll(cleanupOwned);
 process.once('exit', cleanupOwned);
+
+// BT8: the owner's decision lives in the owner's settings folder, outside
+// every repository. Tests never read or write the real one: every file that
+// imports this module gets the tool pointed at a temp folder, and each test
+// starts with nothing written — nothing written is never read as allowed.
+// Fixture worlds that travel with their own scratch carry their own
+// settings dir instead (github-fixture.ts rebinds the variable).
+export const ownerSettingsRoot = runRoot('bt8-owner-settings');
+process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;
+beforeEach(() => {
+  rmSync(join(ownerSettingsRoot, 'settings.json'), { force: true });
+  if (process.env['BOX_BOUNTY_SETTINGS_DIR'] !== ownerSettingsRoot) process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;
+});
+// Write one level of the owner's decision inside the temp folder — the same
+// bytes `box bounty owner allow/ask/off` writes.
+export function ownerSays(repoRoot: string, decision: OwnerDecision, level: 'project' | 'default' = 'project'): void {
+  writeDecision(repoRoot, level, decision);
+}
+export const ownerRead = (repoRoot: string) => readDecision(repoRoot);
 
 // A deterministic fixture identity on every call: the suite must not depend on
 // the host's global config — CI runners carry none, so merge/commit/revert

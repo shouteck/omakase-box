@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
@@ -12,7 +12,6 @@ import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.
 // aimed at an issue that exists but is not this bounty's.
 
 function arrived(context: GithubFixture): void {
-  confirmBounty(context.repo, context.id, 'github');
   postBounty(context.repo, context.id, 'github');
   context.pr('outside-solver');
   answerGitHub(context.repo, context.id, 1);

@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './github-fixture.js';
-import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, fingerprint, git, makeRepo, ownerSays, runRoot, write } from './support.js';
 
 // BT6b: "nothing a solver wrote runs" holds for the tool's own merge whatever
 // the owner's Git configuration is, and a work-in-progress commit holds the
@@ -81,15 +81,16 @@ const inTreeFilter = (repo: string): void => {
 const readLog = (logFile: string): string[] =>
   existsSync(logFile) ? readFileSync(logFile, 'utf8').split('\n').filter(line => line !== '') : [];
 
-// The outbound journey through the CLI: create, confirm, post to a folder —
-// the returned value is the delivered bounty folder a solver edits.
+// The outbound journey through the CLI: create, post to a folder — the
+// owner already allowed the tool (BT8). The returned value is the delivered
+// bounty folder a solver edits.
 function delivered(repo: string): { id: string; folder: string } {
   write(repo, 'TASK.md', 'the task\n');
   const out = join(runRoot('bt6b-out'), 'bounty');
   const created = cli(repo, 'create', '--task', join(repo, 'TASK.md'), '--why', 'a reason', '--out', out);
   expect(created.status).toBe(0);
   const id = /bt-[a-f0-9]{12}/.exec(created.stdout)![0];
-  expect(cli(repo, 'confirm', id).status).toBe(0);
+  ownerSays(repo, 'allowed');
   const dest = join(runRoot('bt6b-dest'), 'inbox');
   expect(cli(repo, 'post', id, '--to', dest).status).toBe(0);
   return { id, folder: join(dest, id) };
@@ -237,8 +238,7 @@ describe('defect 2 — a work-in-progress commit holds the filtered bytes create
   it('pushes the stored form of a clean-filtered file, never the working-tree bytes', () => fixture(context => {
     armCrypt(context.repo);
     write(context.repo, 'secret.dat', 'edited plaintext\n');
-    expect(cli(context.repo, 'confirm', context.id, '--to', 'github', '--with-changes').status).toBe(0);
-    expect(cli(context.repo, 'post', context.id, '--to', 'github').status).toBe(0);
+    expect(cli(context.repo, 'post', context.id, '--to', 'github', '--with-changes').status).toBe(0);
     const remote = 'https://github.com/owner/project.git';
     const tip = git(context.repo, ['ls-remote', remote, `box-bounty/${context.id}`]).split(/\s/)[0];
     expect(tip).toMatch(/^[a-f0-9]{40}$/);
@@ -250,16 +250,14 @@ describe('defect 2 — a work-in-progress commit holds the filtered bytes create
   it('refuses the post by name when the filtered form cannot be produced — nothing is pushed', () => fixture(context => {
     armCrypt(context.repo);
     // An untracked .dat file named --include: it reaches the work-in-progress
-    // build, where its blob is hashed through the clean filter.
+    // build, where its blob is hashed through the clean filter. The filter
+    // breaks on this file's bytes only — the refusal lands exactly where the
+    // filtered form is built, before the publish or the owner hold.
     write(context.repo, 'new.dat', 'FAIL this\n');
-    expect(cli(context.repo, 'confirm', context.id, '--to', 'github', '--include', 'new.dat').status).toBe(0);
-    // The clean filter breaks between approval and post — but only on this
-    // file's bytes, so every earlier read of the uncommitted state still
-    // passes and the refusal lands exactly where the filtered form is built.
     const picky = join(runRoot('bt6b-picky'), 'picky.cjs');
     writeFileSync(picky, `let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{if(d.startsWith('FAIL'))process.exit(1);process.stdout.write('ENC:'+d)});\n`);
     git(context.repo, ['config', 'filter.crypt.clean', `"${process.execPath.replaceAll('\\', '/')}" "${picky.replaceAll('\\', '/')}"`]);
-    const posted = cli(context.repo, 'post', context.id, '--to', 'github');
+    const posted = cli(context.repo, 'post', context.id, '--to', 'github', '--include', 'new.dat');
     expect(posted.status).toBe(3);
     expect(posted.stderr).toContain('github-filter-failed');
     expect(posted.stderr).toContain('new.dat');

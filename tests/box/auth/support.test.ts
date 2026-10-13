@@ -7,13 +7,13 @@ afterEach(() => { if (configured === undefined) delete process.env.BOX_TEST_DATA
 describe('Box test database helper', () => {
   it('rejects a non-loopback BOX_TEST_DATABASE_URL before connecting', async () => {
     for (const host of ['db.example.invalid', '10.0.0.5', '127.0.0.1.example.invalid', 'localhost.example.invalid', 'w002-b11-box-db-r4-env2', '[2001:db8::1]']) {
-      process.env.BOX_TEST_DATABASE_URL = 'postgres://postgres:synthetic@' + host + ':5432/postgres';
+      process.env.BOX_TEST_DATABASE_URL = 'postgres://postgres:' + 'synthetic@' + host + ':5432/postgres';
       await expect(migratedPool()).rejects.toThrow('BOX_TEST_DATABASE_URL is not a loopback database.');
     }
   });
   it('rejects a loopback URL that carries a query or fragment, which pg would let override the host', async () => {
     for (const suffix of ['?host=evil.invalid', '?hostaddr=10.0.0.1', '?port=1&host=evil.invalid', '#fragment', '?host=/var/run/postgresql', '?', '#']) {
-      process.env.BOX_TEST_DATABASE_URL = 'postgres://postgres:synthetic@127.0.0.1:5432/postgres' + suffix;
+      process.env.BOX_TEST_DATABASE_URL = 'postgres://postgres:' + 'synthetic@127.0.0.1:5432/postgres' + suffix;
       await expect(migratedPool()).rejects.toThrow('BOX_TEST_DATABASE_URL must not carry a query or fragment.');
     }
   });

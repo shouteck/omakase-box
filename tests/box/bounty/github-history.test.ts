@@ -1,7 +1,8 @@
 import { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, closeBounty, confirmBounty, loadRecord, lookBounty, postBounty, previewGitHub, renderStatus } from '../../../packages/box-bounty/index.js';
+import { applyBounty, closeBounty, loadRecord, lookBounty, ownerAnswer, postBounty, previewGitHub, renderStatus } from '../../../packages/box-bounty/index.js';
+import { approveGitHub } from '../../../packages/box-bounty/github.js';
 import { fingerprint, git, runRoot, write } from './support.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
@@ -13,6 +14,19 @@ import type { GithubFixture } from './github-fixture.js';
 // bare remote is github.com, the stand-in gh is the API.
 
 const choice = (withChanges: boolean, include: readonly string[] = []) => ({ withChanges, include });
+
+// A pre-BT8 record: stage 'confirmed' with the githubApproval the removed
+// `confirm` command wrote. approveGitHub computes the plan as it did then;
+// the rest is the exact on-disk shape — the post path must still publish
+// exactly what was approved, or refuse the drift by name.
+function legacyConfirmed(repo: string, id: string, githubChoice: { withChanges: boolean; include: readonly string[] }): void {
+  const record = loadRecord(repo, id);
+  record.stage = 'confirmed';
+  record.events.push({ stage: 'confirmed', at: '2026-10-11T00:00:00.000Z', command: 'confirm' });
+  record.githubApproval = approveGitHub(repo, record, githubChoice);
+  const file = join(repo, '.box/bounties', `${id}.json`);
+  writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+}
 
 // Whether this host can make file symlinks — Windows needs developer mode or
 // an elevated account; the link-at-tracked-path test skips where it cannot.
@@ -38,7 +52,6 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(preview).toContain(`${c2!.slice(0, 12)} first local`);
     expect(preview).toContain(`${c1!.slice(0, 12)} second local`);
     expect(preview).toContain(`Base: commit ${base}`);
-    confirmBounty(repo, id, 'github', choice(false));
     const result = postBounty(repo, id, 'github');
     const pub = result.record.github!;
     expect(pub.base).toBe(base);
@@ -56,7 +69,6 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const head = git(repo, ['rev-parse', 'HEAD']);
     const preview = previewGitHub(repo, id);
     expect(preview).toContain('1 file(s) stay home');
-    confirmBounty(repo, id, 'github', choice(false));
     const result = postBounty(repo, id, 'github');
     expect(result.record.github!.commit).toBe(head);
     expect(result.record.github!.wipCommit).toBeUndefined();
@@ -74,15 +86,13 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(preview).toContain('the tool\'s work-in-progress commit');
     expect(preview).toContain('files changed in the work-in-progress commit: app.txt');
     expect(preview).toContain('files added in the work-in-progress commit: new.txt');
-    confirmBounty(repo, id, 'github', choice(true));
-    const approval = loadRecord(repo, id).githubApproval!;
-    expect(approval.wipCommit).toMatch(/^[a-f\d]{40}$/);
-    expect(approval.wip!.changed).toEqual(['app.txt']);
-    expect(approval.wip!.added).toEqual(['new.txt']);
-    const result = postBounty(repo, id, 'github');
+    const result = postBounty(repo, id, 'github', { choice: choice(true) });
     const pub = result.record.github!;
-    expect(pub.commit).toBe(approval.wipCommit);
-    expect(pub.pushed!.map(commit => commit.sha)).toEqual([approval.wipCommit]);
+    expect(pub.wipCommit).toMatch(/^[a-f\d]{40}$/);
+    expect(pub.wip!.changed).toEqual(['app.txt']);
+    expect(pub.wip!.added).toEqual(['new.txt']);
+    expect(pub.commit).toBe(pub.wipCommit);
+    expect(pub.pushed!.map(commit => commit.sha)).toEqual([pub.wipCommit]);
     expect(git(repo, ['rev-parse', `${pub.commit}^`])).toBe(head);
     expect(git(repo, ['log', '-1', '--format=%an', pub.commit])).toBe('box-bounty');
     // Solvers cloning the branch see the work in progress as ordinary history.
@@ -111,21 +121,24 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     refused(() => previewGitHub(repo, id, choice(false, ['app.txt'])), 'github-include-invalid'); // tracked, not untracked
     refused(() => previewGitHub(repo, id, choice(false, ['notes'])), 'github-include-invalid'); // a directory, not a file
     refused(() => previewGitHub(repo, id, choice(false, ['../outside.txt'])), 'github-include-invalid');
-    confirmBounty(repo, id, 'github', choice(false, ['notes/hint.txt']));
-    const result = postBounty(repo, id, 'github');
-    expect(result.record.github!.wip!.added).toEqual(['notes/hint.txt']);
-    expect(git(bare, ['show', `${result.record.github!.branch}:notes/hint.txt`])).toBe('look here');
-    expect(git(bare, ['ls-tree', '-r', '--name-only', result.record.github!.branch])).not.toContain('stay.txt');
-    expect(git(bare, ['ls-tree', '-r', '--name-only', result.record.github!.branch])).not.toContain('stray.log');
-    expect(git(bare, ['ls-tree', '-r', '--name-only', result.record.github!.branch])).not.toContain('.env.local');
+    // Naming an untracked file for publishing holds that one bounty for the
+    // owner, whatever the standing decision says (BT8).
+    refused(() => postBounty(repo, id, 'github', { choice: choice(false, ['notes/hint.txt']) }), 'publish-held');
+    expect(loadRecord(repo, id).waiting?.reason).toBe('untracked-file');
+    ownerAnswer(repo, id);
+    const pub = loadRecord(repo, id).github!;
+    expect(pub.wip!.added).toEqual(['notes/hint.txt']);
+    expect(git(bare, ['show', `${pub.branch}:notes/hint.txt`])).toBe('look here');
+    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.branch])).not.toContain('stay.txt');
+    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.branch])).not.toContain('stray.log');
+    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.branch])).not.toContain('.env.local');
   }), 120000);
 
   it('refuses work the task needs when it touches a never-ship path — worktree or staged, it publishes nothing', () => fixture(({ repo, id }) => {
     write(repo, '.env', 'CHANGED\n');
     write(repo, 'key.pem', 'x\n'); git(repo, ['add', '-f', 'key.pem']);
     refused(() => previewGitHub(repo, id, choice(true)), 'github-never-ship');
-    refused(() => confirmBounty(repo, id, 'github', choice(true)), 'github-never-ship');
-    refused(() => postBounty(repo, id, 'github'), 'not-confirmed');
+    refused(() => postBounty(repo, id, 'github', { choice: choice(true) }), 'github-never-ship');
     expect(loadRecord(repo, id).github).toBeUndefined();
   }));
 
@@ -153,12 +166,12 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     const merge = objectGit(repo, ['-c', 'user.name=poster', '-c', 'user.email=poster@test.invalid', 'commit-tree', headTree, '-p', head, '-p', orphan, '-m', 'pull in the orphan'], env);
     git(repo, ['update-ref', 'refs/heads/main', merge]);
     refused(() => previewGitHub(repo, id), 'github-never-ship');
-    refused(() => confirmBounty(repo, id, 'github', choice(false)), 'github-never-ship');
+    refused(() => postBounty(repo, id, 'github'), 'github-never-ship');
     expect(loadRecord(repo, id).github).toBeUndefined();
   }));
 
   it('refuses to post when the recorded approval carries only some plan fields', () => fixture(({ repo, id }) => {
-    confirmBounty(repo, id, 'github', choice(false));
+    legacyConfirmed(repo, id, choice(false));
     // Delete one plan field — some-but-not-all is a corrupt record, not a
     // pre-wave approval; falling back would post a snapshot never approved.
     const file = join(repo, '.box/bounties', `${id}.json`);
@@ -178,7 +191,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     symlinkSync(target, join(repo, 'app.txt'), 'file');
     expect(git(repo, ['status', '--porcelain'])).toContain('T app.txt');
     refused(() => previewGitHub(repo, id, choice(true)), 'github-non-plain-path');
-    refused(() => confirmBounty(repo, id, 'github', choice(true)), 'github-non-plain-path');
+    refused(() => postBounty(repo, id, 'github', { choice: choice(true) }), 'github-non-plain-path');
     expect(loadRecord(repo, id).github).toBeUndefined();
   }));
 
@@ -198,7 +211,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     ['the remote loses its only ref', 'github-no-public-base', (context: GithubFixture) => { git(context.repo, ['push', 'https://github.com/owner/project.git', ':refs/heads/main']); }]
   ])('refuses a post that would disagree with the approved preview when %s', (_label, reason, drift) => fixture(context => {
     const { repo, id } = context;
-    confirmBounty(repo, id, 'github', choice(false));
+    legacyConfirmed(repo, id, choice(false));
     const approved = readFileSync(join(repo, '.box/bounties', `${id}.json`));
     drift(context);
     refused(() => postBounty(repo, id, 'github'), reason);
@@ -208,7 +221,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
   it('refuses when the remote gained the approved tip between preview and post', () => fixture(({ repo, id }) => {
     write(repo, 'local.txt', 'x\n'); git(repo, ['add', 'local.txt']);
     git(repo, ['-c', 'user.name=p', '-c', 'user.email=p@t', 'commit', '-qm', 'local work']);
-    confirmBounty(repo, id, 'github', choice(false));
+    legacyConfirmed(repo, id, choice(false));
     // Someone pushed the same commits meanwhile — what was new is not anymore.
     git(repo, ['push', 'https://github.com/owner/project.git', 'main']);
     refused(() => postBounty(repo, id, 'github'), 'github-preview-stale');
@@ -340,8 +353,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
 
   it('closing a branch that carried work in progress names the commits before removing it', () => fixture(({ repo, bare, id, state }) => {
     write(repo, 'app.txt', 'work in progress\n');
-    confirmBounty(repo, id, 'github', choice(true));
-    postBounty(repo, id, 'github');
+    postBounty(repo, id, 'github', { choice: choice(true) });
     const pub = loadRecord(repo, id).github!;
     expect(pub.wipCommit).toBeDefined();
     closeBounty(repo, id);
@@ -360,7 +372,6 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
   it('a record posted the old way still loads, reads as snapshot-posted, collects and closes', () => fixture(({ repo, bare, scratch, id, folder, state, pr, update }) => {
     // Forge the pre-BT6a record shape: a publication with no kind, pointing at
     // a parentless commit of the shipped snapshot — what the old tool pushed.
-    confirmBounty(repo, id, 'github');
     postBounty(repo, id, 'github');
     const record = loadRecord(repo, id);
     const issue = record.github!.issue!;

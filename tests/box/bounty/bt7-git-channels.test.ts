@@ -3,7 +3,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, closeBounty, confirmBounty, lookBounty, postBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, closeBounty, lookBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { asOneCommand, git as safeGit, gitOutcome } from '../../../packages/box-bounty/git.js';
 import { fixture } from './github-fixture.js';
 import { git, makeRepo, runRoot, write } from './support.js';
@@ -12,7 +12,7 @@ const quote = (value: string): string => `'${value.replaceAll("'", "'\\''")}'`;
 const CLI_DIST = fileURLToPath(new URL('../../../packages/box-cli/dist/cli.js', import.meta.url));
 
 it.skipIf(process.platform !== 'win32')('uses pinned Git and command interpreter when the CLI cwd carries replacement executables', () => fixture(context => {
-  confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
+  postBounty(context.repo, context.id, 'github');
   copyFileSync(process.execPath, join(context.repo, 'git.exe'));
   copyFileSync(process.execPath, join(context.repo, 'cmd.exe'));
   const result = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'status', context.id], { cwd: context.repo, encoding: 'utf8' });
@@ -61,7 +61,7 @@ it('does not invoke a repository-relative signing program for a tool commit', ()
 });
 
 it('keeps reference hooks disabled through look, apply and close', () => fixture(context => {
-  confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
+  postBounty(context.repo, context.id, 'github');
   context.pr('solver'); answerGitHub(context.repo, context.id, 1);
   const marker = join(context.scratch, 'reference-ran');
   const hooks = join(context.scratch, 'reference-hooks'); mkdirSync(hooks);

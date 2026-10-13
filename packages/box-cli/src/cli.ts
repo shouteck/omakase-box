@@ -7,11 +7,12 @@
 //   bounty help
 //   bounty describe [--rules] [--repo <path>]
 //   bounty status [<id>] [--full] [--comments] [--repo <path>]
-//   bounty confirm [<id>] [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]
-//   bounty post [<id>] --to <dir|github> [--repo <path>]
+//   bounty post [<id>] --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]
 //   bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]
 //   bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]
 //   bounty close [<id>] [--reason "<text>"] [--repo <path>]
+//   bounty owner <setup|allow|ask|off|on|answer|summary> — the owner's own
+//   commands, the plainly named group the description never offers an agent.
 // A bounty command works without <id> when exactly one bounty can take it.
 // Thin shell over packages/box-package and packages/box-trace: argument parsing and
 // exit codes live here; all agreement validation, selection, folder emission,
@@ -21,7 +22,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, confirmBounty, finalizeBounty, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, showPath } from '../../box-bounty/index.js';
+import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, ownerAllow, ownerAnswer, ownerAsk, ownerOff, ownerOn, ownerSetup, ownerSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, showPath } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -52,8 +53,7 @@ function usage(message?: string): never {
   console.error('       box bounty help');
   console.error('       box bounty describe [--rules] [--repo <path>]');
   console.error('       box bounty status [<id>] [--full] [--comments] [--repo <path>]');
-  console.error('       box bounty confirm [<id>] [--to github] [--with-changes] [--include <file>] [--preview] [--repo <path>]');
-  console.error('       box bounty post [<id>] --to <dir|github> [--repo <path>]');
+  console.error('       box bounty post [<id>] --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
   console.error('       box bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]');
   console.error('       box bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]');
   console.error('       box bounty close [<id>] [--reason "<text>"] [--repo <path>]');
@@ -208,7 +208,8 @@ if (command === 'export') {
       undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it: git revert -m 1 <merge>',
       reject: 'ending a bounty with nothing merged is one command now — box bounty close <id> --reason "<why>" keeps the reason on the record',
       withdraw: 'ending a bounty with nothing merged is one command now — box bounty close <id>',
-      remind: 'the tool no longer supplies a reminder line — the "reminders" switch in .box/limits.json is the owner\'s to act on'
+      remind: 'the tool no longer supplies a reminder line — the "reminders" switch in .box/limits.json is the owner\'s to act on',
+      confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --to github --preview, publish with box bounty post <id> --to github; the owner\'s own commands are box bounty owner setup/allow/ask/answer'
     };
     if (removed[subcommand!] !== undefined) {
       throw new BountyRefused('command-removed', removed[subcommand!]!);
@@ -248,47 +249,42 @@ if (command === 'export') {
         process.exitCode = 0;
       } else {
         const result = finalizeBounty(plan);
-        console.log(`${result.id} — stage 1 of 7: drafted — written to ${result.outDir}`);
+        console.log(`${result.id} — drafted — written to ${result.outDir}`);
         console.log(`record: ${result.recordPath} — the tool writes it; commit it with the project`);
-        console.log(`next: the owner reviews the preview above and says yes — then run box bounty confirm ${result.id}. Nothing has been posted; nothing has left this machine.`);
+        console.log(`next: deliver it — run box bounty post ${result.id} --to <dir|github> (--preview shows what a GitHub post makes public). Nothing has been posted; nothing has left this machine.`);
       }
     } else if (subcommand === 'status') {
       const [id, ...extraIds] = bountyIds();
       if (extraIds.length > 0) usage('box bounty status [id] [--full] [--comments]');
       console.log(renderStatus(resolveRepoRoot(bountyRepo(), 'status'), { ...(id === undefined ? {} : { id }), full: bountyArgs.includes('--full'), comments: bountyArgs.includes('--comments') }));
-    } else if (subcommand === 'confirm') {
-      const [id, ...extraIds] = commandIds();
-      if (id === undefined || extraIds.length > 0) usage('box bounty confirm <id> [--repo <path>]');
-      const repoRoot = resolveRepoRoot(bountyRepo(), 'confirm');
+    } else if (subcommand === 'post') {
       const toIndex = bountyArgs.indexOf('--to');
       const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
-      // The two publication choices: --with-changes says the task needs every
-      // uncommitted change to tracked files (one tool-built commit on the
-      // bounty branch); --include names an untracked file to publish, once per
-      // file. Both are previewed and recorded — post publishes only what the
-      // owner saw.
+      const [id, ...extraIds] = commandIds();
+      // The two publication choices, moved from the removed `confirm`:
+      // --with-changes says the task needs every uncommitted change to
+      // tracked files (one tool-built commit on the bounty branch);
+      // --include names an untracked file to publish, once per file. Both
+      // show in --preview, and each makes the post wait for the owner.
       const withChanges = bountyArgs.includes('--with-changes');
       const include: string[] = [];
       bountyArgs.forEach((arg, index) => {
         if (arg !== '--include') return;
         const named = bountyArgs[index + 1];
-        if (named === undefined || named.startsWith('--')) usage('box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview]');
+        if (named === undefined || named.startsWith('--')) usage('box bounty post <id> --to github [--with-changes] [--include <file>] [--preview]');
         include.push(named!);
       });
-      if (toIndex >= 0 && to !== 'github' || bountyArgs.includes('--preview') && to !== 'github' || (withChanges || include.length > 0) && to !== 'github') usage('box bounty confirm <id> [--to github] [--with-changes] [--include <file>] [--preview]');
-      const githubChoice = { withChanges, include };
-      if (bountyArgs.includes('--preview')) { if (to === 'github') console.log(previewGitHub(repoRoot, id, githubChoice)); process.exit(0); }
-      const record = confirmBounty(repoRoot, id, to, githubChoice);
-      if (record.githubApproval !== undefined) console.log(record.githubApproval.preview);
-      console.log(`${record.id} — stage 2 of 7: confirmed — the owner's yes is recorded in ${recordPath(repoRoot, record.id)}`);
-      console.log(`next: deliver it — run box bounty post ${record.id} --to ${to === 'github' ? 'github' : '<dir>'}`);
-    } else if (subcommand === 'post') {
-      const toIndex = bountyArgs.indexOf('--to');
-      const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
-      const [id, ...extraIds] = commandIds();
-      if (id === undefined || extraIds.length > 0 || to === undefined) usage('box bounty post <id> --to <dir> [--repo <path>]');
-      const { record, destination } = postBounty(resolveRepoRoot(bountyRepo(), 'post'), id, to);
-      console.log(`${record.id} — stage 3 of 7: posted — delivered to ${destination}`);
+      if (id === undefined || extraIds.length > 0 || to === undefined || (withChanges || include.length > 0) && to !== 'github') usage('box bounty post <id> --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
+      const repoRoot = resolveRepoRoot(bountyRepo(), 'post');
+      if (bountyArgs.includes('--preview')) {
+        if (to !== 'github') usage('box bounty post <id> --to github --preview — only a GitHub post has a preview');
+        console.log(previewGitHub(repoRoot, id, { withChanges, include }));
+        console.log('preview only — nothing was posted. Run again without --preview to publish it.');
+        process.exit(0);
+      }
+      const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
+      console.log(`${record.id} — posted — delivered to ${destination}`);
+      if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level}-level "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
       console.log(record.github !== undefined ? `next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change` : `next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty look ${record.id} --from <dir>`);
     } else if (subcommand === 'apply') {
       const [id, attemptText, ...extraIds] = commandIds();
@@ -362,6 +358,47 @@ if (command === 'export') {
       } else {
         console.log(`${record.id} — ${record.stage} — ${record.stage === 'rejected' ? 'the reason is recorded and' : 'the durability ref is removed and'} the record says ended`);
         console.log(`ended — ${jobLine(record)}`);
+      }
+    } else if (subcommand === 'owner') {
+      // The plainly named owner group the description never offers an agent:
+      // the only commands that write or widen the decision, plus setup, the
+      // answers and the summary. `owner` alone prints the group's usage.
+      const [verb, ...ownerArgs] = bountyArgs;
+      const levelAll = ownerArgs.includes('--all') || ownerArgs.includes('--all-projects');
+      const yes = ownerArgs.includes('--yes');
+      const ownerUsage = (detail?: string): never => {
+        if (detail !== undefined) console.error(detail);
+        console.error('the owner commands — only these write or widen the owner\'s decision:');
+        console.error('       box bounty owner setup [--repo <path>]        where things stand + the exact command for each step');
+        console.error('       box bounty owner allow [--project|--all] [--yes]   allow the tool — prints what it allows; --yes writes it');
+        console.error('       box bounty owner ask [--project|--all]      ask me each time');
+        console.error('       box bounty owner off [--project|--all]      turn the permission off');
+        console.error('       box bounty owner on [--project|--all] [--yes]      turn it back on');
+        console.error('       box bounty owner answer <id> [--repo <path>]   answer the one bounty waiting for the owner');
+        console.error('       box bounty owner summary [--since <iso>] [--repo <path>]  what was done since a time');
+        process.exit(2);
+      };
+      if (verb === undefined) ownerUsage();
+      const root = resolveRepoRoot(bountyRepo(), `owner ${verb}`);
+      if (verb === 'setup') {
+        console.log(ownerSetup(root));
+      } else if (verb === 'allow' || verb === 'on') {
+        console.log(ownerAllow(root, levelAll, yes));
+      } else if (verb === 'ask') {
+        console.log(ownerAsk(root, levelAll));
+      } else if (verb === 'off') {
+        console.log(ownerOff(root, levelAll));
+      } else if (verb === 'answer') {
+        const [id, ...rest0] = ownerArgs.filter((arg, index) => !arg.startsWith('--') && ownerArgs[index - 1] !== '--repo');
+        if (id === undefined || rest0.length > 0) ownerUsage('box bounty owner answer <id>');
+        console.log(ownerAnswer(root, id!));
+      } else if (verb === 'summary') {
+        const sinceIndex = ownerArgs.indexOf('--since');
+        const since = sinceIndex >= 0 ? ownerArgs[sinceIndex + 1] : undefined;
+        if (sinceIndex >= 0 && (since === undefined || since.startsWith('--'))) ownerUsage('box bounty owner summary --since <iso>');
+        console.log(ownerSummary(root, since));
+      } else {
+        ownerUsage(`box bounty owner ${verb} is not an owner command`);
       }
     } else {
       usage(`box bounty ${subcommand} is not a bounty command — run box bounty help for the journey`);
