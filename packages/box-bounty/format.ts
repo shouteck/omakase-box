@@ -50,7 +50,20 @@ export function readFormat(body: string): FormatRead {
 }
 export const renderFormat = (value: BountyFormat): string => `${FORMAT_MARKER}\n${JSON.stringify(value)}\n-->\n`;
 export const publicText = (text: string): string => text.replaceAll('<', '&lt;');
-export function formatFor(record: BountyRecord, publication: Pick<GitHubPublication, 'repository' | 'commit' | 'pushed' | 'branch' | 'seenPullRequests'> | undefined = record.github, stating: number | undefined = record.reward?.amount): BountyFormat {
+// The amount a posted bounty is bound to state. It lives in the format block
+// of the body the tool posted — the artifact GitHub accepted — never in the
+// record's `reward` summary on its own: that file is agent-editable, so a
+// number re-read from it could reach a public write the posted body never
+// carried (BT11a fix round). A pre-wave approval (and a snapshot publication,
+// whose body holds no block) is bound to $0 — the listing it approved states
+// no other amount. A bounty with no GitHub publication is bound only by a
+// folder post, which wrote `reward` itself in the same write as the post.
+export function boundAmount(record: BountyRecord): number | undefined {
+  if (record.github === undefined) return record.githubApproval !== undefined ? 0 : record.reward?.amount;
+  const posted = readFormat(record.github.body);
+  return posted.kind === 'present' ? posted.value.reward.amount : record.reward?.amount ?? 0;
+}
+export function formatFor(record: BountyRecord, publication: Pick<GitHubPublication, 'repository' | 'commit' | 'pushed' | 'branch' | 'seenPullRequests'> | undefined = record.github, stating: number | undefined = boundAmount(record)): BountyFormat {
   if (publication === undefined) throw new Error('a format needs a GitHub publication');
   const decision = [...record.events].reverse().find(event => event.stage === 'applied');
   let state: FormatState = { kind: 'open' };

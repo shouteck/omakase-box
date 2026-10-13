@@ -7,6 +7,7 @@ import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, in
 import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
 import { changePublishList, publishLists } from './never-ship.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
+import { boundAmount } from './format.js';
 
 export const DECISION_WORDS = {
   allow: 'allow this repository',
@@ -132,7 +133,7 @@ export function renderConfig(repoRoot: string | null): string {
     lines.push(...instructionNotices(repoRoot, false));
     const listed = listRecords(repoRoot);
     const promised = promisedTotal(listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
-    lines.push(`promised across this repository's open bounties: $${promised}${rewardLimit === null ? ' — no limit is set' : ` of a $${rewardLimit} limit — $${rewardLimit - promised} left`}`);
+    lines.push(`promised across this repository's open bounties: $${promised}${rewardLimit === null ? ' — no limit is set' : ` of a $${rewardLimit} limit — ${promised <= rewardLimit ? `$${rewardLimit - promised} left` : `$${promised - rewardLimit} over`}`}`);
     const waiting = listed.flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record] : []);
     for (const record of waiting) {
       lines.push(record!.waiting!.reason === 'secrets'
@@ -203,13 +204,13 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     // open. This repository is what the tool can see; the owner keeps the
     // limit with that horizon in mind.
     const open = repoRoot === null ? [] : listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
-    const posted = open.filter(entry => entry.record!.reward !== undefined).length;
+    const posted = open.filter(entry => boundAmount(entry.record!) !== undefined).length;
     if (posted > 0) lines.push(`${posted} open ${posted === 1 ? 'bounty keeps' : 'bounties keep'} the amount each was posted with — this changes later bounties only.`);
     else lines.push('a bounty keeps the amount it was posted with — this changes later bounties only.');
     if (repoRoot !== null) {
       const promised = promisedTotal(open);
       const limit = name === 'reward-limit' ? amount : settings.rewardLimit?.amount ?? null;
-      lines.push(limit === null ? `promised now: $${promised} across this repository's open bounties; no limit is set` : `promised now: $${promised} across this repository's open bounties — $${limit - promised} left of the $${limit} limit`);
+      lines.push(limit === null ? `promised now: $${promised} across this repository's open bounties; no limit is set` : `promised now: $${promised} across this repository's open bounties — ${promised <= limit ? `$${limit - promised} left of` : `$${promised - limit} over`} the $${limit} limit`);
     }
     return lines.join('\n');
   }

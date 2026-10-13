@@ -14,7 +14,7 @@
 // `close` removes the ref.
 
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
@@ -29,6 +29,7 @@ import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
 import { quoteForeign, showPath } from './answer.js';
+import { boundAmount } from './format.js';
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
 
@@ -385,12 +386,24 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (attempt.pullRequest !== undefined && (!Number.isSafeInteger(attempt.pullRequest) || attempt.pullRequest < 1)) return null;
   }
   if (record.reward !== undefined && (!object(record.reward) || typeof record.reward.amount !== 'number' || !Number.isSafeInteger(record.reward.amount) || record.reward.amount < 0 || Object.keys(record.reward).some(key => key !== 'amount'))) return null;
+  // `reward` is bound only at posting — in the same write as the GitHub
+  // publication, or with a folder post's `posted` transition. On a record
+  // still short of posting it can only have been edited in, and a pre-wave
+  // approval predates rewards entirely: it states $0 whatever this field
+  // says. A record carrying either shape is not one the tool wrote — it
+  // reads corrupt rather than lend a forged amount to a public render or to
+  // the promised count (BT11a fix round).
+  if (record.reward !== undefined && (record.githubApproval !== undefined || record.github === undefined && (record.stage === 'drafted' || record.stage === 'confirmed' || record.stage === 'waiting'))) return null;
   if (record.answer !== undefined && record.answer !== null && (typeof record.answer !== 'object' || typeof record.answer.commit !== 'string' || !sha.test(record.answer.commit))) return null;
   if (record.conflicts !== undefined && record.conflicts !== null && (typeof record.conflicts !== 'object' || !strings(record.conflicts.paths) || typeof record.conflicts.at !== 'string' || !stamp.test(record.conflicts.at))) return null;
   const github = record.github;
   if (github !== undefined) {
     if (github === null || typeof github !== 'object') return null;
     if (typeof github.repository !== 'string' || !/^[A-Za-z\d_.-]+\/[A-Za-z\d_.-]+$/.test(github.repository) || typeof github.commit !== 'string' || !sha.test(github.commit)) return null;
+    // The bound reward lives inside the posted body's format block — a body
+    // that is not a string was never written by this tool, so nothing parses
+    // a number out of it (BT11a fix round).
+    if (typeof github.body !== 'string') return null;
     if (github.formatRead !== undefined && !['absent', 'invalid', 'matches-record', 'differs-from-record'].includes(github.formatRead)) return null;
     if (github.formatRepair !== undefined && !['updated', 'preserved-invalid', 'update-failed'].includes(github.formatRepair)) return null;
     if (github.formatReadAt !== undefined && (typeof github.formatReadAt !== 'string' || !stamp.test(github.formatReadAt))) return null;
@@ -622,7 +635,10 @@ const historyJson = (event: StageEvent): string =>
 // record is no longer open. This repository is what the tool can see; the
 // owner keeps the limit with that horizon in mind.
 export function promisedTotal(open: readonly ListedBounty[]): number {
-  return open.reduce((sum, entry) => sum + (entry.record?.reward?.amount ?? 0), 0);
+  // The bound amount, not the editable `reward` summary: for a GitHub-posted
+  // bounty that is the amount inside the body the tool posted, so an edited
+  // record cannot shrink what open bounties promise (BT11a fix round).
+  return open.reduce((sum, entry) => sum + (entry.record === null ? 0 : boundAmount(entry.record) ?? 0), 0);
 }
 
 // The reward side of `status`/`config`: what each new bounty will state, what
@@ -632,7 +648,7 @@ function rewardStatusLine(open: readonly ListedBounty[]): string {
   const { amount, limit } = readReward();
   const promised = promisedTotal(open);
   const stated = amount === 0 ? 'each new bounty states $0 — no payment is promised' : `each new bounty states $${amount} — a promise in the owner's name, paid by hand`;
-  const counted = limit === null ? `open bounties here promise $${promised}; no limit is set` : `open bounties here promise $${promised} of a $${limit} limit — $${limit - promised} left`;
+  const counted = limit === null ? `open bounties here promise $${promised}; no limit is set` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
   return `reward: ${stated}; ${counted}; the owner sets both in box bounty config`;
 }
 
@@ -643,13 +659,53 @@ function rewardStatusLine(open: readonly ListedBounty[]): string {
 // checked on load, but reward>limit is a rule about the pair, enforced where
 // it is written and again where it is spent.
 export function rewardForPost(repoRoot: string): { readonly amount: number } {
-  const { amount, limit } = readReward();
-  if (amount > 0) {
-    if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`} — the owner sets the most that may be promised with box bounty config set reward-limit <whole dollars>; nothing was posted`);
-    const promised = promisedTotal(listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
-    if (promised + amount > limit) throw new BountyRefused('promise-limit-exceeded', `posting would bring promised rewards to $${promised + amount} across this repository's open bounties — the owner's limit is $${limit}; nothing was posted`);
-  }
+  const { amount } = readReward();
+  assertPromiseRoom(repoRoot, amount);
   return { amount };
+}
+
+// The limit gate itself, run for a stated amount: once early so a refused
+// post touches nothing, and again inside the promise lock at the moment the
+// record binds — the lock makes the check and the write one span, so two
+// posts running at once cannot both pass (BT11a fix round).
+export function assertPromiseRoom(repoRoot: string, amount: number): void {
+  const { limit } = readReward();
+  if (amount <= 0) return;
+  if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`} — the owner sets the most that may be promised with box bounty config set reward-limit <whole dollars>; nothing was posted`);
+  const promised = promisedTotal(listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+  if (promised + amount > limit) throw new BountyRefused('promise-limit-exceeded', `posting would bring promised rewards to $${promised + amount} across this repository's open bounties — the owner's limit is $${limit}; nothing was posted`);
+}
+
+// One directory, one mkdir — atomic on every filesystem the tool runs on. A
+// post holds it only for the span that re-reads the promised total and writes
+// the record, so the check and the write cannot interleave with another
+// post's. A lock that outlives a minute is the corpse of a killed process:
+// swept, not waited on — the critical span is local file work, far shorter.
+const PROMISE_LOCK_STALE_MS = 60_000;
+const PROMISE_LOCK_WAIT_MS = 3_000;
+export function withPromiseLock<T>(repoRoot: string, run: () => T): T {
+  const lock = join(repoRoot, '.box', 'promise.lock');
+  mkdirSync(dirname(lock), { recursive: true });
+  const giveUp = Date.now() + PROMISE_LOCK_WAIT_MS;
+  for (;;) {
+    try {
+      mkdirSync(lock);
+      break;
+    } catch {
+      // A held lock is waited out briefly; one that vanished mid-check is
+      // retried at once; a stale one is removed and the loop retries.
+      try {
+        if (Date.now() - statSync(lock).mtimeMs > PROMISE_LOCK_STALE_MS) { rmSync(lock, { recursive: true, force: true }); continue; }
+      } catch { continue; }
+      if (Date.now() >= giveUp) throw new BountyRefused('promise-limit-busy', 'another command is binding a bounty reward right now — run this post again in a moment; nothing was posted');
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+    }
+  }
+  try {
+    return run();
+  } finally {
+    rmSync(lock, { recursive: true, force: true });
+  }
 }
 
 // Cold-read surface for a fresh agent: every open bounty with id, stage, its
@@ -1054,14 +1110,6 @@ export function postBounty(repoRoot: string, id: string, toDir: string, opts?: {
   if (manifestId !== id) {
     throw new BountyRefused('folder-mismatch', `${join(record.folder, 'bounty.json')} does not name bounty ${id} — the recorded folder is not the bounty it should deliver`);
   }
-  record.reward = { amount: reward.amount };
-  // The listing states the amount bound now — rewritten whenever the manifest
-  // parses as this bounty, so an edited bounty.json or README can never ship
-  // a money line the owner did not set. The manifest bytes themselves ship
-  // as found: they carry no reward.
-  if (manifest !== null) {
-    writeFileSync(join(record.folder, 'README.md'), renderListing(manifest, manifest.note ?? null, reward.amount));
-  }
   const dest = resolve(toDir);
   const destReal = canonicalForNew(dest);
   if (existsSync(destReal) && !statSync(destReal).isDirectory()) {
@@ -1079,14 +1127,31 @@ export function postBounty(repoRoot: string, id: string, toDir: string, opts?: {
   if (existsSync(destination)) {
     throw new BountyRefused('destination-exists', `${destination} already exists — a delivered copy is never overwritten. Remove it or pick another --to`);
   }
-  mkdirSync(dirname(destination), { recursive: true });
-  cpSync(record.folder, destination, { recursive: true }); // copy, not move — the recorded folder stays
-  record.allowedBy = allowedByFor(repoRoot, record, opts?.answered === true, confirmed);
-  // A folder post runs no scan — the record must not claim the flagged
-  // content was re-checked; only a safe-listed path settles as known.
-  settleScanFindings(repoRoot, record, 'went-out-unchecked');
-  transitionTo(repoRoot, record, 'posted', { destination });
-  return { record, destination };
+  // Every refusal is behind us — a refused post changed nothing, the draft's
+  // README included. The limit is re-checked inside the promise lock at the
+  // moment the record binds: the check and the write are one span, so two
+  // posts running at once cannot both pass. A $0 post promises nothing, so it
+  // never takes the lock (BT11a fix round).
+  const bind = () => {
+    assertPromiseRoom(repoRoot, reward.amount);
+    record.reward = { amount: reward.amount };
+    // The listing states the amount bound now — rewritten whenever the manifest
+    // parses as this bounty, so an edited bounty.json or README can never ship
+    // a money line the owner did not set. The manifest bytes themselves ship
+    // as found: they carry no reward.
+    if (manifest !== null) {
+      writeFileSync(join(record.folder, 'README.md'), renderListing(manifest, manifest.note ?? null, reward.amount));
+    }
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(record.folder, destination, { recursive: true }); // copy, not move — the recorded folder stays
+    record.allowedBy = allowedByFor(repoRoot, record, opts?.answered === true, confirmed);
+    // A folder post runs no scan — the record must not claim the flagged
+    // content was re-checked; only a safe-listed path settles as known.
+    settleScanFindings(repoRoot, record, 'went-out-unchecked');
+    transitionTo(repoRoot, record, 'posted', { destination });
+    return { record, destination };
+  };
+  return reward.amount === 0 ? bind() : withPromiseLock(repoRoot, bind);
 }
 
 // Which written answer of the owner's allowed this post: the standing

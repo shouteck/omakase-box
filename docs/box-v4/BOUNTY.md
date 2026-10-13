@@ -16,8 +16,10 @@ block with the local record and reports absent, invalid, matching, or changed
 metadata. The issue block never overrides the record. Older issues without a
 block remain readable.
 
-Closing updates only the final machine block and preserves the visible issue
-body as read from GitHub. Invalid or duplicate blocks stay untouched; issue
+Closing updates only the `state` field of the final machine block and
+preserves everything else as read live from GitHub — the reward included, so
+the closed block states the amount the issue carried, never a value re-read
+from the record. Invalid or duplicate blocks stay untouched; issue
 closure and branch removal continue. A failed block write is reported as
 `update-failed`, with the last observed comparison. `close <id>` retries that
 write on an ended bounty. Compact ended `status` shows the cached last
@@ -427,7 +429,10 @@ flag — each money spelling is a named refusal (`reward-agent-set`) — and a
 project file claiming a reward or a limit is refused by name
 (`project-claims-reward`); both live in the owner's settings only. A post
 that would pass the limit refuses by name (`promise-limit-exceeded`) with
-both numbers and changes nothing.
+both numbers and changes nothing. The check is atomic with the record write
+that binds the reward — posts running at the same time take a short lock, so
+two concurrent posts cannot both pass; a post that finds the lock busy
+refuses with `promise-limit-busy` and can be run again.
 
 Nothing written grants nothing. A repository entry overrides the default.
 Every change retains the previous value and its time. Legacy folder entries

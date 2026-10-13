@@ -3,7 +3,7 @@
 // project file claiming a reward is refused by name, and the amount bound at
 // posting lives on the record — never taken from anything an agent wrote.
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
@@ -243,5 +243,82 @@ describe('BT11a — the public side and the words around it', () => {
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('reward you have set — $0');
     expect(run.stdout).toContain('config set reward');
+  });
+});
+
+describe('BT11a fix round — the record file is never a render source', () => {
+  it('post → the record\'s reward rewritten → close keeps the bound amount in the listing and the block', () => fixture(({ repo, id, state }) => {
+    changeConfig(repo, 'set', 'reward-limit', '200');
+    changeConfig(repo, 'set', 'reward', '50');
+    postBounty(repo, id, 'github');
+    // The pass's attack, replayed: `.box/bounties/<id>.json` is agent-editable
+    // — the bound summary is rewritten between post and close.
+    const path = join(repo, '.box', 'bounties', `${id}.json`);
+    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 99999 } }, null, 2) + '\n');
+    closeBounty(repo, id);
+    const body = state().issues[0]!.body;
+    // Listing text and block state the one bound amount — the forged field
+    // reached neither.
+    expect(body).toContain('reward: $50');
+    expect(body).not.toContain('99999');
+    const read = readFormat(body);
+    if (read.kind !== 'present') throw new Error('format missing');
+    expect(read.value.schemaVersion).toBe(2);
+    expect(read.value.reward).toEqual({ amount: 50, currency: 'USD' });
+    expect(read.value.state).toEqual({ kind: 'closed-none' });
+  }));
+
+  it('a forged-down summary cannot shrink what an open bounty promises', () => fixture(({ repo, id }) => {
+    changeConfig(repo, 'set', 'reward-limit', '60');
+    changeConfig(repo, 'set', 'reward', '50');
+    postBounty(repo, id, 'github'); // $50 promised of the $60 limit — $10 left
+    const path = join(repo, '.box', 'bounties', `${id}.json`);
+    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 0 } }, null, 2) + '\n');
+    // The count reads the posted body's block — the bound $50 still fills the limit.
+    const second = draft(repo, 'another');
+    refused(() => postBounty(repo, second.id, 'github'), 'promise-limit-exceeded');
+  }));
+
+  it('a reward written onto a record that never posted reads corrupt, not as an amount', () => {
+    const repo = makeRepo({ 'TASK.md': 'task\n' });
+    ownerSays(repo, 'allowed');
+    const { id } = draft(repo);
+    const path = join(repo, '.box', 'bounties', `${id}.json`);
+    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 50 } }, null, 2) + '\n');
+    refused(() => loadRecord(repo, id), 'record-corrupt');
+  });
+
+  it('the promise lock makes the limit check and the bind one span', () => {
+    const repo = makeRepo({ 'TASK.md': 'task\n' });
+    ownerSays(repo, 'allowed');
+    const { id, outDir } = draft(repo);
+    changeConfig(repo, 'set', 'reward-limit', '50');
+    changeConfig(repo, 'set', 'reward', '12');
+    const before = readFileSync(join(outDir, 'README.md'), 'utf8');
+    // A lock already held is the other post's bind in flight — this one
+    // waits it out, then refuses by name rather than guessing.
+    mkdirSync(join(repo, '.box', 'promise.lock'));
+    refused(() => postBounty(repo, id, runRoot('inbox')), 'promise-limit-busy');
+    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toBe(before); // a refused post changed nothing
+    expect(loadRecord(repo, id).stage).toBe('drafted');
+    rmSync(join(repo, '.box', 'promise.lock'), { recursive: true });
+    const { destination } = postBounty(repo, id, runRoot('inbox'));
+    expect(readFileSync(join(destination, 'README.md'), 'utf8')).toContain('reward: $12');
+  }, 15000);
+
+  it('a refused folder post leaves the draft README untouched', () => {
+    const repo = makeRepo({ 'TASK.md': 'task\n' });
+    ownerSays(repo, 'allowed');
+    const { id, outDir } = draft(repo);
+    const before = readFileSync(join(outDir, 'README.md'), 'utf8');
+    changeConfig(repo, 'set', 'reward-limit', '50');
+    changeConfig(repo, 'set', 'reward', '12');
+    const blocked = join(runRoot('blocked'), 'file');
+    writeFileSync(blocked, 'in the way\n');
+    refused(() => postBounty(repo, id, blocked), 'destination-exists');
+    // Before the fix the draft's stated amount was rewritten to $12 anyway.
+    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toBe(before);
+    expect(loadRecord(repo, id).reward).toBeUndefined();
+    expect(loadRecord(repo, id).stage).toBe('drafted');
   });
 });

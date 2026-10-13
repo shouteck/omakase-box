@@ -11,11 +11,11 @@ import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, g
 import type { DryMerge, IndexChange } from './git.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner } from './record.js';
+import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { requireRepository } from './repository.js';
 import { readReward } from './settings.js';
-import { formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
+import { boundAmount, formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the
@@ -224,7 +224,10 @@ function listingSnapshot(record: BountyRecord, repository: string) {
   const { manifest } = boundFolder(record);
   const branch = `box-bounty/${record.id}`;
   const title = `[box bounty ${record.id}] ${publicText(manifest.title)}`;
-  const sourceListing = renderListing(manifest, manifest.note, record.reward?.amount ?? 0)
+  // This path runs only for approvals recorded before rewards existed, so the
+  // bound amount is $0 by definition — the record's `reward` field is never a
+  // render source here (a forged one reads as corrupt at load).
+  const sourceListing = renderListing(manifest, manifest.note, boundAmount(record) ?? 0)
     .replace('`repo/` holds', 'The branch root holds')
     .replace('There is no `.git` and no history.', 'No owner Git history was shipped.');
   const body = `${sourceListing}\n\n## Answer on GitHub\n\nRepository: https://github.com/${repository}\nBranch to work from: \`${branch}\`\nClone only this branch, make the change, and open a pull request against \`${branch}\` in this repository. The branch contains exactly the shipped source, with no owner history.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer. Collecting an answer runs nothing a solver wrote.\n\n<!-- box-bounty:${record.id} -->\n`;
@@ -1000,9 +1003,10 @@ export function approveGitHub(root: string, record: BountyRecord, choice: GitHub
   const rules = shipRules(root);
   const plan = planGitHub(root, repository, record, rules, choice);
   // A preview states the amount a post would bind now; a posted bounty keeps
-  // the amount it went out with, and a recorded approval predates rewards —
-  // its frozen body states $0.
-  const text = listingHistory(record, repository, plan, record.reward?.amount ?? (record.githubApproval !== undefined ? 0 : readReward().amount));
+  // the amount it went out with — read from the posted body, never from the
+  // editable `reward` summary — and a recorded approval predates rewards: its
+  // frozen body states $0.
+  const text = listingHistory(record, repository, plan, boundAmount(record) ?? readReward().amount);
   const preview = renderPlanPreview(repository, record, plan, text);
   return {
     repository,
@@ -1108,8 +1112,6 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         `the owner answers this one with box bounty allow ${id} — the answer is bound to what would be published now — or ends it with box bounty close ${id}`
       ].join('\n'));
     }
-    record.allowedBy = allowedByFor(root, record, opts?.answered === true || reusedAnswer, legacyConfirmed);
-    record.reward = { amount: reward!.amount };
     const text = listingHistory(record, repository, plan, reward!.amount);
     const publication: GitHubPublication = {
       repository,
@@ -1128,9 +1130,21 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       issue: null,
       pending: null
     };
-    record.github = publication;
-    git(root, ['update-ref', publicationRef(id), publication.commit]);
-    persistRecord(root, record);
+    // The limit gate ran before the waits above; between then and now another
+    // process may have bound its own bounty. The re-check and the write that
+    // binds the reward run inside the promise lock as one span, so two posts
+    // cannot both pass the owner's limit — the second sees the first's bound
+    // record and refuses by name, before anything of it was written (BT11a
+    // fix round). A $0 post promises nothing, so it never takes the lock.
+    const bind = () => {
+      assertPromiseRoom(root, reward!.amount);
+      record.allowedBy = allowedByFor(root, record, opts?.answered === true || reusedAnswer, legacyConfirmed);
+      record.reward = { amount: reward!.amount };
+      record.github = publication;
+      git(root, ['update-ref', publicationRef(id), publication.commit]);
+      persistRecord(root, record);
+    };
+    if (reward!.amount === 0) bind(); else withPromiseLock(root, bind);
   }
   if (record.github === undefined) {
     const approval = record.githubApproval!;
@@ -1622,10 +1636,16 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
       let closed: unknown;
       if (read.kind === 'present') {
         try {
-          const body = snapshot.body.slice(0, read.start) + renderFormat(formatFor(record));
+          // The block already on the issue is the bound public artifact: at
+          // close only `state` may change — every other field, the reward
+          // among them, keeps the bytes it went public with. Nothing re-read
+          // from the record can reach the block here, so it can never be made
+          // to disagree with the listing text above it by an edited record
+          // (BT11a fix round).
+          const body = snapshot.body.slice(0, read.start) + renderFormat({ ...read.value, state: formatFor(record).state });
           closed = api(root, endpoint, { state: 'closed', body }, 'PATCH');
           if (!isObject(closed) || closed['body'] !== body) throw new Error('format update was not confirmed');
-          publication.formatRead = 'matches-record';
+          publication.formatRead = formatFact(body, formatFor(record));
           publication.formatRepair = 'updated';
         } catch { publication.formatRepair = 'update-failed'; closed = api(root, endpoint, { state: 'closed' }, 'PATCH'); }
       } else closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
