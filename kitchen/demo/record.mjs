@@ -198,6 +198,7 @@ async function main() {
           index.push({ at: at(), who: 'PAGE line refused — outside the sandbox', still: await still(`page-${pad(pages)}.png`), address: `refused: ${url}` });
           await showTerminal();
         }
+        return; // a PAGE line was already painted by the full re-render — appending it again would double it on screen
       }
       await page.evaluate(`(function(){var t=document.getElementById('term');if(!t)return;var d=document.createElement('div');var l=LINE;d.className=l.startsWith('=== ')?'step':l.startsWith('PAGE ')?'page':l.startsWith('$ ')?'cmd':'';d.textContent=l;t.appendChild(d);window.scrollTo(0,document.body.scrollHeight)})()`.replace('LINE', JSON.stringify(line)));
     };
