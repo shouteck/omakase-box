@@ -102,14 +102,15 @@ it('recognition without one receiving address saves a local notice and does not 
   expect(loadSettings().firstMerges).toEqual({});
 }, { prAuthor: 'solver', collected: true }));
 
-it('two independent local-folder bounties without a GitHub address merge with one recorded notice', () => {
+it('independent local-folder bounties notify once when a GitHub address is later added', () => {
   const repo = makeRepo({ 'app.txt': 'broken\n', 'TASK.md': 'repair it\n' });
   const scratch = runRoot('BT8a-local-merge'), deliveries = join(scratch, 'deliveries'), returned = join(scratch, 'returned');
   changeConfig(repo, 'set', 'all-projects', 'true');
   write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: [deliveries] }));
   const ids: string[] = [], notices: boolean[] = [];
   let firstCommit = '';
-  for (const n of [1, 2]) {
+  for (const n of [1, 2, 3]) {
+    if (n === 3) git(repo, ['remote', 'add', 'origin', 'https://github.com/owner/project.git']);
     const created = cli(repo, 'create', '--task', 'TASK.md', '--why', 'independent eyes', '--title', `local repair ${n}`, '--out', join(scratch, `bounty-${n}`));
     expect(created.status).toBe(0);
     const id = /(bt-[a-f\d]+) — drafted/.exec(created.stdout)?.[1];
@@ -134,8 +135,8 @@ it('two independent local-folder bounties without a GitHub address merge with on
     }
     expect(loadRecord(repo, id).stage).toBe('applied');
   }
-  expect(new Set(ids).size).toBe(2);
-  expect(notices).toEqual([true, false]);
+  expect(new Set(ids).size).toBe(3);
+  expect(notices).toEqual([true, false, false]);
   const marker = JSON.parse(readFileSync(join(repo, '.box', 'bounties', 'FIRST_MERGE'), 'utf8'));
   expect(marker).toMatchObject({ kind: 'box-local-first-merge', repository: repo, commit: firstCommit });
   const status = cli(repo, 'status');
@@ -144,10 +145,11 @@ it('two independent local-folder bounties without a GitHub address merge with on
   expect(status.stdout).not.toContain('corrupt');
   expect(renderConfig(repo)).toContain(`commit ${firstCommit}`);
   expect(loadSettings().firstMerges).toEqual({});
+  expect(loadSettings().repositories).toEqual({});
 });
 
-it('a foreign or malformed local marker is preserved and reports persistence trouble after apply', () => postedFixture(({ repo, id }) => {
-  git(repo, ['remote', 'remove', 'origin']);
+it.each([false, true])('a foreign or malformed local marker is preserved after apply with readable address %s', readable => postedFixture(({ repo, id }) => {
+  if (!readable) git(repo, ['remote', 'remove', 'origin']);
   const marker = join(repo, '.box', 'bounties', 'FIRST_MERGE');
   writeFileSync(marker, 'foreign bytes\n');
   const applied = cli(repo, 'apply', id, '1');
@@ -157,6 +159,7 @@ it('a foreign or malformed local marker is preserved and reports persistence tro
   expect(applied.stdout).toContain('the merge stands');
   expect(readFileSync(marker, 'utf8')).toBe('foreign bytes\n');
   expect(loadRecord(repo, id).stage).toBe('applied');
+  expect(loadSettings().firstMerges).toEqual({});
 }, { prAuthor: 'solver', collected: true }));
 
 it('local notice persistence does not follow a linked marker or parent', () => {

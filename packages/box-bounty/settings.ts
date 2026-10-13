@@ -198,8 +198,8 @@ export function recordFirstMerge(repoRoot: string, commit: string): string | nul
   const receiving = address ?? 'this local repository';
   const fact = `a solution written by someone outside was merged into ${receiving}, commit ${commit}.`;
   try {
+    if (readLocalMerge(repoRoot) !== null) return null;
     if (address === null) {
-      if (readLocalMerge(repoRoot) !== null) return null;
       mkdirSync(join(repoRoot, '.box', 'bounties'), { recursive: true });
       checkLocalMergePath(repoRoot);
       writeFileSync(localMergeFile(repoRoot), `${JSON.stringify({ kind: 'box-local-first-merge', repository: realpathSync(repoRoot), commit, at: new Date().toISOString() }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
@@ -209,7 +209,8 @@ export function recordFirstMerge(repoRoot: string, commit: string): string | nul
       persist({ ...settings, firstMerges: { ...settings.firstMerges, [address]: { commit, at: new Date().toISOString() } } });
     }
   } catch (error) {
-    return `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${address === null ? '.box/bounties/FIRST_MERGE' : 'box bounty config'}.`;
+    const where = address === null || error instanceof BountyRefused && error.reason.startsWith('first-merge-notice-') ? '.box/bounties/FIRST_MERGE' : 'box bounty config';
+    return `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${where}.`;
   }
   return `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository; merging is not gated.`;
 }

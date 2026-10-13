@@ -420,6 +420,7 @@ recorded once per receiving repository and shown by status. The receiving
 repository's current GitHub address identifies that notice, even when the
 bounty was published elsewhere. Without a usable address, the notice is
 recorded locally in `.box/bounties/FIRST_MERGE` and names the local repository.
+A recorded local notice still counts if a GitHub address is later added.
 It grants no publication permission. `status --since <iso>`
 also prints the bounties posted, solutions merged and bounties closed since
 that time, plus what is waiting now. The seven old owner spellings are named
