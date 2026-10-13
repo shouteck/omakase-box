@@ -66,3 +66,4 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 ## The lab
 
 Paused by the owner on 10 October 2026. Nothing is owed to it and nothing is read from it at kickoff or close. Its last brief is at `git show origin/lab:lab/BRIEF.md` for the record.
+- **An agent prices each bounty.** As an option the owner switches on: a budget, a limit per bounty, the agent states the reward at `create`, a posted reward can be raised and never lowered, and the tool offers this project's own history as pricing facts. Designed in talk on 13 October 2026 and left out of BT11 by the owner as too early and likely to confuse. Revisit after real paid bounties exist.
