@@ -57,7 +57,7 @@ Whichever host an agent runs on, it learns at the start of a session that the to
 
 ## Result
 
-- Worker: (cook's session ended mid-report) · Reviewer: the pass — Devin subagent (Claude) on the Windows host, fresh agent, did not write this code
+- Worker: `box-worker` subagent on Devin (same model family); its session ended mid-report after committing the candidate — the CTO reconstructed state from the branch, `.kitchen/runs` records and fixtures · Reviewer: the pass — Devin subagent (Claude) on the Windows host, fresh agent, did not write this code
 - Commit: e4ebc139c7a13ec08f3ec223b1f96ff447b0404b
 - Verify: `verify e4ebc13 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 557s` (.kitchen/runs/2026-10-13T06-24-28-905Z-e4ebc13, summary.json read; clean tree, all four steps exit 0). Reused per reviewer role — nothing in the record to doubt; the earlier 06:16Z run on the same SHA timed out only in bt7-correction.test.ts (untouched by this diff) under host load. No `--fresh` rerun.
 - Verdict: **PASS** · Level: test-verified (recorded green suite plus live probes on the frozen built CLI)
@@ -72,5 +72,5 @@ Whichever host an agent runs on, it learns at the start of a session that the to
   - First install appends the block directly after existing bytes; a file without a trailing newline gets `<!-- box-bounty -->` glued to its last line (byte-preserved, per the test).
   - This repository's own AGENTS.md still carries the pre-wave "limits apply" block and `.box/limits.json` still sits there — worker notes forbade running the updater on the kitchen checkout; refresh/deletion is the owner's.
   - Bare `box bounty`, `config` found-files list, once-only "lacks the block" notice, `describe --rules` template and the four state transitions were exercised live; GitHub-dependent paths (PR seen/new flip) were verified through the fixture test, not a live post.
-- Merged: · Resources removed:
-- Reflect:
+- Merged: `37d34c5` (`--no-ff` into master, pushed 13 October 2026) · Resources removed: `wave/BT8b` branch deleted after merge; fixture roots `box-BT8b-readers-{m8BXrd,QGVOPC,sz1gTj}` removed by the helper's own guarded cleanup; ~80 `box-k6-stats-*.jsonl` temp files swept under standing approval; no embedded database was started (db=none)
+- Reflect: the cook's host session died before its report, and the committed candidate plus `.kitchen/runs` records carried all the state needed — a fresh pass finished the wave with no rework; records-first did its job. The `instruction-file` internals finding is sorted to BACKLOG.md; the frozen-CLI fresh-reader fixture pattern is sorted to the packaging card.

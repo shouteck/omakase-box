@@ -1,16 +1,15 @@
 # Status
 
-Updated by the CTO on 13 October 2026, at the BT8b kickoff check.
+Updated by the CTO on 13 October 2026, at the BT8b close.
 
 ## Now
 
-- **BT8b is in progress.** The owner said go after the removal card. Base `1b25ed6`; branch `wave/BT8b`. Start 05:11 UTC; stop by 06:41 UTC. Retire project limits-file reads and add opt-in instruction-file blocks. Latest hosted run `38349905613` is in progress; the preceding master run passed. This run stops after BT8b.
-- **BT8a merged and pushed.** The owner's commands are `allow`, `deny` and `config`. Permission follows the GitHub repository address across copies; deny keeps dated history and blocks blanket permission. Ask covers publishing only. First-use wording passed three fresh relay trials; two fresh configuration readers acted correctly on the first try.
-- Acceptance: fresh pass **PASS, ui-verified**, on `7534f3b`. Completed offline bounty and packaging verification passed; six existing packaging skips remain. No real owner settings, GitHub bounty or payment changed. Latest hosted master before merge was green; the new pushed run is not a local acceptance substitute.
-- BT8a's merged branch and wave-owned disposable fixtures are removed. The kitchen inbox is empty, and no fully merged wave branch remains.
-- The lab remains paused. Owner-held unmerged branches retained: `wave/A6`, `wave/K7`, `wave/BT7`, `wave/BT8-held`. Never push BT8-held, whose synthetic fixture history triggered push protection. About 109 older `box-bt1-*` temp directories remain outside this wave's cleanup authority.
-- Other nonblocking findings are in [BACKLOG.md](BACKLOG.md), with exact evidence in the wave records.
+- **BT8b merged and pushed** (merge `37d34c5`). An owner can opt in once (`box bounty config set instructions true`) and the tool keeps one identical block in each discovered host instruction file — Codex, Claude Code, Cursor, Gemini CLI, Copilot — saying the tool exists, plus one fixed line while a bounty is open or has an unseen solution. One file importing another gets the block once. `.box/limits.json` is retired: destinations, reminders and rulesFile are gone, cost and expected answer are generated from record facts. Bare `box bounty` prints the cold overview.
+- Acceptance: fresh pass **PASS, test-verified**, on `e4ebc13` (`verify e4ebc13 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 557s`). A fresh agent on a second host reported the tool and the open bounty from its instruction file alone; six measurement runs showed zero off-task pull. Security probes on the frozen built CLI all refused or stayed inside the block.
+- One non-blocking finding in [BACKLOG.md](BACKLOG.md): `config set instruction-file` accepts `.git/` and `.box/` internals; a `.git/config` block bricks git in that repo. A refuse-list is the cheap fix.
+- This run stopped after BT8b as named. The wave's cook session died mid-report; committed work plus verify records carried the state and a fresh pass finished it. Latest hosted run to read at next kickoff is the merge push on `37d34c5`; the preceding master run was green.
+- The lab remains paused. Owner-held unmerged branches retained: `wave/A6`, `wave/K7`, `wave/BT7`, `wave/BT8-held`. About 109 older `box-bt1-*` temp directories remain outside cleanup authority. This repo's own `AGENTS.md` still carries the pre-wave block wording and `.box/limits.json` still sits there — refreshing or deleting either is the owner's.
 
 ## Next
 
-**BT8b** is the only wave named for this run. After go, implement and independently review it within 90 minutes, close it, push master and stop. Then BT8c, BT9, BT10 with a real first-time owner setup, and BT11 after that use remain outside this run.
+No wave is named for a next run. The queue order per plan: **BT8c** (the secret scan split out of BT8), then **BT9** (the hook), **BT10** with a real first-time owner setup, and **BT11** after that use.
