@@ -84,6 +84,7 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 
 ## Notes for the worker
 
+- Dispatch, 13 October: owner named BT9 in the START message. Base `ebef4e6`; start 08:38 UTC; stop by 11:08 UTC. The hosted run on the BT8c merge was in flight at dispatch; the BT8b merge run was green. Name corrections per the brief's own instruction: also read waves/BT8a.md, waves/BT8b.md and waves/BT8c.md Results — the owner surface is now `allow`/`deny`/`config`, merges are never gated (a recognised merge closes the bounty without asking, so the 12-Oct disclosure sentence about closing with nobody asked applies under current rules), and the removed-command list also covers `remind`, `confirm` and the `owner *` spellings. Disposable trial projects and temp settings only; never touch this repository's host settings, any global/user-level host setting, real authority or the network beyond what the hook design requires.
 - Feature playbook, with the investigation steps first: confirm on each real host what its start and during-session slots do with a command's output before writing the installer for it.
 - One output command shared by every host; a thin, separate piece per host that only knows where that host keeps its settings and what an entry looks like. Do not build a general plug-in system.
 - BT4 found, from published work, that wording alone changes how much a tool is used and that more detail is not better. Keep every line the hook prints as short as it can be and still be a fact with a next command.
