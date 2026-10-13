@@ -56,6 +56,14 @@ The owner does not want to be handed a pile of commands. Most owners will not ty
 - First use offers, in this order: allow this repository; be asked each time; this one bounty only. The setup view offers the first two and the all-projects extra; it does not offer "this one bounty" when nothing is waiting.
 - An owner who chose "this one bounty" before is told so the next time, in one line, not shown the first-use text as if new.
 
+**What the yes means has to reach the owner (owner, 13 October 2026)**
+
+The owner's understanding of what they agree to comes through their agent's own words. The tool supplies the words; it cannot make an agent repeat them. This is the largest risk in the first-time setup, so it is tested and the wording is shaped by the test.
+
+- The first-use message gives the agent what to tell the owner in three short facts that survive paraphrase: bounties are **public**, under the owner's GitHub account; a solution the agent chooses is **merged** into the owner's code; and it is **this repository** only. From BT11 a fourth: what each bounty promises to pay.
+- **The relay is measured.** In the trial below, the reviewer plays an owner who sees only what the agent says in the conversation, never the tool's output, and then writes down what they believe they agreed to. Three runs with fresh agents. If "public", "merged" or "this repository" is missing from what the owner understood in any run, the message is made shorter and blunter and the runs are repeated. The Result gives each run's relayed sentence word for word.
+- **The first merge of a stranger's solution in a repository is said to the owner once.** The output of that `apply`, or of the command that recognises that merge, tells the agent to say in its closing message that a solution written by someone outside was merged into the owner's code, naming the commit. Once per repository, recorded so it is not said again, and never a question. `status` shows it too.
+
 **"Ask me each time" covers publishing only**
 
 - The owner is asked before each post. Nothing else waits on this setting.
@@ -93,7 +101,7 @@ The owner does not want to be handed a pile of commands. Most owners will not ty
 ## Review lenses
 
 - [x] **Security:** the reviewer plays an agent that wants a flagged bounty out. It tries: reworking the content so the pattern no longer matches (and reports that it goes out and that the owner is told, as the doc page says); adding to the safe list from the project, through a solution, through a link or a case trick on the path; getting the value printed; making the hit vanish from the record or the summary; discarding and recreating the bounty to lose the hit's trace. It tries to make a yes for one repository apply to another: same path with a different repository, a fork, a second remote, a remote edited to claim a listed address while the bounty would go elsewhere, a lookalike address. For each: prevented, or permitted but visible, and whether the doc page's claim matches.
-- [x] **User experience:** three readers, each fresh. An agent whose post is held by a hit says what it may do, what it may not, and who decides, then removes the content and posts. An owner, played by the reviewer with only bare `config`, allows one repository and adds one entry to each list, and says in their own words what each did. A fresh agent given only bare `config` and an owner's plain request ("stop bounties on this repository", "never publish the fixtures folder") runs the right command first time. An owner who allowed "this one bounty" last time reads the next first-use message and says what is being asked. The reviewer reports anything shown that was not used, and any line addressed to the wrong reader.
+- [x] **User experience:** the relay trial above, three runs, reported word for word. Then three readers, each fresh. An agent whose post is held by a hit says what it may do, what it may not, and who decides, then removes the content and posts. An owner, played by the reviewer with only bare `config`, allows one repository and adds one entry to each list, and says in their own words what each did. A fresh agent given only bare `config` and an owner's plain request ("stop bounties on this repository", "never publish the fixtures folder") runs the right command first time. An owner who allowed "this one bounty" last time reads the next first-use message and says what is being asked. The reviewer reports anything shown that was not used, and any line addressed to the wrong reader.
 - [ ] **Measurement fairness:** not applicable.
 
 ## Notes for the worker
@@ -103,6 +111,7 @@ The owner does not want to be handed a pile of commands. Most owners will not ty
 - A message has one reader. If a line is for the owner, it belongs in the setup view or the summary, not in what an agent is shown.
 - Report at the timebox. Do not run on.
 - Not in this wave: the instruction files (BT8b); the hook (BT9); any reward or limit (BT11).
+- The owner's side is not designed further until this wave has run (owner and head chef, 13 October 2026): the next useful information is what a fresh agent and a first-time owner do with it, not another decision made in talk.
 
 ---
 
