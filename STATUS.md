@@ -1,12 +1,13 @@
 # Status
 
-Updated by the CTO on 13 October 2026, at the close of wave BT8.
+Updated by the CTO on 13 October 2026, at the close of wave BT7b-ci2.
 
 ## Now
 
 - **BT8 merged** (`e8e1038`; PASS ui-verified on `37aa33d`): the owner says yes once, held in their own settings file outside any repository (`allowed`/`ask`/`off`, project level over default, nothing written is never allowed). `confirm` is gone — a `post` outside authority waits for the owner's one `owner answer`; the `bounty owner` group (`setup`, `allow`, `ask`, `off`, `on`, `answer`, `summary`) is the only writer of authority. A pre-publish scan holds a post on secret-shaped bytes, naming file:line and rule, never the value. Legacy records (`confirmed` stage, `confirm` events, `githubApproval`) still load; `.box/limits.json` authority claims refuse `limits-authority`.
 - **Push protection lesson landed:** the first BT8 push was rejected over a fake `glpat-` fixture literal — every secret-shaped test value is now built at run time, and `tests/box/bounty/secret-literals.test.ts` scans every tracked test file with the tool's own patterns so a literal cannot come back. The same rule got the wave file itself: describe a flagged value, never quote it. On the packaging card.
-- **BT7c done** (`1ce6cc7`): 9 commands. BT7b (`bd31c77`), BT6b (`af7b4e6`), BT7b-ci (`e7ec97b`), BT6b-ci (`2465d2c`) landed before it; master is green off-machine.
+- **BT7b-ci2 merged** (`10ca11e`; PASS test-verified on `be7a188`): the last red on master — `git 2.39.9 is refused` planted a `git.exe` stub, which POSIX never resolves as `git`. Now platform-split like the `gh` stand-in. Master's next run is the confirmation.
+- **BT7c done** (`1ce6cc7`): 9 commands. BT7b (`bd31c77`), BT6b (`af7b4e6`), BT7b-ci (`e7ec97b`), BT6b-ci (`2465d2c`) landed before it.
 - **Briefs revised on 13 October against BT8's Result:** `waves/BT8a.md` (three owner words and the repository list), `waves/BT8b.md` (instruction files; `.box/limits.json` retired), `waves/BT8c.md` (the scan as the owner decided it, new), `waves/BT11.md` (the fixed reward inside the owner's one decision, with a limit on what is promised at once), and a step zero in `waves/BT10.md` (a real first-time setup). Read briefs as they stand on master.
 - **K14 merged** (`0448c4f`, owner-accepted partial), K12 (`9fb21f4`), BT7a (`6043833`). `.box/limits.json` allows GitHub only; rewards $0; Apache 2.0; reminders off.
 - The lab is paused. Unmerged local branches kept for the owner: `wave/A6`, `wave/K7`, `wave/BT7`, `wave/BT8-held` (the unpushed reviewed BT8 history, kept for provenance — contains the synthetic fixture literals that tripped push protection; never push it).
