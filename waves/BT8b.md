@@ -2,7 +2,7 @@
 
 Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch, after BT8a · Branch: `wave/BT8b` · Timebox: 90 minutes; at expiry the cook stops and reports where it is, whatever state that is
 
-**Split out of BT8 by the CTO on 13 October 2026** so each wave is small enough to review once. The content is the owner's decision of 11 October 2026, unchanged: the tool must not depend on one agent host. The head chef checks names against master at dispatch. The corrections to BT8 that were briefly carried here are their own wave, [BT8a](BT8a.md).
+**Split out of BT8 by the CTO on 13 October 2026** so each wave is small enough to review once. The content is the owner's decision of 11 October 2026, unchanged: the tool must not depend on one agent host. The head chef checks names against master at dispatch. The corrections to BT8 that were briefly carried here are their own waves, [BT8a](BT8a.md) and [BT8c](BT8c.md). Checked against BT8's Result on 13 October 2026: BT8 left the instruction files and `.box/limits.json` as they were, apart from refusing an authority claim in the limits file and reporting its old destination entry once, so nothing here is already done.
 
 ## Outcome
 
@@ -11,14 +11,14 @@ Whichever host an agent runs on, it learns at the start of a session that the to
 ## Scope
 
 - Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`.
-- Read for context: `waves/BT8a.md` Result; `waves/BT4.md` Result (the tool-kept lines and how their wording was chosen); `waves/BT8.md` Result (`setup`); PLAN.md ("Memory without demand", "Host agnostic"); `kitchen/stations/packaging.md`.
+- Read for context: `waves/BT8a.md` Result; `waves/BT4.md` Result (the tool-kept lines and how their wording was chosen); `waves/BT8.md` Result; PLAN.md ("Memory without demand", "Host agnostic"); `kitchen/stations/packaging.md`.
 - Do not touch: anything in an instruction file outside the tool's own marked block; the owner's settings; `.execution/`, `docs/legacy/`.
 
 ## Done when
 
 - `node scripts/verify.mjs test:box-bounty test:box-package` exits 0 on the final commit; the suites reach no network.
-- **Finding the files.** At `setup`, the tool looks in the project for the instruction files hosts are known to load and states which it found. The list is in one place in the code and in the doc page, with the host each belongs to. The cook confirms each against that host's own documentation and lists in the Result what was confirmed and when. As understood on 11 October 2026, not confirmed: `AGENTS.md`, `CLAUDE.md`, files under `.cursor/rules`, `GEMINI.md`, `.github/copilot-instructions.md`.
-- **Keeping the block.** With the owner's yes, given once at setup, the tool keeps its block in each file it found, identical in all, and changes them together. Where one file already pulls in another (as this repository's `CLAUDE.md` pulls in `AGENTS.md`), it writes the block once and says so.
+- **Finding the files.** Bare `config` (BT8a) shows which instruction files the tool found; it looks in the project for the instruction files hosts are known to load and states which it found. The list is in one place in the code and in the doc page, with the host each belongs to. The cook confirms each against that host's own documentation and lists in the Result what was confirmed and when. As understood on 11 October 2026, not confirmed: `AGENTS.md`, `CLAUDE.md`, files under `.cursor/rules`, `GEMINI.md`, `.github/copilot-instructions.md`.
+- **Keeping the block.** With the owner's yes, one `config` setting given once, the tool keeps its block in each file it found, identical in all, and changes them together. Where one file already pulls in another (as this repository's `CLAUDE.md` pulls in `AGENTS.md`), it writes the block once and says so.
 - It creates no instruction file, and changes nothing outside its own marked block, byte for byte. A file it cannot update safely is a named refusal for that file only; the others are still updated and the output says which was not.
 - **The list of files is not stored.** The tool finds its own marked block in the known instruction files each time it needs to. Only an owner's choice of a file outside the known list is kept, in the owner's settings for that repository.
 - When a new instruction file appears later, `status` says once that a host's file lacks the block and gives the command that adds it. It adds nothing by itself.
