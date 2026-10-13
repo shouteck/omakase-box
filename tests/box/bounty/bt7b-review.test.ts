@@ -1,7 +1,7 @@
 // BT7b pass review — adversarial cases the wave's own tests do not carry.
 // Scratch additions by the reviewer; each states which attack it stands for.
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, linkSync, copyFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync, linkSync, copyFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { answerGitHub, checkMergedSolutions, loadRecord, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
@@ -154,20 +154,26 @@ it('git 2.39.9 is refused as too old, naming what was found', () => postedFixtur
   answerGitHub(repo, id, 1);
   const bin = runRoot('bt7b-review-oldgit');
   mkdirSync(bin, { recursive: true });
-  try { linkSync(process.execPath, join(bin, 'git.exe')); }
-  catch { copyFileSync(process.execPath, join(bin, 'git.exe')); }
-  writeFileSync(join(bin, 'git-preload.cjs'), [
-    'if (/(^|[\\\\/])git\\.exe$/i.test(process.execPath)) {',
-    "  console.log('git version 2.39.9');",
-    '  process.exit(0);',
-    '}',
-    ''
-  ].join('\n'));
-  const env = {
-    ...process.env,
-    PATH: `${bin}${delimiter}${process.env.PATH ?? ''}`,
-    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --require ${join(bin, 'git-preload.cjs').split('\\').join('/')}`.trim()
-  };
+  const env: NodeJS.ProcessEnv = { ...process.env, PATH: `${bin}${delimiter}${process.env.PATH ?? ''}` };
+  if (process.platform === 'win32') {
+    // git.exe is node itself, like the gh stand-in: a preload recognises the
+    // renamed binary and answers `version` with an old release.
+    try { linkSync(process.execPath, join(bin, 'git.exe')); }
+    catch { copyFileSync(process.execPath, join(bin, 'git.exe')); }
+    writeFileSync(join(bin, 'git-preload.cjs'), [
+      'if (/(^|[\\\\/])git\\.exe$/i.test(process.execPath)) {',
+      "  console.log('git version 2.39.9');",
+      '  process.exit(0);',
+      '}',
+      ''
+    ].join('\n'));
+    env['NODE_OPTIONS'] = `${process.env.NODE_OPTIONS ?? ''} --require ${join(bin, 'git-preload.cjs').split('\\').join('/')}`.trim();
+  } else {
+    // POSIX knows no PATHEXT: `git` resolves only an executable at that exact
+    // name, so the old version rides a plain shell script on PATH.
+    writeFileSync(join(bin, 'git'), "#!/bin/sh\necho 'git version 2.39.9'\n");
+    chmodSync(join(bin, 'git'), 0o755);
+  }
   const run = cli(repo, env, 'status');
   expect(run.status).toBe(3);
   expect(run.stderr).toMatch(/refused \(git-too-old\)/);
