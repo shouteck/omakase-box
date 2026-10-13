@@ -13,7 +13,7 @@ import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, resolveLimits, transitionTo, waitForOwner } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
-import { readDecision } from './settings.js';
+import { requireRepository } from './repository.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the
@@ -32,7 +32,7 @@ export interface GitHubPublication {
   readonly body: string;
   /** `unnamed`: how many of them carry an account name GitHub returned in a form the tool will not print. */
   questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number };
-  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string }[];
+  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string }[];
   /** 'history' on posts made since the bounty became an issue on the code that
       is already there; absent on snapshot posts made before. */
   readonly kind?: 'history';
@@ -157,18 +157,8 @@ function signedAccount(root: string): string {
 }
 
 function ownRepository(root: string): string {
-  const remote = gitOutcome(root, ['remote', 'get-url', '--push', '--all', 'origin']);
-  const urls = remote.stdout.trim().split('\n');
-  if (remote.status !== 0 || urls.length !== 1) return invalid('github-remote-required', 'the project must have one GitHub origin push destination; a local folder is still available');
-  const url = urls[0] ?? '';
-  const match = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([a-z\d][a-z\d-]{0,38})\/([a-z\d_.-]+?)(?:\.git)?$/i.exec(url);
-  if (match === null) return invalid('github-remote-required', 'origin is not an unambiguous GitHub repository; a local folder is still available');
-  const repository = `${match[1]}/${match[2]}`;
-  const fetch = gitOutcome(root, ['remote', 'get-url', '--all', 'origin']);
-  const fetchUrls = fetch.stdout.trim().split('\n');
-  const fetchMatch = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([a-z\d][a-z\d-]{0,38})\/([a-z\d_.-]+?)(?:\.git)?$/i.exec(fetchUrls[0] ?? '');
-  if (fetch.status !== 0 || fetchUrls.length !== 1 || fetchMatch === null || `${fetchMatch[1]}/${fetchMatch[2]}`.toLowerCase() !== repository.toLowerCase()) return invalid('github-remote-mismatch', 'origin fetch and push destinations must name the same GitHub repository; nothing was posted');
-  return repository;
+  return requireRepository(root);
+
 }
 
 function publicRepository(root: string): string {
@@ -936,8 +926,11 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   if (record.stage !== 'confirmed' && record.stage !== 'drafted' && record.stage !== 'waiting' && !resumable) {
     return invalid('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted`);
   }
-  // The hard stop comes before every gate: a private repository is refused
-  // with no override, whatever the owner wrote.
+  // Read local permission before any gh probe. A waiting post publishes
+  // nothing; visibility remains a hard stop once permission permits a call.
+  if (record.stage !== 'confirmed' && opts?.answered !== true && record.github === undefined && record.githubApproval === undefined) {
+    ownerGate(root, record, { for: 'post', to: 'github', choice: opts?.choice ?? { withChanges: false, include: [] } });
+  }
   const repository = publicRepository(root);
   if (record.githubApproval !== undefined && record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository the recorded approval was made for; nothing was posted');
   if (record.github !== undefined && record.github.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved for this bounty; nothing was posted');
@@ -950,7 +943,6 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     const choice = opts?.choice ?? { withChanges: false, include: [] };
     const priorWait = record.waiting;
     const legacyConfirmed = record.stage === 'confirmed';
-    if (!legacyConfirmed && opts?.answered !== true) ownerGate(root, record, { for: 'post', to: 'github', choice });
     const plan = planGitHub(root, repository, record, neverShipRules(root), choice);
     // An owner answer clears only what the recorded wait named: a post held
     // for the decision alone can still carry scan hits the owner never saw —
@@ -961,7 +953,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       return invalid('publish-held', [
         `${id} — the pre-publish scan found ${plan.scan.hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
         ...plan.scan.hits.map(hit => `  ${hit.path}:${hit.line} — ${hit.rule}`),
-        `the owner allows it once with box bounty owner answer ${id}, adds the path to never-ship, or ends it with box bounty close ${id}`,
+        `the owner allows it once with box bounty allow ${id}, adds the path to never-ship, or ends it with box bounty close ${id}`,
         'nothing else is held up. The scan is a stated pattern list, not proof of absence.'
       ].join('\n'));
     }
@@ -969,7 +961,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       waitForOwner(root, record, { for: 'post', reason: 'untracked-file', at: new Date().toISOString(), to: 'github', choice });
       return invalid('publish-held', [
         `${id} — an untracked file is named for publishing (${plan.include.join(', ')}); this bounty waits for the owner`,
-        `the owner allows it once with box bounty owner answer ${id}, or ends it with box bounty close ${id}`
+        `the owner allows it once with box bounty allow ${id}, or ends it with box bounty close ${id}`
       ].join('\n'));
     }
     record.allowedBy = allowedByFor(root, record, opts?.answered === true, legacyConfirmed);
@@ -1103,7 +1095,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
     const next = collected === undefined ? `collect: box bounty look ${id} ${n} or box bounty apply ${id} ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
     lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}`);
-    if (seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n, commit, at: new Date().toISOString() }];
+    if (seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n, commit, at: new Date().toISOString(), author: login(entry['user']['login']) }];
   }
   if (data.length === 0) lines.push('  none open; wait for one or close the bounty');
   persistRecord(root, record);
@@ -1406,7 +1398,7 @@ function collectSnapshotPullRequest(root: string, record: BountyRecord, id: stri
 // The owner's "ask me each time" (and "off", and nothing written) makes each
 // outside close a named waiting state: the local decision is recorded as a
 // fact, and the comment, issue close and branch removal wait for the owner's
-// one command — `box bounty owner answer <id>`, which re-enters here with
+// one command — `box bounty allow <id>`, which re-enters here with
 // answered set.
 export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean }): void {
   const publication = record.github;
@@ -1416,19 +1408,6 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
   const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged', 'close'].includes(entry.command ?? ''));
   const event = decisions.at(-1);
   if (event === undefined) return;
-  if (opts?.answered !== true) {
-    const read = readDecision(root);
-    if (read.decision !== 'allowed') {
-      const local = ({ undo: 'revert', reject: 'close', withdraw: 'close' } as Record<string, string>)[event.command ?? ''] ?? event.command;
-      const why = read.decision === null ? 'the owner has not allowed the tool'
-        : read.decision === 'ask' ? 'the owner asked to be asked each time'
-        : 'the owner turned the permission off';
-      publication.pending = `waiting-owner: ${why}; local ${local} stands; the owner answers once with box bounty owner answer ${record.id} — then the tool comments, closes the issue and removes ${publication.branch}`;
-      record.waiting = { for: 'close', reason: read.decision === null ? 'owner-allow' : read.decision === 'ask' ? 'owner-ask' : 'owner-off', at: new Date().toISOString() };
-      persistRecord(root, record);
-      return;
-    }
-  }
   try {
     if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'sign in to the account that started this post to finish outside work');
     if (publication.issue === null) {

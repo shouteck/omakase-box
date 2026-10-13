@@ -29,17 +29,13 @@ node packages/box-cli/dist/cli.js bounty apply [id] [<n> | --from <dir>] [--repo
 node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
 ```
 
-The owner-facing group — plainly named, never offered to an agent by the
-description; the only commands that write or widen the owner's decision:
+The owner has three commands. An agent can run them after the owner's decision:
 
 ```
-node packages/box-cli/dist/cli.js bounty owner setup [--repo <path>]
-node packages/box-cli/dist/cli.js bounty owner allow [--project|--all] [--yes]
-node packages/box-cli/dist/cli.js bounty owner ask [--project|--all]
-node packages/box-cli/dist/cli.js bounty owner off [--project|--all]
-node packages/box-cli/dist/cli.js bounty owner on [--project|--all] [--yes]
-node packages/box-cli/dist/cli.js bounty owner answer <id> [--repo <path>]
-node packages/box-cli/dist/cli.js bounty owner summary [--since <iso>] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty allow [owner/name|waiting-id] [--ask] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty deny [owner/name] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty config [set|add|remove <setting> <value>] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty status --since <iso> [--repo <path>]
 ```
 
 The commands folded away — `answer`, `questions`, `reply`, `undo`,
@@ -371,42 +367,59 @@ of a solution, a pull request or a collaborator:
 - elsewhere: `$XDG_CONFIG_HOME/box/settings.json`, or `~/.config/box/settings.json`
 - tests and fixtures point `BOX_BOUNTY_SETTINGS_DIR` at a temporary folder.
 
-Two levels, both the owner's: this project (keyed by the repository's
-canonical path) or all the owner's projects. The project level is read
-first, then the default — so `"off"` for one project stands against a wider
-`"allowed"`. Three states, never guessed: written `allowed`; written `ask`
-(ask me each time); **nothing written** — which is never read as allowed. A
-written `off` is the owner turning the permission off: everything returns to
-asking and the answer stays on file marked `off`.
+A repository entry is keyed by its GitHub address, owner/name, with letter
+case and a trailing .git normalized. Every copy on this machine is covered.
+A fork, or another repository at the same folder path, is a different entry.
+All fetch and push addresses must name one GitHub repository. A Git URL
+rewrite that changes that destination refuses before permission or posting.
+Remote names can change without changing the repository's identity.
 
-No agent command writes or widens the decision. The commands that do are a
-separate, plainly named group the description never offers an agent —
-`box bounty owner …`. `owner allow` without `--yes` prints what allowing
-means and changes nothing:
+The owner has three words:
 
-- bounties are posted publicly under the owner's GitHub account;
-- a solution an agent chooses is merged into the owner's code on the agent's
-  judgement — the tool runs nothing from it, but the owner's next build will;
-- the tool closes the issue when it finds a solution merged;
-- once rewards exist, money is promised within what the owner sets.
+- `allow [owner/name]` adds a repository. Without a name it adds this
+  repository. The disclosure says bounties are public under the owner's
+  GitHub account, solutions the agent chooses are merged into the owner's
+  code, and this decision covers this repository only. `--ask` means be
+  asked each time before publishing.
+- `deny [owner/name]` removes the active entry. Open bounties are untouched.
+  Its dated removal stays in the settings history and blocks the all-projects
+  default for that repository. Config shows 'not allowed; denied at' and the
+  exact command to re-allow it. Re-allow clears the exception.
+- Bare `config` prints all settings, set or not, with the command that changes
+  each one. `config set all-projects true` allows all projects, except dated
+  deny exceptions. It is off by default. `false` turns that default off;
+  `ask` asks before publishing in projects with no entry.
+  `config add repositories owner/name` and `config remove repositories
+  owner/name` change the same list as allow and deny.
 
-Every write is recorded with the time (the file keeps a `changes` list), and
-`status` says when the decision last changed. With the tool **allowed**,
-`create` then `post` goes out with no question; the record names which of
-the owner's written answers allowed it, with its date and level. Under
-**ask me each time** (and under `off`, which asks) each post and each
-outside close the tool is about to do is a named `waiting` state for that
-one action; `owner answer <id>` answers it once and writes no standing
-decision. With **nothing written**, the first post waits the same way and
-prints the exact commands to put to the owner — for this project, for all
-projects, or for that one bounty only.
+Nothing written grants nothing. A repository entry overrides the default.
+Every change retains the previous value and its time. Legacy folder entries
+are moved once to the single readable GitHub address at that path. Unreadable
+or ambiguous paths are reported with a re-add command and grant nothing at
+that path, even under an old blanket default. If two old paths have conflicting
+decisions for the same address, that address stays not allowed until a new
+decision. Migration notices and the old decision history remain visible.
 
-The other owner commands: `owner setup` prints where things stand — the
-settings file, the project and default answers, Git and `gh` facts — and the
-exact command for each remaining step (never interactive); `owner off` /
-`owner on` turn the permission off and back on; `owner summary [--since
-<iso>]` prints what was done — bounties posted, solutions merged, bounties
-closed with none, anything waiting — facts from the record.
+Ask me each time covers publishing and nothing else. Merging is not gated.
+The tool closes a bounty whose solution was merged without asking, in every
+mode. `allow <waiting-bounty-id>` posts that waiting bounty immediately and
+changes no repository permission. The first-use message offers, in order,
+allow this repository, be asked each time before publishing, and this one
+bounty only. Bare config uses the same choices. All-projects is not offered
+at first use. A later post says if the owner previously chose one bounty only.
+
+Waiting is a successful command outcome with exit status 0. No command waits
+for typed input, and retrying a held post keeps its first waiting time. The
+owner's permission is checked before any GitHub call; a first post still
+waits if gh is absent. Allowed posts still require public repository visibility
+and a signed-in GitHub account. A post under the all-projects setting says so.
+
+The first merge of a stranger's solution asks the agent to tell the owner in
+its closing message, naming the merge commit. It is a notice, never a question,
+recorded once per repository and shown by status. `status --since <iso>`
+also prints the bounties posted, solutions merged and bounties closed since
+that time, plus what is waiting now. The seven old owner spellings are named
+refusals with their replacements, never aliases.
 
 **This is protection, not a lock.** The file sits where the owner's own
 programs can write it; an agent that sets out to edit a file it can reach —
@@ -445,7 +458,7 @@ Ordinary code that uses the words `token` or `key` — short values, obvious
 placeholders — does not match. A hit, or an untracked file named for
 publishing, makes **that one bounty** wait for the owner, naming the file
 and line and **never printing the value**. The owner allows it once with
-`owner answer <id>`, adds the path to never-ship, or closes the bounty;
+`allow <id>`, adds the path to never-ship, or closes the bounty;
 nothing else is held up. An answer clears only what the recorded wait named:
 a post held for the decision alone still runs its scan. No setting switches
 the scan off — it is a protection of the owner's, like never-ship, not a

@@ -1,201 +1,126 @@
-// The owner-facing command group (BT8): `box bounty owner <…>`, plainly
-// named, never offered to an agent by the description. Only these commands
-// write or widen the owner's decision; nothing on the agent's journey does.
-//
-//   owner setup    where things stand + the exact command for each step
-//   owner allow    allow the tool — prints what it allows; nothing changes
-//                  unless the command carries an explicit --yes
-//   owner ask      ask me each time — every post and every outside close
-//                  waits for `owner answer <id>`
-//   owner off/on   turn the permission off (the answer stays on file marked
-//                  off) and back on
-//   owner answer   answer the one thing waiting for the owner — posts the
-//                  held bounty, or finishes the held outside close
-//   owner summary  what was done since a given time, from the record
-
-import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
-import { gitOutcome, gitProgram } from './git.js';
-import { resolveProgram } from '../box-package/commands.js';
 import { listRecords, loadRecord, postBounty } from './record.js';
-import { syncGitHubDecision } from './github.js';
-import { loadSettings, projectKey, readDecision, settingsFile, writeDecision } from './settings.js';
-import type { DecisionRead } from './settings.js';
+import { loadSettings, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
+import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
-// What allowing means, in plain words — printed before anything is written.
-// `owner allow` without --yes prints exactly this and changes nothing.
-const ALLOW_DISCLOSURE: readonly string[] = [
-  'allowing this tool means:',
-  '- bounties are posted publicly under your GitHub account — anyone can read the issue and the branch.',
-  '- a solution an agent chooses is merged into your code on the agent\'s judgement — the tool runs nothing from it, but your next build will.',
-  '- the tool closes the bounty issue when it finds a solution merged.',
-  '- once rewards exist, money is promised within what you set.',
-  'it stops accidents and makes every change visible with a time; it is not a lock —',
-  'an agent that sets out to edit files it can reach could post the same with its own Git.'
+export const DECISION_WORDS = {
+  allow: 'allow this repository',
+  ask: 'be asked each time before publishing',
+  once: 'this one bounty only'
+} as const;
+const disclosure = (address: string): string[] => [
+  `Allowing ${address} means bounties are public under your GitHub account.`,
+  'A solution the agent chooses is merged into your code. Merging is not gated.',
+  'This decision covers this repository only. The tool closes an issue after a merge.',
+  'These settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
 ];
 
-const levelOf = (all: boolean): 'project' | 'default' => all ? 'default' : 'project';
-
-const where = (read: DecisionRead): string =>
-  read.decision === null ? 'nothing written — never read as allowed'
-    : `${read.decision} for ${read.level === 'project' ? 'this project' : 'all projects'} (changed ${read.at})`;
-
-// Facts, never a failure: a missing or unsigned program is a step named, not
-// a refusal — setup is where the owner learns what is left.
-function programFacts(): { git: string; gh: string } {
-  let git = 'missing — Git 2.40 or later is required (https://git-scm.com)';
-  try {
-    gitProgram();
-    const version = gitOutcome('.', ['version']);
-    git = version.status === 0 ? version.stdout.trim() : 'present but did not answer "git version"';
-  } catch { /* missing */ }
-  let gh = 'missing — needed for GitHub posting, gh 2.0 or later signed in (https://cli.github.com)';
-  try {
-    const program = resolveProgram('gh');
-    const probe = spawnSync(program.path, ['version'], { encoding: 'utf8', windowsHide: true });
-    const found = /gh version (\d+\.\d+\.\d+)/.exec(probe.stdout ?? '');
-    const auth = spawnSync(program.path, ['auth', 'status', '--hostname', 'github.com'], { encoding: 'utf8', windowsHide: true });
-    gh = `${found !== null ? `gh ${found[1]}` : 'present'}${auth.status === 0 ? ', signed in' : ', NOT signed in — sign in with your own gh: gh auth login'}`;
-  } catch { /* missing */ }
-  return { git, gh };
-}
-
-export function ownerSetup(repoRoot: string): string {
-  const settings = loadSettings();
-  const read = readDecision(repoRoot);
-  const file = settingsFile();
-  const { git, gh } = programFacts();
-  const lines: string[] = [
-    `the owner's settings: ${file} — ${existsSync(file) ? 'written' : 'nothing written yet'}`,
-    `  this project (${projectKey(repoRoot)}): ${settings.projects[projectKey(repoRoot)] === undefined ? 'nothing written' : `${settings.projects[projectKey(repoRoot)]!.bounty} (changed ${settings.projects[projectKey(repoRoot)]!.at})`}`,
-    `  all projects (default): ${settings.default === undefined ? 'nothing written' : `${settings.default.bounty} (changed ${settings.default.at})`}`,
-    `  effective here: ${where(read)}`,
-    `  git: ${git}`,
-    `  gh: ${gh}`,
-    '',
-    'each remaining step is one command:'
-  ];
-  if (read.decision !== 'allowed') {
-    lines.push('  allow the tool for this project only: box bounty owner allow --project --yes');
-    lines.push('  allow it for all your projects:       box bounty owner allow --all --yes');
-    lines.push('  or be asked each time:                box bounty owner ask --project');
-  } else {
-    lines.push('  be asked each time instead:           box bounty owner ask --project');
-    lines.push('  turn the permission off:              box bounty owner off --project');
+export function allowRepository(repoRoot: string | null, name?: string, ask = false): string {
+  if (name?.startsWith('bt-')) {
+    if (ask || repoRoot === null) throw new BountyRefused('allow-arguments', 'a waiting bounty requires a repository and cannot use --ask; nothing changed');
+    return allowBounty(repoRoot, name);
   }
-  lines.push('  see what was done:                    box bounty owner summary');
-  lines.push('  answer a waiting bounty:              box bounty owner answer <id>');
-  return lines.join('\n');
-}
-
-export function ownerAllow(repoRoot: string, all: boolean, yes: boolean): string {
-  const lines: string[] = [...ALLOW_DISCLOSURE];
-  if (!yes) {
-    lines.push('', 'nothing was written — it changes nothing unless the command carries an explicit yes:', '  box bounty owner allow --project --yes   (this project)', '  box bounty owner allow --all --yes       (all your projects)');
-    return lines.join('\n');
+  const address = name === undefined ? (repoRoot === null ? null : requireRepository(repoRoot)) : repositoryAddress(name);
+  if (address === null) throw new BountyRefused('repository-address-invalid', 'allow needs a GitHub repository address, owner/name, or a waiting bounty; nothing changed');
+  let currentAddress: string | null = null;
+  if (repoRoot !== null) {
+    try { currentAddress = repositoryIdentity(repoRoot); } catch { /* named addresses work outside this checkout */ }
   }
-  const level = levelOf(all);
-  const written = writeDecision(repoRoot, level, 'allowed');
-  lines.push('', `allowed — written to ${written.path} at ${written.at} for ${level === 'project' ? `this project (${written.key})` : 'all projects'}.`);
-  // A bounty that was waiting only for the decision goes out now — the
-  // waiting state said the owner answers once. A bounty held by the
-  // pre-publish scan or a named untracked file keeps waiting: those are the
-  // owner's per-bounty call, answered with `owner answer <id>`.
-  for (const entry of listRecords(repoRoot)) {
-    const record = entry.record;
-    if (record === null || record.stage !== 'waiting' || record.waiting?.for !== 'post' || record.waiting.to === undefined) continue;
-    if (record.waiting.reason === 'secrets' || record.waiting.reason === 'untracked-file') {
-      lines.push(`${record.id} — still waits: held by the pre-publish check, not the decision — answer it with box bounty owner answer ${record.id}`);
-      continue;
-    }
-    try {
-      const posted = postBounty(repoRoot, record.id, record.waiting.to, { ...(record.waiting.choice !== undefined ? { choice: record.waiting.choice } : {}) });
-      lines.push(`${record.id} — the waiting bounty went out: ${posted.destination}`);
-    } catch (error) {
-      lines.push(`${record.id} — still waiting: ${error instanceof BountyRefused ? `${error.reason} — ${error.message}` : error instanceof Error ? error.message : String(error)}`);
+  const written = writeRepository(address, ask ? 'ask' : 'allowed');
+  const lines = [...disclosure(address), `${ask ? 'ask me each time before publishing' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`];
+  if (ask) lines.push('This covers publishing and nothing else. A merged solution closes the bounty without asking.');
+  // A named repository may be allowed from outside any checkout. Release
+  // waits only when the current checkout has that same address.
+  if (!ask && repoRoot !== null && currentAddress === address) {
+    for (const entry of listRecords(repoRoot)) {
+      const record = entry.record;
+      if (record?.stage !== 'waiting' || record.waiting?.for !== 'post' || record.waiting.to === undefined) continue;
+      if (record.waiting.reason === 'secrets' || record.waiting.reason === 'untracked-file') {
+        lines.push(`${record.id} still waits on the pre-publish check; box bounty allow ${record.id} answers that one hold.`);
+        continue;
+      }
+      try {
+        const posted = postBounty(repoRoot, record.id, record.waiting.to, { ...(record.waiting.choice === undefined ? {} : { choice: record.waiting.choice }) });
+        lines.push(`${record.id}: the waiting bounty went out: ${posted.destination}`);
+      } catch (error) {
+        lines.push(`${record.id} still waits: ${error instanceof BountyRefused ? `${error.reason}: ${error.message}` : error instanceof Error ? error.message : String(error)}`);
+      }
     }
   }
   return lines.join('\n');
 }
-
-export function ownerAsk(repoRoot: string, all: boolean): string {
-  const level = levelOf(all);
-  const written = writeDecision(repoRoot, level, 'ask');
-  return `ask — written to ${written.path} at ${written.at} for ${level === 'project' ? 'this project' : 'all projects'}.\nEach post and each outside close waits for you: the agent is told only that you decide. You answer one at a time with box bounty owner answer <id>.`;
+export function denyRepository(repoRoot: string | null, name?: string): string {
+  const address = name === undefined ? (repoRoot === null ? null : requireRepository(repoRoot)) : repositoryAddress(name);
+  if (address === null) throw new BountyRefused('repository-address-invalid', 'deny needs a GitHub repository address, owner/name; nothing changed');
+  const written = writeRepository(address, null);
+  return `${address}: not allowed; denied at ${written.at}. Removed from the active list. All-projects does not apply after deny. Open bounties are untouched.\nRe-allow: box bounty allow ${address}`;
 }
-
-export function ownerOff(repoRoot: string, all: boolean): string {
-  const level = levelOf(all);
-  const written = writeDecision(repoRoot, level, 'off');
-  return `off — written to ${written.path} at ${written.at} for ${level === 'project' ? 'this project' : 'all projects'}.\nThe answer stays on file marked off; the tool asks each time, as if nothing were written. Back on: box bounty owner on ${all ? '--all' : '--project'} --yes.`;
-}
-
-// Turning it back on is allowing — same disclosure, same explicit yes.
-export function ownerOn(repoRoot: string, all: boolean, yes: boolean): string {
-  return ownerAllow(repoRoot, all, yes);
-}
-
-// The one command that answers a waiting state. It performs the held action
-// — posts the held bounty or finishes the held outside close — and writes no
-// standing decision. Answering when nothing is waiting is a named refusal.
-export function ownerAnswer(repoRoot: string, id: string): string {
+export function allowBounty(repoRoot: string, id: string): string {
   const record = loadRecord(repoRoot, id);
   const waiting = record.waiting;
-  if (waiting !== undefined && waiting.for === 'post' && record.stage === 'waiting') {
-    const lines: string[] = [];
-    if (waiting.hits !== undefined && waiting.hits.length > 0) {
-      lines.push(`the pre-publish scan is holding ${waiting.hits.length} hit(s):`);
-      for (const hit of waiting.hits) lines.push(`  ${hit.path}:${hit.line} — ${hit.rule}`);
-      lines.push('answering posts it anyway, once — it allows nothing else and changes no standing rule.');
-    }
-    if (waiting.to === undefined) throw new BountyRefused('record-corrupt', `${id} waits for a post but names no destination — open the record by hand`);
-    const posted = postBounty(repoRoot, id, waiting.to, { answered: true, ...(waiting.choice !== undefined ? { choice: waiting.choice } : {}) });
-    lines.push(`${posted.record.id} — answered once — posted to ${posted.destination}`);
-    return lines.join('\n');
+  if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed. box bounty status ${id} shows its state`);
+  const posted = postBounty(repoRoot, id, waiting.to, { answered: true, ...(waiting.choice === undefined ? {} : { choice: waiting.choice }) });
+  return `${id}: answered once; posted to ${posted.destination}. No repository decision changed.`;
+}
+export function renderConfig(repoRoot: string | null): string {
+  const settings = loadSettings();
+  let address: string | null = null;
+  let identityFact = 'no checkout selected';
+  if (repoRoot !== null) {
+    try { address = repositoryIdentity(repoRoot); identityFact = address ?? 'no GitHub address'; }
+    catch (error) { identityFact = error instanceof BountyRefused ? `${error.reason}: ${error.message}` : String(error); }
   }
-  if (waiting !== undefined && waiting.for === 'close' || record.github?.pending?.startsWith('waiting-owner:') === true) {
-    syncGitHubDecision(repoRoot, record, { answered: true });
-    const pending = record.github?.pending;
-    if (pending !== null && pending !== undefined) {
-      throw new BountyRefused('github-decision-pending', `${id} — the outside close could not finish: ${pending}`);
-    }
-    return `${id} — answered once — the tool commented, closed the issue and removed the bounty branch`;
+  const active = Object.entries(settings.repositories).filter(([, entry]) => entry.bounty === 'allowed' || entry.bounty === 'ask');
+  const global = settings.default?.bounty === 'allowed' ? 'true' : settings.default?.bounty === 'ask' ? 'ask' : 'false (off by default)';
+  const undecided = address === null ? 'a GitHub address for this checkout' : settings.repositories[address] === undefined && settings.default?.bounty !== 'allowed' && settings.default?.bounty !== 'ask'
+    ? 'no repository permission for this repository' : 'none of the current permission choices';
+  const lines = [
+    `the owner's settings: ${settingsFile()}`,
+    'Allowing a repository means bounties are public under your GitHub account and a solution the agent chooses is merged into your code. Each repository entry covers that repository only.',
+    `this repository: ${identityFact}; add it: box bounty allow${address === null ? ' <owner/name>' : ` ${address}`}`,
+    `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; applies to repositories without their own entry or removal; change: box bounty config set all-projects <true|false|ask>`,
+    `repositories: ${active.length} active; add: box bounty config add repositories <owner/name>; remove: box bounty config remove repositories <owner/name>`,
+    `  ${DECISION_WORDS.allow}: box bounty allow${address === null ? ' <owner/name>' : ` ${address}`}`,
+    `  ${DECISION_WORDS.ask}: box bounty allow${address === null ? ' <owner/name>' : ` ${address}`} --ask`,
+    `  ${DECISION_WORDS.once}: box bounty allow <waiting-bounty-id>`,
+    'ask me each time covers publishing and nothing else; merging is not gated. A bounty whose solution is merged closes without asking.',
+    `not decided yet: ${undecided}; decide with box bounty allow${address === null ? ' <owner/name>' : ` ${address}`}`
+  ];
+  for (const [key, entry] of Object.entries(settings.repositories)) {
+    lines.push(`  ${key}: ${entry.bounty === null || entry.bounty === 'off' ? `not allowed; denied at ${entry.at}; all-projects does not apply after deny` : `${entry.bounty === 'ask' ? DECISION_WORDS.ask : 'allowed'}, added ${entry.changes[0]?.at ?? entry.at}, changed ${entry.at}`}; change: box bounty allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: box bounty deny ${key}`);
+    for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}; re-allow: box bounty allow ${key}`);
   }
-  throw new BountyRefused('owner-answer-not-waiting', `bounty ${id} is not waiting for an answer — nothing is held for the owner; box bounty status ${id} shows where it stands`);
+  for (const notice of settings.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
+  for (const [key, notice] of Object.entries(settings.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
+  return lines.join('\n');
+}
+export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string): string {
+  if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value) : denyRepository(repoRoot, value);
+  if (name !== 'all-projects') return unknownSetting(name);
+  if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'use box bounty config set all-projects <true|false|ask>; nothing changed');
+  const bounty = value === 'true' ? 'allowed' : value === 'ask' ? 'ask' : 'off';
+  const written = writeDecision(repoRoot ?? '.', 'default', bounty);
+  return `all-projects: ${value}, written ${written.at}. ${value === 'true' ? 'Bounties may be public under your GitHub account across all projects; solutions the agent chooses are merged into your code.' : 'Each post needs a repository permission or one-bounty answer.'} Dated deny exceptions stay not allowed. Merging is not gated.`;
 }
 
-// Facts from the record, since a given time: bounties posted, solutions
-// merged, bounties closed with none, anything waiting. Default: all of it.
-export function ownerSummary(repoRoot: string, since?: string): string {
+export function renderSummary(repoRoot: string, since?: string): string {
   let from = '';
   if (since !== undefined) {
-    if (!Number.isFinite(Date.parse(since))) throw new BountyRefused('summary-time-invalid', `--since ${since} is not a readable time — pass an ISO time like 2026-10-01 or 2026-10-01T00:00:00Z`);
+    if (!Number.isFinite(Date.parse(since))) throw new BountyRefused('summary-time-invalid', `--since ${since} is not a readable time; pass an ISO time`);
     from = new Date(since).toISOString();
   }
-  const posted: string[] = [];
-  const merged: string[] = [];
-  const closedNone: string[] = [];
-  const waiting: string[] = [];
+  const posted: string[] = [], merged: string[] = [], closed: string[] = [], waiting: string[] = [];
   for (const entry of listRecords(repoRoot)) {
     const record = entry.record;
     if (record === null) continue;
     for (const event of record.events) {
       if (event.at < from) continue;
       if (event.stage === 'posted') posted.push(`${record.id} at ${event.at} (${event.destination ?? 'unspecified destination'})`);
-      else if (event.stage === 'applied') merged.push(`${record.id} at ${event.at} (merge ${event.merge ?? 'unnamed'}${event.command === 'merged' ? ', recognised from a merge made outside the tool' : ''})`);
-      else if (event.stage === 'rejected' || event.stage === 'withdrawn' || event.stage === 'expired' || event.stage === 'undone') closedNone.push(`${record.id} ${event.stage} at ${event.at}`);
+      else if (event.stage === 'applied') merged.push(`${record.id} at ${event.at} (merge ${event.merge ?? 'unnamed'})`);
+      else if (['rejected', 'withdrawn', 'expired', 'undone'].includes(event.stage)) closed.push(`${record.id} ${event.stage} at ${event.at}`);
     }
-    if (record.waiting !== undefined) waiting.push(`${record.id} — ${record.waiting.for === 'post' ? 'a post waits for you' : 'an outside close waits for you'} (${record.waiting.reason}, since ${record.waiting.at})`);
+    if (record.waiting !== undefined) waiting.push(`${record.id} (${record.waiting.reason}, since ${record.waiting.at})`);
   }
-  const line = (label: string, entries: readonly string[]): string =>
-    `  ${label}: ${entries.length}${entries.length === 0 ? '' : ` — ${entries.join('; ')}`}`;
-  return [
-    `what was done since ${since === undefined ? 'the beginning' : from} — facts from the record:`,
-    line('bounties posted', posted),
-    line('solutions merged', merged),
-    line('bounties closed with none', closedNone),
-    line('waiting now', waiting),
-    `the record lives at .box/bounties/ inside the repository; the owner's decision is ${where(readDecision(repoRoot))}`
-  ].join('\n');
+  const read = readDecision(repoRoot);
+  return [`what was done since ${since === undefined ? 'the beginning' : from}: facts from the record`, `  bounties posted: ${posted.length}: ${posted.join('; ')}`, `  solutions merged: ${merged.length}: ${merged.join('; ')}`, `  bounties closed with none: ${closed.length}: ${closed.join('; ')}`, `  waiting now: ${waiting.length}: ${waiting.join('; ')}`, `the owner's decision is ${read.decision ?? 'nothing written'}`].join('\n');
 }

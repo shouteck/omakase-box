@@ -11,6 +11,7 @@ import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { resolveAttempt, syncGitHubDecision } from './github.js';
+import { recordFirstMerge } from './settings.js';
 // Collecting a solution — the return journey. A solver hands back the whole
 // bounty folder (`bounty.json` + `repo/`); this module binds it, extracts the
 // change and writes a report of FACTS — never a verdict. Nothing the solution
@@ -81,6 +82,7 @@ export interface ApplyResult {
   readonly outcome: 'applied' | 'conflict';
   readonly attempt: number;
   readonly mergeCommit?: string | undefined;
+  readonly firstMergeNotice?: string;
   readonly conflicts?: readonly string[] | undefined;
   /** On a conflict: the solution's files that would have merged cleanly. */
   readonly clean?: readonly string[] | undefined;
@@ -423,7 +425,8 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget):
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
     syncGitHubDecision(repoRoot, record);
-    return { record, outcome: 'applied', attempt: attempt.n, mergeCommit };
+    const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit, record.github?.repository);
+    return { record, outcome: 'applied', attempt: attempt.n, mergeCommit, ...(notice === null ? {} : { firstMergeNotice: notice }) };
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
   if (mergeHead.status === 0) {
