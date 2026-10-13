@@ -252,7 +252,7 @@
     },
     "pending": null,
     "formatRead": "matches-record",
-    "formatReadAt": "2026-10-13T13:11:49.519Z",
+    "formatReadAt": "2026-10-13T13:18:38.278Z",
     "formatUnavailableAt": null,
     "availablePullRequests": [],
     "questions": {
@@ -260,7 +260,7 @@
       "latestAt": null
     },
     "outside": {
-      "at": "2026-10-13T13:11:50.551Z",
+      "at": "2026-10-13T13:18:39.635Z",
       "issueState": "open",
       "answers": "GitHub answers for bt-26bb9883d6b2 against box-bounty/bt-26bb9883d6b2:\n  none open; wait for one or close the bounty"
     },

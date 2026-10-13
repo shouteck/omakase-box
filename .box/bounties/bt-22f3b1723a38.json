@@ -19,7 +19,7 @@
     "text": "Complete BT10's real bounty journey, record what happened for every step, replace STATUS.md, return the checkout to master and stop after BT10. BT11 is outside this run.\r\n"
   },
   "manifestSha256": "11be05c6b231c3528b60bf48d3009ca6851ee94c3e7a53b6a04d2955f03da444",
-  "stage": "posted",
+  "stage": "applied",
   "folder": "C:\\Users\\shout\\Desktop\\Projects\\bounties\\correct-the-stale-off-machine-verificati",
   "snapshot": {
     "commit": "48695c85a3e5f67a34b65c43874c2bd489bddf17",
@@ -229,6 +229,36 @@
       "stage": "posted",
       "at": "2026-10-13T13:11:17.831Z",
       "destination": "https://github.com/shouteck/omakase-box/issues/5"
+    },
+    {
+      "stage": "taken",
+      "at": "2026-10-13T13:20:08.122Z",
+      "attempt": 7,
+      "command": "look"
+    },
+    {
+      "stage": "answered",
+      "at": "2026-10-13T13:20:08.139Z",
+      "attempt": 7
+    },
+    {
+      "stage": "taken",
+      "at": "2026-10-13T13:20:15.635Z",
+      "attempt": 8,
+      "command": "look"
+    },
+    {
+      "stage": "answered",
+      "at": "2026-10-13T13:20:15.653Z",
+      "attempt": 8
+    },
+    {
+      "stage": "applied",
+      "at": "2026-10-13T13:22:13.366Z",
+      "reason": "commit 7d94c4ed9fd78dbeb306fbda9d1ef6a5eeefe1d3",
+      "attempt": 8,
+      "command": "merged",
+      "merge": "d493dbe35f0dbdb0724c73ff339e18ce39d56978"
     }
   ],
   "allowedBy": {
@@ -260,26 +290,109 @@
       "added": [],
       "deleted": []
     },
-    "state": "posted",
+    "state": "closed",
     "issue": {
       "number": 5,
       "url": "https://github.com/shouteck/omakase-box/issues/5"
     },
     "pending": null,
     "formatRead": "matches-record",
-    "formatReadAt": "2026-10-13T13:11:47.986Z",
+    "formatReadAt": "2026-10-13T13:22:46.055Z",
     "formatUnavailableAt": null,
-    "availablePullRequests": [],
+    "availablePullRequests": [
+      {
+        "n": 8,
+        "commit": "7d94c4ed9fd78dbeb306fbda9d1ef6a5eeefe1d3",
+        "at": "2026-10-13T13:18:36.531Z",
+        "author": "shouteck"
+      },
+      {
+        "n": 7,
+        "commit": "2be7bdd54ac939ac59187853284ee45b2e85f3a8",
+        "at": "2026-10-13T13:18:37.182Z",
+        "author": "shouteck"
+      }
+    ],
     "questions": {
       "count": 0,
       "latestAt": null
     },
     "outside": {
-      "at": "2026-10-13T13:11:48.924Z",
+      "at": "2026-10-13T13:19:14.999Z",
       "issueState": "open",
-      "answers": "GitHub answers for bt-22f3b1723a38 against box-bounty/bt-22f3b1723a38:\n  none open; wait for one or close the bounty"
+      "answers": "GitHub answers for bt-22f3b1723a38 against box-bounty/bt-22f3b1723a38:\n  #8 by shouteck: \"BACKLOG.md\"; seen since 2026-10-13T13:18:36.531Z; collect: box bounty look bt-22f3b1723a38 8 or box bounty apply bt-22f3b1723a38 8\n  #7 by shouteck: \"BACKLOG.md\"; seen since 2026-10-13T13:18:37.182Z; collect: box bounty look bt-22f3b1723a38 7 or box bounty apply bt-22f3b1723a38 7"
     },
     "unavailableAt": null,
-    "seenPullRequests": []
-  }
+    "seenPullRequests": [
+      {
+        "n": 8,
+        "commit": "7d94c4ed9fd78dbeb306fbda9d1ef6a5eeefe1d3",
+        "at": "2026-10-13T13:18:36.531Z",
+        "author": "shouteck"
+      },
+      {
+        "n": 7,
+        "commit": "2be7bdd54ac939ac59187853284ee45b2e85f3a8",
+        "at": "2026-10-13T13:18:37.182Z",
+        "author": "shouteck"
+      }
+    ],
+    "formatRepair": "updated",
+    "closedNote": "box-bounty/bt-22f3b1723a38 carried 1 commit(s) published only there — 3eedab735772 box bounty bt-22f3b1723a38: work in progress — and is now removed"
+  },
+  "conflicts": null,
+  "attempts": [
+    {
+      "n": 7,
+      "pullRequest": 7,
+      "at": "2026-10-13T13:20:08.152Z",
+      "seenAt": "2026-10-13T13:18:37.182Z",
+      "author": "shouteck",
+      "commit": "2be7bdd54ac939ac59187853284ee45b2e85f3a8",
+      "changed": [
+        "BACKLOG.md"
+      ],
+      "added": [],
+      "deleted": [],
+      "outcome": "answered",
+      "conflicts": [
+        "BACKLOG.md"
+      ],
+      "report": [
+        "report — attempt 7 for bt-22f3b1723a38",
+        "  from: GitHub account shouteck — arrived 2026-10-13T13:20:08.152Z",
+        "  change: 1 commit(s) on the bounty branch — 1 changed, 0 added, 0 deleted — 1 lines added, 1 removed",
+        "  current code: merging onto the current branch would conflict in \"BACKLOG.md\"",
+        "  flags: none",
+        "  nothing in the solution was run and this report says nothing about whether it works",
+        "  next: box bounty look bt-22f3b1723a38 7 to read the change; box bounty apply bt-22f3b1723a38 7 to merge it; or box bounty close bt-22f3b1723a38 --reason \"<why>\""
+      ]
+    },
+    {
+      "n": 8,
+      "pullRequest": 8,
+      "at": "2026-10-13T13:20:15.668Z",
+      "seenAt": "2026-10-13T13:18:36.531Z",
+      "author": "shouteck",
+      "commit": "7d94c4ed9fd78dbeb306fbda9d1ef6a5eeefe1d3",
+      "changed": [
+        "BACKLOG.md"
+      ],
+      "added": [],
+      "deleted": [],
+      "outcome": "answered",
+      "conflicts": [
+        "BACKLOG.md"
+      ],
+      "report": [
+        "report — attempt 8 for bt-22f3b1723a38",
+        "  from: GitHub account shouteck — arrived 2026-10-13T13:20:15.668Z",
+        "  change: 1 commit(s) on the bounty branch — 1 changed, 0 added, 0 deleted — 1 lines added, 1 removed",
+        "  current code: merging onto the current branch would conflict in \"BACKLOG.md\"",
+        "  flags: none",
+        "  nothing in the solution was run and this report says nothing about whether it works",
+        "  next: box bounty look bt-22f3b1723a38 8 to read the change; box bounty apply bt-22f3b1723a38 8 to merge it; or box bounty close bt-22f3b1723a38 --reason \"<why>\""
+      ]
+    }
+  ]
 }
