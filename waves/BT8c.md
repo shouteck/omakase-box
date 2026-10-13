@@ -65,6 +65,7 @@ The owner's part in the scan is two lists set beforehand. A hit always reaches t
 
 ## Notes for the worker
 
+- Dispatch, 13 October: owner named BT8c in the START message after the BT8b close card. Base `0fdc01b`; start 06:55 UTC; stop by 08:55 UTC. The hosted run on the BT8b merge was still in flight at dispatch; the preceding master run was green. Use disposable fixtures and a temporary owner settings folder only; do not touch the real settings, post anything, or alter real authority.
 - Subtract first: remove "allow once" for hits and the owner's commands from the hit message, then add the lists.
 - Every secret-shaped test value is built at run time; never write one in a tracked file, this one included. `secret-literals.test.ts` guards it, and GitHub's push protection will reject the push.
 - The scan stays a small stated list. Do not grow it into a general scanner: each pattern added needs a false-alarm test beside it.
