@@ -21,8 +21,8 @@
 // once across sessions. A race between two sessions may announce an event
 // twice — never lose it.
 
-import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { refreshGitHubStatus } from './github.js';
 import { attemptsOf, isOpenStage, listRecords } from './record.js';
@@ -52,6 +52,13 @@ export const HOOK_GITHUB_INTERVAL_MS = 5 * 60 * 1000;
 // stall a session. The entry written into the host's settings carries a
 // timeout above the worst case of one refresh (a few calls at this cap).
 export const HOOK_GH_CALL_LIMIT_MS = 8000;
+// The whole run's GitHub budget, not just each call: at most this many gh
+// invocations, and no new call once this much wall time has passed — a
+// stand-in that paginates forever or hangs every call cannot hold a
+// session. Worst case is the deadline plus one in-flight call, inside the
+// host entry's own timeout.
+export const HOOK_GH_CALL_COUNT = 8;
+export const HOOK_GITHUB_BUDGET_MS = 20000;
 const HOOK_ENTRY_TIMEOUT_SECONDS = 30;
 
 const toldPath = (repoRoot: string): string => join(repoRoot, '.box', 'hook-told.json');
@@ -145,7 +152,11 @@ export interface HookRun {
 // Everything is best-effort: the hook must never block a session, so a
 // failure lands as a named fact line and the run still exits 0.
 export function runHook(repoRoot: string, slot: HookSlot, notices: readonly string[]): HookRun {
-  const lines: string[] = [...notices];
+  // `notices` is the live listener array — merge-recognition and
+  // instruction-refusal lines arrive DURING the record scan below, so they
+  // are folded in only when the envelope is built, never copied at entry:
+  // a bounty this run itself just closed still gets its line.
+  const lines: string[] = [];
   const told = readTold(repoRoot);
   // State is written only when it changed or already exists — a silent run
   // in a project that never opened a bounty leaves nothing behind.
@@ -154,7 +165,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   try {
     listed = listRecords(repoRoot);
   } catch (error) {
-    return envelope(slot, [`box bounty: the records could not be read (${error instanceof BountyRefused ? error.reason : 'read-failed'}) — see: box bounty status`]);
+    return envelope(slot, [...notices, `box bounty: the records could not be read (${error instanceof BountyRefused ? error.reason : 'read-failed'}) — see: box bounty status`]);
   }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)).map(entry => entry.record!);
   const corrupt = listed.filter(entry => entry.record === null).length;
@@ -181,7 +192,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   }
 
   if (slot === 'start') {
-    if (open.length === 0 && lines.length === 0) { if (dirty) writeTold(repoRoot, told); return { output: null, lines: [] }; }
+    if (open.length === 0 && lines.length === 0 && notices.length === 0) { if (dirty) writeTold(repoRoot, told); return { output: null, lines: [] }; }
     if (open.length > 0) {
       const summary = open.map(record => {
         const suffixes: string[] = [];
@@ -199,7 +210,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
     // only for what arrives while the session runs.
     for (const record of open) for (const event of [...arrivalKeys(record), ...conflictKeys(record)]) { told.told[event.key] = new Date().toISOString(); dirty = true; }
     if (dirty) writeTold(repoRoot, told);
-    return envelope(slot, lines);
+    return envelope(slot, [...notices, ...lines]);
   }
 
   // pause and finish: only what is new, each event once.
@@ -211,7 +222,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   for (const event of fresh) { told.told[event.key] = new Date().toISOString(); dirty = true; }
   if (dirty) writeTold(repoRoot, told);
   lines.push(...fresh.map(event => `box bounty: ${event.line}`));
-  return envelope(slot, lines);
+  return envelope(slot, [...notices, ...lines]);
 }
 
 // The envelope hosts read for context injection: hookSpecificOutput with the
@@ -394,47 +405,61 @@ function insertLast(text: string, span: Span, piece: string): string {
   return `${text.slice(0, closingAt)}${empty ? piece : `,${piece}`}${text.slice(closingAt)}`;
 }
 
-// Remove one element or member from its container, with its separating
-// comma: the comma before it when it is not the first entry, else the comma
-// after it. Comma positions come from a token scan, so a comma inside a
-// comment or string is never mistaken for the separator.
-function removeEntry(text: string, containerSpan: Span, entry: { start: number; end: number }): string {
+// One span per run of consecutive entries leaving a container — the comma
+// separating them from what stays is taken whole, so planned spans never
+// overlap. `created` marks members hook on wrote into an empty container:
+// the leading whitespace is ours too (insertLast pieces begin with it), so
+// the removal reaches back to the container's opening brace — but only
+// while the gap is still bare whitespace; an owner who commented inside
+// keeps it. Comma positions come from a token scan, so a comma inside a
+// comment or string is never mistaken for a separator.
+function removalSpans(text: string, containerSpan: Span, commas: readonly Token[], indices: readonly number[], created: boolean): { start: number; end: number }[] {
   const entries = (containerSpan.members ?? containerSpan.elements ?? []) as readonly { start: number; end: number }[];
-  const index = entries.findIndex(item => item.start === entry.start && item.end === entry.end);
-  if (index === -1) return text;
-  const commas = scan(text).filter(token => token.kind === ',').map(token => token.start);
-  if (index > 0) {
-    const comma = commas.filter(at => at > entries[index - 1]!.end && at < entry.start).at(-1);
-    if (comma !== undefined) return `${text.slice(0, comma)}${text.slice(entry.end)}`;
+  const spans: { start: number; end: number }[] = [];
+  for (let at = 0; at < indices.length;) {
+    let end = at;
+    while (end + 1 < indices.length && indices[end + 1] === indices[end]! + 1) end += 1;
+    const lo = indices[at]!; const hi = indices[end]!;
+    if (lo > 0) {
+      const comma = commas.filter(token => token.start >= entries[lo - 1]!.end && token.start < entries[lo]!.start).at(-1);
+      spans.push({ start: comma?.start ?? entries[lo]!.start, end: entries[hi]!.end });
+    } else {
+      const gapOwn = created && /^[ \t\r\n]*$/.test(text.slice(containerSpan.start + 1, entries[0]!.start));
+      const start = gapOwn ? containerSpan.start + 1 : entries[0]!.start;
+      if (hi < entries.length - 1) {
+        const comma = commas.find(token => token.start >= entries[hi]!.end && token.start < containerSpan.end - 1);
+        spans.push({ start, end: comma?.end ?? entries[hi]!.end });
+      } else {
+        spans.push({ start, end: entries[hi]!.end });
+      }
+    }
+    at = end + 1;
   }
-  const comma = commas.find(at => at >= entry.end && at < containerSpan.end - 1);
-  if (comma !== undefined) return `${text.slice(0, entry.start)}${text.slice(comma + 1)}`;
-  return `${text.slice(0, entry.start)}${text.slice(entry.end)}`;
+  return spans;
 }
 
 // The file's text after adding this host's groups, or a named refusal. A
 // file the tool creates holds only its own entries; an existing file keeps
-// every other byte — the splice only ever appends.
-function addEntries(path: string, host: HookHost, groups: Record<string, unknown[]>): string {
+// every other byte — the splice only ever appends. `createdMembers` names
+// the event members this call created inside a container that was already
+// there: `hook off` removes only those members whole, so an event array the
+// owner wrote restores to exactly its own bytes.
+function addEntries(path: string, host: HookHost, groups: Record<string, unknown[]>): { text: string; createdMembers: string[] } {
+  const createdMembers: string[] = [];
   if (!existsSync(path) || readFileSync(path, 'utf8').trim() === '') {
-    return host.nested ? `${JSON.stringify({ hooks: groups }, null, 2)}\n` : `${JSON.stringify(groups, null, 2)}\n`;
+    const text = host.nested ? `${JSON.stringify({ hooks: groups }, null, 2)}\n` : `${JSON.stringify(groups, null, 2)}\n`;
+    return { text, createdMembers: Object.keys(groups) };
   }
   let text = readFileSync(path, 'utf8');
   let root = reparse(text, path);
   let box = container(root, host);
-  if (host.nested && box === null) {
-    const member = root.members!.find(entry => entry.key === 'hooks');
-    if (member !== undefined) {
-      throw new BountyRefused('hook-settings-malformed', `${path}: "hooks" is not an object — fix the file; nothing changed`);
-    }
-    text = insertLast(text, root, `\n  "hooks": ${JSON.stringify(groups, null, 2).replaceAll('\n', '\n  ')}`);
-    root = reparse(text, path);
-    box = container(root, host);
+  if (host.nested && box === null && root.members!.find(entry => entry.key === 'hooks') !== undefined) {
+    throw new BountyRefused('hook-settings-malformed', `${path}: "hooks" is not an object — fix the file; nothing changed`);
   }
-  if (box === null) throw new BountyRefused('hook-settings-malformed', `${path}: the hooks object could not be found; nothing changed`);
-  // Refuse to double-install: our entries already present means the hook is
-  // on — or the file was hand-edited into a shape `off` must sort out.
-  for (const member of box.members!) {
+  // Refuse to double-install — scanning only what was already there: a
+  // container the tool is about to create holds only our entries and would
+  // flag itself.
+  if (box !== null) for (const member of box.members!) {
     if (member.value.kind !== 'array') continue;
     for (const element of member.value.elements!) {
       let group: unknown = null;
@@ -444,11 +469,20 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
       }
     }
   }
+  // The container is made empty and the event loop below fills it — one
+  // code path, so createdMembers records exactly what this install wrote.
+  if (host.nested && box === null) {
+    text = insertLast(text, root, '\n  "hooks": {}');
+    root = reparse(text, path);
+    box = container(root, host);
+  }
+  if (box === null) throw new BountyRefused('hook-settings-malformed', `${path}: the hooks object could not be found; nothing changed`);
   for (const event of Object.keys(groups)) {
     const current = reparse(text, path);
     const currentBox = container(current, host)!;
     const member = currentBox.members!.find(entry => entry.key === event);
     if (member === undefined) {
+      createdMembers.push(event);
       text = insertLast(text, currentBox, `\n    "${event}": ${JSON.stringify(groups[event], null, 2).replaceAll('\n', '\n    ')}`);
     } else if (member.value.kind !== 'array') {
       throw new BountyRefused('hook-settings-malformed', `${path}: "${event}" is not a list of hook entries — fix the file; nothing changed`);
@@ -460,62 +494,72 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
       }
     }
   }
-  return text;
+  return { text, createdMembers };
 }
 
-// Remove every entry that is ours. An event member whose elements are all
-// ours goes with them — its whole span is one splice, which restores the
-// file whether `hook on` created the member or added to it. A member that
-// still holds somebody else's entry keeps its name and every other element,
-// and an empty array the owner wrote by hand is never touched: only spans
-// that contain our commands are ever spliced. `text: null` means the file
-// should be deleted; `text: ''` restores an originally empty file.
+// Remove every entry that is ours, restoring the bytes the file held
+// before. Everything is planned on one parse and applied right-to-left, so
+// each splice is removed while it is the tail and owner text between
+// entries never drifts. A member leaves whole only when the install record
+// proves `hook on` created it (or created the file) — an event array the
+// owner wrote, even one that was empty and now holds only our entries,
+// keeps its name and restores to its own bytes. `text: null` means the
+// file should be deleted; the recorded `emptyText` restores a file that
+// held only whitespace exactly.
 function removeEntries(path: string, host: HookHost, install: HookInstall | null): { text: string | null; removed: number } {
   if (!existsSync(path)) return { text: null, removed: 0 };
-  let text = readFileSync(path, 'utf8');
+  const text = readFileSync(path, 'utf8');
   readSettings(path); // refusal on a malformed file — never a blind delete
+  const made = new Set(install?.createdMembers ?? []);
+  const allOurs = install?.createdFile === true || install?.emptyFile === true || typeof install?.emptyText === 'string';
+  const root = reparse(text, path);
+  const box = container(root, host);
+  const removals: { start: number; end: number }[] = [];
   let removed = 0;
-  // Each splice moves positions: re-parse, remove one thing, repeat until no
-  // entry of ours remains.
-  for (let pass = 0; pass < 64; pass += 1) {
-    const root = reparse(text, path);
-    const box = container(root, host);
-    if (box === null) break;
-    let acted = false;
-    for (const member of [...box.members!]) {
+  if (box !== null) {
+    const commas = scan(text).filter(token => token.kind === ',');
+    const boxMembers = box.members ?? [];
+    const memberGone: number[] = [];
+    for (let index = 0; index < boxMembers.length; index += 1) {
+      const member = boxMembers[index]!;
       if (member.value.kind !== 'array') continue;
-      const ours = member.value.elements!.map(element => {
+      const elements = member.value.elements ?? [];
+      const ours = elements.map(element => {
         try { return isOurs(JSON.parse(text.slice(element.start, element.end))); } catch { return false; }
       });
-      if (!ours.includes(true)) continue;
-      if (ours.every(Boolean)) {
-        removed += ours.length;
-        text = removeEntry(text, box, member);
+      const count = ours.filter(Boolean).length;
+      if (count === 0) continue;
+      removed += count;
+      if (count === elements.length && (allOurs || made.has(member.key))) {
+        memberGone.push(index);
       } else {
-        text = removeEntry(text, member.value, member.value.elements![ours.indexOf(true)]!);
-        removed += 1;
+        const elementGone = elements.map((_, i) => i).filter(i => ours[i] === true);
+        removals.push(...removalSpans(text, member.value, commas, elementGone, false));
       }
-      acted = true;
-      break;
     }
-    if (!acted) break;
+    removals.push(...removalSpans(text, box, commas, memberGone, true));
   }
-  const root = reparse(text, path);
+  removals.sort((a, b) => b.start - a.start);
+  let next = text;
+  for (const span of removals) next = `${next.slice(0, span.start)}${next.slice(span.end)}`;
   if (host.nested) {
-    const box = container(root, host);
+    const after = reparse(next, path);
+    const boxNow = container(after, host);
     // Only an install record proves the "hooks" member is ours to drop —
     // an empty one the owner wrote stays.
-    if (box !== null && box.members!.length === 0 && install?.createdContainer === true) {
-      const member = root.members!.find(entry => entry.key === 'hooks')!;
-      text = removeEntry(text, root, member);
+    if (boxNow !== null && (boxNow.members ?? []).length === 0 && install?.createdContainer === true) {
+      const at = after.members!.findIndex(entry => entry.key === 'hooks');
+      const commas = scan(next).filter(token => token.kind === ',');
+      for (const span of removalSpans(next, after, commas, [at], true)) next = `${next.slice(0, span.start)}${next.slice(span.end)}`;
     }
-    const after = reparse(text, path);
-    if (install?.createdFile === true && after.members!.length === 0) return { text: null, removed };
-    if (install?.emptyFile === true && after.members!.length === 0) return { text: '', removed };
-    return { text, removed };
   }
-  if (root.members!.length === 0) return { text: install?.emptyFile === true ? '' : null, removed };
-  return { text, removed };
+  const final = reparse(next, path);
+  if ((final.members ?? []).length > 0) return { text: next, removed };
+  if (install?.createdFile === true) return { text: null, removed };
+  // The file pre-existed: a whitespace-only file gets its exact bytes back;
+  // any other emptied object (a bare {} the tool filled) keeps its own.
+  const empty = install?.emptyText ?? (install?.emptyFile === true ? '' : undefined);
+  return { text: empty ?? next, removed };
 }
 
 // ---------------------------------------------------------------------------
@@ -524,18 +568,40 @@ function removeEntries(path: string, host: HookHost, install: HookInstall | null
 
 const settingsPath = (repoRoot: string, host: HookHost): string => join(repoRoot, ...host.file.split('/'));
 
-// The settings file must resolve inside this project — a junction or a link
-// that escapes the checkout is a named refusal, never a write.
+const folded = (path: string): string => path.replaceAll('\\', '/').toLowerCase();
+
+// The settings file must stay inside this project. Every component from the
+// project root down is checked the way the instruction-file checker does —
+// a link or junction anywhere on the path is refused whether or not its
+// target exists yet, because a dangling link still writes through when the
+// file is created, and a plain file where a directory should be is refused
+// rather than left to an unhandled error from the write.
 function checkedSettingsPath(repoRoot: string, host: HookHost): string {
-  const path = settingsPath(repoRoot, host);
-  const root = realpathSync(repoRoot).replaceAll('\\', '/');
-  const inside = (resolved: string): boolean => resolved === root || resolved.startsWith(`${root}/`);
-  const dir = dirname(path);
-  if (existsSync(dir) && !inside(realpathSync(dir).replaceAll('\\', '/'))) {
-    throw new BountyRefused('hook-settings-escape', `${dir} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
+  const root = realpathSync(repoRoot);
+  // Built from the canonical root, so a checkout that itself sits behind a
+  // link still compares inside its real location.
+  const path = join(root, ...host.file.split('/'));
+  let current = root;
+  const parts = relative(root, path).split(sep);
+  for (let index = 0; index < parts.length; index += 1) {
+    current = join(current, parts[index]!);
+    const stat = lstatSync(current, { throwIfNoEntry: false });
+    if (stat === undefined) break; // below the last existing component the tool creates inside the project
+    if (stat.isSymbolicLink()) {
+      throw new BountyRefused('hook-settings-escape', `${current} is a link — the hook only writes settings that stay inside the project; nothing changed`);
+    }
+    if (index < parts.length - 1 && !stat.isDirectory()) {
+      throw new BountyRefused('hook-settings-blocked', `${current} is not a directory — the hook cannot write ${host.file}; nothing changed`);
+    }
   }
-  if (existsSync(path) && !inside(realpathSync(path).replaceAll('\\', '/'))) {
-    throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
+  const leaf = lstatSync(path, { throwIfNoEntry: false });
+  if (leaf !== undefined) {
+    if (leaf.isDirectory()) throw new BountyRefused('hook-settings-blocked', `${path} is a directory — ${host.file} must be a settings file; nothing changed`);
+    if (leaf.nlink > 1) throw new BountyRefused('hook-settings-escape', `${path} is linked from more than one place — the hook only writes a file the project owns; nothing changed`);
+    const resolved = folded(realpathSync(path));
+    if (resolved !== folded(root) && !resolved.startsWith(`${folded(root)}/`)) {
+      throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
+    }
   }
   return path;
 }
@@ -547,10 +613,16 @@ function checkedSettingsPath(repoRoot: string, host: HookHost): string {
 interface HookInstall {
   /** The settings file did not exist before `hook on` — `off` may delete it. */
   readonly createdFile: boolean;
-  /** It existed but held only whitespace — `off` restores it to empty. */
+  /** It existed but held only whitespace — `off` restores those bytes. */
   readonly emptyFile: boolean;
+  /** The exact bytes a whitespace-only file held, so `off` restores them
+      verbatim. Absent on install records written before this field. */
+  readonly emptyText?: string | undefined;
   /** The "hooks" member itself was created by `hook on` (nested hosts). */
   readonly createdContainer: boolean;
+  /** The event members `hook on` added inside a container that was already
+      there — only those, or a file wholly ours, may be removed whole. */
+  readonly createdMembers?: readonly string[] | undefined;
 }
 
 const installsPath = (repoRoot: string): string => join(repoRoot, '.box', 'hook-on.json');
@@ -565,7 +637,13 @@ function readInstalls(repoRoot: string): Record<string, HookInstall> {
     for (const [name, value] of Object.entries(hosts as Record<string, unknown>)) {
       if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
         const record = value as Record<string, unknown>;
-        out[name] = { createdFile: record.createdFile === true, emptyFile: record.emptyFile === true, createdContainer: record.createdContainer === true };
+        out[name] = {
+          createdFile: record.createdFile === true,
+          emptyFile: record.emptyFile === true,
+          emptyText: typeof record.emptyText === 'string' ? record.emptyText : undefined,
+          createdContainer: record.createdContainer === true,
+          createdMembers: Array.isArray(record.createdMembers) ? record.createdMembers.filter((entry): entry is string => typeof entry === 'string') : undefined
+        };
       }
     }
     return out;
@@ -647,9 +725,9 @@ export function hookDisclosure(repoRoot: string, host: HookHost): string {
     `- on this host it uses ${host.slotsNote}`,
     '',
     'what it touches:',
-    `- it writes hook entries into ${host.file} inside this project — the exact lines are below; everything already in the file is preserved byte for byte`,
+    `- it writes hook entries into ${host.file} inside this project — the entries it adds are shown below in compact form; everything already in the file is preserved byte for byte`,
     `- the entries run: ${slotCommand('start')}, ${slotCommand('pause')} and ${slotCommand('finish')} — reading this project's .box/bounties records and writing .box/hook-told.json (what agents have been told) and .box/hook-on.json (what hook on installed, so hook off restores exactly)`,
-    `- it contacts GitHub through your gh sign-in at most once every ${HOOK_GITHUB_INTERVAL_MS / 60000} minutes, only while an open bounty is posted there; each call is capped at ${HOOK_GH_CALL_LIMIT_MS / 1000} seconds and the host entry itself times out at ${HOOK_ENTRY_TIMEOUT_SECONDS} seconds`
+    `- it contacts GitHub through your gh sign-in at most once every ${HOOK_GITHUB_INTERVAL_MS / 60000} minutes, only while an open bounty is posted there; each call is capped at ${HOOK_GH_CALL_LIMIT_MS / 1000} seconds, all calls in one run stay within ${HOOK_GITHUB_BUDGET_MS / 1000} seconds and ${HOOK_GH_CALL_COUNT} calls, and the host entry itself times out at ${HOOK_ENTRY_TIMEOUT_SECONDS} seconds`
   ];
   const decision = (() => { try { return readDecision(repoRoot); } catch { return null; } })();
   if (decision !== null && (decision.decision === 'allowed' || decision.decision === 'ask')) {
@@ -682,14 +760,21 @@ export function hookOn(repoRoot: string, host: HookHost): string {
   // Before writing, record exactly what the write will create — `hook off`
   // restores by this record, never by guessing.
   const existed = existsSync(path);
-  const emptyBefore = existed && readFileSync(path, 'utf8').trim() === '';
+  const original = existed ? readFileSync(path, 'utf8') : null;
+  const emptyBefore = original !== null && original.trim() === '';
   const createdContainer = host.nested && (emptyBefore || !existed
     || readSettings(path).root.members!.find(member => member.key === 'hooks') === undefined);
   mkdirSync(dirname(path), { recursive: true });
-  const text = addEntries(path, host, hookGroups());
-  writeFileSync(path, text);
+  const added = addEntries(path, host, hookGroups());
+  writeFileSync(path, added.text);
   const installs = readInstalls(repoRoot);
-  installs[host.name] = { createdFile: !existed, emptyFile: existed && emptyBefore, createdContainer };
+  installs[host.name] = {
+    createdFile: !existed,
+    emptyFile: existed && emptyBefore,
+    emptyText: emptyBefore && original !== null ? original : undefined,
+    createdContainer,
+    createdMembers: added.createdMembers
+  };
   writeInstalls(repoRoot, installs);
   return `hook on — wrote ${Object.keys(hookGroups()).length} hook entrie(s) for ${host.name} to ${host.file}\n  sessions on this host now see open-bounty state at start and new arrivals once, until: box bounty hook off --host ${host.name}`;
 }

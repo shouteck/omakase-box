@@ -638,8 +638,10 @@ announced is kept in `.box/bounties/`'s sibling `.box/hook-told.json`, so an
 event is announced once across sessions, and `.box/hook-on.json` records
 what `hook on` created so `hook off` restores the file exactly. GitHub is
 asked at most once every five minutes while an open bounty is posted
-there, each call capped at eight seconds, and the host entry itself times
-out — a hook never blocks a session, waits for input or exits non-zero.
+there, each call capped at eight seconds, and one run's calls bounded to
+eight calls inside twenty seconds — a GitHub that paginates or hangs
+cannot hold a session — and the host entry itself times out — a hook
+never blocks a session, waits for input or exits non-zero.
 Reading records recognises a merged solution as any record read does, so
 under the standing rules the hook can close a GitHub bounty with a comment
 and nobody asked — the disclosure says so before anything is written.

@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_LIMIT_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -417,10 +417,14 @@ if (command === 'export') {
       if (action === 'start' || action === 'pause' || action === 'finish') {
         if (extra.length > 0 || hostIndex >= 0 || confirm) usage(`box bounty hook ${action} [--explain] [--repo <path>]`);
         let root: string | null = null;
+        let rootRefusal: string | null = null;
+        // Any refusal here (no checkout, Git itself unreadable or refusing)
+        // is a silent exit-0: a session must never be blocked or made noisy
+        // by the hook — --explain still says what happened, by name.
         try { root = resolveRepoRoot(bountyRepo(), 'hook'); }
-        catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository') throw error; }
+        catch (error) { if (!(error instanceof BountyRefused)) throw error; rootRefusal = error.reason; }
         if (root === null) {
-          if (explain) console.log('nothing to report — not inside a Git checkout');
+          if (explain) console.log(rootRefusal === 'not-a-repository' ? 'nothing to report — not inside a Git checkout' : `nothing to report — the checkout could not be read (${rootRefusal ?? 'unreadable'})`);
           process.exit(0);
         }
         // Notices (a merge recognised while records were read, an
@@ -429,7 +433,7 @@ if (command === 'export') {
         const notices: string[] = [];
         setMergeNoticeListener(line => notices.push(line));
         setInstructionNoticeListener(line => notices.push(line));
-        limitGitHubCalls(HOOK_GH_CALL_LIMIT_MS);
+        limitGitHubCalls(HOOK_GH_CALL_LIMIT_MS, HOOK_GH_CALL_COUNT, Date.now() + HOOK_GITHUB_BUDGET_MS);
         let run;
         try { run = runHook(root, action, notices); }
         catch { process.exit(0); }

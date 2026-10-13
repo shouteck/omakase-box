@@ -94,6 +94,11 @@ const probedGh = new Set<string>();
 
 // Never include gh/git diagnostics here: signed-in programs can print credentials.
 function gh(root: string, args: readonly string[]): string {
+  // The run-level budget a bounded caller (the hook) sets: a call count so
+  // endless pagination cannot loop forever, and a deadline so a run of hung
+  // calls stays inside its bound. Ordinary commands leave both unbounded.
+  if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again');
+  ghCallBudget -= 1;
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
   catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com). A local folder is still available`); }
@@ -111,6 +116,10 @@ function gh(root: string, args: readonly string[]): string {
     }
     probedGh.add(program.path);
   }
+  // The probe itself can burn a whole call's cap — check the run deadline
+  // again before the real call so the worst case is the deadline plus one
+  // in-flight call.
+  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again');
   const result = launch(program, root, args);
   if (result.error !== undefined || result.status !== 0) return invalid('github-command-failed', 'GitHub CLI could not complete the requested operation; check gh sign-in and access, then retry');
   return result.stdout ?? '';
@@ -121,7 +130,13 @@ function gh(root: string, args: readonly string[]): string {
 // session) — one process runs one command, so the module-level value is the
 // command's own.
 let ghCallLimit = 60000;
-export function limitGitHubCalls(ms: number): void { ghCallLimit = ms; }
+let ghCallBudget = Infinity;
+let ghDeadline = Infinity;
+export function limitGitHubCalls(ms: number, calls = Infinity, deadline = Infinity): void {
+  ghCallLimit = ms;
+  ghCallBudget = calls;
+  ghDeadline = deadline;
+}
 
 function launch(program: ReturnType<typeof resolveProgram>, root: string, args: readonly string[]) {
   if (program.kind === 'command-file') {
