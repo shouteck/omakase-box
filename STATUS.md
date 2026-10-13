@@ -14,4 +14,10 @@ Updated by the CTO on 13 October 2026, at the BT10 close.
 
 ## Next
 
-No wave is named for a next run. Remaining in the BT milestone: **BT11** (a stated reward and the solver's payment link) — and the owner has already noted it waits for real use first.
+No wave is named. Briefed on 13 October 2026 and ready, in this order:
+
+1. **K15** — a sandbox repository the owner allows once, so real runs never need the owner again; also the hook's live-host proof owed since BT9 and a two-agent check of owner-facing wording. Creates a new public repository on the owner's account, so its pre-cook card waits for the owner's go. [waves/K15.md](waves/K15.md)
+2. **BT11a** — a bounty states the owner's reward, with a limit on what is promised at once. [waves/BT11a.md](waves/BT11a.md)
+3. **BT11b** — the solver's payment link and the message telling the owner whom to pay; real run in the sandbox. [waves/BT11b.md](waves/BT11b.md)
+
+The old BT11 was split and rewritten; its condition that BT11 waits for a real first use by the owner is withdrawn (see [waves/BT11.md](waves/BT11.md)). The owner's instruction of 13 October: a test must not need the owner's input.
