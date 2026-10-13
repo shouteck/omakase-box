@@ -31,7 +31,7 @@ The CTO ticks the ones that apply. The reviewer answers every ticked one in the 
 
 ## Notes for the worker
 
-Decisions already made, interfaces to reuse, traps. Keep it short; link instead of pasting.
+Decisions already made, interfaces to reuse, traps. Keep it short; link instead of pasting. A wave with a real-GitHub step names the sandbox (`kitchen/sandbox.md`); a step that needs the owner as a test subject is not written.
 
 ---
 

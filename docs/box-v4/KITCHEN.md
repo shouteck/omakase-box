@@ -39,6 +39,8 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 - A lost or unclear result is fixed by running it again. Databases are created per run and destroyed after it, so a rerun costs nothing.
 - The reviewer's run is the one that counts. The worker's run is a self-check.
 
+A wave that needs a real GitHub bounty journey — post, solve, merge, close — runs it in the sandbox, `shouteck/box-bounty-sandbox`, where the owner has already allowed the tool standing and the instruction block and session hook are on. `kitchen/sandbox.md` says what a wave may do there without asking, what still goes to the owner, and how to clean up. No live verification step touches the working repository, and no step that needs the owner as a test subject is ever written into a brief.
+
 ## Review
 
 The reviewer answers three questions: does the diff do what the brief says and nothing else, does verify pass on this exact commit, and would the checks have caught a wrong implementation. For the third, ask of each new test whether it would still pass if the code under test returned nothing; a test that would is not a check. It may add tests on the branch; it may not weaken existing ones.
