@@ -104,15 +104,23 @@ What this proves: every step the tool takes around a reward, on real GitHub. Wha
 ## Result
 
 - Worker: · Reviewer:
-- Commit:
-- Verify:
+- Commit: <filled at commit>
+- Verify: `env HOME=$HOME/kitchen-home node scripts/verify.mjs test:box-bounty test:box-package` — exit 0 (line filled at commit)
 - Verdict: · Level:
 - Lenses:
-- Stripe link shapes accepted, and where they were confirmed:
-- Real use in the sandbox, step by step:
-- The replay: command, time for one `--auto` run, where it was run (Linux stand-in; real mode deferred to Windows and the recording session per the owner's instruction of 14 October 2026), transcript:
-- The pay message as relayed:
-- Left on GitHub, by exact name:
-- Findings and limits:
+- Stripe link shapes accepted, and where they were confirmed: exactly `https://buy.stripe.com/<id>` — https only, host `buy.stripe.com` exactly, path one segment of 4–64 letters/digits, test-mode ids starting `test_`; nothing after the id (no query, fragment, trailing slash or deeper path), one address on the line and nothing else. Confirmed against Stripe's own docs — the published link format is `https://buy.stripe.com/<alphanumeric id>` and test-mode links carry `test_` ids (docs.stripe.com/payment-links/url-parameters). Anything else — other schemes, lookalike hosts, user-info, a second address, text after the address, control/bidi characters, lines over 200 chars — is "not recognised" and the stranger's text is never echoed.
+- Real use in the sandbox, step by step: not run on this Linux host — the amended brief (owner, 14 October 2026) confines the Linux leg to the stand-in; no sandbox token ever arrived and none was needed. The stand-in run walks the identical journey (post → two solver pull requests → collect → merge → close), captured in `kitchen/demo/bt11b-transcript.txt`. Real mode stays in `kitchen/demo/bt11b-replay.mjs` for the Windows host and the Devin Cloud recording session (`kitchen/demo/RECORDING.md`).
+- The replay: `node kitchen/demo/bt11b-replay.mjs [--standin|--real] [--auto] [--pause <s>] [--url-pause <s>]` — one `--auto` run at default pauses is about 51 seconds on this host (steps print who acts; `PAGE <url>` lines mark every page). Ran on Linux (this host) in stand-in mode: the suite's own trick — a `gh` stand-in program plus a `git` transport shim in a scratch dir, modelled on `tests/box/bounty/github-fixture.ts` (the fixture mocks spawnSync; the replay puts two PATH wrappers in front instead). Transcript: `kitchen/demo/bt11b-transcript.txt` (a full `--auto` run, commands and complete output in order). Real mode is prefighted: Node, Git, `gh auth status`, sandbox reachable — it stops before doing anything when a piece is missing.
+- The pay message as relayed (the stand-in run, verbatim):
+  for the owner — this bounty stated a reward and a solution is merged; the tool does not pay and does not send this:
+    bounty: "Repair the app: app.txt should read fixed." — <id>; issue https://github.com/owner/project/issues/1
+    merged solution: pull request https://github.com/owner/project/pull/1 from GitHub account solver-a
+    merged in: <merge sha>
+    reward: $5 — the amount from the owner's setting, to be paid by hand; the tool cannot know the amount a link asks for
+    pay the solver at: https://buy.stripe.com/test_28E7sLbHrbu70eC5C5afS00 — supplied by the solver (test-mode: no real money moves through it)
+    check the checkout shows $5 and that the account name shown there belongs to solver-a
+    pass this on to the owner — the tool does not tell them; repeat it when your work ends
+- Left on GitHub, by exact name: nothing — the amended brief forbids any real posts from this host, and the stand-in run leaves nothing behind (scratch folder removed; stated in its last lines).
+- Findings and limits: (1) two `bt11.test.ts` assertions pinned the pre-wave format version `2` for rewarded posts; the brief redefines rewarded posts as version `3` (the `payment` member), so the pins moved to 3 — the only test-expectation edits in the wave, made because the spec moved, noted here rather than silently. (2) The tool learns the merged PR's description with one GraphQL read at close (`userContentEdits(last:1)`); an empty node set means the description was never edited, so the link is the solver's own. (3) A folder-returned (non-PR) merged solution with a reward closes with the pay message saying a returned folder carried no pull request — no link can be supplied. (4) The ride-along fixture fix folds the PR number into the minted commit message (`fix (pr N)`); the other fixture commit-maker, `prCommit`, takes an arbitrary sha and cannot collide — audited.
 - Merged: · Resources removed:
 - Reflect:

@@ -23,6 +23,8 @@ import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
 import { showPath } from './answer.js';
 import { recordFirstMerge } from './settings.js';
+import { boundAmount } from './format.js';
+import { payNotice } from './pay.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
@@ -182,6 +184,9 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
+  // A bounty with a reward hands the owner message to whichever command
+  // noticed the merge — whom to pay and where (BT11b).
+  payNotice(record, boundAmount(record))?.forEach(emit);
   const author = candidate.attempt?.author ?? record.github?.seenPullRequests?.find(pr => pr.n === candidate.pr && pr.commit === candidate.commit)?.author;
   if (candidate.attempt !== undefined && author === undefined || author !== undefined && author !== record.github?.account) {
     const notice = recordFirstMerge(repoRoot, merge);

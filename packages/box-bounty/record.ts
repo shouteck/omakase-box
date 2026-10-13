@@ -28,6 +28,8 @@ import { loadSettings, localFirstMergeLine, readDecision, readReward, rewardNoti
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
+import { payNotice, payOutcomeShape, payToFactShape, payToLine } from './pay.js';
+import type { PayToFact } from './pay.js';
 import { quoteForeign, showPath } from './answer.js';
 import { boundAmount } from './format.js';
 
@@ -81,6 +83,9 @@ export interface Attempt {
   /** The fact report, rendered once when the answer came in — `look`/`apply`
       print it on collection and `status` replays it. Facts only, never a verdict. */
   readonly report: readonly string[];
+  /** What the pull request description's `pay-to:` line parsed to at
+      collection — a fact, never the text itself (BT11b). */
+  readonly payTo?: PayToFact;
 }
 
 // A held action (BT8): while the owner's decision is "ask"/"off" or nothing
@@ -384,6 +389,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   for (const attempt of record.attempts ?? []) {
     if (attempt === null || typeof attempt !== 'object' || !Number.isInteger(attempt.n) || attempt.n < 1 || typeof attempt.commit !== 'string' || !sha.test(attempt.commit)) return null;
     if (attempt.pullRequest !== undefined && (!Number.isSafeInteger(attempt.pullRequest) || attempt.pullRequest < 1)) return null;
+    if (attempt.payTo !== undefined && !payToFactShape(attempt.payTo)) return null;
   }
   if (record.reward !== undefined && (!object(record.reward) || typeof record.reward.amount !== 'number' || !Number.isSafeInteger(record.reward.amount) || record.reward.amount < 0 || Object.keys(record.reward).some(key => key !== 'amount'))) return null;
   // `reward` is bound only at posting — in the same write as the GitHub
@@ -414,6 +420,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
       if (!Array.isArray(list)) return null;
       for (const pr of list) {
         if (pr === null || typeof pr !== 'object' || !Number.isInteger(pr.n) || pr.n < 1 || typeof pr.commit !== 'string' || !sha.test(pr.commit) || typeof pr.at !== 'string' || !stamp.test(pr.at)) return null;
+        if (pr.payTo !== undefined && !payToFactShape(pr.payTo)) return null;
       }
     }
     if (github.outside !== undefined && (github.outside === null || typeof github.outside !== 'object'
@@ -421,6 +428,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
       || typeof github.outside.at !== 'string' || !stamp.test(github.outside.at)
       || typeof github.outside.answers !== 'string')) return null;
     if (github.unavailableAt !== undefined && github.unavailableAt !== null && (typeof github.unavailableAt !== 'string' || !stamp.test(github.unavailableAt))) return null;
+    if (github.pay !== undefined && !payOutcomeShape(github.pay)) return null;
   }
   // BT7c: pending text is tool-written and status prints it. A record written
   // while undo/reject/withdraw existed can carry their names — migrate the
@@ -786,8 +794,9 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       // What an agent needs to act comes first; this is the bounty's one `next:`.
       lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
-      for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}`);
-      for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}`);
+      const pays = (boundAmount(record) ?? 0) > 0;
+      for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}`);
+      for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}${pays && pr.payTo !== undefined ? `; ${payToLine(pr.payTo)}` : ''}`);
       if (record.waiting !== undefined) {
         const liveFinding = (record.scanFindings ?? []).some(finding => finding.settled === null);
         for (const hit of record.waiting.hits ?? []) {
@@ -840,7 +849,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         });
         lines.push(`      attempts (${attempts.length}):`);
         for (const attempt of ordered) {
-          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
         }
         const top = ordered[0]!;
         if ((record.github === undefined || options.full) && top.report.length > 0) {
@@ -870,10 +879,14 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     // line, so the compact list still tells the owner to look — the finding
     // itself prints on the detail below (or under status <id> / --full).
     const finding = (record.scanFindings ?? []).length > 0 ? ' — scan finding recorded' : '';
+    // A bounty with a reward that ended on a merge keeps whom to pay on the
+    // line — a record the owner can read whenever they wish, not a reminder.
+    const pay = record.github?.pay;
+    const paid = pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${pay.solver ?? 'the solver'}` : '';
     // applied/rejected/undone name the job the bounty came from, so the record
     // alone says which piece of work is unblocked — falling back to the title.
-    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${finding} (job: ${record.job?.file ?? record.title})`;
-    return `${record.id} ${record.stage}${finding}`;
+    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${finding}${paid} (job: ${record.job?.file ?? record.title})`;
+    return `${record.id} ${record.stage}${finding}${paid}`;
   }).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
   // was asked for by id, or else for the one that ended last.
@@ -883,6 +896,10 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     const detailed = options.id !== undefined || entry.record === lastEnded;
     if (detailed) {
       lines.push(renderResume(entry.record, '  '));
+      const pay = entry.record.github?.pay;
+      if (pay !== undefined) {
+        lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${pay.solver}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${pay.solver ?? 'the solver'}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
+      }
       // The finding stays visible after the bounty ends — the owner learns a
       // flagged file sat in their working tree even when the agent stopped it.
       lines.push(...scanFindingLines(entry.record, '  '));
@@ -1170,6 +1187,9 @@ export function allowedByFor(repoRoot: string, record: BountyRecord, answered: b
 }
 
 export interface CloseOutcome {
+  /** A bounty with a reward that closed on a merge carries the message for
+      the owner — whom to pay and where (BT11b). */
+  readonly payMessage?: readonly string[];
   readonly record: BountyRecord;
   readonly outcome: 'rejected' | 'withdrawn' | 'already-ended';
 }
@@ -1188,7 +1208,8 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
   const record = loadRecord(repoRoot, id);
   if (!isOpenStage(record.stage)) {
     if (record.github !== undefined) syncGitHubDecision(repoRoot, record);
-    return { record, outcome: 'already-ended' };
+    const retryPay = payNotice(record, boundAmount(record));
+    return { record, outcome: 'already-ended', ...(retryPay === null ? {} : { payMessage: retryPay }) };
   }
   settleScanFindings(repoRoot, record, 'ended');
   if (text !== '') {
@@ -1198,5 +1219,6 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
   }
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record);
-  return { record, outcome: text !== '' ? 'rejected' : 'withdrawn' };
+  const payMessage = payNotice(record, boundAmount(record));
+  return { record, outcome: text !== '' ? 'rejected' : 'withdrawn', ...(payMessage === null ? {} : { payMessage }) };
 }

@@ -24,9 +24,18 @@ reads: its `reward.amount` is always `0`. There is no other difference between
 the versions, so a reader written for version 1 that accepts either version
 number reads both.
 
+**What changed in version 3 (BT11b, 13 October 2026):** a block on a bounty
+stating a reward above $0 carries one more member, `payment`:
+`{"method":"stripe-link","where":"pull-request-description","prefix":"pay-to:"}`
+— the machine name for how the listing says a solver may ask to be paid: one
+`pay-to:` line in the pull request description carrying a Stripe payment
+link. Bounties stating $0 keep version 2. A version 3 block always carries
+`payment`, so its key set is larger than version 2's — nothing else differs.
+
 | Field | Meaning |
 |---|---|
-| `schemaVersion`, `kind` | Version `1` or `2`, format name `box-bounty`. |
+| `schemaVersion`, `kind` | Version `1`, `2` or `3`, format name `box-bounty`. |
+| `payment` | Present exactly at version 3: `{"method":"stripe-link","where":"pull-request-description","prefix":"pay-to:"}` — the solver asks for the reward by adding one `pay-to:` line with a Stripe payment link to their pull request description. |
 | `id` | `bt-` followed by exactly 12 lowercase hexadecimal digits. |
 | `repository` | GitHub `OWNER/REPO`, with letters, digits, `_`, `.`, and `-` in each part. |
 | `workCommit` | Exactly 40 lowercase hexadecimal digits identifying the published bounty branch tip to work from. |
