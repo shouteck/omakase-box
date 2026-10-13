@@ -160,11 +160,16 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('status-end', 'status');
 
   const overs: string[] = [];
+  console.log('K14 measured starts: ' + JSON.stringify(runs.map(({ label, git, gh }) => ({ label, git, gh }))));
+  const countsFile = process.env.BT8A_START_COUNTS_FILE;
+  if (countsFile !== undefined) writeFileSync(countsFile, JSON.stringify(runs.map(({ label, git, gh }) => ({ label, git, gh })), null, 2));
   for (const step of runs) {
     const budget = BUDGET[step.label];
     if (budget === undefined) { expect.unreachable(`${step.label} has no budget entry`); }
     expect(step.exit, `${step.label} itself failed: ${step.stderr.slice(0, 300)}`).toBe(0);
     expect(step.other, `${step.label} started stray processes`).toEqual([]);
+    if (budget.git > 0) expect(step.git, `${step.label} did not count its Git calls`).toBeGreaterThan(0);
+    if (budget.gh > 0) expect(step.gh, `${step.label} did not count its GitHub calls`).toBeGreaterThan(0);
     // Every overage is named in one message, so a wave that moves a count
     // reads the whole new row from a single run.
     if (step.git > budget.git) overs.push(`${step.label} Git starts ${step.git} (budget ${budget.git})`);

@@ -11,8 +11,9 @@
 //   bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]
 //   bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]
 //   bounty close [<id>] [--reason "<text>"] [--repo <path>]
-//   bounty owner <setup|allow|ask|off|on|answer|summary> — the owner's own
-//   commands, the plainly named group the description never offers an agent.
+//   bounty allow [owner/name|waiting-id] [--ask]
+//   bounty deny [owner/name]
+//   bounty config [set|add|remove <setting> <value>]
 // A bounty command works without <id> when exactly one bounty can take it.
 // Thin shell over packages/box-package and packages/box-trace: argument parsing and
 // exit codes live here; all agreement validation, selection, folder emission,
@@ -22,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, ownerAllow, ownerAnswer, ownerAsk, ownerOff, ownerOn, ownerSetup, ownerSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, showPath } from '../../box-bounty/index.js';
+import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, showPath } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -179,7 +180,7 @@ if (command === 'export') {
     return index >= 0 && bountyArgs[index + 1] !== undefined ? resolve(bountyArgs[index + 1]!) : process.cwd();
   };
   const bountyIds = (): string[] =>
-    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason', '--include'].includes(bountyArgs[index - 1] ?? ''));
+    bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--to', '--from', '--reason', '--include', '--since'].includes(bountyArgs[index - 1] ?? ''));
 
   const commandIds = (): string[] => {
     const positional = bountyIds();
@@ -209,10 +210,14 @@ if (command === 'export') {
       reject: 'ending a bounty with nothing merged is one command now — box bounty close <id> --reason "<why>" keeps the reason on the record',
       withdraw: 'ending a bounty with nothing merged is one command now — box bounty close <id>',
       remind: 'the tool no longer supplies a reminder line — the "reminders" switch in .box/limits.json is the owner\'s to act on',
-      confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --to github --preview, publish with box bounty post <id> --to github; the owner\'s own commands are box bounty owner setup/allow/ask/answer'
+      confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --to github --preview, publish with box bounty post <id> --to github; the owner uses box bounty allow, deny and config'
     };
     if (removed[subcommand!] !== undefined) {
       throw new BountyRefused('command-removed', removed[subcommand!]!);
+    }
+    if (subcommand === 'owner') {
+      const replacements: Record<string, string> = { setup: 'box bounty config', allow: 'box bounty allow', ask: 'box bounty allow --ask', off: 'box bounty deny', on: 'box bounty allow', answer: 'box bounty allow <waiting-bounty-id>', summary: 'box bounty status --since <iso>' };
+      throw new BountyRefused('command-removed', `owner ${bountyArgs[0] ?? ''} was removed; use ${replacements[bountyArgs[0] ?? ''] ?? 'box bounty allow, box bounty deny or box bounty config'}. Nothing changed`);
     }
     if (subcommand === 'help') {
       // Works outside a checkout too — it reads no repository.
@@ -256,7 +261,12 @@ if (command === 'export') {
     } else if (subcommand === 'status') {
       const [id, ...extraIds] = bountyIds();
       if (extraIds.length > 0) usage('box bounty status [id] [--full] [--comments]');
-      console.log(renderStatus(resolveRepoRoot(bountyRepo(), 'status'), { ...(id === undefined ? {} : { id }), full: bountyArgs.includes('--full'), comments: bountyArgs.includes('--comments') }));
+      const root = resolveRepoRoot(bountyRepo(), 'status');
+      const sinceIndex = bountyArgs.indexOf('--since');
+      const since = sinceIndex < 0 ? undefined : bountyArgs[sinceIndex + 1];
+      if (sinceIndex >= 0 && (since === undefined || since.startsWith('--'))) usage('box bounty status --since <iso>');
+      console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: bountyArgs.includes('--full'), comments: bountyArgs.includes('--comments') }));
+      if (since !== undefined) console.log(renderSummary(root, since));
     } else if (subcommand === 'post') {
       const toIndex = bountyArgs.indexOf('--to');
       const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
@@ -284,7 +294,7 @@ if (command === 'export') {
       }
       const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
       console.log(`${record.id} — posted — delivered to ${destination}`);
-      if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level}-level "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
+      if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
       console.log(record.github !== undefined ? `next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change` : `next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty look ${record.id} --from <dir>`);
     } else if (subcommand === 'apply') {
       const [id, attemptText, ...extraIds] = commandIds();
@@ -298,6 +308,7 @@ if (command === 'export') {
         usage('box bounty apply [id] [<n> | --from <dir>] [--repo <path>]');
       }
       const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, from !== undefined ? { from: resolve(from) } : attempt);
+      if (result.firstMergeNotice !== undefined) console.log(result.firstMergeNotice);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
       if (result.record.github?.closedNote !== undefined) console.log(`github: ${result.record.github.closedNote}`);
       if (result.outcome === 'applied') {
@@ -359,53 +370,38 @@ if (command === 'export') {
         console.log(`${record.id} — ${record.stage} — ${record.stage === 'rejected' ? 'the reason is recorded and' : 'the durability ref is removed and'} the record says ended`);
         console.log(`ended — ${jobLine(record)}`);
       }
-    } else if (subcommand === 'owner') {
-      // The plainly named owner group the description never offers an agent:
-      // the only commands that write or widen the decision, plus setup, the
-      // answers and the summary. `owner` alone prints the group's usage.
-      const [verb, ...ownerArgs] = bountyArgs;
-      const levelAll = ownerArgs.includes('--all') || ownerArgs.includes('--all-projects');
-      const yes = ownerArgs.includes('--yes');
-      const ownerUsage = (detail?: string): never => {
-        if (detail !== undefined) console.error(detail);
-        console.error('the owner commands — only these write or widen the owner\'s decision:');
-        console.error('       box bounty owner setup [--repo <path>]        where things stand + the exact command for each step');
-        console.error('       box bounty owner allow [--project|--all] [--yes]   allow the tool — prints what it allows; --yes writes it');
-        console.error('       box bounty owner ask [--project|--all]      ask me each time');
-        console.error('       box bounty owner off [--project|--all]      turn the permission off');
-        console.error('       box bounty owner on [--project|--all] [--yes]      turn it back on');
-        console.error('       box bounty owner answer <id> [--repo <path>]   answer the one bounty waiting for the owner');
-        console.error('       box bounty owner summary [--since <iso>] [--repo <path>]  what was done since a time');
-        process.exit(2);
-      };
-      if (verb === undefined) ownerUsage();
-      const root = resolveRepoRoot(bountyRepo(), `owner ${verb}`);
-      if (verb === 'setup') {
-        console.log(ownerSetup(root));
-      } else if (verb === 'allow' || verb === 'on') {
-        console.log(ownerAllow(root, levelAll, yes));
-      } else if (verb === 'ask') {
-        console.log(ownerAsk(root, levelAll));
-      } else if (verb === 'off') {
-        console.log(ownerOff(root, levelAll));
-      } else if (verb === 'answer') {
-        const [id, ...rest0] = ownerArgs.filter((arg, index) => !arg.startsWith('--') && ownerArgs[index - 1] !== '--repo');
-        if (id === undefined || rest0.length > 0) ownerUsage('box bounty owner answer <id>');
-        console.log(ownerAnswer(root, id!));
-      } else if (verb === 'summary') {
-        const sinceIndex = ownerArgs.indexOf('--since');
-        const since = sinceIndex >= 0 ? ownerArgs[sinceIndex + 1] : undefined;
-        if (sinceIndex >= 0 && (since === undefined || since.startsWith('--'))) ownerUsage('box bounty owner summary --since <iso>');
-        console.log(ownerSummary(root, since));
-      } else {
-        ownerUsage(`box bounty owner ${verb} is not an owner command`);
+    } else if (subcommand === 'allow' || subcommand === 'deny' || subcommand === 'config') {
+      const values: string[] = [];
+      const seen = new Set<string>();
+      for (let i = 0; i < bountyArgs.length; i += 1) {
+        const arg = bountyArgs[i]!;
+        if (arg === '--repo' || arg === '--ask' && subcommand === 'allow') {
+          if (seen.has(arg)) throw new BountyRefused('authority-arguments', `${arg} was repeated; nothing changed`);
+          seen.add(arg);
+          if (arg === '--repo') {
+            const value = bountyArgs[++i];
+            if (value === undefined || value.startsWith('--')) throw new BountyRefused('authority-arguments', '--repo needs a path; nothing changed');
+          }
+        } else if (arg.startsWith('--')) throw new BountyRefused('authority-arguments', `unexpected option ${arg}; nothing changed`);
+        else values.push(arg);
       }
+      if ((subcommand === 'allow' || subcommand === 'deny') && values.length > 1 || subcommand === 'config' && values.length !== 0 && values.length !== 3) throw new BountyRefused('authority-arguments', 'unexpected arguments; use allow [owner/name|waiting-id], deny [owner/name], or config [set|add|remove <setting> <value>]. Nothing changed');
+      let root: string | null = null;
+      try { root = resolveRepoRoot(bountyRepo(), subcommand); }
+      catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || seen.has('--repo')) throw error; }
+      if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask'), text => console.log(text)));
+      else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
+      else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text)));
     } else {
       usage(`box bounty ${subcommand} is not a bounty command — run box bounty help for the journey`);
     }
   } catch (error) {
     if (error instanceof BountyUsage) usage(error.message);
     if (error instanceof BountyRefused) {
+      if (['owner-allow-needed', 'owner-answer-needed', 'publish-held'].includes(error.reason)) {
+        console.log(error.message);
+        process.exit(0);
+      }
       console.error(`bounty ${subcommand} refused (${error.reason}): ${error.message}`);
       process.exit(3);
     }

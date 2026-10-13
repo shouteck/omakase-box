@@ -145,10 +145,10 @@ const ALWAYS = ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', 
 // relative include or attributes path can be resolved against the including
 // file's directory exactly as Git resolves it — and the include chain is
 // already followed, to any depth, by git itself.
-const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile|alias\\..*)$';
+const CONFIG_KEYS = '^(filter\\..*\\.(clean|smudge|process|required)|merge\\..*\\.driver|include\\.path|includeif\\..*\\.path|core\\.attributesfile|alias\\..*|remote\\..*\\.(url|pushurl)|url\\..*\\.(insteadof|pushinsteadof))$';
 const PIN_KEYS = /^(filter\..*\.(clean|smudge|process|required)|merge\..*\.driver)$/;
 
-function commandConfig(repo: string): readonly ConfigEntry[] {
+export function commandConfig(repo: string): readonly ConfigEntry[] {
   const remembered = pinsByRepo ?? commandPins;
   const known = remembered?.get(repo);
   if (known !== undefined) return known;

@@ -15,6 +15,7 @@ const repo = join(root, 'repo');
 const bin = join(root, 'bin');
 const stateFile = join(root, 'offline-github.json');
 const settingsDir = join(root, 'settings');
+const transportPreload = join(root, 'transport-preload.cjs');
 const write = (path, content) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
 const run = (program, args, cwd = root, env = process.env) => {
   const result = spawnSync(program, args, { cwd, env, encoding: 'utf8', windowsHide: true });
@@ -55,7 +56,8 @@ if (!existsSync(cli)) throw new Error('build the repository before creating the 
 plainComponents(dirname(root));
 mkdirSync(repo, { recursive: true });
 write(marker, JSON.stringify({ root, kind: 'BT7-disposable-offline-fixture' }));
-write(join(root, 'invoke.cjs'), `const {spawnSync}=require('node:child_process');\nconst {delimiter}=require('node:path');\nconst env={...process.env,PATH:${JSON.stringify(bin)}+delimiter+(process.env.PATH||''),BT7_UX_STATE:${JSON.stringify(stateFile)},BOX_BOUNTY_SETTINGS_DIR:${JSON.stringify(settingsDir)}};\nconst result=spawnSync(${JSON.stringify(process.execPath)},[${JSON.stringify(cli)},...process.argv.slice(2),'--repo',${JSON.stringify(repo)}],{cwd:${JSON.stringify(repo)},env,stdio:'inherit',windowsHide:true});\nprocess.exit(result.status??1);\n`);
+write(transportPreload, `const cp = require('node:child_process');\nconst original = cp.spawnSync;\ncp.spawnSync = function(program, args, options) {\n  if (/(^|[\\\\/])git(?:\\.exe)?$/i.test(program) && Array.isArray(args)) args = args.map(arg => arg === 'https://github.com/owner/project.git' ? process.env.BT8A_GIT_REMOTE : arg);\n  return original.call(this, program, args, options);\n};\nrequire('node:module').syncBuiltinESMExports();\n`);
+write(join(root, 'invoke.cjs'), `const {spawnSync}=require('node:child_process');\nconst {delimiter}=require('node:path');\nconst env={...process.env,PATH:${JSON.stringify(bin)}+delimiter+(process.env.PATH||''),BT7_UX_STATE:${JSON.stringify(stateFile)},BOX_BOUNTY_SETTINGS_DIR:${JSON.stringify(settingsDir)},BT8A_GIT_REMOTE:${JSON.stringify(join(root, 'remote.git'))},NODE_OPTIONS:(process.env.NODE_OPTIONS||'')+' --require '+${JSON.stringify(transportPreload.replaceAll('\\', '/'))}};\nconst result=spawnSync(${JSON.stringify(process.execPath)},[${JSON.stringify(cli)},...process.argv.slice(2),'--repo',${JSON.stringify(repo)}],{cwd:${JSON.stringify(repo)},env,stdio:'inherit',windowsHide:true});\nprocess.exit(result.status??1);\n`);
 write(join(bin, 'box.cmd'), `@"${process.execPath}" "${join(root, 'invoke.cjs')}" %*\r\n`);
 write(join(bin, 'box'), `#!/bin/sh\nexec '${process.execPath.replaceAll('\\', '/').replaceAll("'", "'\\''")}' '${join(root, 'invoke.cjs').replaceAll('\\', '/').replaceAll("'", "'\\''")}' "$@"\n`);
 chmodSync(join(bin, 'box'), 0o755);
@@ -104,8 +106,7 @@ const base = git(repo, ['rev-parse', 'HEAD']);
 const bare = join(root, 'remote.git');
 git(repo, ['init', '--bare', bare]);
 git(repo, ['remote', 'add', 'origin', 'git@github.com:owner/project.git']);
-git(repo, ['config', `url.${bare.replaceAll('\\', '/')}.insteadOf`, 'https://github.com/owner/project.git']);
-git(repo, ['push', 'https://github.com/owner/project.git', 'main']);
+git(repo, ['push', bare, 'main']);
 write(join(repo, '.box/limits.json'), JSON.stringify({ allowedDestinations: ['github'] }));
 const task = 'Complete greeting.txt: welcome new shoppers, let guests check out, tell returning shoppers to resume their saved basket, and say no account is required. Preserve any current accessibility sentence.\n';
 write(join(repo, 'TASK.md'), task);

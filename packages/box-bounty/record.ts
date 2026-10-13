@@ -20,7 +20,8 @@ import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
 import { postGitHub, refreshGitHubStatus, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
-import { readDecision } from './settings.js';
+import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
+import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
 import { quoteForeign, showPath } from './answer.js';
@@ -284,6 +285,8 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   // wording to the command that retries the same outside work now.
   if (record.github?.pending !== null && record.github?.pending !== undefined) {
     record.github.pending = record.github.pending
+      .replace(/box bounty owner answer \S+/g, `box bounty close ${record.id}`)
+      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'box bounty config')
       .replace(/retry box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `retry box bounty close ${record.id}`)
       .replace(/local (?:undo|reject|withdraw) stands/g, 'local close stands')
       .replace(/box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `box bounty close ${record.id}`);
@@ -295,6 +298,8 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   // pull request now; any other removed name points back at status.
   if (record.github?.outside !== undefined && typeof record.github.outside.answers === 'string') {
     const answers = record.github.outside.answers
+      .replace(/box bounty owner answer (\S+)/g, 'box bounty allow $1')
+      .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'box bounty config')
       .replace(/box bounty answer (\S+) --pr (\d+)/g, 'box bounty look $1 $2 or box bounty apply $1 $2')
       .replace(/box bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b[^\n;]*/g, `box bounty status ${record.id}`);
     if (answers !== record.github.outside.answers) {
@@ -457,17 +462,17 @@ export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string
   if (read.decision === 'ask' || read.decision === 'off') {
     return [
       `the owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off — it is on file marked off'}.`,
-      `the owner answers this one with: box bounty owner answer ${id}`
+      `the owner answers this one with: box bounty allow ${id}`
     ];
   }
   return [
-    'the owner has not allowed this tool — that is the owner\'s to decide, and nothing else can decide it.',
-    'put this to them: an agent wants to post a bounty for this project. Allowing is one decision, made once:',
-    `  this project only:    box bounty owner allow --project --yes`,
-    `  every project:        box bounty owner allow --all --yes`,
-    `  this one bounty only: box bounty owner answer ${id}`,
-    'an owner who wants to be asked each time runs: box bounty owner ask --project',
-    '`box bounty owner setup` shows where things stand and the exact command for each step.'
+    'Ask the owner in your own words. Bounties are public under the owner\'s GitHub account. A solution the agent chooses is merged into the owner\'s code. This decision covers this repository only.',
+    'These are the same choices shown by bare box bounty config:',
+    `  ${DECISION_WORDS.allow}: box bounty allow`,
+    `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
+    `  ${DECISION_WORDS.once}: box bounty allow ${id}`,
+    'Ask mode covers publishing only; merging is not gated.',
+    'box bounty config shows every setting and the command that changes it.'
   ];
 }
 
@@ -476,7 +481,7 @@ export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string
 // rewritten. Status prints the vocabulary the agent can act on, so the view
 // maps each removed name to what replaced it ('revert' reads as plain Git —
 // undo has no replacement command).
-const EVENT_COMMAND_VIEW: Record<string, string> = { answer: 'look', reject: 'close', withdraw: 'close', undo: 'revert' };
+const EVENT_COMMAND_VIEW: Record<string, string> = { answer: 'look', reject: 'close', withdraw: 'close', undo: 'revert', confirm: 'post', 'owner answer': 'allow', 'owner allow': 'allow', 'owner ask': 'allow --ask', 'owner off': 'deny', 'owner on': 'allow', 'owner setup': 'config', 'owner summary': 'status --since' };
 const historyJson = (event: StageEvent): string =>
   JSON.stringify(event.command === undefined || EVENT_COMMAND_VIEW[event.command] === undefined ? event : { ...event, command: EVENT_COMMAND_VIEW[event.command] });
 
@@ -490,6 +495,7 @@ const historyJson = (event: StageEvent): string =>
 // never read as allowed.
 export function ownerStatusLine(repoRoot: string): string {
   const read = readDecision(repoRoot);
+  if (read.denied) return `owner: this repository is no longer allowed; denied at ${read.at}; all-projects does not apply after deny`;
   const where = read.level === 'project' ? 'this project' : 'all projects';
   switch (read.decision) {
     case 'allowed': return `owner: allowed for ${where} (changed ${read.at})`;
@@ -510,6 +516,13 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
   lines.push(ownerStatusLine(repoRoot));
+  const localMerge = localFirstMergeLine(repoRoot);
+  if (localMerge !== null) lines.push(localMerge);
+  for (const [address, notice] of Object.entries(loadSettings().firstMerges)) {
+    if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === notice.commit))) {
+      lines.push(`first outside solution merged in ${address}: commit ${notice.commit} at ${notice.at}`);
+    }
+  }
   const limits = resolveLimits(repoRoot);
   if (limits.legacyGithubDestination) lines.push(`  ${LEGACY_GITHUB_NOTE}`);
   if (open.length === 0) {
@@ -526,7 +539,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
       if (record.waiting !== undefined) {
         for (const hit of record.waiting.hits ?? []) lines.push(`      scan hit: ${hit.path}:${hit.line} (${hit.rule})`);
-        lines.push(`      the owner answers this one with: box bounty owner answer ${record.id}`);
+        lines.push(`      the owner answers this one with: box bounty allow ${record.id}`);
       }
       if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
@@ -682,7 +695,7 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
 // keeps its first wait time — the state does not move just because the same
 // held command ran again.
 export function waitForOwner(repoRoot: string, record: BountyRecord, waiting: WaitingFor): void {
-  record.waiting = waiting;
+  record.waiting = { ...waiting, at: record.waiting?.at ?? waiting.at };
   if (record.stage === 'waiting') persistRecord(repoRoot, record);
   else transitionTo(repoRoot, record, 'waiting');
 }
@@ -757,7 +770,7 @@ export function resolveLimits(repoRoot: string): ResolvedLimits {
 
 // The one notice a pre-BT8 "github" destination allowance earns, with the
 // command that moves the decision — printed once where it shows.
-export const LEGACY_GITHUB_NOTE = '`.box/limits.json` still names "github" in allowedDestinations — a destination allowance from before the owner\'s decision moved to the owner\'s own settings folder. It does not allow posting; `box bounty owner setup` shows the decision and the command that moves it. Drop "github" from allowedDestinations to retire this line';
+export const LEGACY_GITHUB_NOTE = '`.box/limits.json` still names "github" in allowedDestinations — a destination allowance from before the owner\'s decision moved to the owner\'s own settings folder. It does not allow posting; `box bounty config` shows the decision and the command that moves it. Drop "github" from allowedDestinations to retire this line';
 
 // The line the tool keeps current everywhere open bounties surface:
 // `.box/bounties/OPEN` and the marked block of the rules file the limits name.
@@ -810,7 +823,7 @@ function syncOpenSurfaces(repoRoot: string, limits: ResolvedLimits): void {
 }
 
 // The decision gate every post and every tool-driven outside close passes.
-// `answered` is true only inside `box bounty owner answer` — the owner's own
+// `answered` is true only inside `box bounty allow` — the owner's own
 // one command, which completes the held action without writing a standing
 // decision. Allowed or answered returns the read; anything else marks the
 // record waiting and refuses by name with the lines for the owner.
@@ -821,7 +834,7 @@ export function ownerGate(repoRoot: string, record: BountyRecord, action: { for:
   waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}) });
   throw new BountyRefused(
     read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
-    [`${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(record, read)].join('\n')
+    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(record, read), ...(listRecords(repoRoot).some(entry => entry.record?.allowedBy?.decision === 'once') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
   );
 }
 

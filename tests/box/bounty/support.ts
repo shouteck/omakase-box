@@ -39,6 +39,7 @@ beforeEach(() => {
 // Write one level of the owner's decision inside the temp folder — the same
 // bytes `box bounty owner allow/ask/off` writes.
 export function ownerSays(repoRoot: string, decision: OwnerDecision, level: 'project' | 'default' = 'project'): void {
+  if (level === 'project' && git(repoRoot, ['remote']).trim() === '') git(repoRoot, ['remote', 'add', 'origin', `https://github.com/tests/${repoRoot.split(/[\\/]/).slice(-2, -1)[0]}.git`]);
   writeDecision(repoRoot, level, decision);
 }
 export const ownerRead = (repoRoot: string) => readDecision(repoRoot);

@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, closeBounty, loadRecord, lookBounty, ownerAnswer, postBounty, previewGitHub, renderStatus } from '../../../packages/box-bounty/index.js';
+import { applyBounty, closeBounty, loadRecord, lookBounty, allowBounty, postBounty, previewGitHub, renderStatus } from '../../../packages/box-bounty/index.js';
 import { approveGitHub } from '../../../packages/box-bounty/github.js';
 import { fingerprint, git, runRoot, write } from './support.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
@@ -125,7 +125,7 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     // owner, whatever the standing decision says (BT8).
     refused(() => postBounty(repo, id, 'github', { choice: choice(false, ['notes/hint.txt']) }), 'publish-held');
     expect(loadRecord(repo, id).waiting?.reason).toBe('untracked-file');
-    ownerAnswer(repo, id);
+    allowBounty(repo, id);
     const pub = loadRecord(repo, id).github!;
     expect(pub.wip!.added).toEqual(['notes/hint.txt']);
     expect(git(bare, ['show', `${pub.branch}:notes/hint.txt`])).toBe('look here');

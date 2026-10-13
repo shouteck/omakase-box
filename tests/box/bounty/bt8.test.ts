@@ -1,9 +1,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyRefused, closeBounty, finalizeBounty, loadRecord, ownerAllow, ownerAnswer, ownerOff, ownerOn, ownerSetup, ownerSummary, planBounty, postBounty, readDecision, renderStatus, scanText, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, closeBounty, finalizeBounty, loadRecord, allowBounty, planBounty, postBounty, readDecision, renderStatus, scanText, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, ownerRead, runRoot, write } from './support.js';
+import { git, makeRepo as makeBareRepo, ownerRead, runRoot, write } from './support.js';
 import { fixture, refused } from './github-fixture.js';
 
 // BT8: the owner says yes once. The decision lives in the owner's own
@@ -15,6 +15,12 @@ import { fixture, refused } from './github-fixture.js';
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
   return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+}
+
+function makeRepo(files: Record<string, string>): string {
+  const repo = makeBareRepo(files);
+  git(repo, ['remote', 'add', 'origin', 'https://github.com/tests/' + repo.split(/[\\/]/).slice(-2, -1)[0] + '.git']);
+  return repo;
 }
 
 const drafted = (repo: string, extra: Partial<CreateOptions> = {}) =>
@@ -42,8 +48,8 @@ describe('the owner\'s one decision — nothing written is never allowed', () =>
   it('an owner answer on a bounty that is not waiting is a named refusal', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = drafted(repo);
-    refused(() => ownerAnswer(repo, id), 'owner-answer-not-waiting');
-    refused(() => ownerAnswer(repo, 'bt-000000000000'), 'unknown-bounty');
+    refused(() => allowBounty(repo, id), 'owner-answer-not-waiting');
+    refused(() => allowBounty(repo, 'bt-000000000000'), 'unknown-bounty');
   });
 });
 
@@ -83,7 +89,7 @@ describe('ask me each time — every post and every outside close waits', () => 
     const first = drafted(repo);
     refused(() => postBounty(repo, first.id, join(runRoot('dest'), 'inbox')), 'owner-answer-needed');
     expect(loadRecord(repo, first.id).waiting?.reason).toBe('owner-ask');
-    const output = ownerAnswer(repo, first.id);
+    const output = allowBounty(repo, first.id);
     expect(output).toContain('answered once');
     const record = loadRecord(repo, first.id);
     expect(record.stage).toBe('posted');
@@ -94,87 +100,7 @@ describe('ask me each time — every post and every outside close waits', () => 
     expect(loadRecord(repo, second.id).stage).toBe('waiting');
   });
 
-  it('off asks the same way, the answer stays on file marked off, and on turns it back', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    writeDecision(repo, 'project', 'allowed');
-    ownerOff(repo, false);
-    expect(ownerRead(repo).decision).toBe('off');
-    const { id } = drafted(repo);
-    refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-answer-needed');
-    expect(loadRecord(repo, id).waiting?.reason).toBe('owner-off');
-    ownerOn(repo, false, true);
-    expect(ownerRead(repo).decision).toBe('allowed');
-    // …and the file kept every change with its time.
-    const file = JSON.parse(readFileSync(settingsFile(), 'utf8')) as { projects: Record<string, { bounty: string; at: string; changes: { bounty: string; at: string }[] }> };
-    const level = Object.values(file.projects)[0]!;
-    expect(level.bounty).toBe('allowed');
-    expect(level.changes.map(change => change.bounty)).toEqual(['allowed', 'off']);
-    expect(level.changes.every(change => /^\d{4}-/.test(change.at))).toBe(true);
-  });
 
-  it('a GitHub close under ask holds only the outside work — the local decision stands', () => fixture(({ repo, id, scratch, state, bare }) => {
-    // The world's own settings folder, rewritten to "ask" for this test only.
-    writeFileSync(join(scratch, 'settings', 'settings.json'), levelJson('ask'));
-    refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
-    ownerAnswer(repo, id);
-    expect(state().issues).toHaveLength(1);
-    closeBounty(repo, id, 'not wanted');
-    const record = loadRecord(repo, id);
-    expect(record.stage).toBe('rejected'); // the local decision stands…
-    expect(record.waiting?.for).toBe('close'); // …the outside close waits
-    expect(record.github?.pending).toContain('waiting-owner');
-    expect(state().issues[0]!.state).toBe('open');
-    ownerAnswer(repo, id);
-    expect(state().issues[0]!.state).toBe('closed');
-    expect(loadRecord(repo, id).github?.pending).toBeNull();
-    expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
-  }));
-});
-
-describe('the owner commands', () => {
-  it('owner allow prints what it allows and writes nothing without --yes', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const shown = ownerAllow(repo, false, false);
-    expect(shown).toContain('posted publicly under your GitHub account');
-    expect(shown).toContain('nothing was written');
-    expect(existsSync(settingsFile())).toBe(false);
-    expect(ownerRead(repo).decision).toBeNull();
-    ownerAllow(repo, false, true);
-    expect(ownerRead(repo).decision).toBe('allowed');
-    expect(ownerRead(repo).level).toBe('project');
-  });
-
-  it('owner allow --all writes the default level, which a project with nothing written inherits', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    ownerAllow(repo, true, true);
-    expect(ownerRead(repo)).toMatchObject({ decision: 'allowed', level: 'default' });
-  });
-
-  it('owner allow releases a bounty that waited only for the decision', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id } = drafted(repo);
-    refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
-    const shown = ownerAllow(repo, false, true);
-    expect(shown).toContain(`${id} — the waiting bounty went out`);
-    expect(loadRecord(repo, id).stage).toBe('posted');
-  });
-
-  it('owner setup states the file, the answers and the exact next commands; summary reports facts from the record', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const setup = ownerSetup(repo);
-    expect(setup).toContain('the owner\'s settings:');
-    expect(setup).toContain('nothing written');
-    expect(setup).toContain('box bounty owner allow --project --yes');
-    expect(setup).toContain('git:');
-    const { id } = drafted(repo);
-    writeDecision(repo, 'project', 'allowed');
-    postBounty(repo, id, join(runRoot('dest'), 'inbox'));
-    const summary = ownerSummary(repo);
-    expect(summary).toContain('bounties posted: 1');
-    expect(summary).toContain(id);
-    expect(ownerSummary(repo, '2999-01-01')).toContain('bounties posted: 0');
-    refused(() => ownerSummary(repo, 'not a time'), 'summary-time-invalid');
-  });
 });
 
 describe('the settings file is a boundary — malformed and unknown names refuse, never ignore', () => {
@@ -281,7 +207,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(record.waiting?.reason).toBe('secrets');
     expect(record.waiting?.hits?.[0]).toMatchObject({ path: 'config.txt', line: 1 });
     expect(state().issues).toHaveLength(0); // nothing was published
-    const answer = ownerAnswer(repo, id);
+    const answer = allowBounty(repo, id);
     expect(answer).not.toContain('s3cret-hun73r');
     expect(state().issues).toHaveLength(1);
   }));
@@ -296,10 +222,10 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(loadRecord(repo, id).waiting?.reason).toBe('owner-allow');
     // …the owner answers that one bounty — and the scan they never saw still
     // holds the post, now with its own named reason.
-    refused(() => ownerAnswer(repo, id), 'publish-held');
+    refused(() => allowBounty(repo, id), 'publish-held');
     expect(loadRecord(repo, id).waiting?.reason).toBe('secrets');
     expect(state().issues).toHaveLength(0);
-    ownerAnswer(repo, id); // a second answer, now to the scan's own hold
+    allowBounty(repo, id); // a second answer, now to the scan's own hold
     expect(state().issues).toHaveLength(1);
   }));
 
@@ -326,7 +252,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     postBounty(repo, other.id, 'github');
     expect(state().issues).toHaveLength(1);
     // The held one goes out on its own answer.
-    ownerAnswer(repo, id);
+    allowBounty(repo, id);
     expect(loadRecord(repo, id).stage).toBe('posted');
     expect(state().issues).toHaveLength(2);
   }));

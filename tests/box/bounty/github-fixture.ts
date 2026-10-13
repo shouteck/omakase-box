@@ -1,7 +1,8 @@
-import { spawnSync } from 'node:child_process';
+import childProcess, { spawnSync } from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
 import { chmodSync, copyFileSync, cpSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot, write } from './support.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
@@ -132,6 +133,15 @@ save(); console.log(JSON.stringify(result));
 // same state machine and exits before node looks for a script. Any other
 // node process sees a different execPath and the preload does nothing.
 const GH_PRELOAD = String.raw`
+const cp = require('node:child_process');
+const originalSpawn = cp.spawnSync;
+cp.spawnSync = function (program, args, options) {
+  if (/(^|[\\/])git(?:\.exe)?$/i.test(program) && Array.isArray(args)) {
+    args = args.map(arg => arg === 'https://github.com/owner/project.git' ? process.env.BT8A_GIT_REMOTE : arg);
+  }
+  return originalSpawn.call(this, program, args, options);
+};
+require('node:module').syncBuiltinESMExports();
 if (/(^|[\\/])gh\.exe$/i.test(process.execPath)) {
   // Node resolves argv[1] to an absolute path before preloads run; rebuild the
   // argv the stand-in expects: [exe, 'gh.exe', <first arg>, <rest>...].
@@ -195,10 +205,9 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
   const bare = join(scratch, 'remote.git');
   git(repo, ['init', '--bare', bare]);
   git(repo, ['remote', 'add', 'origin', 'git@github.com:owner/project.git']);
-  git(repo, ['config', `url.${bare.replaceAll('\\', '/')}.insteadOf`, 'https://github.com/owner/project.git']);
   // The repository is already public: what is on the remote now is what a
   // bounty can point solvers at. The bare remote stands in for github.com.
-  git(repo, ['push', 'https://github.com/owner/project.git', 'main']);
+  git(repo, ['push', bare, 'main']);
   write(repo, 'TASK.md', 'Repair the app.\n');
   if (resumeNote !== undefined) {
     write(repo, '.box/bt7-local-context.txt', resumeNote);
@@ -213,8 +222,8 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
   write(bin, 'standin.cjs', STANDIN);
   if (process.platform === 'win32') {
     linkGh(process.execPath, join(bin, 'gh.exe'));
-    write(bin, 'gh-preload.cjs', GH_PRELOAD);
   } else { write(bin, 'gh', `#!/bin/sh\nexec '${process.execPath}' '${join(bin, 'standin.cjs')}' "$@"\n`); chmodSync(join(bin, 'gh'), 0o755); }
+  write(bin, 'gh-preload.cjs', GH_PRELOAD);
   // The owner allowed the tool for all their projects — the world's own
   // settings folder, carried inside scratch so a copy keeps its own answer.
   const settings = join(scratch, 'settings');
@@ -232,21 +241,33 @@ function withGhEnv<T>(world: World, run: () => T): T {
   const oldStandin = process.env['BT6_GH_STANDIN'];
   const oldNodeOptions = process.env['NODE_OPTIONS'];
   const oldSettings = process.env['BOX_BOUNTY_SETTINGS_DIR'];
+  const oldRemote = process.env['BT8A_GIT_REMOTE'];
   process.env.PATH = `${world.bin}${delimiter}${oldPath ?? ''}`;
   process.env['BT6_GH_STATE'] = world.stateFile;
   process.env['BT6_GH_STANDIN'] = join(world.bin, 'standin.cjs');
   process.env['BOX_BOUNTY_SETTINGS_DIR'] = world.settings;
-  if (process.platform === 'win32') {
+  process.env['BT8A_GIT_REMOTE'] = world.bare;
+  {
     const preload = join(world.bin, 'gh-preload.cjs').replaceAll('\\', '/');
     process.env['NODE_OPTIONS'] = `${oldNodeOptions ?? ''} --require ${preload}`.trim();
   }
+  const originalSpawn = childProcess.spawnSync;
+  const transport = vi.spyOn(childProcess, 'spawnSync').mockImplementation((program, args, options) => {
+    const mapped = /(?:^|[\\/])git(?:\.exe)?$/i.test(String(program)) && Array.isArray(args)
+      ? args.map(arg => arg === 'https://github.com/owner/project.git' ? world.bare : arg) : args;
+    return originalSpawn(program, mapped, options);
+  });
+  syncBuiltinESMExports();
   try { return run(); }
   finally {
+    transport.mockRestore();
+    syncBuiltinESMExports();
     if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
     if (oldState === undefined) delete process.env['BT6_GH_STATE']; else process.env['BT6_GH_STATE'] = oldState;
     if (oldStandin === undefined) delete process.env['BT6_GH_STANDIN']; else process.env['BT6_GH_STANDIN'] = oldStandin;
     if (oldNodeOptions === undefined) delete process.env['NODE_OPTIONS']; else process.env['NODE_OPTIONS'] = oldNodeOptions;
     if (oldSettings === undefined) delete process.env['BOX_BOUNTY_SETTINGS_DIR']; else process.env['BOX_BOUNTY_SETTINGS_DIR'] = oldSettings;
+    if (oldRemote === undefined) delete process.env['BT8A_GIT_REMOTE']; else process.env['BT8A_GIT_REMOTE'] = oldRemote;
   }
 }
 
@@ -257,7 +278,7 @@ function contextFor(world: World): GithubFixture {
   /** Register a pull request head already reachable on the remote. */
   const prCommit = (sha: string, author = 'solver', files = ['app.txt'], base = `box-bounty/${id}`) => {
     const n = state().prs.length + 1;
-    git(repo, ['push', 'https://github.com/owner/project.git', `+${sha}:refs/pull/${n}/head`]);
+    git(repo, ['push', bare, `+${sha}:refs/pull/${n}/head`]);
     update({ prs: [...state().prs, { number: n, user: { login: author }, base: { ref: base, repo: { full_name: 'owner/project' } }, head: { sha }, files: files.map(filename => ({ filename })) }] });
   };
   const pr = (author = 'owner', extra: Record<string, string> = {}, base = `box-bounty/${id}`, history = `box-bounty/${id}`): string => {

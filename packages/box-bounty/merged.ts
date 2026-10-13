@@ -22,6 +22,7 @@ import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, transitionTo 
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
 import { showPath } from './answer.js';
+import { recordFirstMerge } from './settings.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
@@ -181,6 +182,11 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
+  const author = candidate.attempt?.author ?? record.github?.seenPullRequests?.find(pr => pr.n === candidate.pr && pr.commit === candidate.commit)?.author;
+  if (candidate.attempt !== undefined && author === undefined || author !== undefined && author !== record.github?.account) {
+    const notice = recordFirstMerge(repoRoot, merge);
+    if (notice !== null) emit(notice);
+  }
   for (const hit of extras) {
     emit(`${record.id} — fact: the merge also carries ${showPath(hit.path)}, which the never-ship rule '${hit.rule}' keeps out — the history stays as the owner made it`);
   }

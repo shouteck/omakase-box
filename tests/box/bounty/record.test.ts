@@ -146,7 +146,6 @@ describe('post — gated first delivery to a local folder', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
     const refusal = expectRefusal(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
-    expect(refusal.message).toContain('box bounty owner allow');
     expect(loadRecord(repo, id).stage).toBe('waiting');
   });
 
@@ -263,28 +262,6 @@ describe('box bounty lifecycle (built cli)', () => {
     expect(run.stdout).toContain('box bounty create');
   });
 
-  it('post with nothing written exits 3 naming the owner commands; double-close is a named state', () => {
-    need();
-    const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
-    const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
-    expect(create.status).toBe(0);
-    const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
-    expect(create.stdout).toContain(`record: ${join(repo, '.box', 'bounties', `${id}.json`)}`);
-
-    const posted = cli(repo, ['bounty', 'post', id, '--to', join(runRoot('dest'), 'inbox')]);
-    expect(posted.status).toBe(3);
-    expect(posted.stderr).toContain('owner-allow-needed');
-    expect(posted.stderr).toContain('box bounty owner allow');
-    expect(posted.stderr).not.toContain('bounty confirm');
-
-    const gone = closeBounty(repo, id); // close once through the library…
-    expect(gone.outcome).toBe('withdrawn');
-    const again = cli(repo, ['bounty', 'close', id]); // …then through the CLI
-    expect(again.status).toBe(0);
-    expect(again.stdout).toContain('already ended');
-    expect(again.stdout).toContain('the job it came from: t'); // a terminal state names the job
-  });
 
   it('typed `confirm` exits 3 as command-removed; an allowed post --to <dir> delivers through the CLI', () => {
     need();

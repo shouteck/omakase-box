@@ -45,7 +45,7 @@ export { BUILTIN_RULES, loadOwnerList, OWNER_LIST_FILE } from './never-ship.js';
 export type { NeverShipRule } from './never-ship.js';
 export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, ownerGate, ownerWaitLines, persistRecord, recordDir, recordPath, refName, renderHelp, renderOpenLine, renderResume, resolveLimits, transitionTo, waitForOwner, waitingSummary, writeNewRecord } from './record.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, CloseOutcome, EndedStage, ListedBounty, OpenStage, RecordSeed, ResolvedLimits, StageEvent, WaitingFor } from './record.js';
-export { ownerAllow, ownerAnswer, ownerAsk, ownerOff, ownerOn, ownerSetup, ownerSummary } from './owner.js';
+export { allowRepository, allowBounty, denyRepository, renderConfig, changeConfig, renderSummary } from './owner.js';
 export { loadSettings, projectKey, readDecision, settingsDir, settingsFile, writeDecision, SETTINGS_ENV } from './settings.js';
 export type { DecisionRead, OwnerDecision, OwnerSettings } from './settings.js';
 export { SECRET_RULES, scanPatch, scanText } from './github.js';
