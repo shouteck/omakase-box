@@ -1,59 +1,36 @@
-// Telling the agent — the two switchable pieces of wave BT4:
-//
-//   describe         the canonical description (wording.ts) plus the facts an
-//                    agent needs to choose: cost, expected wait, the limits and
-//                    open bounties, read from .box/limits.json and live state.
-//                    Works outside a checkout too — outside one it prints the
-//                    description and says the live facts need a repository.
-//   describe --rules the block an owner pastes into a project's rules file,
-//                    markers included, with the current open-bounties line.
-//
-// Neither ever prints nothing: facts that are not set say so, an absent
-// limits file means defaults, and a broken one is a named refusal.
-
-import { LEGACY_GITHUB_NOTE, ownerStatusLine, renderOpenLine, resolveLimits } from './record.js';
+import { attemptsOf, isOpenStage, listRecords, ownerStatusLine, renderOpenLine } from './record.js';
+import { instructionBlock } from './instructions.js';
 import { DESCRIBE_LINES, renderRulesBlock } from './wording.js';
 
 export function renderDescribe(repoRoot: string | null): string {
   const lines: string[] = [...DESCRIBE_LINES, ''];
   if (repoRoot === null) {
-    lines.push('the facts for choosing — cost, expected wait, the owner\'s limits and open bounties — need a repository: they live in .box/. Run inside a checkout or pass --repo <path> to see them.');
+    lines.push('the facts for choosing need a repository: run inside a checkout or pass --repo <path>.');
     return lines.join('\n');
   }
-  const limits = resolveLimits(repoRoot);
-  lines.push('the facts for choosing — .box/limits.json and the live records:');
-  lines.push('  GitHub cost: nothing; public repositories only. Expected wait: unknown; nobody is known to be watching these issues yet.');
-  lines.push(`  cost: ${limits.cost ?? 'not stated — the owner sets "cost" in .box/limits.json'}`);
-  lines.push(`  expected wait: ${limits.expectedAnswer ?? 'not stated — the owner sets "expectedAnswer" in .box/limits.json'}`);
-  lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing — choosing is yours.');
-  // An empty list still means what it means — no destination is allowed — so
-  // it says so plainly rather than dangling "only inside" with nothing after.
-  // "github" is not a folder: a leftover entry is a legacy allowance, named
-  // once and never a yes — the decision moved to the owner's own settings.
-  const folders = (limits.allowedDestinations ?? []).filter(dir => dir !== 'github');
-  const destinations = limits.allowedDestinations === null
-    ? 'any local folder — the owner can restrict it with "allowedDestinations"'
-    : folders.length === 0
-      ? 'nowhere — the owner\'s "allowedDestinations" names no folder'
-      : `only inside ${folders.join(', ')}`;
-  lines.push(`  where post --to <dir> may deliver: ${destinations}`);
+  const records = listRecords(repoRoot).flatMap(entry => entry.record === null ? [] : [entry.record]);
+  const posted = records.filter(record => record.events.some(event => event.stage === 'posted'));
+  const ended = posted.filter(record => !isOpenStage(record.stage));
+  const merged = ended.filter(record => record.stage === 'applied');
+  const waits = posted.flatMap(record => {
+    const post = record.events.find(event => event.stage === 'posted');
+    const first = [...attemptsOf(record).map(attempt => attempt.at), ...record.github?.seenPullRequests?.map(pr => pr.at) ?? []].sort()[0];
+    if (post === undefined || first === undefined) return [];
+    const hours = (Date.parse(first) - Date.parse(post.at)) / 3600000;
+    return Number.isFinite(hours) && hours >= 0 ? [hours] : [];
+  });
+  lines.push('the facts for choosing, from this project\'s records:');
+  lines.push('  cost: GitHub posting is public and free; every bounty states a reward of $0. No payment exists. A draft is free; preparing and judging solutions takes your time.');
+  if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet. Nobody is known to be watching these issues yet.');
+  else lines.push(`  expected wait: ${waits.length === 0 ? 'no solution wait recorded yet' : `${Math.min(...waits).toFixed(1)} to ${Math.max(...waits).toFixed(1)} hours from posting to the first solution recorded, across ${waits.length} bounty/bounties`}; ${merged.length} of ${ended.length} ended posted bounties had a solution merged. Past waits do not predict the next answer.`);
+  lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing. Choosing is yours.');
+  lines.push('  where post --to <dir> may deliver: any local folder outside the repository.');
   lines.push(`  ${ownerStatusLine(repoRoot)}`);
-  if (limits.legacyGithubDestination) lines.push(`  ${LEGACY_GITHUB_NOTE}`);
   lines.push(renderOpenLine(repoRoot));
-  lines.push('');
-  lines.push('next: box bounty create --task <file> --why "<one line>" — or box bounty help for the whole journey');
+  lines.push('', 'next: box bounty create --task <file> --why "<one line>" or box bounty help for the whole journey');
   return lines.join('\n');
 }
 
 export function renderRules(repoRoot: string | null): string {
-  // Outside a checkout the block still prints, as a template — the tool
-  // rewrites the open-bounties line (and the whole marked block) on every
-  // record change once it is pasted and .box/limits.json names the file.
-  if (repoRoot !== null) resolveLimits(repoRoot); // the limits file is still a boundary — a broken one is a named refusal here too
-  const openLine = repoRoot === null ? 'open bounties: none' : renderOpenLine(repoRoot);
-  return [
-    'paste this block into the project\'s rules file — the tool keeps what sits between the markers current on every record change:',
-    '',
-    renderRulesBlock(openLine)
-  ].join('\n');
+  return ['the tool keeps this fixed block in existing instruction files after box bounty config set instructions true:', '', repoRoot === null ? renderRulesBlock('idle') : instructionBlock(repoRoot)].join('\n');
 }

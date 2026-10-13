@@ -88,7 +88,7 @@ describe('no output names a removed command', () => {
     scan('describe-repo', renderDescribe(repo));
     scan('rules-repo', renderRules(repo));
     scan('open-line', renderOpenLine(repo));
-    scan('rules-block', renderRulesBlock(renderOpenLine(repo)));
+    scan('rules-block', renderRulesBlock('open'));
     scan('status', renderStatus(resolveRepoRoot(repo)));
     scan('status-id', renderStatus(repo, { id }));
     scan('status-full', renderStatus(repo, { id, full: true }));

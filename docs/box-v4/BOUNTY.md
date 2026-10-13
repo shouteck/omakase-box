@@ -20,6 +20,7 @@ agent's or the owner's.
 node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>" \
     [--title "<one line>"] [--note <file>] [--job <file>] [--resume "<short note>"] \
     [--out <dir>] [--repo <path>] [--preview]
+node packages/box-cli/dist/cli.js bounty [--repo <path>]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--repo <path>]
@@ -264,10 +265,9 @@ node packages/box-cli/dist/cli.js bounty post <id> --to github [--with-changes] 
 ```
 
 Before the push, the pre-publish scan reads everything that would be
-published for the first time — see *The pre-publish scan* below. A limits
-file that still names `"github"` in `"allowedDestinations"` is a legacy
-allowance: it is reported once, grants nothing, and the command that moves
-the decision is named. When nothing local was needed,
+published for the first time — see *The pre-publish scan* below.
+The retired project limits file grants nothing and is no longer read.
+When nothing local was needed,
 the branch is a name pointing at the existing commit and **zero file content
 is uploaded**; otherwise only the new commits go up, identifiers unchanged.
 The issue says the task, what was tried, the branch to branch from and the
@@ -436,8 +436,7 @@ cryptographic boundary.
 A malformed settings file, or a name the tool does not know, is a named
 refusal (`settings-malformed`, `settings-unknown-name`) — refused, never
 ignored, on every command that reads it. A name that reaches for a hard stop
-(`settings-hard-stop`) and a project file that claims authority
-(`limits-authority`) are refused the same way: **the three hard stops —
+(`settings-hard-stop`) is refused the same way: **the three hard stops —
 never-ship files, a private repository, the owner's standing rules — cannot
 be expressed as settings or switched off by one.**
 
@@ -494,71 +493,82 @@ inside it.
 
 ## Telling the agent
 
-Two switchable pieces put the tool in front of an agent that has never seen
-it — and the owner's limits file supplies the facts it needs to choose.
+`box bounty` prints the cold-session overview: open work, solutions needing
+attention and the next command. A solution already shown but not decided
+includes its age. `describe` explains what the tool does and when it is worth
+using, then generates cost and wait facts from the project records each time.
+GitHub posting is public and free, and every bounty states a $0 reward.
+With no past posted bounty it says there is no history yet. Otherwise it
+reports waits from the recorded posting time to the first recorded solution
+observation and how many ended posted bounties had
+a solution merged. Past waits do not predict the next answer.
 
-- **`describe`** prints the canonical description — what the tool does, when
-  it is worth using and when it is not — plus the facts for choosing, read
-  from `.box/limits.json` and the live records: cost, expected wait, where
-  `post --to` may deliver, how an answer is treated
-  (each solution arrives as a numbered attempt; the report states facts about
-  the change and runs nothing — choosing is yours) and
-  the open-bounties line. It works outside a checkout too: outside one it
-  prints the description and says the live facts need a repository. A fact the
-  owner has not set says so — describe never prints nothing.
-- **`describe --rules`** prints the block an owner pastes into a project's
-  rules file — the rules lines and an `open bounties:` line between
-  `<!-- box-bounty -->` / `<!-- /box-bounty -->` markers.
+### Existing instruction files
 
-### The open-bounties line the tool keeps current
+`box bounty config` lists the instruction files found now. The known list,
+confirmed against official documentation on 13 October 2026, is:
 
-`.box/bounties/OPEN` always mirrors the records —
-`open bounties: bt-… "title" (stage), …` or `open bounties: none` — rewritten
-on every record mutation. When the limits file names `rulesFile`, the marked
-block inside that file is rewritten too on every mutation: the tool owns
-everything between the markers (the rules lines plus the current
-open-bounties line) and never touches a byte outside them. A file without the
-markers — or one that does not exist — is left exactly as it was.
+| Host | Files | Loading condition |
+| --- | --- | --- |
+| [Codex](https://developers.openai.com/codex/guides/agents-md) | `AGENTS.md`, `AGENTS.override.md` | The override takes precedence in a directory. |
+| [Claude Code](https://code.claude.com/docs/en/memory) | `CLAUDE.md`, `CLAUDE.local.md`, `.claude/CLAUDE.md` | Project instructions loaded at startup. |
+| [Cursor](https://cursor.com/docs/rules) | Existing `.mdc` files under `.cursor/rules` | Only `alwaysApply: true` guarantees every chat; other rules are conditional. |
+| [Gemini CLI](https://geminicli.com/docs/cli/gemini-md/) | `GEMINI.md` | Default workspace context filename. |
+| [GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions) | `.github/copilot-instructions.md` | Repository instructions for supported enabled features. |
 
-### The owner's limits file — `.box/limits.json`
+Discovery checks these project-root files and existing rule files on every
+invocation. It stores no discovered file list. Nested or differently named
+instruction files can be selected explicitly. The owner enables maintenance
+once for this checkout with:
 
-Written once by the owner, read at the boundary (`.box` never ships):
-
-```json
-{
-  "reminders": "off",
-  "rulesFile": "AGENTS.md",
-  "cost": "each bounty costs real money against the owner's account",
-  "expectedAnswer": "usually a day; unknown is fine to say",
-  "allowedDestinations": ["../bounty-drops"]
-}
+```text
+box bounty config set instructions true
 ```
 
-- `reminders` — `"off"` (default) or `"on"`; kept as a known field since
-  `remind` was removed — nothing in the tool gates on it now, so the switch
-  is the owner's own to act on.
-- `rulesFile` — optional path, resolved relative to the repository root, of
-  the project rules file holding the marked block. It must land **inside**
-  the checkout, judged on the canonical path — a junction or `..` spelling
-  that resolves outside is refused (`rules-file-outside-repo`).
-- `cost` / `expectedAnswer` — one free-text line each, shown by `describe` so
-  an agent can weigh handing off against doing the work.
-- `allowedDestinations` — optional list of local directories (repo-relative or
-  absolute) that `post --to <dir>` must land inside; absent means any local
-  folder. Enforced on the canonical destination — a junction trick cannot
-  slip past — and the refusal is named `destination-not-allowed`. An empty
-  list means no destination is allowed. A literal `"github"` entry written
-  before the owner's decision moved to the settings folder grants nothing:
-  it is reported once, with the command that moves it, and GitHub posting
-  reads only the owner's own settings.
+This adds one identical block to each existing file found. It creates no
+instruction file and changes no original bytes outside its marked block.
+Front matter, other tools' blocks and line endings outside the block stay as
+they were. A damaged block, a link or an unsafe path is a named refusal for
+that file; other safe files still update. Standalone `@relative/path` imports
+among discovered instruction files keep the block in the imported file once.
+The importer names that fact in config output. Cyclic imports are refused.
 
-A missing file means defaults. Malformed JSON, a non-object document or a
-known field of the wrong shape is the named refusal `limits-malformed` —
-read before anything mutates or posts, so a broken file never leaves a
-half-written record. Unknown fields are ignored — except a name that claims
-authority (`authority`, `permission`, `allowed`, `approve` and the like): a
-project file can never allow the tool, so that is refused by name
-(`limits-authority`) rather than ignored.
+For any other host or custom filename, choose an existing file inside the
+checkout, then enable maintenance:
+
+```text
+box bounty config set instruction-file path/to/instructions.txt
+box bounty config set instructions true
+```
+
+The maintenance choice and optional custom file live in the owner's
+`settings.json` outside the repository. They grant no publication permission.
+`box bounty config set instructions false` stops maintenance and keeps existing
+blocks. A newly appearing instruction file gets a once-only notice from
+`status`, with the command to add the block; nothing adds it automatically.
+Private notice acknowledgements store hashes, not a discovery list.
+
+The block says the tool exists and points to `box bounty describe`. With
+nothing open it has no activity line. With open work it says exactly
+`a bounty is open; \x60box bounty\x60 shows more.` With a new solution it says
+`a bounty has a new solution; \x60box bounty\x60 shows more.` New means no agent
+in this project has been shown it. Once shown, the first wording returns.
+No count, identifier, title, account, branch, stage or foreign text enters
+the block. Its canonical bytes use LF in every file.
+
+These lines are only as fresh as the last time the tool looked at GitHub.
+Nothing runs in the background. The detailed local listing in
+`.box/bounties/OPEN` remains separate from the instruction block.
+`describe --rules` prints the current fixed block as a template.
+
+### Retired project limits
+
+`.box/limits.json` is no longer read, rewritten or deleted, even if malformed.
+The tool reports its presence once and says it can be deleted. If you used
+`rulesFile`, re-enable maintenance and re-select any custom file using the
+commands above. `allowedDestinations` and `reminders` are dropped; `cost` and
+`expectedAnswer` now come from facts. Everything the owner configures lives
+in the owner's settings outside the repository.
 
 ## The record — the bounty outlives the agent
 

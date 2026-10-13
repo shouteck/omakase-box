@@ -1,0 +1,196 @@
+import { linkSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { changeConfig, closeBounty, finalizeBounty, loadRecord, planBounty, renderConfig, renderDescribe, renderRules, renderStatus } from '../../../packages/box-bounty/index.js';
+import { discoverInstructions, INSTRUCTION_HOSTS, instructionBlock, syncInstructions } from '../../../packages/box-bounty/instructions.js';
+import { fixture } from './github-fixture.js';
+import { refreshGitHubStatus } from '../../../packages/box-bounty/github.js';
+import { postBounty, scanText, settingsFile } from '../../../packages/box-bounty/index.js';
+import { git, makeRepo, ROOT, runRoot, write } from './support.js';
+
+const bytes = (repo: string, name: string) => readFileSync(join(repo, name));
+const setup = (files: Record<string, string>) => makeRepo({ 'TASK.md': 'Fix the sum.\n', ...files });
+const draft = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', outDir: join(runRoot('bt8b-out'), 'bounty') }));
+const block = (repo: string, name: string) => /<!-- box-bounty -->[\s\S]*?<!-- \/box-bounty -->/.exec(bytes(repo, name).toString('utf8'))?.[0];
+
+describe('instruction blocks', () => {
+  it('round-trips arbitrary outside bytes and uses only four fixed-state changes', () => {
+    const prefix = Buffer.from([0xff, 0x00, 0x0d, 0x0a]);
+    const suffix = Buffer.from([0x0d, 0x00, 0xfe]);
+    const repo = setup({ 'AGENTS.md': 'first\r\n', 'GEMINI.md': 'second\n' });
+    writeFileSync(join(repo, 'AGENTS.md'), Buffer.concat([prefix, Buffer.from('<!-- box-bounty -->\r\nstale\n<!-- /box-bounty -->'), suffix]));
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('AGENTS.md');
+    const idle = block(repo, 'AGENTS.md');
+    expect(idle).toBe(block(repo, 'GEMINI.md'));
+    expect(idle).not.toContain('open bounties: none');
+    const { id } = draft(repo);
+    const open = block(repo, 'AGENTS.md');
+    expect(open).toContain('a bounty is open; `box bounty` shows more.');
+    expect(open).not.toContain(id);
+    expect(open).toBe(block(repo, 'GEMINI.md'));
+    const record = loadRecord(repo, id);
+    // An unmerged commit is a recorded solution, without running foreign code.
+    const tree = git(repo, ['rev-parse', 'HEAD^{tree}']);
+    const commit = git(repo, ['commit-tree', tree, '-m', 'outside change']);
+    record.attempts = [{ n: 1, commit, at: '2026-10-01T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
+    write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
+    syncInstructions(repo);
+    expect(block(repo, 'AGENTS.md')).toContain('a bounty has a new solution; `box bounty` shows more.');
+    expect(block(repo, 'AGENTS.md')).toBe(block(repo, 'GEMINI.md'));
+    renderStatus(repo);
+    expect(block(repo, 'AGENTS.md')).toBe(open);
+    expect(renderStatus(repo)).toContain('seen and not decided');
+    closeBounty(repo, id);
+    expect(block(repo, 'AGENTS.md')).toBe(idle);
+    const final = bytes(repo, 'AGENTS.md');
+    expect(final.subarray(0, prefix.length)).toEqual(prefix);
+    expect(final.subarray(-suffix.length)).toEqual(suffix);
+  });
+
+  it('adds once when one instruction file imports another, preserving all original bytes', () => {
+    const repo = setup({ 'AGENTS.md': 'base\r\n', 'CLAUDE.md': '@AGENTS.md\r\nother instruction\r\n' });
+    const before = bytes(repo, 'CLAUDE.md');
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('imports');
+    expect(block(repo, 'AGENTS.md')).toBeDefined();
+    expect(bytes(repo, 'CLAUDE.md')).toEqual(before);
+  });
+
+  it('refuses damaged markers for one file and still updates safe files', () => {
+    const repo = setup({ 'AGENTS.md': '<!-- box-bounty -->\nbroken\n', 'GEMINI.md': 'safe\n' });
+    const before = bytes(repo, 'AGENTS.md');
+    const out = changeConfig(repo, 'set', 'instructions', 'true');
+    expect(out).toContain('instruction-markers-damaged');
+    expect(bytes(repo, 'AGENTS.md')).toEqual(before);
+    expect(block(repo, 'GEMINI.md')).toBeDefined();
+  });
+
+  it('finds only existing files, notices a new file once and waits for config', () => {
+    const repo = setup({ 'AGENTS.md': 'base\n' });
+    changeConfig(repo, 'set', 'instructions', 'true');
+    write(repo, 'GEMINI.md', 'new\n');
+    expect(renderConfig(repo)).toContain('GEMINI.md');
+    expect(renderStatus(repo)).toContain('box bounty config set instructions true');
+    expect(renderStatus(repo)).not.toContain('lacks the block');
+    expect(bytes(repo, 'GEMINI.md').toString()).toBe('new\n');
+    changeConfig(repo, 'set', 'instructions', 'true');
+    expect(block(repo, 'GEMINI.md')).toBeDefined();
+    expect(discoverInstructions(repo).map(file => file.path)).toHaveLength(2);
+  });
+
+  it('supports an arbitrary existing file but refuses outside, missing and linked choices unchanged', () => {
+    const repo = setup({ 'team.txt': 'our instructions\n', 'AGENTS.md': 'base\n' });
+    changeConfig(repo, 'set', 'instruction-file', 'team.txt');
+    changeConfig(repo, 'set', 'instructions', 'true');
+    expect(block(repo, 'team.txt')).toBeDefined();
+    const settingsBefore = readFileSync(settingsFile());
+    for (const path of ['../elsewhere.md', 'missing.md']) expect(() => changeConfig(repo, 'set', 'instruction-file', path)).toThrow();
+    write(repo, 'broken.txt', '<!-- box-bounty --\nbroken');
+    expect(() => changeConfig(repo, 'set', 'instruction-file', 'broken.txt')).toThrow('instruction-markers-damaged');
+    const target = join(runRoot('bt8b-link'), 'real');
+    write(target, 'team.txt', 'outside\n');
+    symlinkSync(target, join(repo, 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
+    expect(() => changeConfig(repo, 'set', 'instruction-file', 'linked/team.txt')).toThrow('instruction-file-link');
+    expect(readFileSync(join(target, 'team.txt'), 'utf8')).toBe('outside\n');
+    expect(readFileSync(settingsFile())).toEqual(settingsBefore);
+  });
+
+  it('refuses a hard-linked instruction file without changing either name', () => {
+    const repo = setup({ 'team.txt': 'linked bytes\n' });
+    linkSync(join(repo, 'team.txt'), join(repo, 'AGENTS.md'));
+    const before = bytes(repo, 'team.txt');
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('instruction-file-link');
+    expect(bytes(repo, 'AGENTS.md')).toEqual(before);
+    expect(bytes(repo, 'team.txt')).toEqual(before);
+  });
+
+  it('refuses duplicate or damaged marker pairs and cyclic imports', () => {
+    const repo = setup({ 'AGENTS.md': '@GEMINI.md\n', 'GEMINI.md': '@AGENTS.md\n' });
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('instruction-import-cycle');
+    expect(bytes(repo, 'AGENTS.md').toString()).toBe('@GEMINI.md\n');
+    const broken = '<!-- box-bounty --\n<!-- /box-bounty --\n';
+    write(repo, 'AGENTS.md', broken);
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('instruction-markers-damaged');
+    expect(bytes(repo, 'AGENTS.md').toString()).toBe(broken);
+  });
+
+  it('keeps other blocks, front matter and mixed endings outside its block', () => {
+    const raw = '---\r\nalwaysApply: true\n---\r\n<!-- other -->\nkeep\r<!-- /other -->\r\n';
+    const repo = setup({ '.cursor/rules/tool.mdc': raw });
+    changeConfig(repo, 'set', 'instructions', 'true');
+    expect(bytes(repo, '.cursor/rules/tool.mdc').subarray(0, Buffer.byteLength(raw))).toEqual(Buffer.from(raw));
+    const maintained = block(repo, '.cursor/rules/tool.mdc');
+    expect(bytes(repo, '.cursor/rules/tool.mdc').toString().replace(maintained ?? 'absent', '')).toBe(raw);
+  });
+
+  it('first installation adds no bytes outside the block to a file with no final newline', () => {
+    const raw = 'owner\r\nother\nodd\rfinal';
+    const repo = setup({ 'AGENTS.md': raw });
+    changeConfig(repo, 'set', 'instructions', 'true');
+    const maintained = block(repo, 'AGENTS.md');
+    expect(maintained).toBeDefined();
+    expect(bytes(repo, 'AGENTS.md').toString().replace(maintained ?? 'absent', '')).toBe(raw);
+  });
+});
+
+it('finding a GitHub solution changes the block to new; only showing it clears new', () => fixture(({ repo, id, pr }) => {
+  write(repo, 'AGENTS.md', 'base\n');
+  write(repo, 'GEMINI.md', 'second\n');
+  changeConfig(repo, 'set', 'instructions', 'true');
+  postBounty(repo, id, 'github');
+  pr('solver');
+  refreshGitHubStatus(repo, loadRecord(repo, id));
+  expect(instructionBlock(repo)).toContain('a bounty has a new solution');
+  expect(block(repo, 'AGENTS.md')).toBe(block(repo, 'GEMINI.md'));
+  renderStatus(repo);
+  expect(instructionBlock(repo)).toContain('a bounty is open');
+  expect(instructionBlock(repo)).not.toContain('new solution');
+}));
+
+it('host names occur in one product registry only', () => {
+  const sources = readdirSync(join(ROOT, 'packages', 'box-bounty')).filter(name => name.endsWith('.ts') && name !== 'instructions.ts').map(name => readFileSync(join(ROOT, 'packages', 'box-bounty', name), 'utf8'));
+  sources.push(readFileSync(join(ROOT, 'packages', 'box-cli', 'src', 'cli.ts'), 'utf8'));
+  for (const host of INSTRUCTION_HOSTS) for (const source of sources) expect(source).not.toContain(host.host);
+});
+
+it('the tool scanner finds no secret-shaped literal in the added candidate diff', () => {
+  for (const mode of [[], ['--cached']]) {
+    const result = spawnSync('git', ['-c', `safe.directory=${ROOT.replaceAll('\\', '/').replace(/\/+$/, '')}`, 'diff', ...mode, '--no-ext-diff', '--no-textconv', '--unified=0'], { cwd: ROOT, encoding: 'utf8' });
+    expect(result.status, result.stderr).toBe(0);
+    const added = result.stdout.split('\n').filter(line => line.startsWith('+') && !line.startsWith('+++')).map(line => line.slice(1)).join('\n');
+    expect(scanText('BT8b-added-diff', added).map(hit => `${hit.line}: ${hit.rule}`)).toEqual([]);
+  }
+});
+
+it('retires malformed limits without reading them and reports migration once', () => {
+  const repo = setup({ '.box/limits.json': '{ broken\n' });
+  const before = bytes(repo, '.box/limits.json');
+  expect(renderDescribe(repo)).toContain('no bounty history yet');
+  expect(renderDescribe(repo)).not.toContain('cost: not stated');
+  expect(renderStatus(repo)).toContain('no longer read');
+  expect(renderStatus(repo)).not.toContain('no longer read');
+  const { id } = draft(repo);
+  expect(() => postBounty(repo, id, join(runRoot('bt8b-drop'), 'drop'))).toThrow('waiting for the owner');
+  expect(bytes(repo, '.box/limits.json')).toEqual(before);
+  expect(renderRules(null)).not.toContain('open bounties: none');
+});
+
+it('describe reports observed waits and current terminal outcomes, with invalid dates unknown', () => {
+  const repo = setup({});
+  const { id } = draft(repo);
+  const record = loadRecord(repo, id);
+  record.stage = 'undone';
+  record.events = [
+    ...record.events,
+    { stage: 'posted', at: '2026-10-01T00:00:00.000Z' },
+    { stage: 'applied', at: '2026-10-02T00:00:00.000Z' },
+    { stage: 'undone', at: '2026-10-03T00:00:00.000Z' }
+  ];
+  record.attempts = [{ n: 1, commit: record.snapshot.commit, at: '2026-10-02T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
+  write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
+  expect(renderDescribe(repo)).toContain('24.0 to 24.0 hours');
+  expect(renderDescribe(repo)).toContain('0 of 1 ended posted bounties had a solution merged');
+  record.events = record.events.map(event => event.stage === 'posted' ? { ...event, at: 'unusable' } : event);
+  write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
+  expect(renderDescribe(repo)).toContain('no solution wait recorded yet');
+});

@@ -38,16 +38,16 @@ export const RULES_LINES: readonly string[] = [
   'box bounty can hand a task to an outside solver and bring solutions back',
   'as facts — `box bounty describe` says what it does, what it costs and when it',
   'beats doing the work yourself. Using it is always your call; the owner\'s',
-  'limits apply.'
+  'permission applies.'
 ];
 
 // The marker convention for the block an owner pastes into a rules file. The
 // tool owns everything between the markers: on every record mutation the whole
-// interior is rewritten — the rules lines plus the current open-bounties line —
+// interior is rewritten with the fixed lines for the current activity —
 // while every byte outside the markers is left alone.
 export const RULES_MARKERS = { open: '<!-- box-bounty -->', close: '<!-- /box-bounty -->' } as const;
 
-export const rulesBlockInterior = (openBountiesLine: string): readonly string[] => [...RULES_LINES, openBountiesLine];
+export const rulesBlockInterior = (state: 'idle' | 'open' | 'new'): readonly string[] => [...RULES_LINES, ...(state === 'idle' ? [] : [state === 'new' ? 'a bounty has a new solution; `box bounty` shows more.' : 'a bounty is open; `box bounty` shows more.'])];
 
-export const renderRulesBlock = (openBountiesLine: string): string =>
-  [RULES_MARKERS.open, ...rulesBlockInterior(openBountiesLine), RULES_MARKERS.close].join('\n');
+export const renderRulesBlock = (state: 'idle' | 'open' | 'new'): string =>
+  [RULES_MARKERS.open, ...rulesBlockInterior(state), RULES_MARKERS.close].join('\n');
