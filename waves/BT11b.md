@@ -104,8 +104,8 @@ What this proves: every step the tool takes around a reward, on real GitHub. Wha
 ## Result
 
 - Worker: · Reviewer:
-- Commit: <filled at commit>
-- Verify: `env HOME=$HOME/kitchen-home node scripts/verify.mjs test:box-bounty test:box-package` — exit 0 (line filled at commit)
+- Commit: 28395aee662074d30e3f9fe9222ab48bf184ca20 (plus the Result-fields commit on top)
+- Verify: `verify 28395ae PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 115s` — `env HOME=$HOME/kitchen-home node scripts/verify.mjs test:box-bounty test:box-package` exit 0 on the commit (bt11b.test.ts 17 tests inside). Re-measured K14 starts on the final commit: post-github 19 git / 8 gh (budget 21/8), apply 15/5 (15/5), look-pr 19/2 (19/2), close-ended 4/4 (4/5), status-posted 2/5 (2/5) — all under budget; the pay read at close is one `gh api graphql` inside the existing close span.
 - Verdict: · Level:
 - Lenses:
 - Stripe link shapes accepted, and where they were confirmed: exactly `https://buy.stripe.com/<id>` — https only, host `buy.stripe.com` exactly, path one segment of 4–64 letters/digits, test-mode ids starting `test_`; nothing after the id (no query, fragment, trailing slash or deeper path), one address on the line and nothing else. Confirmed against Stripe's own docs — the published link format is `https://buy.stripe.com/<alphanumeric id>` and test-mode links carry `test_` ids (docs.stripe.com/payment-links/url-parameters). Anything else — other schemes, lookalike hosts, user-info, a second address, text after the address, control/bidi characters, lines over 200 chars — is "not recognised" and the stranger's text is never echoed.
