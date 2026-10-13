@@ -303,6 +303,7 @@ if (command === 'export') {
       }
       const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
       console.log(`${record.id} — posted — delivered to ${destination}`);
+      if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.join(', ')}`);
       if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
       console.log(record.github !== undefined ? `next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change` : `next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty look ${record.id} --from <dir>`);
     } else if (subcommand === 'apply') {

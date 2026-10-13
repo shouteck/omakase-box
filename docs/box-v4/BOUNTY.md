@@ -446,8 +446,11 @@ Because nobody sees a preview any more, everything a GitHub post would
 publish **for the first time** is scanned for secret-shaped content before
 it goes out: the added lines of each commit not yet pushed, the tool's
 work-in-progress commit when `--with-changes` is chosen, and every untracked
-file `--include` names. The patterns are a small stated list, not proof of
-absence:
+file `--include` names. `create` previews the same scan over what would
+leave — the shipped set is what a folder post publishes and a superset of
+what a GitHub post publishes for the first time — so the agent can fix a
+hit before `post`; a hit at `create` holds nothing and is recorded the same
+way. The patterns are a small stated list, not proof of absence:
 
 - private key blocks (`-----BEGIN … PRIVATE KEY-----`);
 - well-known token and key formats (GitHub, GitLab, AWS, Slack, OpenAI,
@@ -456,17 +459,55 @@ absence:
   credentials section contains `user:password@`, `Password=…` and the
   like);
 - a long random-looking string assigned to a name such as `key`, `secret`,
-  `token` or `password`.
+  `token` or `password` — quoted or the bare `NAME=value` env spelling.
 
 Ordinary code that uses the words `token` or `key` — short values, obvious
-placeholders — does not match. A hit, or an untracked file named for
-publishing, makes **that one bounty** wait for the owner, naming the file
-and line and **never printing the value**. The owner allows it once with
-`allow <id>`, adds the path to never-ship, or closes the bounty;
-nothing else is held up. An answer clears only what the recorded wait named:
-a post held for the decision alone still runs its scan. No setting switches
-the scan off — it is a protection of the owner's, like never-ship, not a
-judgement on the agent.
+placeholders, a getter call — does not match. Stated limits of the same
+kind: a token split across lines is not caught, a key block wrapped
+differently (say, base64) is not caught, and **a file Git treats as binary
+is not scanned at all** — the preview and the post name such files as not
+scanned, which is a fact, never a hold; the owner's `never publish` list is
+how such a path is kept out.
+
+A hit makes **that one bounty** wait for the owner in a named waiting
+state, naming the file and line — and the commit when the content sits in
+one not yet pushed, since an ordinary push would publish it too — **never
+printing the value**. The hold is recorded on the record: what was flagged
+and what happened. The agent's own moves are to remove the flagged content
+and post again — that sends the bounty — or to stop it; the hit message
+offers no owner command, because no owner answer can release a scan hold:
+`allow <id>` on one is a named refusal (`allow-scan-held`). The owner
+decides in `config` on two lists that live only in the owner's settings
+outside the repository:
+
+- **`safe to publish`** — `config add safe-to-publish <path>` lists paths
+  the scan does not hold a bounty over, for known false alarms (a fixture
+  with a made-up key). A safe-listed path still cannot carry a never-ship
+  file — the rule keeps it out whatever the list says, and naming a
+  never-ship path safe is refused (`publish-list-never-ship`).
+- **`never publish`** — `config add never-publish <path>` is the owner's
+  own addition to the never-ship table: a listed path is kept out of every
+  bounty — snapshot, first-published commit, named file, returned solution.
+
+Entries are repository-relative paths validated before the write: a path
+resolving outside the repository or through a link is refused
+(`publish-list-outside`, `publish-list-link`), and a project file that
+claims either list is refused by name and grants nothing
+(`project-claims-list`) — a solution must never widen what a bounty can
+carry. `config` shows both lists and the commands that change them.
+
+Waiting for the owner **cannot be enforced** — the owner may not act, and
+content reworked until the scan passes goes out. What the tool guarantees
+is that the owner is told every time, in `status` and `config`, and can
+read what was published. An owner's `allow <id>` remains how permission
+waits are answered — bound to what the owner was shown would be published:
+if the base, the commits published for the first time, the work in
+progress, the included files or what stays home changes afterwards, the
+answer does not carry over (`github-preview-stale`); the tool's own
+bookkeeping does not count as a change. An answer clears only what the
+recorded wait named: a post held for the decision alone still runs its
+scan. No setting switches the scan off — it is a protection of the owner's,
+like never-ship, not a judgement on the agent.
 
 `create` asks only for judgement — a task and one line of why; everything
 else has a default:
@@ -873,4 +914,5 @@ by name (`link-escape`) — never followed. A snapshot path that cannot be read
 ordinary-looking file name still ships. The pre-publish scan (above) catches
 secret-shaped content only in what a GitHub post publishes for the first
 time; a local-folder bounty ships the snapshot unchecked, and `.boxignore`
-is the catch-all for those.
+is the catch-all for those — plus the owner's `never publish` settings list,
+which joins this same table from outside the repository.

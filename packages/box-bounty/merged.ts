@@ -17,7 +17,7 @@
 import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gitOutcome, gitProgram } from './git.js';
-import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
+import { shipRules } from './never-ship.js';
 import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
@@ -199,8 +199,7 @@ function neverShipExtras(repoRoot: string, record: BountyRecord, merge: string, 
   const diff = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', `${merge}^1`, merge]);
   if (diff.status !== 0 || diff.error !== undefined) return [];
   const touched = new Set(attempt === undefined ? [] : [...attempt.changed, ...attempt.added, ...attempt.deleted].map(path => path.toLowerCase()));
-  const ownerList = loadOwnerList(repoRoot);
-  const rules = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
+  const rules = shipRules(repoRoot);
   const hits = new Map<string, { path: string; rule: string }>();
   for (const path of diff.stdout.split('\0').filter(name => name !== '')) {
     if (touched.has(path.toLowerCase()) || hits.has(path)) continue;

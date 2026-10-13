@@ -1,6 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
+import { basename as pathBasename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { loadSettings, saveSettings, settingsFile } from './settings.js';
 
 // Never-ship is the security boundary of a whole-repository bounty. The rules below
 // are built in and cannot be overridden in this wave. Each rule is evaluated on a
@@ -119,4 +120,147 @@ export function loadOwnerList(repoRoot: string): { readonly rule: NeverShipRule;
   });
   if (compiled.length === 0) return null;
   return { rule: { name: 'owner-list', match: path => compiled.some(regex => regex.test(path)) }, patterns };
+}
+
+// ---------------------------------------------------------------------------
+// The owner's two publish lists (BT8c), kept in the owner's own settings
+// folder — never in the project, where a solution or an agent could write
+// them. `never` is the owner's addition to the never-ship table: a listed
+// path is kept out of every bounty. `safe` is the pre-publish scan's only
+// exception: paths the scan does not hold a bounty over, for known false
+// alarms such as fixtures with made-up keys. A path on the safe list still
+// cannot carry a never-ship file — the scan holds nothing there, but the
+// table still keeps it out.
+//
+// Entries are repository-relative paths, stored under the canonical spelling
+// they resolve to. A path matches itself or anything beneath it.
+// ---------------------------------------------------------------------------
+
+export interface PublishLists { readonly never: readonly string[]; readonly safe: readonly string[] }
+
+const toPosix = (path: string): string => path.split('\\').join('/');
+
+// A listed path covers itself and anything below it. Matching folds case on
+// both sides, exactly like the rule table it joins.
+const listedUnder = (entries: readonly string[], path: string): boolean => {
+  const folded = path.toLowerCase();
+  return entries.some(entry => folded === entry.toLowerCase() || folded.startsWith(`${entry.toLowerCase()}/`));
+};
+export const publishListed = (entries: readonly string[], path: string): boolean => listedUnder(entries, path);
+
+// A project file cannot claim the lists — they live in the owner's settings
+// only. The claim surfaces: files spelled like the lists, and settings-shaped
+// JSON that names them. `.boxignore` is not a claim — it is the project's own
+// never-ship list and every pattern in it can only ever remove files.
+const CLAIM_KEY = /^(?:never[-_ ]?publish|safe[-_ ]?to[-_ ]?publish|safe[-_ ]?list|never[-_ ]?ship)$/i;
+const CLAIM_FILES = ['never-publish', 'safe-to-publish', 'never-ship', 'safe-list'];
+
+function checkProjectClaims(repoRoot: string): void {
+  const candidates = [...CLAIM_FILES, ...CLAIM_FILES.map(name => join('.box', name)), 'settings.json', join('.box', 'settings.json'), join('.box', 'limits.json')];
+  for (const name of candidates) {
+    const file = join(repoRoot, name);
+    if (!existsSync(file)) continue;
+    if (name.endsWith('.json')) {
+      let parsed: unknown;
+      try { parsed = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; } // unreadable is not a claim the tool can read
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const claim = Object.keys(parsed).find(key => CLAIM_KEY.test(key));
+        if (claim !== undefined) throw new BountyRefused('project-claims-list', `${name} claims "${claim}" — the owner's publish lists live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it or rename the key; nothing was read from it`);
+      }
+      continue;
+    }
+    throw new BountyRefused('project-claims-list', `${name} names an owner publish list — the lists live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it; nothing was read from it`);
+  }
+}
+
+// The owner's lists for one repository: the settings entry keyed by its real
+// folder path, after the project-claim check — a claim refuses by name and
+// grants nothing, everywhere the lists are consulted.
+export function publishLists(repoRoot: string): PublishLists {
+  checkProjectClaims(repoRoot);
+  const found = loadSettings().publishing?.[realpathSync(repoRoot)];
+  return { never: found?.never ?? [], safe: found?.safe ?? [] };
+}
+
+// The whole never-ship table for a repository: the built-ins, the project's
+// `.boxignore` (patterns can only remove), and the owner's `never publish`
+// settings entries — same judgement in create, post, answer and merged.
+export function shipRules(repoRoot: string): readonly NeverShipRule[] {
+  const rules: NeverShipRule[] = [...BUILTIN_RULES];
+  const ownerList = loadOwnerList(repoRoot);
+  if (ownerList !== null) rules.push(ownerList.rule);
+  const publish = publishLists(repoRoot);
+  if (publish.never.length > 0) rules.push({ name: 'owner-never-publish', match: path => listedUnder(publish.never, path) });
+  return rules;
+}
+
+// Where a `config add` entry lands: resolve the spelling against the
+// repository, realpath the nearest existing ancestor and re-append the
+// missing tail, then take the offset — the canonical repo-relative spelling
+// the scans and the rule table speak. A link at any existing component of
+// the spelled path is refused by name; so is a path that lands outside.
+function publishEntryPath(repoRoot: string, which: string, named: string): string {
+  const root = realpathSync(repoRoot);
+  const absolute = resolve(root, named);
+  let ancestor = absolute;
+  const tail: string[] = [];
+  while (!existsSync(ancestor)) {
+    const parent = dirname(ancestor);
+    if (parent === ancestor) throw new BountyRefused('publish-list-outside', `${which} ${named} cannot be resolved; nothing changed`);
+    tail.unshift(pathBasename(ancestor));
+    ancestor = parent;
+  }
+  const canon = join(realpathSync(ancestor), ...tail);
+  const offset = toPosix(relative(root, canon));
+  if (offset === '' || offset === '..' || offset.startsWith('../') || isAbsolute(offset)) {
+    throw new BountyRefused('publish-list-outside', `${which} ${named} resolves to ${canon}${offset === '' ? '' : ', outside the repository'} — a listed path names a path inside the repository; nothing changed`);
+  }
+  let current = root;
+  for (const part of relative(root, absolute).split(sep)) {
+    if (part === '' || part === '.' || part === '..') continue;
+    current = join(current, part);
+    const stat = lstatSync(current, { throwIfNoEntry: false });
+    if (stat === undefined) break;
+    if (stat.isSymbolicLink()) throw new BountyRefused('publish-list-link', `${which} ${named} resolves through a link — a listed path must be a real path inside the repository; nothing changed`);
+  }
+  return offset;
+}
+
+// `config add|remove never-publish|safe-to-publish <path>` — the only way the
+// lists change. Validation is all before the write: a path that resolves
+// outside the repository or through a link is refused by name, and a safe
+// entry that names a never-ship path is refused — the safe list cannot carry
+// what the table keeps out.
+export function changePublishList(repoRoot: string, which: 'never-publish' | 'safe-to-publish', verb: 'add' | 'remove', named: string): string {
+  const root = realpathSync(repoRoot);
+  const offset = publishEntryPath(repoRoot, which, named);
+  if (which === 'safe-to-publish' && verb === 'add') {
+    // Judged against the whole never-ship table — built-ins, .boxignore and
+    // the never publish list itself. The project-claim check is skipped on
+    // purpose: a claim grants nothing but must not block the owner's own
+    // settings write that keeps the tool honest.
+    const ownerList = loadOwnerList(repoRoot);
+    const rules: NeverShipRule[] = [...BUILTIN_RULES, ...(ownerList === null ? [] : [ownerList.rule])];
+    const existing = loadSettings().publishing?.[root]?.never ?? [];
+    if (existing.length > 0) rules.push({ name: 'owner-never-publish', match: path => listedUnder(existing, path) });
+    const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
+    if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${offset} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed`);
+  }
+  const stat = lstatSync(settingsFile(), { throwIfNoEntry: false });
+  if (stat !== undefined && (stat.isSymbolicLink() || !stat.isFile())) throw new BountyRefused('publish-list-settings-link', 'the owner settings file is a link or not a plain file; nothing changed');
+  const settings = loadSettings();
+  const key = which === 'never-publish' ? 'never' : 'safe';
+  const previous = settings.publishing?.[root] ?? { never: [], safe: [] };
+  const list = [...previous[key]];
+  if (verb === 'add') {
+    if (list.some(entry => entry.toLowerCase() === offset.toLowerCase())) return `${which}: ${offset} was already listed; nothing changed`;
+    list.push(offset);
+  } else {
+    const index = list.findIndex(entry => entry.toLowerCase() === offset.toLowerCase());
+    if (index === -1) throw new BountyRefused('publish-list-not-listed', `${which}: ${offset} is not listed; nothing changed`);
+    list.splice(index, 1);
+  }
+  const next = { never: [...(key === 'never' ? list : previous.never)], safe: [...(key === 'safe' ? list : previous.safe)] };
+  saveSettings({ ...settings, publishing: { ...settings.publishing, [root]: next } });
+  return `${which}: ${offset} ${verb === 'add' ? 'added' : 'removed'}, written to ${settingsFile()}`;
 }

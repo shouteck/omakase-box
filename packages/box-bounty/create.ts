@@ -5,8 +5,10 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { BountyRefused } from './errors.js';
 import { gitBlob, gitOutcome, ownerGitOutcome } from './git.js';
 import type { BountyManifest } from './manifest.js';
-import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
+import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
+import { looksBinary, scanText } from './github.js';
+import type { ScanHit } from './github.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
@@ -68,6 +70,13 @@ export interface BountyPlan {
   readonly removed: readonly SnapshotRemoval[];
   readonly ruleRemovals: readonly RuleRemoval[];
   readonly totalBytes: number;
+  /** The create-time scan (BT8c): the shipped set — what a folder post
+      publishes, and a superset of what a GitHub post publishes for the
+      first time — read for the same secret shapes the post scan watches.
+      A hit at create holds nothing; it is recorded on the record the same
+      way. `suppressed` counts hits on owner safe-listed paths; `binary`
+      names files Git would treat as binary — they were not scanned. */
+  readonly scan: { readonly hits: readonly ScanHit[]; readonly suppressed: number; readonly binary: readonly string[]; readonly filesScanned: number };
   readonly outDir: string;
 }
 
@@ -132,8 +141,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     throw new BountyRefused('missing-why', 'create needs one line of why — pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
   }
   const repoRoot = resolveRepoRoot(options.repoPath, 'create');
-  const ownerList = loadOwnerList(repoRoot);
-  const rules: NeverShipRule[] = ownerList === null ? [...BUILTIN_RULES] : [...BUILTIN_RULES, ownerList.rule];
+  const rules = [...shipRules(repoRoot)];
   const task = readTextFile(options.taskPath, 'missing-task', repoRoot, rules);
   const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot, rules) : null;
   const job = options.jobPath !== undefined ? readTextFile(options.jobPath, 'missing-job', repoRoot, rules) : null;
@@ -161,6 +169,28 @@ export function planBounty(options: CreateOptions): BountyPlan {
 
   const files: PlanFile[] = [...snapshot.files];
   const removed = snapshot.removed;
+  // The create-time scan (BT8c): the shipped set is what a folder post
+  // publishes — and a GitHub post's first-published set is a subset of it —
+  // so it is read for the same secret shapes the post scan watches. A hit
+  // holds nothing here and is recorded on the record, so the agent can fix
+  // the flagged content before post. A file Git would call binary (a NUL in
+  // the head) is named as not scanned — a fact, never a hold; the owner's
+  // never publish list is the way to keep such a file out.
+  const publish = publishLists(repoRoot);
+  const found: ScanHit[] = [];
+  const scanBinary: string[] = [];
+  for (const file of files) {
+    try {
+      const bytes = readFileSync(join(repoRoot, ...file.path.split('/')));
+      if (looksBinary(bytes)) { scanBinary.push(file.path); continue; }
+      found.push(...scanText(file.path, bytes.toString('utf8')));
+    } catch {
+      // A file that cannot be read back ships by its recorded hash; the
+      // post scan reads the first-published bytes anyway.
+    }
+  }
+  const scanHits = found.filter(hit => !publishListed(publish.safe, hit.path));
+  const scan = { hits: scanHits, suppressed: found.length - scanHits.length, binary: scanBinary, filesScanned: files.length - scanBinary.length };
   const ruleRemovals: RuleRemoval[] = rules
     .map(rule => ({ rule: rule.name, paths: removed.filter(entry => entry.rule === rule.name).map(entry => entry.path) }))
     .filter(entry => entry.paths.length > 0)
@@ -190,6 +220,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     removed,
     ruleRemovals,
     totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
+    scan,
     outDir
   };
 }
@@ -260,6 +291,14 @@ export function renderPreview(plan: BountyPlan): string {
   lines.push(`  repository: ${plan.repoRoot}`);
   lines.push(`  snapshot: commit ${plan.snapshot.commit} (tree ${plan.snapshot.tree}, base ${plan.snapshot.baseCommit ?? 'none — unborn HEAD'})`);
   lines.push(`  would ship: ${plan.files.length} file(s), ${plan.totalBytes} bytes`);
+  if (plan.scan.hits.length === 0) {
+    lines.push(`  pre-publish scan of the shipped set: clean — ${plan.scan.filesScanned} file(s) read`);
+  } else {
+    lines.push(`  pre-publish scan of the shipped set: ${plan.scan.hits.length} secret-shaped hit(s) — a post would wait for the owner:`);
+    for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}`);
+  }
+  if (plan.scan.suppressed > 0) lines.push(`    ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
+  if (plan.scan.binary.length > 0) lines.push(`    not scanned — Git would treat them as binary: ${plan.scan.binary.slice(0, PREVIEW_NAMES_PER_RULE).join(', ')}${plan.scan.binary.length > PREVIEW_NAMES_PER_RULE ? ` … and ${plan.scan.binary.length - PREVIEW_NAMES_PER_RULE} more` : ''}`);
   if (plan.removed.length === 0) {
     lines.push('  never-ship removed: nothing');
   } else {
@@ -312,8 +351,7 @@ function composeNote(plan: BountyPlan): { file: string; text: string } {
         return offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset) ? null : offset;
       };
       const shipped = new Map(plan.files.map(file => [file.path.toLowerCase(), file.path]));
-      const ownerList = loadOwnerList(plan.repoRoot);
-      const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
+      const rules = shipRules(plan.repoRoot);
       // --no-renames: rename detection folds a paired delete+add into one
       // line naming only the target (`git mv a.py .env` emits just `.env`),
       // which would hide the shipped file the working state lost.
@@ -500,7 +538,10 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
       noteSource: plan.note === null ? 'generated' : 'authored',
       // sha256 of the exact bounty.json bytes: the answer's manifest must come
       // back byte-identical, which binds a returned folder to this bounty.
-      manifestSha256: sha256(manifestJson)
+      manifestSha256: sha256(manifestJson),
+      // A scan hit at create holds nothing, but it is recorded the same way
+      // — the record says what was flagged and what happened.
+      scanFindings: plan.scan.hits.length === 0 ? [] : [{ at: createdAt, where: 'create', hits: [...plan.scan.hits], settled: null }]
     });
     return { id, outDir, plan, recordPath: written.path };
   } catch (error) {
