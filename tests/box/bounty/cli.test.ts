@@ -131,9 +131,11 @@ describe('box bounty help (built cli)', () => {
     const run = cli(dir, ['bounty', 'help']);
     expect(run.status).toBe(0);
     expect(run.stdout).not.toBe('');
-    for (const word of ['create', 'confirm', 'post', 'answer', 'apply', 'undo', 'reject', 'withdraw', 'status', 'drafted', 'posted', 'applied']) {
+    for (const word of ['create', 'confirm', 'post', 'look', 'apply', 'close', 'status', 'describe', 'drafted', 'posted', 'applied']) {
       expect(run.stdout).toContain(word);
     }
+    // help lists only commands that exist — no name BT7c removed.
+    expect(run.stdout).not.toMatch(/\b(answer|answers|undo|reject|withdraw|questions|reply|remind)\b/);
     expect(run.stdout).toContain('what ends a bounty');
     expect(run.stdout).toContain('--why');
   });

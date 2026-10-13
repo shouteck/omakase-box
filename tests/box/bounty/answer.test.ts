@@ -2,15 +2,15 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerBounty, applyBounty, BountyRefused, confirmBounty, finalizeBounty, planBounty, postBounty, rejectBounty, renderStatus, resolveRepoRoot, undoBounty } from '../../../packages/box-bounty/index.js';
+import { applyBounty, BountyRefused, closeBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyManifest, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, fingerprint, git, listTree, makeRepo, runRoot, write } from './support.js';
 
-// The return journey: a solver hands the bounty folder back; `answer` binds it
-// to this bounty, extracts the change against the recorded hashes, reports the
-// facts — running nothing — and `apply` lands it with git's own merge, or names
-// exactly why not. Every wrong move is a named refusal, never a crash and
-// never silence.
+// The return journey: a solver hands the bounty folder back; `look --from`
+// collects it — binds it to this bounty, extracts the change against the
+// recorded hashes, reports the facts, running nothing — and `apply` lands it
+// with git's own merge, or names exactly why not. Every wrong move is a named
+// refusal, never a crash and never silence.
 
 const readRecord = (repo: string, id: string): BountyRecord =>
   JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
@@ -29,7 +29,7 @@ function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOption
 }
 
 // create → confirm → post, the whole outbound half. `delivered` is the copy a
-// solver edits and hands back through `answer --from`.
+// solver edits and hands back through `look --from`.
 function posted(repo: string, extra: Partial<CreateOptions> = {}): { id: string; folder: string; delivered: string } {
   const result = finalizeBounty(planBounty(options(repo, extra)));
   confirmBounty(repo, result.id);
@@ -61,15 +61,15 @@ const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
   throw new Error('unreachable');
 };
 
-describe('answer — every solution is a numbered attempt, and nothing in it is run', () => {
+describe('collection — every solution is a numbered attempt, and nothing in it is run', () => {
   it('an answer lands at answered and waits; apply is a separate command that merges it naming the bounty', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const headBefore = git(repo, ['rev-parse', 'HEAD']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered');
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered');
     const record = readRecord(repo, id);
     // The events tell the true story: taken is implicit in the answer's arrival.
     expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
@@ -80,8 +80,8 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore);
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     // The report is stored on the attempt and names the next command.
-    expect(result.report.join('\n')).toContain(`box bounty apply ${id} 1`);
-    expect(result.report.join('\n')).toContain('nothing in the solution was run and this report says nothing about whether it works');
+    expect(result.attempt.report.join('\n')).toContain(`box bounty apply ${id} 1`);
+    expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run and this report says nothing about whether it works');
 
     const applied = applyBounty(repo, id);
     expect(applied.outcome).toBe('applied');
@@ -110,13 +110,13 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
     const headBefore = git(repo, ['rev-parse', 'HEAD']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'still broken\n'));
 
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered'); // nothing is run — an unhelpful answer still waits on a decision
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered'); // nothing is run — an unhelpful answer still waits on a decision
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
     expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
     expect(record.attempts).toHaveLength(1);
-    expect(result.report.join('\n')).toContain('nothing in the solution was run');
+    expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run');
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore); // nothing was applied
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     // Still open: the durability ref stays, and status says so.
@@ -134,10 +134,10 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
     const before = { head: git(repo, ['rev-parse', 'HEAD']), index: git(repo, ['ls-files', '--stage']), files: fingerprint(repo).files };
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered'); // the conflict is a fact, not an ending
-    expect(result.conflicts).toEqual(['src/app.py']);
-    expect(result.report.join('\n')).toContain('src/app.py');
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered'); // the conflict is a fact, not an ending
+    expect(result.attempt.conflicts).toEqual(['src/app.py']);
+    expect(result.attempt.report.join('\n')).toContain('src/app.py');
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
     expect(record.attempts?.[0]?.conflicts).toEqual(['src/app.py']);
@@ -153,12 +153,12 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
     expect(status).toContain('src/app.py');
     expect(status).toContain(`box bounty apply ${id}`);
 
-    // The real merge on apply still aborts byte-identical; reject still ends it.
+    // The real merge on apply still aborts byte-identical; close --reason still ends it.
     expect(applyBounty(repo, id).outcome).toBe('conflict');
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(before.head);
     expect(git(repo, ['ls-files', '--stage'])).toBe(before.index);
     expect(fingerprint(repo).files).toEqual(before.files);
-    rejectBounty(repo, id, 'resolved by hand instead');
+    closeBounty(repo, id, 'resolved by hand instead');
     expect(readRecord(repo, id).stage).toBe('rejected');
     expect(refGone(repo, id)).toBe(true);
   });
@@ -176,9 +176,9 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
     expect(git(repo, ['status', '--porcelain'])).toContain('.box/');
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered');
-    expect(result.conflicts).toEqual(['src/app.py']);
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered');
+    expect(result.attempt.conflicts).toEqual(['src/app.py']);
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
 
@@ -196,7 +196,7 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
     expect(status).toContain(`box bounty look ${id}`);
     // BT7b: a clash names the manual path — the owner's own merge lands it,
     // never "resolve the paths and run apply again".
-    expect(status).toContain(`box bounty reject ${id}`);
+    expect(status).toContain(`box bounty close ${id}`);
 
     // Retry still conflicts; after the owner resolves the file by hand it lands.
     expect(applyBounty(repo, id).outcome).toBe('conflict');
@@ -208,14 +208,14 @@ describe('answer — every solution is a numbered attempt, and nothing in it is 
   });
 });
 
-describe('answer — an answered bounty waits on a decision', () => {
+describe('collection — an answered bounty waits on a decision', () => {
   it('an added-file answer applies and lands its bytes naming the bounty', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/notes.md', 'the answer\n'));
 
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered');
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered');
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
     expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
@@ -224,7 +224,7 @@ describe('answer — an answered bounty waits on a decision', () => {
     expect(record.events.some(event => event.stage === 'verified')).toBe(false);
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain(`box bounty apply ${id}`);
-    expect(status).toContain(`box bounty reject ${id}`);
+    expect(status).toContain(`box bounty close ${id}`);
 
     const applied = applyBounty(repo, id);
     expect(applied.outcome).toBe('applied');
@@ -233,13 +233,13 @@ describe('answer — an answered bounty waits on a decision', () => {
     expect(refGone(repo, id)).toBe(true);
   });
 
-  it('reject ends an answered bounty with the reason kept on the event', () => {
+  it('close --reason ends an answered bounty with the reason kept on the event', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
-    expect(answerBounty(repo, id, dir).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: dir }).attempt.outcome).toBe('answered');
 
-    rejectBounty(repo, id, 'not what was asked for');
+    closeBounty(repo, id, 'not what was asked for');
     const record = readRecord(repo, id);
     expect(record.stage).toBe('rejected');
     expect(record.events.at(-1)!.reason).toBe('not what was asked for');
@@ -248,7 +248,7 @@ describe('answer — an answered bounty waits on a decision', () => {
   });
 });
 
-describe('answer — binding refuses anything that is not this bounty, by name', () => {
+describe('collection — binding refuses anything that is not this bounty, by name', () => {
   it('a bounty.json naming another id is answer-mismatch', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
@@ -257,7 +257,7 @@ describe('answer — binding refuses anything that is not this bounty, by name',
       writeFileSync(join(root, 'bounty.json'), JSON.stringify({ ...manifest, id: 'bt-000000000000' }, null, 2) + '\n');
       write(root, 'repo/src/app.py', 'y\n');
     });
-    expectRefusal(() => answerBounty(repo, id, dir), 'answer-mismatch');
+    expectRefusal(() => lookBounty(repo, id, { from: dir }), 'answer-mismatch');
     expect(readRecord(repo, id).stage).toBe('posted'); // nothing moved
   });
 
@@ -269,7 +269,7 @@ describe('answer — binding refuses anything that is not this bounty, by name',
       writeFileSync(join(root, 'bounty.json'), JSON.stringify({ ...manifest, snapshot: { ...manifest.snapshot, commit: '0'.repeat(40) } }, null, 2) + '\n');
       write(root, 'repo/src/app.py', 'y\n');
     });
-    expectRefusal(() => answerBounty(repo, id, dir), 'snapshot-mismatch');
+    expectRefusal(() => lookBounty(repo, id, { from: dir }), 'snapshot-mismatch');
   });
 
   it('a doctored bounty.json that keeps id and commit is manifest-tampered', () => {
@@ -280,7 +280,7 @@ describe('answer — binding refuses anything that is not this bounty, by name',
       writeFileSync(join(root, 'bounty.json'), JSON.stringify({ ...manifest, title: 'doctored' }, null, 2) + '\n');
       write(root, 'repo/src/app.py', 'y\n');
     });
-    expectRefusal(() => answerBounty(repo, id, dir), 'manifest-tampered');
+    expectRefusal(() => lookBounty(repo, id, { from: dir }), 'manifest-tampered');
   });
 
   it('a folder missing bounty.json or repo/ is answer-malformed', () => {
@@ -290,27 +290,27 @@ describe('answer — binding refuses anything that is not this bounty, by name',
       writeFileSync(join(root, 'bounty.json'), 'not json\n');
       write(root, 'repo/src/app.py', 'y\n');
     });
-    expectRefusal(() => answerBounty(repo, id, noManifest), 'answer-malformed');
+    expectRefusal(() => lookBounty(repo, id, { from: noManifest }), 'answer-malformed');
     const bare = join(runRoot('answer'), 'empty');
     mkdirSync(bare, { recursive: true });
-    expectRefusal(() => answerBounty(repo, id, bare), 'answer-malformed');
+    expectRefusal(() => lookBounty(repo, id, { from: bare }), 'answer-malformed');
   });
 
   it('an answer on a bounty that is not posted is a named refusal', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const drafted = finalizeBounty(planBounty(options(repo)));
-    expectRefusal(() => answerBounty(repo, drafted.id, drafted.outDir), 'not-posted');
+    expectRefusal(() => lookBounty(repo, drafted.id, { from: drafted.outDir }), 'not-posted');
     confirmBounty(repo, drafted.id);
-    expectRefusal(() => answerBounty(repo, drafted.id, drafted.outDir), 'not-posted');
-    expectRefusal(() => answerBounty(repo, 'bt-000000000000', drafted.outDir), 'unknown-bounty');
+    expectRefusal(() => lookBounty(repo, drafted.id, { from: drafted.outDir }), 'not-posted');
+    expectRefusal(() => lookBounty(repo, 'bt-000000000000', { from: drafted.outDir }), 'unknown-bounty');
   });
 });
 
-describe('answer — the extracted change', () => {
+describe('collection — the extracted change', () => {
   it('a return that changes nothing is answer-empty, never a pass', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    const refusal = expectRefusal(() => answerBounty(repo, id, returned(delivered)), 'answer-empty');
+    const refusal = expectRefusal(() => lookBounty(repo, id, { from: returned(delivered) }), 'answer-empty');
     expect(refusal.message).toContain('byte-identical');
     expect(readRecord(repo, id).stage).toBe('posted');
     expect(refGone(repo, id)).toBe(false); // still durable — the bounty is open
@@ -324,8 +324,8 @@ describe('answer — the extracted change', () => {
       write(root, 'repo/new/deep.txt', 'added\n');
       rmSync(join(root, 'repo', 'stale.txt'));
     });
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered');
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered');
     const record = readRecord(repo, id);
     expect(record.attempts?.[0]?.changed).toEqual(['src/app.py']);
     expect(record.attempts?.[0]?.added).toEqual(['new/deep.txt']);
@@ -339,15 +339,15 @@ describe('answer — the extracted change', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const withGit = returned(delivered, root => write(root, 'repo/.git/config', '[core]\n'));
-    expectRefusal(() => answerBounty(repo, id, withGit), 'answer-never-ship');
+    expectRefusal(() => lookBounty(repo, id, { from: withGit }), 'answer-never-ship');
     const withBox = returned(delivered, root => write(root, 'repo/.box/bounties/x.json', '{}'));
-    expectRefusal(() => answerBounty(repo, id, withBox), 'answer-never-ship');
+    expectRefusal(() => lookBounty(repo, id, { from: withBox }), 'answer-never-ship');
     const withLink = returned(delivered, root => {
       write(root, 'repo/src/app.py', 'y\n');
       symlinkSync(repo, join(root, 'repo', 'link'), 'junction');
     });
     expect(readlinkSync(join(withLink, 'repo', 'link'))).toBeTruthy();
-    expectRefusal(() => answerBounty(repo, id, withLink), 'answer-unsafe-path');
+    expectRefusal(() => lookBounty(repo, id, { from: withLink }), 'answer-unsafe-path');
     expect(readRecord(repo, id).stage).toBe('posted');
   });
 
@@ -356,17 +356,17 @@ describe('answer — the extracted change', () => {
     const { id, delivered } = posted(repo);
     git(repo, ['update-ref', '-d', `refs/box-bounty/${id}`]);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    expectRefusal(() => answerBounty(repo, id, dir), 'snapshot-lost');
+    expectRefusal(() => lookBounty(repo, id, { from: dir }), 'snapshot-lost');
     expect(readRecord(repo, id).stage).toBe('posted');
   });
 });
 
-describe('apply and reject — stage rules and the dirty-worktree boundary', () => {
+describe('apply and close — stage rules and the dirty-worktree boundary', () => {
   it('apply on a dirty path the merge would overwrite is a named refusal, not damage', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
-    expect(answerBounty(repo, id, dir).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: dir }).attempt.outcome).toBe('answered');
     write(repo, 'src/app.py', 'uncommitted local work\n');
     const refusal = expectRefusal(() => applyBounty(repo, id), 'apply-worktree-dirty');
     expect(refusal.message).toContain('src/app.py');
@@ -374,28 +374,27 @@ describe('apply and reject — stage rules and the dirty-worktree boundary', () 
     expect(readRecord(repo, id).stage).toBe('answered');
   });
 
-  it('apply and reject name wrong-stage and already-ended refusals', () => {
+  it('apply names wrong-stage and already-ended refusals; close ends any open stage', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const drafted = finalizeBounty(planBounty(options(repo)));
     expectRefusal(() => applyBounty(repo, drafted.id), 'wrong-stage');
-    expectRefusal(() => rejectBounty(repo, drafted.id, 'why'), 'wrong-stage');
-    confirmBounty(repo, drafted.id);
-    expectRefusal(() => rejectBounty(repo, drafted.id, 'why'), 'wrong-stage');
+    // close works where only withdraw once did — a draft ends as withdrawn.
+    expect(closeBounty(repo, drafted.id).outcome).toBe('withdrawn');
     const { id } = posted(repo, { outDir: join(runRoot('out'), 'bounty2') });
     expectRefusal(() => applyBounty(repo, id), 'wrong-stage');
-    rejectBounty(repo, id, 'closed early');
+    expect(closeBounty(repo, id, 'closed early').outcome).toBe('rejected');
     expect(readRecord(repo, id).stage).toBe('rejected');
     expect(refGone(repo, id)).toBe(true);
     expectRefusal(() => applyBounty(repo, id), 'already-ended');
-    expectRefusal(() => rejectBounty(repo, id, 'again'), 'already-ended');
-    expectRefusal(() => answerBounty(repo, id, id), 'already-ended');
+    expect(closeBounty(repo, id, 'again').outcome).toBe('already-ended');
+    expectRefusal(() => lookBounty(repo, id, { from: id }), 'already-ended');
   });
 
-  it('reject without a reason is refused; a posted bounty can be rejected', () => {
+  it('close with an empty reason is refused; a posted bounty can be closed with one', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = posted(repo);
-    expectRefusal(() => rejectBounty(repo, id, '   '), 'missing-reason');
-    rejectBounty(repo, id, 'solver went quiet');
+    expectRefusal(() => closeBounty(repo, id, '   '), 'missing-reason');
+    expect(closeBounty(repo, id, 'solver went quiet').outcome).toBe('rejected');
     expect(readRecord(repo, id).stage).toBe('rejected');
   });
 });
@@ -416,8 +415,8 @@ describe('create --job — owner context that lives only in the record', () => {
     expect(readFileSync(join(delivered, 'README.md'), 'utf8')).not.toContain('winter launch');
     expect(listTree(delivered).some(path => path === 'JOB.md' || path === 'repo/JOB.md')).toBe(false);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
-    answerBounty(repo, id, dir);
-    rejectBounty(repo, id, 'not needed');
+    lookBounty(repo, id, { from: dir });
+    closeBounty(repo, id, 'not needed');
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain(`${id} rejected (job: JOB.md)`);
   });
@@ -428,13 +427,13 @@ describe('the boundary the pass proved open', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n', '.boxignore': 'credentials.json\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/credentials.json', 'password=hunter2\n'));
-    const refusal = expectRefusal(() => answerBounty(repo, id, dir), 'answer-never-ship');
+    const refusal = expectRefusal(() => lookBounty(repo, id, { from: dir }), 'answer-never-ship');
     expect(refusal.message).toContain('credentials.json');
     expect(readRecord(repo, id).stage).toBe('posted');
     expect(existsSync(join(repo, 'credentials.json'))).toBe(false);
   });
 
-  it('nothing a solver wrote runs — hostile attributes, a merge driver, a hook and a submodule declaration fire no sentinel through answer, apply or undo', () => {
+  it('nothing a solver wrote runs — hostile attributes, a merge driver, a hook and a submodule declaration fire no sentinel through look or apply', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const marks = join(runRoot('sentinel'), 'marks');
     mkdirSync(marks, { recursive: true });
@@ -453,8 +452,8 @@ describe('the boundary the pass proved open', () => {
       write(root, 'repo/src/app.py', 'y\n');
     });
 
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered');
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered');
     // Since BT6b the merge refuses before anything is touched: `node -e` is a
     // wrapper whose payload the tool cannot place inside or outside the
     // repository, and a configured command it cannot place is refused by
@@ -464,11 +463,9 @@ describe('the boundary the pass proved open', () => {
     for (const name of ['filter', 'driver', 'hook']) {
       expect(existsSync(join(marks, name)), `sentinel ${name} fired`).toBe(false);
     }
-    // Nothing landed, so undo has nothing to reverse — it refuses the same
-    // way any unapplied bounty does.
-    expect(refusalOf(() => undoBounty(repo, id))).toBe('not-applied');
+    // Nothing landed, and nothing of the solver's ran anywhere in between.
     for (const name of ['filter', 'driver', 'hook']) {
-      expect(existsSync(join(marks, name)), `sentinel ${name} fired on undo`).toBe(false);
+      expect(existsSync(join(marks, name)), `sentinel ${name} fired`).toBe(false);
     }
   });
 
@@ -484,7 +481,7 @@ describe('the boundary the pass proved open', () => {
     expect(git(repo, ['status', '--porcelain'])).toBe('');
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
-    expect(answerBounty(repo, id, dir).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: dir }).attempt.outcome).toBe('answered');
     expect(applyBounty(repo, id).outcome).toBe('applied');
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('y\r\n'); // landed under the repo's own convention
   });
@@ -495,7 +492,7 @@ describe('the boundary the pass proved open', () => {
     expect(git(repo, ['status', '--porcelain', '--ignored'])).toContain('precious.txt'); // prove it really is ignored
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/precious.txt', 'FOREIGN\n'));
-    expect(answerBounty(repo, id, dir).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: dir }).attempt.outcome).toBe('answered');
     const refusal = expectRefusal(() => applyBounty(repo, id), 'apply-worktree-dirty');
     expect(refusal.message).toContain('precious.txt');
     expect(readFileSync(join(repo, 'precious.txt'), 'utf8')).toBe('PRECIOUS LOCAL BYTES\n');
@@ -506,13 +503,13 @@ describe('the boundary the pass proved open', () => {
 // The agent-facing surface, driven through the built CLI: exit codes and the
 // printed states for the whole return. Skipped unless the bundle exists —
 // verify builds first.
-describe('box bounty answer/apply/reject (built cli)', () => {
+describe('box bounty look/apply/close (built cli)', () => {
   const cli = (cwd: string, args: string[]) =>
     spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
   const built = existsSync(CLI_DIST);
   const need = () => { if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first'); };
 
-  it('the whole return journey through the CLI: answer reports facts, apply merges, status names the job', () => {
+  it('the whole return journey through the CLI: look collects, apply merges, status names the job', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'fix it\n', 'JOB.md': 'winter launch\n' });
     const out = join(runRoot('out'), 'bounty');
@@ -524,12 +521,11 @@ describe('box bounty answer/apply/reject (built cli)', () => {
     expect(cli(repo, ['bounty', 'post', id, '--to', inbox]).status).toBe(0);
     const delivered = join(inbox, id);
     write(delivered, 'repo/src/app.py', 'fixed\n');
-    const answer = cli(repo, ['bounty', 'answer', id, '--from', delivered]);
-    expect(answer.status).toBe(0);
-    expect(answer.stdout).toContain('answered');
-    expect(answer.stdout).toContain('report');
-    expect(answer.stdout).toContain(`box bounty apply ${id} 1`);
-    expect(answer.stdout).toContain('nothing in the solution was run');
+    const look = cli(repo, ['bounty', 'look', id, '--from', delivered]);
+    expect(look.status).toBe(0);
+    expect(look.stdout).toContain('collected first');
+    expect(look.stdout).toContain('written by the solver');
+    expect(look.stdout).toContain(`box bounty apply ${id} 1`);
     // An answered attempt waits: nothing merged yet.
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
     const apply = cli(repo, ['bounty', 'apply', id, '1']);
@@ -539,22 +535,23 @@ describe('box bounty answer/apply/reject (built cli)', () => {
     const status = cli(repo, ['bounty', 'status']);
     expect(status.stdout).toContain(`${id} applied (job: JOB.md)`);
     // An ended bounty refuses further transitions by name.
-    const again = cli(repo, ['bounty', 'answer', id, '--from', delivered]);
+    const again = cli(repo, ['bounty', 'look', id, '--from', delivered]);
     expect(again.status).toBe(3);
     expect(again.stderr).toContain('already-ended');
   });
 
-  it('answer on a not-posted bounty and reject without --reason fail with named exits', () => {
+  it('look --from on a not-posted bounty fails by name; close without a reason ends a draft', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 't\n' });
     const out = join(runRoot('out'), 'bounty');
     const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
-    const answer = cli(repo, ['bounty', 'answer', id, '--from', out]);
-    expect(answer.status).toBe(3);
-    expect(answer.stderr).toContain('not-posted');
-    const reject = cli(repo, ['bounty', 'reject', id]);
-    expect(reject.status).toBe(2);
+    const look = cli(repo, ['bounty', 'look', id, '--from', out]);
+    expect(look.status).toBe(3);
+    expect(look.stderr).toContain('not-posted');
+    const close = cli(repo, ['bounty', 'close', id]);
+    expect(close.status).toBe(0);
+    expect(close.stdout).toContain('withdrawn');
   });
 });
 

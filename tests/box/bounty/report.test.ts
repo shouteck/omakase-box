@@ -2,16 +2,16 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerBounty, applyBounty, attemptsOf, BountyRefused, confirmBounty, finalizeBounty, planBounty, postBounty, renderStatus, resolveRepoRoot, undoBounty } from '../../../packages/box-bounty/index.js';
+import { applyBounty, attemptsOf, BountyRefused, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { Attempt, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { fingerprint, git, makeRepo, runRoot, write } from './support.js';
+import { git, makeRepo, runRoot, write } from './support.js';
 
-// Report, do not judge. `answer` binds the returned folder and writes a report
+// Report, do not judge. `look` binds the returned folder and writes a report
 // of facts: who sent it and when, the change with counts and lines, a dry merge
 // read of the current code, and eager flags — ending with the nothing-was-run
 // sentence. Every answer is a numbered attempt that waits on a decision;
-// `apply` names the attempt and `undo` reverses an applied merge. Nothing in
-// the report is a verdict.
+// `apply` names the attempt, and ordinary git reverts an applied merge.
+// Nothing in the report is a verdict.
 
 const readRecord = (repo: string, id: string): BountyRecord =>
   JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
@@ -56,28 +56,18 @@ describe('the fact report', () => {
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
-    const result = answerBounty(repo, id, dir);
-    const report = result.report.join('\n');
+    const result = lookBounty(repo, id, { from: dir });
+    const report = result.attempt.report.join('\n');
     expect(report).toContain(`report — attempt 1 for ${id}`);
     expect(report).toContain('from: a returned folder — no account was named — arrived');
     expect(report).toContain('1 changed, 0 added, 0 deleted');
     expect(report).toContain('lines added');
-    expect(report).toContain('current code: the answer would merge cleanly');
+    expect(report).toContain('current code: the solution would merge cleanly');
     expect(report).toContain('nothing in the solution was run and this report says nothing about whether it works');
-    expect(report).toContain(`next: box bounty apply ${id} 1`);
+    expect(report).toContain(`next: box bounty look ${id} 1 to read the change; box bounty apply ${id} 1 to merge it; or box bounty close ${id} --reason "<why>"`);
     // No check path exists to report on.
     expect(report).not.toContain('check:');
     expect(report).not.toContain('guard:');
-  });
-
-  it('an answer from a named GitHub account says who sent it', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo);
-    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
-    const result = answerBounty(repo, id, dir, 'octocat');
-    expect(result.report.join('\n')).toContain('from: GitHub account octocat');
-    const record = readRecord(repo, id);
-    expect(record.attempts?.[0]?.author).toBe('octocat');
   });
 
   it('a conflicting merge read is a fact in the report, not an ending', () => {
@@ -87,10 +77,10 @@ describe('the fact report', () => {
     git(repo, ['add', '-A']);
     git(repo, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'moved']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    const result = answerBounty(repo, id, dir);
-    expect(result.outcome).toBe('answered');
-    expect(result.report.join('\n')).toContain('would conflict in "src/app.py"');
-    expect(result.report.join('\n')).toContain('nothing in the solution was run');
+    const result = lookBounty(repo, id, { from: dir });
+    expect(result.attempt.outcome).toBe('answered');
+    expect(result.attempt.report.join('\n')).toContain('would conflict in "src/app.py"');
+    expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run');
   });
 });
 
@@ -104,10 +94,10 @@ describe('flags — observations, never blocks', () => {
       rmSync(join(root, 'repo', 'stale.txt'));
       for (let i = 0; i < 22; i += 1) write(root, `repo/gen/f${i}.txt`, `f${i}\n`);
     });
-    const report = answerBounty(repo, id, dir).report.join('\n');
+    const report = lookBounty(repo, id, { from: dir }).attempt.report.join('\n');
     expect(report).toContain('marked as a test by the stated rule');
-    expect(report).toContain('the answer adds 23 file(s)');
-    expect(report).toContain('the answer deletes 1 file(s)');
+    expect(report).toContain('the solution adds 23 file(s)');
+    expect(report).toContain('the solution deletes 1 file(s)');
     expect(report).toContain('above the stated size');
   });
 });
@@ -116,8 +106,8 @@ describe('several answers — each is its own attempt', () => {
   it('full status includes every report once when a later acceptable attempt sorts first', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'first\n')));
-    answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')));
+    lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'first\n')) });
+    lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')) });
     const record = readRecord(repo, id);
     record.attempts = attemptsOf(record).map((attempt): Attempt => ({ ...attempt, outcome: attempt.n === 1 ? 'check-failed' : 'answered', report: [attempt.n === 1 ? 'FIRST_FAILED_REPORT_73c5' : 'SECOND_ANSWERED_REPORT_73c5'] }));
     writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record));
@@ -130,13 +120,13 @@ describe('several answers — each is its own attempt', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const bad = returned(delivered, root => write(root, 'repo/src/app.py', 'still broken\n'));
-    expect(answerBounty(repo, id, bad).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: bad }).attempt.outcome).toBe('answered');
     expect(readRecord(repo, id).stage).toBe('answered');
 
     const good = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    const second = answerBounty(repo, id, good);
-    expect(second.outcome).toBe('answered');
-    expect(second.attempt).toBe(2);
+    const second = lookBounty(repo, id, { from: good });
+    expect(second.attempt.outcome).toBe('answered');
+    expect(second.attempt.n).toBe(2);
     const record = readRecord(repo, id);
     expect(record.attempts).toHaveLength(2);
     expect(refExists(repo, `refs/box-bounty/${id}-answer-1`)).toBe(true);
@@ -158,9 +148,9 @@ describe('several answers — each is its own attempt', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const first = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    expect(answerBounty(repo, id, first).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: first }).attempt.outcome).toBe('answered');
     const second = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed again\n'));
-    expect(answerBounty(repo, id, second).outcome).toBe('answered');
+    expect(lookBounty(repo, id, { from: second }).attempt.outcome).toBe('answered');
 
     const refusal = expectRefusal(() => applyBounty(repo, id), 'apply-ambiguous');
     expect(refusal.message).toContain('#1');
@@ -175,100 +165,12 @@ describe('several answers — each is its own attempt', () => {
   });
 });
 
-describe('undo — reverses an applied merge as a new commit', () => {
-  const appliedRepo = () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo);
-    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    answerBounty(repo, id, dir);
-    const treeBefore = fingerprint(repo).files;
-    applyBounty(repo, id);
-    return { repo, id, treeBefore };
-  };
-
-  it('apply then undo leaves the tree equal to before the apply, and records it', () => {
-    const { repo, id, treeBefore } = appliedRepo();
-    const headAfterApply = git(repo, ['rev-parse', 'HEAD']);
-    const undone = undoBounty(repo, id);
-    expect(undone.outcome).toBe('undone');
-    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
-    expect(fingerprint(repo).files).toEqual(treeBefore);
-    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(undone.undoCommit);
-    expect(undone.undoCommit).not.toBe(headAfterApply);
-    expect(git(repo, ['log', '-1', '--format=%s'])).toContain(`bounty ${id}`);
-    const record = readRecord(repo, id);
-    expect(record.stage).toBe('undone');
-    expect(record.events.at(-1)!.command).toBe('undo');
-    expect(record.events.at(-1)!.merge).toBe(undone.undoCommit);
-    expect(renderStatus(resolveRepoRoot(repo))).toContain(`${id} undone`);
-  });
-
-  it('refuses by name when the reversal conflicts and on uncommitted work at a touched path — nothing changes either way', () => {
-    const { repo, id } = appliedRepo();
-
-    // The reversal would conflict: the applied file moved on since.
-    write(repo, 'src/app.py', 'moved after apply\n');
-    git(repo, ['add', '-A']);
-    git(repo, ['-c', 'user.name=bt3a', '-c', 'user.email=bt3a@test.invalid', 'commit', '-qm', 'moved after apply']);
-    const refusal = expectRefusal(() => undoBounty(repo, id), 'undo-conflict');
-    expect(refusal.message).toContain('src/app.py');
-    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('moved after apply\n'); // nothing changed
-
-    // Uncommitted work at a touched path is a named refusal, not damage.
-    write(repo, 'src/app.py', 'uncommitted\n');
-    const dirty = expectRefusal(() => undoBounty(repo, id), 'undo-worktree-dirty');
-    expect(dirty.message).toContain('src/app.py');
-    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('uncommitted\n');
-  });
-
-  it('an ignored file at a folded rename source is refused, never clobbered — the touched set names what the reversal writes', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo);
-    // Identical bytes at a new path: git pairs the return as a rename, and a
-    // folded --name-only read of the merge then names only the target — but
-    // the reversal writes the source back.
-    const dir = returned(delivered, root => {
-      write(root, 'repo/src/renamed.py', 'x\n');
-      rmSync(join(root, 'repo', 'src', 'app.py'));
-    });
-    answerBounty(repo, id, dir);
-    expect(applyBounty(repo, id).outcome).toBe('applied');
-    // An ignored file at the folded-away source: invisible to porcelain, so
-    // only the touched set's own completeness can save it.
-    write(repo, '.gitignore', 'src/app.py\n');
-    write(repo, 'src/app.py', 'LOCAL-BUILD-ARTIFACT\n');
-    expect(git(repo, ['status', '--porcelain', '--ignored'])).toContain('!! src/app.py');
-    const refusal = expectRefusal(() => undoBounty(repo, id), 'undo-worktree-dirty');
-    expect(refusal.message).toContain('src/app.py');
-    expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('LOCAL-BUILD-ARTIFACT\n'); // untouched
-    expect(readRecord(repo, id).stage).toBe('applied');
-  });
-
-  it('refuses by name when the merge is no longer on this branch', () => {
-    const { repo, id } = appliedRepo();
-    git(repo, ['reset', '--hard', 'HEAD~1']); // drop the merge commit from history
-    expectRefusal(() => undoBounty(repo, id), 'undo-not-on-branch');
-  });
-
-  it('undo on a bounty that was never applied, and undo twice, are named refusals', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo);
-    expectRefusal(() => undoBounty(repo, id), 'not-applied');
-    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    answerBounty(repo, id, dir);
-    applyBounty(repo, id);
-    undoBounty(repo, id);
-    expectRefusal(() => undoBounty(repo, id), 'already-undone');
-    expectRefusal(() => applyBounty(repo, id), 'already-ended');
-  });
-});
-
 describe('older records still load', () => {
   it('a record written before attempts existed reads as one attempt — status says there is no report and apply still works', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    answerBounty(repo, id, dir);
+    lookBounty(repo, id, { from: dir });
     // Rewrite the record into the pre-BT3a shape: a single `answer`, no
     // `attempts`, the ref named <id>-answer — and a `level` key, which records
     // written while checks existed carried. A mechanical record's single
@@ -302,24 +204,18 @@ describe('the words are policed — facts, never verdicts', () => {
     // answered — clean merge read
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    const clean = answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
-    expect(clean.report.join('\n')).not.toMatch(BANNED);
+    const clean = lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')) });
+    expect(clean.attempt.report.join('\n')).not.toMatch(BANNED);
     expect(renderStatus(resolveRepoRoot(repo))).not.toMatch(BANNED);
 
     // answered — with flags firing
     const repo2 = makeRepo({ 'src/app.py': 'x\n', 'tests/t.js': 'x\n' });
     const posted2 = posted(repo2);
-    const flagged = answerBounty(repo2, posted2.id, returned(posted2.delivered, root => {
+    const flagged = lookBounty(repo2, posted2.id, { from: returned(posted2.delivered, root => {
       write(root, 'repo/tests/t.js', 'y\n');
       write(root, 'repo/new.txt', 'n\n');
-    }));
-    expect(flagged.report.join('\n')).not.toMatch(BANNED);
-
-    // answered — from a named account
-    const repo3 = makeRepo({ 'src/app.py': 'x\n' });
-    const posted3 = posted(repo3);
-    const authored = answerBounty(repo3, posted3.id, returned(posted3.delivered, root => write(root, 'repo/src/app.py', 'y\n')), 'octocat');
-    expect(authored.report.join('\n')).not.toMatch(BANNED);
+    }) });
+    expect(flagged.attempt.report.join('\n')).not.toMatch(BANNED);
 
     // answered — with a merge conflict
     const repo4 = makeRepo({ 'src/app.py': 'x\n' });
@@ -327,15 +223,15 @@ describe('the words are policed — facts, never verdicts', () => {
     write(repo4, 'src/app.py', 'moved\n');
     git(repo4, ['add', '-A']);
     git(repo4, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'moved']);
-    const conflicted = answerBounty(repo4, posted4.id, returned(posted4.delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
-    expect(conflicted.report.join('\n')).not.toMatch(BANNED);
+    const conflicted = lookBounty(repo4, posted4.id, { from: returned(posted4.delivered, root => write(root, 'repo/src/app.py', 'fixed\n')) });
+    expect(conflicted.attempt.report.join('\n')).not.toMatch(BANNED);
     expect(renderStatus(resolveRepoRoot(repo4))).not.toMatch(BANNED);
 
     // answered — a solver-named path carrying verdict words stays quoted data
     const repo5 = makeRepo({ 'src/app.py': 'x\n' });
     const posted5 = posted(repo5);
-    const named = answerBounty(repo5, posted5.id, returned(posted5.delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')));
-    const namedReport = named.report.join('\n');
+    const named = lookBounty(repo5, posted5.id, { from: returned(posted5.delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')) });
+    const namedReport = named.attempt.report.join('\n');
     expect(namedReport).toContain('"tests/should accept.py"');
     expect(prose(namedReport)).not.toMatch(BANNED);
     expect(prose(renderStatus(resolveRepoRoot(repo5)))).not.toMatch(BANNED);
@@ -344,7 +240,7 @@ describe('the words are policed — facts, never verdicts', () => {
   it('a quoted path cannot break out of the prose — a double quote or a newline shows JSON-escaped, not raw', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    answerBounty(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'y\n')));
+    lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'y\n')) });
     // No filesystem the tests run on can hold this name — the record is the
     // rendering boundary, so a hostile path is written into it directly, the
     // same way the pre-attempts record test rewrites history.

@@ -13,12 +13,17 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   expect(cli(context.repo, 'confirm', '--to', 'github').status).toBe(0);
   expect(cli(context.repo, 'post', '--to', 'github').status).toBe(0);
   context.pr('solver', { 'extra.txt': 'solver added\n' });
-  const answer = cli(context.repo, 'answer', '--pr', '1');
-  expect(answer.status).toBe(0); expect(answer.stdout).toContain('attempt 1');
-  expect(cli(context.repo, 'questions').status).toBe(0);
-  expect(cli(context.repo, 'reply', '--text', 'Please keep the task wording.').status).toBe(0);
+  // The commands BT7c folded away each refuse by name and say what took the
+  // place — never a silent drop, never an alias that runs the old operation.
+  for (const gone of [['answer', '--pr', '1'], ['questions'], ['reply', '--text', 'hi'], ['undo'], ['reject', '--reason', 'x'], ['withdraw'], ['remind']]) {
+    const result = cli(context.repo, ...gone);
+    expect(result.status).toBe(3);
+    expect(result.stderr).toContain('command-removed');
+  }
+  // look <n> collects the pull request itself, then shows its change.
   const look = cli(context.repo, 'look', '1');
   expect(look.status).toBe(0);
+  expect(look.stdout).toContain('collected first');
   expect(look.stdout).toContain('written by the solver');
   expect(look.stdout).toContain('ran nothing of the solver');
   expect(look.stdout).toContain('+fixed');
@@ -44,7 +49,7 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   write(context.repo, 'app.txt', 'fixed\n'); git(context.repo, ['add', 'app.txt']);
   git(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'resolved for the solution']);
   const applied = cli(context.repo, 'apply', '1');
-  expect(applied.status).toBe(0); expect(applied.stdout).toContain('applied'); expect(applied.stdout).toContain('Saved job context'); expect(applied.stdout).toContain('box bounty undo');
+  expect(applied.status).toBe(0); expect(applied.stdout).toContain('applied'); expect(applied.stdout).toContain('Saved job context'); expect(applied.stdout).toContain('git revert -m 1');
   expect(readFileSync(join(context.repo, 'unrelated.txt'), 'utf8')).toBe('precious dirty bytes\n');
   expect(readFileSync(join(context.repo, 'staged.txt'), 'utf8')).toBe('precious staged bytes\n');
   // Both owner files are modified in the worktree and neither is staged, as
@@ -52,19 +57,19 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   expect(git(context.repo, ['diff', '--name-only']).split('\n').sort()).toEqual(['staged.txt', 'unrelated.txt']);
   expect(git(context.repo, ['diff', '--cached', '--name-only'])).toBe('');
   expect(cli(context.repo, 'status', context.id).stdout).toContain('applied');
-  const undo = cli(context.repo, 'undo');
-  expect(undo.status).toBe(0); expect(undo.stdout).toContain('undone');
-  // The merge brought the solver's new file; the undo commit takes it out.
+  // Reversing the merge is ordinary Git: the merge is one ordinary commit.
+  git(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'revert', '--no-edit', '-m', '1', 'HEAD']);
+  // The merge brought the solver's new file; the revert commit takes it out.
   expect(git(context.repo, ['ls-files', '--', 'extra.txt'])).toBe('');
 }, 'Repair app', files));
 
 it('names each bounty when omitted ids are ambiguous and keeps explicit ended inspection available', () => fixture(context => {
   const second = finalizeBounty(planBounty({ repoPath: context.repo, title: 'Another task', taskPath: join(context.repo, 'TASK.md'), why: 'separate task', outDir: join(context.scratch, 'second-draft') }));
-  for (const command of [['confirm'], ['post', '--to', 'github'], ['answer', '--pr', '1'], ['look', '1'], ['apply', '1'], ['questions'], ['reply', '--text', 'hello'], ['reject', '--reason', 'done'], ['withdraw']]) {
+  for (const command of [['confirm'], ['post', '--to', 'github'], ['look', '1'], ['apply', '1'], ['close'], ['close', '--reason', 'done']]) {
     const result = cli(context.repo, ...command);
     expect(result.status).toBe(3); expect(result.stderr).toContain('bounty-ambiguous');
     expect(result.stderr).toContain(context.id); expect(result.stderr).toContain(second.id);
   }
-  expect(cli(context.repo, 'withdraw', second.id).status).toBe(0);
+  expect(cli(context.repo, 'close', second.id).status).toBe(0);
   expect(cli(context.repo, 'status', second.id, '--full').stdout).toContain('withdrawn');
 }, 'Repair app', files));

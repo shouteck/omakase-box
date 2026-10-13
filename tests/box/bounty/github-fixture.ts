@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, cpSync, linkSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { expect } from 'vitest';
-import { answerGitHub, BountyRefused, confirmBounty, finalizeBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot, write } from './support.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
 
@@ -303,7 +303,7 @@ function buildPostedMaster(options: Required<PostedOptions>): PostedWorld {
     confirmBounty(world.repo, world.id, 'github');
     postBounty(world.repo, world.id, 'github');
     const sha = context.pr(options.prAuthor);
-    if (options.collected) answerGitHub(world.repo, world.id, 1);
+    if (options.collected) lookBounty(world.repo, world.id, 1);
     return sha;
   });
   return { ...world, prSha };

@@ -152,13 +152,14 @@ it('a merge carrying a never-ship path the solution did not is named as a fact a
   expect(noticedLines.some(line => line.includes('prod.env') && line.includes('dot-env'))).toBe(true);
 }, { collected: false }));
 
-it('apply names no attempt that does not exist', () => postedFixture(({ repo, id }) => {
+it('apply names a pull request or attempt that does not exist', () => postedFixture(({ repo, id }) => {
   answerGitHub(repo, id, 1);
+  // A number no attempt and no pull request carries: apply treats it as a
+  // pull request first — GitHub's miss is the named refusal, nothing written.
   try { applyBounty(repo, id, 99); expect.unreachable('apply of attempt 99 should refuse'); }
   catch (error) {
     expect(error).toBeInstanceOf(BountyRefused);
-    expect((error as BountyRefused).reason).toBe('unknown-attempt');
-    expect((error as BountyRefused).message).toContain('attempts #1');
+    expect((error as BountyRefused).reason).toBe('github-pr-missing');
   }
   expect(loadRecord(repo, id).stage).toBe('answered');
 }));

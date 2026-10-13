@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, questionsBounty, renderStatus, replyBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
@@ -61,19 +61,17 @@ it('a clashing apply aborts the merge, keeps the worktree and index byte-identic
   expect(output.stdout).toContain(`box bounty look ${context.id} 1`);
 }, 'Repair app', files));
 
-it('refuses to read or reply on an existing issue that is not this bounty\'s, and posts nothing', () => fixture(context => {
+it('refuses to read comments on an existing issue that is not this bounty\'s, and posts nothing', () => fixture(context => {
   arrived(context);
   const stranger = { number: 2, html_url: 'https://github.com/owner/project/issues/2', title: 'unrelated issue', body: 'no bounty marker here', state: 'open', user: { login: 'owner' } };
   context.update({ issues: [...context.state().issues, stranger], comments: [{ body: 'a question on the other issue', user: { login: 'questioner' }, created_at: '2026-10-10T01:02:03Z' }] });
-  // The bounty's own issue answers; the same commands against the other issue do not.
-  expect(questionsBounty(context.repo, context.id)).toContain('1 comment(s) written by others');
+  // The bounty's own issue answers; the same read against the other issue does not.
+  expect(renderStatus(context.repo, { id: context.id, comments: true })).toContain('1 comment(s) written by others');
   const record = loadRecord(context.repo, context.id);
   if (record.github === undefined) throw new Error('publication missing');
   record.github = { ...record.github, issue: { number: 2, url: stranger.html_url } };
   persistRecord(context.repo, record);
   const before = context.state().comments.length;
-  refused(() => replyBounty(context.repo, context.id, 'must not post'), 'github-issue-mismatch');
-  refused(() => questionsBounty(context.repo, context.id), 'github-issue-mismatch');
+  refused(() => renderStatus(context.repo, { id: context.id, comments: true }), 'github-issue-mismatch');
   expect(context.state().comments).toHaveLength(before);
-  expect(loadRecord(context.repo, context.id).replies ?? []).toHaveLength(0);
 }, 'Repair app', files));

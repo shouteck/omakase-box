@@ -1,6 +1,6 @@
 // The agent-facing wording of the bounty tool: the description `describe`
-// prints, the rules block an owner pastes into a project's rules file, and the
-// reminder line a harness can surface. This file IS the product of wave BT4 —
+// prints and the rules block an owner pastes into a project's rules file.
+// This file IS the product of wave BT4 —
 // "wording is product": published work found wording alone changes a tool's
 // use tenfold, and that more detail is not better, so every string below is
 // short on purpose.
@@ -17,8 +17,8 @@
 export const DESCRIBE_LINES: readonly string[] = [
   'box bounty hands a piece of work to an outside solver: the task and what you',
   'tried — on GitHub an issue on the repository\'s real history, in a folder a',
-  'snapshot minus never-ship files — the project keeps the record; the answer',
-  'comes back as facts you judge, and nothing a solver wrote is ever run.',
+  'snapshot minus never-ship files — the project keeps the record; solutions',
+  'come back as facts you judge, and nothing a solver wrote is ever run.',
   'GitHub posting is public and free, only to this project\'s already-public',
   'repository — the preview says exactly what becomes public that was not.',
   'Nobody is known to be watching these issues yet. A local folder is still',
@@ -34,19 +34,11 @@ export const DESCRIBE_LINES: readonly string[] = [
 ];
 
 export const RULES_LINES: readonly string[] = [
-  'box bounty can hand a task to an outside solver and bring the answer back',
+  'box bounty can hand a task to an outside solver and bring solutions back',
   'as facts — `box bounty describe` says what it does, what it costs and when it',
   'beats doing the work yourself. Using it is always your call; the owner\'s',
   'limits apply.'
 ];
-
-// One line, naming the tool and one trigger-worthy moment (a failed attempt).
-// The trigger belongs to the harness — remind only supplies text and switch.
-export const REMINDER_ON =
-  'a failed attempt is one good moment to hand off — `box bounty describe` says what box bounty does and costs; using it is always your call';
-
-export const REMINDER_OFF =
-  'reminders are off — the owner switches them on with "reminders": "on" in .box/limits.json';
 
 // The marker convention for the block an owner pastes into a rules file. The
 // tool owns everything between the markers: on every record mutation the whole

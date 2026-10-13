@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, undoBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { ahead } from './ordinary-tree.js';
@@ -107,7 +107,10 @@ it('a clean apply leaves the working-tree form and a clean status; look prints t
   expect(trackedChanges(context.repo)).toEqual([]);
   expect(filter.ranIn(context.repo).some(line => line.startsWith('smudge '))).toBe(true);
 
-  expect(undoBounty(context.repo, context.id).outcome).toBe('undone');
+  // Reversal is ordinary Git now — `undo` is gone and the merge `apply`
+  // landed reverts like any merge, with the owner's own filter running as
+  // plain Git runs it.
+  git(context.repo, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'revert', '--no-edit', '-m', '1', 'HEAD']);
   expect(existsSync(join(context.repo, 'new.dat'))).toBe(false);
   expect(readFileSync(join(context.repo, 'secret.dat'), 'utf8')).toBe('committed plaintext\n');
   expect(trackedChanges(context.repo)).toEqual([]);

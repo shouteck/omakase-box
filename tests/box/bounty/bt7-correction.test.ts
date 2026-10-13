@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
-import { answerGitHub, confirmBounty, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, questionsBounty, quoteForeign, renderStatus } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, confirmBounty, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, quoteForeign, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
@@ -32,13 +32,13 @@ it('an answer names look and apply; hidden characters are escaped in questions a
   const hidden = 'right‮to-left \u009b[31m zero​width del\u007f';
   // The solver also adds a file with a reStructuredText heading and a file with hidden characters.
   collected(context, { 'README.rst': 'Title\n=======\n', 'notes.txt': `${hidden}\n` });
-  // answer names look, apply and reject.
+  // An answer's report names look and apply.
   const report = loadRecord(context.repo, context.id).attempts?.[0]?.report.join('\n') ?? '';
   expect(report).toContain(`box bounty look ${context.id} 1`);
   expect(report).toContain(`box bounty apply ${context.id} 1`);
   // A comment from another account with characters that hide or reorder text.
   context.update({ comments: [{ body: hidden, user: { login: 'questioner' }, created_at: '2026-10-10T01:02:03Z' }] });
-  const questions = questionsBounty(context.repo, context.id);
+  const questions = renderStatus(context.repo, { id: context.id, comments: true });
   for (const raw of ['‮', '\u009b', '​', '\u007f']) expect(questions).not.toContain(raw);
   expect(questions).toContain('\\u202e');
   expect(questions).toContain('\\u009b');
@@ -80,7 +80,7 @@ it('asking which bounty lists each title, usage lists the commands of this wave,
   expect(which.stderr).toContain(`${second.id} "Mend the second thing"`);
   const usage = cli(repo, 'look', first.id);
   expect(usage.status).toBe(2);
-  for (const line of ['box bounty status [<id>] [--full]', 'box bounty look [<id>] <n>', 'box bounty questions [<id>]', 'box bounty reply [<id>] --text']) expect(usage.stderr).toContain(line);
+  for (const line of ['box bounty status [<id>] [--full] [--comments]', 'box bounty look [<id>] (<n> | --from <dir>)', 'box bounty apply [<id>] [<n> | --from <dir>]', 'box bounty close [<id>]']) expect(usage.stderr).toContain(line);
   expect(usage.stderr).not.toContain('unlook');
   expect(quoteForeign('a‮b\u009bc​d\u007fe⁦f\u001bg')).toBe('"a\\u202eb\\u009bc\\u200bd\\u007fe\\u2066f\\u001bg"');
   expect(quoteForeign('plain "quoted" path/with spaces.txt')).toBe(JSON.stringify('plain "quoted" path/with spaces.txt'));

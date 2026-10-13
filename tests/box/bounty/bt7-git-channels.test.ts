@@ -3,7 +3,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, lookBounty, postBounty, undoBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, closeBounty, confirmBounty, lookBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { asOneCommand, git as safeGit, gitOutcome } from '../../../packages/box-bounty/git.js';
 import { fixture } from './github-fixture.js';
 import { git, makeRepo, runRoot, write } from './support.js';
@@ -19,7 +19,7 @@ it.skipIf(process.platform !== 'win32')('uses pinned Git and command interpreter
   expect(result.status).toBe(0);
   expect(result.stdout).toContain(context.id);
   expect(result.stderr).not.toContain('MODULE_NOT_FOUND');
-  const questions = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'questions', context.id], { cwd: context.repo, encoding: 'utf8' });
+  const questions = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'status', context.id, '--comments'], { cwd: context.repo, encoding: 'utf8' });
   expect(questions.status).toBe(0);
   expect(questions.stdout).toContain('next:');
 }));
@@ -60,7 +60,7 @@ it('does not invoke a repository-relative signing program for a tool commit', ()
   expect(git(repo, ['config', '--get', 'commit.gpgSign'])).toBe('true');
 });
 
-it('keeps reference hooks disabled through look, apply and undo', () => fixture(context => {
+it('keeps reference hooks disabled through look, apply and close', () => fixture(context => {
   confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
   context.pr('solver'); answerGitHub(context.repo, context.id, 1);
   const marker = join(context.scratch, 'reference-ran');
@@ -70,7 +70,7 @@ it('keeps reference hooks disabled through look, apply and undo', () => fixture(
   lookBounty(context.repo, context.id, 1);
   expect(applyBounty(context.repo, context.id, 1).outcome).toBe('applied');
   expect(existsSync(marker)).toBe(false);
-  expect(undoBounty(context.repo, context.id).outcome).toBe('undone');
+  expect(closeBounty(context.repo, context.id).outcome).toBe('already-ended');
   expect(existsSync(marker)).toBe(false);
   expect(git(context.repo, ['config', '--get', 'core.hooksPath'])).toBe(hooks);
 }, 'Repair app', { 'app.txt': 'broken\n' }));

@@ -1,5 +1,7 @@
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
+import { answerBounty } from './answer.js';
+import { resolveAttempt } from './github.js';
 import { attemptsOf, loadRecord, persistRecord } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 
@@ -9,6 +11,11 @@ import type { Attempt, BountyRecord } from './record.js';
 // nothing a solver wrote runs — the reads below are diffs over objects, and
 // --no-ext-diff/--no-textconv keep solver-selected programs out of them.
 // A large change lists its files first; --full prints the whole diff.
+//
+// `<n>` is a pull request's number: when no recorded attempt carries it and
+// the bounty is posted on GitHub, `look` collects the pull request first —
+// every refusal the old `answer` enforced — then shows the change. `--from
+// <dir>` collects a returned folder the same way and shows it.
 
 const refuse = (reason: string, detail: string, next = 'box bounty status'): never => { throw new BountyRefused(reason, `${detail}; next: ${next}`); };
 
@@ -17,9 +24,19 @@ const refuse = (reason: string, detail: string, next = 'box bounty status'): nev
 // flooding the agent's context with hundreds of lines it may not need.
 export const LOOK_DIFF_LIMIT = 200;
 
+// A pull request's number, or a returned folder: `look <id> <n>` shows
+// attempt n — collecting pull request n first when the bounty is posted on
+// GitHub and no attempt carries that number — and `look <id> --from <dir>`
+// collects a returned folder and shows it.
+export type LookTarget = number | { readonly from: string };
+
 export interface LookResult {
   readonly record: BountyRecord;
   readonly attempt: Attempt;
+  /** True when this look collected the solution itself (a pull request
+      number, or a returned folder) rather than reading an attempt already
+      recorded. */
+  readonly collected: boolean;
   /** Every path the change touches, in Git's own name order. */
   readonly files: readonly string[];
   /** The full diff — null when the change is large and `full` was not asked for. */
@@ -27,12 +44,23 @@ export interface LookResult {
   readonly large: boolean;
 }
 
-export function lookBounty(root: string, id: string, n: number, options: { readonly full?: boolean } = {}): LookResult {
-  const record = loadRecord(root, id);
-  const attempt = attemptsOf(record).find(entry => entry.n === n);
-  if (attempt === undefined) return refuse('unknown-attempt', `solution ${n} does not exist on ${record.id}`);
+export function lookBounty(root: string, id: string, target: LookTarget, options: { readonly full?: boolean } = {}): LookResult {
+  let record = loadRecord(root, id);
+  let attempt: Attempt;
+  let collected = false;
+  if (typeof target === 'number') {
+    const resolved = resolveAttempt(root, record, target, 'look');
+    record = resolved.record;
+    attempt = resolved.attempt;
+    collected = resolved.collected;
+  } else {
+    const result = answerBounty(root, id, target.from, undefined, { via: 'look' });
+    record = result.record;
+    attempt = attemptsOf(record).find(entry => entry.n === result.attempt)!;
+    collected = true;
+  }
   // Shown means seen: status marks the attempt seen-since from this run.
-  record.attempts = attemptsOf(record).map(entry => entry.n === n && entry.seenAt === undefined ? { ...entry, seenAt: new Date().toISOString() } : entry);
+  record.attempts = attemptsOf(record).map(entry => entry.n === attempt.n && entry.seenAt === undefined ? { ...entry, seenAt: new Date().toISOString() } : entry);
   persistRecord(root, record);
   const base = record.github?.kind === 'history' ? record.github.commit : record.snapshot.baseCommit;
   const from = base ?? '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
@@ -40,5 +68,5 @@ export function lookBounty(root: string, id: string, n: number, options: { reado
   const files = gitOutcome(root, ['diff', ...diffArgs, '--name-only', '-z', from, attempt.commit]).stdout.split('\0').filter(Boolean);
   const diff = gitOutcome(root, ['diff', ...diffArgs, from, attempt.commit]).stdout;
   const large = diff.split('\n').length > LOOK_DIFF_LIMIT;
-  return { record, attempt, files, large, diff: large && options.full !== true ? null : diff };
+  return { record, attempt, collected, files, large, diff: large && options.full !== true ? null : diff };
 }
