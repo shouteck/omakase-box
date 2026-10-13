@@ -9,3 +9,10 @@ Read AGENTS.md, then STATUS.md. They are the rules and the current state. The br
 - Cursor has no named profiles in this repository. Staff each role by starting a fresh agent with the role file, the wave file and the station card as its whole prompt.
 - Native pstack is not installed on this machine. Installing it is the owner's decision; do not claim it ran.
 - Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call.
+<!-- box-bounty -->
+box bounty can hand a task to an outside solver and bring solutions back
+as facts — `box bounty describe` says what it does, what it costs and when it
+beats doing the work yourself. Using it is always your call; the owner's
+permission applies.
+a bounty is open; `box bounty` shows more.
+<!-- /box-bounty -->
