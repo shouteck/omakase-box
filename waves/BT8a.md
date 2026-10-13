@@ -1,8 +1,8 @@
 # BT8a: the owner's settings as the owner decided them
 
-Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch, after BT8 · Branch: `wave/BT8a` · Timebox: 120 minutes; at expiry the cook stops and reports where it is, whatever state that is
+Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch, after BT8 · Branch: `wave/BT8a` · Timebox: 150 minutes; at expiry the cook stops and reports where it is, whatever state that is
 
-**Pre-brief.** Written by the CTO on 13 October 2026 from decisions the owner made in conversation while BT8 was cooking. BT8 was briefed before them and was not interrupted. **At dispatch the head chef reads BT8's Result first, strikes from this brief whatever BT8 already does, and corrects command names** (BT8's cook was building an `owner` command group; this brief says "the owner's commands" and "the setup view" for whatever BT8 named them).
+**Pre-brief.** Written by the CTO on 13 October 2026 from decisions the owner made in conversation while BT8 was cooking. This wave reshapes what BT8 built on the owner's side as well as correcting it, so it is a refactoring of fresh code and its timebox is 150 minutes, not 120. BT8 was briefed before them and was not interrupted. **At dispatch the head chef reads BT8's Result first, strikes from this brief whatever BT8 already does, and corrects command names** (BT8's cook was building an `owner` command group; this brief says "the owner's commands" and "the setup view" for whatever BT8 named them).
 
 ## Outcome
 
@@ -17,6 +17,24 @@ The owner's side of the tool is as small and as safe by default as the owner ask
 ## Done when
 
 - `node scripts/verify.mjs test:box-bounty test:box-package` exits 0 on the final commit; the suites reach no network.
+
+**The owner's side is three words (owner, 13 October 2026)**
+
+The owner does not want to be handed a pile of commands. Most owners will not type these at all: they will tell their agent "allow bounties on this repository" and the agent will run it. So the surface is small, and one command says everything that can be set. It follows tools people already know: `direnv allow` and `direnv deny` for trust; `git config`, `npm config` and `gh config` for everything else; a status command for where things stand.
+
+| Command | What it does |
+|---|---|
+| `allow [repository]` | Adds a repository to the owner's list; with no name, the one it is run in. Prints what that allows before writing. One option makes the entry "ask me each time". |
+| `deny [repository]` | Takes a repository off the list. |
+| `config` | Bare: prints everything that is set and can be set, each with its current value and the exact command that changes it. With `set`, `add` or `remove`: changes one thing. |
+| `status` | Exists already and is shared with agents. Shows what is waiting for the owner, and with an option what was done since a given time. |
+
+- **Nothing else is the owner's.** BT8's `owner` group, its setup view, and separate commands for asking, switching off and on, listing, removing and summarising are folded into these. Each folded command, typed, is a named refusal that says what replaced it; none is kept as an alias.
+- **`config` holds every setting, and a new setting adds no command:** the never-publish and safe-to-publish lists here; whether the yes extends to all the owner's projects, off by default; the reward and the limit when BT11 adds them.
+- **Bare `config` is written for an agent to act on.** It is complete (every setting, including ones not set), each line carries the command that changes it, and it says in one line what the owner has not decided yet. An agent asked by its owner to change something needs nothing but this output. A test gives a fresh agent only the bare output and one instruction from the owner for each setting, and checks the command it runs.
+- Switching off is `deny`; switching back on is `allow`. The dated history of changes stays, so what was there before is still visible.
+- The words "the setup view" and "the owner's commands" elsewhere in this brief mean bare `config` and these three.
+- The head chef settles the exact spelling against BT8's Result at dispatch; the count does not grow.
 
 **A list of allowed repositories (owner, 13 October 2026)**
 
@@ -70,12 +88,12 @@ The owner's side of the tool is as small and as safe by default as the owner ask
 
 - A command that leaves a bounty waiting says so in its first line and exits in a way an agent host does not read as a crash; the Result states the exit status chosen for waiting states and why. No command waits for typed input.
 
-**Cases that must fail, each a named refusal that changes nothing:** adding a repository with no GitHub address, or a name that is not a repository address; removing one that is not listed; the all-projects word misspelled or half given; a safe-list or never-publish entry that resolves outside the repository, is a link, or names a never-ship path as safe; either list claimed from a project file; "allow once" typed for a hit, which says what replaced it; an approval for something that is not waiting; an approval after the content changed.
+**Cases that must fail, each a named refusal that changes nothing:** each command BT8 offered that this wave folds away; `config set` of a name the tool does not know, or of a hard stop; adding a repository with no GitHub address, or a name that is not a repository address; removing one that is not listed; the all-projects word misspelled or half given; a safe-list or never-publish entry that resolves outside the repository, is a link, or names a never-ship path as safe; either list claimed from a project file; "allow once" typed for a hit, which says what replaced it; an approval for something that is not waiting; an approval after the content changed.
 
 ## Review lenses
 
 - [x] **Security:** the reviewer plays an agent that wants a flagged bounty out. It tries: reworking the content so the pattern no longer matches (and reports that it goes out and that the owner is told, as the doc page says); adding to the safe list from the project, through a solution, through a link or a case trick on the path; getting the value printed; making the hit vanish from the record or the summary; discarding and recreating the bounty to lose the hit's trace. It tries to make a yes for one repository apply to another: same path with a different repository, a fork, a second remote, a remote edited to claim a listed address while the bounty would go elsewhere, a lookalike address. For each: prevented, or permitted but visible, and whether the doc page's claim matches.
-- [x] **User experience:** three readers, each fresh. An agent whose post is held by a hit says what it may do, what it may not, and who decides, then removes the content and posts. An owner, played by the reviewer with only the setup view, allows one repository and adds one entry to each list, and says in their own words what each did. An owner who allowed "this one bounty" last time reads the next first-use message and says what is being asked. The reviewer reports anything shown that was not used, and any line addressed to the wrong reader.
+- [x] **User experience:** three readers, each fresh. An agent whose post is held by a hit says what it may do, what it may not, and who decides, then removes the content and posts. An owner, played by the reviewer with only bare `config`, allows one repository and adds one entry to each list, and says in their own words what each did. A fresh agent given only bare `config` and an owner's plain request ("stop bounties on this repository", "never publish the fixtures folder") runs the right command first time. An owner who allowed "this one bounty" last time reads the next first-use message and says what is being asked. The reviewer reports anything shown that was not used, and any line addressed to the wrong reader.
 - [ ] **Measurement fairness:** not applicable.
 
 ## Notes for the worker
