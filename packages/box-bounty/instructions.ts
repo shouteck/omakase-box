@@ -9,11 +9,11 @@ import { renderRulesBlock, RULES_MARKERS } from './wording.js';
 // Confirmed against each host's documentation on 2026-10-13. Only this
 // registry names hosts; discovery never creates their instruction files.
 export const INSTRUCTION_HOSTS = [
-  { host: 'Codex', files: ['AGENTS.md', 'AGENTS.override.md'], directory: null },
-  { host: 'Claude Code', files: ['CLAUDE.md', 'CLAUDE.local.md', '.claude/CLAUDE.md'], directory: null },
-  { host: 'Cursor', files: [], directory: '.cursor/rules' },
-  { host: 'Gemini CLI', files: ['GEMINI.md'], directory: null },
-  { host: 'GitHub Copilot', files: ['.github/copilot-instructions.md'], directory: null }
+  { host: 'Codex', files: ['AGENTS.md', 'AGENTS.override.md'], directory: null, imports: 'none' },
+  { host: 'Claude Code', files: ['CLAUDE.md', 'CLAUDE.local.md', '.claude/CLAUDE.md'], directory: null, imports: 'at-escaped-spaces' },
+  { host: 'Cursor', files: [], directory: '.cursor/rules', imports: 'none' },
+  { host: 'Gemini CLI', files: ['GEMINI.md'], directory: null, imports: 'at' },
+  { host: 'GitHub Copilot', files: ['.github/copilot-instructions.md'], directory: null, imports: 'none' }
 ] as const;
 
 export interface InstructionFile { readonly path: string; readonly refusal?: string }
@@ -81,10 +81,30 @@ function span(bytes: Buffer): { readonly afterOpen: number; readonly closeAt: nu
   return { openAt, afterOpen: openAt + open.length, closeAt };
 }
 export function checkInstructionMarkers(path: string): void { span(readFileSync(path)); }
+function proseOutsideCode(text: string): string {
+  let fence: string | null = null;
+  const prose: string[] = [];
+  for (const line of text.split(/\r?\n/)) {
+    const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (fence !== null) {
+      if (marker !== null && marker[1] !== undefined && marker[1][0] === fence[0] && marker[1].length >= fence.length && marker[2]?.trim() === '') fence = null;
+      prose.push('');
+    } else if (marker?.[1] !== undefined) {
+      fence = marker[1];
+      prose.push('');
+    } else prose.push(/^(?: {4}|\t)/.test(line) ? '' : line);
+  }
+  return prose.join('\n').replace(/(?<!`)(`+)([\s\S]*?)(?<!`)\1(?!`)/g, ' ');
+}
 function imports(repoRoot: string, file: InstructionFile, files: readonly InstructionFile[]): string | null {
-  const text = readFileSync(checkInstructionFile(repoRoot, file.path), 'utf8');
-  for (const match of text.matchAll(/^\s*@([^\s]+)\s*$/gm)) {
-    const path = resolve(dirname(resolve(repoRoot, file.path)), match[1] ?? '');
+  const name = folded(relative(repoRoot, resolve(repoRoot, file.path)));
+  const syntax = INSTRUCTION_HOSTS.find(host => host.files.some(path => folded(path) === name))?.imports ?? 'none';
+  if (syntax === 'none') return null;
+  const text = proseOutsideCode(readFileSync(checkInstructionFile(repoRoot, file.path), 'utf8'));
+  const pattern = syntax === 'at-escaped-spaces' ? /(?:^|\s)@((?:\\[ \t]|[^\s"'`<>])+)/g : /(?:^|\s)@([^\s"'`<>]+)/g;
+  for (const match of text.matchAll(pattern)) {
+    const imported = (match[1] ?? '').replace(/\\([ \t])/g, '$1');
+    const path = resolve(dirname(resolve(repoRoot, file.path)), imported);
     const target = files.find(candidate => candidate.refusal === undefined && folded(resolve(repoRoot, candidate.path)) === folded(path));
     if (target !== undefined && target.path !== file.path) return target.path;
   }

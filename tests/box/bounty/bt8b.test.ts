@@ -56,6 +56,41 @@ describe('instruction blocks', () => {
     expect(bytes(repo, 'CLAUDE.md')).toEqual(before);
   });
 
+  it.each(['AGENTS.md', '.cursor/rules/plain.mdc', '.github/copilot-instructions.md', 'custom.txt'])('keeps a block in %s when @ text is not a documented import', name => {
+    const repo = setup({ [name]: '@GEMINI.md\n', 'GEMINI.md': 'shared\n' });
+    if (name === 'custom.txt') changeConfig(repo, 'set', 'instruction-file', name);
+    const output = changeConfig(repo, 'set', 'instructions', 'true');
+    expect(block(repo, name)).toBeDefined();
+    expect(output).not.toContain(`${name}: imports`);
+  });
+
+  it.each(['CLAUDE.md', 'GEMINI.md'])('recognizes inline imports in %s and ignores code spans and fences', name => {
+    const repo = setup({ [name]: 'Read @AGENTS.md for shared instructions.\n', 'AGENTS.md': 'shared\n' });
+    const original = bytes(repo, name);
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('imports AGENTS.md');
+    expect(bytes(repo, name)).toEqual(original);
+    for (const raw of ['`@AGENTS.md`\n', '```markdown\n@AGENTS.md\n```\n', '~~~\n@AGENTS.md\n~~~\n', '    @AGENTS.md\n']) {
+      write(repo, name, raw);
+      changeConfig(repo, 'set', 'instructions', 'true');
+      expect(block(repo, name)).toBeDefined();
+      expect(bytes(repo, name).toString().replace(block(repo, name) ?? 'absent', '')).toBe(raw);
+    }
+  });
+
+  it('recognizes documented escaped spaces and preserves an importer when its leaf is unsafe', () => {
+    const repo = setup({ 'CLAUDE.md': 'Use @team\\ guide.txt here.\n', 'team guide.txt': 'shared\n' });
+    changeConfig(repo, 'set', 'instruction-file', 'team guide.txt');
+    const original = bytes(repo, 'CLAUDE.md');
+    changeConfig(repo, 'set', 'instructions', 'true');
+    expect(bytes(repo, 'CLAUDE.md')).toEqual(original);
+    expect(block(repo, 'team guide.txt')).toBeDefined();
+    write(repo, 'CLAUDE.md', `${original.toString()}${block(repo, 'team guide.txt') ?? ''}`);
+    const importer = bytes(repo, 'CLAUDE.md');
+    write(repo, 'team guide.txt', '<!-- box-bounty -->\nbroken');
+    expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('instruction-markers-damaged');
+    expect(bytes(repo, 'CLAUDE.md')).toEqual(importer);
+  });
+
   it('refuses damaged markers for one file and still updates safe files', () => {
     const repo = setup({ 'AGENTS.md': '<!-- box-bounty -->\nbroken\n', 'GEMINI.md': 'safe\n' });
     const before = bytes(repo, 'AGENTS.md');
@@ -104,10 +139,21 @@ describe('instruction blocks', () => {
     expect(bytes(repo, 'team.txt')).toEqual(before);
   });
 
+  it('refuses instruction configuration through a linked settings file before any effects', () => {
+    const repo = setup({ 'AGENTS.md': 'owner instructions\n' });
+    writeFileSync(settingsFile(), JSON.stringify({ kind: 'box-owner-settings', repositories: {} }));
+    linkSync(settingsFile(), join(repo, 'owner-settings.json'));
+    const before = readFileSync(settingsFile());
+    expect(() => changeConfig(repo, 'set', 'instructions', 'true')).toThrow('instruction-settings-link');
+    expect(readFileSync(settingsFile())).toEqual(before);
+    expect(bytes(repo, 'owner-settings.json')).toEqual(before);
+    expect(bytes(repo, 'AGENTS.md').toString()).toBe('owner instructions\n');
+  });
+
   it('refuses duplicate or damaged marker pairs and cyclic imports', () => {
-    const repo = setup({ 'AGENTS.md': '@GEMINI.md\n', 'GEMINI.md': '@AGENTS.md\n' });
+    const repo = setup({ 'CLAUDE.md': '@GEMINI.md\n', 'GEMINI.md': '@CLAUDE.md\n' });
     expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('instruction-import-cycle');
-    expect(bytes(repo, 'AGENTS.md').toString()).toBe('@GEMINI.md\n');
+    expect(bytes(repo, 'CLAUDE.md').toString()).toBe('@GEMINI.md\n');
     const broken = '<!-- box-bounty --\n<!-- /box-bounty --\n';
     write(repo, 'AGENTS.md', broken);
     expect(changeConfig(repo, 'set', 'instructions', 'true')).toContain('instruction-markers-damaged');
@@ -154,7 +200,7 @@ it('host names occur in one product registry only', () => {
 });
 
 it('the tool scanner finds no secret-shaped literal in the added candidate diff', () => {
-  for (const mode of [[], ['--cached']]) {
+  for (const mode of [['master...HEAD'], [], ['--cached']]) {
     const result = spawnSync('git', ['-c', `safe.directory=${ROOT.replaceAll('\\', '/').replace(/\/+$/, '')}`, 'diff', ...mode, '--no-ext-diff', '--no-textconv', '--unified=0'], { cwd: ROOT, encoding: 'utf8' });
     expect(result.status, result.stderr).toBe(0);
     const added = result.stdout.split('\n').filter(line => line.startsWith('+') && !line.startsWith('+++')).map(line => line.slice(1)).join('\n');

@@ -182,7 +182,7 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
 export function readInstructions(repoRoot: string): InstructionSettings {
   return loadSettings().instructions?.[realpathSync(repoRoot)] ?? { enabled: false, notices: [] };
 }
-export function writeInstructions(repoRoot: string, choice: InstructionSettings): void {
+export function checkInstructionSettingsWrite(repoRoot: string): void {
   const root = realpathSync(repoRoot);
   let ancestor = resolve(settingsDir());
   const tail: string[] = [];
@@ -196,6 +196,13 @@ export function writeInstructions(repoRoot: string, choice: InstructionSettings)
   const relativeFolder = folder.toLowerCase().replaceAll('\\', '/');
   const rootKey = root.toLowerCase().replaceAll('\\', '/');
   if (relativeFolder === rootKey || relativeFolder.startsWith(`${rootKey}/`)) throw new BountyRefused('settings-inside-repo', 'instruction maintenance settings must live outside the repository; nothing changed');
+  const stat = lstatSync(settingsFile(), { throwIfNoEntry: false });
+  if (stat !== undefined && (stat.isSymbolicLink() || stat.nlink > 1)) throw new BountyRefused('instruction-settings-link', 'instruction-settings-link: instruction configuration cannot write a linked settings file; nothing changed');
+  if (stat !== undefined && !stat.isFile()) throw new BountyRefused('instruction-settings-not-file', 'instruction-settings-not-file: choose an ordinary settings file; nothing changed');
+}
+export function writeInstructions(repoRoot: string, choice: InstructionSettings): void {
+  checkInstructionSettingsWrite(repoRoot);
+  const root = realpathSync(repoRoot);
   const settings = loadSettings();
   persist({ ...settings, instructions: { ...settings.instructions, [root]: choice } });
 }

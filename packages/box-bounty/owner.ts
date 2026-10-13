@@ -4,7 +4,7 @@ import { loadSettings, localFirstMergeLine, readDecision, settingsFile, unknownS
 import type { DecisionRead } from './settings.js';
 import { relative } from 'node:path';
 import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
-import { readInstructions, writeInstructions } from './settings.js';
+import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
 export const DECISION_WORDS = {
@@ -125,6 +125,7 @@ export function renderConfig(repoRoot: string | null): string {
 export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string, emitDisclosure?: (text: string) => void): string {
   if (name === 'instructions' || name === 'instruction-file') {
     if (repoRoot === null || verb !== 'set') throw new BountyRefused('config-value-invalid', 'instruction settings require a checkout and config set; nothing changed');
+    checkInstructionSettingsWrite(repoRoot);
     const previous = readInstructions(repoRoot);
     if (name === 'instructions') {
       if (value !== 'true' && value !== 'false') throw new BountyRefused('config-value-invalid', 'use box bounty config set instructions <true|false>; nothing changed');

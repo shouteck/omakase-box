@@ -529,8 +529,11 @@ This adds one identical block to each existing file found. It creates no
 instruction file and changes no original bytes outside its marked block.
 Front matter, other tools' blocks and line endings outside the block stay as
 they were. A damaged block, a link or an unsafe path is a named refusal for
-that file; other safe files still update. Standalone `@relative/path` imports
-among discovered instruction files keep the block in the imported file once.
+that file; other safe files still update. The registry declares which files
+support documented `@relative/path` imports. In those files, inline references
+outside Markdown code spans and code blocks keep the block in the imported
+file once. Ordinary references in files without import support do not suppress
+their block. Imports are resolved relative to the importing file.
 The importer names that fact in config output. Cyclic imports are refused.
 
 For any other host or custom filename, choose an existing file inside the
