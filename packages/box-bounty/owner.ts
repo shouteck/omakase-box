@@ -1,10 +1,11 @@
 import { BountyRefused } from './errors.js';
-import { listRecords, loadRecord, postBounty } from './record.js';
+import { listRecords, loadRecord, persistRecord, postBounty } from './record.js';
 import { loadSettings, localFirstMergeLine, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import { relative } from 'node:path';
 import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
 import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
+import { changePublishList, publishLists } from './never-ship.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
 export const DECISION_WORDS = {
@@ -40,7 +41,11 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
     for (const entry of listRecords(repoRoot)) {
       const record = entry.record;
       if (record?.stage !== 'waiting' || record.waiting?.for !== 'post' || record.waiting.to === undefined) continue;
-      if (record.waiting.reason === 'secrets' || record.waiting.reason === 'untracked-file') {
+      if (record.waiting.reason === 'secrets') {
+        lines.push(`${record.id} still waits on the pre-publish scan — an answer cannot release it; decide in box bounty config: the path goes on safe to publish or never publish.`);
+        continue;
+      }
+      if (record.waiting.reason === 'untracked-file') {
         lines.push(`${record.id} still waits on the pre-publish check; box bounty allow ${record.id} answers that one hold.`);
         continue;
       }
@@ -64,6 +69,13 @@ export function allowBounty(repoRoot: string, id: string): string {
   const record = loadRecord(repoRoot, id);
   const waiting = record.waiting;
   if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed. box bounty status ${id} shows its state`);
+  if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. Decide in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing changed`);
+  // The answer is recorded bound to what the owner was shown before the held
+  // post reruns: a wait the rerun uncovers carries it forward for the same
+  // post, and a later `post` reuses it only while the published state still
+  // matches — drift drops it (github-preview-stale or a fresh wait).
+  record.waiting = { ...waiting, answered: { at: new Date().toISOString(), ...(waiting.shown === undefined ? {} : { shown: waiting.shown }) } };
+  persistRecord(repoRoot, record);
   const posted = postBounty(repoRoot, id, waiting.to, { answered: true, ...(waiting.choice === undefined ? {} : { choice: waiting.choice }) });
   return `${id}: answered once; posted to ${posted.destination}. No repository decision changed.`;
 }
@@ -102,14 +114,21 @@ export function renderConfig(repoRoot: string | null): string {
     if (current?.decision !== 'ask') lines.push(`  ${DECISION_WORDS.ask}: box bounty allow ${address} --ask`);
   }
   if (repoRoot !== null) {
+    const publish = publishLists(repoRoot);
+    lines.push(`never publish: ${publish.never.length === 0 ? 'none listed' : publish.never.join(', ')} — kept out of every bounty; change: box bounty config add never-publish <path>, or remove never-publish <path>`);
+    lines.push(`safe to publish: ${publish.safe.length === 0 ? 'none listed' : publish.safe.join(', ')} — paths the pre-publish scan does not hold a bounty over; change: box bounty config add safe-to-publish <path>, or remove safe-to-publish <path>`);
     const choice = readInstructions(repoRoot);
     lines.push(`instructions: ${choice.enabled ? 'on' : 'off'}; change: box bounty config set instructions <true|false>`);
     lines.push(`instruction-file: ${choice.file ?? 'none chosen'}; choose any existing file: box bounty config set instruction-file <existing-path>`);
     const found = discoverInstructions(repoRoot);
     lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${file.path}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
     lines.push(...instructionNotices(repoRoot, false));
-    const waiting = listRecords(repoRoot).flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record.id] : []);
-    for (const id of waiting) lines.push(`  ${DECISION_WORDS.once}: box bounty allow ${id}`);
+    const waiting = listRecords(repoRoot).flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record] : []);
+    for (const record of waiting) {
+      lines.push(record!.waiting!.reason === 'secrets'
+        ? `  ${record!.id} waits on the pre-publish scan — decide with the lists above: safe to publish or never publish the path`
+        : `  ${DECISION_WORDS.once}: box bounty allow ${record!.id}`);
+    }
     if (waiting.length === 0) lines.push('waiting posts: none; see current actions with box bounty status');
   }
   for (const [key, entry] of Object.entries(settings.repositories)) {
@@ -137,6 +156,11 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     writeInstructions(repoRoot, { ...previous, file: relative(repoRoot, file).replaceAll('\\', '/') });
     return [`instruction-file: ${value}; saved in the owner's settings. Enable or add the block: box bounty config set instructions true`, ...syncInstructions(repoRoot, true)].join('\n');
   }
+  if ((name === 'never-publish' || name === 'safe-to-publish') && (verb === 'add' || verb === 'remove')) {
+    if (repoRoot === null) throw new BountyRefused('config-value-invalid', `${name} lists paths inside one repository — run it inside a checkout; nothing changed`);
+    return changePublishList(repoRoot, name, verb, value);
+  }
+  if (name === 'never-publish' || name === 'safe-to-publish') throw new BountyRefused('config-value-invalid', `use box bounty config add ${name} <path>, or config remove ${name} <path>; nothing changed`);
   if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value, false, emitDisclosure) : denyRepository(repoRoot, value);
   if (name !== 'all-projects') return unknownSetting(name);
   if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'use box bounty config set all-projects <true|false|ask>; nothing changed');
@@ -151,7 +175,7 @@ export function renderSummary(repoRoot: string, since?: string): string {
     if (!Number.isFinite(Date.parse(since))) throw new BountyRefused('summary-time-invalid', `--since ${since} is not a readable time; pass an ISO time`);
     from = new Date(since).toISOString();
   }
-  const posted: string[] = [], merged: string[] = [], closed: string[] = [], waiting: string[] = [];
+  const posted: string[] = [], merged: string[] = [], closed: string[] = [], waiting: string[] = [], findings: string[] = [];
   for (const entry of listRecords(repoRoot)) {
     const record = entry.record;
     if (record === null) continue;
@@ -162,7 +186,13 @@ export function renderSummary(repoRoot: string, since?: string): string {
       else if (['rejected', 'withdrawn', 'expired', 'undone'].includes(event.stage)) closed.push(`${record.id} ${event.stage} at ${event.at}`);
     }
     if (record.waiting !== undefined) waiting.push(`${record.id} (${record.waiting.reason}, since ${record.waiting.at})`);
+    // Scan findings are standing facts, not events — a settled one carries no
+    // time of its own, so every finding on the record is reported, whatever
+    // --since says about the events around it.
+    for (const finding of record.scanFindings ?? []) {
+      for (const hit of finding.hits) findings.push(`${record.id}: ${hit.path}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+    }
   }
   const read = readDecision(repoRoot);
-  return [`what was done since ${since === undefined ? 'the beginning' : from}: facts from the record`, `  bounties posted: ${posted.length}: ${posted.join('; ')}`, `  solutions merged: ${merged.length}: ${merged.join('; ')}`, `  bounties closed with none: ${closed.length}: ${closed.join('; ')}`, `  waiting now: ${waiting.length}: ${waiting.join('; ')}`, `the owner's decision is ${read.decision ?? 'nothing written'}`].join('\n');
+  return [`what was done since ${since === undefined ? 'the beginning' : from}: facts from the record`, `  bounties posted: ${posted.length}: ${posted.join('; ')}`, `  solutions merged: ${merged.length}: ${merged.join('; ')}`, `  bounties closed with none: ${closed.length}: ${closed.join('; ')}`, `  waiting now: ${waiting.length}: ${waiting.join('; ')}`, `  scan findings: ${findings.length}: ${findings.join('; ')}`, `the owner's decision is ${read.decision ?? 'nothing written'}`].join('\n');
 }

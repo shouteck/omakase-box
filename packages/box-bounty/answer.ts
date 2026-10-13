@@ -6,7 +6,7 @@ import { BountyRefused } from './errors.js';
 import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, ownerGitOutcome, unsafeOwnerCommands } from './git.js';
 import type { DryMerge, IndexChange } from './git.js';
 import type { BountyManifest } from './manifest.js';
-import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
+import { shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
@@ -573,11 +573,11 @@ export function answerBounty(repoRoot: string, id: string, fromDir: string, auth
   if (record.manifestSha256 !== undefined && sha256(manifestBytes) !== record.manifestSha256) {
     throw new BountyRefused('manifest-tampered', `the returned bounty.json is not byte-identical to the one this bounty shipped — it binds the solution and must come back unmodified; edit repo/ only`);
   }
-  // Never-ship applies to the return exactly as it did outbound: built-ins plus
-  // the owner's .boxignore. An answer cannot smuggle a path create would have
-  // stripped — it is refused by name before anything is extracted.
-  const ownerList = loadOwnerList(repoRoot);
-  const rules: readonly NeverShipRule[] = ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
+  // Never-ship applies to the return exactly as it did outbound: built-ins,
+  // the owner's .boxignore and the owner's never publish list. An answer
+  // cannot smuggle a path create would have stripped — it is refused by
+  // name before anything is extracted.
+  const rules = shipRules(repoRoot);
   const change = extractAnswerChange(manifest, repoDir, rules);
   if (gitOutcome(repoRoot, ['rev-parse', '--verify', '-q', refName(id)]).status !== 0) {
     throw new BountyRefused('snapshot-lost', `refs/box-bounty/${id} is gone — the snapshot this solution was made for can no longer be recreated or merged from. Nothing can come back to this bounty; end it with box bounty close ${id} --reason "snapshot lost"`);

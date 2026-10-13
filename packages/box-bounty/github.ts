@@ -9,10 +9,10 @@ import { renderListing } from './create.js';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, mergeBase, ownerGitOutcome } from './git.js';
 import type { DryMerge, IndexChange } from './git.js';
-import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
+import { publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, transitionTo, waitForOwner } from './record.js';
-import type { Attempt, BountyRecord } from './record.js';
+import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, recordScanFinding, sameShown, settleScanFindings, transitionTo, waitForOwner } from './record.js';
+import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { requireRepository } from './repository.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
@@ -54,6 +54,10 @@ export interface GitHubPublication {
   /** Set when closing removed a branch that carried first-published commits —
       names them so nothing the agent published is lost by surprise. */
   closedNote?: string;
+  /** Files Git treated as binary in the first-published set — the scan had
+      nothing to read in them. Recorded so the post output and `status` can
+      say they were not scanned; never a hold. */
+  scanBinary?: readonly string[];
   outside?: { readonly at: string; readonly issueState: 'open' | 'closed'; readonly answers: string };
   unavailableAt?: string | null;
 }
@@ -377,10 +381,14 @@ export const SECRET_RULES: readonly SecretRule[] = [
   { name: 'jwt', pattern: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/ },
   { name: 'passworded-connection-string', pattern: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|mariadb|redis|amqps?|mssql|cockroachdb):\/\/[^\s:'/@]+:[^\s'"@]+@/ },
   // A long random-looking string assigned to a key/secret/token/password-
-  // like name: `name = "value"` or `name: "value"`. Long enough and mixed
-  // enough that ordinary code mentioning such names does not match — a
-  // short token, a getter call or a plain-words value is not a hit.
-  { name: 'assigned-secret', pattern: /\b(?:[a-z0-9_.[\]-]*?(?:secret|token|passw(?:or)?d|api[-_]?key|access[-_]?key|private[-_]?key|client[-_]?secret|auth[-_]?token)[a-z0-9_.[\]-]*)\s*[:=]\s*['"]([A-Za-z0-9+/=_.~-]{20,})['"]/i }
+  // like name: `name = "value"`, `name: "value"` or the bare `name=value`
+  // env-file spelling (BT8c). Long enough and mixed enough that ordinary
+  // code mentioning such names does not match — a short token, a getter
+  // call (the unquoted form refuses a value that continues into `(`) or a
+  // plain-words value is not a hit. The unquoted arm cannot span a `.`:
+  // `name: some.long.member.access` is code, not a value — a dotted
+  // env spelling is one of the stated misses, quoted forms still read.
+  { name: 'assigned-secret', pattern: /\b(?:[a-z0-9_.[\]-]*?(?:secret|token|passw(?:or)?d|api[-_]?key|access[-_]?key|private[-_]?key|client[-_]?secret|auth[-_]?token)[a-z0-9_.[\]-]*)\s*[:=]\s*(?:['"]([A-Za-z0-9+/=_.~-]{20,})['"]|([A-Za-z0-9+/=~-]{20,})(?![A-Za-z0-9+/=_.~(]))/i }
 ];
 
 // "Long random": at least two character classes among lower, upper, digit —
@@ -388,7 +396,14 @@ export const SECRET_RULES: readonly SecretRule[] = [
 const randomEnough = (value: string): boolean =>
   [/[a-z]/, /[A-Z]/, /[0-9]/].filter(re => re.test(value)).length >= 2;
 
-export interface ScanHit { readonly path: string; readonly line: number; readonly rule: string }
+export interface ScanHit {
+  readonly path: string;
+  readonly line: number;
+  readonly rule: string;
+  /** The first-published commit carrying the hit — named on the hold so the
+      agent knows an ordinary git push would publish it too. */
+  readonly commit?: string;
+}
 
 // Scan one line's text. The assigned-secret rule checks its captured value
 // for the mixed classes — the pattern alone cannot say "random".
@@ -396,7 +411,7 @@ function scanLine(path: string, lineNo: number, text: string, hits: ScanHit[]): 
   for (const rule of SECRET_RULES) {
     const found = rule.pattern.exec(text);
     if (found === null) continue;
-    if (rule.name === 'assigned-secret' && !randomEnough(found[1] ?? '')) continue;
+    if (rule.name === 'assigned-secret' && !randomEnough(found[1] ?? found[2] ?? '')) continue;
     hits.push({ path, line: lineNo, rule: rule.name });
     return; // one hit per line is enough — the line is named, not counted
   }
@@ -428,6 +443,24 @@ export function scanPatch(diff: string): ScanHit[] {
   }
   return hits;
 }
+
+// `git diff -p` prints one `Binary files …` line for each file it treats as
+// binary and no added-line text for it — the scan has nothing to read there.
+// The path is named as a fact: it was not scanned. That is never a hold —
+// the owner's never publish list is the way to keep such a file out.
+export function binaryPatchPaths(diff: string): string[] {
+  const paths: string[] = [];
+  for (const line of diff.split('\n')) {
+    const found = /^Binary files .* and b\/(.+) differ$/.exec(line);
+    if (found !== null) paths.push(found[1]!.replace(/^"(.*)"$/, '$1'));
+  }
+  return paths;
+}
+
+// The same line drawn on bytes read directly: a NUL inside the head is what
+// makes Git call a file binary.
+const binaryBytes = (bytes: Buffer): boolean => bytes.subarray(0, 8000).includes(0);
+export const looksBinary = binaryBytes;
 
 // The empty tree — what a root commit is diffed against, so every path it
 // plants appears as 'A' in the scan instead of disappearing behind the failed
@@ -654,8 +687,11 @@ export interface GitHubPlan {
   readonly include: readonly string[];
   /** The pre-publish scan over first-published bytes: added lines of each
       first-published commit's diff, the work-in-progress diff and every
-      named include file. File and line named, never the value. */
-  readonly scan: { readonly hits: readonly ScanHit[]; readonly commitsScanned: number };
+      named include file. File and line named, never the value. `suppressed`
+      counts hits on owner safe-listed paths — named, never held. `binary`
+      names files Git treats as binary: they were not scanned (a fact, never
+      a hold — never publish is how the owner keeps one out). */
+  readonly scan: { readonly hits: readonly ScanHit[]; readonly suppressed: number; readonly binary: readonly string[]; readonly commitsScanned: number };
   /** Never-ship-named paths already in the public history — facts, not
       refusals: this tool cannot take back what is already public. */
   readonly publicNeverShip: readonly string[];
@@ -665,12 +701,23 @@ export interface GitHubPlan {
 const LICENCE_NAME = /^licen[cs]e([._ -].*)?$/i;
 const PREVIEW_PUBLIC_NAMES = 20;
 
-function neverShipRules(root: string): readonly NeverShipRule[] {
-  const ownerList = loadOwnerList(root);
-  return ownerList === null ? BUILTIN_RULES : [...BUILTIN_RULES, ownerList.rule];
+// What a wait records of the plan it was made under — the base, the commits
+// published for the first time, the work-in-progress lists and the choices.
+// The owner's one answer is bound to exactly this: a move afterwards means
+// the answer was for something else and does not carry (github-preview-stale).
+export function shownOfPlan(plan: GitHubPlan): NonNullable<WaitingFor['shown']> {
+  return {
+    base: plan.base,
+    head: plan.head,
+    tip: plan.tip,
+    pushed: plan.pushed.map(commit => commit.sha),
+    include: plan.include,
+    leftHome: plan.leftHome,
+    untracked: plan.untracked
+  };
 }
 
-function planGitHub(root: string, repository: string, record: BountyRecord, rules: readonly NeverShipRule[], choice: GitHubChoice): GitHubPlan {
+export function planGitHub(root: string, repository: string, record: BountyRecord, rules: readonly NeverShipRule[], choice: GitHubChoice): GitHubPlan {
   // One rev-parse answers both HEAD questions the plan asks: the branch tip
   // and its tree — used for the no-commits refusal, the wip comparison and
   // the plan's head/tipTree fields.
@@ -740,22 +787,36 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
     // The pre-publish scan: the added lines of every commit published for
     // the first time, of the work-in-progress diff, and of each named
     // untracked file — the same diffs the never-ship read already walks, one
-    // extra git read per first-published commit.
-    const hits: ScanHit[] = [];
+    // extra git read per first-published commit. Each hit carries the commit
+    // it sits in so the hold can name it: an ordinary git push would publish
+    // that commit just the same. Files Git calls binary give the scan no
+    // lines — named as not scanned, never held (BT8c).
+    const publish = publishLists(root);
+    const found: ScanHit[] = [];
+    const binary: string[] = [];
     for (const sha of unpushed) {
       const patch = gitOutcome(root, ['diff', '-p', '--no-renames', firstParents.get(sha) ?? EMPTY_TREE, sha]);
       if (patch.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)} for the pre-publish scan; nothing was posted`);
-      hits.push(...scanPatch(patch.stdout));
+      found.push(...scanPatch(patch.stdout).map(hit => ({ ...hit, commit: sha })));
+      binary.push(...binaryPatchPaths(patch.stdout));
     }
     if (wip !== null) {
       const patch = gitOutcome(root, ['diff', '-p', '--no-renames', 'HEAD', wip.tree]);
       if (patch.status !== 0) return invalid('github-git-failed', 'Git could not read the work-in-progress diff for the pre-publish scan; nothing was posted');
-      hits.push(...scanPatch(patch.stdout));
+      found.push(...scanPatch(patch.stdout).map(hit => ({ ...hit, commit: wip.commit })));
+      binary.push(...binaryPatchPaths(patch.stdout));
     }
     for (const offset of include) {
-      try { hits.push(...scanText(offset, readFileSync(join(root, ...offset.split('/')), 'utf8'))); }
-      catch { return invalid('github-include-missing', `--include ${offset} could not be read for the pre-publish scan; nothing was posted`); }
+      try {
+        const bytes = readFileSync(join(root, ...offset.split('/')));
+        if (binaryBytes(bytes)) { binary.push(offset); continue; }
+        found.push(...scanText(offset, bytes.toString('utf8')));
+      } catch { return invalid('github-include-missing', `--include ${offset} could not be read for the pre-publish scan; nothing was posted`); }
     }
+    // The owner's safe to publish list is the scan's only exception: hits on
+    // those paths are counted, never held — never-ship rules still apply to
+    // them, a safe-listed path cannot carry a never-ship file.
+    const hits = found.filter(hit => !publishListed(publish.safe, hit.path));
     const publicNeverShip: string[] = [];
     const baseTree = gitOutcome(root, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--name-only', base]);
     for (const path of baseTree.stdout.split('\0')) {
@@ -794,7 +855,7 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
       leftHome: choice.withChanges ? 0 : tracked.length,
       untracked: untracked.length,
       include,
-      scan: { hits, commitsScanned: unpushed.length + (wip === null ? 0 : 1) },
+      scan: { hits, suppressed: found.length - hits.length, binary: [...new Set(binary)], commitsScanned: unpushed.length + (wip === null ? 0 : 1) },
       publicNeverShip: publicNeverShip.sort(),
       licence: { file: licenceFile, declared }
     };
@@ -879,8 +940,10 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
     lines.push(`Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`);
   } else {
     lines.push(`Pre-publish scan: ${plan.scan.hits.length} secret-shaped hit(s) — a post would wait for the owner:`);
-    for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}`);
+    for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)}` : ''}`);
   }
+  if (plan.scan.suppressed > 0) lines.push(`  ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
+  if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`);
   lines.push(`Issue title: ${text.title}`);
   lines.push('Issue body:');
   lines.push(text.body);
@@ -893,7 +956,7 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
 // what a post would publish.
 export function approveGitHub(root: string, record: BountyRecord, choice: GitHubChoice) {
   const repository = publicRepository(root);
-  const rules = neverShipRules(root);
+  const rules = shipRules(root);
   const plan = planGitHub(root, repository, record, rules, choice);
   const text = listingHistory(record, repository, plan);
   const preview = renderPlanPreview(repository, record, plan, text);
@@ -929,8 +992,12 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   }
   // Read local permission before any gh probe. A waiting post publishes
   // nothing; visibility remains a hard stop once permission permits a call.
+  // `reused` is true when the gate passed on a recorded one-bounty answer
+  // still bound to the same published state (BT8c) — the post then credits
+  // that answer, not a standing decision.
+  let reusedAnswer = false;
   if (record.stage !== 'confirmed' && opts?.answered !== true && record.github === undefined && record.githubApproval === undefined) {
-    ownerGate(root, record, { for: 'post', to: 'github', choice: opts?.choice ?? { withChanges: false, include: [] } });
+    reusedAnswer = ownerGate(root, record, { for: 'post', to: 'github', choice: opts?.choice ?? { withChanges: false, include: [] } }).reused === true;
   }
   const repository = publicRepository(root);
   if (record.githubApproval !== undefined && record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository the recorded approval was made for; nothing was posted');
@@ -944,28 +1011,51 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     const choice = opts?.choice ?? { withChanges: false, include: [] };
     const priorWait = record.waiting;
     const legacyConfirmed = record.stage === 'confirmed';
-    const plan = planGitHub(root, repository, record, neverShipRules(root), choice);
+    // A scan hold is never answered away (BT8c): `allow <bounty>` on one is
+    // a named refusal — the owner settles it in `config` (safe to publish /
+    // never publish), or the flagged content is removed and the post rerun.
+    if (opts?.answered === true && priorWait?.reason === 'secrets') {
+      return invalid('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. The owner decides in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing was posted`);
+    }
+    const plan = planGitHub(root, repository, record, shipRules(root), choice);
+    // An owner answer is bound to what the owner was shown would be
+    // published: the recorded wait keeps the plan it was made under, and a
+    // move since — base, commits published for the first time, work in
+    // progress, included files, what stays home — means the answer was for
+    // something else and does not carry over. A wait recorded with nothing
+    // shown (a remote that could not be read, or an older record) cannot
+    // bind — the post's own refusals still apply.
+    const shown = priorWait?.shown;
+    if (opts?.answered === true && priorWait?.to === 'github' && shown !== undefined && !sameShown(shown, shownOfPlan(plan))) {
+      return invalid('github-preview-stale', `what would be published changed since this post first waited — the owner's answer was for what they were shown and does not carry over. Run box bounty post ${id} --to github again so the wait records the new state for the owner; nothing was posted`);
+    }
     // An owner answer clears only what the recorded wait named: a post held
     // for the decision alone can still carry scan hits the owner never saw —
     // those hold again, listing them. Rerunning `post` is never an answer.
     const seen = opts?.answered === true ? priorWait?.reason : undefined;
-    if (plan.scan.hits.length > 0 && seen !== 'secrets') {
-      waitForOwner(root, record, { for: 'post', reason: 'secrets', at: new Date().toISOString(), to: 'github', choice, hits: plan.scan.hits });
+    if (plan.scan.hits.length > 0) {
+      waitForOwner(root, record, { for: 'post', reason: 'secrets', at: new Date().toISOString(), to: 'github', choice, hits: plan.scan.hits, shown: shownOfPlan(plan) });
+      recordScanFinding(record, plan.scan.hits, 'post');
+      persistRecord(root, record);
       return invalid('publish-held', [
         `${id} — the pre-publish scan found ${plan.scan.hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
-        ...plan.scan.hits.map(hit => `  ${hit.path}:${hit.line} — ${hit.rule}`),
-        `the owner allows it once with box bounty allow ${id}, adds the path to never-ship, or ends it with box bounty close ${id}`,
-        'nothing else is held up. The scan is a stated pattern list, not proof of absence.'
+        ...plan.scan.hits.map(hit => `  ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
+        'it waits for the owner, who decides in box bounty config — tell them: the path goes on safe to publish or never publish there.',
+        'you may remove the flagged content and post again — that sends the bounty;',
+        'or stop this bounty — nothing was published and nothing will be, and the owner\'s files are untouched.',
+        ...(plan.scan.suppressed > 0 ? [`${plan.scan.suppressed} hit(s) on safe-listed paths are not held`] : []),
+        ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`] : []),
+        'the scan is a stated pattern list, not proof of absence.'
       ].join('\n'));
     }
-    if (plan.include.length > 0 && seen !== 'secrets' && seen !== 'untracked-file') {
-      waitForOwner(root, record, { for: 'post', reason: 'untracked-file', at: new Date().toISOString(), to: 'github', choice });
+    if (plan.include.length > 0 && seen !== 'untracked-file') {
+      waitForOwner(root, record, { for: 'post', reason: 'untracked-file', at: new Date().toISOString(), to: 'github', choice, shown: shownOfPlan(plan) });
       return invalid('publish-held', [
         `${id} — an untracked file is named for publishing (${plan.include.join(', ')}); this bounty waits for the owner`,
-        `the owner allows it once with box bounty allow ${id}, or ends it with box bounty close ${id}`
+        `the owner answers this one with box bounty allow ${id} — the answer is bound to what would be published now — or ends it with box bounty close ${id}`
       ].join('\n'));
     }
-    record.allowedBy = allowedByFor(root, record, opts?.answered === true, legacyConfirmed);
+    record.allowedBy = allowedByFor(root, record, opts?.answered === true || reusedAnswer, legacyConfirmed);
     const text = listingHistory(record, repository, plan);
     const publication: GitHubPublication = {
       repository,
@@ -979,6 +1069,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       pushed: plan.pushed,
       ...(plan.wipCommit !== null ? { wipCommit: plan.wipCommit } : {}),
       wip: plan.wip,
+      ...(plan.scan.binary.length > 0 ? { scanBinary: plan.scan.binary } : {}),
       state: 'preparing',
       issue: null,
       pending: null
@@ -1001,7 +1092,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       // Publish exactly what was approved: recompute the plan live and refuse
       // by name when the working state, the branch or the remote moved since
       // the preview — the preview and the push can never disagree.
-      const plan = planGitHub(root, repository, record, neverShipRules(root), {
+      const plan = planGitHub(root, repository, record, shipRules(root), {
         withChanges: approval.withChanges === true,
         include: approval.include ?? []
       });
@@ -1070,6 +1161,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       })();
     }
     publication.state = 'posted'; publication.pending = null;
+    settleScanFindings(root, record, 'went-out');
     if (record.stage !== 'posted') transitionTo(root, record, 'posted', { destination: publication.issue.url });
     else persistRecord(root, record);
     return { record, destination: publication.issue.url };
@@ -1305,7 +1397,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   // anywhere in its new history — added, changed or deleted — is refused,
   // so a file planted deep in the history and removed in the last commit
   // still cannot land.
-  const rules = neverShipRules(root);
+  const rules = shipRules(root);
   // --parents rides the same walk: each new commit's first parent comes back
   // in the same line, so no per-commit `rev-list --parents` is needed.
   const firstParents = new Map<string, string>();

@@ -31,6 +31,12 @@ export interface OwnerSettings {
   readonly migrations: readonly Migration[];
   readonly firstMerges: Readonly<Record<string, MergeNotice>>;
   readonly instructions?: Readonly<Record<string, InstructionSettings>>;
+  /** The owner's two publish lists (BT8c), keyed by the repository's real
+      folder path — they are about the working files in this checkout, not
+      the public repository: `never` paths are kept out of every bounty like
+      a never-ship rule; `safe` paths are the ones the pre-publish scan does
+      not hold a bounty over. Both live here and never in the project. */
+  readonly publishing?: Readonly<Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }>>;
 }
 export const projectKey = requireRepository;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -59,6 +65,9 @@ function persist(settings: OwnerSettings): void {
   mkdirSync(settingsDir(), { recursive: true });
   writeFileSync(settingsFile(), `${JSON.stringify({ kind: 'box-owner-settings', ...settings }, null, 2)}\n`, 'utf8');
 }
+// The one write path every settings mutation shares — exported for the
+// publish lists, which are validated in never-ship.ts before they land here.
+export const saveSettings = persist;
 
 // Consume legacy paths once. Unresolved paths grant nothing under a blanket
 // default, and conflicting copies require a fresh repository decision.
@@ -68,7 +77,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -111,7 +120,21 @@ export function loadSettings(): OwnerSettings {
       instructions[key] = { enabled: value['enabled'], ...(value['file'] === undefined ? {} : { file: value['file'] }), notices: value['notices'], ...(value['retired'] === undefined ? {} : { retired: value['retired'] }) };
     }
   }
-  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }) };
+  const publishing: Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }> = {};
+  const rawPublishing = parsed['publishing'];
+  if (rawPublishing !== undefined) {
+    if (!isObject(rawPublishing)) return bad('publishing must hold an object keyed by repository folder');
+    for (const [key, value] of Object.entries(rawPublishing)) {
+      if (!isAbsolute(key) || !isObject(value)) return bad('a publishing entry is unreadable');
+      for (const name of Object.keys(value)) if (!['never', 'safe'].includes(name)) unknownSetting(name);
+      const lists = (list: unknown): string[] => {
+        if (!Array.isArray(list) || list.some(entry => typeof entry !== 'string')) return bad('a publishing entry list is unreadable');
+        return list;
+      };
+      publishing[key] = { never: lists(value['never'] ?? []), safe: lists(value['safe'] ?? []) };
+    }
+  }
+  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }) };
   const legacy = parsed['projects'];
   if (legacy === undefined) return settings;
   if (!isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyRefused, closeBounty, finalizeBounty, loadRecord, allowBounty, planBounty, postBounty, readDecision, renderStatus, scanText, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, changePublishList, closeBounty, finalizeBounty, loadRecord, allowBounty, planBounty, postBounty, readDecision, renderStatus, scanText, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo as makeBareRepo, ownerRead, runRoot, write } from './support.js';
 import { fixture, refused } from './github-fixture.js';
@@ -179,13 +179,23 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(refusal.message).toContain('config.txt:1');
     expect(refusal.message).toContain('passworded-connection-string');
     expect(refusal.message).not.toContain('s3cret-hun73r');
+    // The hit message offers the agent only its own moves — no owner command.
+    expect(refusal.message).not.toContain('allow');
+    expect(refusal.message).not.toContain('close');
+    expect(refusal.message).toContain('config');
     const record = loadRecord(repo, id);
     expect(record.stage).toBe('waiting');
     expect(record.waiting?.reason).toBe('secrets');
     expect(record.waiting?.hits?.[0]).toMatchObject({ path: 'config.txt', line: 1 });
     expect(state().issues).toHaveLength(0); // nothing was published
-    const answer = allowBounty(repo, id);
-    expect(answer).not.toContain('s3cret-hun73r');
+    // BT8c: an owner answer cannot release a scan hold — the owner marks the
+    // path safe to publish in config, and the post goes out.
+    refused(() => allowBounty(repo, id), 'allow-scan-held');
+    expect(loadRecord(repo, id).waiting?.reason).toBe('secrets');
+    changePublishList(repo, 'safe-to-publish', 'add', 'config.txt');
+    const { record: posted } = postBounty(repo, id, 'github');
+    expect(posted.stage).toBe('posted');
+    expect(JSON.stringify(posted)).not.toContain('s3cret-hun73r');
     expect(state().issues).toHaveLength(1);
   }));
 
@@ -202,7 +212,11 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     refused(() => allowBounty(repo, id), 'publish-held');
     expect(loadRecord(repo, id).waiting?.reason).toBe('secrets');
     expect(state().issues).toHaveLength(0);
-    allowBounty(repo, id); // a second answer, now to the scan's own hold
+    // A second answer cannot settle the scan's hold either (BT8c) — the
+    // owner decides it in config; safe-listing the path sends the bounty.
+    refused(() => allowBounty(repo, id), 'allow-scan-held');
+    changePublishList(repo, 'safe-to-publish', 'add', 'keys.txt');
+    postBounty(repo, id, 'github');
     expect(state().issues).toHaveLength(1);
   }));
 

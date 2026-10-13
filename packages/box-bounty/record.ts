@@ -18,7 +18,9 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { instructionNotices, syncInstructions } from './instructions.js';
-import { postGitHub, refreshGitHubStatus, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
+import { planGitHub, postGitHub, refreshGitHubStatus, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
+import { publishListed, publishLists, shipRules } from './never-ship.js';
+import { requireRepository } from './repository.js';
 import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
@@ -78,14 +80,78 @@ export interface Attempt {
 // named waiting state instead of running. `for` says what waits; `to` and
 // `choice` keep the intended post so the owner's one answer can complete it;
 // `hits` are the secret-scan findings a publish is held on (file and line,
-// never the value).
+// never the value). `shown` (BT8c) records what the owner was shown would be
+// published: an owner's `allow <bounty>` releases the wait only while what
+// would be published still matches it — a drift refuses by name.
 export interface WaitingFor {
   readonly for: 'post' | 'close';
   readonly reason: 'owner-allow' | 'owner-ask' | 'owner-off' | 'secrets' | 'untracked-file';
   readonly at: string;
   readonly to?: string;
   readonly choice?: { readonly withChanges: boolean; readonly include: readonly string[] };
-  readonly hits?: readonly { readonly path: string; readonly line: number; readonly rule: string }[];
+  readonly hits?: readonly { readonly path: string; readonly line: number; readonly rule: string; readonly commit?: string }[];
+  readonly shown?: {
+    readonly base: string;
+    readonly head: string;
+    readonly tip: string;
+    readonly pushed: readonly string[];
+    readonly include: readonly string[];
+    readonly leftHome: number;
+    readonly untracked: number;
+  };
+  /** The owner's one answer on this wait (BT8c), bound to the `shown` it was
+      made under. `allow <bounty>` writes it before rerunning the held post;
+      a wait the rerun uncovers — the scan's hold — carries it forward for
+      the same action and destination, so a later `post` on the same
+      published state reuses it. What would be published drifting drops it:
+      the answer was for something else. */
+  readonly answered?: { readonly at: string; readonly shown?: WaitingFor['shown'] };
+}
+
+// One pre-publish scan finding kept on the record (BT8c): what was flagged,
+// where the scan ran, and what happened — the bounty went out (the content
+// changed, the flagged path is on safe to publish, or a folder post carried
+// it out unchecked) or it ended without posting.
+// `settled` starts null while the finding is live; settling rewrites only
+// that marker — the hits themselves are never edited.
+export interface ScanFinding {
+  readonly at: string;
+  readonly where: 'create' | 'post';
+  readonly hits: readonly { readonly path: string; readonly line: number; readonly rule: string; readonly commit?: string }[];
+  settled: string | null;
+}
+
+// Record a scan finding, once per distinct hit set — a rerun of the same
+// held post does not pile up copies.
+export function recordScanFinding(record: BountyRecord, hits: readonly { readonly path: string; readonly line: number; readonly rule: string; readonly commit?: string }[], where: 'create' | 'post'): void {
+  const key = JSON.stringify(hits.map(hit => [hit.path, hit.line, hit.rule]));
+  const live = (record.scanFindings ?? []).find(finding => finding.settled === null);
+  if (live !== undefined && JSON.stringify(live.hits.map(hit => [hit.path, hit.line, hit.rule])) === key) return;
+  record.scanFindings = [...(record.scanFindings ?? []), { at: new Date().toISOString(), where, hits: [...hits], settled: null }];
+}
+
+// Settle every live finding with what happened — the bounty went out, or it
+// ended without posting. The wording claims only what was verified: a GitHub
+// post ran the scan again, so it can say the flagged content changed; a
+// folder post runs no scan, so it can only say the content went out
+// unchecked. When every flagged path is on safe to publish the record says
+// the list's state — a local file write, so who wrote it is not claimed.
+export function settleScanFindings(repoRoot: string, record: BountyRecord, settled: 'went-out' | 'went-out-unchecked' | 'ended'): void {
+  const live = (record.scanFindings ?? []).filter(finding => finding.settled === null);
+  if (live.length === 0) return;
+  let text: string;
+  if (settled === 'ended') text = 'the bounty ended — nothing was published';
+  else {
+    const safe = publishLists(repoRoot).safe;
+    if (live.every(finding => finding.hits.every(hit => publishListed(safe, hit.path)))) {
+      text = 'the flagged path is on safe to publish — the bounty went out';
+    } else if (settled === 'went-out') {
+      text = 'the flagged content changed — the bounty went out';
+    } else {
+      text = 'the bounty went out to a folder — the scan does not run on a folder post, so the flagged content was not re-checked';
+    }
+  }
+  for (const finding of live) finding.settled = text;
 }
 
 // Which answer of the owner's allowed a post (BT8): the standing decision
@@ -151,6 +217,9 @@ export interface BountyRecord {
   /** Set while an action is held for the owner — the named waiting state
       status and the open-bounties line show. Cleared when the action runs. */
   waiting?: WaitingFor;
+  /** Every pre-publish scan finding — what was flagged and what happened.
+      Written at create (informational) and at a held post; status shows it. */
+  scanFindings?: ScanFinding[];
   /** Recorded on the posted event: which answer of the owner's allowed it. */
   allowedBy?: AllowedBy;
   github?: import('./github.js').GitHubPublication;
@@ -197,6 +266,7 @@ export interface RecordSeed {
   readonly createdAt: string;
   readonly job?: { readonly file: string; readonly text: string } | null;
   readonly manifestSha256?: string;
+  readonly scanFindings?: ScanFinding[];
 }
 
 export type ResumeContext = { readonly kind: 'not-recorded' } | {
@@ -271,6 +341,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   if (record.kind !== 'box-bounty-record' || typeof record.id !== 'string') return null;
   if (typeof record.stage !== 'string' || !Array.isArray(record.events) || typeof record.folder !== 'string') return null;
   if (record.noteSource !== undefined && record.noteSource !== 'authored' && record.noteSource !== 'generated' && record.noteSource !== 'legacy') return null;
+  if (record.scanFindings !== undefined && !Array.isArray(record.scanFindings)) return null;
   const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
   const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(entry => typeof entry === 'string');
   if (record.resume !== undefined && (!object(record.resume) || record.resume.kind !== 'not-recorded' && (record.resume.kind !== 'recorded' || typeof record.resume.branch !== 'string' || typeof record.resume.commit !== 'string' || !strings(record.resume.changed) || record.resume.note !== null && typeof record.resume.note !== 'string'))) return null;
@@ -344,6 +415,7 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     folder: seed.folder,
     snapshot: { ...seed.snapshot },
     createdAt: seed.createdAt,
+    ...(seed.scanFindings !== undefined && seed.scanFindings.length > 0 ? { scanFindings: seed.scanFindings } : {}),
     events: [{ stage: 'drafted', at: seed.createdAt }]
   };
   git(repoRoot, ['update-ref', refName(seed.id), seed.snapshot.commit]);
@@ -500,6 +572,20 @@ export function ownerStatusLine(repoRoot: string): string {
   }
 }
 
+// Every scan finding on the record, one line per hit — what was flagged and
+// what happened. Open bounties print these inside their block; ended ones
+// print them on the asked-for or last-ended detail (every one under --full),
+// so a settled hit stays visible for as long as the record does.
+const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
+  const out: string[] = [];
+  for (const finding of record.scanFindings ?? []) {
+    for (const hit of finding.hits) {
+      out.push(`${indent}scan finding${finding.where === 'create' ? ' (recorded at create)' : ''}: ${hit.path}:${hit.line} (${hit.rule}) — ${finding.settled ?? 'flagged — unsettled'}`);
+    }
+  }
+  return out;
+};
+
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
   if (options.id !== undefined) loadRecord(repoRoot, options.id);
   const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
@@ -534,9 +620,16 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}`);
       for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}`);
       if (record.waiting !== undefined) {
-        for (const hit of record.waiting.hits ?? []) lines.push(`      scan hit: ${hit.path}:${hit.line} (${hit.rule})`);
-        lines.push(`      the owner answers this one with: box bounty allow ${record.id}`);
+        const liveFinding = (record.scanFindings ?? []).some(finding => finding.settled === null);
+        for (const hit of record.waiting.hits ?? []) {
+          if (record.waiting.reason === 'secrets' && liveFinding) break; // the finding below names the same hits
+          lines.push(`      scan hit: ${hit.path}:${hit.line} (${hit.rule})`);
+        }
+        lines.push(record.waiting.reason === 'secrets'
+          ? '      the owner decides in box bounty config — the path goes on safe to publish or never publish there'
+          : `      the owner answers this one with: box bounty allow ${record.id}`);
       }
+      lines.push(...scanFindingLines(record, '      '));
       if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
       // by another account — the issue is bound to this bounty first, so a
@@ -604,20 +697,30 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   if (ended.length === 0) lines.push('ended: none');
   else lines.push(`ended: ${ended.map(entry => {
     const record = entry.record!;
+    // A bounty that once flagged secret-shaped content keeps the fact on this
+    // line, so the compact list still tells the owner to look — the finding
+    // itself prints on the detail below (or under status <id> / --full).
+    const finding = (record.scanFindings ?? []).length > 0 ? ' — scan finding recorded' : '';
     // applied/rejected/undone name the job the bounty came from, so the record
     // alone says which piece of work is unblocked — falling back to the title.
-    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage} (job: ${record.job?.file ?? record.title})`;
-    return `${record.id} ${record.stage}`;
+    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${finding} (job: ${record.job?.file ?? record.title})`;
+    return `${record.id} ${record.stage}${finding}`;
   }).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
   // was asked for by id, or else for the one that ended last.
   const lastEnded = [...ended].sort((a, b) => (a.record!.events.at(-1)?.at ?? '').localeCompare(b.record!.events.at(-1)?.at ?? '')).at(-1)?.record ?? null;
   for (const entry of ended) {
     if (entry.record === null) continue;
-    if (options.id !== undefined || entry.record === lastEnded) {
+    const detailed = options.id !== undefined || entry.record === lastEnded;
+    if (detailed) {
       lines.push(renderResume(entry.record, '  '));
+      // The finding stays visible after the bounty ends — the owner learns a
+      // flagged file sat in their working tree even when the agent stopped it.
+      lines.push(...scanFindingLines(entry.record, '  '));
       // With a bounty still open, that bounty's line above is the next step.
       if (open.length === 0) lines.push(`  next: continue the saved job${entry.record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${entry.record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${entry.record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`);
+    } else if (options.full) {
+      lines.push(...scanFindingLines(entry.record, '  '));
     }
     if (options.full && entry.record !== null) {
       for (const event of entry.record.events) lines.push(`  history: ${historyJson(event)}`);
@@ -691,11 +794,25 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
 // An action held for the owner: mark the record so status and the
 // open-bounties line show the named waiting state. A bounty already waiting
 // keeps its first wait time — the state does not move just because the same
-// held command ran again.
+// held command ran again. A recorded owner answer carries forward only
+// while the wait is still the same action to the same destination — a hold
+// the answered rerun uncovered keeps it; a different held action never
+// inherits it.
 export function waitForOwner(repoRoot: string, record: BountyRecord, waiting: WaitingFor): void {
-  record.waiting = { ...waiting, at: record.waiting?.at ?? waiting.at };
+  const carried = record.waiting !== undefined && record.waiting.for === waiting.for && record.waiting.to === waiting.to ? record.waiting.answered : undefined;
+  record.waiting = { ...waiting, at: record.waiting?.at ?? waiting.at, ...(carried !== undefined ? { answered: carried } : {}) };
   if (record.stage === 'waiting') persistRecord(repoRoot, record);
   else transitionTo(repoRoot, record, 'waiting');
+}
+
+// What the owner was shown would be published, compared field by field —
+// the shape WaitingFor.shown and WaitingFor.answered.shown both carry.
+export function sameShown(a: WaitingFor['shown'], b: WaitingFor['shown']): boolean {
+  return a !== undefined && b !== undefined
+    && a.base === b.base && a.head === b.head && a.tip === b.tip
+    && a.pushed.join('\n') === b.pushed.join('\n')
+    && a.include.join('\n') === b.include.join('\n')
+    && a.leftHome === b.leftHome && a.untracked === b.untracked;
 }
 
 // `confirm` is removed (BT8): the owner allows the tool once, in the owner's
@@ -754,11 +871,35 @@ export function renderOverview(repoRoot: string): string {
 // one command, which completes the held action without writing a standing
 // decision. Allowed or answered returns the read; anything else marks the
 // record waiting and refuses by name with the lines for the owner.
-export function ownerGate(repoRoot: string, record: BountyRecord, action: { for: 'post'; to: string; choice?: WaitingFor['choice'] }): { read: DecisionRead } {
+export function ownerGate(repoRoot: string, record: BountyRecord, action: { for: 'post'; to: string; choice?: WaitingFor['choice'] }): { read: DecisionRead; reused?: true } {
   const read = readDecision(repoRoot);
   if (read.decision === 'allowed') return { read };
   const reason = read.decision === 'ask' ? 'owner-ask' : read.decision === 'off' ? 'owner-off' : 'owner-allow';
-  waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}) });
+  let shown: WaitingFor['shown'];
+  if (action.to === 'github') {
+    // The wait records what would be published, when it can be read — the
+    // owner's answer is bound to what they were shown (BT8c). This runs only
+    // when a wait is actually being recorded, and a remote that cannot be
+    // read yet leaves the wait unbound: the post's own refusal names the
+    // cause when the owner answers. It is a git read, never a gh call — the
+    // permission state still gates every GitHub call below.
+    try {
+      const plan = planGitHub(repoRoot, requireRepository(repoRoot), record, shipRules(repoRoot), action.choice ?? { withChanges: false, include: [] });
+      shown = shownOfPlan(plan);
+    } catch {
+      shown = undefined;
+    }
+  }
+  // A one-bounty answer recorded on this wait still stands while what would
+  // be published is what the owner was shown — a scan hold the answered
+  // rerun uncovered carries it, and once the owner settles that in config
+  // the same `post` goes out under the recorded answer. Any drift drops it
+  // and the wait below is recorded fresh.
+  const answered = record.waiting?.answered;
+  if (action.for === 'post' && record.waiting?.for === 'post' && record.waiting.to === action.to && answered !== undefined && sameShown(answered.shown, shown)) {
+    return { read: { decision: 'allowed', level: null, at: null }, reused: true };
+  }
+  waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}), ...(shown !== undefined ? { shown } : {}) });
   throw new BountyRefused(
     read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
     [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(record, read), ...(listRecords(repoRoot).some(entry => entry.record?.allowedBy?.decision === 'once') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
@@ -809,6 +950,9 @@ export function postBounty(repoRoot: string, id: string, toDir: string, opts?: {
   mkdirSync(dirname(destination), { recursive: true });
   cpSync(record.folder, destination, { recursive: true }); // copy, not move — the recorded folder stays
   record.allowedBy = allowedByFor(repoRoot, record, opts?.answered === true, confirmed);
+  // A folder post runs no scan — the record must not claim the flagged
+  // content was re-checked; only a safe-listed path settles as known.
+  settleScanFindings(repoRoot, record, 'went-out-unchecked');
   transitionTo(repoRoot, record, 'posted', { destination });
   return { record, destination };
 }
@@ -849,6 +993,7 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
     if (record.github !== undefined) syncGitHubDecision(repoRoot, record);
     return { record, outcome: 'already-ended' };
   }
+  settleScanFindings(repoRoot, record, 'ended');
   if (text !== '') {
     transitionTo(repoRoot, record, 'rejected', { reason: text, command: 'close' });
   } else {
