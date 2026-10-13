@@ -300,6 +300,28 @@ and the licence as a fact — and carries the
 number and branch are kept in the local record and shown by `status` and the
 open-bounties line.
 
+**Getting paid (reward above $0 only).** When the issue states a reward, its
+"How to answer" also asks for one line in the pull request description:
+`pay-to:` followed by the solver's Stripe payment link and nothing else, for
+example `pay-to: https://buy.stripe.com/test_0EXAMPLE00000000000000`. The tool
+reads the first line that starts with `pay-to:` and recognises exactly one
+shape — `https://buy.stripe.com/` followed by an alphanumeric id (test-mode
+ids start `test_`) — everything else is "not recognised" and the solver's
+text is never echoed. `look` and `status` state which of the four facts each
+solution carries: a recognised link, a recognised test-mode link, a `pay-to:`
+line the tool does not recognise, or no line at all. The tool never opens the
+link, never fetches it and cannot know the amount it asks for; when the
+bounty closes on a merged solution the closing output and `status` carry the
+message for the owner — whom to pay, how much (the amount from the owner's
+setting, to be paid by hand) and where, with a sentence to check the checkout
+shows the right amount and account name, plus who last edited the description
+when that was not the solver. A merged solution with no recognised link is
+stated the same way, without one.
+
+The tool does not pay, does not know whether payment was made, holds no money
+and does not protect the solver: posting a solution does not guarantee the
+reward, and payment — if any — is the owner's to make by hand.
+
 The solver forks the repository (or pushes a branch inside it), works from the
 bounty branch and opens a pull request against it in the same repository.
 Collect from the project's record:

@@ -72,7 +72,7 @@ export interface GhState {
   repository: string;
   issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
   comments: { body: string; user: { login: string }; created_at?: string }[];
-  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[] }[];
+  prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string }[];
   labels: { name: string }[];
   calls: string[][];
 }
@@ -100,7 +100,12 @@ const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.in
 if (state.failBodyUpdate && input && typeof input.body === 'string' && endpoint.includes('/issues/') && !endpoint.includes('/comments')) fail();
 if (state.fail && endpoint.includes(state.fail)) fail();
 let result;
-if (endpoint === 'graphql') {
+if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
+  const pr = state.prs.find(pr => pr.number === input.variables.number);
+  if (!pr) fail();
+  result = { data: { repository: { pullRequest: { body: pr.body ?? '', userContentEdits: { nodes: pr.editedBy ? [{ editor: { login: pr.editedBy } }] : [] } } } } };
+}
+else if (endpoint === 'graphql') {
   const issue = state.issues.find(issue => issue.number === input.variables.number);
   if (!issue || state.fail && ('/issues/' + issue.number + '/comments').includes(state.fail)) fail();
   const offset = Number(input.variables.after ?? 0);
@@ -303,9 +308,12 @@ function contextFor(world: World): GithubFixture {
     write(solver, 'app.txt', 'fixed\n');
     for (const [path, content] of Object.entries(extra)) write(solver, path, content);
     git(solver, ['add', '-A']);
-    git(solver, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit', '-qm', 'fix']);
-    const sha = git(solver, ['rev-parse', 'HEAD']);
+    // The pull request number goes into the commit itself: two solver
+    // requests answered in the same second would otherwise mint byte-
+    // identical commits — same tree, parent, author and message (BT7b flake).
     const n = state().prs.length + 1;
+    git(solver, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit', '-qm', `fix (pr ${n})`]);
+    const sha = git(solver, ['rev-parse', 'HEAD']);
     git(solver, ['push', 'origin', `HEAD:refs/pull/${n}/head`]);
     update({ prs: [...state().prs, { number: n, user: { login: author }, base: { ref: base, repo: { full_name: 'owner/project' } }, head: { sha }, files: ['app.txt', ...Object.keys(extra)].map(filename => ({ filename })) }] });
     return sha;

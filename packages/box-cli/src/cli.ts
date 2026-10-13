@@ -25,7 +25,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
+import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
 // dependency weight (typescript, zod) is paid once by export/submit/verify/
 // trace, never by every `box bounty` spawn.
@@ -323,6 +323,7 @@ if (command === 'export') {
       }
       const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, from !== undefined ? { from: resolve(from) } : attempt);
       if (result.firstMergeNotice !== undefined) console.log(result.firstMergeNotice);
+      if (result.payMessage !== undefined) for (const line of result.payMessage) console.log(line);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
       if (result.record.github?.closedNote !== undefined) console.log(`github: ${result.record.github.closedNote}`);
       if (result.outcome === 'applied') {
@@ -361,6 +362,7 @@ if (command === 'export') {
       const result = lookBounty(root, id, from !== undefined ? { from: resolve(from) } : n!, { full: bountyArgs.includes('--full') });
       const label = result.attempt.n;
       console.log(`${id} solution ${label} — ${result.collected ? 'collected first — ' : ''}the change below was written by the solver, not by the tool; the tool ran nothing of the solver's to show it. It is read from fetched objects — nothing is checked out, nothing is left behind.`);
+      if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
       if (result.diff === null) {
         console.log(`${result.files.length} file(s) changed:`);
         for (const file of result.files) console.log(`solver change | ${quoteForeign(file)}`);
@@ -374,7 +376,8 @@ if (command === 'export') {
       const reason = reasonIndex >= 0 ? bountyArgs[reasonIndex + 1] : undefined;
       const [id, ...extraIds] = commandIds();
       if (id === undefined || extraIds.length > 0 || (reasonIndex >= 0 && (reason === undefined || reason.startsWith('--')))) usage('box bounty close [id] [--reason "<text>"] [--repo <path>]');
-      const { record, outcome } = closeBounty(resolveRepoRoot(bountyRepo(), 'close'), id, reason);
+      const { record, outcome, payMessage } = closeBounty(resolveRepoRoot(bountyRepo(), 'close'), id, reason);
+      if (payMessage !== undefined) for (const line of payMessage) console.log(line);
       if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
       if (record.github?.closedNote !== undefined) console.log(`github: ${record.github.closedNote}`);
       if (outcome === 'already-ended') {

@@ -28,6 +28,8 @@ import { refreshGitHubStatus } from './github.js';
 import { attemptsOf, isOpenStage, listRecords } from './record.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
+import { boundAmount } from './format.js';
+import { payNotice } from './pay.js';
 
 // ---------------------------------------------------------------------------
 // The one shared output command
@@ -218,6 +220,18 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   for (const record of open) {
     for (const event of arrivalKeys(record)) if (told.told[event.key] === undefined) fresh.push(event);
     if (slot === 'finish') for (const event of conflictKeys(record)) if (told.told[event.key] === undefined) fresh.push(event);
+  }
+  // The finish slot carries the owner message once: a bounty with a reward
+  // that closed on a merge tells whom to pay — a statement, never a waiting
+  // state, and nothing carried to a later session beyond the told mark.
+  if (slot === 'finish') {
+    for (const entry of listed) {
+      const record = entry.record;
+      if (record === null || isOpenStage(record.stage) || record.github?.pay === undefined) continue;
+      const key = `pay:${record.id}`;
+      if (told.told[key] !== undefined) continue;
+      for (const line of payNotice(record, boundAmount(record)) ?? []) fresh.push({ key, line });
+    }
   }
   for (const event of fresh) { told.told[event.key] = new Date().toISOString(); dirty = true; }
   if (dirty) writeTold(repoRoot, told);

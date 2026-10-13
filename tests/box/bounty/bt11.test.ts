@@ -182,7 +182,8 @@ describe('BT11a — the public side and the words around it', () => {
     expect(body).toContain('payment is the poster\'s to make by hand — posting an answer does not guarantee it.');
     const read = readFormat(body);
     if (read.kind !== 'present') throw new Error('format missing');
-    expect(read.value.schemaVersion).toBe(2);
+    // v3 since BT11b: a rewarded post's block carries the payment member.
+    expect(read.value.schemaVersion).toBe(3);
     expect(read.value.reward).toEqual({ amount: 25, currency: 'USD' });
     expect(loadRecord(repo, id).reward).toEqual({ amount: 25 });
   }));
@@ -263,7 +264,8 @@ describe('BT11a fix round — the record file is never a render source', () => {
     expect(body).not.toContain('99999');
     const read = readFormat(body);
     if (read.kind !== 'present') throw new Error('format missing');
-    expect(read.value.schemaVersion).toBe(2);
+    // v3 since BT11b: a rewarded post's block carries the payment member.
+    expect(read.value.schemaVersion).toBe(3);
     expect(read.value.reward).toEqual({ amount: 50, currency: 'USD' });
     expect(read.value.state).toEqual({ kind: 'closed-none' });
   }));

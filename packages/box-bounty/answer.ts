@@ -12,6 +12,8 @@ import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isO
 import type { Attempt, BountyRecord } from './record.js';
 import { resolveAttempt, syncGitHubDecision } from './github.js';
 import { recordFirstMerge } from './settings.js';
+import { boundAmount } from './format.js';
+import { payNotice } from './pay.js';
 // Collecting a solution — the return journey. A solver hands back the whole
 // bounty folder (`bounty.json` + `repo/`); this module binds it, extracts the
 // change and writes a report of FACTS — never a verdict. Nothing the solution
@@ -83,6 +85,9 @@ export interface ApplyResult {
   readonly attempt: number;
   readonly mergeCommit?: string | undefined;
   readonly firstMergeNotice?: string;
+  /** A bounty with a reward that closed on this merge carries the message
+      for the owner — whom to pay and where (BT11b). */
+  readonly payMessage?: readonly string[];
   readonly conflicts?: readonly string[] | undefined;
   /** On a conflict: the solution's files that would have merged cleanly. */
   readonly clean?: readonly string[] | undefined;
@@ -322,7 +327,8 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget):
   if (record.stage === 'applied' && record.github !== undefined) {
     syncGitHubDecision(repoRoot, record);
     const event = [...record.events].reverse().find(entry => entry.command === 'apply' || entry.command === 'merged');
-    return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge };
+    const retryPay = payNotice(record, boundAmount(record));
+    return { record, outcome: 'applied', attempt: event?.attempt ?? 1, mergeCommit: event?.merge, ...(retryPay === null ? {} : { payMessage: retryPay }) };
   }
   if (!isOpenStage(record.stage)) throw endedRefusal(record);
   let attemptN: number | undefined;
@@ -426,7 +432,8 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget):
     dropDurabilityRefs(repoRoot, record);
     syncGitHubDecision(repoRoot, record);
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);
-    return { record, outcome: 'applied', attempt: attempt.n, mergeCommit, ...(notice === null ? {} : { firstMergeNotice: notice }) };
+    const payMessage = payNotice(record, boundAmount(record));
+    return { record, outcome: 'applied', attempt: attempt.n, mergeCommit, ...(notice === null ? {} : { firstMergeNotice: notice }), ...(payMessage === null ? {} : { payMessage }) };
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
   if (mergeHead.status === 0) {

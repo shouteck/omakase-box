@@ -57,6 +57,8 @@ export { DESCRIBE_LINES, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBloc
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
 export { checkMergedSolutions, noticeMergedSolutions, setMergeNoticeListener } from './merged.js';
+export { parsePayTo, payToLine, payMessageLines, payNotice } from './pay.js';
+export type { PayOutcome, PayToFact } from './pay.js';
 export { GIT_LEAST } from './git.js';
 export { GH_LEAST } from './github.js';
 export { HOOK_COMMAND, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, HOOK_GITHUB_INTERVAL_MS, HOOK_HOSTS, HOOK_SLOTS, hookDisclosure, hookGroups, hookHost, hookOff, hookOn, hookStatus, runHook } from './hook.js';

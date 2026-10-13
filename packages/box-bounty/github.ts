@@ -16,6 +16,7 @@ import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { requireRepository } from './repository.js';
 import { readReward } from './settings.js';
 import { boundAmount, formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
+import { parsePayTo, payToLine, type PayOutcome, type PayToFact } from './pay.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the
@@ -34,8 +35,12 @@ export interface GitHubPublication {
   readonly body: string;
   /** `unnamed`: how many of them carry an account name GitHub returned in a form the tool will not print. */
   questions?: { readonly count: number; readonly latestAt: string | null; readonly unnamed?: number };
-  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string }[];
-  availablePullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string }[];
+  seenPullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact }[];
+  availablePullRequests?: { readonly n: number; readonly commit: string; readonly at: string; readonly author?: string; readonly payTo?: PayToFact }[];
+  /** Recorded at close when a bounty with a reward ended on a merged
+      solution: whom to pay and where, for `status` and the hook's finish
+      slot — a record, not a reminder (BT11b). */
+  pay?: PayOutcome;
   /** 'history' on posts made since the bounty became an issue on the code that
       is already there; absent on snapshot posts made before. */
   readonly kind?: 'history';
@@ -941,7 +946,10 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     'Nobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.',
     '',
     `reward: $${reward}`,
-    ...(reward > 0 ? ['payment is the poster\'s to make by hand — posting an answer does not guarantee it.'] : []),
+    ...(reward > 0 ? [
+      'to ask for the reward, add one line to your pull request description — `pay-to:` followed by your Stripe payment link and nothing else, for example `pay-to: https://buy.stripe.com/test_0EXAMPLE00000000000000`.',
+      'payment is the poster\'s to make by hand — posting an answer does not guarantee it.'
+    ] : []),
     'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.',
     plan.licence.file !== null
       ? publicText(`licence: ${plan.licence.file}${plan.licence.declared !== null ? ` (package.json declares ${plan.licence.declared})` : ''}`)
@@ -1256,8 +1264,12 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files'));
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
     const next = collected === undefined ? `collect: box bounty look ${id} ${n} or box bounty apply ${id} ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
-    lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}`);
-    const fact = { n, commit, at: seen?.at ?? record.github.availablePullRequests?.find(pr => pr.n === n && pr.commit === commit)?.at ?? new Date().toISOString(), author: login(entry['user']['login']) };
+    // The `pay-to:` line is read only from the pull request description — a
+    // comment or a changed file never carries it — and only the fact is kept.
+    const payTo = parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '');
+    const paid = boundAmount(record) !== undefined && boundAmount(record)! > 0 ? `; ${payToLine(payTo)}` : '';
+    lines.push(`  #${n} by ${login(entry['user']['login'])}: ${names.join(', ')}; ${seen === undefined ? 'new' : `seen since ${seen.at}`}; ${next}${paid}`);
+    const fact = { n, commit, at: seen?.at ?? record.github.availablePullRequests?.find(pr => pr.n === n && pr.commit === commit)?.at ?? new Date().toISOString(), author: login(entry['user']['login']), payTo };
     available.push(fact);
     if (shown && seen === undefined) record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], fact];
   }
@@ -1386,10 +1398,11 @@ function pullRequestFlags(change: { changed: readonly string[]; added: readonly 
   return flags;
 }
 
-function renderPullRequestReport(record: BountyRecord, n: number, at: string, author: string, commits: number, change: { changed: readonly string[]; added: readonly string[]; deleted: readonly string[] }, merge: DryMerge, counts: { added: number; removed: number; binary: number }): string[] {
+function renderPullRequestReport(record: BountyRecord, n: number, at: string, author: string, commits: number, change: { changed: readonly string[]; added: readonly string[]; deleted: readonly string[] }, merge: DryMerge, counts: { added: number; removed: number; binary: number }, payTo: PayToFact = { state: 'none' }): string[] {
   const lines: string[] = [];
   lines.push(`report — attempt ${n} for ${record.id}`);
   lines.push(`  from: GitHub account ${author} — arrived ${at}`);
+  if ((boundAmount(record) ?? 0) > 0) lines.push(`  ${payToLine(payTo)}`);
   lines.push(`  change: ${commits} commit(s) on the bounty branch — ${change.changed.length} changed, ${change.added.length} added, ${change.deleted.length} deleted — ${counts.added} lines added, ${counts.removed} removed${counts.binary > 0 ? ` (${counts.binary} binary file(s))` : ''}`);
   if (merge.kind === 'clean') {
     lines.push('  current code: the solution would merge cleanly onto the current branch');
@@ -1428,8 +1441,9 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`]);
   const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
   if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
+  const payTo = parsePayTo(typeof data['body'] === 'string' ? data['body'] : '');
   if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author, pr, via);
-  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via);
+  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo);
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
     publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
     persistRecord(root, result.record);
@@ -1461,7 +1475,7 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
 // changing nothing: its history does not descend from the bounty branch; its
 // tree holds a link, a submodule or an unsafe name; a path it carries matches
 // never-ship anywhere in its new history; it changes nothing at all.
-function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string) {
+function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }) {
   if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
     return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected`);
   }
@@ -1520,7 +1534,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   const at = new Date().toISOString();
   const merge = dryMergeOnto(root, commit);
   const counts = pullRequestCounts(root, publication.commit, commit);
-  const report = renderPullRequestReport(record, n, at, author, newCommits.length, change, merge, counts);
+  const report = renderPullRequestReport(record, n, at, author, newCommits.length, change, merge, counts, payTo);
   const attempt: Attempt = {
     n,
     pullRequest: pr,
@@ -1533,7 +1547,8 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
     deleted: change.deleted,
     outcome: 'answered',
     conflicts: merge.kind === 'conflict' ? merge.paths : null,
-    report
+    report,
+    payTo
   };
   record.attempts = [...attemptsOf(record), attempt];
   persistRecord(root, record);
@@ -1661,6 +1676,14 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     if (publication.kind === 'history' && (publication.pushed?.length ?? 0) > 0) {
       publication.closedNote = `${publication.branch} carried ${publication.pushed!.length} commit(s) published only there — ${publication.pushed!.map(commit => `${commit.sha.slice(0, 12)} ${commit.subject}`).join(', ')} — and is now removed`;
     }
+    // A bounty that stated a reward and ends on a merged solution records
+    // whom to pay: the pull request description is re-read now — with the
+    // account that last edited it — so the pay message the agent relays says
+    // what the solver actually left there (BT11b). $0 and non-merged closes
+    // record nothing.
+    if (event.merge !== undefined && (boundAmount(record) ?? 0) > 0) {
+      publication.pay = readPay(root, publication, record, event);
+    }
     publication.pending = null;
     delete record.waiting; // the held outside close is done
   } catch (error) {
@@ -1707,4 +1730,50 @@ function closingIssue(root: string, publication: GitHubPublication): { body: str
     if (page['hasNextPage'] !== true || last === null || seenAfter.has(last)) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor');
     after = last; seenAfter.add(after);
   }
+}
+
+// BT11b — whom a merged solution pays. The description of the merged pull
+// request is read again at close, with the account that last edited it, so
+// the pay message reflects what the solver actually left there. When the
+// read fails, the fact recorded at collection stands and the message says
+// the description could not be read again.
+function readPay(root: string, publication: GitHubPublication, record: BountyRecord, event: { attempt?: number; reason?: string }): PayOutcome {
+  const attempt = event.attempt !== undefined ? attemptsOf(record).find(entry => entry.n === event.attempt) : undefined;
+  const pr = attempt?.pullRequest ?? (() => {
+    const match = /pull request #(\d+)/.exec(event.reason ?? '');
+    return match !== null ? Number(match[1]) : null;
+  })();
+  const solver = attempt?.author ?? (pr !== null ? publication.seenPullRequests?.find(entry => entry.n === pr)?.author ?? null : null);
+  const recorded = attempt?.payTo ?? (pr !== null ? publication.seenPullRequests?.find(entry => entry.n === pr)?.payTo : undefined);
+  if (pr === null) return { pr: null, solver, link: null, testMode: false, editedBy: null };
+  try {
+    const fresh = closingPullRequest(root, publication, pr);
+    const fact = parsePayTo(fresh.body);
+    const link = fact.state === 'recognised' || fact.state === 'test-mode' ? fact.link : null;
+    return { pr, solver, link, testMode: fact.state === 'test-mode', editedBy: fresh.editor !== null && fresh.editor !== solver ? fresh.editor : null };
+  } catch {
+    const link = recorded?.state === 'recognised' || recorded?.state === 'test-mode' ? recorded.link : null;
+    return { pr, solver, link, testMode: recorded?.state === 'test-mode', editedBy: null, readFailed: true };
+  }
+}
+
+// The pull request's description plus the account that last edited it — one
+// GraphQL read. `userContentEdits` is empty when the description was never
+// edited after opening, so a null editor means the solver's own text.
+function closingPullRequest(root: string, publication: GitHubPublication, pr: number): { body: string; editor: string | null } {
+  const [owner, name] = publication.repository.split('/');
+  const data = api(root, 'graphql', {
+    query: 'query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){body userContentEdits(last:1){nodes{editor{login}}}}}}',
+    variables: { owner, name, number: pr }
+  });
+  if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['pullRequest'])) throw new Error('github-response-invalid: GitHub returned an unreadable pull request');
+  const pullRequest = data['data']['repository']['pullRequest'];
+  if (typeof pullRequest['body'] !== 'string') throw new Error('github-response-invalid: GitHub returned an unreadable pull request description');
+  const edits = pullRequest['userContentEdits'];
+  let editor: string | null = null;
+  if (isObject(edits) && Array.isArray(edits['nodes'])) {
+    const last = edits['nodes'].at(-1);
+    if (isObject(last) && isObject(last['editor']) && typeof last['editor']['login'] === 'string') editor = login(last['editor']['login']);
+  }
+  return { body: pullRequest['body'], editor };
 }
