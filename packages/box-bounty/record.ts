@@ -20,7 +20,7 @@ import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js
 import { loadLimits } from './limits.js';
 import { RULES_MARKERS, rulesBlockInterior } from './wording.js';
 import { postGitHub, refreshGitHubStatus, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
-import { loadSettings, readDecision } from './settings.js';
+import { loadSettings, localFirstMergeLine, readDecision } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
@@ -516,6 +516,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
   lines.push(ownerStatusLine(repoRoot));
+  const localMerge = localFirstMergeLine(repoRoot);
+  if (localMerge !== null) lines.push(localMerge);
   for (const [address, notice] of Object.entries(loadSettings().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === notice.commit))) {
       lines.push(`first outside solution merged in ${address}: commit ${notice.commit} at ${notice.at}`);

@@ -1,6 +1,6 @@
 import { BountyRefused } from './errors.js';
 import { listRecords, loadRecord, postBounty } from './record.js';
-import { loadSettings, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
+import { loadSettings, localFirstMergeLine, readDecision, settingsFile, unknownSetting, writeDecision, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
 
@@ -109,6 +109,8 @@ export function renderConfig(repoRoot: string | null): string {
   }
   for (const notice of settings.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
   for (const [key, notice] of Object.entries(settings.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
+  const localMerge = repoRoot === null ? null : localFirstMergeLine(repoRoot);
+  if (localMerge !== null) lines.push(localMerge);
   return lines.join('\n');
 }
 export function changeConfig(repoRoot: string | null, verb: string, name: string, value: string, emitDisclosure?: (text: string) => void): string {

@@ -425,7 +425,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget):
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
     syncGitHubDecision(repoRoot, record);
-    const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit, record.github?.repository);
+    const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);
     return { record, outcome: 'applied', attempt: attempt.n, mergeCommit, ...(notice === null ? {} : { firstMergeNotice: notice }) };
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);

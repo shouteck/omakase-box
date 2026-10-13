@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
@@ -162,16 +162,54 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
   persist({ ...settings, default: { bounty, at, changes: [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])] } });
   return { path: settingsFile(), at, key: 'all-projects' };
 }
-export function recordFirstMerge(repoRoot: string, commit: string, recordedRepository?: string): string | null {
-  let address: string | null;
-  try { address = recordedRepository === undefined ? repositoryIdentity(repoRoot) : repositoryAddress(recordedRepository); } catch { return null; }
-  if (address === null) return null;
-  try {
-    const settings = loadSettings();
-    if (settings.firstMerges[address] !== undefined) return null;
-    persist({ ...settings, firstMerges: { ...settings.firstMerges, [address]: { commit, at: new Date().toISOString() } } });
-  } catch (error) {
-    return `Tell the owner: a solution written by someone outside was merged into ${address}, commit ${commit}. The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check box bounty config.`;
+interface LocalMergeNotice extends MergeNotice { readonly repository: string }
+const localMergeFile = (repoRoot: string): string => join(repoRoot, '.box', 'bounties', 'FIRST_MERGE');
+function checkLocalMergePath(repoRoot: string): void {
+  for (const path of [join(repoRoot, '.box'), join(repoRoot, '.box', 'bounties'), localMergeFile(repoRoot)]) {
+    const stat = lstatSync(path, { throwIfNoEntry: false });
+    if (stat === undefined) continue;
+    if (stat.isSymbolicLink() || (path === localMergeFile(repoRoot) ? !stat.isFile() : !stat.isDirectory())) {
+      throw new BountyRefused('first-merge-notice-unsafe-path', `${path}: the local first-merge notice must use ordinary directories and a file`);
+    }
   }
-  return `Tell the owner in your closing message: a solution written by someone outside was merged into ${address}, commit ${commit}. This notice is recorded once for this repository; merging is not gated.`;
+}
+function readLocalMerge(repoRoot: string): LocalMergeNotice | null {
+  const path = localMergeFile(repoRoot);
+  checkLocalMergePath(repoRoot);
+  if (!existsSync(path)) return null;
+  let value: unknown;
+  try { value = JSON.parse(readFileSync(path, 'utf8')); } catch { throw new BountyRefused('first-merge-notice-malformed', `${path}: the local first-merge notice is unreadable`); }
+  if (!isObject(value) || value['kind'] !== 'box-local-first-merge' || typeof value['repository'] !== 'string' || typeof value['commit'] !== 'string' || !/^[a-f\d]{40,64}$/.test(value['commit']) || typeof value['at'] !== 'string') {
+    throw new BountyRefused('first-merge-notice-malformed', `${path}: the local first-merge notice is unreadable`);
+  }
+  return { repository: value['repository'], commit: value['commit'], at: value['at'] };
+}
+export function localFirstMergeLine(repoRoot: string): string | null {
+  try {
+    const notice = readLocalMerge(repoRoot);
+    return notice === null ? null : `first outside solution merged in local repository ${JSON.stringify(notice.repository)}: commit ${notice.commit} at ${notice.at}`;
+  } catch {
+    return 'the local first-merge notice could not be read; merge history stands. Check .box/bounties/FIRST_MERGE';
+  }
+}
+export function recordFirstMerge(repoRoot: string, commit: string): string | null {
+  let address: string | null = null;
+  try { address = repositoryIdentity(repoRoot); } catch { /* A landed merge still gets a local fact, never a publication address. */ }
+  const receiving = address ?? 'this local repository';
+  const fact = `a solution written by someone outside was merged into ${receiving}, commit ${commit}.`;
+  try {
+    if (address === null) {
+      if (readLocalMerge(repoRoot) !== null) return null;
+      mkdirSync(join(repoRoot, '.box', 'bounties'), { recursive: true });
+      checkLocalMergePath(repoRoot);
+      writeFileSync(localMergeFile(repoRoot), `${JSON.stringify({ kind: 'box-local-first-merge', repository: realpathSync(repoRoot), commit, at: new Date().toISOString() }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+    } else {
+      const settings = loadSettings();
+      if (settings.firstMerges[address] !== undefined) return null;
+      persist({ ...settings, firstMerges: { ...settings.firstMerges, [address]: { commit, at: new Date().toISOString() } } });
+    }
+  } catch (error) {
+    return `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${address === null ? '.box/bounties/FIRST_MERGE' : 'box bounty config'}.`;
+  }
+  return `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository; merging is not gated.`;
 }

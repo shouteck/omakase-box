@@ -184,7 +184,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   const author = candidate.attempt?.author ?? record.github?.seenPullRequests?.find(pr => pr.n === candidate.pr && pr.commit === candidate.commit)?.author;
   if (candidate.attempt !== undefined && author === undefined || author !== undefined && author !== record.github?.account) {
-    const notice = recordFirstMerge(repoRoot, merge, record.github?.repository);
+    const notice = recordFirstMerge(repoRoot, merge);
     if (notice !== null) emit(notice);
   }
   for (const hit of extras) {

@@ -416,7 +416,11 @@ and a signed-in GitHub account. A post under the all-projects setting says so.
 
 The first merge of a stranger's solution asks the agent to tell the owner in
 its closing message, naming the merge commit. It is a notice, never a question,
-recorded once per repository and shown by status. `status --since <iso>`
+recorded once per receiving repository and shown by status. The receiving
+repository's current GitHub address identifies that notice, even when the
+bounty was published elsewhere. Without a usable address, the notice is
+recorded locally in `.box/bounties/FIRST_MERGE` and names the local repository.
+It grants no publication permission. `status --since <iso>`
 also prints the bounties posted, solutions merged and bounties closed since
 that time, plus what is waiting now. The seven old owner spellings are named
 refusals with their replacements, never aliases.
