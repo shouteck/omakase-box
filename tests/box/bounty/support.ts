@@ -22,8 +22,12 @@ function cleanupOwned(): void {
 afterAll(cleanupOwned);
 process.once('exit', cleanupOwned);
 
+// A deterministic fixture identity on every call: the suite must not depend on
+// the host's global config — CI runners carry none, so merge/commit/revert
+// calls without their own -c died with "Committer identity unknown" there.
+// `-c` applies in order, so a call site's own `-c user.name=` still wins.
 export function git(repo: string, args: string[]): string {
-  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll('\\', '/')}`, '-C', repo, ...args], { encoding: 'utf8', env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' } });
+  const result = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll('\\', '/')}`, '-c', 'user.name=bt-test', '-c', 'user.email=bt-test@test.invalid', '-C', repo, ...args], { encoding: 'utf8', env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' } });
   if (result.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
   return result.stdout.trim();
 }
