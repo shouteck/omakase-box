@@ -32,6 +32,7 @@ export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'und
 export type BountyStage = OpenStage | EndedStage;
 
 const OPEN_STAGES: ReadonlySet<BountyStage> = new Set(['drafted', 'confirmed', 'waiting', 'posted', 'taken', 'answered', 'verified']);
+const ENDED_STAGES: ReadonlySet<BountyStage> = new Set(['applied', 'rejected', 'withdrawn', 'expired', 'undone']);
 export const isOpenStage = (stage: BountyStage): stage is OpenStage => OPEN_STAGES.has(stage);
 
 export interface StageEvent {
@@ -347,6 +348,42 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   if (record.resume !== undefined && (!object(record.resume) || record.resume.kind !== 'not-recorded' && (record.resume.kind !== 'recorded' || typeof record.resume.branch !== 'string' || typeof record.resume.commit !== 'string' || !strings(record.resume.changed) || record.resume.note !== null && typeof record.resume.note !== 'string'))) return null;
   record.resume ??= { kind: 'not-recorded' };
   record.noteSource ??= 'legacy';
+  // Every field the tool prints back out of a record — the open-bounties
+  // line, status headers, the hook's context envelope, merge-recognition
+  // notices — is a fixed-shape fact the tool itself wrote. A record file can
+  // arrive through a merged solution or a tampered checkout, so these shapes
+  // are checked on read: a file that fails them is not a record this tool
+  // wrote, it reads as corrupt, and its fields are never trusted text (BT9).
+  const stamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+  const sha = /^[0-9a-f]{40}$/;
+  const printable = /^[\x21-\x7e]{1,120}$/; // printable ASCII, no space — the shape Git refnames share
+  const safeBranch = (branch: string) => branch === '(detached HEAD)' || printable.test(branch) && !branch.includes('..');
+  if (!/^bt-[a-f\d]{12}$/.test(record.id)) return null;
+  if (!OPEN_STAGES.has(record.stage) && !ENDED_STAGES.has(record.stage)) return null;
+  if (record.resume.kind === 'recorded' && !safeBranch(record.resume.branch)) return null;
+  if (record.attempts !== undefined && !Array.isArray(record.attempts)) return null;
+  for (const attempt of record.attempts ?? []) {
+    if (attempt === null || typeof attempt !== 'object' || !Number.isInteger(attempt.n) || attempt.n < 1 || typeof attempt.commit !== 'string' || !sha.test(attempt.commit)) return null;
+  }
+  if (record.answer !== undefined && record.answer !== null && (typeof record.answer !== 'object' || typeof record.answer.commit !== 'string' || !sha.test(record.answer.commit))) return null;
+  if (record.conflicts !== undefined && record.conflicts !== null && (typeof record.conflicts !== 'object' || !strings(record.conflicts.paths) || typeof record.conflicts.at !== 'string' || !stamp.test(record.conflicts.at))) return null;
+  const github = record.github;
+  if (github !== undefined) {
+    if (github === null || typeof github !== 'object') return null;
+    if (github.branch !== undefined && (typeof github.branch !== 'string' || !safeBranch(github.branch))) return null;
+    for (const list of [github.seenPullRequests, github.availablePullRequests]) {
+      if (list === undefined) continue;
+      if (!Array.isArray(list)) return null;
+      for (const pr of list) {
+        if (pr === null || typeof pr !== 'object' || !Number.isInteger(pr.n) || pr.n < 1 || typeof pr.commit !== 'string' || !sha.test(pr.commit) || typeof pr.at !== 'string' || !stamp.test(pr.at)) return null;
+      }
+    }
+    if (github.outside !== undefined && (github.outside === null || typeof github.outside !== 'object'
+      || github.outside.issueState !== 'open' && github.outside.issueState !== 'closed'
+      || typeof github.outside.at !== 'string' || !stamp.test(github.outside.at)
+      || typeof github.outside.answers !== 'string')) return null;
+    if (github.unavailableAt !== undefined && github.unavailableAt !== null && (typeof github.unavailableAt !== 'string' || !stamp.test(github.unavailableAt))) return null;
+  }
   // BT7c: pending text is tool-written and status prints it. A record written
   // while undo/reject/withdraw existed can carry their names — migrate the
   // wording to the command that retries the same outside work now.
@@ -749,6 +786,7 @@ export function renderHelp(): string {
     '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; a returned folder goes to --from <dir>; --full prints a large change',
     '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request; --from <dir> collects a returned folder — the recorded decision → applied',
     '  close [id]  end a bounty with nothing merged; --reason "<why>" stays on the record → rejected, without it → withdrawn',
+    '  hook      owner-opt-in awareness at session moments: on --host <name> prints the full disclosure and changes nothing until run again with the flag it names; off removes it; start|pause|finish is the command a host entry runs',
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  help      this screen',
     '',

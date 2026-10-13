@@ -58,3 +58,6 @@ export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
 export { checkMergedSolutions, noticeMergedSolutions, setMergeNoticeListener } from './merged.js';
 export { GIT_LEAST } from './git.js';
 export { GH_LEAST } from './github.js';
+export { HOOK_COMMAND, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, HOOK_GITHUB_INTERVAL_MS, HOOK_HOSTS, HOOK_SLOTS, hookDisclosure, hookGroups, hookHost, hookOff, hookOn, hookStatus, runHook } from './hook.js';
+export type { HookHost, HookRun, HookSlot } from './hook.js';
+export { limitGitHubCalls } from './github.js';

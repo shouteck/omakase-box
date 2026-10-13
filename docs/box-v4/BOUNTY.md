@@ -610,6 +610,48 @@ Nothing runs in the background. The detailed local listing in
 `.box/bounties/OPEN` remains separate from the instruction block.
 `describe --rules` prints the current fixed block as a template.
 
+### Awareness at fixed moments — the hook
+
+An agent that forgets to run `status` still misses arrivals. On hosts that
+run a command at fixed moments, the owner can switch on the hook:
+`box bounty hook on --host <devin|claude>` prints a complete disclosure —
+what the entries run, which files they read and write, what the context
+costs, what may follow (including that a recognised merged solution closes
+the GitHub issue with a comment and nobody is asked, while publication is
+allowed), what it never does and how to stop it — and writes nothing until
+the same command is repeated with `--confirm`. `box bounty hook` reports
+per-host state; `box bounty hook off --host <name>` removes exactly the
+entries it wrote and restores the settings file byte for byte.
+
+The entries the hook installs call one shared command, `box bounty hook
+start|pause|finish`, at the host's start, next-prompt and finishing slots:
+
+- **start** shows the open-bounty state on one line — ids, stages, counts —
+  and nothing when no bounty is open;
+- **pause** and **finish** announce what arrived during the session, once
+  each — a new solution, and at finish a merge conflict still waiting;
+- every other moment the command prints nothing at all.
+
+The agent's context only ever carries tool-generated facts — never a title,
+account name, branch name or issue body a stranger chose. What was already
+announced is kept in `.box/bounties/`'s sibling `.box/hook-told.json`, so an
+event is announced once across sessions, and `.box/hook-on.json` records
+what `hook on` created so `hook off` restores the file exactly. GitHub is
+asked at most once every five minutes while an open bounty is posted
+there, each call capped at eight seconds, and one run's calls bounded to
+eight calls inside twenty seconds — a GitHub that paginates or hangs
+cannot hold a session — and the host entry itself times out — a hook
+never blocks a session, waits for input or exits non-zero.
+Reading records recognises a merged solution as any record read does, so
+under the standing rules the hook can close a GitHub bounty with a comment
+and nobody asked — the disclosure says so before anything is written.
+
+Host support is limited to the hosts whose hook format was verified against
+installed documentation on this machine: Devin CLI (`.devin/hooks.v1.json`)
+and the Claude Code settings format (`.claude/settings.json`). A session
+actually firing these entries was not live-proven on this machine — the
+wiring is written to the documented format, nothing more.
+
 ### Retired project limits
 
 `.box/limits.json` is no longer read, rewritten or deleted, even if malformed.
@@ -707,6 +749,12 @@ and all refs exist while the bounty is open. Every ended stage — `applied`,
   is `unknown-bounty` everywhere.
 - **reversing an apply is plain Git** — `git revert -m 1 <merge>`, the merge
   being one ordinary commit. There is no `undo` command.
+- **`hook`** reports whether the awareness hook is on for each known host.
+  **`hook on --host <name>`** prints the disclosure and changes nothing until
+  `--confirm`; **`hook off --host <name>`** removes the entries it wrote.
+  `hook start|pause|finish` is the shared command the host entries call —
+  silent with nothing to say, exit 0 always. See *Awareness at fixed
+  moments* above.
 
 ## The answer comes back
 
