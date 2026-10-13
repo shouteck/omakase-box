@@ -1,16 +1,15 @@
 # Status
 
-Updated by the CTO on 13 October 2026, at the BT9 close.
+Updated by the CTO on 13 October 2026, at BT10 dispatch.
 
 ## Now
 
-- **BT9 merged and pushed** (merge `425ad90`). `box bounty hook` gives a session bounty awareness through the host's own hook settings: `start` reports open state in one line, `pause`/`finish` report each new arrival once, `finish` names a left merge conflict, and a run that just recognised a merged solution says so. Silent, exit 0, no `.box` written when nothing is open. GitHub is asked at most once per five minutes, each `gh` call capped at 8 s, each run bounded by call count and wall clock inside the host's 30 s entry timeout. `hook on|off --host devin|claude` writes/removes only project settings, with full disclosure and a `--confirm` gate; `off` restores the file byte for byte.
-- Acceptance: fresh pass **PASS** on `ecf2479` after one correction (`verify ecf2479 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 420s`; 376 bounty + 142 package tests). First round FAILED `031b8b5` on five live-demonstrated defects — dangling settings symlink escaping the project, tampered record text injected into agent context, dead merge-recognition notices, unbounded `gh` pagination, `hook off` byte drift on empty shapes; all fixed and re-proven.
-- **Unmet criterion, unwaived:** the brief's "proved on at least two real hosts" could not be met on this machine — Devin CLI is unauthenticated, Cursor is GUI-only, no `claude`/`codex`/`gemini` on PATH. Adapters are built to installed documentation and file/command-tested; no host has fired the hook in a live session. A real run happens the first time the owner or an agent switches it on in a drivable host.
-- Nonblocking items in [BACKLOG.md](BACKLOG.md): the reviewer's owner-facing observation that `syncGitHubDecision` ignores withdrawn authority (still closes a posted issue on a recognised merge), plus the carried BT8b/BT8c lists.
-- This run stopped after BT9 as named. Latest hosted run to read at next kickoff is the merge push on `425ad90`; the BT8c merge run was in flight at that close.
-- The lab remains paused. Owner-held unmerged branches retained: `wave/A6`, `wave/K7`, `wave/BT7`, `wave/BT8-held`. About 109 older `box-bt1-*` temp directories remain outside cleanup authority. This repo's own `AGENTS.md` still carries the pre-wave block wording and `.box/limits.json` still sits there — refreshing or deleting either is the owner's. Switching the hook on here (`box bounty hook on --host devin`) is likewise the owner's.
+- **BT10 is in progress.** Owner named BT10; base ffddecb after BT9. Start 11:20 UTC, stop by 13:50 UTC, or 21:50 Singapore time. Build and independently review the stable public format first, then run the real journey with the merged tool. This run stops after BT10.
+- **Live publication is gated.** No new issue, pull request or comment is posted until the required real owner setup and exact issue/newly-public-file previews have received their explicit approvals. The kitchen does not grant itself authority. No money is involved; reward remains zero.
+- Latest hosted master run 38388939538 passed. Main was clean on master; wave/BT10 is the only new branch. Kitchen inbox is empty and there are no fully merged wave branches to sweep.
+- BT8b, BT8c and BT9 are merged and pushed. BT9's two-real-host firing criterion remains unmet and unwaived; no actual host has fired its hook. BT10 will use the instruction-file route unless the owner explicitly enables a drivable hook.
+- The lab is paused. Owner-held branches wave/A6, wave/K7, wave/BT7 and wave/BT8-held remain; never push BT8-held. About 109 older box-bt1 temp directories remain outside cleanup authority. Other nonblocking items stay in BACKLOG.md.
 
 ## Next
 
-No wave is named for a next run. The queue order per plan: **BT10** with a real first-time owner setup, and **BT11** after that use.
+Complete or park BT10 with exact code and live-journey evidence, push master, return the main checkout to master and stop. BT11 is outside this run and remains after the real first use.
