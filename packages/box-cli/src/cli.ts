@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath } from '../../box-bounty/index.js';
+import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_LIMIT_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -402,6 +402,56 @@ if (command === 'export') {
       if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask'), text => console.log(text)));
       else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
       else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text)));
+    } else if (subcommand === 'hook') {
+      // BT9: the owner switches the hook on and off; hosts run the slot
+      // commands. `hook start|pause|finish` is the one shared output command
+      // every host's entry calls — silent with nothing to say, exit 0 always,
+      // so a session is never blocked by it.
+      const positionals = bountyArgs.filter((arg, index) => !arg.startsWith('--') && !['--repo', '--host'].includes(bountyArgs[index - 1] ?? ''));
+      const [action, ...extra] = positionals;
+      const hostIndex = bountyArgs.indexOf('--host');
+      const hostName = hostIndex >= 0 ? bountyArgs[hostIndex + 1] : undefined;
+      const explain = bountyArgs.includes('--explain');
+      const confirm = bountyArgs.includes('--confirm');
+      if (hostIndex >= 0 && (hostName === undefined || hostName.startsWith('--'))) usage('box bounty hook on --host <name>');
+      if (action === 'start' || action === 'pause' || action === 'finish') {
+        if (extra.length > 0 || hostIndex >= 0 || confirm) usage(`box bounty hook ${action} [--explain] [--repo <path>]`);
+        let root: string | null = null;
+        try { root = resolveRepoRoot(bountyRepo(), 'hook'); }
+        catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository') throw error; }
+        if (root === null) {
+          if (explain) console.log('nothing to report — not inside a Git checkout');
+          process.exit(0);
+        }
+        // Notices (a merge recognised while records were read, an
+        // instruction refusal) are collected into the context lines — the
+        // JSON envelope is the only stdout a host ever sees.
+        const notices: string[] = [];
+        setMergeNoticeListener(line => notices.push(line));
+        setInstructionNoticeListener(line => notices.push(line));
+        limitGitHubCalls(HOOK_GH_CALL_LIMIT_MS);
+        let run;
+        try { run = runHook(root, action, notices); }
+        catch { process.exit(0); }
+        if (explain) console.log(run.lines.length === 0 ? 'nothing to report — no open bounties, nothing new' : run.lines.join('\n'));
+        else if (run.output !== null) console.log(run.output);
+        process.exit(0);
+      }
+      if (extra.length > 0) usage('box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain]');
+      if (action === undefined) {
+        console.log(hookStatus(resolveRepoRoot(bountyRepo(), 'hook')));
+      } else if (action === 'on') {
+        const host = hookHost(hostName);
+        const root = resolveRepoRoot(bountyRepo(), 'hook on');
+        // Without --confirm the disclosure prints and nothing is written —
+        // its last line names the outcome and the confirming command.
+        console.log(confirm ? hookOn(root, host) : hookDisclosure(root, host));
+      } else if (action === 'off') {
+        if (confirm || explain) usage('box bounty hook off --host <name>');
+        console.log(hookOff(resolveRepoRoot(bountyRepo(), 'hook off'), hookHost(hostName)));
+      } else {
+        usage('box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain]');
+      }
     } else {
       usage(`box bounty ${subcommand} is not a bounty command — run box bounty help for the journey`);
     }

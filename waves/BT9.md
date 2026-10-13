@@ -97,13 +97,19 @@ This repository has `.claude/` and `.devin/` folders, and both hosts cook here.
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Verdict: · Level:
-- Lenses:
-- Hosts proved, hosts only read about:
-- To switch it on in this repository (owner's decision):
+- Worker: Devin (cook) · Reviewer: pending — the pass has not run on this commit
+- Commit: `56d879cff47e5541c292cbf3ab4739d42a2dadc9` on `wave/BT9`
+- Verify: first run `node scripts/verify.mjs test:box-bounty test:box-package` on `56d879c` FAILed with two 30 s timeouts under parallel load — `record.test.ts` "bounty.json names a different id" and `report.test.ts` "no verdict word"; both re-passed standalone (27/27 in 34 s) — not a regression, machine-load flake. A rerun on the final commit SHA is the acceptance run; see below
+- Verdict: implementation complete pending review · Level: pending
+- Lenses (worker-side; the pass re-judges): security — hostile title/account/branch/PR-author/issue text through every outside field produces only tool-generated lines (test: `hook.test.ts` "shows open-bounty state"); settings escape refused by name on a junction (`hook-settings-escape`); malformed file named (`hook-settings-malformed`); entry timeout 30 s, each `gh` call capped at 8 s, GitHub asked at most once per 5 min, whole refresh bounded inside the entry cap, always exit 0. UX — disclosure prints before any write and names the merge-close consequence only while publication is allowed (`--confirm` gate tested); no real-host session could run (below). Measurement — real CLI on a trial repo: 0 open → 0 bytes out, exit 0, no `.box` created; 1 open drafted → 1 line, 92 chars of `additionalContext` (159-byte envelope); 3 open → 1 line, 132 chars (211-byte envelope); one arrival → one line; matches the disclosure's "one line at start, one per new event, zero when nothing is open".
+- Hosts proved: **none**. Devin CLI on this machine is installed (`devin.exe`, 3000.10.31) but `Not logged in` — no live lifecycle run was possible. Cursor (3.24.12) is GUI-oriented; no non-interactive agent entry point was found. No `claude`, `codex` or `gemini` binary exists on PATH. Hosts only read about, against installed/bundled documentation: **devin** (`.devin/hooks.v1.json`; bundled docs state hook entries run a command with JSON stdin, `hookSpecificOutput.additionalContext` reaches context, non-2 exits are nonblocking; the adapter event map seen locally lists SessionStart, UserPromptSubmit, SessionEnd, PreToolUse, PostToolUse, ErrorOccurred — `Stop` is documented in the general table but not confirmed in that local map) and **claude** (`.claude/settings.json`, `hooks` key; format per the same installed documentation). Both adapters are written to the documented format only — the wiring is a read-about claim, not a proven one.
+- To switch it on in this repository (owner's decision): `box bounty hook on --host devin` writes entries to `.devin/hooks.v1.json`; `box bounty hook on --host claude` writes to `.claude/settings.json` (Devin reads this file too). Either prints the full disclosure first and changes nothing until repeated with `--confirm`. `box bounty hook off --host <name>` removes exactly the written entries and restores the file byte for byte.
 - Findings and limits:
-- Merged: · Resources removed:
-- Reflect:
+  - No host lifecycle slot was live-proven — the "proved on at least two real hosts" acceptance is **not met**; it cannot be met on this machine without a Devin sign-in or an installed CLI host. Everything host-facing is built to installed documentation and is test-covered at the file and command level, not the session level.
+  - Fixed in review of my own first pass before commit: a path-prefix check that would have accepted a sibling `repo-evil/` junction; `hook off` deleting pre-existing empty arrays and an owner-written `"hooks": {}`; GitHub-ask timestamp lost if the host killed the run mid-refresh (now persisted before the calls); `.box` created in a project that never opened a bounty (now no state is written unless something was told or state exists); help text named a removed-command word; a host-name literal outside the product registry.
+  - The finishing slot shows arrivals and left merge conflicts; the BT11 solver-to-pay line does not exist yet (that wave adds it).
+  - GitHub polling: at most once per 5 minutes while an open bounty is posted there; each `gh` spawn capped at 8 s; total refresh bounded so the 30 s host entry timeout is never the real limit; a killed run still leaves the interval marker.
+  - The mid-run full-suite failure of `hook.test.ts` (`.box` created by a stale `dist/cli.js`) was a build-order artifact; after rebuilding, the file passes 8/8.
+  - Disclosure was traced to behaviour: every sentence maps to a tested fact except the live-host firing, which is stated as read-about in the doc and here.
+- Merged: not yet — awaiting the pass · Resources removed: smoke trial repos `box-bt9-smoke-*`, `box-bt9-boxcheck-*` deleted; `box-bt9-hosts/` trial projects deleted at close; no repository or global host settings were changed (verified: `.claude/` and `.devin/` in this repo untouched — `git status` clean there)
+- Reflect: the pstack feature playbook's "confirm the host before writing the installer" step is what kept this honest — the only host binaries present could not run a session, so the wave shipped read-about adapters with named boundaries rather than claims. The JSONC splice (parse-for-spans, edit-by-text) proved simpler and safer than a rewrite-on-off model: it is what makes byte-for-byte restore and comment preservation possible at all.

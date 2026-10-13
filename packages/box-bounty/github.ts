@@ -116,6 +116,13 @@ function gh(root: string, args: readonly string[]): string {
   return result.stdout ?? '';
 }
 
+// The per-call limit every gh spawn runs under. Commands pay 60 seconds;
+// the hook tightens it for the length of its run (it must never stall a
+// session) — one process runs one command, so the module-level value is the
+// command's own.
+let ghCallLimit = 60000;
+export function limitGitHubCalls(ms: number): void { ghCallLimit = ms; }
+
 function launch(program: ReturnType<typeof resolveProgram>, root: string, args: readonly string[]) {
   if (program.kind === 'command-file') {
     for (const token of [program.path, ...args]) {
@@ -125,9 +132,9 @@ function launch(program: ReturnType<typeof resolveProgram>, root: string, args: 
     let interpreter: string;
     try { interpreter = resolveProgram('cmd.exe').path; }
     catch { throw new BountyRefused('github-cli-missing', 'the command-file interpreter is missing; use the gh executable'); }
-    return spawnSync(interpreter, ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
+    return spawnSync(interpreter, ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: ghCallLimit, maxBuffer: 16 * 1024 * 1024 });
   }
-  return spawnSync(program.path, [...args], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
+  return spawnSync(program.path, [...args], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: ghCallLimit, maxBuffer: 16 * 1024 * 1024 });
 }
 
 function api(root: string, endpoint: string, payload?: object, method?: string): unknown {

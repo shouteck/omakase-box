@@ -749,6 +749,7 @@ export function renderHelp(): string {
     '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; a returned folder goes to --from <dir>; --full prints a large change',
     '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request; --from <dir> collects a returned folder — the recorded decision → applied',
     '  close [id]  end a bounty with nothing merged; --reason "<why>" stays on the record → rejected, without it → withdrawn',
+    '  hook      owner-opt-in awareness at session moments: on --host <name> prints the full disclosure and changes nothing until run again with the flag it names; off removes it; start|pause|finish is the command a host entry runs',
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  help      this screen',
     '',
