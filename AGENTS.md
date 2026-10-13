@@ -13,7 +13,6 @@ box bounty can hand a task to an outside solver and bring solutions back
 as facts — `box bounty describe` says what it does, what it costs and when it
 beats doing the work yourself. Using it is always your call; the owner's
 permission applies.
-a bounty is open; `box bounty` shows more.
 <!-- /box-bounty -->
 
 ## Method

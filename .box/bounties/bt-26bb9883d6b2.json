@@ -16,7 +16,7 @@
   "why": "second open bounty for the BT10 outside-reader check — a real small clarification",
   "job": null,
   "manifestSha256": "dbae29b4d3295ecb63ab83137dbe50b8d03747bea080ac04528de4956f4b63bf",
-  "stage": "posted",
+  "stage": "rejected",
   "folder": "C:\\Users\\shout\\Desktop\\Projects\\bounties\\clarify-the-unresolved-bt9-real-host-hoo",
   "snapshot": {
     "commit": "729e04e06b4d3aac056ee73b4b2d557f3be1090e",
@@ -226,6 +226,12 @@
       "stage": "posted",
       "at": "2026-10-13T13:11:31.743Z",
       "destination": "https://github.com/shouteck/omakase-box/issues/6"
+    },
+    {
+      "stage": "rejected",
+      "at": "2026-10-13T13:24:00.456Z",
+      "reason": "reader check complete; the two-open-bounty criterion is met — closing with no solution",
+      "command": "close"
     }
   ],
   "allowedBy": {
@@ -245,14 +251,14 @@
     "base": "dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3",
     "pushed": [],
     "wip": null,
-    "state": "posted",
+    "state": "closed",
     "issue": {
       "number": 6,
       "url": "https://github.com/shouteck/omakase-box/issues/6"
     },
     "pending": null,
     "formatRead": "matches-record",
-    "formatReadAt": "2026-10-13T13:18:38.278Z",
+    "formatReadAt": "2026-10-13T13:24:02.866Z",
     "formatUnavailableAt": null,
     "availablePullRequests": [],
     "questions": {
@@ -265,6 +271,7 @@
       "answers": "GitHub answers for bt-26bb9883d6b2 against box-bounty/bt-26bb9883d6b2:\n  none open; wait for one or close the bounty"
     },
     "unavailableAt": null,
-    "seenPullRequests": []
+    "seenPullRequests": [],
+    "formatRepair": "updated"
   }
 }
