@@ -11,8 +11,9 @@ import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, g
 import type { DryMerge, IndexChange } from './git.js';
 import { BUILTIN_RULES, loadOwnerList } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { attemptRefName, attemptsOf, isOpenStage, loadRecord, persistRecord, resolveLimits, transitionTo } from './record.js';
+import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, resolveLimits, transitionTo, waitForOwner } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
+import { readDecision } from './settings.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the
@@ -56,8 +57,9 @@ export interface GitHubPublication {
   unavailableAt?: string | null;
 }
 
-// The agent's two publication choices, made at `confirm <id> --to github` and
-// recorded in githubApproval so `post` publishes exactly what was approved.
+// The agent's two publication choices, named on `post <id> --to github`
+// (before BT8 they were made at `confirm`). Records carrying a githubApproval
+// from then still post exactly what was approved.
 export interface GitHubChoice {
   /** The task needs the uncommitted changes to tracked files: they become one
       tool-built commit on the bounty branch. Absent, they stay home. */
@@ -359,6 +361,83 @@ function neverShipViolations(statuses: readonly NamedStatus[], rules: readonly N
   return violations;
 }
 
+// ---------------------------------------------------------------------------
+// The pre-publish scan (BT8). With no preview read by a person any more, what
+// is about to be published for the first time is scanned for things shaped
+// like secrets before it goes out — the stated, small pattern list below,
+// kept in step with BOUNTY.md. A hit names file and line, never the value,
+// and holds that one bounty for the owner. Not proof of absence — a
+// protection of the owner's, like never-ship, not a judgement on the agent.
+// No setting switches it off.
+// ---------------------------------------------------------------------------
+
+export interface SecretRule { readonly name: string; readonly pattern: RegExp }
+
+// The stated list. Each name is what a hit reports.
+export const SECRET_RULES: readonly SecretRule[] = [
+  { name: 'private-key-block', pattern: /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY(?: BLOCK)?-----/ },
+  { name: 'github-token', pattern: /\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{20,})\b/ },
+  { name: 'gitlab-token', pattern: /\bglpat-[A-Za-z0-9_-]{15,}\b/ },
+  { name: 'aws-access-key-id', pattern: /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/ },
+  { name: 'slack-token', pattern: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
+  { name: 'openai-key', pattern: /\bsk-[A-Za-z0-9_-]{20,}\b/ },
+  { name: 'stripe-key', pattern: /\b[sr]k_(?:live|test)_[A-Za-z0-9]{16,}\b/ },
+  { name: 'google-api-key', pattern: /\bAIza[0-9A-Za-z_-]{35}\b/ },
+  { name: 'jwt', pattern: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/ },
+  { name: 'passworded-connection-string', pattern: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|mariadb|redis|amqps?|mssql|cockroachdb):\/\/[^\s:'/@]+:[^\s'"@]+@/ },
+  // A long random-looking string assigned to a key/secret/token/password-
+  // like name: `name = "value"` or `name: "value"`. Long enough and mixed
+  // enough that ordinary code mentioning such names does not match — a
+  // short token, a getter call or a plain-words value is not a hit.
+  { name: 'assigned-secret', pattern: /\b(?:[a-z0-9_.[\]-]*?(?:secret|token|passw(?:or)?d|api[-_]?key|access[-_]?key|private[-_]?key|client[-_]?secret|auth[-_]?token)[a-z0-9_.[\]-]*)\s*[:=]\s*['"]([A-Za-z0-9+/=_.~-]{20,})['"]/i }
+];
+
+// "Long random": at least two character classes among lower, upper, digit —
+// "application/octet-stream" or a sentence is not a secret.
+const randomEnough = (value: string): boolean =>
+  [/[a-z]/, /[A-Z]/, /[0-9]/].filter(re => re.test(value)).length >= 2;
+
+export interface ScanHit { readonly path: string; readonly line: number; readonly rule: string }
+
+// Scan one line's text. The assigned-secret rule checks its captured value
+// for the mixed classes — the pattern alone cannot say "random".
+function scanLine(path: string, lineNo: number, text: string, hits: ScanHit[]): void {
+  for (const rule of SECRET_RULES) {
+    const found = rule.pattern.exec(text);
+    if (found === null) continue;
+    if (rule.name === 'assigned-secret' && !randomEnough(found[1] ?? '')) continue;
+    hits.push({ path, line: lineNo, rule: rule.name });
+    return; // one hit per line is enough — the line is named, not counted
+  }
+}
+
+// Scan plain text (a named untracked file) line by line.
+export function scanText(path: string, text: string): ScanHit[] {
+  const hits: ScanHit[] = [];
+  text.split('\n').forEach((line, index) => scanLine(path, index + 1, line, hits));
+  return hits;
+}
+
+// Scan a unified diff's added lines — the bytes being published for the
+// first time — tracking the new file's path and line numbers. Context and
+// removed lines are already public or are leaving, never arriving.
+export function scanPatch(diff: string): ScanHit[] {
+  const hits: ScanHit[] = [];
+  let path = '(unknown)';
+  let lineNo = 0;
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('+++ ')) {
+      path = line.slice(4).trim().replace(/^b\//, '').replace(/^"(.*)"$/, '$1');
+      continue;
+    }
+    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
+    if (hunk !== null) { lineNo = Number.parseInt(hunk[1]!, 10) - 1; continue; }
+    if (line.startsWith('+')) { lineNo += 1; scanLine(path, lineNo, line.slice(1), hits); continue; }
+    if (line.startsWith(' ')) lineNo += 1;
+  }
+  return hits;
+}
+
 // The empty tree — what a root commit is diffed against, so every path it
 // plants appears as 'A' in the scan instead of disappearing behind the failed
 // `<sha>^` a root has no answer for.
@@ -529,7 +608,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
       try {
         blob = gitFilteredBlob(root, path, readFileSync(absolute));
       } catch (error) {
-        return invalid('github-filter-failed', `the filtered form of ${path} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; fix the configured filter or commit the file, then confirm and post again. Nothing was posted`);
+        return invalid('github-filter-failed', `the filtered form of ${path} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; fix the configured filter or commit the file, then post again. Nothing was posted`);
       }
       pending.push({ mode: modes.get(path) ?? '100644', sha: blob, path });
       return true;
@@ -582,6 +661,10 @@ export interface GitHubPlan {
   readonly leftHome: number;
   readonly untracked: number;
   readonly include: readonly string[];
+  /** The pre-publish scan over first-published bytes: added lines of each
+      first-published commit's diff, the work-in-progress diff and every
+      named include file. File and line named, never the value. */
+  readonly scan: { readonly hits: readonly ScanHit[]; readonly commitsScanned: number };
   /** Never-ship-named paths already in the public history — facts, not
       refusals: this tool cannot take back what is already public. */
   readonly publicNeverShip: readonly string[];
@@ -663,6 +746,25 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
       const named = [...new Map(violations.map(v => [v.path, v])).values()];
       return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}`);
     }
+    // The pre-publish scan: the added lines of every commit published for
+    // the first time, of the work-in-progress diff, and of each named
+    // untracked file — the same diffs the never-ship read already walks, one
+    // extra git read per first-published commit.
+    const hits: ScanHit[] = [];
+    for (const sha of unpushed) {
+      const patch = gitOutcome(root, ['diff', '-p', '--no-renames', firstParents.get(sha) ?? EMPTY_TREE, sha]);
+      if (patch.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)} for the pre-publish scan; nothing was posted`);
+      hits.push(...scanPatch(patch.stdout));
+    }
+    if (wip !== null) {
+      const patch = gitOutcome(root, ['diff', '-p', '--no-renames', 'HEAD', wip.tree]);
+      if (patch.status !== 0) return invalid('github-git-failed', 'Git could not read the work-in-progress diff for the pre-publish scan; nothing was posted');
+      hits.push(...scanPatch(patch.stdout));
+    }
+    for (const offset of include) {
+      try { hits.push(...scanText(offset, readFileSync(join(root, ...offset.split('/')), 'utf8'))); }
+      catch { return invalid('github-include-missing', `--include ${offset} could not be read for the pre-publish scan; nothing was posted`); }
+    }
     const publicNeverShip: string[] = [];
     const baseTree = gitOutcome(root, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--name-only', base]);
     for (const path of baseTree.stdout.split('\0')) {
@@ -701,6 +803,7 @@ function planGitHub(root: string, repository: string, record: BountyRecord, rule
       leftHome: choice.withChanges ? 0 : tracked.length,
       untracked: untracked.length,
       include,
+      scan: { hits, commitsScanned: unpushed.length + (wip === null ? 0 : 1) },
       publicNeverShip: publicNeverShip.sort(),
       licence: { file: licenceFile, declared }
     };
@@ -781,15 +884,22 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
     const named = plan.publicNeverShip.slice(0, PREVIEW_PUBLIC_NAMES);
     lines.push(`Already public — this tool cannot take it back: ${plan.publicNeverShip.length} never-ship-named path(s) exist in the public history: ${named.join(', ')}${plan.publicNeverShip.length > PREVIEW_PUBLIC_NAMES ? ` … and ${plan.publicNeverShip.length - PREVIEW_PUBLIC_NAMES} more` : ''}`);
   }
+  if (plan.scan.hits.length === 0) {
+    lines.push(`Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`);
+  } else {
+    lines.push(`Pre-publish scan: ${plan.scan.hits.length} secret-shaped hit(s) — a post would wait for the owner:`);
+    for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}`);
+  }
   lines.push(`Issue title: ${text.title}`);
   lines.push('Issue body:');
   lines.push(text.body);
   return lines.join('\n');
 }
 
-// `confirm <id> --to github`: compute the plan once and record it in
-// githubApproval — base, tip, the first-published commits, the work-in-progress
-// lists and the choices — so `post` publishes exactly what was approved.
+// `--preview` (and, before BT8, `confirm <id> --to github`): compute the plan
+// once — base, tip, the first-published commits, the work-in-progress lists,
+// the choices and the pre-publish scan — so the printed preview is exactly
+// what a post would publish.
 export function approveGitHub(root: string, record: BountyRecord, choice: GitHubChoice) {
   const repository = publicRepository(root);
   const rules = neverShipRules(root);
@@ -820,18 +930,72 @@ export function previewGitHub(root: string, id: string, choice: GitHubChoice = {
   return approveGitHub(root, record, choice).preview;
 }
 
-export function postGitHub(root: string, id: string): { record: BountyRecord; destination: string } {
+export function postGitHub(root: string, id: string, opts?: { answered?: boolean; choice?: GitHubChoice }): { record: BountyRecord; destination: string } {
   const record = loadRecord(root, id);
-  if (record.stage !== 'confirmed' && !(record.github !== undefined && record.stage === 'posted')) return invalid('not-confirmed', `bounty ${id} must be confirmed before posting to GitHub`);
-  if (!resolveLimits(root).allowedDestinations?.includes('github')) return invalid('destination-not-allowed', 'github is not named in the owner\'s allowedDestinations; nothing was posted');
+  const resumable = record.github !== undefined && record.stage === 'posted';
+  if (record.stage !== 'confirmed' && record.stage !== 'drafted' && record.stage !== 'waiting' && !resumable) {
+    return invalid('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted`);
+  }
+  // The hard stop comes before every gate: a private repository is refused
+  // with no override, whatever the owner wrote.
   const repository = publicRepository(root);
-  if (record.githubApproval === undefined) return invalid('github-preview-required', `confirm the GitHub preview first with box bounty confirm ${id} --to github`);
-  if (record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved at confirmation; nothing was posted');
+  if (record.githubApproval !== undefined && record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository the recorded approval was made for; nothing was posted');
   if (record.github !== undefined && record.github.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved for this bounty; nothing was posted');
   const account = signedAccount(root);
   if (record.github !== undefined && record.github.account !== account) return invalid('github-account-changed', 'sign in to the account that started this post before retrying; nothing was posted');
+  if (record.github === undefined && record.githubApproval === undefined) {
+    // The standing-decision path (BT8): no per-bounty approval exists or is
+    // needed. The owner's written answer gates the post; the pre-publish
+    // scan holds what it finds; a named untracked file always holds.
+    const choice = opts?.choice ?? { withChanges: false, include: [] };
+    const priorWait = record.waiting;
+    const legacyConfirmed = record.stage === 'confirmed';
+    if (!legacyConfirmed && opts?.answered !== true) ownerGate(root, record, { for: 'post', to: 'github', choice });
+    const plan = planGitHub(root, repository, record, neverShipRules(root), choice);
+    // An owner answer clears only what the recorded wait named: a post held
+    // for the decision alone can still carry scan hits the owner never saw —
+    // those hold again, listing them. Rerunning `post` is never an answer.
+    const seen = opts?.answered === true ? priorWait?.reason : undefined;
+    if (plan.scan.hits.length > 0 && seen !== 'secrets') {
+      waitForOwner(root, record, { for: 'post', reason: 'secrets', at: new Date().toISOString(), to: 'github', choice, hits: plan.scan.hits });
+      return invalid('publish-held', [
+        `${id} — the pre-publish scan found ${plan.scan.hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
+        ...plan.scan.hits.map(hit => `  ${hit.path}:${hit.line} — ${hit.rule}`),
+        `the owner allows it once with box bounty owner answer ${id}, adds the path to never-ship, or ends it with box bounty close ${id}`,
+        'nothing else is held up. The scan is a stated pattern list, not proof of absence.'
+      ].join('\n'));
+    }
+    if (plan.include.length > 0 && seen !== 'secrets' && seen !== 'untracked-file') {
+      waitForOwner(root, record, { for: 'post', reason: 'untracked-file', at: new Date().toISOString(), to: 'github', choice });
+      return invalid('publish-held', [
+        `${id} — an untracked file is named for publishing (${plan.include.join(', ')}); this bounty waits for the owner`,
+        `the owner allows it once with box bounty owner answer ${id}, or ends it with box bounty close ${id}`
+      ].join('\n'));
+    }
+    record.allowedBy = allowedByFor(root, record, opts?.answered === true, legacyConfirmed);
+    const text = listingHistory(record, repository, plan);
+    const publication: GitHubPublication = {
+      repository,
+      account,
+      kind: 'history',
+      branch: `box-bounty/${id}`,
+      title: text.title,
+      body: text.body,
+      commit: plan.tip,
+      base: plan.base,
+      pushed: plan.pushed,
+      ...(plan.wipCommit !== null ? { wipCommit: plan.wipCommit } : {}),
+      wip: plan.wip,
+      state: 'preparing',
+      issue: null,
+      pending: null
+    };
+    record.github = publication;
+    git(root, ['update-ref', publicationRef(id), publication.commit]);
+    persistRecord(root, record);
+  }
   if (record.github === undefined) {
-    const approval = record.githubApproval;
+    const approval = record.githubApproval!;
     // A full plan, or none at all: approvals written before this wave carry
     // only repository and preview, and post the snapshot they approved. Some
     // fields present and others missing is a record no honest write produced —
@@ -848,19 +1012,22 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
         withChanges: approval.withChanges === true,
         include: approval.include ?? []
       });
+      // The pre-wave approval cannot be refreshed — the command that recorded
+      // it is removed — so a stale one ends the bounty rather than guess.
+      const staleNext = `the approval recorded before the decision moved to the owner's settings can no longer be refreshed; end this bounty with box bounty close ${id} and create a new one — nothing was posted`;
       if (plan.base !== approval.base) {
-        return invalid('github-preview-stale', `what the GitHub repository has moved since the preview was approved — run box bounty confirm ${id} --to github again; nothing was posted`);
+        return invalid('github-preview-stale', `what the GitHub repository has moved since the preview was approved — ${staleNext}`);
       }
       if (plan.head !== approval.head || plan.pushed.length !== (approval.pushed ?? []).length || plan.pushed.some((commit, index) => commit.sha !== approval.pushed![index]!.sha)) {
-        return invalid('github-preview-stale', `the branch moved since the preview was approved — run box bounty confirm ${id} --to github again; nothing was posted`);
+        return invalid('github-preview-stale', `the branch moved since the preview was approved — ${staleNext}`);
       }
       if (plan.tip !== approval.tip) {
-        return invalid('github-preview-stale', `the uncommitted work or named files changed since the preview was approved — run box bounty confirm ${id} --to github again; nothing was posted`);
+        return invalid('github-preview-stale', `the uncommitted work or named files changed since the preview was approved — ${staleNext}`);
       }
       // Even work that stays home is part of what the owner was shown: if the
       // tracked or untracked leftovers changed since the preview, it is stale.
       if (plan.leftHome !== approval.leftHome || plan.untracked !== approval.untracked || plan.include.join('') !== (approval.include ?? []).join('')) {
-        return invalid('github-preview-stale', `the working state changed since the preview was approved — run box bounty confirm ${id} --to github again; nothing was posted`);
+        return invalid('github-preview-stale', `the working state changed since the preview was approved — ${staleNext}`);
       }
       publication = {
         repository,
@@ -884,6 +1051,9 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
     } else {
       return invalid('record-corrupt', `the recorded GitHub approval carries only some plan fields (${present.join(', ')}) — it is not a readable approval; nothing was posted`);
     }
+    // The recorded approval was the owner's own written yes — kept as the
+    // answer that allowed this post.
+    record.allowedBy = allowedByFor(root, record, opts?.answered === true, true);
     record.github = publication;
     git(root, ['update-ref', publicationRef(id), publication.commit]);
     persistRecord(root, record);
@@ -907,7 +1077,7 @@ export function postGitHub(root: string, id: string): { record: BountyRecord; de
       })();
     }
     publication.state = 'posted'; publication.pending = null;
-    if (record.stage === 'confirmed') transitionTo(root, record, 'posted', { destination: publication.issue.url });
+    if (record.stage !== 'posted') transitionTo(root, record, 'posted', { destination: publication.issue.url });
     else persistRecord(root, record);
     return { record, destination: publication.issue.url };
   } catch {
@@ -1233,7 +1403,12 @@ function collectSnapshotPullRequest(root: string, record: BountyRecord, id: stri
 
 // Local decisions stand even when GitHub is unavailable. Retrying the same
 // decision resumes here, using a stable comment marker to avoid duplicates.
-export function syncGitHubDecision(root: string, record: BountyRecord): void {
+// The owner's "ask me each time" (and "off", and nothing written) makes each
+// outside close a named waiting state: the local decision is recorded as a
+// fact, and the comment, issue close and branch removal wait for the owner's
+// one command — `box bounty owner answer <id>`, which re-enters here with
+// answered set.
+export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean }): void {
   const publication = record.github;
   if (publication === undefined) return;
   // 'reject', 'withdraw' and 'undo' stay in the list for records written
@@ -1241,6 +1416,19 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
   const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged', 'close'].includes(entry.command ?? ''));
   const event = decisions.at(-1);
   if (event === undefined) return;
+  if (opts?.answered !== true) {
+    const read = readDecision(root);
+    if (read.decision !== 'allowed') {
+      const local = ({ undo: 'revert', reject: 'close', withdraw: 'close' } as Record<string, string>)[event.command ?? ''] ?? event.command;
+      const why = read.decision === null ? 'the owner has not allowed the tool'
+        : read.decision === 'ask' ? 'the owner asked to be asked each time'
+        : 'the owner turned the permission off';
+      publication.pending = `waiting-owner: ${why}; local ${local} stands; the owner answers once with box bounty owner answer ${record.id} — then the tool comments, closes the issue and removes ${publication.branch}`;
+      record.waiting = { for: 'close', reason: read.decision === null ? 'owner-allow' : read.decision === 'ask' ? 'owner-ask' : 'owner-off', at: new Date().toISOString() };
+      persistRecord(root, record);
+      return;
+    }
+  }
   try {
     if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'sign in to the account that started this post to finish outside work');
     if (publication.issue === null) {
@@ -1292,6 +1480,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord): void {
       publication.closedNote = `${publication.branch} carried ${publication.pushed!.length} commit(s) published only there — ${publication.pushed!.map(commit => `${commit.sha.slice(0, 12)} ${commit.subject}`).join(', ')} — and is now removed`;
     }
     publication.pending = null;
+    delete record.waiting; // the held outside close is done
   } catch (error) {
     const detail = error instanceof BountyRefused ? ` (${error.reason}: ${error.message})` : '';
     // The retry is `close` whatever the local decision was — on an ended

@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, cpSync, linkSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { expect } from 'vitest';
-import { BountyRefused, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot, write } from './support.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
 
@@ -74,6 +74,12 @@ export interface GhState {
   calls: string[][];
 }
 
+// A GitHub-token-shaped canary planted where gh's output or a pull request's
+// fields could leak credential-looking text into the record or the tool's
+// own output. Assembled at run time so this file's bytes never hold the
+// contiguous shape — synthetic, and never a real credential.
+export const leakCanary = 'ghp_' + 'DO_NOT_LEAK_THIS_TOKEN_VALUE' + '1234567890';
+
 const STANDIN = String.raw`
 const fs = require('node:fs');
 const args = process.argv.slice(2);
@@ -81,7 +87,7 @@ const path = process.env.BT6_GH_STATE;
 const state = JSON.parse(fs.readFileSync(path, 'utf8'));
 state.calls.push(args);
 const save = () => fs.writeFileSync(path, JSON.stringify(state));
-const fail = () => { save(); console.error('ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890'); process.exit(1); };
+const fail = () => { save(); console.error('${leakCanary}'); process.exit(1); };
 // The probe asks "gh version" (never "gh --version"): the Windows stand-in
 // is node.exe itself and node would eat "--version" before the preload ran.
 if (args[0] === 'version' || args[0] === '--version') { save(); console.log('gh version ' + (state.ghVersion ?? '2.40.0')); process.exit(0); }
@@ -91,7 +97,7 @@ const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.in
 if (state.fail && endpoint.includes(state.fail)) fail();
 let result;
 if (endpoint === 'user') result = { login: state.account };
-else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' } : { full_name: state.repository, private: state.private, visibility: state.visibility };
+else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility };
 else if (endpoint.includes('/pulls/')) {
   const n = Number(endpoint.split('/pulls/')[1].split('/')[0]);
   const pr = state.prs.find(pr => pr.number === n);
@@ -173,6 +179,11 @@ interface World {
   readonly folder: string;
   readonly stateFile: string;
   readonly bin: string;
+  /** The world's own owner-settings folder (BT8): created with the default
+      level already "allowed", so a fixture world's posts need nobody asked.
+      It travels inside scratch — cloneWorld copies it with everything else,
+      and withGhEnv binds BOX_BOUNTY_SETTINGS_DIR at it. */
+  readonly settings: string;
 }
 
 // The repo, bare "GitHub" remote, gh stand-in and drafted bounty every
@@ -188,7 +199,6 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
   // The repository is already public: what is on the remote now is what a
   // bounty can point solvers at. The bare remote stands in for github.com.
   git(repo, ['push', 'https://github.com/owner/project.git', 'main']);
-  write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: ['github'] }));
   write(repo, 'TASK.md', 'Repair the app.\n');
   if (resumeNote !== undefined) {
     write(repo, '.box/bt7-local-context.txt', resumeNote);
@@ -205,7 +215,12 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
     linkGh(process.execPath, join(bin, 'gh.exe'));
     write(bin, 'gh-preload.cjs', GH_PRELOAD);
   } else { write(bin, 'gh', `#!/bin/sh\nexec '${process.execPath}' '${join(bin, 'standin.cjs')}' "$@"\n`); chmodSync(join(bin, 'gh'), 0o755); }
-  return { repo, bare, scratch, id: created.id, folder: created.outDir, stateFile, bin };
+  // The owner allowed the tool for all their projects — the world's own
+  // settings folder, carried inside scratch so a copy keeps its own answer.
+  const settings = join(scratch, 'settings');
+  mkdirSync(settings, { recursive: true });
+  writeFileSync(join(settings, 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', default: { bounty: 'allowed', at: '2026-10-13T00:00:00.000Z', changes: [] }, projects: {} }, null, 2) + '\n');
+  return { repo, bare, scratch, id: created.id, folder: created.outDir, stateFile, bin, settings };
 }
 
 // The gh stand-in's environment for the length of `run`, restored after.
@@ -216,9 +231,11 @@ function withGhEnv<T>(world: World, run: () => T): T {
   const oldState = process.env['BT6_GH_STATE'];
   const oldStandin = process.env['BT6_GH_STANDIN'];
   const oldNodeOptions = process.env['NODE_OPTIONS'];
+  const oldSettings = process.env['BOX_BOUNTY_SETTINGS_DIR'];
   process.env.PATH = `${world.bin}${delimiter}${oldPath ?? ''}`;
   process.env['BT6_GH_STATE'] = world.stateFile;
   process.env['BT6_GH_STANDIN'] = join(world.bin, 'standin.cjs');
+  process.env['BOX_BOUNTY_SETTINGS_DIR'] = world.settings;
   if (process.platform === 'win32') {
     const preload = join(world.bin, 'gh-preload.cjs').replaceAll('\\', '/');
     process.env['NODE_OPTIONS'] = `${oldNodeOptions ?? ''} --require ${preload}`.trim();
@@ -229,6 +246,7 @@ function withGhEnv<T>(world: World, run: () => T): T {
     if (oldState === undefined) delete process.env['BT6_GH_STATE']; else process.env['BT6_GH_STATE'] = oldState;
     if (oldStandin === undefined) delete process.env['BT6_GH_STANDIN']; else process.env['BT6_GH_STANDIN'] = oldStandin;
     if (oldNodeOptions === undefined) delete process.env['NODE_OPTIONS']; else process.env['NODE_OPTIONS'] = oldNodeOptions;
+    if (oldSettings === undefined) delete process.env['BOX_BOUNTY_SETTINGS_DIR']; else process.env['BOX_BOUNTY_SETTINGS_DIR'] = oldSettings;
   }
 }
 
@@ -276,7 +294,7 @@ export function fixture(run: (context: GithubFixture) => void, title = 'Repair a
 }
 
 // A posted bounty with a pull request waiting, built ONCE per test file and
-// copied per test: the clone, confirm, post, solver branch and collection —
+// copied per test: the clone, post, solver branch and collection —
 // roughly forty Git starts each — happen once; a test that only needs the
 // posted world gets a full copy and pays nothing. A test mutating its copy
 // cannot touch the master or another copy: the copy carries its own repo,
@@ -300,7 +318,6 @@ function buildPostedMaster(options: Required<PostedOptions>): PostedWorld {
   const world = makeWorld('Repair app', options.files);
   const context = contextFor(world);
   const prSha = withGhEnv(world, () => {
-    confirmBounty(world.repo, world.id, 'github');
     postBounty(world.repo, world.id, 'github');
     const sha = context.pr(options.prAuthor);
     if (options.collected) lookBounty(world.repo, world.id, 1);
@@ -339,7 +356,10 @@ function cloneWorld<M extends World & { readonly prSha?: string }>(master: M, sc
   // The posted world (issue, PRs, comments) is part of the copy; the call log
   // is each test's own observation, so it starts empty.
   writeFileSync(stateFile, JSON.stringify({ ...JSON.parse(readFileSync(stateFile, 'utf8')), calls: [] }));
-  return { repo, bare, scratch, id: master.id, folder, stateFile, bin, prSha: master.prSha } as M;
+  // The world's own settings folder copied with the rest of scratch — the
+  // copy answers its own owner decision, never the master's and never the
+  // suite's shared one.
+  return { repo, bare, scratch, id: master.id, folder, stateFile, bin, settings: join(scratch, 'settings'), prSha: master.prSha } as M;
 }
 
 export function postedFixture(run: (context: GithubFixture & { readonly waitingPr: string }) => void, options: PostedOptions = {}) {

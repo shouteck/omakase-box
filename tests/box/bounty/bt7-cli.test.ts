@@ -10,12 +10,12 @@ const cli = (repo: string, ...args: string[]) => spawnSync(process.execPath, [CL
 const files = { 'app.txt': 'broken\n', 'unrelated.txt': 'owner\n', 'staged.txt': 'owner staged base\n' };
 
 it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files', () => fixture(context => {
-  expect(cli(context.repo, 'confirm', '--to', 'github').status).toBe(0);
   expect(cli(context.repo, 'post', '--to', 'github').status).toBe(0);
   context.pr('solver', { 'extra.txt': 'solver added\n' });
-  // The commands BT7c folded away each refuse by name and say what took the
-  // place — never a silent drop, never an alias that runs the old operation.
-  for (const gone of [['answer', '--pr', '1'], ['questions'], ['reply', '--text', 'hi'], ['undo'], ['reject', '--reason', 'x'], ['withdraw'], ['remind']]) {
+  // The commands BT7c and BT8 folded away each refuse by name and say what
+  // took the place — never a silent drop, never an alias that runs the old
+  // operation.
+  for (const gone of [['answer', '--pr', '1'], ['questions'], ['reply', '--text', 'hi'], ['undo'], ['reject', '--reason', 'x'], ['withdraw'], ['remind'], ['confirm']]) {
     const result = cli(context.repo, ...gone);
     expect(result.status).toBe(3);
     expect(result.stderr).toContain('command-removed');
@@ -65,7 +65,7 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
 
 it('names each bounty when omitted ids are ambiguous and keeps explicit ended inspection available', () => fixture(context => {
   const second = finalizeBounty(planBounty({ repoPath: context.repo, title: 'Another task', taskPath: join(context.repo, 'TASK.md'), why: 'separate task', outDir: join(context.scratch, 'second-draft') }));
-  for (const command of [['confirm'], ['post', '--to', 'github'], ['look', '1'], ['apply', '1'], ['close'], ['close', '--reason', 'done']]) {
+  for (const command of [['post', '--to', 'github'], ['look', '1'], ['apply', '1'], ['close'], ['close', '--reason', 'done']]) {
     const result = cli(context.repo, ...command);
     expect(result.status).toBe(3); expect(result.stderr).toContain('bounty-ambiguous');
     expect(result.stderr).toContain(context.id); expect(result.stderr).toContain(second.id);

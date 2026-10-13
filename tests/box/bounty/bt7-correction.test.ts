@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
-import { answerGitHub, confirmBounty, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, quoteForeign, renderStatus } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, quoteForeign, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
@@ -22,7 +22,6 @@ function ownerCommits(context: GithubFixture, path: string, content: string): vo
 }
 
 function collected(context: GithubFixture, extra: Record<string, string> = {}): void {
-  confirmBounty(context.repo, context.id, 'github');
   postBounty(context.repo, context.id, 'github');
   context.pr('outside-solver', extra);
   answerGitHub(context.repo, context.id, 1);

@@ -2,9 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, BountyRefused, closeBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
+import { applyBounty, BountyRefused, closeBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyManifest, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, fingerprint, git, listTree, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, fingerprint, git, listTree, makeRepo, ownerSays, runRoot, write } from './support.js';
 
 // The return journey: a solver hands the bounty folder back; `look --from`
 // collects it — binds it to this bounty, extracts the change against the
@@ -28,11 +28,12 @@ function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOption
   return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
 }
 
-// create → confirm → post, the whole outbound half. `delivered` is the copy a
+// create → post, the whole outbound half — the owner already allowed the
+// tool (BT8: one decision, not one per bounty). `delivered` is the copy a
 // solver edits and hands back through `look --from`.
 function posted(repo: string, extra: Partial<CreateOptions> = {}): { id: string; folder: string; delivered: string } {
   const result = finalizeBounty(planBounty(options(repo, extra)));
-  confirmBounty(repo, result.id);
+  ownerSays(repo, 'allowed');
   const { destination } = postBounty(repo, result.id, join(runRoot('dest'), 'inbox'));
   return { id: result.id, folder: result.outDir, delivered: destination };
 }
@@ -72,7 +73,7 @@ describe('collection — every solution is a numbered attempt, and nothing in it
     expect(result.attempt.outcome).toBe('answered');
     const record = readRecord(repo, id);
     // The events tell the true story: taken is implicit in the answer's arrival.
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'posted', 'taken', 'answered']);
     expect(record.stage).toBe('answered');
     expect(record.attempts?.[0]?.commit).toMatch(/^[a-f0-9]{40}$/);
     expect(record.attempts?.[0]?.outcome).toBe('answered');
@@ -87,7 +88,7 @@ describe('collection — every solution is a numbered attempt, and nothing in it
     expect(applied.outcome).toBe('applied');
     const after = readRecord(repo, id);
     expect(after.stage).toBe('applied');
-    expect(after.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered', 'applied']);
+    expect(after.events.map(event => event.stage)).toEqual(['drafted', 'posted', 'taken', 'answered', 'applied']);
     // The decision is recorded: which command ended it, on which attempt.
     const appliedEvent = after.events.at(-1)!;
     expect(appliedEvent.command).toBe('apply');
@@ -114,7 +115,7 @@ describe('collection — every solution is a numbered attempt, and nothing in it
     expect(result.attempt.outcome).toBe('answered'); // nothing is run — an unhelpful answer still waits on a decision
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'posted', 'taken', 'answered']);
     expect(record.attempts).toHaveLength(1);
     expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run');
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore); // nothing was applied
@@ -218,7 +219,7 @@ describe('collection — an answered bounty waits on a decision', () => {
     expect(result.attempt.outcome).toBe('answered');
     const record = readRecord(repo, id);
     expect(record.stage).toBe('answered');
-    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted', 'taken', 'answered']);
+    expect(record.events.map(event => event.stage)).toEqual(['drafted', 'posted', 'taken', 'answered']);
     expect(record.attempts?.[0]?.added).toEqual(['notes.md']);
     // No check-only stage ever exists: nothing claims a run that did not happen.
     expect(record.events.some(event => event.stage === 'verified')).toBe(false);
@@ -300,7 +301,8 @@ describe('collection — binding refuses anything that is not this bounty, by na
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const drafted = finalizeBounty(planBounty(options(repo)));
     expectRefusal(() => lookBounty(repo, drafted.id, { from: drafted.outDir }), 'not-posted');
-    confirmBounty(repo, drafted.id);
+    // Held for the owner is still not posted.
+    expectRefusal(() => postBounty(repo, drafted.id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
     expectRefusal(() => lookBounty(repo, drafted.id, { from: drafted.outDir }), 'not-posted');
     expectRefusal(() => lookBounty(repo, 'bt-000000000000', { from: drafted.outDir }), 'unknown-bounty');
   });
@@ -516,7 +518,7 @@ describe('box bounty look/apply/close (built cli)', () => {
     const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 'fix app', '--task', 'TASK.md', '--job', 'JOB.md', '--out', out]);
     expect(create.status).toBe(0);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
-    expect(cli(repo, ['bounty', 'confirm', id]).status).toBe(0);
+    ownerSays(repo, 'allowed');
     const inbox = join(runRoot('dest'), 'inbox');
     expect(cli(repo, ['bounty', 'post', id, '--to', inbox]).status).toBe(0);
     const delivered = join(inbox, id);

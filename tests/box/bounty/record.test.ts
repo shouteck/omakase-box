@@ -2,14 +2,15 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyRefused, closeBounty, confirmBounty, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, closeBounty, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, git, listTree, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, git, listTree, makeRepo, ownerSays, runRoot, write } from './support.js';
 
 // The record and the lifecycle: `.box/bounties/<id>.json` is written at create,
 // the snapshot commit is pinned under refs/box-bounty/<id>, and the bounty moves
-// drafted → confirmed → posted through recorded events — or ends as withdrawn.
-// Every wrong move is a named refusal, never a crash and never silence.
+// drafted → posted through recorded events — or ends as withdrawn, or waits on
+// the owner. Every wrong move is a named refusal, never a crash and never
+// silence.
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
@@ -83,16 +84,15 @@ describe('the bounty record', () => {
   it('status lists every open bounty with id, stage and next step; ended are a compact line', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const open = created(repo);
-    const confirmed = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b2') })));
-    confirmBounty(repo, confirmed.id);
+    const second = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b2') })));
     const closed = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b3') })));
     closeBounty(repo, closed.id);
     const status = renderStatus(resolveRepoRoot(repo));
     expect(status).toContain('2 open');
     expect(status).toContain(`${open.id}  drafted`);
-    expect(status).toContain(`${confirmed.id}  confirmed`);
-    expect(status).toContain(`box bounty confirm ${open.id}`);
-    expect(status).toContain(`box bounty post ${confirmed.id} --to <dir>`);
+    expect(status).toContain(`${second.id}  drafted`);
+    expect(status).toContain(`box bounty post ${open.id} --to <dir|github>`);
+    expect(status).toContain('owner: nothing written');
     expect(status).toContain(`ended: ${closed.id} withdrawn`);
   });
 
@@ -110,45 +110,50 @@ describe('the bounty record', () => {
     expect(status).toContain(`ended: ${id} undone`);
     expect(status).toContain(`box bounty status ${id} --full`);
     expect(status).toContain('box bounty create --task <file>');
-    for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind']) {
+    for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
       expect(status).not.toContain(`bounty ${gone}`);
     }
   });
 });
 
-describe('confirm — the owner\'s yes is a recorded fact', () => {
-  it('records drafted → confirmed with a timestamped event', () => {
+describe('the owner\'s written yes — the gate every post passes once', () => {
+  it('a pre-BT8 record at stage `confirmed` still loads and posts — the yes written on the record stands', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    const record = confirmBounty(repo, id);
-    expect(record.stage).toBe('confirmed');
-    const onDisk = readRecord(repo, id);
-    expect(onDisk.stage).toBe('confirmed');
-    expect(onDisk.events.map(event => event.stage)).toEqual(['drafted', 'confirmed']);
-    expect(onDisk.events[1]!.at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    // The file is rewritten the way a record from before the owner decision
+    // moved to the settings folder sits on disk — `confirm` wrote this stage
+    // and its event; nothing writes it today.
+    const file = join(repo, '.box', 'bounties', `${id}.json`);
+    const older = JSON.parse(readFileSync(file, 'utf8')) as BountyRecord;
+    older.stage = 'confirmed';
+    older.events = [...older.events, { stage: 'confirmed' as BountyRecord['stage'], at: new Date().toISOString(), command: 'confirm' }];
+    writeFileSync(file, JSON.stringify(older, null, 2) + '\n');
+    const { record } = postBounty(repo, id, join(runRoot('dest'), 'inbox'));
+    expect(record.stage).toBe('posted');
+    expect(record.allowedBy?.decision).toBe('once');
+    expect(readRecord(repo, id).events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted']);
   });
 
-  it('refuses a bounty that is not drafted, and an unknown id, by name', () => {
+  it('refuses an unknown id by name, whatever the owner wrote', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id } = created(repo);
-    confirmBounty(repo, id);
-    const refusal = expectRefusal(() => confirmBounty(repo, id), 'not-drafted');
-    expect(refusal.message).toContain('confirmed');
-    expectRefusal(() => confirmBounty(repo, 'bt-000000000000'), 'unknown-bounty');
+    ownerSays(repo, 'allowed');
+    expectRefusal(() => postBounty(repo, 'bt-000000000000', join(runRoot('dest'), 'inbox')), 'unknown-bounty');
   });
 });
 
 describe('post — gated first delivery to a local folder', () => {
-  it('refuses before the owner\'s yes: not-confirmed', () => {
+  it('holds the first post when the owner has not decided: owner-allow-needed', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    expectRefusal(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'not-confirmed');
+    const refusal = expectRefusal(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
+    expect(refusal.message).toContain('box bounty owner allow');
+    expect(loadRecord(repo, id).stage).toBe('waiting');
   });
 
   it('copies the bounty folder to <dir>/<id> and marks the record posted with the destination', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, outDir } = created(repo);
-    confirmBounty(repo, id);
+    ownerSays(repo, 'allowed');
     const inbox = join(runRoot('dest'), 'inbox');
     const { record, destination } = postBounty(repo, id, inbox);
     expect(destination).toBe(join(inbox, id));
@@ -158,14 +163,14 @@ describe('post — gated first delivery to a local folder', () => {
     expect(existsSync(join(outDir, 'bounty.json'))).toBe(true);
     expect(record.stage).toBe('posted');
     const onDisk = readRecord(repo, id);
-    expect(onDisk.events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted']);
-    expect(onDisk.events[2]!.destination).toBe(destination);
+    expect(onDisk.events.map(event => event.stage)).toEqual(['drafted', 'posted']);
+    expect(onDisk.events[1]!.destination).toBe(destination);
   });
 
   it('refuses a destination inside the repository, by name', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    confirmBounty(repo, id);
+    ownerSays(repo, 'allowed');
     const refusal = expectRefusal(() => postBounty(repo, id, join(repo, 'delivered')), 'destination-inside-repo');
     expect(refusal.message).toContain('inside the repository');
   });
@@ -173,7 +178,7 @@ describe('post — gated first delivery to a local folder', () => {
   it('refuses a destination that already exists, by name', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    confirmBounty(repo, id);
+    ownerSays(repo, 'allowed');
     const inbox = join(runRoot('dest'), 'inbox');
     mkdirSync(join(inbox, id), { recursive: true });
     expectRefusal(() => postBounty(repo, id, inbox), 'destination-exists');
@@ -182,7 +187,7 @@ describe('post — gated first delivery to a local folder', () => {
   it('refuses when the recorded folder is gone, by name', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, outDir } = created(repo);
-    confirmBounty(repo, id);
+    ownerSays(repo, 'allowed');
     rmSync(outDir, { recursive: true, force: true });
     const refusal = expectRefusal(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'folder-missing');
     expect(refusal.message).toContain(outDir);
@@ -192,7 +197,7 @@ describe('post — gated first delivery to a local folder', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const first = created(repo);
     const second = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b2') })));
-    confirmBounty(repo, first.id);
+    ownerSays(repo, 'allowed');
     // Point the first record at the second bounty's folder — not the bounty it names.
     const path = join(repo, '.box', 'bounties', `${first.id}.json`);
     const tampered = { ...readRecord(repo, first.id), folder: second.outDir };
@@ -206,7 +211,7 @@ describe('post — gated first delivery to a local folder', () => {
   it.skipIf(process.platform !== 'win32')('refuses a nonexistent --to under a junction pointing into the repository', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n', 'inbox/.keep': 'x\n' });
     const { id } = created(repo);
-    confirmBounty(repo, id);
+    ownerSays(repo, 'allowed');
     const link = join(runRoot('link'), 'via-junction');
     symlinkSync(join(repo, 'inbox'), link, 'junction');
     // link/sub does not exist — its nearest existing ancestor is the junction.
@@ -231,10 +236,11 @@ describe('close — ends an open bounty cleanly', () => {
     expect(status).toContain(`${id} withdrawn`);
   });
 
-  it('closes a confirmed bounty too', () => {
+  it('closes a posted bounty too', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    confirmBounty(repo, id);
+    ownerSays(repo, 'allowed');
+    postBounty(repo, id, join(runRoot('dest'), 'inbox'));
     expect(closeBounty(repo, id).outcome).toBe('withdrawn');
     expect(loadRecord(repo, id).stage).toBe('withdrawn');
   });
@@ -257,7 +263,7 @@ describe('box bounty lifecycle (built cli)', () => {
     expect(run.stdout).toContain('box bounty create');
   });
 
-  it('post before confirm exits 3 with not-confirmed; double-close is a named state', () => {
+  it('post with nothing written exits 3 naming the owner commands; double-close is a named state', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
     const out = join(runRoot('out'), 'bounty');
@@ -268,7 +274,9 @@ describe('box bounty lifecycle (built cli)', () => {
 
     const posted = cli(repo, ['bounty', 'post', id, '--to', join(runRoot('dest'), 'inbox')]);
     expect(posted.status).toBe(3);
-    expect(posted.stderr).toContain('not-confirmed');
+    expect(posted.stderr).toContain('owner-allow-needed');
+    expect(posted.stderr).toContain('box bounty owner allow');
+    expect(posted.stderr).not.toContain('bounty confirm');
 
     const gone = closeBounty(repo, id); // close once through the library…
     expect(gone.outcome).toBe('withdrawn');
@@ -278,19 +286,22 @@ describe('box bounty lifecycle (built cli)', () => {
     expect(again.stdout).toContain('the job it came from: t'); // a terminal state names the job
   });
 
-  it('confirm then post --to <dir> delivers through the CLI with stage lines', () => {
+  it('typed `confirm` exits 3 as command-removed; an allowed post --to <dir> delivers through the CLI', () => {
     need();
     const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
     const out = join(runRoot('out'), 'bounty');
     const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
     const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
-    const confirm = cli(repo, ['bounty', 'confirm', id]);
-    expect(confirm.status).toBe(0);
-    expect(confirm.stdout).toContain('stage 2 of 7: confirmed');
+    const gone = cli(repo, ['bounty', 'confirm', id]);
+    expect(gone.status).toBe(3);
+    expect(gone.stderr).toContain('command-removed');
+    expect(gone.stderr).toContain('box bounty post');
+    ownerSays(repo, 'allowed');
     const inbox = join(runRoot('dest'), 'inbox');
     const post = cli(repo, ['bounty', 'post', id, '--to', inbox]);
     expect(post.status).toBe(0);
-    expect(post.stdout).toContain('stage 3 of 7: posted');
+    expect(post.stdout).toContain('— posted —');
+    expect(post.stdout).toContain('allowed by');
     expect(existsSync(join(inbox, id, 'bounty.json'))).toBe(true);
   });
 });

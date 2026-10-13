@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, loadRecord, lookBounty, persistRecord, postBounty, renderStatus, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, loadRecord, lookBounty, persistRecord, postBounty, renderStatus, listGitHubAnswers } from '../../../packages/box-bounty/index.js';
 import { BountyRefused } from '../../../packages/box-bounty/errors.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
@@ -154,7 +154,7 @@ describe('BT7a look', () => {
 
 describe('BT7 questions', () => {
   it('keeps an authored public note on the issue while automatic resume facts stay home', () => fixture(context => {
-    confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
+    postBounty(context.repo, context.id, 'github');
     const issue = context.state().issues[0];
     expect(issue?.body).toContain('PUBLIC_NOTE_73c5: tried the guest flow.');
     expect(issue?.body).not.toContain('PRIVATE_BT7_RESUME_73c5');
@@ -163,7 +163,7 @@ describe('BT7 questions', () => {
   }, 'Repair app', files, 'PRIVATE_BT7_RESUME_73c5', 'PUBLIC_NOTE_73c5: tried the guest flow.'));
 
   it('records a waiting PR as new then seen before collection and keeps resume context entirely local', () => fixture(context => {
-    confirmBounty(context.repo, context.id, 'github'); postBounty(context.repo, context.id, 'github');
+    postBounty(context.repo, context.id, 'github');
     context.pr('solver');
     expect(listGitHubAnswers(context.repo, context.id)).toContain('; new;');
     expect(listGitHubAnswers(context.repo, context.id)).toContain('seen since');

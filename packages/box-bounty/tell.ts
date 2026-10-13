@@ -11,7 +11,7 @@
 // Neither ever prints nothing: facts that are not set say so, an absent
 // limits file means defaults, and a broken one is a named refusal.
 
-import { renderOpenLine, resolveLimits } from './record.js';
+import { LEGACY_GITHUB_NOTE, ownerStatusLine, renderOpenLine, resolveLimits } from './record.js';
 import { DESCRIBE_LINES, renderRulesBlock } from './wording.js';
 
 export function renderDescribe(repoRoot: string | null): string {
@@ -28,12 +28,17 @@ export function renderDescribe(repoRoot: string | null): string {
   lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing — choosing is yours.');
   // An empty list still means what it means — no destination is allowed — so
   // it says so plainly rather than dangling "only inside" with nothing after.
+  // "github" is not a folder: a leftover entry is a legacy allowance, named
+  // once and never a yes — the decision moved to the owner's own settings.
+  const folders = (limits.allowedDestinations ?? []).filter(dir => dir !== 'github');
   const destinations = limits.allowedDestinations === null
     ? 'any local folder — the owner can restrict it with "allowedDestinations"'
-    : limits.allowedDestinations.length === 0
-      ? 'nowhere — the owner\'s "allowedDestinations" is an empty list, so no destination is allowed'
-      : `only inside ${limits.allowedDestinations.join(', ')}`;
-  lines.push(`  where post --to may deliver: ${destinations}`);
+    : folders.length === 0
+      ? 'nowhere — the owner\'s "allowedDestinations" names no folder'
+      : `only inside ${folders.join(', ')}`;
+  lines.push(`  where post --to <dir> may deliver: ${destinations}`);
+  lines.push(`  ${ownerStatusLine(repoRoot)}`);
+  if (limits.legacyGithubDestination) lines.push(`  ${LEGACY_GITHUB_NOTE}`);
   lines.push(renderOpenLine(repoRoot));
   lines.push('');
   lines.push('next: box bounty create --task <file> --why "<one line>" — or box bounty help for the whole journey');

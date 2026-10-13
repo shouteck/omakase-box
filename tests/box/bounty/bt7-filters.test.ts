@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { answerGitHub, applyBounty, confirmBounty, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
+import { answerGitHub, applyBounty, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { ahead } from './ordinary-tree.js';
@@ -81,7 +81,6 @@ function filteredBounty(context: GithubFixture): Armed {
   git(context.repo, ['add', '.gitattributes', 'secret.dat']);
   git(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'commit', '-qm', 'a filtered file']);
   git(context.repo, ['push', 'https://github.com/owner/project.git', 'main']);
-  confirmBounty(context.repo, context.id, 'github');
   postBounty(context.repo, context.id, 'github');
   context.pr('solver', { 'new.dat': 'ENC:solver new\n' });
   answerGitHub(context.repo, context.id, 1);

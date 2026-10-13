@@ -14,6 +14,7 @@ const marker = join(root, 'BT7-owned.json');
 const repo = join(root, 'repo');
 const bin = join(root, 'bin');
 const stateFile = join(root, 'offline-github.json');
+const settingsDir = join(root, 'settings');
 const write = (path, content) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
 const run = (program, args, cwd = root, env = process.env) => {
   const result = spawnSync(program, args, { cwd, env, encoding: 'utf8', windowsHide: true });
@@ -54,7 +55,7 @@ if (!existsSync(cli)) throw new Error('build the repository before creating the 
 plainComponents(dirname(root));
 mkdirSync(repo, { recursive: true });
 write(marker, JSON.stringify({ root, kind: 'BT7-disposable-offline-fixture' }));
-write(join(root, 'invoke.cjs'), `const {spawnSync}=require('node:child_process');\nconst {delimiter}=require('node:path');\nconst env={...process.env,PATH:${JSON.stringify(bin)}+delimiter+(process.env.PATH||''),BT7_UX_STATE:${JSON.stringify(stateFile)}};\nconst result=spawnSync(${JSON.stringify(process.execPath)},[${JSON.stringify(cli)},...process.argv.slice(2),'--repo',${JSON.stringify(repo)}],{cwd:${JSON.stringify(repo)},env,stdio:'inherit',windowsHide:true});\nprocess.exit(result.status??1);\n`);
+write(join(root, 'invoke.cjs'), `const {spawnSync}=require('node:child_process');\nconst {delimiter}=require('node:path');\nconst env={...process.env,PATH:${JSON.stringify(bin)}+delimiter+(process.env.PATH||''),BT7_UX_STATE:${JSON.stringify(stateFile)},BOX_BOUNTY_SETTINGS_DIR:${JSON.stringify(settingsDir)}};\nconst result=spawnSync(${JSON.stringify(process.execPath)},[${JSON.stringify(cli)},...process.argv.slice(2),'--repo',${JSON.stringify(repo)}],{cwd:${JSON.stringify(repo)},env,stdio:'inherit',windowsHide:true});\nprocess.exit(result.status??1);\n`);
 write(join(bin, 'box.cmd'), `@"${process.execPath}" "${join(root, 'invoke.cjs')}" %*\r\n`);
 write(join(bin, 'box'), `#!/bin/sh\nexec '${process.execPath.replaceAll('\\', '/').replaceAll("'", "'\\''")}' '${join(root, 'invoke.cjs').replaceAll('\\', '/').replaceAll("'", "'\\''")}' "$@"\n`);
 chmodSync(join(bin, 'box'), 0o755);
@@ -90,6 +91,9 @@ else {
   chmodSync(join(bin, 'gh'), 0o755);
 }
 write(stateFile, JSON.stringify({ issues: [], comments: [], prs: [], labels: [] }));
+// The fixture owner allowed the tool once for every project — permission
+// lives outside the repository in BT8.
+write(join(settingsDir, 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', default: { bounty: 'allowed', at: '2026-10-13T00:00:00.000Z', changes: [] }, projects: {} }, null, 2));
 git(repo, ['init', '-b', 'main', '-q']);
 git(repo, ['config', 'core.autocrlf', 'false']);
 write(join(repo, 'greeting.txt'), 'Welcome.\n\nNew shoppers: browse products.\nReturning shoppers: start a new basket.\nGuest checkout: available.\n');
@@ -109,7 +113,6 @@ write(join(repo, 'basket-plan.txt'), 'Local job: wire the saved basket to the or
 const created = invoke('create', '--task', join(repo, 'TASK.md'), '--why', 'copywriting handed off while implementing checkout', '--resume', 'Continue wiring the saved basket to the order form; the greeting was the blocker.', '--out', join(root, 'draft'));
 const id = /bt-[a-f\d]{12}/.exec(created)?.[0];
 if (!id) throw new Error('create did not name a bounty');
-invoke('confirm', id, '--to', 'github');
 invoke('post', id, '--to', 'github');
 const solutions = [
   'Welcome.\n\nNew shoppers: browse products.\nReturning shoppers: sign in to restore your basket.\nGuest checkout: available.\n',

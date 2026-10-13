@@ -2,11 +2,11 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, closeBounty, confirmBounty, finalizeBounty, listGitHubAnswers, loadRecord, lookBounty, planBounty, postBounty, previewGitHub, renderDescribe, renderHelp, renderOpenLine, renderStatus } from '../../../packages/box-bounty/index.js';
+import { applyBounty, closeBounty, finalizeBounty, listGitHubAnswers, loadRecord, lookBounty, planBounty, postBounty, previewGitHub, renderDescribe, renderHelp, renderOpenLine, renderStatus } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, fingerprint, git, runRoot, write } from './support.js';
 import { resolveProgram, runDeclaredCheck } from '../../../packages/box-package/commands.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
-import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
+import { fixture, leakCanary, postedFixture, refused, withoutGh } from './github-fixture.js';
 import type { GhState } from './github-fixture.js';
 
 describe('GitHub bounty destination, entirely offline', () => {
@@ -47,7 +47,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     // A never-ship-named file in the public history is a fact, not a refusal.
     expect(preview).toContain('Already public');
     expect(preview).toContain('.env');
-    confirmBounty(repo, id, 'github');
     const result = postBounty(repo, id, 'github');
     const pub = result.record.github!;
     expect(pub.kind).toBe('history');
@@ -89,7 +88,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     ['visibility error', 'github-visibility-unreadable', { fail: 'repos/owner/project' }],
     ['not signed in', 'github-not-signed-in', { auth: false }]
   ])('refuses %s without changing anything', (_label, reason, mutation) => fixture(({ repo, bare, id, update, state }) => {
-    confirmBounty(repo, id, 'github');
     update(mutation as Partial<GhState>);
     const before = fingerprint(repo);
     const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
@@ -100,12 +98,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues).toHaveLength(0);
   }));
 
-  it('refuses missing limits, no confirmation, missing gh, a non-GitHub remote, and mismatched pushurl', () => fixture(({ repo, bare, id, state }) => {
-    refused(() => postBounty(repo, id, 'github'), 'not-confirmed');
-    confirmBounty(repo, id, 'github');
-    write(repo, '.box/limits.json', '{}');
-    refused(() => postBounty(repo, id, 'github'), 'destination-not-allowed');
-    write(repo, '.box/limits.json', '{"allowedDestinations":["github"]}');
+  it('refuses missing gh, a non-GitHub remote and mismatched pushurl', () => fixture(({ repo, bare, id, state }) => {
     expect(resolveProgram('gh').path).toBeTruthy();
     withoutGh(() => refused(() => postBounty(repo, id, 'github'), 'github-cli-missing'));
     git(repo, ['remote', 'set-url', 'origin', bare]);
@@ -119,20 +112,22 @@ describe('GitHub bounty destination, entirely offline', () => {
   it('refuses a manifest tampered with before the GitHub preview is taken', () => fixture(({ repo, id, folder }) => {
     writeFileSync(join(folder, 'bounty.json'), readFileSync(join(folder, 'bounty.json'), 'utf8') + ' ');
     refused(() => previewGitHub(repo, id), 'manifest-tampered');
-    refused(() => confirmBounty(repo, id, 'github'), 'manifest-tampered');
+    refused(() => postBounty(repo, id, 'github'), 'manifest-tampered');
   }));
 
-  it('binds the repository reviewed at confirm, even when a new origin is public', () => fixture(({ repo, id, update }) => {
-    confirmBounty(repo, id, 'github');
+  it('binds the repository a post was started for, even when a new origin is public', () => fixture(({ repo, id, update }) => {
+    // A post that got as far as the pushed branch keeps its repository bound:
+    // retargeting origin cannot redirect the retry.
+    update({ fail: '/issues' });
+    refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     git(repo, ['remote', 'set-url', 'origin', 'git@github.com:other/public.git']);
-    update({ repository: 'other/public' });
+    update({ repository: 'other/public', fail: undefined });
     const before = readFileSync(join(repo, '.box/bounties', `${id}.json`));
     refused(() => postBounty(repo, id, 'github'), 'github-repository-changed');
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(before);
   }));
 
   it('recovers a branch-only post and an issue created with a lost response without duplicates', () => fixture(({ repo, bare, id, state, update }) => {
-    confirmBounty(repo, id, 'github');
     update({ fail: '/issues' });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     expect(loadRecord(repo, id).github!.state).toBe('branch-pushed');
@@ -149,7 +144,7 @@ describe('GitHub bounty destination, entirely offline', () => {
   }));
 
   it('close removes a branch after a failed issue post', () => fixture(({ repo, bare, id, update }) => {
-    confirmBounty(repo, id, 'github'); update({ fail: '/issues' });
+    update({ fail: '/issues' });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     update({ fail: undefined }); closeBounty(repo, id);
     expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
@@ -157,7 +152,7 @@ describe('GitHub bounty destination, entirely offline', () => {
   }));
 
   it('close discovers and closes an issue after its successful creation response was lost', () => fixture(({ repo, bare, id, update, state }) => {
-    confirmBounty(repo, id, 'github'); update({ loseIssueResponse: true });
+    update({ loseIssueResponse: true });
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     expect(loadRecord(repo, id).github!.issue).toBeNull();
     expect(state().issues).toHaveLength(1);
@@ -191,7 +186,7 @@ describe('GitHub bounty destination, entirely offline', () => {
   }));
 
   it.each(['stranger', 'renovate[bot]'])('collects and applies an answer from outside author %s — nothing a solver wrote runs', author => fixture(({ repo, id, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+    postBounty(repo, id, 'github');
     const sentinel = join(runRoot('bt6-sentinel'), 'ran');
     pr(author, { 'check.cjs': `require('fs').writeFileSync(${JSON.stringify(sentinel)}, 'ran'); process.exit(0);` });
     const before = fingerprint(repo);
@@ -210,7 +205,7 @@ describe('GitHub bounty destination, entirely offline', () => {
   }));
 
   it('refuses a pull request with a Git symlink without materializing it or changing local state', () => fixture(({ repo, bare, id, update }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+    postBounty(repo, id, 'github');
     const publication = loadRecord(repo, id).github!;
     const env = { GIT_INDEX_FILE: join(runRoot('bt6-link-index'), 'index') };
     objectGit(repo, ['read-tree', publication.commit], env);
@@ -228,17 +223,17 @@ describe('GitHub bounty destination, entirely offline', () => {
   }));
 
   it('keeps titles and hostile pull-request text out of shell command arguments', () => fixture(({ repo, id, state, update, pr }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+    postBounty(repo, id, 'github');
     expect(state().issues[0]!.title).toContain('$(echo title)&');
     expect(state().calls.every(args => !args.some(arg => arg.includes('$(echo title)')))).toBe(true);
     pr();
-    update({ prs: state().prs.map(value => ({ ...value, head: { ...value.head, ref: '$(echo HEAD)&' }, title: 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' })) });
+    update({ prs: state().prs.map(value => ({ ...value, head: { ...value.head, ref: '$(echo HEAD)&' }, title: leakCanary })) });
     expect(lookBounty(repo, id, 1).attempt.outcome).toBe('answered');
     expect(JSON.stringify(loadRecord(repo, id))).not.toContain('ghp_');
   }, 'Repair app $(echo title)&'));
 
   it('refreshes outside state from the record alone and retains dated facts when GitHub is unavailable', () => fixture(({ repo, id, pr, update }) => {
-    confirmBounty(repo, id, 'github'); postBounty(repo, id, 'github');
+    postBounty(repo, id, 'github');
     expect(renderStatus(repo)).toContain('none open');
     pr();
     const refreshed = renderStatus(repo);
@@ -261,7 +256,7 @@ describe('GitHub bounty destination, entirely offline', () => {
   ])('refuses %s without changing the record or worktree', (label, reason, extra, base) => postedFixture(({ repo, id, pr }) => {
     // A second pull request carries the shape under test; the master's own PR
     // waits beside it, uncollected.
-    pr(label === 'hostile author' ? 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890' : 'owner', extra, base);
+    pr(label === 'hostile author' ? leakCanary : 'owner', extra, base);
     const before = fingerprint(repo);
     const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
     refused(() => lookBounty(repo, id, 2), reason);
@@ -271,7 +266,7 @@ describe('GitHub bounty destination, entirely offline', () => {
 
   it('refuses a missing PR and leaks no credential from gh errors or fields', () => postedFixture(({ repo, id, state, update, pr }) => {
     refused(() => lookBounty(repo, id, 999), 'github-pr-missing');
-    pr('owner', { 'ghp_DO_NOT_LEAK_THIS_TOKEN_VALUE1234567890.txt': 'data' });
+    pr('owner', { [leakCanary + '.txt']: 'data' });
     expect(listGitHubAnswers(repo, id)).not.toContain('ghp_');
     update({ fail: '/comments' });
     closeBounty(repo, id, 'not wanted');
@@ -317,7 +312,6 @@ describe('GitHub bounty destination, entirely offline', () => {
       expect(() => resolveProgram('gh')).toThrow();
       const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty') }));
       const id = created.id;
-      confirmBounty(repo, id);
       const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
       write(destination, 'repo/app.txt', 'fixed\n');
       expect(lookBounty(repo, id, { from: destination }).attempt.outcome).toBe('answered');
@@ -331,11 +325,10 @@ describe('GitHub bounty destination, entirely offline', () => {
   it('routes the built CLI preview, post, status and PR commands through the adapter', () => fixture(({ repo, id, state, pr }) => {
     const cli = (...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8' });
     const before = readFileSync(join(repo, '.box/bounties', `${id}.json`));
-    const preview = cli('confirm', id, '--to', 'github', '--preview');
+    const preview = cli('post', id, '--to', 'github', '--preview');
     expect(preview.status).toBe(0);
     expect(preview.stdout).toContain('Issue body:');
     expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(before);
-    expect(cli('confirm', id, '--to', 'github').status).toBe(0);
     expect(cli('post', id, '--to', 'github').status).toBe(0);
     pr();
     expect(cli('status').stdout).toContain('#1 by owner');

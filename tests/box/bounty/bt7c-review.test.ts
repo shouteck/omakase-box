@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { applyBounty, BountyRefused, closeBounty, confirmBounty, finalizeBounty, loadRecord, lookBounty, persistRecord, planBounty, postBounty, renderDescribe, renderHelp, renderOpenLine, renderRules, renderRulesBlock, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
+import { applyBounty, BountyRefused, closeBounty, finalizeBounty, loadRecord, lookBounty, persistRecord, planBounty, postBounty, renderDescribe, renderHelp, renderOpenLine, renderRules, renderRulesBlock, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
 import { postedFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
@@ -26,7 +26,7 @@ it('a stored outside-answers text written before BT7c names no removed command',
   };
   persistRecord(context.repo, record);
   context.update({ fail: '/issues' }); // refresh cannot run — the stored text is what prints
-  for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind']) {
+  for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
     expect(renderStatus(context.repo, { id: context.id })).not.toContain(`bounty ${gone}`);
     expect(renderStatus(context.repo, { id: context.id, full: true })).not.toContain(`bounty ${gone}`);
     expect(renderOpenLine(context.repo)).not.toContain(`bounty ${gone}`);
@@ -43,7 +43,7 @@ it('a stored outside-answers text written before BT7c names no removed command',
 // command name the output *recommends*. The refusal echo `bounty answer
 // refused (command-removed)` lacks the `box ` prefix and stays a statement
 // of what was typed, never a suggestion.
-const REMOVED_NAME = /\bbox bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b/;
+const REMOVED_NAME = /\bbox bounty (?:answer|questions|reply|undo|reject|withdraw|remind|confirm)\b/;
 
 describe('no output names a removed command', () => {
   it('scans every renderer, refusal and CLI print path the tool can reach', () => postedFixture(context => {
@@ -103,7 +103,7 @@ describe('no output names a removed command', () => {
       }
     };
     grab(() => loadRecord(repo, 'bt-000000000000'));
-    grab(() => confirmBounty(repo, id));
+    grab(() => postBounty(repo, id, join(runRoot('bt7c-dest'), 'inbox')));
     grab(() => postBounty(repo, id, join(runRoot('bt7c-dest'), 'drop')));
     grab(() => lookBounty(repo, id, 99));
     grab(() => lookBounty(repo, id, { from: join(runRoot('bt7c-missing'), 'none') }));
@@ -120,7 +120,7 @@ describe('no output names a removed command', () => {
       const run = cli(...args);
       scan(`cli-${args.join(' ')}`, `${run.stdout}\n${run.stderr}`);
     }
-    for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind']) {
+    for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
       const run = cli(gone, id);
       expect(run.status).toBe(3);
       expect(run.stderr).toContain('command-removed');
