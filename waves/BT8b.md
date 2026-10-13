@@ -4,13 +4,22 @@ Milestone: BT · Station: packaging (also evidence) · Base: master at dispatch,
 
 **Split out of BT8 by the CTO on 13 October 2026** so each wave is small enough to review once. The content is the owner's decision of 11 October 2026, unchanged: the tool must not depend on one agent host. The head chef checks names against master at dispatch.
 
+## Carried in from the owner, 13 October 2026 (decided while BT8 was cooking)
+
+The head chef reads BT8's Result first and keeps here only what BT8 did not already do.
+
+- **Allowing the tool means one repository by default.** The plain allow command covers this repository and nothing else.
+- **All the owner's projects is an extra, never the default.** It needs its own explicit word on the command, is described in `setup` and the doc page, and is **not offered in the first-use message**, which shows only "allow for this repository" and "allow this one bounty". Offered side by side, people pick the wider one to avoid being asked again, and a wide yes covers repositories that do not exist yet.
+- When an action goes ahead under the all-projects answer, the output says so in those words, so an owner who gave it sees where it reached.
+- **What counts as "this repository" is stated and tested.** A different repository later placed at the same folder path does not inherit the yes, and a fork or a clone under another address is not silently treated as the same one. The pass tries both.
+
 ## Outcome
 
 Whichever host an agent runs on, it learns at the start of a session that the tool exists and whether a bounty is open or has a new solution, from the instruction file that host loads. The tool keeps one identical block in each such file and says no more there than that.
 
 ## Scope
 
-- Write: `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`.
+- Write (the carried items touch the owner's commands and the first-use message from BT8): `packages/box-bounty/**`, `packages/box-cli/**` (the `bounty` commands), `tests/box/bounty/**`, `docs/box-v4/BOUNTY.md`.
 - Read for context: `waves/BT4.md` Result (the tool-kept lines and how their wording was chosen); `waves/BT8.md` Result (`setup`); PLAN.md ("Memory without demand", "Host agnostic"); `kitchen/stations/packaging.md`.
 - Do not touch: anything in an instruction file outside the tool's own marked block; the owner's settings; `.execution/`, `docs/legacy/`.
 
