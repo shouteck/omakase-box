@@ -14,6 +14,7 @@ import type { NeverShipRule } from './never-ship.js';
 import { allowedByFor, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, recordScanFinding, sameShown, settleScanFindings, transitionTo, waitForOwner } from './record.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { requireRepository } from './repository.js';
+import { formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the
@@ -60,6 +61,9 @@ export interface GitHubPublication {
   scanBinary?: readonly string[];
   outside?: { readonly at: string; readonly issueState: 'open' | 'closed'; readonly answers: string };
   unavailableAt?: string | null;
+  formatRead?: 'absent' | 'invalid' | 'matches-record' | 'differs-from-record';
+  formatReadAt?: string;
+  formatRepair?: 'updated' | 'preserved-invalid' | 'update-failed';
 }
 
 // The agent's two publication choices, named on `post <id> --to github`
@@ -217,7 +221,7 @@ function listingSnapshot(record: BountyRecord, repository: string) {
   if (!/^bt-[a-f\d]{12}$/.test(record.id)) return invalid('record-corrupt', 'the bounty identifier is not valid');
   const { manifest } = boundFolder(record);
   const branch = `box-bounty/${record.id}`;
-  const title = `[box bounty ${record.id}] ${manifest.title}`;
+  const title = `[box bounty ${record.id}] ${publicText(manifest.title)}`;
   const sourceListing = renderListing(manifest, manifest.note)
     .replace('`repo/` holds', 'The branch root holds')
     .replace('There is no `.git` and no history.', 'No owner Git history was shipped.');
@@ -701,6 +705,7 @@ export interface GitHubPlan {
   /** Commits the branch would publish that GitHub lacks — unpushed commits
       plus the tool's work-in-progress commit, oldest first. */
   readonly pushed: readonly { readonly sha: string; readonly subject: string }[];
+  readonly publishedFiles: readonly { readonly commit: string; readonly files: readonly NamedStatus[] }[];
   readonly wipCommit: string | null;
   readonly wip: { readonly changed: readonly string[]; readonly added: readonly string[]; readonly deleted: readonly string[] } | null;
   /** Tracked changes the agent said the task does not need — they stay home. */
@@ -795,11 +800,15 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     // already in the public history is a fact, not a refusal — this tool
     // cannot take it back, so the preview says so instead.
     const violations: { path: string; rule: string }[] = [];
+    const publishedFiles: { commit: string; files: readonly NamedStatus[] }[] = [];
     for (const sha of unpushed) {
-      violations.push(...neverShipViolations(commitStatuses(root, sha, 'nothing was posted', firstParents.get(sha) ?? EMPTY_TREE), rules));
+      const files = commitStatuses(root, sha, 'nothing was posted', firstParents.get(sha) ?? EMPTY_TREE);
+      publishedFiles.push({ commit: sha, files });
+      violations.push(...neverShipViolations(files, rules));
     }
     if (wip !== null) {
       const statuses = parseNameStatus(gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD', wip.tree]).stdout);
+      publishedFiles.push({ commit: wip.commit, files: statuses });
       violations.push(...neverShipViolations(statuses, rules));
     }
     if (violations.length > 0) {
@@ -872,6 +881,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
       tip,
       tipTree,
       pushed,
+      publishedFiles,
       wipCommit: wip?.commit ?? null,
       wip: wip === null ? null : { changed: wip.changed, added: wip.added, deleted: wip.deleted },
       leftHome: choice.withChanges ? 0 : tracked.length,
@@ -897,24 +907,24 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
   // An authored --note is public by choice; automatic job context stays local.
   const note = record.noteSource === 'generated' ? null : manifest.note;
   const branch = `box-bounty/${record.id}`;
-  const title = `[box bounty ${record.id}] ${manifest.title}`;
+  const title = `[box bounty ${record.id}] ${publicText(manifest.title)}`;
   const onTop = plan.pushed.length === 0
     ? `it points at that commit — nothing new was published`
     : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${c.subject}`).join(', ')}`;
   const body = [
-    `# Bounty: ${manifest.title}`,
+    `# Bounty: ${publicText(manifest.title)}`,
     '',
     `id ${record.id} · created ${manifest.createdAt} by ${manifest.tool}`,
     '',
     '## What is wanted',
     '',
-    manifest.task.text.trim(),
+    publicText(manifest.task.text.trim()),
     '',
-    '## What was already tried', '', note !== null ? note.text.trim() : 'No public note was supplied.', '',
+    '## What was already tried', '', note !== null ? publicText(note.text.trim()) : 'No public note was supplied.', '',
     '## The code',
     '',
     `Branch from \`${branch}\` — it is the branch pull requests for this bounty target.`,
-    `The branch is based on commit ${plan.base}, the newest commit this repository already had: ${onTop}.`,
+    publicText(`The branch is based on commit ${plan.base}, the newest commit this repository already had: ${onTop}.`),
     '',
     '## How to answer',
     '',
@@ -923,14 +933,16 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     'Nobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer.',
     '',
     'reward: $0',
+    'The merged solution earns the whole reward. Other solutions and parts used by hand earn nothing.',
     plan.licence.file !== null
-      ? `licence: ${plan.licence.file}${plan.licence.declared !== null ? ` (package.json declares ${plan.licence.declared})` : ''}`
+      ? publicText(`licence: ${plan.licence.file}${plan.licence.declared !== null ? ` (package.json declares ${plan.licence.declared})` : ''}`)
       : 'licence: no licence file was found at the branch root',
     '',
     `<!-- box-bounty:${record.id} -->`,
     ''
   ].join('\n');
-  return { branch, title, body };
+  const block = renderFormat(formatFor(record, { repository, branch, commit: plan.tip, pushed: plan.pushed }));
+  return { branch, title, body: body + block };
 }
 
 function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHubPlan, text: { branch: string; title: string; body: string }): string {
@@ -945,6 +957,7 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
     lines.push(`  commits published for the first time (${plan.pushed.length}):`);
     for (const commit of plan.pushed) {
       lines.push(`    ${commit.sha.slice(0, 12)} ${commit.subject}${commit.sha === plan.wipCommit ? ' — the tool\'s work-in-progress commit' : ''}`);
+      for (const file of plan.publishedFiles.find(entry => entry.commit === commit.sha)?.files ?? []) lines.push(`      ${file.status} ${JSON.stringify(file.path)}`);
     }
     if (plan.wip !== null) {
       if (plan.wip.changed.length > 0) lines.push(`  files changed in the work-in-progress commit: ${plan.wip.changed.join(', ')}`);
@@ -1227,6 +1240,9 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
   try {
     const issue = api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
     if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state');
+    if (typeof issue['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable issue body');
+    publication.formatRead = formatFact(issue['body'], formatFor(record));
+    publication.formatReadAt = new Date().toISOString();
     const answers = listGitHubAnswers(root, record.id, record, false);
     const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
     const unnamed = comments.filter(comment => comment.author === null).length;
@@ -1461,6 +1477,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   const report = renderPullRequestReport(record, n, at, author, newCommits.length, change, merge, counts);
   const attempt: Attempt = {
     n,
+    pullRequest: pr,
     at,
     seenAt: publication.seenPullRequests?.find(entry => entry.commit === commit)?.at ?? at,
     author,
@@ -1535,7 +1552,8 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     }
     if (publication.issue !== null) {
       const endpoint = `repos/${publication.repository}/issues/${publication.issue.number}`;
-      const comments = pages(root, `${endpoint}/comments`);
+      const snapshot = closingIssue(root, publication);
+      const comments = snapshot.comments;
       for (const decision of decisions) {
         const marker = `<!-- box-bounty:${record.id}:${decision.command} -->`;
         const fact = decision.command === 'merged' ? `Solution${decision.attempt !== undefined ? ` #${decision.attempt}` : ''} is merged on the bounty's branch as commit ${decision.merge} (${decision.reason ?? decision.merge}).`
@@ -1564,7 +1582,20 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
           if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment');
         }
       }
-      const closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
+      const read = readFormat(snapshot.body);
+      publication.formatRead = read.kind === 'present' ? 'differs-from-record' : read.kind;
+      publication.formatReadAt = new Date().toISOString();
+      if (read.kind === 'invalid') publication.formatRepair = 'preserved-invalid';
+      let closed: unknown;
+      if (read.kind === 'present') {
+        try {
+          const body = snapshot.body.slice(0, read.start) + renderFormat(formatFor(record));
+          closed = api(root, endpoint, { state: 'closed', body }, 'PATCH');
+          if (!isObject(closed) || closed['body'] !== body) throw new Error('format update was not confirmed');
+          publication.formatRead = 'matches-record';
+          publication.formatRepair = 'updated';
+        } catch { publication.formatRepair = 'update-failed'; closed = api(root, endpoint, { state: 'closed' }, 'PATCH'); }
+      } else closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
       if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure');
     }
     const tip = remoteBranchSha(root, publication.repository, publication.branch);
@@ -1588,4 +1619,36 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     publication.pending = `github-decision-pending${detail}: local ${local} stands; retry box bounty close ${record.id} to comment, close the issue and remove ${publication.branch}`;
   }
   persistRecord(root, record);
+}
+
+// Acquire the current issue body and every decision comment in one paginated
+// GitHub request per page. This replaces the comments-only REST read, so
+// preserving an edited visible body costs no extra process on the close path.
+function closingIssue(root: string, publication: GitHubPublication): { body: string; comments: unknown[] } {
+  const [owner, name] = publication.repository.split('/');
+  const comments: unknown[] = [];
+  let cursor: string | null = null;
+  let body: string | undefined;
+  const cursors = new Set<string>();
+  for (;;) {
+    const data = api(root, 'graphql', {
+      query: 'query($owner:String!,$name:String!,$number:Int!,$cursor:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$cursor){nodes{body author{login}} pageInfo{hasNextPage endCursor}}}}}',
+      variables: { owner, name, number: publication.issue?.number, cursor }
+    });
+    if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['issue'])) return invalid('github-response-invalid', 'GitHub returned an unreadable closing issue');
+    const issue = data['data']['repository']['issue'];
+    if (typeof issue['body'] !== 'string' || !isObject(issue['author']) || issue['author']['login'] !== publication.account || !isObject(issue['comments'])) return invalid('github-issue-mismatch', 'the closing issue body or author did not match this bounty');
+    body ??= issue['body'];
+    if (body !== issue['body']) return invalid('github-issue-changed', 'the issue body changed while its comments were read; retry closing');
+    const connection = issue['comments'];
+    if (!Array.isArray(connection['nodes']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments');
+    for (const node of connection['nodes']) {
+      if (!isObject(node) || typeof node['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment');
+      comments.push({ body: node['body'], user: node['author'] });
+    }
+    const page = connection['pageInfo'];
+    if (page['hasNextPage'] === false) return { body, comments };
+    if (page['hasNextPage'] !== true || typeof page['endCursor'] !== 'string' || cursors.has(page['endCursor'])) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor');
+    cursor = page['endCursor']; cursors.add(cursor);
+  }
 }

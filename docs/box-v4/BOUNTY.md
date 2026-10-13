@@ -7,6 +7,21 @@ states a reward of $0 — no payment exists. Private repositories and unreadable
 visibility are refused with no override. A local folder remains available on
 every repository.
 
+GitHub issues carry the [versioned public format](BOUNTY-FORMAT.md) for readers
+that use none of this tool's code. The reward is fixed at zero USD, and the
+merged solution earns the whole reward. `status` compares the issue body's
+block with the local record and reports absent, invalid, matching, or changed
+metadata. The issue block never overrides the record. Older issues without a
+block remain readable.
+
+Closing updates only the final machine block and preserves the visible issue
+body as read from GitHub. Invalid or duplicate blocks stay untouched; issue
+closure and branch removal continue. A failed block write is reported as
+`update-failed`, with the last observed comparison. `close <id>` retries that
+write on an ended bounty. Ended `status` shows the last observation, without a
+fresh GitHub read. `post <id> --to github --preview` shows the exact issue and
+publication plan before an owner has allowed posting and grants no authority.
+
 A bounty is the task, what was tried, the one line of why, and the code —
 nothing else. **Nothing a solver wrote is ever run by the tool:** checks were
 removed on 11 October 2026, so `create` accepts no command flags at all —
