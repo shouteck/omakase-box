@@ -17,7 +17,7 @@ const cli = (repo: string, ...args: string[]) => spawnSync(process.execPath, [CL
 // real post/look would have left them.
 function seedRecord(repo: string, id: string, edit?: (record: BountyRecord) => void): BountyRecord {
   const head = git(repo, ['rev-parse', 'HEAD']);
-  const { record } = writeNewRecord(repo, { id, title: `${id} task`, snapshot: { commit: head, tree: head, baseCommit: head }, folder: join(repo, '..', 'bounties', id), createdAt: new Date().toISOString(), resume: { kind: 'recorded', branch: 'main', commit: head, changed: [], note: null } });
+  const { record } = writeNewRecord(repo, { id, title: `${id} task`, snapshot: { commit: head, tree: head, baseCommit: head }, content: { task: { file: 'TASK.md', text: 'fixture task' }, note: null, tool: 'box-bounty@0.1.0' }, createdAt: new Date().toISOString(), resume: { kind: 'recorded', branch: 'main', commit: head, changed: [], note: null } });
   const path = join(repo, '.box', 'bounties', `${id}.json`);
   const current = JSON.parse(readFileSync(path, 'utf8')) as BountyRecord;
   edit?.(current);

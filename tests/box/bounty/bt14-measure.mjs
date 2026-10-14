@@ -112,7 +112,7 @@ const pbox = (cwd, args) => spawnSync(process.execPath, [CLI, ...args], { cwd, e
 const postRuns = [
   measure('post: box --help', pbox(posting, ['--help'])),
   measure('post: box bounty describe', pbox(posting, ['bounty', 'describe'])),
-  measure('post: box bounty create', pbox(posting, ['bounty', 'create', '--task', 'TASK.md', '--why', 'beyond this agent', '--out', join(root, 'posting-bounty')])),
+  measure('post: box bounty create', pbox(posting, ['bounty', 'create', '--task', 'TASK.md', '--why', 'beyond this agent'])),
 ];
 const pid = /bt-[a-f\d]{12}/.exec(postRuns.at(-1).output)?.[0];
 if (pid === undefined) throw new Error(`no id in create output (exit ${postRuns.at(-1).exit}): ${postRuns.at(-1).output}`);

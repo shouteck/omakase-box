@@ -1,3 +1,4 @@
+import { allowGitHub, postToGitHub, collectPullRequest, applyGitHub, closeGitHub, statusGitHub } from './github-solver.js';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -14,7 +15,7 @@ import { fixture, refused } from './github-fixture.js';
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), ...extra };
 }
 
 function makeRepo(files: Record<string, string>): string {
@@ -38,18 +39,18 @@ describe('the owner\'s one decision — nothing written is never allowed', () =>
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     expect(ownerRead(repo).decision).toBeNull();
     const { id } = drafted(repo);
-    refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
+    refused(() => postToGitHub(repo, id), 'owner-allow-needed');
     const record = loadRecord(repo, id);
     expect(record.stage).toBe('waiting');
     expect(record.waiting?.reason).toBe('owner-allow');
-    expect(renderStatus(repo)).toContain('waiting for the owner');
+    expect(statusGitHub(repo)).toContain('waiting for the owner');
   });
 
   it('an owner answer on a bounty that is not waiting is a named refusal', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = drafted(repo);
-    refused(() => allowBounty(repo, id), 'owner-answer-not-waiting');
-    refused(() => allowBounty(repo, 'bt-000000000000'), 'unknown-bounty');
+    refused(() => allowGitHub(repo, id), 'owner-answer-not-waiting');
+    refused(() => allowGitHub(repo, 'bt-000000000000'), 'unknown-bounty');
   });
 });
 
@@ -58,7 +59,7 @@ describe('allowed — posting, answering and closing need nobody asked again', (
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = drafted(repo);
     writeDecision(repo, 'project', 'allowed');
-    const { record } = postBounty(repo, id, join(runRoot('dest'), 'inbox'));
+    const { record } = postToGitHub(repo, id);
     expect(record.stage).toBe('posted');
     expect(record.allowedBy?.decision).toBe('allowed');
     expect(record.allowedBy?.level).toBe('project');
@@ -72,13 +73,13 @@ describe('allowed — posting, answering and closing need nobody asked again', (
     expect(ownerRead(repo).decision).toBe('ask');
     expect(ownerRead(repo).level).toBe('project');
     const first = drafted(repo);
-    refused(() => postBounty(repo, first.id, join(runRoot('dest'), 'inbox')), 'owner-answer-needed');
+    refused(() => postToGitHub(repo, first.id), 'owner-answer-needed');
     // …and a project allowed stands over a default ask, same file, other order.
     const repo2 = makeRepo({ 'src/app.py': 'x\n' });
     writeDecision(repo2, 'project', 'allowed');
     writeDecision(repo2, 'default', 'ask');
-    const second = drafted(repo2, { outDir: join(runRoot('out'), 'b2') });
-    expect(postBounty(repo2, second.id, join(runRoot('dest'), 'inbox')).record.stage).toBe('posted');
+    const second = drafted(repo2, { });
+    expect(postToGitHub(repo2, second.id).record.stage).toBe('posted');
   });
 });
 
@@ -87,16 +88,16 @@ describe('ask me each time — every post and every outside close waits', () => 
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     writeDecision(repo, 'project', 'ask');
     const first = drafted(repo);
-    refused(() => postBounty(repo, first.id, join(runRoot('dest'), 'inbox')), 'owner-answer-needed');
+    refused(() => postToGitHub(repo, first.id), 'owner-answer-needed');
     expect(loadRecord(repo, first.id).waiting?.reason).toBe('owner-ask');
-    const output = allowBounty(repo, first.id);
+    const output = allowGitHub(repo, first.id);
     expect(output).toContain('answered once');
     const record = loadRecord(repo, first.id);
     expect(record.stage).toBe('posted');
     expect(record.allowedBy?.decision).toBe('once');
     // ask me EACH time: the next bounty waits on its own answer.
-    const second = drafted(repo, { outDir: join(runRoot('out'), 'b2') });
-    refused(() => postBounty(repo, second.id, join(runRoot('dest'), 'inbox2')), 'owner-answer-needed');
+    const second = drafted(repo, { });
+    refused(() => postToGitHub(repo, second.id), 'owner-answer-needed');
     expect(loadRecord(repo, second.id).stage).toBe('waiting');
   });
 
@@ -108,7 +109,7 @@ describe('the settings file is a boundary — malformed and unknown names refuse
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = drafted(repo);
     rawSettings('this is not json{');
-    refused(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'settings-malformed');
+    refused(() => postToGitHub(repo, id), 'settings-malformed');
     rawSettings('{"kind":"box-owner-settings","default":"allowed"}');
     refused(() => readDecision(repo), 'settings-malformed');
   });
@@ -190,7 +191,7 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(state().issues).toHaveLength(0); // nothing was published
     // BT8c: an owner answer cannot release a scan hold — the owner marks the
     // path safe to publish in config, and the post goes out.
-    refused(() => allowBounty(repo, id), 'allow-scan-held');
+    refused(() => allowGitHub(repo, id), 'allow-scan-held');
     expect(loadRecord(repo, id).waiting?.reason).toBe('secrets');
     changePublishList(repo, 'safe-to-publish', 'add', 'config.txt');
     const { record: posted } = postBounty(repo, id, 'github');
@@ -209,12 +210,12 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(loadRecord(repo, id).waiting?.reason).toBe('owner-allow');
     // …the owner answers that one bounty — and the scan they never saw still
     // holds the post, now with its own named reason.
-    refused(() => allowBounty(repo, id), 'publish-held');
+    refused(() => allowGitHub(repo, id), 'publish-held');
     expect(loadRecord(repo, id).waiting?.reason).toBe('secrets');
     expect(state().issues).toHaveLength(0);
     // A second answer cannot settle the scan's hold either (BT8c) — the
     // owner decides it in config; safe-listing the path sends the bounty.
-    refused(() => allowBounty(repo, id), 'allow-scan-held');
+    refused(() => allowGitHub(repo, id), 'allow-scan-held');
     changePublishList(repo, 'safe-to-publish', 'add', 'keys.txt');
     postBounty(repo, id, 'github');
     expect(state().issues).toHaveLength(1);
@@ -239,11 +240,11 @@ describe('the pre-publish scan — secret shapes hold the one bounty that carrie
     expect(state().issues).toHaveLength(0);
     // …and nothing else is held up: a second bounty on the same repository
     // that names nothing goes straight out.
-    const other = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title: 'other', why: 'w', outDir: join(scratch, 'bounty2') }));
+    const other = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title: 'other', why: 'w', }));
     postBounty(repo, other.id, 'github');
     expect(state().issues).toHaveLength(1);
     // The held one goes out on its own answer.
-    allowBounty(repo, id);
+    allowGitHub(repo, id);
     expect(loadRecord(repo, id).stage).toBe('posted');
     expect(state().issues).toHaveLength(2);
   }));

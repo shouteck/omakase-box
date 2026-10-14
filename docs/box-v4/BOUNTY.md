@@ -3,10 +3,8 @@
 GitHub posting is public and free, only to the project's own repository when
 it is already public. Anyone can read the issue and the bounty branch. Nobody
 is known to be watching these issues yet; the wait is unknown and every bounty
-states the owner's reward — $0 by default, so no payment is promised. Private
-repositories and unreadable
-visibility are refused with no override. A local folder remains available on
-every repository.
+states the owner's reward — $0 by default, so no payment is promised. The tool is for public repositories on GitHub and has no other route.
+Private repositories and unreadable visibility are refused with no override.
 
 GitHub issues carry the [versioned public format](BOUNTY-FORMAT.md) for readers
 that use none of this tool's code. The block's reward is the amount the owner
@@ -25,7 +23,7 @@ closure and branch removal continue. A failed block write is reported as
 write on an ended bounty. Compact ended `status` shows the cached last
 observation and names `status <id> --full` for a current issue-body comparison.
 A failed current read reports unavailable and labels any cached comparison.
-`post <id> --to github --preview` shows the exact issue and
+`post <id> --preview` shows the exact issue and
 publication plan before an owner has allowed posting and grants no authority.
 
 A bounty is the task, what was tried, the one line of why, and the code —
@@ -38,16 +36,15 @@ from any account can be listed, read and merged; choosing is always the
 agent's or the owner's.
 
 ```
-node packages/box-cli/dist/cli.js bounty create --task <file> --why "<one line>" \
-    [--title "<one line>"] [--note <file>] [--job <file>] [--resume "<short note>"] \
-    [--out <dir>] [--repo <path>] [--preview]
+node packages/box-cli/dist/cli.js bounty create --task <file|-> --why "<one line>" \
+    [--title "<text>"] [--resume "<context>"] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty [--repo <path>]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty post <id> --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty look [id] (<n> | --from <dir>) [--full] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty apply [id] [<n> | --from <dir>] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty apply [id] [<n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
 ```
 
@@ -65,7 +62,7 @@ The commands folded away — `answer`, `questions`, `reply`, `undo`,
 name (`command-removed`) and say what took their place; none survives as a
 hidden alias.
 
-A fresh copy — a git clone, or the snapshot a bounty ships — contains no
+A fresh git clone contains no
 `node_modules` and no built output, so `dist/cli.js` is missing until three
 steps run, in this order:
 
@@ -97,13 +94,11 @@ only in commands that would run that program anyway; presence checks are
 PATH lookups, never a spawned probe.
 
 Run inside a Git checkout (or pass `--repo`) — `help` and `describe` work
-anywhere; `help` prints the whole journey on one screen. `create` writes one folder and the
-bounty's record; nothing else leaves the machine until `post` —
-and `post` copies to a local folder you name or publishes the GitHub
-listing. Every outcome is a
+anywhere; `help` prints the whole journey on one screen. `create` writes the bounty's record and Git bookmark. Nothing leaves the
+machine until `post` publishes the GitHub issue and branch. Every outcome is a
 named state: refusals print
 `refused (<name>)` and exit 3; usage errors exit 2; operational failures
-exit 1. `--task` and `--note` are embedded verbatim, so a path the never-ship
+exit 1. `--task` is embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
 
 With one open bounty, omit its identifier: `bounty look 1`, `bounty apply 1`,
@@ -118,8 +113,7 @@ tool shows it, then as seen since that time. Seen means only that it was shown.
 `answer` command ran first, before anything is written — then prints the
 change the solver made: the diff the pull request makes against
 the commit the bounty named, computed on objects the tool already fetched.
-When `<n>` names an attempt already collected it just shows it. `look
---from <dir>` does the same for a returned bounty folder.
+When `<n>` names an attempt already collected it just shows it.
 Nothing is checked out, no folder is made and there is nothing to remove —
 looking touches neither your working tree, index, branch nor configuration,
 and the tool runs nothing of the solver's to print it. The printed lines are
@@ -210,15 +204,12 @@ whether and what to answer is yours.
 
 ## Return to the job
 
-Create automatically saves your branch, last commit and changed-file names
-in the project's bounty record. `--resume "<short note>"` optionally records
-what you were doing. This is private job context, distinct from the public
-hand-off `--note <file>`. It is never copied into a bounty branch, issue or
-comment. Status and the output after apply show it under
-`Saved job context`. Older records say that this context was not recorded.
-The automatic folder note stays in the local-folder hand-off; a new GitHub
-history issue includes only an authored public `--note`, so filenames from
-unfinished local work stay home too.
+Create saves the branch, last commit and changed-file names in the project
+record. Optional `--resume "<context>"` saves what the agent was doing and
+the larger work waiting on the bounty, without a tool-defined length limit. This text and
+`--why` are private; neither appears in an issue or comment. Status and apply
+show the saved context. Older records with job files still show that context.
+Put what was tried in the task, where the solver can read it.
 
 ## Post and collect on GitHub
 
@@ -235,7 +226,7 @@ For a prepared bounty, show exactly what becomes public before anything is
 published:
 
 ```
-node packages/box-cli/dist/cli.js bounty post <id> --to github --preview
+node packages/box-cli/dist/cli.js bounty post <id> --preview
 ```
 
 This changes nothing. It asks the remote what it already has — fetched refs,
@@ -276,13 +267,13 @@ Never-ship holds on what is new: a change being published for the first time —
 an unpushed commit or the work-in-progress commit — that touches a never-ship
 path is refused (`github-never-ship`) and publishes nothing. A branch sharing
 no commit with the remote has nothing public to point solvers at
-(`github-no-public-base`); a local folder is still available.
+(`github-no-public-base`).
 
 Posting is gated once by the owner's decision, not per bounty — see *The
 owner's one decision* below. With the tool allowed:
 
 ```
-node packages/box-cli/dist/cli.js bounty post <id> --to github [--with-changes] [--include <file>]
+node packages/box-cli/dist/cli.js bounty post <id> [--with-changes] [--include <file>]
 ```
 
 Before the push, the pre-publish scan reads everything that would be
@@ -385,17 +376,18 @@ accounts cannot stand in for tool facts.
 
 If a push succeeds but the issue cannot be opened, the refusal is
 `github-post-incomplete`. The record states the known outside state. Repeat
-`post <id> --to github` to finish; it recovers an issue whose response was lost
+`post <id>` to finish; it recovers an issue whose response was lost
 and never creates a second listing. To remove a partial post instead, run
 `close <id>`. Nothing here sends money or posts to a bounty site.
 Closing also finds and closes a successfully created issue whose response
 was lost, before it clears the outside work.
 
-Records posted before the bounty became an issue on real history — a
-parentless snapshot commit on the branch — still load: `status` marks them
-`snapshot-posted`, and a still-open one can be collected and closed the old
-way. The local-folder post and answer path is unchanged and still uses the
-snapshot.
+Records from before this version still load. An unposted draft uses the
+GitHub journey. Old delivery records can be read with `status` and ended
+with `close`; collection on those records refuses as
+`legacy-delivery-retired` and names `close`. Existing bounty folders beside
+projects are no longer used and may be deleted by hand. The tool leaves them
+alone.
 
 ## The owner's one decision
 
@@ -542,10 +534,8 @@ Because nobody sees a preview any more, everything a GitHub post would
 publish **for the first time** is scanned for secret-shaped content before
 it goes out: the added lines of each commit not yet pushed, the tool's
 work-in-progress commit when `--with-changes` is chosen, and every untracked
-file `--include` names. `create` previews the same scan over what would
-leave — the shipped set is what a folder post publishes and a superset of
-what a GitHub post publishes for the first time — so the agent can fix a
-hit before `post`; a hit at `create` holds nothing and is recorded the same
+file `--include` names. `create` also scans the working-state snapshot so
+the agent can fix a hit before `post`; a hit at `create` holds nothing and is recorded the same
 way. The patterns are a small stated list, not proof of absence:
 
 - private key blocks (`-----BEGIN … PRIVATE KEY-----`);
@@ -572,9 +562,8 @@ printing the value**. The hold is recorded on the record: what was flagged
 and what happened — and it stays in `status` (bare, `status <id>` and
 `--full`) after the bounty ends. The record claims only what was verified:
 a GitHub post ran the scan again, so it can say the flagged content changed
-or sits on `safe to publish`; a folder post runs no scan, so a finding
-settled that way says the flagged content went out without being
-re-checked. The agent's own moves are to remove the flagged content
+or sits on `safe to publish`. A finding on a legacy delivery records that
+it was not re-checked. The agent's own moves are to remove the flagged content
 and post again — that sends the bounty — or to stop it; the hit message
 offers no owner command, because no owner answer can release a scan hold:
 `allow <id>` on one is a named refusal (`allow-scan-held`). The owner
@@ -610,28 +599,26 @@ recorded wait named: a post held for the decision alone still runs its
 scan. No setting switches the scan off — it is a protection of the owner's,
 like never-ship, not a judgement on the agent.
 
-`create` asks only for judgement — a task and one line of why; everything
-else has a default:
+`create` takes two required inputs and three optional ones:
 
-- **`--why "<one line>"` is required** — without it the refusal is named
-  (`missing-why`), not a usage wall. It lives only in the record (like
-  `--job`: never in `bounty.json`, the listing or the shipped folder), so
-  the reasons for handing off can be learned from use.
-- **`--title` defaults to the task's first non-empty line**, trimmed;
-  `--title` still wins when given.
-- **`--out` defaults to `bounties/<slug>` next to the repository root** —
-  outside the checkout, where the slug is the title folded to
-  `[a-z0-9-]` (`bounty` when nothing survives). Given or defaulted, the
-  destination must land outside the repository (`out-inside-repo`) and must
-  not already hold files (`out-dir-not-empty`).
-- **`--note` defaults to a note the tool writes itself** — see *The note
-  writes itself* below.
+- `--task <file>` is a file describing what needs doing, written for the
+  solver. The project code is included automatically. Put what was tried in
+  that file. `--task -` reads the same text from standard input and creates no
+  task file. An empty file or empty standard input is `missing-task`; an
+  input file under a never-ship path is `never-ship-input`.
+- `--why "<one line>"` is required and private. Without it the refusal is
+  `missing-why`.
+- Optional `--title "<text>"` follows the same shortening rule as the task's
+  first sentence: remove a leading Markdown heading marker, stop at the first
+  sentence and keep at most 80 characters before the ellipsis.
+- Optional `--resume "<context>"` saves private context for the unfinished
+  work and the larger job, without a tool-defined length limit.
+- `--repo <path>` selects the checkout, as it does for other commands.
 
-Both `--out` and `post --to` are judged on the path they would really land
-at: the nearest *existing* ancestor is realpath-resolved and the missing
-tail re-appended before the inside-the-repository check, so a nonexistent
-target under a junction pointing into the checkout is refused, not written
-inside it.
+`create --note`, `--job` and `--preview` refuse as `create-option-retired`
+without writing anything and name their replacement. None is an alias.
+`post --preview` shows the publication plan.
+
 
 ## Telling the agent
 
@@ -765,7 +752,7 @@ in the owner's settings outside the repository.
 `create` also writes `.box/bounties/<id>.json` inside the repository and prints
 its path. The tool writes the file; committing it is the agent's normal flow.
 The record holds the id, title, the snapshot identifier
-(commit + tree + base), the absolute path of the bounty folder, and the stage
+(commit + tree + base), the public task and generated note facts, and the stage
 history — one event appended per transition, never rewritten:
 
 ```
@@ -795,99 +782,46 @@ check outcomes (`verified`, `check-failed`, `check-unrunnable`,
 check exited 0 on it (checks were removed on 11 October 2026)" — never as a
 promise about the current code, and no new record writes a level.
 
-A later agent in a later session reads the record — not your conversation — to
-pick the bounty up. An optional `--job <file>` on `create` records the larger
-piece of work waiting on the bounty; its text lives only in the record — never
-in `bounty.json`, the listing or the shipped folder — and `status` names it
-once the bounty ends (`applied`/`rejected`). The required `--why` line is kept
-the same way: on the record only.
+`status` lists open bounties first and names the next step. Ended ones are
+compact lines. The public task is held directly in the record; old note and
+job files remain readable. Private `--resume` context and the required
+`--why` line never enter an issue.
 
-`create` also keeps a Git ref `refs/box-bounty/<id>` pointing at
-`snapshot.commit`, so `git gc --prune=now` cannot take the bytes the identifier
-names. Each answer lands as `refs/box-bounty/<id>-answer-<n>` — the answer is
-parented on the snapshot's *base* commit, so it cannot keep the snapshot alive
-and all refs exist while the bounty is open. Every ended stage — `applied`,
-`rejected`, `withdrawn`, and `undone` on older records — removes them all.
+`refs/box-bounty/<id>` pins the working-state snapshot while the bounty is
+open. Each collected pull request is pinned under
+`refs/box-bounty/<id>-answer-<n>`. Ended stages remove those durability refs.
 
 ## The commands after create
 
-- **`help`** prints the whole journey on one screen — the stages, what each
-  command does in one line, and what ends a bounty. It reads no repository,
-  so it works outside a checkout too. A bare `box bounty` is a usage error
-  pointing at it; an unknown verb is named in the message.
-- **`status`** lists every open bounty with id, title, stage and the next step —
-  and never prints nothing: an empty `.box/bounties/` says so and says what to
-  do. Ended bounties are one compact line.
-- **`post <id> --to <dir|github>`** is the first delivery, and it is gated
-  once by the owner's decision: nothing written → `owner-allow-needed` (the
-  post waits, and prints the few lines to put to the owner); "ask me each
-  time" or "off" written → `owner-answer-needed`. The recorded folder gone →
-  `folder-missing`; its
-  `bounty.json` naming a different id → `folder-mismatch`; the destination
-  inside the repository → `destination-inside-repo`; `<dir>/<id>` already
-  existing → `destination-exists`. On success it **copies** the bounty folder to
-  `<dir>/<id>/` (the recorded folder stays) or publishes the GitHub issue,
-  and marks the bounty `posted` with the destination and which of the
-  owner's written answers allowed it.
-- **`look <id> (<n> | --from <dir>)`** collects a pull request by number, or a
-  returned bounty folder with `--from` — see *The answer comes back* below —
-  then shows the change. An `<n>` already collected just shows it.
-- **`apply <id> [<n> | --from <dir>]`** merges a recorded attempt onto the
-  current code — collecting first, exactly as `look` does, when `<n>` names a
-  pull request or `--from` a returned folder. With one applicable attempt no
-  number is needed; with more than one,
-  `apply` refuses by name (`apply-ambiguous`) and prints the attempt numbers —
-  pass one as `<n>` (`unknown-attempt` otherwise). On any other stage it
-  is a named refusal (`wrong-stage`, `already-ended`).
-- **`close <id> [--reason "<text>"]`** ends a bounty with nothing merged:
-  with `--reason` the record lands `rejected` and keeps the reason; without
-  one it lands `withdrawn` — on any open stage, including a draft. Either way
-  the durability refs are removed, and repeating it is a named state, not an
-  error: an ended bounty reports `already-ended` and retries whatever outside
-  work is still owed. An empty `--reason` is `missing-reason`; an unknown id
-  is `unknown-bounty` everywhere.
-- **reversing an apply is plain Git** — `git revert -m 1 <merge>`, the merge
-  being one ordinary commit. There is no `undo` command.
-- **`hook`** reports whether the awareness hook is on for each known host.
-  **`hook on --host <name>`** prints the disclosure and changes nothing until
-  `--confirm`; **`hook off --host <name>`** removes the entries it wrote.
-  `hook start|pause|finish` is the shared command the host entries call —
-  silent with nothing to say, exit 0 always. See *Awareness at fixed
-  moments* above.
+- `post <id>` publishes the issue and bounty branch on GitHub, after the
+  owner's standing decision, private-repository hard stop and secret scan.
+  `post <id> --preview` publishes nothing and shows the same plan.
+- `look <id> <n>` collects pull request `n` when needed and shows the
+  solver's diff, marked as theirs. `--full` prints a large change.
+- `apply <id> [<n>]` collects when needed and merges the chosen solution.
+  Several applicable attempts require a number, with `apply-ambiguous`
+  naming the choice. Unknown numbers are `unknown-attempt`.
+- `close <id> [--reason "<text>"]` ends any open bounty. A supplied reason
+  records `rejected`; otherwise it records `withdrawn`. An empty reason
+  refuses as `missing-reason`. Repeating close reports the ended state and
+  retries any owed GitHub cleanup.
+- `hook` is the owner's opt-in awareness hook, described above.
 
 ## The answer comes back
 
-The solver hands back the **whole bounty folder**: the original `bounty.json`
-plus a `repo/` they edited — nothing else to write, no diff format to learn.
-`look <id> --from <dir>` (or `apply <id> --from <dir>`) binds it before
-anything runs:
+The solver opens a pull request against the bounty branch. The tool reads
+fetched objects, checks descent from the published commit, refuses hostile
+paths and never-ship content throughout the new history, and refuses an empty
+change. It records facts without executing any solver program.
 
-- `bounty.json` must name this bounty's `id` and this `snapshot.commit` — a
-  folder returned for another bounty or another version is refused
-  (`answer-mismatch`, `snapshot-mismatch`). Its bytes must also be identical to
-  what `create` shipped (the record pins the manifest's sha256): a doctored
-  manifest is `manifest-tampered`. **Return the folder with `bounty.json`
-  untouched; edit `repo/` only.**
-- The answer lands only on a `posted` bounty (`not-posted`); an ended bounty
-  refuses every further transition (`already-ended`).
-
-The change is then extracted by comparing `repo/` against the manifest's
-recorded per-file sha256: changed, added and deleted paths — no diff text, no
-git inside the answer. A return that changes nothing is `answer-empty`. Paths
-the never-ship rules would strip (`.git`, `.box`, secrets, keys, and anything
-the owner's `.boxignore` names — the same table that applied at `create`) and
-links of any kind inside `repo/` are refused by name (`answer-never-ship`,
-`answer-unsafe-path`); everything else — including brand-new files — is the
-answer, and it is the merge commit that carries it into history.
-
-**`answer` reports facts, never a verdict.** A wrong fact is a bug we can
+**Collection reports facts, never a verdict.** A wrong fact is a bug we can
 find; a wrong verdict misleads and cannot be traced — so the report is policed:
 no "correct", "safe", "good", "recommended", "should accept" or
 "should reject", in any outcome, and a test keeps it that way. The report
 states only what was observed:
 
 - `report — attempt <n> for <id>` — which answer this is;
-- `from:` — who sent it (a GitHub account name, or "a returned folder") and
+- `from:` — who sent it (the GitHub account name) and
   when it arrived;
 - `change:` — changed/added/deleted path counts and lines added/removed;
 - `current code:` — a dry merge read (`git merge-tree --write-tree`) of the
@@ -931,7 +865,7 @@ revert is history you own, not a bounty transition, so the record stays
 
 ## The note writes itself
 
-Without `--note`, `create` composes the hand-off note from evidence it
+`create` composes a private note from evidence it
 gathers itself: the files the working state already changed
 relative to `snapshot.baseCommit` — named when they are part of the shipped
 set, a moved submodule is labelled `submodule changed`, and a file the working
@@ -949,36 +883,22 @@ spelling's change.
 When every differing path is one that does not ship, the note says the state
 differs only outside the shipped set — never that the tree matches the last
 commit when it does not.
-The composed note is marked `tool-written` in `bounty.json` and says so in
+The composed note is marked `tool-written` in the record and says so in
 its first line. Gathering never crashes `create`: a repository with nothing
-to report — a clean tree — gets a plain note saying so. `--note`
-still wins when given.
+to report gets a plain note saying so. Older authored public notes remain
+readable.
 
-## What the folder contains
+## The publication preview
 
-```
-<out>/
-  README.md      the listing: what is wanted, what was already tried, where the
-                 code is, what was kept out, how to answer, the reward (the
-                 amount in force at posting) and
-                 the licence fact — enough for a stranger to act on
-  bounty.json    the manifest: id, title, task, note, the licence fact, the
-                 snapshot identifier, every shipped file's sha256 + bytes,
-                 totals, and the never-ship rules that applied with removal
-                 counts (no names) — it carries no command
-  repo/…         the snapshot: the repository as it stands — tracked files with
-                 uncommitted changes plus untracked files that are not ignored;
-                 no .git, no history
-```
+Create shows what posting would publish: the bounty branch commit, commits
+not yet pushed and which uncommitted work stays home. Never-ship removals
+are stated. No source copy or file count is written beside the project.
 
-## The preview
-
-Before anything is written the command prints exactly what would leave: file and
-byte counts, which never-ship rules removed how many files (locally the removed
-names are listed), the task and the destination.
-`--preview` prints that and writes nothing — except the snapshot objects: the
-preview is computed from the recorded commit, so it already exists unreferenced
-in `.git/objects` when the preview returns.
+Create still drafts when `gh` is missing, not signed in or GitHub cannot be
+reached. One line names the reason, such as `github-cli-missing`,
+`github-not-signed-in` or `github-visibility-unreadable`, and says post will
+work out and show the plan before anything becomes public. Drafting needs
+Git only. `post --preview` is the optional publication preview.
 
 ## Checks were removed
 
@@ -987,50 +907,24 @@ task, what was tried, the why and the code, and judging a solution is the
 agent's or the owner's work — never the tool's. `--setup`, `--check` and
 `--guard` are each refused by name (`checks-removed`) so an agent reusing an
 old command line learns why; the `mechanical`/`reviewed` level is gone with
-them, from the manifest, the record and the listing. Manifests and records
+them, from new records and issues. Old records
 written before that day keep their keys on disk and still load — readers
 ignore what no longer exists, and an old record's check outcome is printed as
 dated history, not as anything about the current code.
 
 ## The snapshot identifier
 
-`snapshot.commit` in `bounty.json` is a real commit object in the repository's
-own object store, parented on HEAD, recording the whole working state — created
-through a temporary index (`GIT_INDEX_FILE` + `read-tree` + `add -A` +
-`write-tree` + `commit-tree`), so the working tree, the index and the current
-branch are byte-for-byte untouched, and no ref points at it. To recreate the
-snapshot later, in that repository:
+`snapshot.commit` in the local record is a real commit object parented on
+HEAD, recording the full working state. A temporary index records it with
+`read-tree`, `add -A`, `write-tree` and `commit-tree`; the real index,
+working tree and branch remain unchanged. Owner clean filters run as they do
+for an ordinary commit, so this snapshot holds Git's stored byte form.
 
-Git Bash:
-
-```
-GIT_INDEX_FILE=$(mktemp) git read-tree <commit>
-GIT_INDEX_FILE=$(mktemp) git checkout-index -a --prefix=<target>/
-```
-
-PowerShell:
-
-```
-$env:GIT_INDEX_FILE = (New-TemporaryFile).FullName; git read-tree <commit>; git checkout-index -a --prefix=<target>/; Remove-Item Env:\GIT_INDEX_FILE
-```
-
-or `git archive <commit> | tar -x -C <target>`.
-
-The snapshot commit is made the way your own commit would be: a clean filter
-you configured (git-lfs, git-crypt) runs, so the commit holds what Git stores
-for each file — a pointer, a ciphertext — never the working-tree form. The
-bytes in `repo/` are read back **from that commit**, not from the working
-tree, so what ships is byte-for-byte what the identifier pins (blob bytes —
-Git's eol and attribute filters never apply on the way out, whatever autocrlf
-says) and a file changed between the preview and the write cannot smuggle in
-other bytes. The shipped set is that tree minus never-ship removals;
-`snapshot.tree` and the per-file hashes in `bounty.json` let a later wave verify
-an answer against exactly these bytes. Note the corollary: removed files' bytes
-remain reachable to anyone with repository access through `snapshot.commit` —
-the folder ships only the trimmed set, the commit records the full state.
-The commit is pinned under `refs/box-bounty/<id>` (written by `create`, removed
-when the bounty ends), so garbage collection cannot prune it while the bounty
-is open.
+`snapshot.tree` identifies that tree and `snapshot.baseCommit` identifies
+the original HEAD. The local `refs/box-bounty/<id>` bookmark prevents pruning
+while the bounty is open. Removed never-ship bytes remain reachable in the
+local snapshot; publication independently enforces the boundary on what goes
+to GitHub. The snapshot is unchanged by retiring delivery.
 
 ## Never-ship
 
@@ -1066,6 +960,5 @@ by name (`link-escape`) — never followed. A snapshot path that cannot be read
 **Limit:** never-ship matches names, not contents — a secret inside an
 ordinary-looking file name still ships. The pre-publish scan (above) catches
 secret-shaped content only in what a GitHub post publishes for the first
-time; a local-folder bounty ships the snapshot unchecked, and `.boxignore`
-is the catch-all for those — plus the owner's `never publish` settings list,
+time. `.boxignore` is the catch-all for paths, plus the owner's `never publish` settings list,
 which joins this same table from outside the repository.

@@ -31,7 +31,6 @@ export function renderDescribe(repoRoot: string | null): string {
   if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet. Nobody is known to be watching these issues yet.');
   else lines.push(`  expected wait: ${waits.length === 0 ? 'no solution wait recorded yet' : `${Math.min(...waits).toFixed(1)} to ${Math.max(...waits).toFixed(1)} hours from posting to the first solution recorded, across ${waits.length} bounty/bounties`}; ${merged.length} of ${ended.length} ended posted bounties had a solution merged. Past waits do not predict the next answer.`);
   lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing. Choosing is yours.');
-  lines.push('  where post --to <dir> may deliver: any local folder outside the repository.');
   lines.push(`  ${ownerStatusLine(repoRoot)}`);
   lines.push(renderOpenLine(repoRoot));
   lines.push('', 'next: box bounty create --task <file> --why "<one line>" or box bounty help for the whole journey');

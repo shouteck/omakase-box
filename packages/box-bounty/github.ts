@@ -4,14 +4,14 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
-import { answerBounty, NOTHING_RUN, quoteForeign, readAnswerFolder, showPath } from './answer.js';
-import { renderListing } from './create.js';
+import { NOTHING_RUN, quoteForeign, showPath } from './answer.js';
+import { TOOL_VERSION } from './create.js';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, mergeBase, ownerGitOutcome } from './git.js';
 import type { DryMerge, IndexChange } from './git.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
+import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, requireCurrentDelivery, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { repositoryAddress, requireRepository } from './repository.js';
 import { readReward } from './settings.js';
@@ -76,7 +76,7 @@ export interface GitHubPublication {
   formatRepair?: 'updated' | 'preserved-invalid' | 'update-failed';
 }
 
-// The agent's two publication choices, named on `post <id> --to github`
+// The agent's two publication choices, named on `post <id>`
 // (before BT8 they were made at `confirm`). Records carrying a githubApproval
 // from then still post exactly what was approved.
 export interface GitHubChoice {
@@ -88,7 +88,7 @@ export interface GitHubChoice {
   readonly include: readonly string[];
 }
 
-const PUBLIC_ONLY = 'posting outside would publish the code, so GitHub posting is only for repositories already public; a local folder is still available';
+const PUBLIC_ONLY = 'posting outside would publish the code, so GitHub posting is only for repositories already public';
 const digest = (bytes: Buffer): string => createHash('sha256').update(bytes).digest('hex');
 const redact = (text: string): string => text.replace(/(?:gh[pousr]_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+|glpat-[A-Za-z0-9_-]+)/g, '[credential redacted]');
 const invalid = (reason: string, message: string): never => { throw new BountyRefused(reason, message); };
@@ -115,7 +115,7 @@ function gh(root: string, args: readonly string[]): string {
   ghCallBudget -= 1;
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
-  catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com). A local folder is still available`); }
+  catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com)`); }
   if (!probedGh.has(program.path)) {
     // `gh version`, never `gh --version`: a gh.exe that is a wrapped program
     // may see the double-dash flag eaten by its own runtime before the
@@ -123,10 +123,10 @@ function gh(root: string, args: readonly string[]): string {
     const probe = launch(program, root, ['version']);
     const found = /gh version (\d+)\.(\d+)/.exec(probe.stdout ?? '');
     if (probe.error !== undefined || probe.status !== 0 || found === null) {
-      return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — the program at ${program.path} did not answer 'gh version' (https://cli.github.com). A local folder is still available`);
+      return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — the program at ${program.path} did not answer 'gh version' (https://cli.github.com)`);
     }
     if (Number(found[1]) < 2) {
-      return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com). A local folder is still available`);
+      return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com)`);
     }
     probedGh.add(program.path);
   }
@@ -209,7 +209,7 @@ function publicRepository(root: string): string {
     // CLI presence/version refusals keep their own names — only the auth
     // call's failure means not-signed-in.
     if (error instanceof BountyRefused && error.reason.startsWith('github-cli-')) throw error;
-    return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com). A local folder is still available`);
+    return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com)`);
   }
   let info: unknown;
   try { info = api(root, `repos/${repository}`); }
@@ -217,58 +217,6 @@ function publicRepository(root: string): string {
   if (!isObject(info) || typeof info['full_name'] !== 'string' || info['full_name'].toLowerCase() !== repository.toLowerCase() || typeof info['private'] !== 'boolean' || info['visibility'] !== 'public' && info['visibility'] !== 'private' && info['visibility'] !== 'internal') return invalid('github-visibility-unreadable', PUBLIC_ONLY);
   if (info['private'] !== false || info['visibility'] !== 'public') return invalid('github-private-repository', PUBLIC_ONLY);
   return info['full_name'];
-}
-
-function boundFolder(record: BountyRecord) {
-  const folder = readAnswerFolder(record.folder);
-  if (folder.manifest.id !== record.id || folder.manifest.snapshot.commit !== record.snapshot.commit || record.manifestSha256 === undefined || digest(folder.manifestBytes) !== record.manifestSha256) return invalid('manifest-tampered', 'the bounty folder no longer matches its recorded manifest; nothing was posted');
-  return folder;
-}
-
-// The listing a legacy (pre-BT6a) publication carried — kept so records
-// confirmed the old way can still post, collect and close unchanged.
-function listingSnapshot(record: BountyRecord, repository: string) {
-  if (!/^bt-[a-f\d]{12}$/.test(record.id)) return invalid('record-corrupt', 'the bounty identifier is not valid');
-  const { manifest } = boundFolder(record);
-  const branch = `box-bounty/${record.id}`;
-  const title = `[box bounty ${record.id}] ${publicText(manifest.title)}`;
-  // This path runs only for approvals recorded before rewards existed, so the
-  // bound amount is $0 by definition — the record's `reward` field is never a
-  // render source here (a forged one reads as corrupt at load).
-  const sourceListing = renderListing(manifest, manifest.note, boundAmount(record) ?? 0)
-    .replace('`repo/` holds', 'The branch root holds')
-    .replace('There is no `.git` and no history.', 'No owner Git history was shipped.');
-  const body = `${sourceListing}\n\n## Answer on GitHub\n\nRepository: https://github.com/${repository}\nBranch to work from: \`${branch}\`\nClone only this branch, make the change, and open a pull request against \`${branch}\` in this repository. The branch contains exactly the shipped source, with no owner history.\n\nNobody is known to be watching these issues yet. Anyone can read this issue and the branch, and any account may answer. Collecting an answer runs nothing a solver wrote.\n\n<!-- box-bounty:${record.id} -->\n`;
-  return { branch, title, body };
-}
-
-function shippedCommit(root: string, record: BountyRecord): string {
-  const { manifest } = boundFolder(record);
-  // One ls-tree names each shipped blob's own object id and one cat-file
-  // --batch reads every blob for the digest check — the ids the snapshot
-  // recorded are placed verbatim, so no per-file hash-object round trips.
-  const listing = gitOutcome(root, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objectname) %(path)', record.snapshot.commit]);
-  if (listing.status !== 0) return invalid('snapshot-corrupt', 'the snapshot cannot reproduce the shipped set; nothing was posted');
-  const objectIds = new Map<string, string>();
-  for (const entry of listing.stdout.split('\0')) {
-    const space = entry.indexOf(' ');
-    if (space !== -1) objectIds.set(entry.slice(space + 1), entry.slice(0, space));
-  }
-  const blobs = gitBlobs(root, record.snapshot.commit, manifest.files.map(file => file.path));
-  const changes: IndexChange[] = [];
-  for (const file of manifest.files) {
-    const bytes = blobs.get(file.path);
-    const oid = objectIds.get(file.path);
-    if (bytes === null || bytes === undefined || oid === undefined || digest(bytes) !== file.sha256) return invalid('snapshot-corrupt', 'the snapshot cannot reproduce the shipped set; nothing was posted');
-    changes.push({ mode: '100644', sha: oid, path: file.path });
-  }
-  const work = mkdtempSync(join(tmpdir(), 'box-bt6-index-'));
-  try {
-    gitIndexWrite(root, join(work, 'index'), changes);
-    const env = { GIT_INDEX_FILE: join(work, 'index') };
-    const tree = git(root, ['write-tree'], env);
-    return git(root, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-m', `box bounty ${record.id}`], env);
-  } finally { rmSync(work, { recursive: true, force: true }); }
 }
 
 function remoteGit(root: string, repository: string, args: readonly string[]): void {
@@ -765,12 +713,12 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
   const headSha = headLines[0] ?? '';
   const headTree = headLines[1] ?? '';
   if (!/^[a-f\d]{40}$/.test(headSha) || !/^[a-f\d]{40}$/.test(headTree)) {
-    return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have; a local folder is still available');
+    return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have');
   }
   const tips = scanRemote(root, repository, record.id);
   try {
     if (tips.length === 0) {
-      return invalid('github-no-public-base', 'the GitHub repository reports no branches or tags — there is nothing public to point solvers at; a local folder is still available');
+      return invalid('github-no-public-base', 'the GitHub repository reports no branches or tags — there is nothing public to point solvers at');
     }
     // The commits on the current branch the remote lacks, newest first — read
     // from what the remote itself reports, never a local tracking name.
@@ -790,7 +738,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     const base = gitOutcome(root, ['rev-list', '--topo-order', 'HEAD']).stdout
       .split('\n').map(line => line.trim()).find(sha => sha !== '' && !unpushedSet.has(sha));
     if (base === undefined) {
-      return invalid('github-no-public-base', 'the current branch shares no commit with the GitHub repository — there is nothing public to point solvers at; a local folder is still available');
+      return invalid('github-no-public-base', 'the current branch shares no commit with the GitHub repository — there is nothing public to point solvers at');
     }
     // One staged-index read answers "any unmerged paths" for trackedChanges
     // and "what modes does the index know" for the wip commit — the index is
@@ -917,24 +865,44 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
 // `reward` is the amount the listing states — the bound amount for a posted
 // bounty, the amount in force for a preview — so the words and the format
 // block can never disagree.
+function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content']> {
+  if (record.content !== undefined) return record.content;
+  // Only an unposted draft from before BT15 reads its old public text. No
+  // source copy or returned folder is consulted, and no folder is changed.
+  if (record.folder === undefined) return invalid('record-corrupt', 'this draft has no public task text');
+  let bytes: Buffer;
+  try {
+    const path = join(record.folder, 'bounty.json');
+    if (!lstatSync(path).isFile()) return invalid('legacy-task-unavailable', `the old public task is not a plain file; end it with box bounty close ${record.id}`);
+    bytes = readFileSync(path);
+  }
+  catch { return invalid('legacy-task-unavailable', `the old draft's public task cannot be read; end it with box bounty close ${record.id} and create a new one`); }
+  if (record.manifestSha256 !== undefined && digest(bytes) !== record.manifestSha256) return invalid('manifest-tampered', 'the old draft public text changed; nothing was posted');
+  let value: unknown;
+  try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', 'the old draft public text is unreadable'); }
+  const inputText = (item: unknown): item is { file: string; text: string } => isObject(item) && typeof item['file'] === 'string' && typeof item['text'] === 'string';
+  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot.commit || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', 'the old draft public text is unreadable');
+  return { task: value['task'], note: value['note'], tool: typeof value['tool'] === 'string' ? value['tool'] : TOOL_VERSION };
+}
+
 function listingHistory(record: BountyRecord, repository: string, plan: GitHubPlan, reward: number): { branch: string; title: string; body: string } {
-  const { manifest } = boundFolder(record);
+  const content = bountyContent(record);
   // Generated folder notes describe the local snapshot, including work left home.
   // An authored --note is public by choice; automatic job context stays local.
-  const note = record.noteSource === 'generated' ? null : manifest.note;
+  const note = record.noteSource === 'generated' ? null : content.note;
   const branch = `box-bounty/${record.id}`;
-  const title = `[box bounty ${record.id}] ${publicText(manifest.title)}`;
+  const title = `[box bounty ${record.id}] ${publicText(record.title)}`;
   const onTop = plan.pushed.length === 0
     ? `it points at that commit — nothing new was published`
     : `it carries the poster's work in progress — ${plan.pushed.length} commit(s) on top of that commit: ${plan.pushed.map(c => `\`${c.sha.slice(0, 12)}\` ${c.subject}`).join(', ')}`;
   const body = [
-    `# Bounty: ${publicText(manifest.title)}`,
+    `# Bounty: ${publicText(record.title)}`,
     '',
-    `id ${record.id} · created ${manifest.createdAt} by ${manifest.tool}`,
+    `id ${record.id} · created ${record.createdAt} by ${content.tool}`,
     '',
     '## What is wanted',
     '',
-    publicText(manifest.task.text.trim()),
+    publicText(content.task.text.trim()),
     '',
     // The issue and the create preview agree on the note (BT14, F4): a
     // generated note exists — the preview names it — it is simply not
@@ -1012,7 +980,7 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
   return lines.join('\n');
 }
 
-// `--preview` (and, before BT8, `confirm <id> --to github`): compute the plan
+// `--preview` (and, before BT8, `confirm <id>`): compute the plan
 // once — base, tip, the first-published commits, the work-in-progress lists,
 // the choices and the pre-publish scan — so the printed preview is exactly
 // what a post would publish.
@@ -1102,7 +1070,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     // bind — the post's own refusals still apply.
     const shown = priorWait?.shown;
     if (opts?.answered === true && priorWait?.to === 'github' && shown !== undefined && !sameShown(shown, shownOfPlan(plan))) {
-      return invalid('github-preview-stale', `what would be published changed since this post first waited — the owner's answer was for what they were shown and does not carry over. Run box bounty post ${id} --to github again so the wait records the new state for the owner; nothing was posted`);
+      return invalid('github-preview-stale', `what would be published changed since this post first waited — the owner's answer was for what they were shown and does not carry over. Run box bounty post ${id} again so the wait records the new state for the owner; nothing was posted`);
     }
     // An owner answer clears only what the recorded wait named: a post held
     // for the decision alone can still carry scan hits the owner never saw —
@@ -1227,8 +1195,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         pending: null
       };
     } else if (present.length === 0) {
-      // An approval written before this wave: the snapshot post it approved.
-      publication = { repository, account, ...listingSnapshot(record, repository), commit: shippedCommit(root, record), state: 'preparing', issue: null, pending: null };
+      return invalid('legacy-delivery-retired', `the recorded approval used a retired route; end it with box bounty close ${id}`);
     } else {
       return invalid('record-corrupt', `the recorded GitHub approval carries only some plan fields (${present.join(', ')}) — it is not a readable approval; nothing was posted`);
     }
@@ -1263,14 +1230,15 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     else persistRecord(root, record);
     return { record, destination: publication.issue.url };
   } catch {
-    publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} --to github or remove with box bounty close ${id}`;
+    publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} or remove with box bounty close ${id}`;
     persistRecord(root, record);
     return invalid('github-post-incomplete', publication.pending);
   }
 }
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
-  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; collect a returned folder with box bounty look ${id} --from <dir> or box bounty apply ${id} --from <dir>`);
+  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; post it with box bounty post ${id}, or end it with box bounty close ${id}`);
+  if (record.github.kind !== 'history') return `This bounty used a retired delivery route; end it with box bounty close ${id}`;
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   const lines = [`GitHub answers for ${id} against ${branch}:`];
@@ -1451,6 +1419,7 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
 // the driving command's name for the recorded event.
 export function answerGitHub(root: string, id: string, pr: number, via?: 'look' | 'apply') {
   const record = loadRecord(root, id);
+  requireCurrentDelivery(record);
   if (record.github === undefined || record.github.state !== 'posted') return invalid('not-github-posted', 'this bounty is not posted to GitHub');
   if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — a solution can only come back to a bounty that is still open`);
   if (!Number.isSafeInteger(pr) || pr < 1) return invalid('github-pr-missing', 'name an existing pull request number');
@@ -1468,7 +1437,7 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
   if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
   const payTo = parsePayTo(typeof data['body'] === 'string' ? data['body'] : '');
-  if (publication.kind !== 'history') return collectSnapshotPullRequest(root, record, id, commit, author, pr, via);
+  requireCurrentDelivery(record);
   const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo);
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
     publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
@@ -1492,7 +1461,7 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
   }
   const known = attemptsOf(record).map(candidate => `#${candidate.n}`).join(', ') || 'none yet';
   const way = record.github === undefined
-    ? `name one of them, or collect a returned folder first: box bounty ${via} ${record.id} --from <dir>`
+    ? `post to GitHub with box bounty post ${record.id}, or end it with box bounty close ${record.id}`
     : `name one of them or a pull request number — the pull request collects itself`;
   return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}`);
 }
@@ -1579,41 +1548,6 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   record.attempts = [...attemptsOf(record), attempt];
   persistRecord(root, record);
   return { record, outcome: 'answered' as const, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
-}
-
-// The pre-BT6a path, kept for bounties posted as a snapshot: the pull request
-// tree is materialized into an answer folder bound to the shipped manifest.
-function collectSnapshotPullRequest(root: string, record: BountyRecord, id: string, commit: string, author: string, pr: number, via?: string) {
-  const work = mkdtempSync(join(tmpdir(), `box-bt6-${id}-pr-`));
-  try {
-    mkdirSync(join(work, 'repo'));
-    const { manifestBytes } = boundFolder(record);
-    writeFileSync(join(work, 'bounty.json'), manifestBytes);
-    const tree = gitOutcome(root, ['ls-tree', '-rz', commit]);
-    if (tree.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request tree');
-    const paths: string[] = [];
-    for (const entry of tree.stdout.split('\0')) {
-      if (entry === '') continue;
-      const match = /^(100644|100755) blob ([a-f\d]{40})\t(.+)$/s.exec(entry);
-      if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', 'the pull request tree holds a link or unsafe path; nothing was collected');
-      const path = match[3];
-      if (redact(path) !== path) return invalid('github-response-invalid', 'a pull request path contains credential-shaped text; nothing was collected');
-      paths.push(path);
-    }
-    // One cat-file --batch reads every blob the tree named.
-    const blobs = gitBlobs(root, commit, paths);
-    for (const path of paths) {
-      const bytes = blobs.get(path);
-      if (bytes === null || bytes === undefined) return invalid('github-pr-unreadable', 'a pull request blob could not be read');
-      const target = join(work, 'repo', ...path.split('/'));
-      mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes);
-    }
-    // Any account may answer and any attempt may be applied — nothing a solver
-    // wrote is ever run, so the author is recorded as a fact, not a barrier.
-    return answerBounty(root, id, work, author, { attemptN: pr, ...(via !== undefined ? { via } : {}) });
-  } finally {
-    rmSync(work, { recursive: true, force: true });
-  }
 }
 
 // Local decisions stand even when GitHub is unavailable. Retrying the same

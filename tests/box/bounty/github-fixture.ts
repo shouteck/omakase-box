@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import childProcess, { spawnSync } from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
 import { chmodSync, copyFileSync, cpSync, linkSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -5,6 +6,7 @@ import { delimiter, join } from 'node:path';
 import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot, write } from './support.js';
+import { requireRepository } from '../../../packages/box-bounty/repository.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
 
 export function withoutGh(run: () => void): void {
@@ -185,7 +187,7 @@ const cp = require('node:child_process');
 const originalSpawn = cp.spawnSync;
 cp.spawnSync = function (program, args, options) {
   if (/(^|[\\/])git(?:\.exe)?$/i.test(program) && Array.isArray(args)) {
-    args = args.map(arg => arg === 'https://github.com/owner/project.git' ? process.env.BT8A_GIT_REMOTE : arg);
+    args = args.map(arg => arg === (process.env.BT6_GH_REMOTE_URL ?? 'https://github.com/owner/project.git') ? process.env.BT8A_GIT_REMOTE : arg);
   }
   return originalSpawn.call(this, program, args, options);
 };
@@ -215,7 +217,6 @@ export interface GithubFixture {
   readonly bare: string;
   readonly scratch: string;
   readonly id: string;
-  readonly folder: string;
   readonly state: () => GhState;
   readonly update: (change: Partial<GhState>) => void;
   /** A solver clone of the bounty branch with `app.txt` fixed plus `extra`
@@ -230,11 +231,11 @@ export interface GithubFixture {
 const DEFAULT_FILES: Record<string, string> = { 'app.txt': 'broken\n', '.env': 'NEVER_PUBLIC_SECRET\n', 'check.cjs': "process.exit(require('fs').readFileSync('app.txt','utf8') === 'fixed\\n' ? 0 : 1);\n" };
 
 interface World {
+  readonly repository: string;
   readonly repo: string;
   readonly bare: string;
   readonly scratch: string;
   readonly id: string;
-  readonly folder: string;
   readonly stateFile: string;
   readonly bin: string;
   /** The world's own owner-settings folder (BT8): created with the default
@@ -247,24 +248,44 @@ interface World {
 // The repo, bare "GitHub" remote, gh stand-in and drafted bounty every
 // fixture-style test starts from — one helper, so `fixture` and the shared
 // posted world build exactly the same thing.
-function makeWorld(title: string, files: Record<string, string>, resumeNote?: string, publicNote?: string): World {
-  const repo = makeRepo(files);
+function makeWorld(title: string, files: Record<string, string>, resumeNote?: string, publicNote?: string, existing?: { repo: string; id: string }): World {
+  const repo = existing?.repo ?? makeRepo(files);
   const scratch = runRoot('bt6a');
   const bare = join(scratch, 'remote.git');
   git(repo, ['init', '--bare', bare]);
-  git(repo, ['remote', 'add', 'origin', 'git@github.com:owner/project.git']);
+  const hasOrigin = git(repo, ['remote']).split('\n').includes('origin');
+  if (existing === undefined || !hasOrigin) {
+    if (hasOrigin) git(repo, ['remote', 'set-url', 'origin', 'git@github.com:owner/project.git']);
+    else git(repo, ['remote', 'add', 'origin', 'git@github.com:owner/project.git']);
+  }
+  const repository = existing === undefined ? 'owner/project' : requireRepository(repo);
   // The repository is already public: what is on the remote now is what a
   // bounty can point solvers at. The bare remote stands in for github.com.
   git(repo, ['push', bare, 'main']);
-  write(repo, 'TASK.md', 'Repair the app.\n');
+  if (existing === undefined) write(repo, 'TASK.md', 'Repair the app.\n');
   if (resumeNote !== undefined) {
     write(repo, '.box/bt7-local-context.txt', resumeNote);
     write(repo, 'local-job-context-73c5.txt', 'unfinished local work\n');
   }
   if (publicNote !== undefined) write(repo, 'PUBLIC_NOTE.md', publicNote);
-  const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', outDir: join(scratch, 'bounty'), ...(resumeNote === undefined ? {} : { resumeNote }), ...(publicNote === undefined ? {} : { notePath: join(repo, 'PUBLIC_NOTE.md') }) }));
+  const created = existing === undefined ? finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title, why: 'need another pair of eyes', ...(resumeNote === undefined ? {} : { resumeNote }),  })) : { id: existing.id, };
+  if (publicNote !== undefined) {
+    // A note from the removed input is a pre-BT15 draft fixture. Its original
+    // manifest remains on disk solely to prove read-only draft migration.
+    const recordFile = join(repo, '.box/bounties', created.id + '.json');
+    const record = JSON.parse(readFileSync(recordFile, 'utf8'));
+    const folder = join(scratch, 'legacy-draft');
+    mkdirSync(folder);
+    const bytes = JSON.stringify({ ...record.content, id: record.id, title: record.title, createdAt: record.createdAt, snapshot: record.snapshot, note: { file: 'PUBLIC_NOTE.md', text: publicNote } });
+    writeFileSync(join(folder, 'bounty.json'), bytes);
+    delete record.content;
+    record.folder = folder;
+    record.manifestSha256 = createHash('sha256').update(bytes).digest('hex');
+    record.noteSource = 'authored';
+    writeFileSync(recordFile, JSON.stringify(record));
+  }
   const stateFile = join(scratch, 'state.json');
-  const initial: GhState = { visibility: 'public', private: false, auth: true, account: 'owner', repository: 'owner/project', issues: [], comments: [], prs: [], labels: [], calls: [] };
+  const initial: GhState = { visibility: 'public', private: false, auth: true, account: 'owner', repository, issues: [], comments: [], prs: [], labels: [], calls: [] };
   writeFileSync(stateFile, JSON.stringify(initial));
   const bin = join(scratch, 'bin');
   write(bin, 'standin.cjs', STANDIN);
@@ -277,7 +298,16 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
   const settings = join(scratch, 'settings');
   mkdirSync(settings, { recursive: true });
   writeFileSync(join(settings, 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', default: { bounty: 'allowed', at: '2026-10-13T00:00:00.000Z', changes: [] }, projects: {} }, null, 2) + '\n');
-  return { repo, bare, scratch, id: created.id, folder: created.outDir, stateFile, bin, settings };
+  return { repository, repo, bare, scratch, id: created.id, stateFile, bin, settings };
+}
+
+// An existing owner repository can use the same K19 stand-in as the ordinary
+// fixture. The caller drives real post/PR commands inside run, with no network.
+export function githubRepository(repo: string, id: string) {
+  const world = makeWorld('Existing repository', {}, undefined, undefined, { repo, id });
+  const ownedSettings = process.env['BOX_BOUNTY_SETTINGS_DIR'];
+  const isolated = ownedSettings === undefined ? world : { ...world, settings: ownedSettings };
+  return { ...contextFor(isolated), run: <T>(action: () => T): T => withGhEnv(isolated, action) };
 }
 
 // The gh stand-in's environment for the length of `run`, restored after.
@@ -290,44 +320,52 @@ function withGhEnv<T>(world: World, run: () => T): T {
   const oldNodeOptions = process.env['NODE_OPTIONS'];
   const oldSettings = process.env['BOX_BOUNTY_SETTINGS_DIR'];
   const oldRemote = process.env['BT8A_GIT_REMOTE'];
+  const oldRemoteUrl = process.env['BT6_GH_REMOTE_URL'];
   process.env.PATH = `${world.bin}${delimiter}${oldPath ?? ''}`;
   process.env['BT6_GH_STATE'] = world.stateFile;
   process.env['BT6_GH_STANDIN'] = join(world.bin, 'standin.cjs');
   process.env['BOX_BOUNTY_SETTINGS_DIR'] = world.settings;
   process.env['BT8A_GIT_REMOTE'] = world.bare;
+  process.env['BT6_GH_REMOTE_URL'] = `https://github.com/${world.repository}.git`;
   {
     const preload = join(world.bin, 'gh-preload.cjs').replaceAll('\\', '/');
     process.env['NODE_OPTIONS'] = `${oldNodeOptions ?? ''} --require ${preload}`.trim();
   }
   const originalSpawn = childProcess.spawnSync;
-  const transport = vi.spyOn(childProcess, 'spawnSync').mockImplementation((program, args, options) => {
-    const mapped = /(?:^|[\\/])git(?:\.exe)?$/i.test(String(program)) && Array.isArray(args)
-      ? args.map(arg => arg === 'https://github.com/owner/project.git' ? world.bare : arg) : args;
-    return originalSpawn(program, mapped, options);
+  const transport = new Proxy(originalSpawn, {
+    apply(target, receiver, args) {
+      const mapped = [...args];
+      if (/(?:^|[\\/])git(?:\.exe)?$/i.test(String(args[0])) && Array.isArray(args[1])) {
+        mapped[1] = args[1].map(arg => arg === `https://github.com/${world.repository}.git` ? world.bare : arg);
+      }
+      return Reflect.apply(target, receiver, mapped);
+    }
   });
+  childProcess.spawnSync = transport;
   syncBuiltinESMExports();
   try { return run(); }
   finally {
-    transport.mockRestore();
+    childProcess.spawnSync = originalSpawn;
     syncBuiltinESMExports();
     if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
     if (oldState === undefined) delete process.env['BT6_GH_STATE']; else process.env['BT6_GH_STATE'] = oldState;
     if (oldStandin === undefined) delete process.env['BT6_GH_STANDIN']; else process.env['BT6_GH_STANDIN'] = oldStandin;
     if (oldNodeOptions === undefined) delete process.env['NODE_OPTIONS']; else process.env['NODE_OPTIONS'] = oldNodeOptions;
     if (oldSettings === undefined) delete process.env['BOX_BOUNTY_SETTINGS_DIR']; else process.env['BOX_BOUNTY_SETTINGS_DIR'] = oldSettings;
+    if (oldRemoteUrl === undefined) delete process.env['BT6_GH_REMOTE_URL']; else process.env['BT6_GH_REMOTE_URL'] = oldRemoteUrl;
     if (oldRemote === undefined) delete process.env['BT8A_GIT_REMOTE']; else process.env['BT8A_GIT_REMOTE'] = oldRemote;
   }
 }
 
 function contextFor(world: World): GithubFixture {
-  const { repo, bare, scratch, id, folder, stateFile, bin } = world;
+  const { repo, bare, scratch, id, stateFile, bin } = world;
   const state = (): GhState => JSON.parse(readFileSync(stateFile, 'utf8')) as GhState;
   const update = (change: Partial<GhState>) => writeFileSync(stateFile, JSON.stringify({ ...state(), ...change }));
   /** Register a pull request head already reachable on the remote. */
   const prCommit = (sha: string, author = 'solver', files = ['app.txt'], base = `box-bounty/${id}`) => {
     const n = state().prs.length + 1;
     git(repo, ['push', bare, `+${sha}:refs/pull/${n}/head`]);
-    update({ prs: [...state().prs, { number: n, user: { login: author }, base: { ref: base, repo: { full_name: 'owner/project' } }, head: { sha }, files: files.map(filename => ({ filename })) }] });
+    update({ prs: [...state().prs, { number: n, user: { login: author }, base: { ref: base, repo: { full_name: world.repository } }, head: { sha }, files: files.map(filename => ({ filename })) }] });
   };
   const pr = (author = 'owner', extra: Record<string, string> = {}, base = `box-bounty/${id}`, history = `box-bounty/${id}`): string => {
     const solver = join(scratch, `solver-${state().prs.length}`);
@@ -347,7 +385,7 @@ function contextFor(world: World): GithubFixture {
     update({ prs: [...state().prs, { number: n, user: { login: author }, base: { ref: base, repo: { full_name: 'owner/project' } }, head: { sha }, files: ['app.txt', ...Object.keys(extra)].map(filename => ({ filename })) }] });
     return sha;
   };
-  return { repo, bare, scratch, id, folder, state, update, pr, prCommit, bin };
+  return { repo, bare, scratch, id, state, update, pr, prCommit, bin };
 }
 
 // The drafted world every fixture test starts from is built once per file
@@ -410,14 +448,16 @@ function cloneWorld<M extends World & { readonly prSha?: string }>(master: M, sc
   const bare = join(scratch, 'remote.git');
   const bin = join(scratch, 'bin');
   const stateFile = join(scratch, 'state.json');
-  const folder = join(scratch, 'bounty');
   // The copy's own remote indirection names its own bare remote, never the
   // master's: otherwise every git transport would reach the shared world.
   const configPath = join(repo, '.git', 'config');
   writeFileSync(configPath, readFileSync(configPath, 'utf8').replaceAll(master.bare.replaceAll('\\', '/'), bare.replaceAll('\\', '/')));
-  // The record names the bounty folder by absolute path — the copy's own.
   const recordPath = join(repo, '.box', 'bounties', `${master.id}.json`);
-  writeFileSync(recordPath, JSON.stringify({ ...JSON.parse(readFileSync(recordPath, 'utf8')), folder }, null, 2) + '\n');
+  const record = JSON.parse(readFileSync(recordPath, 'utf8'));
+  if (record.folder !== undefined) {
+    record.folder = join(scratch, 'legacy-draft');
+    writeFileSync(recordPath, JSON.stringify(record));
+  }
   // The gh launcher needs no path rewrite on Windows — gh.exe is node itself
   // and finds its script through BT6_GH_STANDIN, which withGhEnv rebinds to
   // this copy. The cp above made a byte copy, though: relink so each launch
@@ -431,7 +471,7 @@ function cloneWorld<M extends World & { readonly prSha?: string }>(master: M, sc
   // The world's own settings folder copied with the rest of scratch — the
   // copy answers its own owner decision, never the master's and never the
   // suite's shared one.
-  return { repo, bare, scratch, id: master.id, folder, stateFile, bin, settings: join(scratch, 'settings'), prSha: master.prSha } as M;
+  return { repository: master.repository, repo, bare, scratch, id: master.id, stateFile, bin, settings: join(scratch, 'settings'), prSha: master.prSha } as M;
 }
 
 export function postedFixture(run: (context: GithubFixture & { readonly waitingPr: string }) => void, options: PostedOptions = {}) {

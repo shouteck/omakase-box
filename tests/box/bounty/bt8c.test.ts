@@ -1,3 +1,4 @@
+import { postToGitHub, allowGitHub, statusGitHub } from './github-solver.js';
 import { readFileSync, writeFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -17,7 +18,7 @@ const joined = (...parts: string[]) => parts.join('');
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), ...extra };
 }
 
 describe('the owner\'s two lists live in the owner\'s settings, never in the project', () => {
@@ -92,7 +93,7 @@ describe('the scan hold — the owner decides in config, the agent cannot answer
     git(repo, ['add', 'keys.txt']);
     git(repo, ['commit', '-qm', 'keys']);
     refused(() => postBounty(repo, id, 'github'), 'publish-held');
-    refused(() => allowBounty(repo, id), 'allow-scan-held');
+    refused(() => allowGitHub(repo, id), 'allow-scan-held');
     // The hold still stands and nothing was published.
     expect(loadRecord(repo, id).waiting?.reason).toBe('secrets');
     expect(state().issues).toHaveLength(0);
@@ -121,7 +122,7 @@ describe('the scan hold — the owner decides in config, the agent cannot answer
     refused(() => postBounty(repo, id, 'github'), 'publish-held');
     // Status names the finding while it is live and offers the owner no
     // `allow <id>` line — a scan hold is decided in config, never answered.
-    const status = renderStatus(repo);
+    const status = statusGitHub(repo);
     expect(status).toContain('scan finding');
     expect(status).toContain('keys.txt');
     expect(status).not.toContain(`allow ${id}`);
@@ -134,7 +135,7 @@ describe('the scan hold — the owner decides in config, the agent cannot answer
     git(repo, ['add', 'keys.txt']);
     git(repo, ['commit', '-qm', 'keys']);
     refused(() => postBounty(repo, id, 'github'), 'publish-held');
-    const status = renderStatus(repo);
+    const status = statusGitHub(repo);
     expect(status).toContain('keys.txt');
     expect(status).toContain('box bounty config');
     expect(status).not.toContain('IOSFODNN');
@@ -151,12 +152,12 @@ describe('an owner answer is bound to what the owner was shown would be publishe
     write(repo, 'app.txt', 'changed\n');
     git(repo, ['add', 'app.txt']);
     git(repo, ['commit', '-qm', 'moved']);
-    refused(() => allowBounty(repo, id), 'github-preview-stale');
+    refused(() => allowGitHub(repo, id), 'github-preview-stale');
     expect(loadRecord(repo, id).stage).toBe('waiting');
     // Posting again re-records the wait under the new state; the owner's
     // answer on that goes out.
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
-    allowBounty(repo, id);
+    allowGitHub(repo, id);
     expect(loadRecord(repo, id).stage).toBe('posted');
     expect(state().issues).toHaveLength(1);
   }));
@@ -165,7 +166,7 @@ describe('an owner answer is bound to what the owner was shown would be publishe
     write(repo, 'notes/hint.txt', 'a hint\n');
     refused(() => postBounty(repo, id, 'github', { choice: { withChanges: false, include: ['notes/hint.txt'] } }), 'publish-held');
     expect(loadRecord(repo, id).waiting?.shown).toBeDefined();
-    allowBounty(repo, id);
+    allowGitHub(repo, id);
     expect(loadRecord(repo, id).stage).toBe('posted');
     expect(state().issues).toHaveLength(1);
   }));
@@ -229,19 +230,6 @@ describe('create previews the scan — a hit holds nothing and is recorded the s
 });
 
 describe('a settled finding claims only what was verified, and stays visible', () => {
-  it('a folder post runs no scan — the record says the flagged content went out unchecked, and it did', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    write(repo, 'keys.txt', 'key = "AKIA' + 'IOSFODNN7EXAMPLE' + '"\n');
-    const { id } = finalizeBounty(planBounty(options(repo)));
-    expect(loadRecord(repo, id).scanFindings?.[0]?.settled).toBeNull();
-    ownerSays(repo, 'allowed');
-    const { destination } = postBounty(repo, id, join(runRoot('delivered'), 'inbox'));
-    const settled = loadRecord(repo, id).scanFindings?.[0]?.settled;
-    expect(settled).toContain('not re-checked');
-    expect(settled).not.toContain('content changed');
-    // The flagged bytes really did go out in the folder — nothing prettier is claimed.
-    expect(readFileSync(join(destination, 'repo', 'keys.txt'), 'utf8')).toContain('IOSFODNN');
-  });
 
   it('a safe-listed path settles by the list\'s state — the record does not claim who acted', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
@@ -249,7 +237,7 @@ describe('a settled finding claims only what was verified, and stays visible', (
     const { id } = finalizeBounty(planBounty(options(repo)));
     changeConfig(repo, 'add', 'safe-to-publish', 'keys.txt');
     ownerSays(repo, 'allowed');
-    postBounty(repo, id, join(runRoot('delivered-safe'), 'inbox'));
+    postToGitHub(repo, id);
     const settled = loadRecord(repo, id).scanFindings?.[0]?.settled;
     expect(settled).toContain('on safe to publish');
     expect(settled).not.toContain('owner marked');
@@ -261,13 +249,13 @@ describe('a settled finding claims only what was verified, and stays visible', (
     git(repo, ['commit', '-qm', 'keys']);
     refused(() => postBounty(repo, id, 'github'), 'publish-held');
     closeBounty(repo, id);
-    for (const status of [renderStatus(repo), renderStatus(repo, { id }), renderStatus(repo, { id, full: true })]) {
+    for (const status of [statusGitHub(repo), statusGitHub(repo, { id }), statusGitHub(repo, { id, full: true })]) {
       expect(status).toContain('scan finding');
       expect(status).toContain('keys.txt:1');
       expect(status).toContain('ended — nothing was published');
     }
     // The compact ended line marks the fact so the owner knows to look.
-    expect(renderStatus(repo)).toContain('scan finding recorded');
+    expect(statusGitHub(repo)).toContain('scan finding recorded');
     // The summary the owner reads carries it whatever --since says — a
     // settled finding is a standing fact, not an event.
     expect(renderSummary(repo)).toContain('keys.txt:1');

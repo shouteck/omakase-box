@@ -10,10 +10,10 @@ import { CLI_DIST, makeRepo, runRoot, write } from './support.js';
 
 describe('bounty create argument parsing', () => {
   it('parses the documented form', () => {
-    const parsed = parseCreateArgs(['--why', 'stuck', '--title', 'fix me', '--task', 'TASK.md', '--note', 'NOTE.md', '--job', 'JOB.md', '--out', 'dist-bounty', '--repo', '.', '--preview']);
+    const parsed = parseCreateArgs(['--why', 'stuck', '--title', 'fix me', '--task', 'TASK.md', '--resume', 'unfinished work', '--repo', '.']);
     expect(parsed).toEqual({
-      why: 'stuck', title: 'fix me', task: 'TASK.md', note: 'NOTE.md', job: 'JOB.md',
-      out: 'dist-bounty', repo: '.', preview: true
+      why: 'stuck', title: 'fix me', task: 'TASK.md', resume: 'unfinished work',
+      repo: '.'
     });
   });
 
@@ -52,35 +52,24 @@ describe('box bounty create (built cli)', () => {
     spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
   const built = existsSync(CLI_DIST);
 
-  it('preview prints what would leave and writes nothing', () => {
-    if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
-    const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n', 'secrets/k.key': 'fake\n' });
-    const out = join(runRoot('out'), 'bounty');
-    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out, '--preview']);
-    expect(run.status).toBe(0);
-    expect(run.stdout).toContain('preview of what would leave');
-    expect(run.stdout).toContain('secrets/k.key');
-    expect(run.stdout).toContain('secrets-dir: 1');
-    expect(run.stdout).toContain('preview only — nothing was written');
-    expect(existsSync(out)).toBe(false);
-  });
-
   it('prints the stage line on success', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const out = join(runRoot('out'), 'bounty');
-    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
+    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md']);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('— drafted —');
     expect(run.stdout).toMatch(/bt-[a-f0-9]{12}/);
-    expect(existsSync(join(out, 'bounty.json'))).toBe(true);
+    const id = /bt-[a-f0-9]{12}/.exec(run.stdout)![0];
+    expect(existsSync(join(repo, '.box/bounties', id + '.json'))).toBe(true);
+    expect(existsSync(out)).toBe(false);
   });
 
   it('refuses an old check flag with the named checks-removed state and writes nothing', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const out = join(runRoot('out'), 'bounty');
-    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--check', '--', 'python', 'check.py', '--out', out]);
+    const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--check', '--', 'python', 'check.py']);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('checks-removed');
     expect(run.stderr).toContain('removed');
@@ -91,7 +80,7 @@ describe('box bounty create (built cli)', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const dir = runRoot('plain');
     write(dir, 'TASK.md', 'task\n');
-    const run = cli(dir, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', join(runRoot('out'), 'b')]);
+    const run = cli(dir, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md']);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('not-a-repository');
     expect(run.stderr).toContain('box bounty create'); // names the command actually run
@@ -100,7 +89,7 @@ describe('box bounty create (built cli)', () => {
   it('refuses create without --why by name, not with a usage wall', () => {
     if (!built) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
-    const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--out', join(runRoot('out'), 'b')]);
+    const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md']);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('missing-why');
   });
@@ -114,7 +103,7 @@ describe('box bounty create (built cli)', () => {
     expect(run.stdout).toContain('title: Fix the thing.');
     // The default place to write: bounties/<slug> next to the repository root.
     const out = join(realpathSync(dirname(repo)), 'bounties', 'fix-the-thing');
-    expect(existsSync(join(out, 'bounty.json'))).toBe(true);
+    expect(existsSync(out)).toBe(false);
     expect(run.stdout).toContain(`box bounty post`);
   });
 });

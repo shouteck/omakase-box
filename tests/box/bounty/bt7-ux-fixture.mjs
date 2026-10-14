@@ -125,7 +125,7 @@ write(join(repo, '.box/limits.json'), JSON.stringify({ allowedDestinations: ['gi
 const task = 'Complete greeting.txt: welcome new shoppers, let guests check out, tell returning shoppers to resume their saved basket, and say no account is required. Preserve any current accessibility sentence.\n';
 write(join(repo, 'TASK.md'), task);
 write(join(repo, 'basket-plan.txt'), 'Local job: wire the saved basket to the order form after the greeting is ready.\n');
-const created = invoke('create', '--task', join(repo, 'TASK.md'), '--why', 'copywriting handed off while implementing checkout', '--resume', 'Continue wiring the saved basket to the order form; the greeting was the blocker.', '--out', join(root, 'draft'));
+const created = invoke('create', '--task', join(repo, 'TASK.md'), '--why', 'copywriting handed off while implementing checkout', '--resume', 'Continue wiring the saved basket to the order form; the greeting was the blocker.');
 const id = /bt-[a-f\d]{12}/.exec(created)?.[0];
 if (!id) throw new Error('create did not name a bounty');
 invoke('post', id, '--to', 'github');

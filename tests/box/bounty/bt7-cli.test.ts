@@ -64,7 +64,7 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
 }, 'Repair app', files));
 
 it('names each bounty when omitted ids are ambiguous and keeps explicit ended inspection available', () => fixture(context => {
-  const second = finalizeBounty(planBounty({ repoPath: context.repo, title: 'Another task', taskPath: join(context.repo, 'TASK.md'), why: 'separate task', outDir: join(context.scratch, 'second-draft') }));
+  const second = finalizeBounty(planBounty({ repoPath: context.repo, title: 'Another task', taskPath: join(context.repo, 'TASK.md'), why: 'separate task', }));
   for (const command of [['post', '--to', 'github'], ['look', '1'], ['apply', '1'], ['close'], ['close', '--reason', 'done']]) {
     const result = cli(context.repo, ...command);
     expect(result.status).toBe(3); expect(result.stderr).toContain('bounty-ambiguous');

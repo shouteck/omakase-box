@@ -1,3 +1,4 @@
+import { postToGitHub, allowGitHub, statusGitHub } from './github-solver.js';
 import { linkSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -11,7 +12,7 @@ import { git, makeRepo, ROOT, runRoot, write } from './support.js';
 
 const bytes = (repo: string, name: string) => readFileSync(join(repo, name));
 const setup = (files: Record<string, string>) => makeRepo({ 'TASK.md': 'Fix the sum.\n', ...files });
-const draft = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', outDir: join(runRoot('bt8b-out'), 'bounty') }));
+const draft = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', }));
 const block = (repo: string, name: string) => /<!-- box-bounty -->[\s\S]*?<!-- \/box-bounty -->/.exec(bytes(repo, name).toString('utf8'))?.[0];
 
 describe('instruction blocks', () => {
@@ -38,9 +39,9 @@ describe('instruction blocks', () => {
     syncInstructions(repo);
     expect(block(repo, 'AGENTS.md')).toContain('a bounty has a new solution; `box bounty` shows more.');
     expect(block(repo, 'AGENTS.md')).toBe(block(repo, 'GEMINI.md'));
-    renderStatus(repo);
+    statusGitHub(repo);
     expect(block(repo, 'AGENTS.md')).toBe(open);
-    expect(renderStatus(repo)).toContain('seen and not decided');
+    expect(statusGitHub(repo)).toContain('seen and not decided');
     closeBounty(repo, id);
     expect(block(repo, 'AGENTS.md')).toBe(idle);
     const final = bytes(repo, 'AGENTS.md');
@@ -108,8 +109,8 @@ describe('instruction blocks', () => {
     changeConfig(repo, 'set', 'instructions', 'true');
     write(repo, 'GEMINI.md', 'new\n');
     expect(renderConfig(repo)).toContain('GEMINI.md');
-    expect(renderStatus(repo)).toContain('box bounty config set instructions true');
-    expect(renderStatus(repo)).not.toContain('lacks the block');
+    expect(statusGitHub(repo)).toContain('box bounty config set instructions true');
+    expect(statusGitHub(repo)).not.toContain('lacks the block');
     expect(bytes(repo, 'GEMINI.md').toString()).toBe('new\n');
     changeConfig(repo, 'set', 'instructions', 'true');
     expect(block(repo, 'GEMINI.md')).toBeDefined();
@@ -191,7 +192,7 @@ it('finding a GitHub solution changes the block to new; only showing it clears n
   refreshGitHubStatus(repo, loadRecord(repo, id));
   expect(instructionBlock(repo)).toContain('a bounty has a new solution');
   expect(block(repo, 'AGENTS.md')).toBe(block(repo, 'GEMINI.md'));
-  renderStatus(repo);
+  statusGitHub(repo);
   expect(instructionBlock(repo)).toContain('a bounty is open');
   expect(instructionBlock(repo)).not.toContain('new solution');
 }));
@@ -216,10 +217,10 @@ it('retires malformed limits without reading them and reports migration once', (
   const before = bytes(repo, '.box/limits.json');
   expect(renderDescribe(repo)).toContain('no bounty history yet');
   expect(renderDescribe(repo)).not.toContain('cost: not stated');
-  expect(renderStatus(repo)).toContain('no longer read');
-  expect(renderStatus(repo)).not.toContain('no longer read');
+  expect(statusGitHub(repo)).toContain('no longer read');
+  expect(statusGitHub(repo)).not.toContain('no longer read');
   const { id } = draft(repo);
-  expect(() => postBounty(repo, id, join(runRoot('bt8b-drop'), 'drop'))).toThrow('waiting for the owner');
+  expect(() => postToGitHub(repo, id)).toThrow('waiting for the owner');
   expect(bytes(repo, '.box/limits.json')).toEqual(before);
   expect(renderRules(null)).not.toContain('open bounties: none');
 });

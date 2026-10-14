@@ -1,3 +1,4 @@
+import { postToGitHub, collectPullRequest, applyPullRequest, applyGitHub, closeGitHub, statusGitHub, pullRequestFor, solverCli } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
 import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -18,13 +19,13 @@ const readRecord = (repo: string, id: string): BountyRecord =>
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), ...extra };
 }
 
 function posted(repo: string, extra: Partial<CreateOptions> = {}): { id: string; delivered: string } {
   const result = finalizeBounty(planBounty(options(repo, extra)));
   ownerSays(repo, 'allowed');
-  const { destination } = postBounty(repo, result.id, join(runRoot('dest'), 'inbox'));
+  const { destination } = postToGitHub(repo, result.id);
   return { id: result.id, delivered: destination };
 }
 
@@ -56,10 +57,10 @@ describe('the fact report', () => {
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
 
-    const result = lookBounty(repo, id, { from: dir });
+    const result = collectPullRequest(repo, id, dir);
     const report = result.attempt.report.join('\n');
     expect(report).toContain(`report — attempt 1 for ${id}`);
-    expect(report).toContain('from: a returned folder — no account was named — arrived');
+    expect(report).toContain('from: GitHub account solver — arrived');
     expect(report).toContain('1 changed, 0 added, 0 deleted');
     expect(report).toContain('lines added');
     expect(report).toContain('current code: the solution would merge cleanly');
@@ -77,7 +78,7 @@ describe('the fact report', () => {
     git(repo, ['add', '-A']);
     git(repo, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'moved']);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    const result = lookBounty(repo, id, { from: dir });
+    const result = collectPullRequest(repo, id, dir);
     expect(result.attempt.outcome).toBe('answered');
     expect(result.attempt.report.join('\n')).toContain('would conflict in "src/app.py"');
     expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run');
@@ -94,7 +95,7 @@ describe('flags — observations, never blocks', () => {
       rmSync(join(root, 'repo', 'stale.txt'));
       for (let i = 0; i < 22; i += 1) write(root, `repo/gen/f${i}.txt`, `f${i}\n`);
     });
-    const report = lookBounty(repo, id, { from: dir }).attempt.report.join('\n');
+    const report = collectPullRequest(repo, id, dir).attempt.report.join('\n');
     expect(report).toContain('marked as a test by the stated rule');
     expect(report).toContain('the solution adds 23 file(s)');
     expect(report).toContain('the solution deletes 1 file(s)');
@@ -106,12 +107,12 @@ describe('several answers — each is its own attempt', () => {
   it('full status includes every report once when a later acceptable attempt sorts first', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'first\n')) });
-    lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')) });
+    collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'first\n')));
+    collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')));
     const record = readRecord(repo, id);
     record.attempts = attemptsOf(record).map((attempt): Attempt => ({ ...attempt, outcome: attempt.n === 1 ? 'check-failed' : 'answered', report: [attempt.n === 1 ? 'FIRST_FAILED_REPORT_73c5' : 'SECOND_ANSWERED_REPORT_73c5'] }));
     writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record));
-    const status = renderStatus(repo, { id, full: true });
+    const status = statusGitHub(repo, { id, full: true });
     expect(status.split('FIRST_FAILED_REPORT_73c5')).toHaveLength(2);
     expect(status.split('SECOND_ANSWERED_REPORT_73c5')).toHaveLength(2);
   });
@@ -120,11 +121,11 @@ describe('several answers — each is its own attempt', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const bad = returned(delivered, root => write(root, 'repo/src/app.py', 'still broken\n'));
-    expect(lookBounty(repo, id, { from: bad }).attempt.outcome).toBe('answered');
+    expect(collectPullRequest(repo, id, bad).attempt.outcome).toBe('answered');
     expect(readRecord(repo, id).stage).toBe('answered');
 
     const good = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    const second = lookBounty(repo, id, { from: good });
+    const second = collectPullRequest(repo, id, good);
     expect(second.attempt.outcome).toBe('answered');
     expect(second.attempt.n).toBe(2);
     const record = readRecord(repo, id);
@@ -132,13 +133,13 @@ describe('several answers — each is its own attempt', () => {
     expect(refExists(repo, `refs/box-bounty/${id}-answer-1`)).toBe(true);
     expect(refExists(repo, `refs/box-bounty/${id}-answer-2`)).toBe(true);
     // status lists every attempt in order — no check sorts one above another.
-    const status = renderStatus(resolveRepoRoot(repo));
+    const status = statusGitHub(resolveRepoRoot(repo));
     const firstIdx = status.indexOf('#1 answered');
     const secondIdx = status.indexOf('#2 answered');
     expect(firstIdx).toBeGreaterThan(-1);
     expect(secondIdx).toBeGreaterThan(firstIdx);
 
-    expect(applyBounty(repo, id, 2).outcome).toBe('applied');
+    expect(applyGitHub(repo, id, 2).outcome).toBe('applied');
     expect(refExists(repo, `refs/box-bounty/${id}-answer-1`)).toBe(false); // the other's ref is gone
     expect(refExists(repo, `refs/box-bounty/${id}-answer-2`)).toBe(false);
     expect(refExists(repo, `refs/box-bounty/${id}`)).toBe(false);
@@ -148,16 +149,16 @@ describe('several answers — each is its own attempt', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const first = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    expect(lookBounty(repo, id, { from: first }).attempt.outcome).toBe('answered');
+    expect(collectPullRequest(repo, id, first).attempt.outcome).toBe('answered');
     const second = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed again\n'));
-    expect(lookBounty(repo, id, { from: second }).attempt.outcome).toBe('answered');
+    expect(collectPullRequest(repo, id, second).attempt.outcome).toBe('answered');
 
-    const refusal = expectRefusal(() => applyBounty(repo, id), 'apply-ambiguous');
+    const refusal = expectRefusal(() => applyGitHub(repo, id), 'apply-ambiguous');
     expect(refusal.message).toContain('#1');
     expect(refusal.message).toContain('#2');
-    expectRefusal(() => applyBounty(repo, id, 9), 'unknown-attempt');
+    expectRefusal(() => applyGitHub(repo, id, 9), 'github-pr-missing');
 
-    const applied = applyBounty(repo, id, 2);
+    const applied = applyGitHub(repo, id, 2);
     expect(applied.outcome).toBe('applied');
     expect(applied.attempt).toBe(2);
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('fixed again\n');
@@ -170,7 +171,7 @@ describe('older records still load', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
     const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n'));
-    lookBounty(repo, id, { from: dir });
+    collectPullRequest(repo, id, dir);
     // Rewrite the record into the pre-BT3a shape: a single `answer`, no
     // `attempts`, the ref named <id>-answer — and a `level` key, which records
     // written while checks existed carried. A mechanical record's single
@@ -183,11 +184,11 @@ describe('older records still load', () => {
     git(repo, ['update-ref', `refs/box-bounty/${id}-answer`, attempt.commit]);
     git(repo, ['update-ref', '-d', `refs/box-bounty/${id}-answer-1`]);
 
-    const status = renderStatus(resolveRepoRoot(repo));
+    const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`${id}  answered`);
     expect(status).toContain('declared check'); // the recorded outcome still says what the check did back then
-    expect(status).toContain('before fact reports existed');
-    expect(applyBounty(repo, id).outcome).toBe('applied');
+    expect(statusGitHub(repo, { id, full: true })).toContain('before fact reports existed');
+    expect(applyGitHub(repo, id).outcome).toBe('applied');
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('fixed\n');
     expect(refExists(repo, `refs/box-bounty/${id}-answer`)).toBe(false);
   });
@@ -204,17 +205,17 @@ describe('the words are policed — facts, never verdicts', () => {
     // answered — clean merge read
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    const clean = lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')) });
+    const clean = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
     expect(clean.attempt.report.join('\n')).not.toMatch(BANNED);
-    expect(renderStatus(resolveRepoRoot(repo))).not.toMatch(BANNED);
+    expect(statusGitHub(resolveRepoRoot(repo))).not.toMatch(BANNED);
 
     // answered — with flags firing
     const repo2 = makeRepo({ 'src/app.py': 'x\n', 'tests/t.js': 'x\n' });
     const posted2 = posted(repo2);
-    const flagged = lookBounty(repo2, posted2.id, { from: returned(posted2.delivered, root => {
+    const flagged = collectPullRequest(repo2, posted2.id, returned(posted2.delivered, root => {
       write(root, 'repo/tests/t.js', 'y\n');
       write(root, 'repo/new.txt', 'n\n');
-    }) });
+    }));
     expect(flagged.attempt.report.join('\n')).not.toMatch(BANNED);
 
     // answered — with a merge conflict
@@ -223,24 +224,24 @@ describe('the words are policed — facts, never verdicts', () => {
     write(repo4, 'src/app.py', 'moved\n');
     git(repo4, ['add', '-A']);
     git(repo4, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'moved']);
-    const conflicted = lookBounty(repo4, posted4.id, { from: returned(posted4.delivered, root => write(root, 'repo/src/app.py', 'fixed\n')) });
+    const conflicted = collectPullRequest(repo4, posted4.id, returned(posted4.delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
     expect(conflicted.attempt.report.join('\n')).not.toMatch(BANNED);
-    expect(renderStatus(resolveRepoRoot(repo4))).not.toMatch(BANNED);
+    expect(statusGitHub(resolveRepoRoot(repo4))).not.toMatch(BANNED);
 
     // answered — a solver-named path carrying verdict words stays quoted data
     const repo5 = makeRepo({ 'src/app.py': 'x\n' });
     const posted5 = posted(repo5);
-    const named = lookBounty(repo5, posted5.id, { from: returned(posted5.delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')) });
+    const named = collectPullRequest(repo5, posted5.id, returned(posted5.delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')));
     const namedReport = named.attempt.report.join('\n');
     expect(namedReport).toContain('"tests/should accept.py"');
     expect(prose(namedReport)).not.toMatch(BANNED);
-    expect(prose(renderStatus(resolveRepoRoot(repo5)))).not.toMatch(BANNED);
+    expect(prose(statusGitHub(resolveRepoRoot(repo5)))).not.toMatch(BANNED);
   });
 
   it('a quoted path cannot break out of the prose — a double quote or a newline shows JSON-escaped, not raw', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
-    lookBounty(repo, id, { from: returned(delivered, root => write(root, 'repo/src/app.py', 'y\n')) });
+    collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'y\n')));
     // No filesystem the tests run on can hold this name — the record is the
     // rendering boundary, so a hostile path is written into it directly, the
     // same way the pre-attempts record test rewrites history.
@@ -249,7 +250,7 @@ describe('the words are policed — facts, never verdicts', () => {
     record.conflicts = { paths: [hostile], at: new Date().toISOString() };
     record.attempts = attemptsOf(record).map(attempt => ({ ...attempt, conflicts: [hostile] }));
     writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record, null, 2) + '\n');
-    const status = renderStatus(resolveRepoRoot(repo));
+    const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(JSON.stringify(hostile));
     expect(status).not.toContain(hostile);
     expect(prose(status)).not.toMatch(BANNED);

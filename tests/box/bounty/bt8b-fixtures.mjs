@@ -56,7 +56,7 @@ if (process.argv[2] === 'cleanup') {
     git(repo, ['add', '-A']);
     git(repo, ['commit', '-qm', 'fixture base']);
     if (state !== 'none') run(repo, settings, ['config', 'set', 'instructions', 'true']);
-    if (state === 'open') run(repo, settings, ['create', '--task', 'TASK.md', '--why', 'an outside opinion', '--out', join(root, label, 'draft')]);
+    if (state === 'open') run(repo, settings, ['create', '--task', 'TASK.md', '--why', 'an outside opinion']);
     const instructions = readFileSync(join(repo, 'AGENTS.md'), 'utf8');
     const block = /<!-- box-bounty -->[\s\S]*?<!-- \/box-bounty -->/.exec(instructions)?.[0] ?? null;
     if (second && !readFileSync(join(repo, 'CLAUDE.md'), 'utf8').includes(block ?? 'absent')) throw new Error('the two maintained blocks differ');

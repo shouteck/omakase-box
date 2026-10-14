@@ -1,3 +1,4 @@
+import { postToGitHub, allowGitHub, statusGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,7 +13,7 @@ function repo(address = 'owner/project'): string {
   return root;
 }
 function draft(root: string) {
-  return finalizeBounty(planBounty({ repoPath: root, taskPath: join(root, 'TASK.md'), why: 'another pair of eyes', title: 'repair', outDir: join(runRoot('BT8a-out'), 'bounty') }));
+  return finalizeBounty(planBounty({ repoPath: root, taskPath: join(root, 'TASK.md'), why: 'another pair of eyes', title: 'repair', }));
 }
 const cli = (root: string, ...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: root, encoding: 'utf8', env: process.env, timeout: 30000 });
 const saved = () => existsSync(settingsFile()) ? readFileSync(settingsFile(), 'utf8') : null;
@@ -125,7 +126,7 @@ describe('repository authority replaces path authority', () => {
     expect(loadRecord(root, id).stage).toBe('drafted');
     expect(readDecision(root)).toMatchObject({ decision: null, denied: true });
     expect(renderConfig(root)).toContain('repositories: 0 active');
-    expect(renderStatus(root)).toContain('this repository is no longer allowed; denied at');
+    expect(statusGitHub(root)).toContain('this repository is no longer allowed; denied at');
     expect(loadSettings().repositories['owner/project']?.changes.map(entry => entry.bounty)).toEqual(['allowed']);
     allowRepository(root);
     expect(readDecision(root).decision).toBe('allowed');
@@ -244,7 +245,7 @@ describe('the three owner words through the built CLI', () => {
     expect(renderConfig(root)).toContain('this repository: owner/project; not allowed; denied at');
     expect(renderConfig(root, { full: true })).toContain('A dated deny removal keeps that repository not allowed even when all-projects is true or ask');
     const { id } = draft(root);
-    refused(() => postBounty(root, id, join(runRoot('BT8a-choice'), 'inbox')), 'owner-allow-needed');
+    refused(() => postToGitHub(root, id), 'owner-allow-needed');
     expect(renderConfig(root)).toContain(`this one bounty only: box bounty allow ${id}`);
   });
 });
@@ -269,7 +270,7 @@ it('waiting exits 0, keeps the first time, and permission is read before any gh 
 
 it('closing a waiting bounty twice stays a named terminal outcome', () => {
   const root = repo(), { id } = draft(root);
-  expect(cli(root, 'post', id, '--to', join(runRoot('BT8a-inbox'), 'inbox')).status).toBe(0);
+  expect(cli(root, 'post', id).status).toBe(0);
   expect(closeBounty(root, id).outcome).toBe('withdrawn');
   const again = cli(root, 'close', id);
   expect(again.status).toBe(0);
@@ -279,10 +280,10 @@ it('closing a waiting bounty twice stays a named terminal outcome', () => {
 
 it('a previous one-bounty choice is visible on the next held post', () => {
   const root = repo(), first = draft(root);
-  refused(() => postBounty(root, first.id, join(runRoot('BT8a-once'), 'inbox')), 'owner-allow-needed');
-  allowBounty(root, first.id);
+  refused(() => postToGitHub(root, first.id), 'owner-allow-needed');
+  allowGitHub(root, first.id);
   const second = draft(root);
-  try { postBounty(root, second.id, join(runRoot('BT8a-once'), 'inbox')); expect.unreachable('post must wait'); }
+  try { postToGitHub(root, second.id); expect.unreachable('post must wait'); }
   catch (error) { expect(error).toMatchObject({ reason: 'owner-allow-needed' }); expect(String(error)).toContain('previously chose this one bounty only'); }
   expect(readDecision(root).decision).toBeNull();
 });
@@ -306,7 +307,7 @@ it('legacy tool-written owner spellings are scrubbed on every replay field and h
   record.events.push({ stage: 'confirmed', at: '2026-10-13T00:00:00.000Z', command: 'confirm' });
   writeFileSync(path, JSON.stringify(record));
   withoutGh(() => {
-    const status = renderStatus(root, { full: true });
+    const status = statusGitHub(root, { full: true });
     expect(status).not.toContain('box bounty owner ');
     expect(status).not.toContain('"command":"owner ');
     expect(status).not.toContain('"command":"confirm"');
@@ -317,13 +318,13 @@ it('legacy tool-written owner spellings are scrubbed on every replay field and h
 it('ask: allowing a waiting bounty posts directly and closes without another question', () => fixture(({ repo: root, id, state, bare }) => {
   allowRepository(root, undefined, true);
   refused(() => postBounty(root, id, 'github'), 'owner-answer-needed');
-  expect(allowBounty(root, id)).toContain('answered once');
+  expect(allowGitHub(root, id)).toContain('answered once');
   expect(state().issues).toHaveLength(1);
   closeBounty(root, id, 'no solution');
   expect(loadRecord(root, id).waiting).toBeUndefined();
   expect(state().issues[0]?.state).toBe('closed');
   expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
-  refused(() => allowBounty(root, id), 'owner-answer-not-waiting');
+  refused(() => allowGitHub(root, id), 'owner-answer-not-waiting');
   expect(renderSummary(root)).toContain('bounties posted: 1');
   expect(renderSummary(root, '2999-01-01')).toContain('bounties posted: 0');
 }));
@@ -337,6 +338,6 @@ it('a stranger merge notice names the commit once per repository and status reta
   expect(first.stdout).toContain(merge);
   expect(git(root, ['merge-base', '--is-ancestor', waitingPr, 'HEAD'])).toBe('');
   expect(cli(root, 'apply', id, '1').stdout).not.toContain('Tell the owner');
-  expect(renderStatus(root)).toContain(`first outside solution merged in owner/project: commit ${merge}`);
+  expect(statusGitHub(root)).toContain(`first outside solution merged in owner/project: commit ${merge}`);
   expect(loadSettings().firstMerges['owner/project']?.commit).toBe(merge);
 }, { prAuthor: 'solver' }));

@@ -1,3 +1,4 @@
+import { postToGitHub, collectPullRequest, applyGitHub, closeGitHub, statusGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -27,8 +28,8 @@ it('a stored outside-answers text written before BT7c names no removed command',
   persistRecord(context.repo, record);
   context.update({ fail: '/issues' }); // refresh cannot run — the stored text is what prints
   for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
-    expect(renderStatus(context.repo, { id: context.id })).not.toContain(`bounty ${gone}`);
-    expect(renderStatus(context.repo, { id: context.id, full: true })).not.toContain(`bounty ${gone}`);
+    expect(statusGitHub(context.repo, { id: context.id })).not.toContain(`bounty ${gone}`);
+    expect(statusGitHub(context.repo, { id: context.id, full: true })).not.toContain(`bounty ${gone}`);
     expect(renderOpenLine(context.repo)).not.toContain(`bounty ${gone}`);
   }
 }));
@@ -54,7 +55,7 @@ describe('no output names a removed command', () => {
     // The comments path reads GitHub live — scan it while the stand-in still
     // answers, with a stranger's comment on the wire.
     context.update({ comments: [{ body: 'a question from a solver', user: { login: 'stranger' }, created_at: '2026-10-12T01:00:00Z' }] });
-    scan('status-comments', renderStatus(repo, { id, comments: true }));
+    scan('status-comments', statusGitHub(repo, { id, comments: true }));
 
     // Planted pre-wave stored text on the posted bounty: the old listing's
     // collect wording and a pending line written while `withdraw` existed.
@@ -74,7 +75,7 @@ describe('no output names a removed command', () => {
     // renderings and their next steps.
     writeFileSync(join(repo, '.box', 'bounties', 'bt-corrupt.json'), 'not json {');
     for (const [index, stage] of (['rejected', 'withdrawn', 'undone'] as const).entries()) {
-      const made = finalizeBounty(planBounty({ repoPath: repo, title: `legacy ${stage}`, taskPath: join(repo, 'TASK.md'), why: 'older record', outDir: join(runRoot(`bt7c-${stage}`), 'bounty') }));
+      const made = finalizeBounty(planBounty({ repoPath: repo, title: `legacy ${stage}`, taskPath: join(repo, 'TASK.md'), why: 'older record', }));
       const file = join(repo, '.box', 'bounties', `${made.id}.json`);
       const record = JSON.parse(readFileSync(file, 'utf8')) as BountyRecord;
       record.stage = stage;
@@ -89,10 +90,10 @@ describe('no output names a removed command', () => {
     scan('rules-repo', renderRules(repo));
     scan('open-line', renderOpenLine(repo));
     scan('rules-block', renderRulesBlock('open'));
-    scan('status', renderStatus(resolveRepoRoot(repo)));
-    scan('status-id', renderStatus(repo, { id }));
-    scan('status-full', renderStatus(repo, { id, full: true }));
-    try { scan('status-comments-stale', renderStatus(repo, { id, comments: true })); } catch (error) { if (error instanceof BountyRefused) scan('status-comments-stale', `refused (${error.reason}): ${error.message}`); else throw error; }
+    scan('status', statusGitHub(resolveRepoRoot(repo)));
+    scan('status-id', statusGitHub(repo, { id }));
+    scan('status-full', statusGitHub(repo, { id, full: true }));
+    try { scan('status-comments-stale', statusGitHub(repo, { id, comments: true })); } catch (error) { if (error instanceof BountyRefused) scan('status-comments-stale', `refused (${error.reason}): ${error.message}`); else throw error; }
     scan('open-file', readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8'));
 
     // Refusals from each command path, collected as printed text.
@@ -103,14 +104,14 @@ describe('no output names a removed command', () => {
       }
     };
     grab(() => loadRecord(repo, 'bt-000000000000'));
-    grab(() => postBounty(repo, id, join(runRoot('bt7c-dest'), 'inbox')));
-    grab(() => postBounty(repo, id, join(runRoot('bt7c-dest'), 'drop')));
+    grab(() => postToGitHub(repo, id));
+    grab(() => postToGitHub(repo, id));
     grab(() => lookBounty(repo, id, 99));
-    grab(() => lookBounty(repo, id, { from: join(runRoot('bt7c-missing'), 'none') }));
+    grab(() => lookBounty(repo, id, 1000));
     grab(() => applyBounty(repo, id, 99));
-    const ended = finalizeBounty(planBounty({ repoPath: repo, title: 'close me', taskPath: join(repo, 'TASK.md'), why: 'ended', outDir: join(runRoot('bt7c-ended'), 'bounty') }));
-    grab(() => closeBounty(repo, ended.id, '   ')); // empty reason refused
-    closeBounty(repo, ended.id);
+    const ended = finalizeBounty(planBounty({ repoPath: repo, title: 'close me', taskPath: join(repo, 'TASK.md'), why: 'ended', }));
+    grab(() => closeGitHub(repo, ended.id, '   ')); // empty reason refused
+    closeGitHub(repo, ended.id);
     grab(() => applyBounty(repo, ended.id)); // already-ended
 
     // The built CLI's own output: the journey and the removed-name refusals.

@@ -8,6 +8,7 @@ import { fixture, postedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, write, makeRepo } from './support.js';
 import { ordinaryTree } from './ordinary-tree.js';
+import { resolveProgram } from '../../../packages/box-package/commands.js';
 
 const files = { 'app.txt': 'broken\n', 'untouched.txt': 'owner bytes\n' };
 
@@ -25,7 +26,7 @@ const ghComment = (context: GithubFixture, body: string): void => {
   if (issue === undefined) throw new Error('fixture has no issue');
   const file = join(context.scratch, `reply-${Date.now()}.json`);
   writeFileSync(file, JSON.stringify({ body }));
-  const run = spawnSync('gh', ['api', '--hostname', 'github.com', `repos/owner/project/issues/${issue}/comments`, '--input', file], { encoding: 'utf8' });
+  const run = spawnSync(resolveProgram('gh').path, ['api', '--hostname', 'github.com', `repos/owner/project/issues/${issue}/comments`, '--input', file], { encoding: 'utf8' });
   if (run.status !== 0) throw new Error(`gh comment failed: ${run.stderr}`);
 };
 

@@ -3,13 +3,13 @@
 //   submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]
 //   verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]
 //   trace --out <dir> -- <the test command, as it would normally be typed>
-//   bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--out <dir>] [--repo <path>] [--preview]
+//   bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--repo <path>]
 //   bounty help
 //   bounty describe [--rules] [--repo <path>]
 //   bounty status [<id>] [--full] [--comments] [--repo <path>]
-//   bounty post [<id>] --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]
-//   bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]
-//   bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]
+//   bounty post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]
+//   bounty look [<id>] <n> [--full] [--repo <path>]
+//   bounty apply [<id>] [<n>] [--repo <path>]
 //   bounty close [<id>] [--reason "<text>"] [--repo <path>]
 //   bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>]
 //   bounty deny [owner/name]
@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, finalizeBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, planBounty, postBounty, recordPath, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, postBounty, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -47,13 +47,13 @@ function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
 // The bounty tool leads every command list (BT14): it is the product an
 // agent is handed, the older export/submit/verify/trace commands after it.
 const HELP_LINES = [
-  'usage: box bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--resume "<short note>"] [--out <dir>] [--repo <path>] [--preview]',
+  'usage: box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>] [--preview]',
   '       box bounty help',
   '       box bounty describe [--rules] [--repo <path>]',
   '       box bounty status [<id>] [--full] [--comments] [--repo <path>]',
-  '       box bounty post [<id>] --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]',
-  '       box bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]',
-  '       box bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]',
+  '       box bounty post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]',
+  '       box bounty look [<id>] <n> [--full] [--repo <path>]',
+  '       box bounty apply [<id>] [<n>] [--repo <path>]',
   '       box bounty close [<id>] [--reason "<text>"] [--repo <path>]',
   '       box bounty allow|deny|config — the owner\'s settings',
   '       <id> may be left out when exactly one bounty can take the command',
@@ -214,18 +214,20 @@ if (command === 'export') {
   const jobLine = (record: { job?: { file: string } | null; title: string }): string =>
     `the job it came from: ${record.job?.file ?? record.title}`;
   try {
+    if ((subcommand === 'look' || subcommand === 'apply') && bountyArgs.some(arg => arg === '--from' || arg.startsWith('--from='))) throw new BountyRefused('folder-delivery-retired', 'folder solutions were retired; collect a pull request with box bounty look <id> <number> or box bounty apply <id> <number>. Nothing changed');
+    if (subcommand === 'post' && bountyArgs.some((arg, index) => arg === '--to' && bountyArgs[index + 1] !== 'github' || arg.startsWith('--to=') && arg !== '--to=github')) throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
     // The commands BT7c removed: a typed name is a named refusal that says
     // what replaced it — never a silent drop, never an alias that runs the
     // old operation. The refusal line above names what was typed.
     const removed: Record<string, string> = {
-      answer: 'collection is a step inside look and apply, not a command — box bounty look <id> <number> collects a pull request and shows its change; box bounty apply <id> <number> collects and merges; a returned folder goes to the same two with --from <dir>',
+      answer: 'collection is a step inside look and apply, not a command — box bounty look <id> <number> collects a pull request and shows its change; box bounty apply <id> <number> collects and merges',
       questions: 'reading what other accounts wrote is part of status — box bounty status <id> --comments',
       reply: 'the tool no longer writes comments for you — comment on the issue in your own words with your own gh, for example gh issue comment <number> --body "<your own words>"',
       undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it: git revert -m 1 <merge>',
       reject: 'ending a bounty with nothing merged is one command now — box bounty close <id> --reason "<why>" keeps the reason on the record',
       withdraw: 'ending a bounty with nothing merged is one command now — box bounty close <id>',
       remind: 'the tool no longer supplies reminders; box bounty shows the current overview',
-      confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --to github --preview, publish with box bounty post <id> --to github; the owner uses box bounty allow, deny and config'
+      confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --preview, publish with box bounty post <id>; the owner uses box bounty allow, deny and config'
     };
     if (removed[subcommand!] !== undefined) {
       throw new BountyRefused('command-removed', removed[subcommand!]!);
@@ -259,27 +261,18 @@ if (command === 'export') {
       const parsed = parseCreateArgs(bountyArgs);
       // --task stays a usage error; a missing --why is the named refusal
       // missing-why, thrown by planBounty — not a usage wall.
-      if (parsed.task === undefined) usage('bounty create needs --task <file> (and --why "<one line>") — run box bounty help');
-      const plan = planBounty({
-        repoPath: parsed.repo !== undefined ? resolve(parsed.repo) : process.cwd(),
-        why: parsed.why ?? '',
+      if (parsed.task === undefined) usage('bounty create needs --task <file|-> (and --why "<one line>") — run box bounty help');
+      const result = createBounty({
+        repoPath: resolve(parsed.repo ?? process.cwd()), why: parsed.why ?? '',
         ...(parsed.title !== undefined ? { title: parsed.title } : {}),
-        taskPath: resolve(parsed.task),
-        ...(parsed.note !== undefined ? { notePath: resolve(parsed.note) } : {}),
-        ...(parsed.job !== undefined ? { jobPath: resolve(parsed.job) } : {}),
-        ...(parsed.resume !== undefined ? { resumeNote: parsed.resume } : {}),
-        ...(parsed.out !== undefined ? { outDir: resolve(parsed.out) } : {})
+        taskPath: parsed.task === '-' ? '-' : resolve(parsed.task),
+        ...(parsed.resume !== undefined ? { resumeNote: parsed.resume } : {})
       });
-      console.log(renderPreview(plan));
-      if (parsed.preview) {
-        console.log('preview only — nothing was written. Run again without --preview to write the bounty folder.');
-        process.exitCode = 0;
-      } else {
-        const result = finalizeBounty(plan);
-        console.log(`${result.id} — drafted — written to ${result.outDir}`);
-        console.log(`record: ${result.recordPath} — the tool writes it; commit it with the project`);
-        console.log(`next: deliver it — run box bounty post ${result.id} --to <dir|github> (--preview shows what a GitHub post makes public). Nothing has been posted; nothing has left this machine.`);
-      }
+      console.log(renderPreview(result.plan));
+      console.log(result.publicationPreview);
+      console.log(`${result.id} — drafted — kept in the project record`);
+      console.log(`record: ${result.recordPath} — the tool writes it; commit it with the project`);
+      console.log(`next: box bounty post ${result.id} (--preview shows what becomes public). Nothing has been posted.`);
     } else if (subcommand === 'status') {
       const [id, ...extraIds] = bountyIds();
       if (extraIds.length > 0) usage('box bounty status [id] [--full] [--comments]');
@@ -295,7 +288,7 @@ if (command === 'export') {
       const amountFlag = bountyArgs.find(arg => ['--reward', '--amount', '--price', '--pay', '--payment', '--limit', '--budget', '--dollars'].includes(arg));
       if (amountFlag !== undefined) throw new BountyRefused('reward-agent-set', `${amountFlag} names money — the reward is the owner's to set, never the agent's; post takes no amount. The owner sets it with box bounty config set reward <whole dollars>`);
       const toIndex = bountyArgs.indexOf('--to');
-      const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : undefined;
+      const to = toIndex >= 0 ? bountyArgs[toIndex + 1] : 'github';
       const [id, ...extraIds] = commandIds();
       // The two publication choices, moved from the removed `confirm`:
       // --with-changes says the task needs every uncommitted change to
@@ -307,13 +300,13 @@ if (command === 'export') {
       bountyArgs.forEach((arg, index) => {
         if (arg !== '--include') return;
         const named = bountyArgs[index + 1];
-        if (named === undefined || named.startsWith('--')) usage('box bounty post <id> --to github [--with-changes] [--include <file>] [--preview]');
+        if (named === undefined || named.startsWith('--')) usage('box bounty post <id> [--with-changes] [--include <file>] [--preview]');
         include.push(named!);
       });
-      if (id === undefined || extraIds.length > 0 || to === undefined || (withChanges || include.length > 0) && to !== 'github') usage('box bounty post <id> --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
+      if (id === undefined || extraIds.length > 0 || to === undefined || (withChanges || include.length > 0) && to !== 'github') usage('box bounty post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
       const repoRoot = resolveRepoRoot(bountyRepo(), 'post');
       if (bountyArgs.includes('--preview')) {
-        if (to !== 'github') usage('box bounty post <id> --to github --preview — only a GitHub post has a preview');
+        if (to !== 'github') usage('box bounty post <id> --preview — only a GitHub post has a preview');
         console.log(previewGitHub(repoRoot, id, { withChanges, include }));
         console.log('preview only — nothing was posted. Run again without --preview to publish it.');
         process.exit(0);
@@ -322,25 +315,21 @@ if (command === 'export') {
       console.log(`${record.id} — posted — delivered to ${destination}`);
       if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.join(', ')}`);
       if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
-      console.log(record.github !== undefined ? `next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change` : `next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty look ${record.id} --from <dir>`);
+      console.log(`next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change`);
     } else if (subcommand === 'apply') {
       // Approval is the owner's, never the agent's (BT13): a flag that tries
       // to mark a merge as asked-for or approved is a named refusal that
       // changes nothing — only `box bounty allow <id>` answers a waiting
-      // merge, and `apply` takes no other flag than --from/--repo.
+      // merge, and `apply` takes no other flag than --repo.
       const approvalFlag = bountyArgs.find(arg => /^--(yes|ok|approve|approved|allow|allowed|owner|force|confirm|answered|permit|accept|asked|skip-ask|no-ask|without-ask|i-asked)/.test(arg));
       if (approvalFlag !== undefined) throw new BountyRefused('merge-approval-agent', `${approvalFlag} tries to mark a merge approved — an agent cannot approve a merge; the owner answers a waiting merge with box bounty allow <id>. Nothing changed`);
       const [id, attemptText, ...extraIds] = commandIds();
-      const fromIndex = bountyArgs.indexOf('--from');
-      const from = fromIndex >= 0 ? bountyArgs[fromIndex + 1] : undefined;
       const attempt = attemptText !== undefined && /^\d+$/.test(attemptText) ? Number.parseInt(attemptText, 10) : undefined;
       if (id === undefined || extraIds.length > 0
-        || (fromIndex >= 0 && (from === undefined || from.startsWith('--')))
-        || (from !== undefined && attemptText !== undefined)
         || (attemptText !== undefined && attempt === undefined)) {
-        usage('box bounty apply [id] [<n> | --from <dir>] [--repo <path>]');
+        usage('box bounty apply [id] [<n>] [--repo <path>]');
       }
-      const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, from !== undefined ? { from: resolve(from) } : attempt);
+      const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, attempt);
       if (result.firstMergeNotice !== undefined) console.log(result.firstMergeNotice);
       if (result.payMessage !== undefined) for (const line of result.payMessage) console.log(line);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
@@ -368,17 +357,14 @@ if (command === 'export') {
       }
     } else if (subcommand === 'look') {
       const [id, text, ...extraIds] = commandIds();
-      const fromIndex = bountyArgs.indexOf('--from');
-      const from = fromIndex >= 0 ? bountyArgs[fromIndex + 1] : undefined;
       const n = text !== undefined && /^\d+$/.test(text) ? Number.parseInt(text, 10) : undefined;
       if (id === undefined || extraIds.length > 0
-        || (fromIndex >= 0 && (from === undefined || from.startsWith('--')))
-        || (from === undefined) === (n === undefined)
+        || n === undefined
         || (text !== undefined && n === undefined)) {
-        usage('box bounty look [id] (<n> | --from <dir>) [--full] [--repo <path>]');
+        usage('box bounty look [id] <n> [--full] [--repo <path>]');
       }
       const root = resolveRepoRoot(bountyRepo(), subcommand);
-      const result = lookBounty(root, id, from !== undefined ? { from: resolve(from) } : n!, { full: bountyArgs.includes('--full') });
+      const result = lookBounty(root, id, n!, { full: bountyArgs.includes('--full') });
       const label = result.attempt.n;
       console.log(`${id} solution ${label} — ${result.collected ? 'collected first — ' : ''}the change below was written by the solver, not by the tool; the tool ran nothing of the solver's to show it. It is read from fetched objects — nothing is checked out, nothing is left behind.`);
       if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));

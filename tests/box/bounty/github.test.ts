@@ -109,12 +109,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues).toHaveLength(0);
   }));
 
-  it('refuses a manifest tampered with before the GitHub preview is taken', () => fixture(({ repo, id, folder }) => {
-    writeFileSync(join(folder, 'bounty.json'), readFileSync(join(folder, 'bounty.json'), 'utf8') + ' ');
-    refused(() => previewGitHub(repo, id), 'manifest-tampered');
-    refused(() => postBounty(repo, id, 'github'), 'manifest-tampered');
-  }));
-
   it('binds the repository a post was started for, even when a new origin is public', () => fixture(({ repo, id, update }) => {
     // A post that got as far as the pushed branch keeps its repository bound:
     // retargeting origin cannot redirect the retry.
@@ -306,24 +300,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(text).toContain('already-public'); expect(text).toContain('free'); expect(text).toContain('Nobody is known');
     expect(text).toContain('nothing a solver wrote is ever run');
   });
-
-  it('runs the whole folder journey with no gh and no GitHub remote', () => fixture(({ repo, state }) => {
-    git(repo, ['remote', 'remove', 'origin']);
-    write(repo, '.box/limits.json', '{}');
-    expect(resolveProgram('gh').path).toBeTruthy();
-    withoutGh(() => {
-      expect(() => resolveProgram('gh')).toThrow();
-      const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty') }));
-      const id = created.id;
-      const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
-      write(destination, 'repo/app.txt', 'fixed\n');
-      expect(lookBounty(repo, id, { from: destination }).attempt.outcome).toBe('answered');
-      expect(applyBounty(repo, id).outcome).toBe('applied');
-      expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
-      expect(state().calls).toHaveLength(0);
-      expect(existsSync(join(created.outDir, 'bounty.json'))).toBe(true);
-    });
-  }));
 
   it('routes the built CLI preview, post, status and PR commands through the adapter', () => fixture(({ repo, id, state, pr }) => {
     const cli = (...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8' });

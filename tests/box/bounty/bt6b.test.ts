@@ -1,3 +1,4 @@
+import { postToGitHub, collectPullRequest, applyPullRequest, applyGitHub, closeGitHub, statusGitHub, pullRequestFor, solverCli } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -26,8 +27,7 @@ import { CLI_DIST, fingerprint, git, makeRepo, ownerSays, runRoot, write } from 
 // add` would — clean filter applied — and refuses the post when the filtered
 // form cannot be produced.
 
-const cli = (repo: string, ...args: string[]) =>
-  spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8', env: process.env });
+const cli = solverCli;
 
 // A clean/smudge filter that passes bytes through unchanged and logs every
 // run — the tag says whose program ran (the owner's or the solver's). The log
@@ -87,13 +87,12 @@ const readLog = (logFile: string): string[] =>
 function delivered(repo: string): { id: string; folder: string } {
   write(repo, 'TASK.md', 'the task\n');
   const out = join(runRoot('bt6b-out'), 'bounty');
-  const created = cli(repo, 'create', '--task', join(repo, 'TASK.md'), '--why', 'a reason', '--out', out);
+  const created = cli(repo, 'create', '--task', join(repo, 'TASK.md'), '--why', 'a reason');
   expect(created.status).toBe(0);
   const id = /bt-[a-f0-9]{12}/.exec(created.stdout)![0];
   ownerSays(repo, 'allowed');
-  const dest = join(runRoot('bt6b-dest'), 'inbox');
-  expect(cli(repo, 'post', id, '--to', dest).status).toBe(0);
-  return { id, folder: join(dest, id) };
+  const { destination } = postToGitHub(repo, id);
+  return { id, folder: destination };
 }
 
 function withLog<T>(run: (logFile: string) => T): T {
@@ -113,7 +112,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     // Git writes after it — the trap BT7's second pass reproduced.
     write(folder, 'repo/tools/filter.cjs', loggingFilter('SOLVER'));
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -138,7 +137,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     // program reads cannot be bounded, so any in-tree program refuses.
     write(folder, 'repo/tools/key.txt', 'solver key\n');
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -158,7 +157,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/drv.cjs', "// the solver's driver\n");
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -174,7 +173,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     git(repo, ['config', 'filter.mystery.clean', 'bt6b-no-such-program %f']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -195,7 +194,7 @@ describe('defect 1 — a merge must never run a program the solution can supply 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/new.dat', 'solver new\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -281,7 +280,7 @@ describe('pass holes — configured commands that still reached a solver program
     const marker = join(runRoot('bt6b-pwn'), 'pwned.txt');
     write(folder, 'repo/zz.dat', `require('node:fs').writeFileSync(${JSON.stringify(marker.replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -300,7 +299,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'filter.lfs.process', 'git-lfs filter-process']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -318,7 +317,7 @@ describe('pass holes — configured commands that still reached a solver program
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'alias.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -338,7 +337,7 @@ describe('pass holes — configured commands that still reached a solver program
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -356,7 +355,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'include.path', '../armed.conf']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -371,7 +370,7 @@ describe('pass holes — configured commands that still reached a solver program
     // A `~/…` include can only land inside a repository that lives under ~,
     // so this test builds its fixture under the home directory itself rather
     // than assuming the host's temp root is there.
-    const home = mkdtempSync(join(homedir(), 'bt6bhh-'));
+    const home = runRoot('BT15-home-include');
     try {
       const repo = filteredRepoUnder(home);
       const fromHome = relative(homedir(), repo).split(sep).join('/');
@@ -380,7 +379,7 @@ describe('pass holes — configured commands that still reached a solver program
       git(repo, ['config', 'include.path', `~/${fromHome}/armed.conf`]);
       const { id, folder } = delivered(repo);
       write(folder, 'repo/app.txt', 'fixed\n');
-      expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+      expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
       const before = fingerprint(repo);
       const applied = cli(repo, 'apply', id, '1');
@@ -402,7 +401,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'include.path', outside.replaceAll('\\', '/')]);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -420,7 +419,7 @@ describe('pass holes — configured commands that still reached a solver program
     git(repo, ['config', 'include.path', join(dir, 'outside.conf').replaceAll('\\', '/')]);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -443,7 +442,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'pipe.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -461,7 +460,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     // The injected alias runs the file `x` the solution carries.
     write(folder, 'repo/x', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'injected.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -482,7 +481,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(join(runRoot('bt6b-pwn'), 'nested.txt').replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -504,7 +503,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/tools/pwn.cjs', '// the solver\'s driver\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -523,7 +522,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -540,7 +539,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     // The solver carries the manifest npm would read its program from.
     write(folder, 'repo/package.json', JSON.stringify({ scripts: { bt6bpwn: `node ${join(runRoot('bt6b-pwn'), 'x.cjs').replaceAll('\\', '/')}` } }));
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -563,7 +562,7 @@ describe('second pass — multi-command lines and config-file launchers', () => 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -589,7 +588,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     const marker = join(runRoot('bt6b-pwn'), 'exec.txt');
     write(folder, 'repo/tools/pwn.cjs', `require('node:fs').writeFileSync(${JSON.stringify(marker.replaceAll('\\', '/'))}, 'pwned');\n`);
     write(folder, 'repo/zz.dat', 'solver changed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     for (const command of ['find . -exec git pwn {} +', 'find . -execdir git pwn {} +']) {
       git(repo, ['config', 'filter.own.smudge', command]);
@@ -613,7 +612,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const before = fingerprint(repo);
     const applied = cli(repo, 'apply', id, '1');
@@ -628,7 +627,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     for (const command of ['ssh localhost git pwn', 'wsl git pwn', 'stdbuf git pwn']) {
       git(repo, ['config', 'filter.own.smudge', command]);
@@ -649,7 +648,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     git(repo, ['config', 'alias.pwn', '!node tools/pwn.cjs']);
     const { id, folder } = delivered(repo);
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     for (const command of [
       `tar -cf "${join(runRoot('bt6b-tar'), 'x.tar').replaceAll('\\', '/')}" --use-compress-program='git pwn' zz.dat`,
@@ -675,7 +674,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     // The solver carries the manifest npm actually reads — `-f` moves nothing.
     write(folder, 'repo/package.json', JSON.stringify({ scripts: { bt6bpwn: `node ${join(runRoot('bt6b-pwn'), 'x.cjs').replaceAll('\\', '/')}` } }));
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     for (const command of [
       `npm run bt6bpwn -f "${outside.replaceAll('\\', '/')}"`,
@@ -699,7 +698,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);
@@ -715,7 +714,7 @@ describe('third pass — operand-level exec, option values and quoted data', () 
     const { id, folder } = delivered(repo);
     write(folder, 'repo/zz.dat', 'solver changed\n');
     write(folder, 'repo/app.txt', 'fixed\n');
-    expect(cli(repo, 'look', id, '--from', folder).status).toBe(0);
+    expect(cli(repo, 'look', id, String(pullRequestFor(repo, id, folder))).status).toBe(0);
 
     const applied = cli(repo, 'apply', id, '1');
     expect(applied.status).toBe(0);

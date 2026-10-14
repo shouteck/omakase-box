@@ -24,10 +24,10 @@ describe('create explains placement, the title rule and the owner gate', () => {
   it('the preview states where the inputs live, the shortened-title rule and the permission that gates a post', () => {
     const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n' });
     git(repo, ['remote', 'add', 'origin', 'https://github.com/owner/notallowed.git']);
-    const plan = planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', outDir: join(runRoot('bt14-out'), 'bounty') });
+    const plan = planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', });
     const preview = renderPreview(plan);
-    expect(preview).toContain('task, note and job files stay where they are');
-    expect(preview).toContain('never commits or removes them');
+    expect(preview).toContain('the task file stays where it is');
+    expect(preview).toContain('never commits or removes it');
     expect(preview).toContain('posting permission: none — a GitHub post waits for the owner\'s permission; box bounty allow owner/notallowed is their answer');
     // An allowed repository states the post goes out instead.
     allowRepository(repo, 'owner/notallowed');
@@ -46,10 +46,10 @@ describe('the title rule — a leading #, the first sentence, a stated length', 
   });
   it('the preview states the rule when the title was shortened, and stays quiet otherwise', () => {
     const repo = makeRepo({ 'TASK.md': '# Repair the app\n' });
-    const shortened = planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'w', outDir: join(runRoot('bt14-out'), 't1') });
+    const shortened = planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'w', });
     expect(shortened.title).toBe('Repair the app');
     expect(renderPreview(shortened)).toContain(`past the first sentence or ${TITLE_LIMIT} characters are dropped`);
-    const clean = planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'w', title: 'Repair the app', outDir: join(runRoot('bt14-out'), 't2') });
+    const clean = planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'w', title: 'Repair the app', });
     expect(renderPreview(clean)).not.toContain('are dropped');
   });
 });
