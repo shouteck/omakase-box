@@ -13,6 +13,6 @@ Updated by the CTO on 14 October 2026, at the K19/BT13/BT14 close — the three 
 
 ## Next
 
-**BT15** is briefed and approved by the owner (14 October 2026): folder delivery is retired and a bounty lives on GitHub only ([waves/BT15.md](waves/BT15.md)). It is a removal; the owner's go was given in conversation. Send `START.md: BT15`.
+**BT15** is briefed and approved by the owner (14 October 2026): folder delivery is retired and a bounty lives on GitHub only ([waves/BT15.md](waves/BT15.md)). It is a removal; the owner's go was given in conversation. Then **BT16**: a project with several remotes (a fork, a mirror) can still be allowed ([waves/BT16.md](waves/BT16.md)). Send `START.md: BT15, BT16`.
 
 No wave is named and none is briefed. Ready when wanted: the backlog candidates the passes logged (deriveTitle empty-title edge, permission-line mislabel on rewritten remotes, post-apply stale-index friction, the GitHub-flavored first-use block on held folder posts); publishing the K17 demo where the owner chooses; whatever the owner picks next.
