@@ -16,4 +16,12 @@ Updated by the CTO on 14 October 2026, at the K18 close.
 
 ## Next
 
+Three waves from K18's critique are briefed, in the order the owner approved on 14 October 2026:
+
+1. **K19** — the demo's stand-in GitHub answers like GitHub, with a parity check ([waves/K19.md](waves/K19.md)).
+2. **BT13** — what the owner hears; "ask me each time" holds merges too ([waves/BT13.md](waves/BT13.md)).
+3. **BT14** — what the agent reads; its pre-cook card waits for the owner's go because it removes duplicate `config` verbs ([waves/BT14.md](waves/BT14.md)).
+
+Send `START.md: K19, BT13, BT14`, or one at a time.
+
 No wave is named and none is briefed. Ready when wanted: choosing which K18 findings to fix (the report's one page is written for that decision); fixing the replay's stand-in GitHub; publishing the K17 demo where the owner chooses.
