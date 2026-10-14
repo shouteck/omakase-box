@@ -447,6 +447,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
       || typeof github.outside.at !== 'string' || !stamp.test(github.outside.at)
       || typeof github.outside.answers !== 'string')) return null;
     if (github.unavailableAt !== undefined && github.unavailableAt !== null && (typeof github.unavailableAt !== 'string' || !stamp.test(github.unavailableAt))) return null;
+    if (github.unavailableReason !== undefined && github.unavailableReason !== null && typeof github.unavailableReason !== 'string') return null;
     if (github.pay !== undefined && !payOutcomeShape(github.pay)) return null;
   }
   // BT7c: pending text is tool-written and status prints it. A record written
@@ -840,11 +841,15 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     const record = entry.record;
     if (record?.github === undefined) continue;
     const publication = record.github;
-    if (publication.formatUnavailableAt !== undefined && publication.formatUnavailableAt !== null) lines.push(`${record.id} current GitHub format read unavailable at ${publication.formatUnavailableAt}; cached last comparison ${publication.formatRead ?? 'not read'} at ${publication.formatReadAt ?? 'time not recorded'}; local record governs`);
-    else if (publication.formatRead !== undefined) lines.push(`${record.id} GitHub format block: ${publication.formatRead} (last issue-body observation ${publication.formatReadAt ?? 'time not recorded'}; local record governs)`);
+    // Format reads and repairs are cache details — the long form's only
+    // (BT14); the compact form carries one pointer on a closed record.
+    if (options.full) {
+      if (publication.formatUnavailableAt !== undefined && publication.formatUnavailableAt !== null) lines.push(`${record.id} current GitHub format read unavailable at ${publication.formatUnavailableAt}; cached last comparison ${publication.formatRead ?? 'not read'} at ${publication.formatReadAt ?? 'time not recorded'}; local record governs`);
+      else if (publication.formatRead !== undefined) lines.push(`${record.id} GitHub format block: ${publication.formatRead} (last issue-body observation ${publication.formatReadAt ?? 'time not recorded'}; local record governs)`);
+      if (publication.formatRepair !== undefined) lines.push(`${record.id} GitHub format update: ${publication.formatRepair}`);
+    }
     if (!isOpenStage(record.stage) && !options.full) lines.push(`${record.id} compact status uses the cached last observation; current comparison: box bounty status ${record.id} --full`);
   }
-  for (const entry of listed) if (entry.record?.github?.formatRepair !== undefined) lines.push(`${entry.record.id} GitHub format update: ${entry.record.github.formatRepair}`);
   lines.push(ownerStatusLine(repoRoot));
   lines.push(rewardStatusLine(repoRoot, open));
   const rewardNotice = rewardNoticeLine();
@@ -869,11 +874,21 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
-      // What an agent needs to act comes first; this is the bounty's one `next:`.
-      lines.push(`      ${attempts.length} collected solution(s)${attempts.length > 0 ? ` (${unseen} new, ${attempts.length - unseen} shown before)` : ''}; next: ${nextStep(record)}`);
       const pays = (boundAmount(record) ?? 0) > 0;
-      for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}`);
-      for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}${pays && pr.payTo !== undefined ? `; ${payToLine(pr.payTo)}` : ''}`);
+      // What waits for the agent leads (BT14): a pending outside action,
+      // then each waiting solution with its pay fact and the collect
+      // command beside it. `0 collected` beside waiting pull requests read
+      // as "nothing waiting" — the count now only prints when there is one.
+      if (!options.full && record.github?.pending !== null && record.github?.pending !== undefined) lines.push(`      github: ${record.github.pending}`);
+      let answerShown = false;
+      if (record.github?.outside !== undefined) {
+        if (options.full) lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
+        for (const line of record.github.outside.answers.split('\n')) {
+          if (!options.full && (line.startsWith('GitHub answers for ') || line.includes('collected as solution'))) continue;
+          lines.push(`      ${line}`);
+          answerShown = true;
+        }
+      }
       if (record.waiting !== undefined) {
         const liveFinding = (record.scanFindings ?? []).some(finding => finding.settled === null);
         for (const hit of record.waiting.hits ?? []) {
@@ -885,6 +900,22 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           : `      the owner answers this one with: box bounty allow ${record.id}`);
       }
       lines.push(...scanFindingLines(record, '      '));
+      // This is the bounty's one `next:`; the collected count only says
+      // something when there is one.
+      if (attempts.length > 0) lines.push(`      ${attempts.length} collected solution(s) (${unseen} new, ${attempts.length - unseen} shown before); next: ${nextStep(record)}`);
+      else lines.push(`      next: ${nextStep(record)}`);
+      if (attempts.length === 0 && record.github?.outside !== undefined && !answerShown) lines.push(`      collect: box bounty look ${record.id} <number> or box bounty apply ${record.id} <number>`);
+      for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}`);
+      for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}${pays && pr.payTo !== undefined ? `; ${payToLine(pr.payTo)}` : ''}`);
+      // A failed refresh names its reason (BT14); a retry is offered only
+      // where a rerun could read a different answer.
+      if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) {
+        const reason = record.github.unavailableReason ?? 'github-status-unavailable';
+        lines.push(`      the outside state could not be refreshed — ${reason} at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}`);
+        lines.push(reason === 'github-issue-mismatch'
+          ? `      rerunning box bounty status reads the same answer — if the recorded issue is not this bounty's, end it with box bounty close ${record.id}`
+          : '      retry box bounty status');
+      }
       if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
       // by another account — the issue is bound to this bounty first, so a
@@ -898,22 +929,12 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         }
         lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or box bounty status ${record.id}`);
       }
+      // Saved context follows the work it explains (BT14).
       lines.push(renderResume(record, '      '));
-      // The github: facts and the outside-state header are the long form's —
-      // reviews found agents never used them in the short one. What stays
-      // actionable in the short form: a pending outside action, the answers
-      // still waiting (one already collected is under `attempts`), and the
-      // command that collects them.
+      // The github: facts are the long form's — reviews found agents never
+      // used them in the short one.
       if (options.full && record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state}${record.github.kind !== 'history' ? ', snapshot-posted — from before the bounty became an issue on the code that is already there' : ''})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
-      if (!options.full && record.github?.pending !== null && record.github?.pending !== undefined) lines.push(`      github: ${record.github.pending}`);
-      if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) lines.push(`      github-status-unavailable: could not refresh at ${record.github.unavailableAt}; last recorded outside state ${record.github.outside?.at ?? 'not yet read'}; retry box bounty status`);
       if (record.github?.outside !== undefined) {
-        if (options.full) lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
-        for (const line of record.github.outside.answers.split('\n')) {
-          if (!options.full && (line.startsWith('GitHub answers for ') || line.includes('collected as solution'))) continue;
-          lines.push(`      ${line}`);
-        }
-        if (attemptsOf(record).length === 0) lines.push(`      collect: box bounty look ${record.id} <number> or box bounty apply ${record.id} <number>`);
         record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
         persistRecord(repoRoot, record);
       }
@@ -1126,7 +1147,11 @@ export function renderOpenLine(repoRoot: string): string {
 // Keep the detailed local listing separate from the fixed instruction block.
 function syncOpenSurfaces(repoRoot: string): void {
   writeFileSync(join(recordDir(repoRoot), 'OPEN'), `${renderOpenLine(repoRoot)}\n`);
-  for (const line of syncInstructions(repoRoot)) if (line.includes('refused')) instructionNoticeListener?.(line);
+  // Every instruction-file message that reports a refusal or an edit is
+  // emitted — the file is named and the edit is stated as not committed
+  // (BT14, F3); 'block current' and 'kept there once' change nothing and
+  // stay quiet.
+  for (const line of syncInstructions(repoRoot)) if (line.includes('refused') || line.includes('not committed')) instructionNoticeListener?.(line);
 }
 let instructionNoticeListener: ((line: string) => void) | undefined;
 export function setInstructionNoticeListener(listener: (line: string) => void): void { instructionNoticeListener = listener; }

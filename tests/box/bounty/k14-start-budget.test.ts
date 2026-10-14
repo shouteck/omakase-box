@@ -73,7 +73,9 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'help': { git: 0, gh: 0 },
   'describe': { git: 2, gh: 0 },
   'describe-rules': { git: 2, gh: 0 },
-  'create-preview': { git: 11, gh: 0 },
+  // BT14: the preview's `posting permission:` line reads the repository's
+  // GitHub address once — one `git remote` start the fact costs.
+  'create-preview': { git: 12, gh: 0 },
   'create': { git: 18, gh: 0 },
   'status-drafted': { git: 2, gh: 0 },
   'close-draft': { git: 3, gh: 0 },

@@ -101,13 +101,16 @@ export function payToFactShape(value: unknown): value is PayToFact {
 // after it carries the facts (BT13). Everything in it is tool-built or
 // allow-listed; the closing output also tells the agent to repeat it at the
 // end of its work, and that is all the tool does.
-export function payMessageLines(record: { id: string; title: string }, pay: PayOutcome, opts: { repository: string; issueUrl: string | null; merge: string | undefined; amount: number; unasked?: boolean; partial?: readonly string[] }): string[] {
+export function payMessageLines(record: { id: string; title: string }, pay: PayOutcome, opts: { repository: string; issueUrl: string | null; merge: string | undefined; amount: number; unasked?: boolean; partial?: readonly string[]; firstMerge?: boolean }): string[] {
   const prUrl = pay.pr !== null ? `https://github.com/${opts.repository}/pull/${pay.pr}` : null;
   const solver = pay.solver ?? 'an account whose name could not be read';
   const owner = [
     `The bounty "${record.title}" ended with a solution merged into your code — it was written by ${solver}.`,
     `The bounty stated $${opts.amount}, which you pay by hand — the tool never moves money.`
   ];
+  // A recorded first merge rides in this same block (BT14): one fact for
+  // the owner, one line for the agent — never two unrelated messages.
+  if (opts.firstMerge === true) owner.push('It was the first solution written by someone outside your project to be merged into your code.');
   if (pay.link !== null) {
     owner.push(`Pay ${solver} at ${pay.link}${pay.testMode ? ' (a test link — no real money moves through it)' : ''}.`);
     owner.push(`Before you pay, check the page asks for $${opts.amount} and that the account name there belongs to ${solver}.`);
@@ -125,7 +128,8 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
     `  bounty: "${record.title}" — ${record.id}${opts.issueUrl !== null ? `; issue ${opts.issueUrl}` : ''}`,
     `  merged solution: ${prUrl !== null ? `pull request ${prUrl} from` : 'a returned folder collected from'} GitHub account ${solver}`,
     `  merged in: ${opts.merge ?? 'the recorded merge'}`,
-    `  reward: $${opts.amount} — the amount from the owner's setting, to be paid by hand; the tool cannot know the amount a link asks for`
+    `  reward: $${opts.amount} — the amount from the owner's setting, to be paid by hand; the tool cannot know the amount a link asks for`,
+    ...(opts.firstMerge === true ? ['  first outside solution merged in this repository — this notice is recorded once'] : [])
   ];
   return lines;
 }
@@ -136,9 +140,9 @@ export function payMessageLines(record: { id: string; title: string }, pay: PayO
 // The closing event also carries the facts the message states: whether the
 // owner was asked before that merge, and which of the solution's files the
 // merge left as they were (BT13).
-export function payNotice(record: { id: string; title: string; events: readonly { stage?: string; merge?: string; command?: string; unasked?: boolean; partial?: readonly string[] }[]; github?: { repository: string; issue: { url: string } | null; pay?: PayOutcome } }, amount: number | undefined): string[] | null {
+export function payNotice(record: { id: string; title: string; events: readonly { stage?: string; merge?: string; command?: string; unasked?: boolean; partial?: readonly string[] }[]; github?: { repository: string; issue: { url: string } | null; pay?: PayOutcome } }, amount: number | undefined, opts?: { readonly firstMerge?: boolean }): string[] | null {
   const pay = record.github?.pay;
   if (pay === undefined || amount === undefined || amount <= 0) return null;
   const merged = [...record.events].reverse().find(event => event.merge !== undefined && ['apply', 'merged'].includes(event.command ?? ''));
-  return payMessageLines(record, pay, { repository: record.github!.repository, issueUrl: record.github!.issue?.url ?? null, merge: merged?.merge, amount, ...(merged?.unasked === true ? { unasked: true } : {}), ...(merged?.partial !== undefined ? { partial: merged.partial } : {}) });
+  return payMessageLines(record, pay, { repository: record.github!.repository, issueUrl: record.github!.issue?.url ?? null, merge: merged?.merge, amount, ...(merged?.unasked === true ? { unasked: true } : {}), ...(merged?.partial !== undefined ? { partial: merged.partial } : {}), ...(opts?.firstMerge === true ? { firstMerge: true } : {}) });
 }

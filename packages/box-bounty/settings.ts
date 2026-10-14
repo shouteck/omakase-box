@@ -496,7 +496,17 @@ export function localFirstMergeLine(repoRoot: string): string | null {
     return 'the local first-merge notice could not be read; merge history stands. Check .box/bounties/FIRST_MERGE';
   }
 }
-export function recordFirstMerge(repoRoot: string, commit: string): string | null {
+export interface FirstMergeNotice {
+  /** The standalone line, emitted only when there is no pay block to ride
+      in or the write failed (BT14 — a recorded first merge fuses into the
+      payment message so the two facts are one block). */
+  readonly line: string;
+  readonly receiving: string;
+  /** False when the write failed — a failed notice never rides in the
+      owner block, it stands alone with its failure named. */
+  readonly recorded: boolean;
+}
+export function recordFirstMerge(repoRoot: string, commit: string): FirstMergeNotice | null {
   let address: string | null = null;
   try { address = repositoryIdentity(repoRoot); } catch { /* A landed merge still gets a local fact, never a publication address. */ }
   const receiving = address ?? 'this local repository';
@@ -514,7 +524,7 @@ export function recordFirstMerge(repoRoot: string, commit: string): string | nul
     }
   } catch (error) {
     const where = address === null || error instanceof BountyRefused && error.reason.startsWith('first-merge-notice-') ? '.box/bounties/FIRST_MERGE' : 'box bounty config';
-    return `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${where}.`;
+    return { line: `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${where}.`, receiving, recorded: false };
   }
-  return `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository.`;
+  return { line: `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository.`, receiving, recorded: true };
 }

@@ -177,7 +177,7 @@ it('local notice persistence does not follow a linked marker or parent', () => {
         symlinkSync(sentinel, join(repo, '.box', 'bounties', 'FIRST_MERGE'), 'file');
       }
     }
-    expect(recordFirstMerge(repo, commit)).toContain('first-merge-notice-unsafe-path');
+    expect(recordFirstMerge(repo, commit)?.line).toContain('first-merge-notice-unsafe-path');
     expect(readFileSync(sentinel, 'utf8')).toBe('owned by another writer\n');
     expect(loadSettings().firstMerges).toEqual({});
   }
@@ -187,7 +187,7 @@ it('a local first-merge fact is excluded from the next public work-in-progress c
   const config = join(repo, '.git', 'config'), before = readFileSync(config, 'utf8');
   git(repo, ['remote', 'remove', 'origin']);
   const firstCommit = git(repo, ['rev-parse', 'HEAD']);
-  expect(recordFirstMerge(repo, firstCommit)).toContain('This notice is recorded once');
+  expect(recordFirstMerge(repo, firstCommit)?.line).toContain('This notice is recorded once');
   writeFileSync(config, before);
   write(repo, 'app.txt', 'owner work in progress\n');
   const preview = cli(repo, 'post', id, '--to', 'github', '--preview', '--with-changes');

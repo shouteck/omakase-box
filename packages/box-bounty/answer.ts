@@ -468,8 +468,12 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     dropDurabilityRefs(repoRoot, record);
     syncGitHubDecision(repoRoot, record);
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);
-    const payMessage = payNotice(record, boundAmount(record));
-    return { record, outcome: 'applied', attempt: attempt.n, mergeCommit, ...(notice === null ? {} : { firstMergeNotice: notice }), ...(payMessage === null ? {} : { payMessage }) };
+    // A recorded first merge fuses into the payment block (BT14) — one
+    // block, one 'for the owner'. With no payment to make, or when the
+    // notice's write failed, the standalone line still goes out.
+    const fused = notice !== null && notice.recorded;
+    const payMessage = payNotice(record, boundAmount(record), fused ? { firstMerge: true } : undefined);
+    return { record, outcome: 'applied', attempt: attempt.n, mergeCommit, ...(notice === null || fused && payMessage !== null ? {} : { firstMergeNotice: notice.line }), ...(payMessage === null ? {} : { payMessage }) };
   }
   const mergeHead = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
   if (mergeHead.status === 0) {

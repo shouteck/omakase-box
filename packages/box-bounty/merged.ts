@@ -202,14 +202,14 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
   if (partial.length > 0) emit(`${record.id} — fact: of the files the solution changed, the merge left these as they were: ${partial.map(showPath).join(', ')}`);
-  // A bounty with a reward hands the owner message to whichever command
-  // noticed the merge — whom to pay and where (BT11b).
-  payNotice(record, boundAmount(record))?.forEach(emit);
   const author = candidate.attempt?.author ?? record.github?.seenPullRequests?.find(pr => pr.n === candidate.pr && pr.commit === candidate.commit)?.author;
-  if (candidate.attempt !== undefined && author === undefined || author !== undefined && author !== record.github?.account) {
-    const notice = recordFirstMerge(repoRoot, merge);
-    if (notice !== null) emit(notice);
-  }
+  const firstMerge = (candidate.attempt !== undefined && author === undefined || author !== undefined && author !== record.github?.account) ? recordFirstMerge(repoRoot, merge) : null;
+  // A bounty with a reward hands the owner message to whichever command
+  // noticed the merge — whom to pay and where (BT11b); a recorded
+  // first-merge fact rides inside that same block (BT14).
+  const pay = payNotice(record, boundAmount(record), firstMerge?.recorded === true ? { firstMerge: true } : undefined);
+  pay?.forEach(emit);
+  if (firstMerge !== null && (firstMerge.recorded !== true || pay === null)) emit(firstMerge.line);
   for (const hit of extras) {
     emit(`${record.id} — fact: the merge also carries ${showPath(hit.path)}, which the never-ship rule '${hit.rule}' keeps out — the history stays as the owner made it`);
   }

@@ -335,8 +335,10 @@ node packages/box-cli/dist/cli.js bounty look <id> <number>
 reads the current issue state too, so a later
 session learns about a new answer from the record alone. It saves the observed
 outside state and its time; the open-bounties line carries those answer facts.
-If GitHub cannot be reached, `github-status-unavailable` names that outcome,
-shows the last recorded outside state and when, and names `status` as the retry.
+If a refresh fails, status names the failure's own reason
+(`github-command-failed`, `github-issue-mismatch`, …), shows the last
+recorded outside state and when, and offers the `status` retry only where a
+rerun could read a different answer.
 `look <id> <number>` fetches the selected pull request's head without changing the
 working tree, index or current branch (`--no-recurse-submodules`, so a carried
 `.gitmodules` fetches nothing). Its target must be the recorded bounty branch
@@ -435,14 +437,17 @@ The owner has three words:
   Its dated removal stays in the settings history and blocks the all-projects
   default for that repository. Config shows 'not allowed; denied at' and the
   exact command to re-allow it. Re-allow clears the exception.
-- Bare `config` prints all settings, set or not, with the command that changes
-  each one, and one line per repository: its address, allowed or ask, its
-  reward, its limit, and what its open bounties promise now and what is
-  left. `config set all-projects true` allows all projects, except dated
-  deny exceptions. It is off by default. `false` turns that default off;
-  `ask` asks before each post and each merge in projects with no entry.
-  `config add repositories owner/name` and `config remove repositories
-  owner/name` change the same list as allow and deny.
+- Bare `config` prints what is in force — one line per repository: its
+  address, allowed or ask, its reward, its limit, and what its open
+  bounties promise now and what is left — with the commands that change
+  them. Settings that are off and were never set are left out; the last
+  line names `config --full` for every setting, its history and the long
+  explanations. `config set all-projects true` allows all projects, except
+  dated deny exceptions. It is off by default. `false` turns that default
+  off; `ask` asks before each post and each merge in projects with no
+  entry. `config add repositories owner/name` and `config remove
+  repositories owner/name` are named refusals — `allow` adds a repository
+  and `deny` removes one, one verb per action.
 - `config set reward <whole dollars>` is the amount each new bounty on that
   repository states — whole US dollars, 0 unless the owner named one.
   `config set reward-limit <whole dollars>` is the most that may be promised

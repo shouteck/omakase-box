@@ -10,7 +10,8 @@ import type { NeverShipRule } from './never-ship.js';
 import { looksBinary, scanText } from './github.js';
 import type { ScanHit } from './github.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
-import { repoReward } from './settings.js';
+import { readDecision, repoReward } from './settings.js';
+import { requireRepository } from './repository.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -55,6 +56,9 @@ export interface BountyPlan {
   readonly resume: import('./record.js').ResumeContext;
   readonly repoRoot: string;
   readonly title: string;
+  /** True when deriveTitle shortened the raw text — the preview then states
+      the rule so the issue's title is never a surprise. */
+  readonly titleShortened: boolean;
   /** One line of why — record only, never shipped. */
   readonly why: string;
   readonly task: { readonly file: string; readonly text: string };
@@ -109,11 +113,26 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   const key = (inside ? offset : toPosixPath(real)).toLowerCase();
   const matched = (inside ? rules : BUILTIN_RULES).find(rule => rule.match(key));
   if (matched !== undefined) {
-    throw new BountyRefused('never-ship-input', `${path} resolves to ${inside ? offset : real}, which the never-ship rule '${matched.name}' removes — task and note files must be safe to embed`);
+    throw new BountyRefused('never-ship-input', `${path} resolves to ${inside ? offset : real}, which the never-ship rule '${matched.name}' removes — task and note files must be safe to embed. They may sit anywhere outside the never-ship paths — inside the repository or outside it, committed or not`);
   }
   const text = readFileSync(absolute, 'utf8');
   if (text.trim() === '') throw new BountyRefused(reason, `file ${path} is empty — a bounty needs real content`);
   return { file: inside ? offset : basename(real), text };
+}
+
+// What a bounty title is made of (BT14, F4): one short line, stated in the
+// preview whenever the raw text was shortened. A leading markdown '#' is
+// dropped, the text stops at the first sentence, and it is kept to
+// TITLE_LIMIT characters — an issue titled by a whole paragraph read worse
+// than one cut to a sentence.
+export const TITLE_LIMIT = 80;
+export function deriveTitle(raw: string): { readonly title: string; readonly shortened: boolean } {
+  const given = raw.trim();
+  let title = given.replace(/^#+\s*/, '').trim();
+  const sentence = /^(.+?[.!?])(?:\s|$)/.exec(title);
+  if (sentence !== null) title = sentence[1]!;
+  if (title.length > TITLE_LIMIT) title = `${title.slice(0, TITLE_LIMIT).trimEnd()}…`;
+  return { title, shortened: title !== given };
 }
 
 export function resolveRepoRoot(repoPath: string, command?: string): string {
@@ -147,9 +166,11 @@ export function planBounty(options: CreateOptions): BountyPlan {
   const note = options.notePath !== undefined ? readTextFile(options.notePath, 'missing-note', repoRoot, rules) : null;
   const job = options.jobPath !== undefined ? readTextFile(options.jobPath, 'missing-job', repoRoot, rules) : null;
   // The title comes from the task when none is given: its first non-empty
-  // line, trimmed. --title still wins when supplied.
-  const title = (options.title ?? '').trim()
-    || task.text.split('\n').map(line => line.trim()).find(line => line !== '')!;
+  // line's first sentence, as deriveTitle states it. --title still wins
+  // when supplied — and is shortened by the same stated rule.
+  const derived = deriveTitle((options.title ?? '').trim()
+    || task.text.split('\n').map(line => line.trim()).find(line => line !== '')!);
+  const title = derived.title;
   // canonicalForNew realpaths the nearest EXISTING ancestor: a nonexistent
   // --out under a junction pointing into the repository resolves to its real
   // inside-the-repo path and is refused below instead of slipping past.
@@ -210,6 +231,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
       note: options.resumeNote?.trim() || null
     },
     title,
+    titleShortened: derived.shortened,
     why,
     task,
     note,
@@ -311,15 +333,29 @@ export function renderPreview(plan: BountyPlan): string {
       if (entry.paths.length > PREVIEW_NAMES_PER_RULE) lines.push(`      … and ${entry.paths.length - PREVIEW_NAMES_PER_RULE} more`);
     }
   }
-  lines.push(`  title: ${plan.title}`);
+  lines.push(`  title: ${plan.title}${plan.titleShortened ? ` (shortened — a leading # and anything past the first sentence or ${TITLE_LIMIT} characters are dropped)` : ''}`);
   lines.push(`  why: ${plan.why} (record only — never shipped)`);
   lines.push(`  reward: $${repoReward(plan.repoRoot).amount} in force now for this repository — a posted bounty states the amount in force at posting`);
+  // The post's owner gate, stated at create (BT14): an agent that learns it
+  // here is not surprised when post waits.
+  let permission = 'no GitHub remote — only a folder post is possible from this repository';
+  try {
+    const address = requireRepository(plan.repoRoot);
+    const decision = readDecision(plan.repoRoot).decision;
+    permission = decision === 'allowed'
+      ? 'allowed — a GitHub post goes out'
+      : decision === 'ask'
+        ? 'ask me each time — a GitHub post waits for the owner\'s answer'
+        : `none — a GitHub post waits for the owner's permission; box bounty allow ${address} is their answer`;
+  } catch { /* an unlistable repository keeps the folder-post fact */ }
+  lines.push(`  posting permission: ${permission}`);
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
   else lines.push('  note: written by the tool from the changed files (no --note)');
   if (plan.job !== null) lines.push(`  job: ${plan.job.file} (record only — never shipped)`);
   lines.push(`  out: ${plan.outDir}`);
+  lines.push('  task, note and job files stay where they are — they may sit anywhere outside the never-ship paths; the tool reads them and never commits or removes them');
   return lines.join('\n');
 }
 

@@ -99,7 +99,9 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
       }
       try {
         const posted = postBounty(repoRoot, record.id, record.waiting.to, { ...(record.waiting.choice === undefined ? {} : { choice: record.waiting.choice }) });
-        lines.push(`${record.id}: the waiting bounty went out: ${posted.destination}`);
+        // The released bounty states its amount in the same breath (BT14) —
+        // what went out is what it pays.
+        lines.push(`${record.id}: the waiting bounty went out: ${posted.destination} — it states $${boundAmount(posted.record) ?? 0}`);
       } catch (error) {
         lines.push(`${record.id} still waits: ${error instanceof BountyRefused ? `${error.reason}: ${error.message}` : error instanceof Error ? error.message : String(error)}`);
       }
@@ -114,8 +116,11 @@ export function denyRepository(repoRoot: string | null, name?: string): string {
   // with the entry, so a re-allowed repository states $0 again.
   const previous = loadSettings().repositories[address];
   const written = writeRepository(address, null);
+  // The removal's consequence is named in the same breath (BT14): the
+  // reward and the limit that went with the entry, so a later re-allow
+  // knows what to state again.
   const money = previous !== undefined && (previous.reward !== undefined || previous.rewardLimit !== undefined)
-    ? ` Its reward ($${previous.reward?.amount ?? 0}) and limit went with the entry — re-allow states them again.` : '';
+    ? ` Its reward ($${previous.reward?.amount ?? 0})${previous.rewardLimit !== undefined ? ` and limit ($${previous.rewardLimit.amount})` : ''} went with the entry — re-allow states them again.` : '';
   const retiredNotice = rewardNoticeLine();
   const askNotice = askMergeNoticeLine();
   return `${address}: not allowed; denied at ${written.at}. Removed from the active list. All-projects does not apply after deny. Open bounties are untouched.${money}\nRe-allow: box bounty allow ${address}${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
@@ -133,7 +138,7 @@ export function allowBounty(repoRoot: string, id: string): string {
   record.waiting = { ...waiting, answered: { at: new Date().toISOString(), ...(waiting.shown === undefined ? {} : { shown: waiting.shown }) } };
   persistRecord(repoRoot, record);
   const posted = postBounty(repoRoot, id, waiting.to, { answered: true, ...(waiting.choice === undefined ? {} : { choice: waiting.choice }) });
-  return `${id}: answered once; posted to ${posted.destination}. No repository decision changed.`;
+  return `${id}: answered once; posted to ${posted.destination} — it states $${boundAmount(posted.record) ?? 0}. No repository decision changed.`;
 }
 
 // `allow <id>` on a merge wait (BT13): the owner's answer releases the
@@ -164,7 +169,13 @@ function allowMerge(repoRoot: string, record: BountyRecord, waiting: WaitingFor)
   if (result.payMessage !== undefined) lines.push(...result.payMessage);
   return lines.join('\n');
 }
-export function renderConfig(repoRoot: string | null): string {
+// Bare `config` is the working surface (BT14): what is in force, the
+// repository table, the publish lists, the waiting answers — and never a
+// never-set-off setting rendered as if written. The long explanations, the
+// history and the all-projects row live under `config --full`, which the
+// bare surface names on its last line.
+export function renderConfig(repoRoot: string | null, options?: { readonly full?: boolean }): string {
+  const full = options?.full === true;
   const settings = loadSettings();
   let address: string | null = null;
   let current: DecisionRead | null = null;
@@ -191,12 +202,18 @@ export function renderConfig(repoRoot: string | null): string {
     `the owner's settings: ${settingsFile()}`,
     'Allowing a repository means bounties are public under your GitHub account and a solution the agent chooses is merged into your code. Each repository entry covers that repository only.',
     `this repository: ${identityFact}; ${effective}`,
-    `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; change: box bounty config set all-projects <true|false|ask>`,
-    '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each post and each merge in repositories without their own decision.',
-    '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; box bounty allow <owner/name> re-allows it.',
-    `repositories: ${active.length} active — each entry carries its own reward and its own limit; adding grants standing publication permission: box bounty config add repositories <owner/name>; removing revokes it: box bounty config remove repositories <owner/name>`,
-    '  a repository with no reward written states $0. Set one: box bounty config set reward <whole dollars> [owner/name]; its limit: box bounty config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
-    'ask me each time covers each post and each merge: the tool\'s own post or merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty and is stated as not asked. Closing never waits.',
+    // A never-set all-projects is not a setting — nothing was written, so
+    // the bare surface omits the row (BT14). --full always shows it.
+    ...(full || settings.default !== undefined ? [
+      `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; change: box bounty config set all-projects <true|false|ask>`,
+      '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each post and each merge in repositories without their own decision.',
+      '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; box bounty allow <owner/name> re-allows it.'
+    ] : []),
+    `repositories: ${active.length} active — each entry carries its own reward and its own limit; allow: box bounty allow <owner/name>; deny: box bounty deny <owner/name>`,
+    ...(full ? [
+      '  a repository with no reward written states $0. Set one: box bounty config set reward <whole dollars> [owner/name]; its limit: box bounty config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
+      'ask me each time covers each post and each merge: the tool\'s own post or merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty and is stated as not asked. Closing never waits.'
+    ] : []),
     `not decided yet: ${undecided.length === 0 ? 'nothing among the settings shown' : undecided.join('; ')}`
   ];
   if (address !== null) {
@@ -241,9 +258,15 @@ export function renderConfig(repoRoot: string | null): string {
     const promise = key === address && promisedHere !== null
       ? (limit === null ? `open bounties here promise $${promisedHere}; no limit set` : `open bounties here promise $${promisedHere} of a $${limit} limit — ${promisedHere <= limit ? `$${limit - promisedHere} left` : `$${promisedHere - limit} over`}`)
       : 'open-promise count lives in that repository\'s own records';
-    lines.push(`  ${key}: ${state}; reward $${reward}${limit === null ? ', no limit set' : `, limit $${limit}`}; ${promise}; change: box bounty allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: box bounty deny ${key}`);
-    for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}`);
+    // A denied entry offers a re-allow, never a second remove for a
+    // repository already gone (BT14); its history is the long form's.
+    const change = entry.bounty === null || entry.bounty === 'off'
+      ? `re-allow: box bounty allow ${key}`
+      : `change: box bounty allow ${key}${entry.bounty === 'ask' ? '' : ' --ask'}; remove: box bounty deny ${key}`;
+    lines.push(`  ${key}: ${state}; reward $${reward}${limit === null ? ', no limit set' : `, limit $${limit}`}; ${promise}; ${change}`);
+    if (full) for (const previous of entry.changes) lines.push(`    history: ${previous.bounty ?? 'denied'} at ${previous.at}`);
   }
+  if (!full) lines.push('every setting, its history and the commands that change it: box bounty config --full');
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
   const askNotice = askMergeNoticeLine();
@@ -274,7 +297,14 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     return changePublishList(repoRoot, name, verb, value);
   }
   if (name === 'never-publish' || name === 'safe-to-publish') throw new BountyRefused('config-value-invalid', `use box bounty config add ${name} <path>, or config remove ${name} <path>; nothing changed`);
-  if (name === 'repositories' && (verb === 'add' || verb === 'remove')) return verb === 'add' ? allowRepository(repoRoot, value, false, undefined, emitDisclosure) : denyRepository(repoRoot, value);
+  // `config add/remove repositories` is retired (BT14): the verbs live on
+  // `allow`/`deny` now, so the old command is a named refusal that points
+  // there rather than silently still working. Any other verb on the same
+  // name gets the same pointer — never the "not a setting" wall.
+  if (name === 'repositories') {
+    const target = verb === 'remove' ? `box bounty deny ${value ?? '<owner/name>'}` : `box bounty allow ${value ?? '<owner/name>'}`;
+    throw new BountyRefused('config-command-removed', `box bounty config ${verb} repositories ${verb === 'add' || verb === 'remove' ? 'was removed' : 'is not how a repository is listed'} — ${verb === 'remove' ? 'denying' : 'allowing'} a repository is its own command: ${target}; nothing changed`);
+  }
   if (name === 'reward' || name === 'reward-limit') {
     if (verb !== 'set') throw new BountyRefused('config-value-invalid', `use box bounty config set ${name} <whole dollars> [owner/name]; nothing changed`);
     if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('reward-amount-invalid', `"${value}" is not a whole dollar amount at or above 0; nothing changed`);
