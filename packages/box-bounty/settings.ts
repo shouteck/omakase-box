@@ -65,6 +65,11 @@ export interface OwnerSettings {
       whose settings predate the reward settings — recorded so it is shown
       once ever. */
   readonly rewardNoticeAt?: string;
+  /** When the once-only "ask me each time now covers merges" fact was shown
+      to an owner carrying an `ask` written before BT13 — recorded so it is
+      shown once ever. An `ask` written by this tool is marked at the write:
+      the owner saw the merge sentence in the block they answered. */
+  readonly askMergeNoticeAt?: string;
 }
 export const projectKey = requireRepository;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -122,7 +127,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -213,7 +218,7 @@ export function loadSettings(): OwnerSettings {
       at: new Date().toISOString()
     };
   }
-  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}) };
+  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}), ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}) };
   const legacy = parsed['projects'];
   if (legacy === undefined) {
     if (retiring) persist(settings);
@@ -297,6 +302,21 @@ export function rewardNoticeLine(): string | null {
   return `each repository can state its own reward — the owner sets it inside its checkout or by name: box bounty config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
 }
 
+/** The once-only fact owed to an owner carrying an `ask` written before
+    BT13: "ask me each time" now covers merges too. A pre-wave `ask` kept its
+    meaning and then some — the owner is told once that it also asks before
+    each merge. An `ask` the tool wrote already carried the merge sentence,
+    so the write itself marks the fact told. */
+export function askMergeNoticeLine(): string | null {
+  const settings = loadSettings();
+  if (settings.askMergeNoticeAt !== undefined) return null;
+  const asks = settings.default?.bounty === 'ask' || Object.values(settings.repositories).some(entry => entry.bounty === 'ask');
+  if (!asks) return null;
+  const at = new Date().toISOString();
+  persist({ ...settings, askMergeNoticeAt: at });
+  return `one fact about ask me each time: it now covers merges too — the owner is asked before each post and before each merge (noted ${at})`;
+}
+
 export interface DecisionRead {
   readonly decision: OwnerDecision | null;
   readonly level: 'project' | 'default' | null;
@@ -335,7 +355,9 @@ export function writeRepository(address: string, bounty: OwnerDecision | null, b
     : { ...(previous?.reward === undefined ? {} : { reward: previous.reward }), ...(previous?.rewardLimit === undefined ? {} : { rewardLimit: previous.rewardLimit }) };
   const entry: SettingsLevel = { bounty, at, changes, ...moneyFields };
   beforeWrite?.();
-  persist({ ...settings, repositories: { ...settings.repositories, [key]: entry } });
+  // An `ask` written through the tool was answered under wording that said
+  // it covers merges — the once-only fact is already told (BT13).
+  persist({ ...settings, ...(bounty === 'ask' ? { askMergeNoticeAt: settings.askMergeNoticeAt ?? at } : {}), repositories: { ...settings.repositories, [key]: entry } });
   return { path: settingsFile(), at, key };
 }
 
@@ -360,7 +382,7 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
   const settings = loadSettings();
   const at = new Date().toISOString();
   const previous = settings.default;
-  persist({ ...settings, default: { bounty, at, changes: [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])] } });
+  persist({ ...settings, ...(bounty === 'ask' ? { askMergeNoticeAt: settings.askMergeNoticeAt ?? at } : {}), default: { bounty, at, changes: [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])] } });
   return { path: settingsFile(), at, key: 'all-projects' };
 }
 export function readInstructions(repoRoot: string): InstructionSettings {
@@ -440,5 +462,5 @@ export function recordFirstMerge(repoRoot: string, commit: string): string | nul
     const where = address === null || error instanceof BountyRefused && error.reason.startsWith('first-merge-notice-') ? '.box/bounties/FIRST_MERGE' : 'box bounty config';
     return `Tell the owner: ${fact} The first-merge notice could not be recorded (${error instanceof BountyRefused ? error.reason : 'settings-write-failed'}); the merge stands. Check ${where}.`;
   }
-  return `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository; merging is not gated.`;
+  return `Tell the owner in your closing message: ${fact} ${address === null ? `The receiving GitHub address could not be determined; this notice is recorded in ${JSON.stringify(localMergeFile(repoRoot))}. ` : ''}This notice is recorded once for this repository.`;
 }

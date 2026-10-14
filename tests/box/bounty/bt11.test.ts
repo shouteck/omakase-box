@@ -61,7 +61,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     const paid = cli(repo, ['bounty', 'allow', '--reward', '10', '--reward-limit', '30']);
     expect(paid.status).toBe(0);
     expect(paid.stdout).toContain('owner/shop');
-    expect(paid.stdout).toContain('promises $10, paid by you by hand');
+    expect(paid.stdout).toContain('promises $10, which you pay by hand');
     expect(repoReward(repo)).toEqual({ amount: 10, limit: 30 });
     // A limit below the reward is a named refusal — and, after deny cleared
     // the money, a reward above $0 with no limit to hold it is one too.
@@ -376,9 +376,8 @@ describe('BT11a — the public side and the words around it', () => {
     const run = cli(repo, ['bounty', 'post', id, '--to', join(runRoot('x'), 'y')]);
     expect(run.status).toBe(0); // a held post prints the owner lines and exits 0
     expect(run.stdout).toContain('waiting for the owner');
-    expect(run.stdout).toContain('reward the owner set for this repository — $0');
-    expect(run.stdout).toContain('box bounty allow --reward <whole dollars> --reward-limit <whole dollars>');
-    expect(run.stdout).toContain('The yes at $0: box bounty allow');
+    expect(run.stdout).toContain('Each bounty states what it pays — $0 unless you set an amount, so nothing is promised now.');
+    expect(run.stdout).toContain('allow this repository: box bounty allow');
   });
 
   it('an owner whose settings predate the wave is told once that each repository can state its own reward', () => {
@@ -402,11 +401,10 @@ describe('BT11a — the public side and the words around it', () => {
     const run = cli(repo, ['bounty', 'allow']);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('states $0 — no payment is promised');
-    expect(run.stdout).toContain('--reward <whole dollars> --reward-limit <whole dollars>');
     expect(run.stdout).toContain('config set reward');
     const paid = cli(repo, ['bounty', 'allow', '--reward', '5', '--reward-limit', '20']);
     expect(paid.status).toBe(0);
-    expect(paid.stdout).toContain('Each bounty posted to owner/thing promises $5, paid by you by hand');
+    expect(paid.stdout).toContain('promises $5, which you pay by hand');
     expect(paid.stdout).toContain('at most $20 promised across its open bounties at once');
   });
 });

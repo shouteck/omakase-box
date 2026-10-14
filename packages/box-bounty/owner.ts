@@ -1,7 +1,11 @@
 import { BountyRefused } from './errors.js';
-import { isOpenStage, listRecords, loadRecord, persistRecord, postBounty, promisedTotal } from './record.js';
-import { loadSettings, localFirstMergeLine, readDecision, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMoney, writeRepository } from './settings.js';
+import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBounty, promisedTotal } from './record.js';
+import { attemptsOf } from './record.js';
+import { applyBounty } from './answer.js';
+import { gitOutcome } from './git.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMoney, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
+import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
 import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
 import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
@@ -11,20 +15,28 @@ import { boundAmount } from './format.js';
 
 export const DECISION_WORDS = {
   allow: 'allow this repository',
-  ask: 'be asked each time before publishing',
+  ask: 'be asked each time before each post and each merge',
   once: 'this one bounty only'
 } as const;
-// What `allow` prints before it writes: the repository and the reward its
-// bounties will state, in the same plain sentences as the three facts —
-// public, merged, this repository only — plus what each bounty promises.
-const disclosure = (address: string, amount: number, limit: number | null): string[] => [
-  `Allowing ${address} means bounties are public under your GitHub account.`,
-  'A solution the agent chooses is merged into your code. Merging is not gated.',
-  'This decision covers this repository only. The tool closes an issue after a merge.',
-  amount === 0
-    ? `Each bounty posted to ${address} states $0 — no payment is promised; name one with --reward <whole dollars> --reward-limit <whole dollars>, or later: box bounty config set reward <whole dollars>.`
-    : `Each bounty posted to ${address} promises $${amount}, paid by you by hand — at most $${limit} promised across its open bounties at once.`,
-  'These settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
+// What `allow` prints before it writes: the owner block first — the plain
+// sentences that say what a bounty is, that it is public under the owner's
+// account, that the answer covers this repository only, what each bounty
+// pays, and whether the owner is asked before posts and merges (BT13 — the
+// merge sentences are part of the choice itself). The agent's part after
+// the block says what the settings are not.
+const disclosure = (address: string, amount: number, limit: number | null, ask: boolean): string[] => [
+  ...ownerBlock([
+    'A bounty asks people outside the project to fix something, and it is posted publicly on GitHub under your account.',
+    'Your answer covers this repository only. A solution your agent chooses is merged into your code.',
+    amount === 0
+      ? `Each bounty on ${address} states $0 — no payment is promised.`
+      : `Each bounty on ${address} promises $${amount}, which you pay by hand — at most $${limit} promised across its open bounties at once.`,
+    ask
+      ? 'You will be asked before each post and before each merge.'
+      : 'You will not be asked before a post or a merge.',
+    'Do you allow this?'
+  ]),
+  'for you — these settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
 ];
 
 const wholeDollars = (flag: string, value: string): number => {
@@ -57,17 +69,25 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   if (repoRoot !== null) {
     try { currentAddress = repositoryIdentity(repoRoot); } catch { /* named addresses work outside this checkout */ }
   }
-  const words = disclosure(address, reward, limit);
+  const words = disclosure(address, reward, limit, ask);
   const written = writeRepository(address, ask ? 'ask' : 'allowed', emitDisclosure === undefined ? undefined : () => emitDisclosure(words.join('\n')), money === undefined ? undefined : { reward, rewardLimit: limit });
-  const lines = [...(emitDisclosure === undefined ? words : []), `${ask ? 'ask me each time before publishing' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
-  if (ask) lines.push('This covers publishing and nothing else. A merged solution closes the bounty without asking.');
+  const lines = [...(emitDisclosure === undefined ? words : []), `${ask ? 'ask me each time' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
+  if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
   const retiredNotice = rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
+  const askNotice = askMergeNoticeLine();
+  if (askNotice !== null) lines.push(askNotice);
   // A named repository may be allowed from outside any checkout. Release
   // waits only when the current checkout has that same address.
   if (!ask && repoRoot !== null && currentAddress === address) {
     for (const entry of listRecords(repoRoot)) {
       const record = entry.record;
+      // A bounty held for a merge runs its merge on the next `apply` — the
+      // new decision already covers it; the wait's binding still applies.
+      if (record?.stage === 'waiting' && record.waiting?.for === 'merge') {
+        lines.push(`${record.id} waits for a merge — box bounty apply ${record.id} ${record.waiting.merge?.n ?? '<n>'} runs it now`);
+        continue;
+      }
       if (record?.stage !== 'waiting' || record.waiting?.for !== 'post' || record.waiting.to === undefined) continue;
       if (record.waiting.reason === 'secrets') {
         lines.push(`${record.id} still waits on the pre-publish scan — an answer cannot release it; decide in box bounty config: the path goes on safe to publish or never publish.`);
@@ -97,11 +117,13 @@ export function denyRepository(repoRoot: string | null, name?: string): string {
   const money = previous !== undefined && (previous.reward !== undefined || previous.rewardLimit !== undefined)
     ? ` Its reward ($${previous.reward?.amount ?? 0}) and limit went with the entry — re-allow states them again.` : '';
   const retiredNotice = rewardNoticeLine();
-  return `${address}: not allowed; denied at ${written.at}. Removed from the active list. All-projects does not apply after deny. Open bounties are untouched.${money}\nRe-allow: box bounty allow ${address}${retiredNotice === null ? '' : `\n${retiredNotice}`}`;
+  const askNotice = askMergeNoticeLine();
+  return `${address}: not allowed; denied at ${written.at}. Removed from the active list. All-projects does not apply after deny. Open bounties are untouched.${money}\nRe-allow: box bounty allow ${address}${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
 }
 export function allowBounty(repoRoot: string, id: string): string {
   const record = loadRecord(repoRoot, id);
   const waiting = record.waiting;
+  if (record.stage === 'waiting' && waiting?.for === 'merge') return allowMerge(repoRoot, record, waiting);
   if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed. box bounty status ${id} shows its state`);
   if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. Decide in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing changed`);
   // The answer is recorded bound to what the owner was shown before the held
@@ -112,6 +134,34 @@ export function allowBounty(repoRoot: string, id: string): string {
   persistRecord(repoRoot, record);
   const posted = postBounty(repoRoot, id, waiting.to, { answered: true, ...(waiting.choice === undefined ? {} : { choice: waiting.choice }) });
   return `${id}: answered once; posted to ${posted.destination}. No repository decision changed.`;
+}
+
+// `allow <id>` on a merge wait (BT13): the owner's answer releases the
+// merge, and only the merge — nothing is written to the owner's settings.
+// The answer is bound to what the owner was shown: which attempt, at which
+// commit, onto which branch tip. A changed solution or a moved branch is a
+// named refusal that changes nothing — the owner answers again on the new
+// state, recorded by a fresh `apply`.
+function allowMerge(repoRoot: string, record: BountyRecord, waiting: WaitingFor): string {
+  const bound = waiting.merge;
+  if (bound === undefined) throw new BountyRefused('merge-approval-stale', `${record.id} waits for a merge approval that names nothing it is bound to — run box bounty apply ${record.id} again so the wait records the current state for the owner; nothing changed`);
+  const attempt = attemptsOf(record).find(candidate => candidate.n === bound.n);
+  const head = gitOutcome(repoRoot, ['rev-parse', 'HEAD']).stdout.trim();
+  if (attempt === undefined || attempt.commit !== bound.commit || head !== bound.head) {
+    throw new BountyRefused('merge-approval-stale', `${record.id}: the solution or the branch changed underneath the waiting merge — the owner's answer was for what they were shown, so it does not carry over. Run box bounty apply ${record.id} again so the wait records the new state; nothing changed`);
+  }
+  // The answer lands on the wait before the merge reruns — a conflict keeps
+  // it so the owner is not asked twice for the same bound state; a drift
+  // then makes the stale check above refuse it.
+  record.waiting = { ...waiting, answered: { at: new Date().toISOString(), merge: bound } };
+  persistRecord(repoRoot, record);
+  const result = applyBounty(repoRoot, record.id, bound.n, { answered: true });
+  const lines = result.outcome === 'applied'
+    ? [`${record.id}: answered once; solution ${bound.n} merged as ${result.mergeCommit}. No repository decision changed.`]
+    : [`${record.id}: answered once; the merge conflicted in ${(result.conflicts ?? []).join(', ')} — worktree and index are exactly as before; the answer stands while the solution and this branch's state are unchanged. No repository decision changed.`];
+  if (result.firstMergeNotice !== undefined) lines.push(result.firstMergeNotice);
+  if (result.payMessage !== undefined) lines.push(...result.payMessage);
+  return lines.join('\n');
 }
 export function renderConfig(repoRoot: string | null): string {
   const settings = loadSettings();
@@ -141,11 +191,11 @@ export function renderConfig(repoRoot: string | null): string {
     'Allowing a repository means bounties are public under your GitHub account and a solution the agent chooses is merged into your code. Each repository entry covers that repository only.',
     `this repository: ${identityFact}; ${effective}`,
     `all-projects: ${global}${settings.default === undefined ? ', nothing written' : `, changed ${settings.default.at}`}; change: box bounty config set all-projects <true|false|ask>`,
-    '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each publication in repositories without their own decision.',
+    '  true grants publication permission in repositories without their own decision; false grants no blanket permission; ask asks before each post and each merge in repositories without their own decision.',
     '  A repository entry overrides all-projects. A dated deny removal keeps that repository not allowed even when all-projects is true or ask; box bounty allow <owner/name> re-allows it.',
     `repositories: ${active.length} active — each entry carries its own reward and its own limit; adding grants standing publication permission: box bounty config add repositories <owner/name>; removing revokes it: box bounty config remove repositories <owner/name>`,
     '  a repository with no reward written states $0. Set one: box bounty config set reward <whole dollars> [owner/name]; its limit: box bounty config set reward-limit <whole dollars> [owner/name] — run inside its checkout or name the repository. The all-projects extra never carries a reward.',
-    'ask me each time covers publishing and nothing else; merging is not gated. A bounty whose solution is merged closes without asking.',
+    'ask me each time covers each post and each merge: the tool\'s own post or merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty and is stated as not asked. Closing never waits.',
     `not decided yet: ${undecided.length === 0 ? 'nothing among the settings shown' : undecided.join('; ')}`
   ];
   if (address !== null) {
@@ -166,13 +216,16 @@ export function renderConfig(repoRoot: string | null): string {
     if (address === null || settings.repositories[address] === undefined) {
       lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so its bounties state $0`);
     }
-    const waiting = listed.flatMap(entry => entry.record?.stage === 'waiting' && entry.record.waiting?.for === 'post' ? [entry.record] : []);
+    const waiting = listed.flatMap(entry => entry.record?.stage === 'waiting' ? [entry.record] : []);
     for (const record of waiting) {
-      lines.push(record!.waiting!.reason === 'secrets'
-        ? `  ${record!.id} waits on the pre-publish scan — decide with the lists above: safe to publish or never publish the path`
-        : `  ${DECISION_WORDS.once}: box bounty allow ${record!.id}`);
+      const held = record!.waiting!;
+      lines.push(held.for === 'merge'
+        ? `  ${record!.id} waits for a merge — ${DECISION_WORDS.once}: box bounty allow ${record!.id}`
+        : held.reason === 'secrets'
+          ? `  ${record!.id} waits on the pre-publish scan — decide with the lists above: safe to publish or never publish the path`
+          : `  ${DECISION_WORDS.once}: box bounty allow ${record!.id}`);
     }
-    if (waiting.length === 0) lines.push('waiting posts: none; see current actions with box bounty status');
+    if (waiting.length === 0) lines.push('waiting actions: none; see current actions with box bounty status');
   }
   // The repository table: one line each — address, its decision, its reward,
   // its limit, and what its open bounties promise now. The promise count is
@@ -192,6 +245,8 @@ export function renderConfig(repoRoot: string | null): string {
   }
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
+  const askNotice = askMergeNoticeLine();
+  if (askNotice !== null) lines.push(askNotice);
   for (const notice of settings.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
   for (const [key, notice] of Object.entries(settings.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
   const localMerge = repoRoot === null ? null : localFirstMergeLine(repoRoot);
@@ -276,7 +331,8 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
   if (verb !== 'set' || !['true', 'false', 'ask'].includes(value)) throw new BountyRefused('config-value-invalid', 'use box bounty config set all-projects <true|false|ask>; nothing changed');
   const bounty = value === 'true' ? 'allowed' : value === 'ask' ? 'ask' : 'off';
   const written = writeDecision(repoRoot ?? '.', 'default', bounty);
-  return `all-projects: ${value}, written ${written.at}. ${value === 'true' ? 'Bounties may be public under your GitHub account across all projects; solutions the agent chooses are merged into your code.' : 'Each post needs a repository permission or one-bounty answer.'} Dated deny exceptions stay not allowed. Merging is not gated.`;
+  const merge = bounty === 'allowed' ? 'Merging is not gated — the owner is not asked before a merge.' : 'The owner is asked before each merge too — ask me each time covers posts and merges.';
+  return `all-projects: ${value}, written ${written.at}. ${value === 'true' ? 'Bounties may be public under your GitHub account across all projects; solutions the agent chooses are merged into your code.' : 'Each post needs a repository permission or one-bounty answer.'} Dated deny exceptions stay not allowed. ${merge}`;
 }
 
 export function renderSummary(repoRoot: string, since?: string): string {

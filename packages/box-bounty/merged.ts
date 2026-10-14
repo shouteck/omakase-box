@@ -22,7 +22,7 @@ import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, transitionTo 
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
 import { showPath } from './answer.js';
-import { recordFirstMerge } from './settings.js';
+import { readDecision, recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
 
@@ -172,18 +172,36 @@ function entryCommit(repoRoot: string, chain: readonly string[], commit: string,
 // collected solution did not carry — named as facts, never a reason to keep
 // the bounty open or to rewrite the owner's history.
 function closeOne(repoRoot: string, record: BountyRecord, branch: string, candidate: MergeCandidate, merge: string): void {
-  const extras = neverShipExtras(repoRoot, record, merge, candidate.attempt);
+  // One read of the landed delta serves the never-ship scan and the partial
+  // fact: which of the solution's own paths the merge left as they were —
+  // the hand merge kept only part of the solution (BT13).
+  const touched = mergeTouched(repoRoot, merge);
+  const extras = neverShipExtras(repoRoot, touched, candidate.attempt);
+  const partial = candidate.attempt === undefined
+    ? []
+    : [...candidate.attempt.changed, ...candidate.attempt.added, ...candidate.attempt.deleted]
+        .filter(path => !touched.has(path.toLowerCase()));
+  // A hand merge lands outside the tool's gate. When the decision asked to
+  // be asked — or nothing was written, or a merge wait still stood — the
+  // owner was not asked before it, and the closing output, status and the
+  // pay message all say so. The merge still closes the bounty: closing
+  // never waits (BT13).
+  const unasked = record.waiting?.for === 'merge' || readDecision(repoRoot).decision !== 'allowed';
   const label = candidate.attempt !== undefined ? `solution ${candidate.attempt.n}` : `a solution from pull request #${candidate.pr}`;
   record.conflicts = null;
   transitionTo(repoRoot, record, 'applied', {
     ...(candidate.attempt !== undefined ? { attempt: candidate.attempt.n } : {}),
     command: 'merged',
     merge,
-    reason: `commit ${candidate.commit}${candidate.pr !== undefined ? `, pull request #${candidate.pr}` : ''}`
+    reason: `commit ${candidate.commit}${candidate.pr !== undefined ? `, pull request #${candidate.pr}` : ''}`,
+    ...(unasked ? { unasked: true } : {}),
+    ...(partial.length > 0 ? { partial } : {})
   });
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
+  if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
+  if (partial.length > 0) emit(`${record.id} — fact: of the files the solution changed, the merge left these as they were: ${partial.map(showPath).join(', ')}`);
   // A bounty with a reward hands the owner message to whichever command
   // noticed the merge — whom to pay and where (BT11b).
   payNotice(record, boundAmount(record))?.forEach(emit);
@@ -197,18 +215,25 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   }
 }
 
+// Every path the landed merge changed, lowercase — `merge^1..merge` under
+// the repository's own view. An empty set means the diff could not be read:
+// the partial fact then says nothing rather than guess.
+function mergeTouched(repoRoot: string, merge: string): ReadonlySet<string> {
+  const diff = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', `${merge}^1`, merge]);
+  if (diff.status !== 0 || diff.error !== undefined) return new Set();
+  return new Set(diff.stdout.split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
+}
+
 // Never-ship paths the landed merge carries beyond the solution's own
 // touched paths — the solver's files were checked at collection; the agent's
 // own resolution commits are the owner's history either way.
-function neverShipExtras(repoRoot: string, record: BountyRecord, merge: string, attempt: Attempt | undefined): { path: string; rule: string }[] {
-  const diff = gitOutcome(repoRoot, ['diff', '--name-only', '-z', '--no-renames', `${merge}^1`, merge]);
-  if (diff.status !== 0 || diff.error !== undefined) return [];
-  const touched = new Set(attempt === undefined ? [] : [...attempt.changed, ...attempt.added, ...attempt.deleted].map(path => path.toLowerCase()));
+function neverShipExtras(repoRoot: string, touched: ReadonlySet<string>, attempt: Attempt | undefined): { path: string; rule: string }[] {
+  const solution = new Set(attempt === undefined ? [] : [...attempt.changed, ...attempt.added, ...attempt.deleted].map(path => path.toLowerCase()));
   const rules = shipRules(repoRoot);
   const hits = new Map<string, { path: string; rule: string }>();
-  for (const path of diff.stdout.split('\0').filter(name => name !== '')) {
-    if (touched.has(path.toLowerCase()) || hits.has(path)) continue;
-    const rule = rules.find(candidate => candidate.match(path.toLowerCase()));
+  for (const path of touched) {
+    if (solution.has(path) || hits.has(path)) continue;
+    const rule = rules.find(candidate => candidate.match(path));
     if (rule !== undefined) hits.set(path, { path, rule: rule.name });
   }
   return [...hits.values()];

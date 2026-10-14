@@ -989,12 +989,16 @@ function renderPlanPreview(repository: string, record: BountyRecord, plan: GitHu
     lines.push(`Already public — this tool cannot take it back: ${plan.publicNeverShip.length} never-ship-named path(s) exist in the public history: ${named.join(', ')}${plan.publicNeverShip.length > PREVIEW_PUBLIC_NAMES ? ` … and ${plan.publicNeverShip.length - PREVIEW_PUBLIC_NAMES} more` : ''}`);
   }
   if (plan.scan.hits.length === 0) {
-    lines.push(`Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`);
+    // No headline "clean" while flagged content only missed the list — a
+    // safe-listed hit says so in its own words instead (BT13, F4).
+    lines.push(plan.scan.suppressed > 0
+      ? `Pre-publish scan: ${plan.scan.suppressed} secret-shaped hit(s) sit on paths the owner listed safe to publish — not held; ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`
+      : `Pre-publish scan: clean — ${plan.scan.commitsScanned} first-published commit(s) read${plan.include.length > 0 ? ` plus ${plan.include.length} named file(s)` : ''}`);
   } else {
     lines.push(`Pre-publish scan: ${plan.scan.hits.length} secret-shaped hit(s) — a post would wait for the owner:`);
     for (const hit of plan.scan.hits) lines.push(`    ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)}` : ''}`);
   }
-  if (plan.scan.suppressed > 0) lines.push(`  ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
+  if (plan.scan.suppressed > 0 && plan.scan.hits.length > 0) lines.push(`  ${plan.scan.suppressed} hit(s) sit on paths the owner listed safe to publish — not held`);
   if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`);
   lines.push(`Issue title: ${text.title}`);
   lines.push('Issue body:');
@@ -1104,10 +1108,15 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       persistRecord(root, record);
       return invalid('publish-held', [
         `${id} — the pre-publish scan found ${plan.scan.hits.length} secret-shaped hit(s); this bounty waits for the owner:`,
-        ...plan.scan.hits.map(hit => `  ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
-        'it waits for the owner, who decides in box bounty config — tell them: the path goes on safe to publish or never publish there.',
-        'you may remove the flagged content and post again — that sends the bounty;',
-        'or stop this bounty — nothing was published and nothing will be, and the owner\'s files are untouched.',
+        // The owner block first (BT13, F3): what was found, in which file,
+        // that nothing was published, and the choices — a question, not a
+        // command; no commits, no git words.
+        'for the owner — pass this on in these words:',
+        ...plan.scan.hits.map(hit => `  Something in your project looks like a password or key: file ${hit.path}, line ${hit.line}.`),
+        '  Nothing has been published.',
+        '  You can say the file is safe to publish, say it must never be published, or have it changed first — which do you want?',
+        'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>; or remove the flagged content and post again — that sends the bounty; or end it — nothing was published and the owner\'s files are untouched.',
+        ...plan.scan.hits.map(hit => `  hit: ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
         ...(plan.scan.suppressed > 0 ? [`${plan.scan.suppressed} hit(s) on safe-listed paths are not held`] : []),
         ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`] : []),
         'the scan is a stated pattern list, not proof of absence.'

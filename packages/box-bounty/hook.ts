@@ -744,8 +744,10 @@ export function hookDisclosure(repoRoot: string, host: HookHost): string {
     `- it contacts GitHub through your gh sign-in at most once every ${HOOK_GITHUB_INTERVAL_MS / 60000} minutes, only while an open bounty is posted there; each call is capped at ${HOOK_GH_CALL_LIMIT_MS / 1000} seconds, all calls in one run stay within ${HOOK_GITHUB_BUDGET_MS / 1000} seconds and ${HOOK_GH_CALL_COUNT} calls, and the host entry itself times out at ${HOOK_ENTRY_TIMEOUT_SECONDS} seconds`
   ];
   const decision = (() => { try { return readDecision(repoRoot); } catch { return null; } })();
-  if (decision !== null && (decision.decision === 'allowed' || decision.decision === 'ask')) {
-    lines.push('- under the standing rules in force (merges are never gated), when a solution the tool handed out is merged, the hook reading the records closes the bounty: the GitHub issue is closed with a comment and nobody is asked');
+  if (decision !== null && decision.decision === 'allowed') {
+    lines.push('- under the standing rules in force (the tool\'s merges are not gated), when a solution the tool handed out is merged, the hook reading the records closes the bounty: the GitHub issue is closed with a comment and nobody is asked');
+  } else if (decision !== null && decision.decision === 'ask') {
+    lines.push('- under the standing rules in force (ask me each time), the tool\'s own merge waits for the owner\'s answer; a merge the agent lands by hand still closes the bounty — the GitHub issue is closed with a comment and it is stated that the owner was not asked');
   }
   lines.push(
     '',

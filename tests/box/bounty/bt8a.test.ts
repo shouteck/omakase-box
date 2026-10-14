@@ -51,7 +51,7 @@ process.on('exit', () => write(process.env.BT8A_ORDER_LOG, JSON.stringify(events
     const written = events.findIndex(event => event.kind === 'settings-write');
     expect(written).toBeGreaterThan(0);
     const printed = events.slice(0, written).filter(event => event.kind === 'stdout');
-    expect(printed.map(event => event.text).join('')).toContain('means bounties are public under your GitHub account');
+    expect(printed.map(event => event.text).join('')).toContain('posted publicly on GitHub under your account');
     expect(printed.every(event => event.before === previous)).toBe(true);
     expect(events[written]?.before).toBe(previous);
     expect(saved()).not.toBe(previous);
@@ -202,7 +202,7 @@ describe('the three owner words through the built CLI', () => {
     expect(shown.stdout).toContain('all-projects: false (off by default), nothing written');
     expect(shown.stdout).toContain('not decided yet: no repository permission');
     expect(shown.stdout).toContain('box bounty allow owner/project --ask');
-    expect(shown.stdout).toContain('merging is not gated');
+    expect(shown.stdout).toContain('covers each post and each merge');
     expect(cli(root, 'config', 'add', 'repositories', 'owner/shop').status).toBe(0);
     expect(readDecision(repo('owner/shop')).decision).toBe('allowed');
     expect(cli(root, 'allow', '--ask').status).toBe(0);
@@ -218,9 +218,9 @@ describe('the three owner words through the built CLI', () => {
     expect(allowed).toContain('not decided yet: all-projects (nothing written; defaults to off)');
     expect(allowed).toContain('true grants publication permission');
     expect(allowed).toContain('false grants no blanket permission');
-    expect(allowed).toContain('ask asks before each publication');
+    expect(allowed).toContain('ask asks before each post and each merge');
     expect(allowed).toContain('adding grants standing publication permission');
-    expect(allowed).toContain('waiting posts: none');
+    expect(allowed).toContain('waiting actions: none');
     expect(allowed).not.toContain('<waiting-bounty-id>');
     expect(allowed).not.toContain('add it:');
     changeConfig(root, 'set', 'all-projects', 'true');
@@ -240,8 +240,8 @@ it('waiting exits 0, keeps the first time, and permission is read before any gh 
     expect(first.status).toBe(0);
     expect(first.stderr).toBe('');
     expect(first.stdout.split('\n')[0]).toContain('waiting for the owner');
-    expect(first.stdout).toContain('Bounties are public under the owner\'s GitHub account');
-    expect(first.stdout).toContain('A solution the agent chooses is merged into the owner\'s code');
+    expect(first.stdout).toContain('It is posted under your GitHub account');
+    expect(first.stdout).toContain('is merged into your code');
     expect(first.stdout).toContain('this repository only');
     const at = loadRecord(root, id).waiting?.at;
     const again = cli(root, 'post', id, '--to', 'github');
@@ -298,7 +298,7 @@ it('legacy tool-written owner spellings are scrubbed on every replay field and h
   });
 }));
 
-it('ask covers publishing only; allowing a waiting bounty posts directly and closes without another question', () => fixture(({ repo: root, id, state, bare }) => {
+it('ask: allowing a waiting bounty posts directly and closes without another question', () => fixture(({ repo: root, id, state, bare }) => {
   allowRepository(root, undefined, true);
   refused(() => postBounty(root, id, 'github'), 'owner-answer-needed');
   expect(allowBounty(root, id)).toContain('answered once');

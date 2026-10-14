@@ -8,10 +8,10 @@ import type { DryMerge, IndexChange } from './git.js';
 import type { BountyManifest } from './manifest.js';
 import { shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, refName, transitionTo } from './record.js';
+import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, mergeWaitLines, persistRecord, refName, transitionTo, waitingSummary, waitForOwner } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { resolveAttempt, syncGitHubDecision } from './github.js';
-import { recordFirstMerge } from './settings.js';
+import { readDecision, recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
 // Collecting a solution — the return journey. A solver hands back the whole
@@ -322,7 +322,7 @@ export type ApplyTarget = number | { readonly from: string };
 // Uncommitted changes the merge would overwrite are a named refusal, not
 // damage. With several attempts that could be applied, `apply` without a
 // number refuses and names them — the choice is the agent's.
-export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget): ApplyResult {
+export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, opts?: { readonly answered?: true }): ApplyResult {
   let record = loadRecord(repoRoot, id);
   if (record.stage === 'applied' && record.github !== undefined) {
     syncGitHubDecision(repoRoot, record);
@@ -364,6 +364,29 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget):
       throw new BountyRefused('apply-ambiguous', `attempts ${applicable.map(candidate => `#${candidate.n}`).join(', ')} could be applied — pick one: box bounty apply ${id} <n>`);
     }
     attempt = applicable[0]!;
+  }
+  // "Ask me each time" covers merges (BT13): under ask — or off, the
+  // strictly stronger "ask each time" — the tool's own merge becomes a named
+  // waiting state the owner releases with `allow <id>`, bound to this
+  // attempt at this commit on this branch tip so a changed solution or a
+  // moved branch asks again. `allowed` and nothing-written merge as before:
+  // a hand merge was always possible, so the gate is a promise kept to
+  // owners who asked to be asked — not a barrier the agent could not cross.
+  // `answered` is set only inside `box bounty allow`, after the bound state
+  // is re-checked; nothing an agent passes reaches it.
+  const mergeRead = readDecision(repoRoot);
+  if ((mergeRead.decision === 'ask' || mergeRead.decision === 'off') && opts?.answered !== true) {
+    const head = gitOutcome(repoRoot, ['rev-parse', 'HEAD']).stdout.trim();
+    const bound = { n: attempt.n, commit: attempt.commit, head };
+    const carried = record.waiting?.for === 'merge'
+      && record.waiting.answered?.merge !== undefined
+      && record.waiting.answered.merge.n === bound.n
+      && record.waiting.answered.merge.commit === bound.commit
+      && record.waiting.answered.merge.head === bound.head;
+    if (!carried) {
+      waitForOwner(repoRoot, record, { for: 'merge', reason: mergeRead.decision === 'ask' ? 'owner-ask' : 'owner-off', at: new Date().toISOString(), merge: bound });
+      throw new BountyRefused('merge-held', [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...mergeWaitLines(record, attempt)].join('\n'));
+    }
   }
   if (gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']).status === 0) {
     throw new BountyRefused('merge-in-progress', `a merge is already in progress in ${repoRoot} — finish it or run git merge --abort before applying a bounty`);
@@ -425,8 +448,18 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget):
   }
   if (merged.status === 0) {
     const mergeCommit = git(repoRoot, ['rev-parse', 'HEAD']);
+    // Which of the solution's own paths the landed merge left as they were —
+    // recorded when a reward is bound, since the pay message must name them
+    // (BT13). The diff against the merge's first parent is what changed.
+    const amount = boundAmount(record) ?? 0;
+    let partial: string[] = [];
+    if (amount > 0) {
+      const touched = new Set(gitOutcome(repoRoot, ['diff', '--name-only', '-z', `${mergeCommit}^1`, mergeCommit], ownerAttrs).stdout
+        .split('\0').filter(name => name !== '').map(name => name.toLowerCase()));
+      partial = [...attempt.changed, ...attempt.added, ...attempt.deleted].filter(path => !touched.has(path.toLowerCase()));
+    }
     record.conflicts = null;
-    transitionTo(repoRoot, record, 'applied', { attempt: attempt.n, command: 'apply', merge: mergeCommit });
+    transitionTo(repoRoot, record, 'applied', { attempt: attempt.n, command: 'apply', merge: mergeCommit, ...(partial.length > 0 ? { partial } : {}) });
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);

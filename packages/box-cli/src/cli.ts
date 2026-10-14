@@ -311,6 +311,12 @@ if (command === 'export') {
       if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
       console.log(record.github !== undefined ? `next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change` : `next: a solver picks it up there — box bounty status shows the bounty meanwhile; when the folder comes back run box bounty look ${record.id} --from <dir>`);
     } else if (subcommand === 'apply') {
+      // Approval is the owner's, never the agent's (BT13): a flag that tries
+      // to mark a merge as asked-for or approved is a named refusal that
+      // changes nothing — only `box bounty allow <id>` answers a waiting
+      // merge, and `apply` takes no other flag than --from/--repo.
+      const approvalFlag = bountyArgs.find(arg => /^--(yes|ok|approve|approved|allow|allowed|owner|force|confirm|answered|permit|accept|asked|skip-ask|no-ask|without-ask|i-asked)/.test(arg));
+      if (approvalFlag !== undefined) throw new BountyRefused('merge-approval-agent', `${approvalFlag} tries to mark a merge approved — an agent cannot approve a merge; the owner answers a waiting merge with box bounty allow <id>. Nothing changed`);
       const [id, attemptText, ...extraIds] = commandIds();
       const fromIndex = bountyArgs.indexOf('--from');
       const from = fromIndex >= 0 ? bountyArgs[fromIndex + 1] : undefined;
@@ -474,7 +480,7 @@ if (command === 'export') {
   } catch (error) {
     if (error instanceof BountyUsage) usage(error.message);
     if (error instanceof BountyRefused) {
-      if (['owner-allow-needed', 'owner-answer-needed', 'publish-held'].includes(error.reason)) {
+      if (['owner-allow-needed', 'owner-answer-needed', 'publish-held', 'merge-held'].includes(error.reason)) {
         console.log(error.message);
         process.exit(0);
       }

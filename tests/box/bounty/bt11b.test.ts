@@ -165,9 +165,9 @@ it('applying a solution with a recognised link tells the owner whom to pay, twic
   expect(message).toContain(`/pull/1`);
   expect(message).toContain('$5');
   expect(message).toContain(STRIPE_LIVE);
-  expect(message).toContain('supplied by the solver');
+  expect(message).toContain('Pay solver1 at');
   expect(message).toContain('does not pay');
-  expect(message).toContain('check the checkout shows $5');
+  expect(message).toContain('check the page asks for $5 and that the account name there belongs to solver1');
   // The issue's closing comment states only which solution merged — never pay.
   const closing = state().comments.filter(comment => comment.body.includes('<!-- box-bounty')).at(-1)!.body;
   expect(closing).toContain('Applied as commit');
@@ -179,9 +179,9 @@ it('applying a solution with a recognised link tells the owner whom to pay, twic
   expect(status).toContain('a record, not a reminder');
   // The finish hook repeats it once.
   const hook = runHook(repo, 'finish', []).output!;
-  expect(hook).toContain('pay the solver at');
+  expect(hook).toContain('Pay solver1 at');
   expect(hook).toContain('solver1');
-  expect(runHook(repo, 'finish', []).output ?? '').not.toContain('pay the solver at');
+  expect(runHook(repo, 'finish', []).output ?? '').not.toContain('Pay solver1 at');
 }, 'Repair app'));
 
 it('a merge the tool itself notices carries the same message', () => fixture(({ repo, id, scratch, state, update, pr }) => {
@@ -195,10 +195,10 @@ it('a merge the tool itself notices carries the same message', () => fixture(({ 
   const out = noticed.join('\n');
   expect(out).toContain('closed');
   expect(out).toContain(STRIPE_TEST);
-  expect(out).toContain('test-mode: no real money moves through it');
+  expect(out).toContain('a test link — no real money moves through it');
   // The description was last edited by someone who is not the solver.
   expect(out).toContain('last edited by maintainer-else, not the solver');
-  expect(out).toContain('check the checkout shows $5');
+  expect(out).toContain('check the page asks for $5');
   const record = loadRecord(repo, id);
   expect(record.github!.pay!.solver).toBe('solver1');
   expect(record.github!.pay!.editedBy).toBe('maintainer-else');
@@ -212,13 +212,13 @@ it('a merged solution without a recognised link is stated, with its pull request
   answerGitHub(repo, id, 1);
   const result = applyBounty(repo, id, 1);
   const message = result.payMessage!.join('\n');
-  expect(message).toContain('no recognised payment link');
+  expect(message).toContain('no usable payment link');
   expect(message).toContain('/pull/1');
   expect(message).toContain('solver2');
   expect(message).not.toContain('hand it over at noon');
   // The pre-close close of a second run tells it again.
   const again = closeBounty(repo, id);
-  expect(again.payMessage!.join('\n')).toContain('no recognised payment link');
+  expect(again.payMessage!.join('\n')).toContain('no usable payment link');
 }, 'Repair app'));
 
 it('a merged $0 bounty or a bounty closed without merge never mentions pay', () => postedFixture(({ repo, id, waitingPr }) => {

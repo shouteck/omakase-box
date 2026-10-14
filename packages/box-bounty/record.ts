@@ -24,7 +24,7 @@ import { checkProjectClaims, publishListed, publishLists, shipRules } from './ne
 import { requireRepository } from './repository.js';
 import { renderListing } from './create.js';
 import type { BountyManifest } from './manifest.js';
-import { loadSettings, localFirstMergeLine, readDecision, repoReward, rewardNoticeLine } from './settings.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, rewardNoticeLine } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
@@ -51,6 +51,16 @@ export interface StageEvent {
   readonly attempt?: number; // which attempt this transition was about
   readonly command?: string; // the command that drove it — apply, look, close, merged — so history says what ended the bounty. Records written before BT7c can still name removed commands; status prints them remapped to what replaced them.
   readonly merge?: string; // the commit the command made (the apply or merged land; on older records the reversal)
+  /** Recorded on `applied` when the merge landed outside the tool and the
+      owner's decision asked to be asked (BT13): the owner was not asked
+      before that merge — stated in the closing output, status and the pay
+      message. A tool-driven apply carries no mark: it either ran under
+      `allowed` or was released by the owner's `allow`. */
+  readonly unasked?: boolean;
+  /** Recorded on `applied`: the solution's own changed/added/deleted paths
+      the landed merge commit does not touch — only some of the solution was
+      kept, and the pay message names which (BT13). */
+  readonly partial?: readonly string[];
 }
 
 // Attempt outcomes written since checks were removed (11 October 2026) are
@@ -97,7 +107,7 @@ export interface Attempt {
 // published: an owner's `allow <bounty>` releases the wait only while what
 // would be published still matches it — a drift refuses by name.
 export interface WaitingFor {
-  readonly for: 'post' | 'close';
+  readonly for: 'post' | 'close' | 'merge';
   readonly reason: 'owner-allow' | 'owner-ask' | 'owner-off' | 'secrets' | 'untracked-file';
   readonly at: string;
   readonly to?: string;
@@ -118,7 +128,19 @@ export interface WaitingFor {
       the same action and destination, so a later `post` on the same
       published state reuses it. What would be published drifting drops it:
       the answer was for something else. */
-  readonly answered?: { readonly at: string; readonly shown?: WaitingFor['shown'] };
+  readonly answered?: {
+    readonly at: string;
+    readonly shown?: WaitingFor['shown'];
+    /** The merge the owner answered for (BT13) — bound exactly like a post
+        answer is: `allow <bounty>` releases the held merge only while the
+        attempt, its commit and the branch tip are all what the owner was
+        shown. A changed solution or a moved branch asks again. */
+    readonly merge?: WaitingFor['merge'];
+  };
+  /** What a held merge is bound to (BT13): which attempt, at which commit,
+      merged into which branch state. `allow` releases it only while all
+      three still match what the owner was shown. */
+  readonly merge?: { readonly n: number; readonly commit: string; readonly head: string };
 }
 
 // One pre-publish scan finding kept on the record (BT8c): what was flagged,
@@ -382,6 +404,8 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (event.merge !== undefined && (typeof event.merge !== 'string' || !sha.test(event.merge))) return null;
     if (event.attempt !== undefined && (!Number.isSafeInteger(event.attempt) || event.attempt < 1)) return null;
     if (event.reason !== undefined && typeof event.reason !== 'string') return null;
+    if (event.unasked !== undefined && event.unasked !== true) return null;
+    if (event.partial !== undefined && (!Array.isArray(event.partial) || !strings(event.partial))) return null;
   }
   if (!OPEN_STAGES.has(record.stage) && !ENDED_STAGES.has(record.stage)) return null;
   if (record.resume.kind === 'recorded' && !safeBranch(record.resume.branch)) return null;
@@ -595,36 +619,88 @@ export function waitingSummary(record: BountyRecord): string {
   const waiting = record.waiting;
   if (waiting === undefined) return 'the owner decides';
   const target = waiting.to === 'github' ? ' to GitHub' : waiting.to !== undefined ? ` to ${waiting.to}` : '';
+  const held = waiting.for === 'merge' ? 'this merge' : `this post${target}`;
   switch (waiting.reason) {
-    case 'owner-allow': return `the owner has not allowed the tool — posting${target} waits for them (since ${waiting.at})`;
-    case 'owner-ask': return `the owner asked to be asked each time — this post${target} waits for them (since ${waiting.at})`;
-    case 'owner-off': return `the owner turned the permission off — this post${target} waits for them (since ${waiting.at})`;
-    case 'secrets': return `the pre-publish scan found ${waiting.hits?.length ?? 0} secret-shaped hit(s) — this post${target} waits for the owner (since ${waiting.at})`;
-    case 'untracked-file': return `an untracked file was named for publishing — this post${target} waits for the owner (since ${waiting.at})`;
+    case 'owner-allow': return `the owner has not allowed the tool — ${held} waits for them (since ${waiting.at})`;
+    case 'owner-ask': return `the owner asked to be asked each time — ${held} waits for them (since ${waiting.at})`;
+    case 'owner-off': return `the owner turned the permission off — ${held} waits for them (since ${waiting.at})`;
+    case 'secrets': return `the pre-publish scan found ${waiting.hits?.length ?? 0} secret-shaped hit(s) — ${held} waits for the owner (since ${waiting.at})`;
+    case 'untracked-file': return `an untracked file was named for publishing — ${held} waits for the owner (since ${waiting.at})`;
   }
 }
 
-// The lines a held post prints, addressed to the agent: what to put to the
-// owner and the one command they run. Owner commands exist under `box bounty
-// owner`, the plainly named group the description never offers an agent.
+// The owner-facing part of every message the agent must relay (BT13): a
+// short block the agent is told to pass on in these words — plain language,
+// no hashes, no command names, no Git words; the owner is offered a question
+// to answer, never a command to run. Everything after the block is for the
+// agent ("for you —"), and the two are never interleaved.
+export const ownerBlock = (lines: readonly string[]): string[] =>
+  ['for the owner — pass this on in these words:', ...lines.map(line => `  ${line}`)];
+
+// The first-use block (BT13, F1): what a bounty is, that it is public under
+// the owner's GitHub account, that it covers this repository only, what each
+// bounty pays, and whether the owner is asked before posts and merges. The
+// merge sentence is inside the question's own terms: a relay that drops it
+// leaves the owner answering words they were never told.
+export function firstUseBlock(repoRoot: string): string[] {
+  const { amount } = repoReward(repoRoot);
+  return ownerBlock([
+    'A bounty asks people outside the project to fix something, and it is posted publicly on GitHub.',
+    'It is posted under your GitHub account. Your answer covers this repository only.',
+    'A solution your agent chooses is merged into your code.',
+    `Each bounty states what it pays — ${amount === 0 ? '$0 unless you set an amount, so nothing is promised now' : `$${amount}, a promise in your name that you pay by hand`}.`,
+    'You can allow this, or you can ask to be asked each time.',
+    'If you allow it, you will not be asked before a post or a merge.',
+    'If you ask each time, you will be asked before each post and before each merge.',
+    'Do you allow this?'
+  ]);
+}
+
+// The lines a held post prints: the owner block first, then the agent's
+// mapping to the one command they run. Owner commands live under
+// `box bounty allow`/`deny`, plainly named.
 export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: DecisionRead): string[] {
   const id = record.id;
   if (read.decision === 'ask' || read.decision === 'off') {
+    const target = record.waiting?.to;
+    const { amount } = repoReward(repoRoot);
     return [
-      `the owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off — it is on file marked off'}.`,
-      `the owner answers this one with: box bounty allow ${id}`
+      ...ownerBlock([
+        target === 'github' || target === undefined
+          ? `A bounty named "${record.title}" is ready to post publicly on GitHub under your account.`
+          : `A bounty named "${record.title}" is ready to be delivered to the folder ${target}.`,
+        `Each bounty on this repository states $${amount}, a promise in your name that you pay by hand.`,
+        `The owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off'} — may this one ${target === 'github' || target === undefined ? 'be posted' : 'be delivered'}? A yes or no is enough.`
+      ]),
+      `for you — the owner answers this one with: box bounty allow ${id}`
     ];
   }
-  const { amount } = repoReward(repoRoot);
   return [
-    'Ask the owner in your own words. Bounties are public under the owner\'s GitHub account. A solution the agent chooses is merged into the owner\'s code. This decision covers this repository only.',
-    `Each bounty states the reward the owner set for this repository — ${amount === 0 ? '$0 unless the owner names one, so no payment is promised now' : `$${amount}, a promise in the owner's name paid by hand`}. The yes at $0: box bounty allow. With a promise: box bounty allow --reward <whole dollars> --reward-limit <whole dollars>`,
-    'These are the same choices shown by bare box bounty config:',
+    ...firstUseBlock(repoRoot),
+    'for you — the owner picks one; you run the matching command:',
     `  ${DECISION_WORDS.allow}: box bounty allow`,
     `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
     `  ${DECISION_WORDS.once}: box bounty allow ${id}`,
-    'Ask mode covers publishing only; merging is not gated.',
     'box bounty config shows every setting and the command that changes it.'
+  ];
+}
+
+// The lines a held merge prints (BT13): one plain owner sentence says which
+// solution, from whom, is ready to merge — and asks the question. The owner
+// block comes first; the agent's part after it carries the one command and
+// the binding: the answer covers exactly this solution at this commit on
+// this branch tip.
+export function mergeWaitLines(record: BountyRecord, attempt: Attempt): string[] {
+  const id = record.id;
+  const from = attempt.author !== undefined ? ` from GitHub account ${attempt.author}` : ' from a returned folder';
+  return [
+    ...ownerBlock([
+      `A solution to "${record.title}"${from} is ready to merge into your code.`,
+      'Nothing has been merged yet.',
+      'May it be merged? A yes or no is enough.'
+    ]),
+    `for you — the owner answers this one with: box bounty allow ${id}`,
+    'the answer is bound to this solution at this commit on this branch\'s state — a change underneath it asks again'
   ];
 }
 
@@ -778,6 +854,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   lines.push(rewardStatusLine(repoRoot, open));
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
+  const askNotice = askMergeNoticeLine();
+  if (askNotice !== null) lines.push(askNotice);
   const localMerge = localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);
   for (const [address, notice] of Object.entries(loadSettings().firstMerges)) {
@@ -887,10 +965,13 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     // line — a record the owner can read whenever they wish, not a reminder.
     const pay = record.github?.pay;
     const paid = pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${pay.solver ?? 'the solver'}` : '';
+    // A hand merge the owner's decision would have held (ask/off) is marked
+    // where it is read back: the owner was not asked before that merge (BT13).
+    const unasked = record.events.some(event => event.stage === 'applied' && event.unasked === true) ? ' — the owner was not asked before the merge' : '';
     // applied/rejected/undone name the job the bounty came from, so the record
     // alone says which piece of work is unblocked — falling back to the title.
-    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${finding}${paid} (job: ${record.job?.file ?? record.title})`;
-    return `${record.id} ${record.stage}${finding}${paid}`;
+    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${unasked}${finding}${paid} (job: ${record.job?.file ?? record.title})`;
+    return `${record.id} ${record.stage}${unasked}${finding}${paid}`;
   }).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
   // was asked for by id, or else for the one that ended last.
@@ -967,7 +1048,7 @@ export function renderHelp(): string {
 // `attempt`, `command` and `merge` say which attempt a transition was about,
 // which command drove it and which commit it made — so the history alone says
 // what ended the bounty and on which attempt.
-export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string; attempt?: number; command?: string; merge?: string }): void => {
+export const transitionTo = (repoRoot: string, record: BountyRecord, stage: BountyStage, extra?: { destination?: string; reason?: string; attempt?: number; command?: string; merge?: string; unasked?: boolean; partial?: readonly string[] }): void => {
   record.events.push({
     stage,
     at: new Date().toISOString(),
@@ -975,7 +1056,9 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
     ...(extra?.reason !== undefined ? { reason: extra.reason } : {}),
     ...(extra?.attempt !== undefined ? { attempt: extra.attempt } : {}),
     ...(extra?.command !== undefined ? { command: extra.command } : {}),
-    ...(extra?.merge !== undefined ? { merge: extra.merge } : {})
+    ...(extra?.merge !== undefined ? { merge: extra.merge } : {}),
+    ...(extra?.unasked === true ? { unasked: true } : {}),
+    ...(extra?.partial !== undefined && extra.partial.length > 0 ? { partial: [...extra.partial] } : {})
   });
   record.stage = stage;
   if (stage !== 'waiting') delete record.waiting; // a landed action is no longer held
@@ -990,7 +1073,11 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
 // the answered rerun uncovered keeps it; a different held action never
 // inherits it.
 export function waitForOwner(repoRoot: string, record: BountyRecord, waiting: WaitingFor): void {
-  const carried = record.waiting !== undefined && record.waiting.for === waiting.for && record.waiting.to === waiting.to ? record.waiting.answered : undefined;
+  const mergeSame = (a: WaitingFor['merge'], b: WaitingFor['merge']): boolean =>
+    a !== undefined && b !== undefined && a.n === b.n && a.commit === b.commit && a.head === b.head;
+  const carried = record.waiting !== undefined && record.waiting.for === waiting.for && record.waiting.to === waiting.to
+    && (waiting.for !== 'merge' || mergeSame(record.waiting.merge, waiting.merge))
+    ? record.waiting.answered : undefined;
   record.waiting = { ...waiting, at: record.waiting?.at ?? waiting.at, ...(carried !== undefined ? { answered: carried } : {}) };
   if (record.stage === 'waiting') persistRecord(repoRoot, record);
   else transitionTo(repoRoot, record, 'waiting');
