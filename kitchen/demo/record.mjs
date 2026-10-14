@@ -1,23 +1,34 @@
 #!/usr/bin/env node
-// K16 — a demo video the kitchen makes by itself.
+// A demo video the kitchen makes by itself.
 //
 //   node kitchen/demo/record.mjs [--real | --standin] [--pause <seconds>]
-//                                [--url-pause <seconds>] [--out <folder>]
+//     [--per-line <seconds>] [--max-pause <seconds>] [--url-pause <seconds>]
+//     [--out <folder>]
 //
 // Runs kitchen/demo/bt11b-replay.mjs in its unattended mode while a windowless
-// browser records video. The browser shows the replay's output, line by line,
-// exactly as printed; when the replay prints a `PAGE <url>` line naming an
-// address inside the sandbox repository the browser goes there at that moment
-// and comes back. It opens nothing else — never the payment link, never an
-// address outside the sandbox — and a refused PAGE line is written into the
-// transcript and the index. `--real` (the default) needs `gh` signed in and
+// browser records video. The browser shows the replay's output, line by line;
+// when the replay prints a `PAGE <url>` line naming an address inside the
+// sandbox repository the browser goes there at that moment and comes back. It
+// opens nothing else — never the payment link, never an address outside the
+// sandbox — and a refused PAGE line is written into the transcript and the
+// index. `--real` (the default) needs `gh` signed in and
 // shouteck/box-bounty-sandbox allowed for bounties; `--standin` needs no
 // network and no credential and says so on its title card.
 //
-// Beside the video the run folder carries a still at every step and every page
-// shown, the full transcript, and an index a reviewer can check without
-// watching anything. Output goes to kitchen/demo/runs/<mode>-<stamp>/, or to
-// --out; an existing non-empty folder is refused, never clobbered.
+// The screen shows a shortened view of the run: tool commands read `box
+// bounty …`, paths under the home folder and the run's scratch area read
+// `<project>`, `<settings>`, `<run>`, `<tool>` or `<home>`, git noise and API
+// replies stay off screen, and a step's pause follows how much text it
+// showed. The transcript keeps every line — full commands included — with
+// only the path shortening applied and over-long API replies marked and
+// shortened; screen.txt is exactly what the viewer saw. Nothing the product
+// prints is reworded, reordered or dropped from the screen.
+//
+// Beside the video the run folder carries a still at every step — taken when
+// the step has finished printing — and at every page shown, the transcript,
+// screen.txt, and an index a reviewer can check without watching anything.
+// Output goes to kitchen/demo/runs/<mode>-<stamp>/, or to --out; an existing
+// non-empty folder is refused, never clobbered.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -31,6 +42,10 @@ const CLI = join(REPO, 'packages', 'box-cli', 'dist', 'cli.js');
 const REPLAY = join(HERE, 'bt11b-replay.mjs');
 const REAL_REPO = 'shouteck/box-bounty-sandbox';
 const VIEW = { width: 1280, height: 800 };
+// Longer than this, a single reply line is marked and shortened in the
+// transcript and kept off the screen — a GitHub API reply, never the
+// product's own output.
+const LONG_LINE = 500;
 
 const args = process.argv.slice(2);
 const real = !args.includes('--standin');
@@ -38,13 +53,35 @@ const flag = (name, fallback) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : fallback;
 };
-const PAUSE = flag('--pause', '1.5');
+const PAUSE = flag('--pause', '2');
+const PER_LINE = flag('--per-line', '0.25');
+const MAX_PAUSE = flag('--max-pause', '14');
 const URL_PAUSE = flag('--url-pause', '8');
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '-').slice(0, 19);
 const OUT = resolve(flag('--out', join(HERE, 'runs', `${real ? 'real' : 'standin'}-${stamp}`)));
 
 // --- the named refusals -------------------------------------------------------
 const refuse = (why) => { console.log(`record refused: ${why}`); process.exit(2); };
+
+// dist/cli.js is one bundle of the workspace's packages: the newest .ts
+// under packages/ must not postdate it — a stale build is the stale-`dist`
+// failure a recorded run would silently carry. Returns the name of what to
+// rebuild, or null.
+export function buildIsStale(packagesDir) {
+  const cli = join(packagesDir, 'box-cli', 'dist', 'cli.js');
+  if (!existsSync(cli)) return 'box-cli';
+  const built = statSync(cli).mtimeMs;
+  let newestSrc = 0;
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) { if (entry.name !== 'node_modules' && entry.name !== 'dist') walk(path); }
+      else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.d.ts')) newestSrc = Math.max(newestSrc, statSync(path).mtimeMs);
+    }
+  };
+  walk(packagesDir);
+  return newestSrc > built ? 'box-cli' : null;
+}
 
 // The only address the recorder may navigate to in a real run: a page inside
 // the sandbox repository. A PAGE line naming anything else — another
@@ -69,6 +106,8 @@ async function main() {
   // --- preflight: everything is checked before the replay (and any post) starts
   if (existsSync(OUT) && readdirSync(OUT).length > 0) refuse(`the output folder ${OUT} already exists and is not this command's — nothing was written`);
   if (!existsSync(CLI)) refuse('the tool is not built — run node scripts/workspace.mjs build first');
+  const stale = buildIsStale(join(REPO, 'packages'));
+  if (stale) refuse(`packages/${stale}/dist/cli.js is older than the sources it is built from — a recording would show a stale tool; build first: node scripts/workspace.mjs build`);
   if (!existsSync(REPLAY)) refuse(`the replay is missing at ${REPLAY}`);
   // The project's own browser path first (the same one scripts/suite.mjs
   // sets); the machine-wide default stays as fallback. Nothing is installed.
@@ -123,7 +162,10 @@ async function main() {
   </div>`);
 
   // --- recording --------------------------------------------------------------
-  const lines = [];          // the transcript, exactly what the replay printed
+  const lines = [];          // the transcript — every line the replay printed,
+                             // with paths shortened and over-long API replies
+                             // marked and shortened; nothing else changed
+  const screen = [];         // exactly what a viewer sees, line for line
   const index = [];          // rows for index.md
   const leftOnGitHub = [];   // the run's own "left on GitHub" lines, real mode
   const t0 = Date.now();
@@ -134,11 +176,52 @@ async function main() {
   let exitCode = 1;
   let browser, context, page;
 
+  // Path shortening, applied to the transcript and the screen alike. The
+  // replay writes the run's own folders to a paths file; the recorder adds
+  // the tool's checkout and the home folder itself.
+  const pathsFile = join(OUT, 'paths.json');
+  let pathMap = null;
+  const shortenPaths = (line) => {
+    if (pathMap === null) {
+      try {
+        const paths = JSON.parse(readFileSync(pathsFile, 'utf8'));
+        pathMap = [];
+        for (const [abs, ph] of [[paths.project, '<project>'], [paths.settings, '<settings>'], [paths.run, '<run>'], [REPO, '<tool>'], [homedir(), '<home>']]) {
+          if (!abs) continue;
+          pathMap.push([abs, ph], [abs.replaceAll('\\', '/'), ph]);
+        }
+        pathMap.sort((a, b) => b[0].length - a[0].length);
+        lines.push('[recorder] path shorthand — <project> the run\'s example checkout, <settings> the run\'s own settings folder, <run> the scratch folder, <tool> the tool\'s checkout, <home> the home folder');
+      } catch { /* not written yet — the next line tries again */ }
+    }
+    if (pathMap) for (const [abs, ph] of pathMap) line = line.split(abs).join(ph);
+    return line;
+  };
+
+  // What stays off screen, besides <<< >>> regions: git's plumbing chatter
+  // and any single line too long to read (an API reply — the transcript keeps
+  // it, marked and shortened). Everything the product prints is shown as is.
+  const OFF_SCREEN = /^(remote: |warning: |Cloning into |Fetching |remote:$)/;
+  const displayed = (line) => {
+    if (OFF_SCREEN.test(line)) return null;
+    if (line.length > LONG_LINE) return null;
+    if (/^\{.*\}$/.test(line)) return null; // a single-line API reply — the transcript keeps it
+    // A tool command runs unchanged; only the display shortens it to `box …`.
+    const cli = line.indexOf('cli.js bounty ');
+    if (line.startsWith('$ ') && cli !== -1) return `$ box bounty ${line.slice(cli + 'cli.js bounty '.length)}`;
+    const shim = line.indexOf('gh-standin.cjs api ');
+    if (line.startsWith('$ ') && shim !== -1) return `$ gh api ${line.slice(shim + 'gh-standin.cjs api '.length)}`;
+    return line;
+  };
+  const truncated = (line) => line.length > LONG_LINE
+    ? `${line.slice(0, 160)}… [recorder: a ${line.length}-character reply, kept off screen — its address is the PAGE line]`
+    : line;
+
   const still = async (name) => {
     await page.screenshot({ path: join(OUT, 'stills', name) });
     return `stills/${name}`;
   };
-  const showTerminal = async () => page.setContent(terminalHtml(lines));
+  const showTerminal = async () => page.setContent(terminalHtml(screen));
 
   try {
     browser = await chromium.launch();
@@ -146,32 +229,54 @@ async function main() {
     page = await context.newPage();
 
     // Title card — plain words about what the viewer is about to see.
-    await page.setContent(card("box bounty — the solver's payment link, a recorded run", [
+    await page.setContent(card('box bounty — an agent hands a task to outside solvers', [
       `Recorded ${new Date().toISOString().slice(0, 10)} — tool commit ${commit.slice(0, 12)}.`,
+      'The tool packages a task an agent cannot or should not do, posts it as a public bounty, and tells the owner whom to pay when a solution is merged.',
       real
-        ? `This is a <b>real run</b>: the tool posts a test bounty in <b>github.com/${REAL_REPO}</b>, a test repository run by the owner; the solvers are the owner's own agents. <b>No real money is paid.</b>`
+        ? `This is a <b>real run</b>: the tool posts a test bounty in <b>github.com/${REAL_REPO}</b>, a test repository run by the owner, and pays nothing — the $1 reward is a test payment link.`
         : 'This is a <b>stand-in run</b>: a fake GitHub on this machine. <b>No network, no credential, nothing leaves the machine.</b>',
-      "What looks like a terminal window is the replay's real output shown in a browser — not a filmed terminal.",
-      'One line before each step says who is acting. Real pages are shown as the run creates them; the payment link itself is never opened.',
+      'Both solvers are played by the owner\'s own GitHub account because this is a test — in real use they are other people. That is why the pay message names the owner\'s account.',
+      'The owner decided once, before the demo: this repository may carry bounties, each promising $1, at most $5 promised at once.',
+      "What looks like a terminal is the replay's real output shown in a browser — not a filmed window. One line before each step says who is acting; the payment link itself is never opened.",
     ]));
     index.push({ at: at(), who: 'title card', still: await still('card-title.png'), address: '' });
-    await wait(4500);
+    await wait(6000);
     await showTerminal();
 
     // The replay, unattended — its own modes and pauses, passed through.
-    const child = spawn(process.execPath, [REPLAY, real ? '--real' : '--standin', '--auto', '--pause', PAUSE, '--url-pause', URL_PAUSE], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [REPLAY, real ? '--real' : '--standin', '--auto', '--pause', PAUSE, '--per-line', PER_LINE, '--max-pause', MAX_PAUSE, '--url-pause', URL_PAUSE, '--paths', pathsFile], { stdio: ['ignore', 'pipe', 'pipe'] });
     let buffer = '';
-    let steps = 0, pages = 0, readingLeft = false;
-    const onLine = async (line) => {
-      line = line.replace(/\r$/, '');
-      lines.push(line);
+    let steps = 0, pages = 0, readingLeft = false, hidden = false;
+    let pendingStepStill = null; // a step's still waits for its finished screen
+    const captureStepStill = async () => {
+      if (pendingStepStill === null) return;
+      index[pendingStepStill.row].still = await still(pendingStepStill.name);
+      pendingStepStill = null;
+    };
+    const paint = async (line) => page.evaluate(`(function(){var t=document.getElementById('term');if(!t)return;var d=document.createElement('div');var l=LINE;d.className=l.startsWith('=== ')?'step':l.startsWith('PAGE ')?'page':l.startsWith('$ ')?'cmd':'';d.textContent=l;t.appendChild(d);window.scrollTo(0,document.body.scrollHeight)})()`.replace('LINE', JSON.stringify(line)));
+    const onLine = async (raw) => {
+      const line = shortenPaths(raw.replace(/\r$/, ''));
+      if (line === '<<<') { hidden = true; lines.push('[recorder] run but not shown on screen:'); return; }
+      if (line === '>>>') { hidden = false; lines.push('[recorder] shown on screen again.'); return; }
+      const kept = truncated(line);
+      lines.push(kept);
       if (readingLeft && line.trimStart().startsWith('- ')) leftOnGitHub.push(line.trim());
       if (line.startsWith('left on GitHub')) readingLeft = true;
+      if (hidden) return;
+      const show = displayed(line);
       if (line.startsWith('=== step ')) {
+        // The previous step has finished printing: its still is this screen.
+        await captureStepStill();
         steps += 1;
         const who = line.replace(/^=== step \d+ — /, '');
-        index.push({ at: at(), who, still: await still(`step-${pad(steps)}.png`), address: '' });
-      } else if (line.startsWith('PAGE ')) {
+        index.push({ at: at(), who, still: '', address: '' });
+        pendingStepStill = { row: index.length - 1, name: `step-${pad(steps)}.png` };
+        if (show !== null) { screen.push(show); await paint(show); }
+        return;
+      }
+      if (line.startsWith('PAGE ')) {
+        if (show !== null) { screen.push(show); await paint(show); }
+        await captureStepStill(); // a PAGE line is the step's last print
         pages += 1;
         const url = pageUrlOf(line);
         if (allowedAddress(url, real)) {
@@ -198,9 +303,9 @@ async function main() {
           index.push({ at: at(), who: 'PAGE line refused — outside the sandbox', still: await still(`page-${pad(pages)}.png`), address: `refused: ${url}` });
           await showTerminal();
         }
-        return; // a PAGE line was already painted by the full re-render — appending it again would double it on screen
+        return;
       }
-      await page.evaluate(`(function(){var t=document.getElementById('term');if(!t)return;var d=document.createElement('div');var l=LINE;d.className=l.startsWith('=== ')?'step':l.startsWith('PAGE ')?'page':l.startsWith('$ ')?'cmd':'';d.textContent=l;t.appendChild(d);window.scrollTo(0,document.body.scrollHeight)})()`.replace('LINE', JSON.stringify(line)));
+      if (show !== null) { screen.push(show); await paint(show); }
     };
     const drain = () => { const out = buffer.split('\n'); buffer = out.pop(); return out; };
     const queue = [];
@@ -218,6 +323,7 @@ async function main() {
     if (buffer.length) { queue.push(buffer); buffer = ''; }
     busy = busy.then(async () => { while (queue.length) await onLine(queue.shift()); });
     await busy;
+    await captureStepStill(); // the last step's still, on the finished screen
 
     // Closing card — what the run left on GitHub, by exact name.
     const left = real
@@ -226,7 +332,7 @@ async function main() {
     await page.setContent(card('the run is over — what it left behind', [
       ...(real ? ['<b>left on GitHub, by exact name:</b>'] : []),
       ...left,
-      `The transcript, the index and one still per step sit beside this video in ${OUT}.`,
+      'The transcript, the index and one still per step sit beside this video in its run folder.',
     ]));
     index.push({ at: at(), who: 'closing card — what the run left', still: await still('card-end.png'), address: '' });
     await wait(3500);
@@ -241,6 +347,7 @@ async function main() {
   }
   rmSync(videoTmp, { recursive: true, force: true });
   writeFileSync(join(OUT, 'transcript.txt'), lines.join('\n') + '\n');
+  writeFileSync(join(OUT, 'screen.txt'), screen.join('\n') + '\n');
   const videoBytes = existsSync(join(OUT, 'demo.webm')) ? statSync(join(OUT, 'demo.webm')).size : 0;
   writeFileSync(join(OUT, 'index.md'), [
     `# recording index — ${real ? 'real' : 'stand-in'} run ${new Date(t0).toISOString()}`,

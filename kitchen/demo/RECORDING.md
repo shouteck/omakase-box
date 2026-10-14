@@ -45,7 +45,10 @@ needs a screen, a browser and the recorder). It is the whole job.
 ## Notes
 
 - The replay is `kitchen/demo/bt11b-replay.mjs`; its `--real` mode posts a
-  fresh test bounty in the sandbox each run and cleans up what it opened.
+  fresh test bounty in the sandbox each run and cleans up what it opened,
+  including the solver branches it pushed. The demo's `allow` and its $1
+  reward are written to a settings folder of the run's own — the owner's real
+  settings file is only ever read, never written.
 - On Linux run it in `--standin` mode instead (the transcript in
   `bt11b-transcript.txt` is one stand-in run); real mode on Linux is exactly
   this recording session.
