@@ -84,6 +84,16 @@ describe('compact status leads with what waits', () => {
   }));
 });
 
+describe('a failed refresh names the reason — and a hopeless one offers no retry', () => {
+  it('an issue that is not this bounty\'s names github-issue-mismatch and no retry', () => postedFixture(({ repo, id, state, update }) => {
+    update({ issues: [{ ...state().issues[0]!, body: 'edited outside — the bounty marker is gone' }] });
+    const stale = renderStatus(repo);
+    expect(stale).toContain('github-issue-mismatch');
+    expect(stale).toContain('reads the same answer');
+    expect(stale).not.toContain('retry box bounty status');
+  }));
+});
+
 describe('the secret scan never tells an agent to rewrite history', () => {
   it('a hit inside an unpushed commit says a new commit does not help and history is the owner\'s call', () => fixture(({ repo, id }) => {
     write(repo, 'config/creds.txt', `api_key = "${'aB3' + 'q'.repeat(30)}"\n`);
