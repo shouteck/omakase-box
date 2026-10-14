@@ -13,7 +13,7 @@ import { checkProjectClaims, publishListed, publishLists, shipRules } from './ne
 import type { NeverShipRule } from './never-ship.js';
 import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
-import { requireRepository } from './repository.js';
+import { repositoryAddress, requireRepository } from './repository.js';
 import { readReward } from './settings.js';
 import { boundAmount, formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
 import { parsePayTo, payToLine, type PayOutcome, type PayToFact } from './pay.js';
@@ -1014,7 +1014,7 @@ export function approveGitHub(root: string, record: BountyRecord, choice: GitHub
   // the amount it went out with — read from the posted body, never from the
   // editable `reward` summary — and a recorded approval predates rewards: its
   // frozen body states $0.
-  const text = listingHistory(record, repository, plan, boundAmount(record) ?? readReward().amount);
+  const text = listingHistory(record, repository, plan, boundAmount(record) ?? readReward(repositoryAddress(repository)).amount);
   const preview = renderPlanPreview(repository, record, plan, text);
   return {
     repository,

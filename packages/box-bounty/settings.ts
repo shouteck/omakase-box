@@ -16,7 +16,16 @@ export function settingsDir(): string {
 export const settingsFile = (): string => join(settingsDir(), SETTINGS_FILE_NAME);
 export type OwnerDecision = 'allowed' | 'ask' | 'off';
 interface Change { readonly bounty: OwnerDecision | null; readonly at: string }
-export interface SettingsLevel extends Change { readonly changes: readonly Change[] }
+interface MoneyEntry { readonly amount: number; readonly at: string }
+export interface SettingsLevel extends Change {
+  readonly changes: readonly Change[];
+  /** The reward each new bounty posted to this repository states (BT11c):
+      whole US dollars, $0 unless the owner named one for this repository.
+      Lives on the repository entry — never on the all-projects extra. */
+  readonly reward?: MoneyEntry;
+  /** The most that may be promised across this repository's open bounties. */
+  readonly rewardLimit?: MoneyEntry;
+}
 interface Migration { readonly path: string; readonly at: string; readonly repository: string | null; readonly detail: string }
 interface MergeNotice { readonly commit: string; readonly at: string }
 export interface InstructionSettings {
@@ -37,13 +46,18 @@ export interface OwnerSettings {
       a never-ship rule; `safe` paths are the ones the pre-publish scan does
       not hold a bounty over. Both live here and never in the project. */
   readonly publishing?: Readonly<Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }>>;
-  /** The reward each new bounty states (BT11a): whole US dollars, 0 by
-      default. The owner's to set, never the agent's — `config set reward`.
-      `at` is when the setting last changed. */
-  readonly reward?: { readonly amount: number; readonly at: string };
-  /** The most that may be promised across open bounties (BT11a): whole US
-      dollars. A reward above 0 cannot be set without one at or above it. */
-  readonly rewardLimit?: { readonly amount: number; readonly at: string };
+  /** The reward and limit are per repository since BT11c — they live on each
+      `repositories` entry. A file written before then carried one shared
+      `reward`/`rewardLimit` for everything; the owner never chose them per
+      repository (one was left by a demo run), so on first load they are
+      retired into this record — applied to nothing — and the tool says so
+      once, recording `toldAt` when the fact was shown. */
+  readonly retiredReward?: {
+    readonly reward: MoneyEntry | null;
+    readonly limit: MoneyEntry | null;
+    readonly at: string;
+    readonly toldAt?: string;
+  };
   /** When the tool once said, in plain words, what a reward is — recorded so
       it is said once ever, at the first amount above 0. */
   readonly rewardPromiseSaid?: string;
@@ -69,11 +83,16 @@ function change(value: unknown, where: string): Change {
 }
 function level(value: unknown, where: string): SettingsLevel {
   if (!isObject(value)) return bad(`${where} must hold an object`);
-  for (const name of Object.keys(value)) if (!['bounty', 'at', 'changes'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(value)) if (!['bounty', 'at', 'changes', 'reward', 'rewardLimit'].includes(name)) unknownSetting(name);
   const current = change({ bounty: value['bounty'], at: value['at'] }, where);
   const raw = value['changes'];
   if (raw !== undefined && !Array.isArray(raw)) return bad(`${where}.changes must hold a list`);
-  return { ...current, changes: raw === undefined ? [] : raw.map(entry => change(entry, `${where}.changes`)) };
+  return {
+    ...current,
+    changes: raw === undefined ? [] : raw.map(entry => change(entry, `${where}.changes`)),
+    ...(value['reward'] === undefined ? {} : { reward: moneySetting(value['reward'], `${where}.reward`) }),
+    ...(value['rewardLimit'] === undefined ? {} : { rewardLimit: moneySetting(value['rewardLimit'], `${where}.rewardLimit`) })
+  };
 }
 function persist(settings: OwnerSettings): void {
   mkdirSync(settingsDir(), { recursive: true });
@@ -103,7 +122,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'rewardPromiseSaid', 'rewardNoticeAt'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -160,9 +179,46 @@ export function loadSettings(): OwnerSettings {
       publishing[key] = { never: lists(value['never'] ?? []), safe: lists(value['safe'] ?? []) };
     }
   }
-  const settings: OwnerSettings = { ...(fallback !== undefined ? { default: level(fallback, 'default') } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(parsed['reward'] === undefined ? {} : { reward: moneySetting(parsed['reward'], 'reward') }), ...(parsed['rewardLimit'] === undefined ? {} : { rewardLimit: moneySetting(parsed['rewardLimit'], 'rewardLimit') }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}) };
+  // The all-projects extra never carries a reward: money is promised only
+  // for a repository the owner named (BT11c). A hand-written file that puts
+  // one there fails loudly like every other wrong shape.
+  const defaultLevel = fallback === undefined ? undefined : level(fallback, 'default');
+  if (defaultLevel !== undefined && (defaultLevel.reward !== undefined || defaultLevel.rewardLimit !== undefined)) return bad('default cannot hold a reward or a limit — money belongs to a named repository; fix the settings file or remove it');
+  // A retired shared reward: loaded so the once-only fact can say what it
+  // was, but it is applied to no repository ever again.
+  let retiredReward: OwnerSettings['retiredReward'];
+  const rawRetired = parsed['retiredReward'];
+  if (rawRetired !== undefined) {
+    if (!isObject(rawRetired) || typeof rawRetired['at'] !== 'string' || !(rawRetired['toldAt'] === undefined || typeof rawRetired['toldAt'] === 'string')
+      || !(rawRetired['reward'] === null || rawRetired['reward'] === undefined || isObject(rawRetired['reward']))
+      || !(rawRetired['limit'] === null || rawRetired['limit'] === undefined || isObject(rawRetired['limit']))) return bad('a retired reward record is unreadable');
+    for (const name of Object.keys(rawRetired)) if (!['reward', 'limit', 'at', 'toldAt'].includes(name)) unknownSetting(name);
+    retiredReward = {
+      reward: rawRetired['reward'] === null || rawRetired['reward'] === undefined ? null : moneySetting(rawRetired['reward'], 'retiredReward.reward'),
+      limit: rawRetired['limit'] === null || rawRetired['limit'] === undefined ? null : moneySetting(rawRetired['limit'], 'retiredReward.limit'),
+      at: rawRetired['at'],
+      ...(typeof rawRetired['toldAt'] === 'string' ? { toldAt: rawRetired['toldAt'] } : {})
+    };
+  }
+  // The shared reward/limit a pre-BT11c file carried apply to nothing: the
+  // owner never chose them per repository, so they retire into a record the
+  // once-only fact reports — they are never read as a setting again. Open
+  // bounties keep the amount they were posted with; that lives on records.
+  const retiring = parsed['reward'] !== undefined || parsed['rewardLimit'] !== undefined;
+  if (retiring) {
+    if (retiredReward !== undefined) return bad('the settings file holds both a shared reward and a retired one; fix the settings file or remove it');
+    retiredReward = {
+      reward: parsed['reward'] === undefined ? null : moneySetting(parsed['reward'], 'reward'),
+      limit: parsed['rewardLimit'] === undefined ? null : moneySetting(parsed['rewardLimit'], 'rewardLimit'),
+      at: new Date().toISOString()
+    };
+  }
+  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}) };
   const legacy = parsed['projects'];
-  if (legacy === undefined) return settings;
+  if (legacy === undefined) {
+    if (retiring) persist(settings);
+    return settings;
+  }
   if (!isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
   const entries = Object.entries(legacy).map(([key, value]) => ({ key, entry: level(value, `projects[${JSON.stringify(key)}]`) }));
   const at = new Date().toISOString();
@@ -190,27 +246,55 @@ export function loadSettings(): OwnerSettings {
   return settings;
 }
 
-/** The reward each new bounty will state and the most that may be promised
-    across open bounties — the owner's two settings, never the agent's. A
-    settings file written before BT11a reads as $0 with no limit, so owners
-    who configured before then are never interrupted. */
-export function readReward(): { readonly amount: number; readonly limit: number | null } {
-  const settings = loadSettings();
-  return { amount: settings.reward?.amount ?? 0, limit: settings.rewardLimit?.amount ?? null };
+/** The reward each new bounty posted to one repository will state and the
+    most that may be promised across its open bounties (BT11c) — read from
+    that repository's own entry, the owner's settings, never the agent's. A
+    repository with no entry — one allowed only through the all-projects
+    extra — states $0: money is promised only for a repository the owner
+    named, and a null address (no GitHub remote) can never be listed. */
+export function readReward(address: string | null): { readonly amount: number; readonly limit: number | null } {
+  const entry = address === null ? undefined : loadSettings().repositories[address];
+  return { amount: entry?.reward?.amount ?? 0, limit: entry?.rewardLimit?.amount ?? null };
 }
 
-/** The once-only fact shown to an owner whose settings predate the reward
-    settings: that a reward can now be set, and the command. Returns the line
-    the first time it applies and persists that it was shown — an owner is
-    told once ever, and a fresh settings file (no decisions written yet) is
-    not told at all: first use already carries the reward fact. */
+/** The reward read for a checkout: resolves this repository's address and
+    reads its own entry. A repository whose remotes cannot name one GitHub
+    address cannot be listed, so it states $0 like one the owner never
+    listed — read paths never fail on a remote problem; `allow` and the post
+    gate are where identity refusals are named. An empty list answers $0
+    without resolving the address at all — the same early read `readDecision`
+    makes, so this adds no Git work to a command that had none. */
+export function repoReward(repoRoot: string): { readonly amount: number; readonly limit: number | null } {
+  const settings = loadSettings();
+  if (Object.keys(settings.repositories).length === 0) return { amount: 0, limit: null };
+  let address: string | null = null;
+  try { address = repositoryIdentity(repoRoot); } catch { /* an unlistable repository states $0 */ }
+  const entry = address === null ? undefined : settings.repositories[address];
+  return { amount: entry?.reward?.amount ?? 0, limit: entry?.rewardLimit?.amount ?? null };
+}
+
+/** The once-only facts about rewards owed to an owner whose settings predate
+    them. First: a shared reward/limit written before BT11c was retired on
+    load — it applies to nothing now, and the tool says once what it was and
+    how to set a repository's own. Then the older BT11a shape: decisions but
+    no reward anywhere — the tool says once that each repository can state
+    its own. Returns the line the first time it applies and persists that it
+    was shown — told once ever, and a fresh settings file (no decisions
+    written yet) is not told at all: first use already carries the fact. */
 export function rewardNoticeLine(): string | null {
   const settings = loadSettings();
-  if (settings.reward !== undefined || settings.rewardNoticeAt !== undefined) return null;
-  if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
   const at = new Date().toISOString();
+  if (settings.retiredReward !== undefined) {
+    if (settings.retiredReward.toldAt !== undefined) return null;
+    const retired = settings.retiredReward;
+    persist({ ...settings, retiredReward: { ...retired, toldAt: at } });
+    const was = retired.reward === null && retired.limit === null ? 'a shared reward entry without readable amounts' : `a shared reward of $${retired.reward?.amount ?? 0}${retired.limit === null ? '' : ` and a $${retired.limit.amount} limit`}`;
+    return `one fact about money: ${was} applied to every repository — it applies to nothing now. Each repository states $0 until you set its own: box bounty config set reward <whole dollars> [owner/name]. Open bounties keep the amount they were posted with (noted ${at})`;
+  }
+  if (settings.rewardNoticeAt !== undefined) return null;
+  if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
   persist({ ...settings, rewardNoticeAt: at });
-  return `bounties can now state a reward — the owner sets it with box bounty config set reward <whole dollars>. Until then every bounty states $0 (noted ${at})`;
+  return `each repository can state its own reward — the owner sets it inside its checkout or by name: box bounty config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
 }
 
 export interface DecisionRead {
@@ -231,7 +315,7 @@ export function readDecision(repoRoot: string): DecisionRead {
   if (settings.default !== undefined) return { decision: settings.default.bounty, level: 'default', at: settings.default.at };
   return { decision: null, level: null, at: null };
 }
-export function writeRepository(address: string, bounty: OwnerDecision | null, beforeWrite?: () => void): { path: string; at: string; key: string } {
+export function writeRepository(address: string, bounty: OwnerDecision | null, beforeWrite?: () => void, money?: { readonly reward: number; readonly rewardLimit: number | null }): { path: string; at: string; key: string } {
   const key = repositoryAddress(address);
   if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address; use owner/name. Nothing changed`);
   const settings = loadSettings();
@@ -239,9 +323,37 @@ export function writeRepository(address: string, bounty: OwnerDecision | null, b
   if (bounty === null && (previous === undefined || previous.bounty === null || previous.bounty === 'off')) throw new BountyRefused('repository-not-listed', `${key} is not listed; nothing changed`);
   const at = new Date().toISOString();
   const changes = [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])];
+  // Money lives on this entry alone. `deny` clears it — a re-allowed
+  // repository states $0 until the owner names an amount again — while a
+  // bare `allow` keeps what the entry already said, and an `allow` that
+  // names amounts replaces them.
+  const moneyFields = bounty === null || bounty === 'off' ? {}
+    : money !== undefined ? {
+      reward: { amount: money.reward, at: money.reward === previous?.reward?.amount ? previous.reward!.at : at },
+      ...(money.rewardLimit === null ? {} : { rewardLimit: { amount: money.rewardLimit, at: money.rewardLimit === previous?.rewardLimit?.amount ? previous.rewardLimit!.at : at } })
+    }
+    : { ...(previous?.reward === undefined ? {} : { reward: previous.reward }), ...(previous?.rewardLimit === undefined ? {} : { rewardLimit: previous.rewardLimit }) };
+  const entry: SettingsLevel = { bounty, at, changes, ...moneyFields };
   beforeWrite?.();
-  persist({ ...settings, repositories: { ...settings.repositories, [key]: { bounty, at, changes } } });
+  persist({ ...settings, repositories: { ...settings.repositories, [key]: entry } });
   return { path: settingsFile(), at, key };
+}
+
+/** Write the reward or the limit on one repository entry — the entry must
+    already be on the owner's list as allowed or ask: money is promised only
+    for a repository the owner named (BT11c). The pair rules — a reward above
+    $0 needs a limit at or above it, a limit never sits below the reward —
+    are the caller's to check, so the refusal can name which side failed. */
+export function writeMoney(address: string, patch: { readonly reward?: number; readonly rewardLimit?: number }): { readonly at: string; readonly key: string; readonly entry: SettingsLevel } {
+  const key = repositoryAddress(address);
+  if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address; use owner/name. Nothing changed`);
+  const settings = loadSettings();
+  const previous = settings.repositories[key];
+  if (previous === undefined || previous.bounty === null || previous.bounty === 'off') throw new BountyRefused('reward-repository-unlisted', `${key} is not on the owner's list — money is promised only for a repository you named. Allow it first: box bounty allow ${key} [--reward <whole dollars> --reward-limit <whole dollars>]. Nothing changed`);
+  const at = new Date().toISOString();
+  const entry: SettingsLevel = { ...previous, ...(patch.reward === undefined ? {} : { reward: { amount: patch.reward, at } }), ...(patch.rewardLimit === undefined ? {} : { rewardLimit: { amount: patch.rewardLimit, at } }) };
+  persist({ ...settings, repositories: { ...settings.repositories, [key]: entry } });
+  return { at, key, entry };
 }
 export function writeDecision(repoRoot: string, scope: 'project' | 'default', bounty: OwnerDecision): { path: string; at: string; key: string } {
   if (scope === 'project') return writeRepository(requireRepository(repoRoot), bounty);

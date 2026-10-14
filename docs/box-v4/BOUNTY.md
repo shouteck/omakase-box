@@ -54,7 +54,7 @@ node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo 
 The owner has three commands. An agent can run them after the owner's decision:
 
 ```
-node packages/box-cli/dist/cli.js bounty allow [owner/name|waiting-id] [--ask] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty deny [owner/name] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty config [set|add|remove <setting> <value>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status --since <iso> [--repo <path>]
@@ -424,27 +424,41 @@ The owner has three words:
   repository. The disclosure says bounties are public under the owner's
   GitHub account, solutions the agent chooses are merged into the owner's
   code, and this decision covers this repository only. `--ask` means be
-  asked each time before publishing.
-- `deny [owner/name]` removes the active entry. Open bounties are untouched.
+  asked each time before publishing. `--reward <whole dollars>` and
+  `--reward-limit <whole dollars>` set this repository's own reward and
+  limit in the same breath; with neither, its bounties state $0 — a bare
+  re-allow keeps what the entry already said.
+- `deny [owner/name]` removes the active entry — its reward and limit go
+  with it. Open bounties are untouched.
   Its dated removal stays in the settings history and blocks the all-projects
   default for that repository. Config shows 'not allowed; denied at' and the
   exact command to re-allow it. Re-allow clears the exception.
 - Bare `config` prints all settings, set or not, with the command that changes
-  each one. `config set all-projects true` allows all projects, except dated
+  each one, and one line per repository: its address, allowed or ask, its
+  reward, its limit, and what its open bounties promise now and what is
+  left. `config set all-projects true` allows all projects, except dated
   deny exceptions. It is off by default. `false` turns that default off;
   `ask` asks before publishing in projects with no entry.
   `config add repositories owner/name` and `config remove repositories
   owner/name` change the same list as allow and deny.
-- `config set reward <whole dollars>` is the amount each new bounty states —
-  whole US dollars, 0 by default. `config set reward-limit <whole dollars>`
-  is the most that may be promised across open bounties; a reward above $0
-  cannot be set without a limit at or above it, and a limit cannot sit below
-  the reward. A posted bounty keeps the amount it was posted with; a change
-  while bounties are open says so, and closing a bounty — merged or not —
-  stops its amount counting. `status` and bare `config` show the reward, the
-  limit, what open bounties promise and what is left. The first amount above
-  0 gets one plain sentence: it is a promise, made in the owner's name, that
-  the owner pays by hand — the tool never moves money.
+- `config set reward <whole dollars>` is the amount each new bounty on that
+  repository states — whole US dollars, 0 unless the owner named one.
+  `config set reward-limit <whole dollars>` is the most that may be promised
+  across that repository's open bounties; a reward above $0 cannot be set
+  without a limit at or above it, and a limit cannot sit below the reward.
+  Both apply to the repository the command runs in, or to one named after
+  the amount: `config set reward 10 owner/name`. Money is promised only for
+  a repository the owner named — an unlisted one is a named refusal, and the
+  all-projects extra never carries a reward. A posted bounty keeps the
+  amount it was posted with; a change while bounties are open says so, and
+  closing a bounty — merged or not — stops its amount counting. `status` and
+  bare `config` show this repository's reward, its limit, what its open
+  bounties promise and what is left. The first amount above 0 gets one
+  plain sentence: it is a promise, made in the owner's name, that the owner
+  pays by hand — the tool never moves money. A reward and limit written
+  before rewards were per repository applied to nothing once this wave
+  landed — the tool says once what they were, and every repository states
+  $0 until the owner sets its own.
 
 The agent is asked nothing about money. `create` and `post` take no amount
 flag — each money spelling is a named refusal (`reward-agent-set`) — and a

@@ -19,13 +19,14 @@ const STRIPE_LIVE = 'https://buy.stripe.com/9AQ00deadbeef0000';
 const noticed: string[] = [];
 setMergeNoticeListener(line => noticed.push(line));
 
-/** Write the reward settings into the fixture world's own settings dir before
-    postBounty runs — the reward is bound at post time. */
+/** Write the repository's reward settings into the fixture world's own
+    settings dir before postBounty runs — the reward is bound at post time.
+    BT11c: money lives on owner/project's own entry; a shared setting would
+    retire on load and apply to nothing. */
 const reward5 = (scratch: string) => {
   const path = join(scratch, 'settings', 'settings.json');
   const settings = JSON.parse(readFileSync(path, 'utf8'));
-  settings.reward = { amount: 5, at: '2026-10-01T00:00:00.000Z' };
-  settings.rewardLimit = { amount: 50, at: '2026-10-01T00:00:00.000Z' };
+  settings.repositories = { ...(settings.repositories ?? {}), 'owner/project': { bounty: 'allowed', at: '2026-10-01T00:00:00.000Z', changes: [], reward: { amount: 5, at: '2026-10-01T00:00:00.000Z' }, rewardLimit: { amount: 50, at: '2026-10-01T00:00:00.000Z' } } };
   writeFileSync(path, JSON.stringify(settings));
 };
 

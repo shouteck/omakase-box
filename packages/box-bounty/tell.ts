@@ -1,12 +1,12 @@
 import { attemptsOf, isOpenStage, listRecords, ownerStatusLine, renderOpenLine } from './record.js';
 import { instructionBlock } from './instructions.js';
-import { readReward } from './settings.js';
+import { repoReward } from './settings.js';
 import { DESCRIBE_LINES, describeRewardLine, renderRulesBlock } from './wording.js';
 
 export function renderDescribe(repoRoot: string | null): string {
-  const { amount } = readReward();
+  const { amount } = repoRoot === null ? { amount: 0 } : repoReward(repoRoot);
   // The reward sentence sits where the frozen text ended its thought — the
-  // amount is generated from the owner's setting, never hard-coded.
+  // amount is generated from this repository's own entry, never hard-coded.
   const at = DESCRIBE_LINES.indexOf('available.');
   const lines: string[] = [...DESCRIBE_LINES.slice(0, at + 1), describeRewardLine(amount), ...DESCRIBE_LINES.slice(at + 1), ''];
   if (repoRoot === null) {

@@ -10,7 +10,7 @@ import type { NeverShipRule } from './never-ship.js';
 import { looksBinary, scanText } from './github.js';
 import type { ScanHit } from './github.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
-import { readReward } from './settings.js';
+import { repoReward } from './settings.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 
@@ -313,7 +313,7 @@ export function renderPreview(plan: BountyPlan): string {
   }
   lines.push(`  title: ${plan.title}`);
   lines.push(`  why: ${plan.why} (record only — never shipped)`);
-  lines.push(`  reward: $${readReward().amount} in force now — a posted bounty states the amount in force at posting`);
+  lines.push(`  reward: $${repoReward(plan.repoRoot).amount} in force now for this repository — a posted bounty states the amount in force at posting`);
   lines.push(`  task: ${plan.task.file}`);
   for (const line of plan.task.text.trim().split('\n')) lines.push(`    ${line}`);
   if (plan.note !== null) lines.push(`  note: ${plan.note.file}`);
@@ -523,10 +523,10 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
     };
     const manifestJson = JSON.stringify(manifest, null, 2) + '\n';
     writeFileSync(join(staging, 'bounty.json'), manifestJson);
-    // The draft listing states the reward in force at create; a folder post
-    // rewrites it with the amount in force at posting, which is the amount
-    // the record binds (BT11a).
-    writeFileSync(join(staging, 'README.md'), renderListing(manifest, note, readReward().amount));
+    // The draft listing states the reward in force at create — this
+    // repository's own (BT11c); a folder post rewrites it with the amount in
+    // force at posting, which is the amount the record binds (BT11a).
+    writeFileSync(join(staging, 'README.md'), renderListing(manifest, note, repoReward(plan.repoRoot).amount));
     if (existsSync(outDir)) rmdirSync(outDir); // only reachable when outDir is empty (checked above)
     renameSync(staging, outDir);
     // With the folder in place, make it reachable later: pin the snapshot
