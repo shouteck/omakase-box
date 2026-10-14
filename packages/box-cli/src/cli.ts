@@ -11,7 +11,7 @@
 //   bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]
 //   bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]
 //   bounty close [<id>] [--reason "<text>"] [--repo <path>]
-//   bounty allow [owner/name|waiting-id] [--ask]
+//   bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>]
 //   bounty deny [owner/name]
 //   bounty config [set|add|remove <setting> <value>]
 // A bounty command works without <id> when exactly one bounty can take it.
@@ -390,25 +390,30 @@ if (command === 'export') {
     } else if (subcommand === 'allow' || subcommand === 'deny' || subcommand === 'config') {
       const values: string[] = [];
       const seen = new Set<string>();
+      // `allow` carries the repository's own money in the same breath
+      // (BT11c): --reward and --reward-limit each take a whole-dollar amount.
+      const money: { reward?: string; rewardLimit?: string } = {};
       for (let i = 0; i < bountyArgs.length; i += 1) {
         const arg = bountyArgs[i]!;
-        if (arg === '--repo' || arg === '--ask' && subcommand === 'allow') {
+        if (arg === '--repo' || (arg === '--ask' || arg === '--reward' || arg === '--reward-limit') && subcommand === 'allow') {
           if (seen.has(arg)) throw new BountyRefused('authority-arguments', `${arg} was repeated; nothing changed`);
           seen.add(arg);
-          if (arg === '--repo') {
+          if (arg === '--repo' || arg === '--reward' || arg === '--reward-limit') {
             const value = bountyArgs[++i];
-            if (value === undefined || value.startsWith('--')) throw new BountyRefused('authority-arguments', '--repo needs a path; nothing changed');
+            if (value === undefined || value.startsWith('--')) throw new BountyRefused('authority-arguments', `${arg} needs ${arg === '--repo' ? 'a path' : 'a whole dollar amount'}; nothing changed`);
+            if (arg === '--reward') money.reward = value; else if (arg === '--reward-limit') money.rewardLimit = value;
           }
         } else if (arg.startsWith('--')) throw new BountyRefused('authority-arguments', `unexpected option ${arg}; nothing changed`);
         else values.push(arg);
       }
-      if ((subcommand === 'allow' || subcommand === 'deny') && values.length > 1 || subcommand === 'config' && values.length !== 0 && values.length !== 3) throw new BountyRefused('authority-arguments', 'unexpected arguments; use allow [owner/name|waiting-id], deny [owner/name], or config [set|add|remove <setting> <value>]. Nothing changed');
+      const namedMoney = values[0] === 'set' && (values[1] === 'reward' || values[1] === 'reward-limit');
+      if ((subcommand === 'allow' || subcommand === 'deny') && values.length > 1 || subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && namedMoney)) throw new BountyRefused('authority-arguments', 'unexpected arguments; use allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], deny [owner/name], or config [set|add|remove <setting> <value>]. Nothing changed');
       let root: string | null = null;
       try { root = resolveRepoRoot(bountyRepo(), subcommand); }
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || seen.has('--repo')) throw error; }
-      if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask'), text => console.log(text)));
+      if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask'), money.reward === undefined && money.rewardLimit === undefined ? undefined : money, text => console.log(text)));
       else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
-      else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text)));
+      else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot
       // commands. `hook start|pause|finish` is the one shared output command

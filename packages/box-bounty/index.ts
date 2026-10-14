@@ -45,7 +45,7 @@ export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, cano
 export { boundAmount } from './format.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, CloseOutcome, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
 export { allowRepository, allowBounty, denyRepository, renderConfig, changeConfig, renderSummary } from './owner.js';
-export { loadSettings, projectKey, readDecision, readReward, rewardNoticeLine, settingsDir, settingsFile, writeDecision, SETTINGS_ENV } from './settings.js';
+export { loadSettings, projectKey, readDecision, readReward, repoReward, rewardNoticeLine, settingsDir, settingsFile, writeDecision, SETTINGS_ENV } from './settings.js';
 export type { DecisionRead, OwnerDecision, OwnerSettings } from './settings.js';
 export { binaryPatchPaths, looksBinary, SECRET_RULES, scanPatch, scanText, shownOfPlan } from './github.js';
 export type { ScanHit, SecretRule } from './github.js';

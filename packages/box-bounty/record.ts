@@ -24,7 +24,7 @@ import { checkProjectClaims, publishListed, publishLists, shipRules } from './ne
 import { requireRepository } from './repository.js';
 import { renderListing } from './create.js';
 import type { BountyManifest } from './manifest.js';
-import { loadSettings, localFirstMergeLine, readDecision, readReward, rewardNoticeLine } from './settings.js';
+import { loadSettings, localFirstMergeLine, readDecision, repoReward, rewardNoticeLine } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
@@ -607,7 +607,7 @@ export function waitingSummary(record: BountyRecord): string {
 // The lines a held post prints, addressed to the agent: what to put to the
 // owner and the one command they run. Owner commands exist under `box bounty
 // owner`, the plainly named group the description never offers an agent.
-export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string[] {
+export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: DecisionRead): string[] {
   const id = record.id;
   if (read.decision === 'ask' || read.decision === 'off') {
     return [
@@ -615,10 +615,10 @@ export function ownerWaitLines(record: BountyRecord, read: DecisionRead): string
       `the owner answers this one with: box bounty allow ${id}`
     ];
   }
-  const { amount } = readReward();
+  const { amount } = repoReward(repoRoot);
   return [
     'Ask the owner in your own words. Bounties are public under the owner\'s GitHub account. A solution the agent chooses is merged into the owner\'s code. This decision covers this repository only.',
-    `Each bounty states the reward the owner has set — $${amount}${amount === 0 ? ', so no payment is promised' : ', a promise in the owner\'s name paid by hand'}. They set it with: box bounty config set reward <whole dollars>`,
+    `Each bounty states the reward the owner set for this repository — ${amount === 0 ? '$0 unless the owner names one, so no payment is promised now' : `$${amount}, a promise in the owner's name paid by hand`}. The yes at $0: box bounty allow. With a promise: box bounty allow --reward <whole dollars> --reward-limit <whole dollars>`,
     'These are the same choices shown by bare box bounty config:',
     `  ${DECISION_WORDS.allow}: box bounty allow`,
     `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
@@ -649,25 +649,28 @@ export function promisedTotal(open: readonly ListedBounty[]): number {
   return open.reduce((sum, entry) => sum + (entry.record === null ? 0 : boundAmount(entry.record) ?? 0), 0);
 }
 
-// The reward side of `status`/`config`: what each new bounty will state, what
-// open bounties here already promise, the owner's limit and what is left of
-// it. A record written before BT11a counts $0 — the amount it was posted with.
-function rewardStatusLine(open: readonly ListedBounty[]): string {
-  const { amount, limit } = readReward();
+// The reward side of `status`/`config`: what each new bounty on this
+// repository will state, what its open bounties already promise, this
+// repository's own limit and what is left of it (BT11c — one repository's
+// money never leans on another's). A record written before BT11a counts $0 —
+// the amount it was posted with.
+function rewardStatusLine(repoRoot: string, open: readonly ListedBounty[]): string {
+  const { amount, limit } = repoReward(repoRoot);
   const promised = promisedTotal(open);
   const stated = amount === 0 ? 'each new bounty states $0 — no payment is promised' : `each new bounty states $${amount} — a promise in the owner's name, paid by hand`;
   const counted = limit === null ? `open bounties here promise $${promised}; no limit is set` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
-  return `reward: ${stated}; ${counted}; the owner sets both in box bounty config`;
+  return `reward: ${stated}; ${counted}; the owner sets both for this repository in box bounty config`;
 }
 
-// The money gate every fresh post passes (BT11a): the reward in force now,
-// checked against the owner's limit on what open bounties promise. Runs
-// before anything is written — a refused post changes nothing. The
-// needs-limit refusal also covers a hand-edited settings file: the shape is
-// checked on load, but reward>limit is a rule about the pair, enforced where
-// it is written and again where it is spent.
+// The money gate every fresh post passes (BT11a, scoped per repository in
+// BT11c): this repository's own reward in force now, checked against this
+// repository's own limit on what its open bounties promise. Runs before
+// anything is written — a refused post changes nothing. The needs-limit
+// refusal also covers a hand-edited settings file: the shape is checked on
+// load, but reward>limit is a rule about the pair on one entry, enforced
+// where it is written and again where it is spent.
 export function rewardForPost(repoRoot: string): { readonly amount: number } {
-  const { amount } = readReward();
+  const { amount } = repoReward(repoRoot);
   assertPromiseRoom(repoRoot, amount);
   return { amount };
 }
@@ -675,9 +678,10 @@ export function rewardForPost(repoRoot: string): { readonly amount: number } {
 // The limit gate itself, run for a stated amount: once early so a refused
 // post touches nothing, and again inside the promise lock at the moment the
 // record binds — the lock makes the check and the write one span, so two
-// posts running at once cannot both pass (BT11a fix round).
+// posts running at once cannot both pass (BT11a fix round). The limit is the
+// posting repository's own — another repository's cap never applies here.
 export function assertPromiseRoom(repoRoot: string, amount: number): void {
-  const { limit } = readReward();
+  const { limit } = repoReward(repoRoot);
   if (amount <= 0) return;
   if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`} — the owner sets the most that may be promised with box bounty config set reward-limit <whole dollars>; nothing was posted`);
   const promised = promisedTotal(listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
@@ -771,7 +775,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   }
   for (const entry of listed) if (entry.record?.github?.formatRepair !== undefined) lines.push(`${entry.record.id} GitHub format update: ${entry.record.github.formatRepair}`);
   lines.push(ownerStatusLine(repoRoot));
-  lines.push(rewardStatusLine(open));
+  lines.push(rewardStatusLine(repoRoot, open));
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
   const localMerge = localFirstMergeLine(repoRoot);
@@ -926,7 +930,7 @@ export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
-    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --to github --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states the owner\'s reward — $0 until the owner sets one in box bounty config.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --to github --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    snapshot the repository minus never-ship files, with the task and a note; prints the preview → drafted',
@@ -1089,7 +1093,7 @@ export function ownerGate(repoRoot: string, record: BountyRecord, action: { for:
   waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}), ...(shown !== undefined ? { shown } : {}) });
   throw new BountyRefused(
     read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
-    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(record, read), ...(listRecords(repoRoot).some(entry => entry.record?.allowedBy?.decision === 'once') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
+    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(listRecords(repoRoot).some(entry => entry.record?.allowedBy?.decision === 'once') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
   );
 }
 
