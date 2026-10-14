@@ -13,4 +13,6 @@ Updated by the CTO on 14 October 2026, at the K16 close.
 
 ## Next
 
+**K17** is briefed and ready when named: corrections to the demo after the owner watched it and the CTO read the whole real run ([waves/K17.md](waves/K17.md)). **Found on 14 October 2026 and not yet put right:** K16's real runs wrote a $5 reward and a $50 limit into the owner's own settings file, for every repository; resetting it is the owner's own command (`box bounty config set reward 0`). K17 stops the demo touching that file.
+
 No wave is named and none is briefed. Ready when wanted: publishing the demo where the owner chooses, or the Devin Cloud desktop recording (`kitchen/demo/RECORDING.md`) if a filmed desktop is wanted after all.
