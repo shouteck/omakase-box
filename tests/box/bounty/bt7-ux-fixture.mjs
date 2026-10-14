@@ -61,28 +61,42 @@ write(join(root, 'invoke.cjs'), `const {spawnSync}=require('node:child_process')
 write(join(bin, 'box.cmd'), `@"${process.execPath}" "${join(root, 'invoke.cjs')}" %*\r\n`);
 write(join(bin, 'box'), `#!/bin/sh\nexec '${process.execPath.replaceAll('\\', '/').replaceAll("'", "'\\''")}' '${join(root, 'invoke.cjs').replaceAll('\\', '/').replaceAll("'", "'\\''")}' "$@"\n`);
 chmodSync(join(bin, 'box'), 0o755);
+// The fixture's own stand-in GitHub. It answers like the real API (K19):
+// one object for a single issue or pull request, `page` selecting the page
+// (never the number inside `per_page`), lists filtered by their query,
+// comments belonging to their issue, and issues and pull requests sharing
+// one number sequence. tests/kitchen/k19-github-standin.test.ts pins this.
 const gh = String.raw`
 const fs = require('node:fs');
 const args = process.argv.slice(2);
 const file = process.env.BT7_UX_STATE;
 if (!file) throw Error('offline fixture state missing');
+if(args[0]==='version'||args[0]==='--version'){console.log('gh version 2.40.0');process.exit(0)}
+if(args[0]==='auth'){process.exit(0)}
 const state = JSON.parse(fs.readFileSync(file,'utf8'));
 const endpoint = args[args.indexOf('--hostname')+2];
 const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input')+1],'utf8')) : null;
 const save=()=>fs.writeFileSync(file,JSON.stringify(state,null,2));
 const fail=()=>{save();process.exit(1)};
+const query=new URLSearchParams(endpoint.split('?')[1] ?? '');
+const page=Math.max(1,Number(query.get('page') ?? 1)||1);
+const perPage=Math.min(100,Math.max(1,Number(query.get('per_page') ?? 30)||30));
+const paged=rows=>rows.slice((page-1)*perPage,page*perPage);
+const nextNumber=()=>1+Math.max(0,...state.issues.map(issue=>issue.number),...state.prs.map(pr=>pr.number));
+const resource=endpoint.split('?')[0];
 let result;
-if(args[0]==='version'||args[0]==='--version'){console.log('gh version 2.40.0');process.exit(0)}
-if(args[0]==='auth'){process.exit(0)}
 if(endpoint==='user') result={login:'owner'};
 else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public'};
-else if(endpoint.includes('/pulls/')){const n=Number(endpoint.split('/pulls/')[1].split('/')[0]);const pr=state.prs.find(pr=>pr.number===n);if(!pr)fail();result=endpoint.includes('/files')?pr.files:pr;}
-else if(endpoint.includes('/pulls?')) result=state.prs.filter(pr=>endpoint.includes(pr.base.ref)&&state.issues[0]?.state==='open');
+else if(endpoint==='graphql'&&input.query&&input.query.includes('pullRequest')){const pr=state.prs.find(pr=>pr.number===input.variables.number);if(!pr)fail();result={data:{repository:{pullRequest:{body:pr.body??'',userContentEdits:{nodes:[]}}}}}}
+else if(endpoint==='graphql'){const issue=state.issues.find(issue=>issue.number===input.variables.number);if(!issue)fail();const own=state.comments.filter(c=>c.issue===undefined||c.issue===issue.number);const offset=Number(input.variables.after??0);result={data:{repository:{issue:{body:issue.body,author:{login:'owner'},comments:{edges:own.slice(offset,offset+100).map((c,i)=>({cursor:String(offset+i+1),node:{body:c.body,author:c.user}})),pageInfo:{hasNextPage:offset+100<own.length}}}}}}}
+else if(resource.endsWith('/pulls')&&input){const n=nextNumber();result={number:n,html_url:'https://github.com/owner/project/pull/'+n,state:'open',...input,user:{login:input.author??'solver'},base:{ref:input.base,repo:{full_name:'owner/project'}},head:{sha:input.head??'0'.repeat(40)},files:[]};state.prs.push(result);}
+else if(endpoint.includes('/pulls/')){const n=Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);const pr=state.prs.find(pr=>pr.number===n);if(!pr)fail();result=endpoint.includes('/files')?paged(pr.files):pr;}
+else if(resource.endsWith('/pulls')){const wanted=query.get('state')??'open';const base=query.get('base');result=paged(state.prs.filter(pr=>(wanted==='all'||(pr.state??'open')===wanted)&&(base===null||pr.base.ref===base)));}
 else if(endpoint.includes('/labels/')){result=state.labels.find(label=>endpoint.endsWith(label.name));if(!result)fail();}
-else if(endpoint.includes('/labels')){result=input?{name:input.name}:state.labels;if(input)state.labels.push(result);}
-else if(endpoint.includes('/comments')){result=input?{...input,user:{login:'owner'},created_at:new Date().toISOString()}:state.comments;if(input)state.comments.push(result);}
+else if(endpoint.includes('/labels')){result=input?{name:input.name}:paged(state.labels);if(input)state.labels.push(result);}
+else if(endpoint.includes('/comments')){const n=Number(resource.split('/issues/')[1].split('/')[0]);result=input?{...input,issue:n,user:{login:'owner'},created_at:new Date().toISOString()}:paged(state.comments.filter(c=>c.issue===undefined||c.issue===n));if(input)state.comments.push(result);}
 else if(endpoint.includes('/issues/')){result=state.issues.find(issue=>issue.number===Number(endpoint.split('/issues/')[1].split('?')[0]));if(!result)fail();if(input)Object.assign(result,input);}
-else if(endpoint.includes('/issues')){result=input?{number:1,html_url:'https://github.com/owner/project/issues/1',...input,labels:input.labels.map(name=>({name})),state:'open',user:{login:'owner'}}:state.issues;if(input)state.issues.push(result);}
+else if(endpoint.includes('/issues')){if(input){result={number:nextNumber(),html_url:'https://github.com/owner/project/issues/'+nextNumber(),...input,labels:input.labels.map(name=>({name})),state:'open',user:{login:'owner'}};state.issues.push(result);}else{const wanted=query.get('state')??'open';result=paged(state.issues.filter(issue=>wanted==='all'||issue.state===wanted));}}
 else fail();
 save();console.log(JSON.stringify(result));
 `;
@@ -127,10 +141,13 @@ for (let i = 0; i < solutions.length; i += 1) {
   git(solver, ['add', 'greeting.txt']);
   git(solver, ['-c', 'user.name=solver', '-c', 'user.email=solver@example.invalid', 'commit', '-qm', `greeting proposal ${i + 1}`]);
   const sha = git(solver, ['rev-parse', 'HEAD']);
-  git(solver, ['push', 'origin', `HEAD:refs/pull/${i + 1}/head`]);
-  const state = JSON.parse(readFileSync(stateFile, 'utf8'));
-  state.prs.push({ number: i + 1, user: { login: `writer-${i + 1}` }, base: { ref: `box-bounty/${id}`, repo: { full_name: 'owner/project' } }, head: { sha }, files: [{ filename: 'greeting.txt' }] });
-  write(stateFile, JSON.stringify(state));
+  // Pull requests share the issues' number sequence on GitHub — the bounty
+  // issue is #1, so the first solution is #2.
+  const seeded = JSON.parse(readFileSync(stateFile, 'utf8'));
+  const n = 1 + Math.max(0, ...seeded.issues.map(issue => issue.number), ...seeded.prs.map(pr => pr.number));
+  git(solver, ['push', 'origin', `HEAD:refs/pull/${n}/head`]);
+  seeded.prs.push({ number: n, user: { login: `writer-${i + 1}` }, base: { ref: `box-bounty/${id}`, repo: { full_name: 'owner/project' } }, head: { sha }, files: [{ filename: 'greeting.txt' }] });
+  write(stateFile, JSON.stringify(seeded));
 }
 write(join(repo, 'greeting.txt'), 'Welcome to our store.\nAccessibility: keyboard checkout is available.\nNew shoppers: browse products.\nReturning shoppers: start a new basket.\nGuest checkout: available.\n');
 git(repo, ['add', 'greeting.txt']);

@@ -104,87 +104,12 @@ function run(cwd, command, argv, env = {}, opts = {}) {
 // Stand-in GitHub — a `gh` program backed by one JSON file, plus a `git`
 // wrapper that sends only https://github.com/owner/project.git to a local
 // bare remote. State layout mirrors tests/box/bounty/github-fixture.ts.
+// The stand-in lives in its own file, `kitchen/demo/gh-standin.cjs`, so the
+// parity check (tests/kitchen/k19-github-standin.test.ts) drives exactly the
+// program this replay runs — before K19 it was an embedded copy that answered
+// `issues/<n>` with the whole list and read `page` out of `per_page`.
 // ---------------------------------------------------------------------------
-const STANDIN = `#!/usr/bin/env node
-const fs = require('node:fs');
-const { spawnSync } = require('node:child_process');
-const statePath = process.env.REPLAY_STATE;
-const bare = process.env.REPLAY_BARE;
-const load = () => JSON.parse(fs.readFileSync(statePath, 'utf8'));
-const save = state => fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
-const args = process.argv.slice(2);
-const fail = () => { console.error('gh: not found'); process.exit(1); };
-if (args[0] === 'version') { console.log('gh version 2.74.0 (2025-01-01)'); process.exit(0); }
-if (args[0] === 'auth' && args[1] === 'status') { console.log('github.com\\n  Logged in to github.com account owner'); process.exit(0); }
-if (args[0] !== 'api') fail();
-const endpoint = args.find((a, i) => i > 0 && !a.startsWith('-') && args[i - 1] !== '--hostname' && args[i - 1] !== '--input' && args[i - 1] !== '--method');
-const method = args.includes('--method') ? args[args.indexOf('--method') + 1] : 'GET';
-const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8')) : null;
-const state = load();
-const emit = value => { console.log(JSON.stringify(value)); process.exit(0); };
-const page = endpoint.includes('page=') ? Number(/page=(\\d+)/.exec(endpoint)[1]) : 1;
-if (endpoint === 'user') emit({ login: 'owner' });
-if (endpoint === 'repos/owner/project') emit({ full_name: 'owner/project', private: false, visibility: 'public', html_url: 'https://github.com/owner/project' });
-if (endpoint === 'graphql') {
-  if ((input.query || '').includes('pullRequest')) {
-    const pr = state.prs.find(pr => pr.number === input.variables.number);
-    if (!pr) fail();
-    emit({ data: { repository: { pullRequest: { body: pr.body ?? '', userContentEdits: { nodes: pr.editedBy ? [{ editor: { login: pr.editedBy } }] : [] } } } } });
-  }
-  const issue = state.issues.find(issue => issue.number === input.variables.number);
-  if (!issue) fail();
-  const offset = input.variables.after ? Number(input.variables.after) : 0;
-  const slice = state.comments.slice(offset).map((comment, index) => ({ cursor: String(offset + index + 1), node: { body: comment.body, author: comment.user } }));
-  emit({ data: { repository: { issue: { body: issue.body, author: { login: 'owner' }, comments: { edges: slice, pageInfo: { hasNextPage: false } } } } } });
-}
-const match = /^repos\\/owner\\/project\\/(.+?)(?:\\?|$)(.*)$/.exec(endpoint);
-const rest = match ? match[1] : '';
-if (rest === 'issues' && method === 'POST') {
-  const number = state.issues.length + 1;
-  const issue = { number, html_url: 'https://github.com/owner/project/issues/' + number, title: input.title, body: input.body, state: 'open', labels: (input.labels || []).map(name => ({ name })), user: { login: 'owner' } };
-  state.issues.push(issue); save(state); emit(issue);
-}
-if (/^issues\\/\\d+\\/comments$/.test(rest)) {
-  if (method === 'POST') {
-    const comment = { body: input.body, user: { login: 'owner' }, created_at: new Date().toISOString(), html_url: 'https://github.com/owner/project/issues/1#comment-' + (state.comments.length + 1) };
-    state.comments.push(comment); save(state); emit(comment);
-  }
-  emit(state.comments);
-}
-if (/^issues\\/\\d+$/.test(rest) && method === 'PATCH') {
-  const n = Number(rest.split('/')[1]);
-  const issue = state.issues.find(issue => issue.number === n); if (!issue) fail();
-  if (input.state) issue.state = input.state;
-  if (typeof input.body === 'string') issue.body = input.body;
-  save(state); emit(issue);
-}
-if (rest.startsWith('issues') && method === 'GET') {
-  const label = /labels=([\\w-]+)/.exec(endpoint)?.[1];
-  const open = /state=open/.test(endpoint);
-  const rows = state.issues.filter(issue => (!open || issue.state === 'open') && (!label || (issue.labels || []).some(entry => entry.name === label)));
-  emit(page === 1 ? rows : []);
-}
-if (rest === 'labels/box-bounty' && method === 'GET') { if (state.labels.some(label => label.name === 'box-bounty')) emit({ name: 'box-bounty' }); fail(); }
-if (rest === 'labels' && method === 'POST') { state.labels.push({ name: input.name }); save(state); emit({ name: input.name }); }
-if (rest.startsWith('pulls') && method === 'GET') {
-  const single = /^pulls\\/(\\d+)$/.exec(rest);
-  if (single) { const pr = state.prs.find(pr => pr.number === Number(single[1])); if (!pr) fail(); emit(pr); }
-  if (/^pulls\\/\\d+\\/files$/.test(rest)) {
-    const pr = state.prs.find(pr => pr.number === Number(rest.split('/')[1]));
-    const base = spawnSync('git', ['-C', bare, 'diff', '--name-only', pr.base.ref, pr.head.sha], { encoding: 'utf8' });
-    emit(page === 1 ? base.stdout.trim().split('\\n').filter(Boolean).map(filename => ({ filename })) : []);
-  }
-  const base = /base=([^&]+)/.exec(endpoint)?.[1];
-  emit(page === 1 ? state.prs.filter(pr => !base || pr.base.ref === base) : []);
-}
-if (rest === 'pulls' && method === 'POST') {
-  const number = state.prs.length + 1;
-  const sha = spawnSync('git', ['-C', bare, 'rev-parse', 'refs/pull/' + number + '/head'], { encoding: 'utf8' }).stdout.trim();
-  const pr = { number, html_url: 'https://github.com/owner/project/pull/' + number, title: input.title, body: input.body, user: { login: input.author || 'solver' }, base: { ref: input.base, repo: { full_name: 'owner/project' } }, head: { sha }, state: 'open' };
-  state.prs.push(pr); save(state); emit(pr);
-}
-fail();
-`;
+const STANDIN_SOURCE = join(HERE, 'gh-standin.cjs');
 
 // Leftovers are read back from the remote itself where a remote exists, so a
 // closing line is true at the moment it is printed — never "will be".
@@ -276,11 +201,9 @@ async function main() {
   cleanup.scratch = scratch;
   const owner = join(scratch, 'owner-project');
   const bare = join(scratch, 'remote.git');
-  const bin = join(scratch, 'bin');
-  const ghStandin = join(bin, 'gh-standin.cjs');
+  const ghStandin = STANDIN_SOURCE;
   const shim = join(scratch, 'box-replay-gh-shim.cjs');
   mkdirSync(owner, { recursive: true });
-  mkdirSync(bin, { recursive: true });
 
   // The tool's settings for this run: a folder of the replay's own inside the
   // scratch area, holding only what the demo writes into it. The owner's real
@@ -290,7 +213,6 @@ async function main() {
   if (PATHS_FILE) writeFileSync(PATHS_FILE, JSON.stringify({ run: scratch, project: owner, settings: env.BOX_BOUNTY_SETTINGS_DIR }, null, 2));
 
   if (!real) {
-    writeFileSync(ghStandin, STANDIN);
     // Interception is in-process, not on PATH: an extensionless `gh` shim is
     // invisible to Windows process search and a .cmd cannot be spawned
     // without a shell, so the POSIX PATH shims this used to write ran the real
@@ -376,7 +298,10 @@ async function main() {
       cleanup.pullRequests.push({ number: pr.number, name });
       await page(pr.html_url + ` — ${name}'s pull request, description on screen`);
     } else {
-      const n = JSON.parse(readFileSync(env.REPLAY_STATE, 'utf8')).prs.length + 1;
+      // Issues and pull requests share one number sequence on GitHub — the
+      // stand-in mints the same next number, so refs/pull/<n>/head matches.
+      const st = JSON.parse(readFileSync(env.REPLAY_STATE, 'utf8'));
+      const n = 1 + Math.max(0, ...st.issues.map(issue => issue.number), ...st.prs.map(pr => pr.number));
       solverPrs.push(n);
       cleanup.pullRequests.push({ number: n, name });
       run(solver, 'git', ['push', '-q', 'origin', `HEAD:refs/heads/${name}-${id}`, `HEAD:refs/pull/${n}/head`]);
