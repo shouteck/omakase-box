@@ -20,4 +20,4 @@ You may add tests on the branch. You may not edit product code or weaken an exis
 
 Keep notes on disk as you go — the wave file's Result section works — so an outage does not lose a whole review.
 
-Write the verdict into the wave file's Result section: commit SHA, the verify summary line, PASS or FAIL with its level (ui-verified, test-verified or typecheck-only), one line per ticked lens, findings and limits, and your host and model. Then report the same in a few sentences.
+Write the verdict into the wave file's Result section and commit it on the wave branch before reporting back: commit SHA, the verify summary line, PASS or FAIL with its level (ui-verified, test-verified or typecheck-only), one line per ticked lens, findings and limits, and your host and model. Then report the same in a few sentences.
