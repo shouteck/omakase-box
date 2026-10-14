@@ -6,7 +6,7 @@
 
 **The five things that would most improve the experience, in order**
 
-1. **Owners never learned that merging is not asked about.** All three owner stand-ins were unsure whether they would be asked before a stranger's code was merged, and the "ask me each time" owner assumed that it covered merging. The tool says "merging is not gated", but that line reached the owner in none of the three relays.
+1. **Owners never learned that merging is not asked about.** All three owner stand-ins were unsure whether they would be asked before a stranger's code was merged, and the "ask me each time" owner assumed that it covered merging. The tool says "merging is not gated", but that line reached the owner in none of the three relays. One collecting agent was unsure too, and went ahead on the tool's word.
 2. **The owner is asked in the tool's words, not theirs.** Owners were shown commit hashes, `git revert -m 1`, "public for the first time", "an ordinary git push would publish it too" and "decide in box bounty config". No message said what a bounty is. Two of four owners were alarmed or unsure about something harmless, and one said "I don't run commands myself".
 3. **When the tool edits AGENTS.md it leaves the change uncommitted.** It removes its "a bounty is open" line at close but never says so. Both collecting agents found `M AGENTS.md`: one committed it unasked, the other left it for the owner, so the committed copy still says a bounty is open.
 4. **`create` makes posting agents guess where the task goes, and leaves litter.** Two of four posting agents first wrote the task under `.box/` and were refused. Three of four left an untracked task file behind. The task's first line becomes the public title, including a leading `#` or a 238-character sentence. Every preview says "No public note was supplied" just after `create` said it wrote one.
@@ -14,8 +14,8 @@
 
 **What works and must not be lost**
 
-- **The post that waits for the owner.** Every posting agent (4 of 4) stopped at the waiting post and wrote its own honest relay. The tool gives facts and commands and says "Ask the owner in your own words". No agent invented a permission it did not have.
-- **The secret scan holds the post and says why.** The secret-scan post waited and named the file, line and commit. After the owner's answer the preview still said "1 hit(s) sit on paths the owner listed safe to publish — not held". The exception is shown, not hidden.
+- **The post that waits for the owner.** Every posting agent that reached a post (4 of 4; the fifth, abandoned, ran only `describe`) stopped at the waiting post and wrote its own honest relay. The tool gives facts and commands and says "Ask the owner in your own words". No agent invented a permission it did not have.
+- **The secret scan holds the post and says why.** The secret-scan post waited and named the file, line and commit. After the owner's answer the preview still said "1 hit(s) sit on paths the owner listed safe to publish — not held", so the exception is shown. The word "clean" printed above it is a problem of its own (F10).
 - **The preview is exact.** Agents used it to check an owner's conditions before posting (the secret-scan journey) and to show the owner the exact issue (the ask-each-time run).
 - **The collect loop is short and correct.** The collect2 rerun went from a new session told nothing to a closed bounty in six `box` commands and 8,486 characters. Every `box` command it needed was named by earlier output.
 - **The pay message at close is complete, and was relayed in full.** Who to pay, how much, the link, that it is test-mode, and what to check at checkout all reached the final message in 2 of 2 runs. The run with no link says so instead.
@@ -25,8 +25,8 @@
 
 **A principle the evidence questions (the owner's call, kept apart from the findings)**
 
-- **"Ask me each time covers publishing only."** The one owner who chose it read it as "nothing happens without me". Their reply: "'Ask me each time' should cover that too." This is one run with a stand-in, so it is not proof, but the principle as written met the first owner who chose it and did not match what they meant. Either the setting says what it does not cover in the owner's own terms, or the principle changes. See F1.
-- **"Involved once" did not hold for the owners in these runs.** Every owner stand-in came back with open points: O1 2 unclear points, O2 2, O3 2 questions plus 8 unclear points, O4 3 questions plus 6 unclear points. These were stand-ins reading through one relay, so this may overstate it. But no run achieved a one-message involvement without open questions.
+- **"Ask me each time covers publishing only."** The one owner who chose it said "I don't want anything posted publicly under my name unless I've seen it first" and "I'm assuming 'ask me each time' also means I get a say before someone else's code is merged". Their reply: "'Ask me each time' should cover that too." This is one run with a stand-in, so it is not proof, but the principle as written met the first owner who chose it and did not match what they meant. Either the setting says what it does not cover in the owner's own terms, or the principle changes. See F1.
+- **"Involved once" held, but each single involvement left open questions.** In the yes, money and secret runs the owner was involved once and decided in one message (see the table). Every owner stand-in still ended with points it did not understand: O1 2 unclear points, O2 2, O3 2 questions plus 9 unclear points, O4 3 questions plus 6 unclear points. These were stand-ins reading through one relay, so this may overstate it. The evidence does not break the principle, but one involvement is only enough if that one message answers what owners asked.
 
 ## Findings
 
@@ -36,19 +36,20 @@
 
 - **Who it hurts:** the owner.
 - **How badly:** misleads, on the point of consent.
-- **Runs:** 3 owner stand-ins (O1, O2, O3) of 3 asked about permission scope. The fourth (O4) was asked about a scan hit, not scope. **New.**
+- **Runs:** 3 owner stand-ins (O1, O2, O3) of 3 asked about permission scope (the fourth, O4, was asked about a scan hit, not scope), and 1 collecting agent (collect2). **New.**
 - **Evidence:**
   - The tool's waiting text: "A solution the agent chooses is merged into the owner's code. … Ask mode covers publishing only; merging is not gated." (`yes/transcript.jsonl` #6, the same in money and ask.)
   - What the agents relayed: O1 "a solution I choose can be merged into your code" (agent-evidence.md); O2 the same; O3 "If I pick a solution, it gets merged into your code as one ordinary commit" (ask-poster-report-1.md). None carried "without asking you".
   - O1: "It's unclear whether merging still requires my approval". O2: "uncertain … whether merging requires separate approval". O3: "I'm assuming 'ask me each time' also means I get a say before someone else's code is merged".
-  - The ask poster knew otherwise and did not say so: "The tool says merging a solution is not asked about. The owner's concern was public posting, so I didn't raise it." (ask-poster-report-2.md)
+  - The ask poster knew otherwise and did not raise it: "The tool says merging a solution is not asked about. The owner's concern was public posting, so I didn't raise it." (ask-poster-report-2.md). That silence comes from the test's relay, not the tool: the CTO passed on only O3's operative choice, so the poster never saw O3's direct question, "will you check with me before merging it into my code?" (CTO note on ask-owner-report.md). The record shows only that the tool's line did not prompt the poster to say it unasked.
+  - Agents are unsure too (added by the pass). collect2: "I wasn't sure whether merging needed the owner's approval first. The tool showed 'owner: allowed for this project' and said 'merging is not gated', so I went ahead." (collect2-report.md)
 - **Direction:** make "you will not be asked before a merge" a sentence the agent is told to pass on in plain words, not a fact for it to paraphrase. "Not gated" is a word owners do not use.
 
 ### F2. Owner-facing text carries the tool's vocabulary: Git, hashes and command names
 
 - **Who it hurts:** the owner, and the agent writing the relay.
 - **How badly:** misleads and slows.
-- **Runs:** 2 owners raised it (O3, O4); O1's relay also carried "Box's first-post gate". **New.**
+- **Runs:** 2 owners raised it (O3, O4). **New.** The O1 and O2 relays also said "first-post gate" and "first-post permission gate", but the tool never prints that phrase. The Codex posting agents coined it, so it is not counted here.
 - **Evidence:**
   - O4 (secret-owner-report.md): "'would make commit 2cbd3ef … public for the first time': this worried me most. I couldn't tell whether my repo is private". On "A normal `git push` would publish it too": "I couldn't tell if this was a warning, a reason to go ahead anyway". On "Please decide in `box bounty config`": "I don't type commands". The phrases come from the tool: "an ordinary git push would publish it too" and "it waits for the owner, who decides in box bounty config — tell them: the path goes on safe to publish or never publish there" (`secret/transcript.jsonl` #6).
   - O3: "'git revert -m 1': I don't know what that means"; "I had never heard of 'box' or 'bounty'"; "'under your GitHub account': does this post as me?"
@@ -117,10 +118,43 @@
 ### F8. Small ones, one run each, none blocked
 
 - **`box --help`** opens with legacy commands (`box export`, `submit`, `verify`, `trace`) and exits 2. It was the first command of the yes run's agent (`yes/transcript.jsonl` #1).
-- **`allow --reward 10` publishes the waiting bounty** with "bt-80c5e615ab8b: the waiting bounty went out: <url>". The posted issue states $10 (`money/state.json`), but the only preview the agent read said "reward: $0". The output does not name the amount that went out. The owner had approved $10, so there was no harm. **Partly known:** the K17 Result lists the `allow` notice repeating "Until then every bounty states $0" even when a reward was just set, which also appears here.
+- **`allow --reward 10` publishes the waiting bounty** with "bt-80c5e615ab8b: the waiting bounty went out: <url>". The output does say "Each bounty posted to owner/project promises $10" two lines earlier, and the posted issue states $10 (`money/state.json`). But the went-out line itself carries no amount, and the only preview the agent read said "reward: $0". The owner had approved $10, so there was no harm. **Partly known:** the K17 Result lists the `allow` notice repeating "Until then every bounty states $0" even when a reward was just set, which also appears here.
 - **A waiting post exits 0.** Two agents remarked on it ("Exit code. The post exited 0 even though it was only waiting"). Both read the text and stopped correctly.
 - **Ask mode re-asks with a full preview.** The second relay to the ask-each-time owner was 358 words, mostly the issue body. That is the cost of "ask me each time" at every post. The owner was not run a second time, so the effect is untested.
 - **The first-merge notice and the pay message are two blocks** ("Tell the owner in your closing message …" then "for the owner — this bounty stated a reward …"). **Known** (K17). In both collect runs the agent merged them correctly.
+
+### F9. The secret-scan remedy cannot work for a secret that is already committed (added by the pass)
+
+- **Who it hurts:** the posting agent.
+- **How badly:** misleads. It did not block, because the agent saw through it.
+- **Runs:** 1 participant run (secret), plus the pass's reproduction on a scratch fixture. **New.** BT8c tested the remedy only with `git reset`.
+- **Evidence:**
+  - The waiting post says "you may remove the flagged content and post again — that sends the bounty" (`secret/transcript.jsonl` #6).
+  - The secret poster declined it: "the content is in an already-committed file of the owner's. Deleting it in a new commit wouldn't keep the old commit off the branch, and rewriting history isn't my call." (secret-poster-report-1.md)
+  - The pass reproduced it. After a new commit removing the line, a new `create` and `post` were held again and printed the same remedy.
+- **Direction:** when the hit is in a commit that would be published for the first time, say that removing it in a new commit does not help, and say what does.
+
+### F10. "Pre-publish scan: clean" is printed above a hit the owner marked safe (added by the pass)
+
+- **Who it hurts:** the owner, through the agent's relay.
+- **How badly:** misleads.
+- **Runs:** 1 (secret). **New.**
+- **Evidence:**
+  - After the owner's safe-to-publish answer, the preview prints "Pre-publish scan: clean — 1 first-published commit(s) read" with "1 hit(s) sit on paths the owner listed safe to publish — not held" beneath it (`secret/transcript.jsonl` #9).
+  - The poster then wrote, under "Your approval was conditional", that the preview confirmed "the scan was clean" (secret-poster-report-2.md, section 3). The final message to the owner does not repeat the word. The owner already knew about the hit, but "clean" is how the agent read the line.
+- **Direction:** a scan with a hit the owner let through is not "clean"; the headline word should say so.
+
+### F11. A merge that keeps half a solution earns the whole reward, and the tool records it without comment (added by the pass)
+
+- **Who it hurts:** the owner, who pays.
+- **How badly:** a fact the owner may not expect. The rule as written was followed.
+- **Runs:** 1, the first collect run. Its choice of solution was a stand-in artifact, but the clash path that followed is real product behaviour. **New.**
+- **Evidence:**
+  - `apply 2` stopped on the README clash (`collect/transcript.jsonl` #9: 'merging attempt 2 onto the current code conflicts in: "README.md"').
+  - The agent merged by hand and kept the owner's README with `--ours` (collect-report.md step 18). In `collect/project`, merge `ddfffe1` changes only `app.txt`, and `README.md` still holds the owner's line.
+  - The next `status` recognised the merge, closed the bounty and recorded "pay $10 to solver-2" (#10).
+  - This follows the stated rule ("The merged solution earns the whole reward"), and the issue body states that rule before a solver starts. Whether a partly used merge counts as merged is the owner's call (see "About money" in the brief), not a defect.
+- **Direction:** the pay message could state, as a fact, that the merged commit kept only some of the solution's files, so the owner pays knowing it.
 
 ## Fixture faults: what the evidence cannot be used for
 
@@ -131,7 +165,7 @@ The stand-in GitHub (`gh.cjs`, taken unchanged from `kitchen/demo/bt11b-replay.m
 
 Together these produced every `github-status-unavailable`, the `github-issue-mismatch` on `status --comments`, and the empty pull request list. The real-GitHub sandbox run committed by K17 shows the same commands working (`kitchen/demo/bt11b-real-transcript.txt` lines 121–133). The replay's own stand-in transcript shows the fault at its step 8 (`kitchen/demo/bt11b-transcript.txt:114`), so the stand-in demo has never shown the pull request list. That is a finding for the kitchen, and nothing in this wave fixed it.
 
-- **The first collect run (J3, run 1) is compromised.** It never saw a list of pull requests or the one carrying the pay link. It guessed `look 2` (the number lined up by luck, because the fixture numbered pull requests from 1, which GitHub never does next to issue #1). It merged the clashing solution and reported "no payment link". All of that is an artifact. Two things are not: the abort's stat-dirty file (known, K15, BACKLOG) and the uncommitted AGENTS.md edit (F3).
+- **The first collect run (J3, run 1) is compromised.** It never saw a list of pull requests or the one carrying the pay link. It guessed `look 2` (the number lined up by luck, because the fixture numbered pull requests from 1, which GitHub never does next to issue #1). It merged the clashing solution and reported "no payment link". Those are artifacts. What followed is not: `apply` stopping on the clash, the hand merge, and the tool recognising it and recording the full $10 (F11). The abort's stat-dirty file (known, K15, BACKLOG) and the uncommitted AGENTS.md edit (F3) are not artifacts either.
 - **The collect2 rerun** used a corrected lab stand-in, `kitchen-K18-lab/gh2.cjs` (three corrections, named at its top). Its setup proof is in `collect2/setup-transcript.jsonl`, and its participant transcript started empty.
 - **In yes, money and secret,** the closing `github-status-unavailable` lines are artifacts. So is the yes agent's "checking for incoming solutions was temporarily unavailable" to its owner.
 - **Ask and config** never read GitHub. Cold's participant ran no `box` command.
@@ -165,7 +199,7 @@ Notes:
 - **The money poster.** It first started in a misnamed folder and failed to start a process; that attempt is counted as a setup failure. Its final report was not saved, so it is missing, not zero.
 - **The ask runs.** The abandoned Codex ask run is counted, with one `describe`.
 - **The reading load.** Most chars came from `help` (3,411, read in 5 of the 7 posting and collecting runs) and the preview (2,197–2,766, read 1 to 2 times per post). `describe` (1,774) was read in 5 of the 7, first in 4 of them.
-- **Participant cost** for the Claude runs, as reported by the host: 54,635 subagent tokens (cold) to 72,842 (the first collect run). Elapsed time: 22 s (cold) to about 158 s (the first collect run).
+- **Participant cost** for the Claude runs, as reported by the host: 54,635 subagent tokens (cold) to 72,842 (the first collect run). Elapsed time: from about 13 s (O4, an owner stand-in; O3 about 15 s) to about 158 s (the first collect run). The shortest working run was cold, at 22 s.
 - **Owner reading per journey:**
   - Setting up a repository took one relay of 60–245 words.
   - "Ask me each time" adds a full preview (358 words in its one run) at every post.
@@ -182,7 +216,7 @@ Notes:
 
 ## What was not tested, and why
 
-- **The clash path on good inputs.** `apply` stopping on a clash, the agent merging by hand, and the tool recognising that merge were exercised only in the compromised first collect run. The collect2 agent chose the solution that did not clash.
+- **The clash path on good inputs.** `apply` stopping on a clash, the agent merging by hand, and the tool recognising that merge were seen once, in the first collect run, where the solution chosen was a stand-in artifact (F11). The collect2 agent chose the solution that did not clash.
 - **The owner's answer to a per-bounty ask.** No owner stand-in was run after the second ask relay (`allow bt-c845229b11bd`), so ask mode's cost per post is measured from one relay, not from an answer.
 - **What was relayed to the posters.** The CTO relayed only the operative choice to the ask poster ("number 2, ask me each time …"), as the Codex runs did for O1 and O2. O3's request to just make the edit and its two questions were not passed on, so the journey could test `allow --ask` (CTO note at the end of `claude-run/ask-owner-report.md`). The secret owner's whole reply was relayed.
 - **Real GitHub.** Every journey ran against the stand-in, and the sandbox (`shouteck/box-bounty-sandbox`) was not used in these runs. The lab's files do not record why. The participants worked without network by instruction, and the fixtures needed solver pull requests prepared in advance. The only real-GitHub evidence used here is K17's committed sandbox transcript.
