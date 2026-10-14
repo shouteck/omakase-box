@@ -70,6 +70,20 @@ export interface OwnerSettings {
       shown once ever. An `ask` written by this tool is marked at the write:
       the owner saw the merge sentence in the block they answered. */
   readonly askMergeNoticeAt?: string;
+  /** Owner answers to held merges (BT13), keyed `<repository>#<bounty-id>`.
+      They live here, outside every repository, because the bounty record is
+      inside it: an approval written on the record could be forged where the
+      agent works. Each entry binds the answer to the attempt, its commit
+      and the branch tip the owner was shown — a changed solution or moved
+      branch no longer matches and is asked again. */
+  readonly mergeAnswers?: Record<string, MergeAnswer>;
+}
+/** One recorded owner answer to a held merge (BT13). */
+export interface MergeAnswer {
+  readonly n: number;
+  readonly commit: string;
+  readonly head: string;
+  readonly at: string;
 }
 export const projectKey = requireRepository;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -127,7 +141,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -218,7 +232,19 @@ export function loadSettings(): OwnerSettings {
       at: new Date().toISOString()
     };
   }
-  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}), ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}) };
+  const mergeAnswers: Record<string, MergeAnswer> = {};
+  const rawAnswers = parsed['mergeAnswers'];
+  if (rawAnswers !== undefined) {
+    if (!isObject(rawAnswers)) return bad('mergeAnswers must hold an object');
+    for (const [key, entry] of Object.entries(rawAnswers)) {
+      if (!isObject(entry) || !Number.isSafeInteger(entry['n']) || (entry['n'] as number) < 1
+        || typeof entry['commit'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['commit'])
+        || typeof entry['head'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head'])
+        || typeof entry['at'] !== 'string') return bad(`mergeAnswers[${JSON.stringify(key)}] is unreadable`);
+      mergeAnswers[key] = { n: entry['n'] as number, commit: entry['commit'], head: entry['head'], at: entry['at'] };
+    }
+  }
+  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}), ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
   const legacy = parsed['projects'];
   if (legacy === undefined) {
     if (retiring) persist(settings);
@@ -315,6 +341,34 @@ export function askMergeNoticeLine(): string | null {
   const at = new Date().toISOString();
   persist({ ...settings, askMergeNoticeAt: at });
   return `one fact about ask me each time: it now covers merges too — the owner is asked before each post and before each merge (noted ${at})`;
+}
+
+// The key a merge answer is recorded under — the repository's GitHub
+// address when it has one, the checkout path when it does not, so one
+// bounty id cannot borrow an answer across repositories.
+const mergeAnswerKey = (repoRoot: string, id: string): string => {
+  let address: string | null = null;
+  try { address = repositoryIdentity(repoRoot); } catch { /* an unlistable repository keys on its path */ }
+  return `${address ?? repoRoot}#${id}`;
+};
+
+/** The recorded owner answer to this bounty's held merge — null when none
+    stands. `allow <id>` writes it after re-checking what the owner was
+    shown; a matching apply carries it; a drifted one simply never matches. */
+export function readMergeAnswer(repoRoot: string, id: string): MergeAnswer | null {
+  return loadSettings().mergeAnswers?.[mergeAnswerKey(repoRoot, id)] ?? null;
+}
+export function writeMergeAnswer(repoRoot: string, id: string, bound: { readonly n: number; readonly commit: string; readonly head: string }): void {
+  const settings = loadSettings();
+  persist({ ...settings, mergeAnswers: { ...settings.mergeAnswers, [mergeAnswerKey(repoRoot, id)]: { ...bound, at: new Date().toISOString() } } });
+}
+export function dropMergeAnswer(repoRoot: string, id: string): void {
+  const settings = loadSettings();
+  const key = mergeAnswerKey(repoRoot, id);
+  if (settings.mergeAnswers?.[key] === undefined) return;
+  const rest = { ...settings.mergeAnswers };
+  delete rest[key];
+  persist({ ...settings, mergeAnswers: rest });
 }
 
 export interface DecisionRead {

@@ -484,7 +484,10 @@ Ask me each time covers posts and merges. Under `allowed` — and where
 nothing is written — the tool's own merge proceeds as it always has; an `ask`
 mode merge becomes a named waiting state the owner releases with
 `allow <waiting-bounty-id>`, bound to the solution, its commit and the branch
-tip, so a changed solution or a moved branch asks again. A merge the agent
+tip, so a changed solution or a moved branch asks again. The owner answer to
+a held merge is recorded in the owner's settings file, outside the
+repository — a bounty record lives inside the checkout and could be edited
+there, so nothing on it marks a merge approved. A merge the agent
 lands with its own Git still closes the bounty in every mode; where the
 owner's decision asked to be asked, the closing output, `status` and the pay
 message state that the owner was not asked before that merge. Closing never

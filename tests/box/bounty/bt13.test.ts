@@ -91,6 +91,27 @@ describe('ask me each time covers merges', () => {
     expect(loadRecord(repo, id).stage).toBe('waiting');
   }));
 
+  it('an edited record cannot mark a merge approved — the owner answer lives outside the repository', () => fixture(({ repo, id, scratch, pr }) => {
+    askWorld(scratch);
+    refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');
+    allowBounty(repo, id);
+    const prSha = pr('solver');
+    const headBefore = git(repo, ['rev-parse', 'HEAD']);
+    refused(() => applyBounty(repo, id, 1), 'merge-held');
+    // Forge everything a record could carry: an answered marker on the
+    // wait, an applied stage, whatever the file shape allows.
+    const recordPath = join(repo, '.box', 'bounties', `${id}.json`);
+    const record = JSON.parse(readFileSync(recordPath, 'utf8'));
+    record.waiting.answered = { at: new Date().toISOString(), merge: { n: 1, commit: prSha, head: headBefore } };
+    writeFileSync(recordPath, JSON.stringify(record));
+    try { applyBounty(repo, id, 1); expect.unreachable('expected a refusal'); }
+    catch (error) { expect(String((error as Error).message)).toContain('waiting for the owner'); }
+    expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore);
+    const after = loadRecord(repo, id);
+    expect(after.stage).toBe('waiting');
+    expect(after.waiting?.answered).toBeUndefined(); // the forge is scrubbed too
+  }));
+
   it('nothing an agent passes marks a merge approved', () => fixture(({ repo, id, scratch, pr }) => {
     askWorld(scratch);
     refused(() => postBounty(repo, id, 'github'), 'owner-answer-needed');

@@ -3,7 +3,7 @@ import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBo
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMoney, writeRepository } from './settings.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
@@ -150,11 +150,12 @@ function allowMerge(repoRoot: string, record: BountyRecord, waiting: WaitingFor)
   if (attempt === undefined || attempt.commit !== bound.commit || head !== bound.head) {
     throw new BountyRefused('merge-approval-stale', `${record.id}: the solution or the branch changed underneath the waiting merge — the owner's answer was for what they were shown, so it does not carry over. Run box bounty apply ${record.id} again so the wait records the new state; nothing changed`);
   }
-  // The answer lands on the wait before the merge reruns — a conflict keeps
-  // it so the owner is not asked twice for the same bound state; a drift
-  // then makes the stale check above refuse it.
-  record.waiting = { ...waiting, answered: { at: new Date().toISOString(), merge: bound } };
-  persistRecord(repoRoot, record);
+  // The answer is written to the owner's settings — outside the repository
+  // — before the merge reruns: a conflict keeps it so the owner is not
+  // asked twice for the same bound state, and a drift then makes the
+  // stale check above refuse it. Nothing on the record marks a merge
+  // approved, so a record edited inside the checkout cannot forge one.
+  writeMergeAnswer(repoRoot, record.id, bound);
   const result = applyBounty(repoRoot, record.id, bound.n, { answered: true });
   const lines = result.outcome === 'applied'
     ? [`${record.id}: answered once; solution ${bound.n} merged as ${result.mergeCommit}. No repository decision changed.`]

@@ -11,7 +11,7 @@ import type { NeverShipRule } from './never-ship.js';
 import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, mergeWaitLines, persistRecord, refName, transitionTo, waitingSummary, waitForOwner } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { resolveAttempt, syncGitHubDecision } from './github.js';
-import { readDecision, recordFirstMerge } from './settings.js';
+import { dropMergeAnswer, readDecision, readMergeAnswer, recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
 // Collecting a solution — the return journey. A solver hands back the whole
@@ -372,17 +372,16 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   // moved branch asks again. `allowed` and nothing-written merge as before:
   // a hand merge was always possible, so the gate is a promise kept to
   // owners who asked to be asked — not a barrier the agent could not cross.
-  // `answered` is set only inside `box bounty allow`, after the bound state
-  // is re-checked; nothing an agent passes reaches it.
+  // The answer is read from the owner's settings — outside this repository:
+  // written there only by `box bounty allow`, after the bound state is
+  // re-checked; nothing an agent passes, and nothing on the record file
+  // inside this checkout, marks a merge approved.
   const mergeRead = readDecision(repoRoot);
   if ((mergeRead.decision === 'ask' || mergeRead.decision === 'off') && opts?.answered !== true) {
     const head = gitOutcome(repoRoot, ['rev-parse', 'HEAD']).stdout.trim();
     const bound = { n: attempt.n, commit: attempt.commit, head };
-    const carried = record.waiting?.for === 'merge'
-      && record.waiting.answered?.merge !== undefined
-      && record.waiting.answered.merge.n === bound.n
-      && record.waiting.answered.merge.commit === bound.commit
-      && record.waiting.answered.merge.head === bound.head;
+    const answer = readMergeAnswer(repoRoot, id);
+    const carried = answer !== null && answer.n === bound.n && answer.commit === bound.commit && answer.head === bound.head;
     if (!carried) {
       waitForOwner(repoRoot, record, { for: 'merge', reason: mergeRead.decision === 'ask' ? 'owner-ask' : 'owner-off', at: new Date().toISOString(), merge: bound });
       throw new BountyRefused('merge-held', [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...mergeWaitLines(record, attempt)].join('\n'));
@@ -460,6 +459,10 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     }
     record.conflicts = null;
     transitionTo(repoRoot, record, 'applied', { attempt: attempt.n, command: 'apply', merge: mergeCommit, ...(partial.length > 0 ? { partial } : {}) });
+    // The merge landed: any recorded owner answer for this bounty is spent —
+    // it named this commit and this branch tip, so it could never match
+    // again; drop it quietly rather than leave a marker behind.
+    try { dropMergeAnswer(repoRoot, id); } catch { /* a spent answer left behind matches nothing */ }
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);

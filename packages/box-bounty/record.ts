@@ -131,11 +131,6 @@ export interface WaitingFor {
   readonly answered?: {
     readonly at: string;
     readonly shown?: WaitingFor['shown'];
-    /** The merge the owner answered for (BT13) — bound exactly like a post
-        answer is: `allow <bounty>` releases the held merge only while the
-        attempt, its commit and the branch tip are all what the owner was
-        shown. A changed solution or a moved branch asks again. */
-    readonly merge?: WaitingFor['merge'];
   };
   /** What a held merge is bound to (BT13): which attempt, at which commit,
       merged into which branch state. `allow` releases it only while all
@@ -1073,10 +1068,10 @@ export const transitionTo = (repoRoot: string, record: BountyRecord, stage: Boun
 // the answered rerun uncovered keeps it; a different held action never
 // inherits it.
 export function waitForOwner(repoRoot: string, record: BountyRecord, waiting: WaitingFor): void {
-  const mergeSame = (a: WaitingFor['merge'], b: WaitingFor['merge']): boolean =>
-    a !== undefined && b !== undefined && a.n === b.n && a.commit === b.commit && a.head === b.head;
-  const carried = record.waiting !== undefined && record.waiting.for === waiting.for && record.waiting.to === waiting.to
-    && (waiting.for !== 'merge' || mergeSame(record.waiting.merge, waiting.merge))
+  // Merge waits never carry an owner answer on the record: the answer
+  // lives in the owner's settings outside the repository (BT13) — a
+  // record field is forgeable by whoever edits the checkout's files.
+  const carried = waiting.for !== 'merge' && record.waiting !== undefined && record.waiting.for === waiting.for && record.waiting.to === waiting.to
     ? record.waiting.answered : undefined;
   record.waiting = { ...waiting, at: record.waiting?.at ?? waiting.at, ...(carried !== undefined ? { answered: carried } : {}) };
   if (record.stage === 'waiting') persistRecord(repoRoot, record);
