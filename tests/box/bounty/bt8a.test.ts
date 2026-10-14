@@ -45,7 +45,7 @@ process.on('exit', () => write(process.env.BT8A_ORDER_LOG, JSON.stringify(events
     const events: { kind: string; text?: string; before: string | null }[] = JSON.parse(readFileSync(log, 'utf8'));
     return { previous, run, events };
   };
-  for (const args of [['allow'], ['allow', '--ask'], ['config', 'add', 'repositories', 'owner/shop']]) {
+  for (const args of [['allow'], ['allow', '--ask'], ['allow', 'owner/shop']]) {
     const { previous, run, events } = observed(...args);
     expect(run.status).toBe(0);
     const written = events.findIndex(event => event.kind === 'settings-write');
@@ -199,15 +199,29 @@ describe('the three owner words through the built CLI', () => {
     const root = repo();
     const shown = cli(root, 'config');
     expect(shown.status).toBe(0);
-    expect(shown.stdout).toContain('all-projects: false (off by default), nothing written');
+    // A never-set all-projects is not a setting — the bare surface omits
+    // its row and names the long form on one line (BT14).
+    expect(shown.stdout).not.toContain('all-projects:');
+    expect(shown.stdout).toContain('box bounty config --full');
     expect(shown.stdout).toContain('not decided yet: no repository permission');
     expect(shown.stdout).toContain('box bounty allow owner/project --ask');
-    expect(shown.stdout).toContain('covers each post and each merge');
-    expect(cli(root, 'config', 'add', 'repositories', 'owner/shop').status).toBe(0);
-    expect(readDecision(repo('owner/shop')).decision).toBe('allowed');
+    const full = cli(root, 'config', '--full');
+    expect(full.status).toBe(0);
+    expect(full.stdout).toContain('all-projects: false (off by default), nothing written');
+    expect(full.stdout).toContain('covers each post and each merge');
+    // The retired `config add/remove repositories` verbs are named refusals
+    // that point at allow and deny — never a silent old behaviour (BT14).
+    const add = cli(root, 'config', 'add', 'repositories', 'owner/shop');
+    expect(add.status).toBe(3);
+    expect(add.stderr).toContain('config-command-removed');
+    expect(add.stderr).toContain('box bounty allow owner/shop');
+    expect(readDecision(repo('owner/shop')).decision).toBeNull();
     expect(cli(root, 'allow', '--ask').status).toBe(0);
     expect(readDecision(root).decision).toBe('ask');
-    expect(cli(root, 'config', 'remove', 'repositories', 'owner/shop').status).toBe(0);
+    const remove = cli(root, 'config', 'remove', 'repositories', 'owner/shop');
+    expect(remove.status).toBe(3);
+    expect(remove.stderr).toContain('config-command-removed');
+    expect(remove.stderr).toContain('box bounty deny owner/shop');
     expect(readDecision(repo('owner/shop')).decision).toBeNull();
   });
   it('config distinguishes effective authority, undecided defaults and applicable waiting choices', () => {
@@ -216,17 +230,19 @@ describe('the three owner words through the built CLI', () => {
     const allowed = renderConfig(root);
     expect(allowed).toContain('this repository: owner/project; allowed by this repository entry');
     expect(allowed).toContain('not decided yet: all-projects (nothing written; defaults to off)');
-    expect(allowed).toContain('true grants publication permission');
-    expect(allowed).toContain('false grants no blanket permission');
-    expect(allowed).toContain('ask asks before each post and each merge');
-    expect(allowed).toContain('adding grants standing publication permission');
+    expect(allowed).toContain('allow: box bounty allow <owner/name>; deny: box bounty deny <owner/name>');
     expect(allowed).toContain('waiting actions: none');
     expect(allowed).not.toContain('<waiting-bounty-id>');
     expect(allowed).not.toContain('add it:');
+    // The long explanations are the long form's (BT14).
+    const allowedFull = renderConfig(root, { full: true });
+    expect(allowedFull).toContain('true grants publication permission');
+    expect(allowedFull).toContain('false grants no blanket permission');
+    expect(allowedFull).toContain('ask asks before each post and each merge');
     changeConfig(root, 'set', 'all-projects', 'true');
     denyRepository(root);
     expect(renderConfig(root)).toContain('this repository: owner/project; not allowed; denied at');
-    expect(renderConfig(root)).toContain('A dated deny removal keeps that repository not allowed even when all-projects is true or ask');
+    expect(renderConfig(root, { full: true })).toContain('A dated deny removal keeps that repository not allowed even when all-projects is true or ask');
     const { id } = draft(root);
     refused(() => postBounty(root, id, join(runRoot('BT8a-choice'), 'inbox')), 'owner-allow-needed');
     expect(renderConfig(root)).toContain(`this one bounty only: box bounty allow ${id}`);

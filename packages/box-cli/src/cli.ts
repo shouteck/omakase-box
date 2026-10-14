@@ -44,25 +44,38 @@ function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
   return { command: 'pnpm', args: [] };
 }
 
+// The bounty tool leads every command list (BT14): it is the product an
+// agent is handed, the older export/submit/verify/trace commands after it.
+const HELP_LINES = [
+  'usage: box bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--resume "<short note>"] [--out <dir>] [--repo <path>] [--preview]',
+  '       box bounty help',
+  '       box bounty describe [--rules] [--repo <path>]',
+  '       box bounty status [<id>] [--full] [--comments] [--repo <path>]',
+  '       box bounty post [<id>] --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]',
+  '       box bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]',
+  '       box bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]',
+  '       box bounty close [<id>] [--reason "<text>"] [--repo <path>]',
+  '       box bounty allow|deny|config — the owner\'s settings',
+  '       <id> may be left out when exactly one bounty can take the command',
+  '       box export <agreement.json> --repo <path> --out <dir> [--pnpm <command|pnpm.cjs path>]',
+  '       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]',
+  '       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]',
+  '       box trace --out <dir> -- <the test command, as it would normally be typed>'
+];
+
 function usage(message?: string): never {
   if (message !== undefined) console.error(message);
-  console.error('usage: box export <agreement.json> --repo <path> --out <dir> [--pnpm <command|pnpm.cjs path>]');
-  console.error('       box submit <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>]');
-  console.error('       box verify <submission.json> --agreement <agreement.json> --repo <path> [--box <retained export dir>] [--base <sha>] [--pnpm <command|pnpm.cjs path>] [--keep-scratch]');
-  console.error('       box trace --out <dir> -- <the test command, as it would normally be typed>');
-  console.error('       box bounty create --task <file> --why "<one line>" [--title "<one line>"] [--note <file>] [--job <file>] [--resume "<short note>"] [--out <dir>] [--repo <path>] [--preview]');
-  console.error('       box bounty help');
-  console.error('       box bounty describe [--rules] [--repo <path>]');
-  console.error('       box bounty status [<id>] [--full] [--comments] [--repo <path>]');
-  console.error('       box bounty post [<id>] --to <dir|github> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
-  console.error('       box bounty look [<id>] (<n> | --from <dir>) [--full] [--repo <path>]');
-  console.error('       box bounty apply [<id>] [<n> | --from <dir>] [--repo <path>]');
-  console.error('       box bounty close [<id>] [--reason "<text>"] [--repo <path>]');
-  console.error('       <id> may be left out when exactly one bounty can take the command');
+  for (const line of HELP_LINES) console.error(line);
   process.exit(2);
 }
 
 const [command, ...rest] = process.argv.slice(2);
+// `box --help` is a request for help, not a wrong command — the list on
+// stdout, exit 0, bounty first (BT14).
+if (command === '--help' || command === '-h' || command === 'help') {
+  for (const line of HELP_LINES) console.log(line);
+  process.exit(0);
+}
 const flag = (name: string): string | undefined => {
   const index = rest.indexOf(name);
   return index >= 0 ? rest[index + 1] : undefined;
@@ -401,7 +414,7 @@ if (command === 'export') {
       const money: { reward?: string; rewardLimit?: string } = {};
       for (let i = 0; i < bountyArgs.length; i += 1) {
         const arg = bountyArgs[i]!;
-        if (arg === '--repo' || (arg === '--ask' || arg === '--reward' || arg === '--reward-limit') && subcommand === 'allow') {
+        if (arg === '--repo' || (arg === '--ask' || arg === '--reward' || arg === '--reward-limit') && subcommand === 'allow' || arg === '--full' && subcommand === 'config') {
           if (seen.has(arg)) throw new BountyRefused('authority-arguments', `${arg} was repeated; nothing changed`);
           seen.add(arg);
           if (arg === '--repo' || arg === '--reward' || arg === '--reward-limit') {
@@ -419,7 +432,7 @@ if (command === 'export') {
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || seen.has('--repo')) throw error; }
       if (subcommand === 'allow') console.log(allowRepository(root, values[0], seen.has('--ask'), money.reward === undefined && money.rewardLimit === undefined ? undefined : money, text => console.log(text)));
       else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
-      else console.log(values.length === 0 ? renderConfig(root) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
+      else console.log(values.length === 0 ? renderConfig(root, { full: seen.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot
       // commands. `hook start|pause|finish` is the one shared output command

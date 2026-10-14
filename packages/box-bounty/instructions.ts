@@ -169,7 +169,9 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
           continue;
         }
         if (marked !== null) replaceFile(path, before, Buffer.concat([before.subarray(0, marked.openAt), before.subarray(marked.closeAt + Buffer.byteLength(RULES_MARKERS.close))]));
-        messages.push(`${file.path}: imports ${imported}; block kept there once`);
+        messages.push(marked === null
+          ? `${file.path}: imports ${imported}; block kept there once`
+          : `${file.path}: imports ${imported} — its block was removed here and kept once in ${imported}; the edit is in the worktree, not committed`);
         continue;
       }
       if (marked === null && !add) continue;
@@ -177,7 +179,9 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
         ? Buffer.concat([before, canonical])
         : Buffer.concat([before.subarray(0, marked.afterOpen), interior, before.subarray(marked.closeAt)]);
       replaceFile(path, before, after);
-      messages.push(`${file.path}: block ${before.equals(after) ? 'current' : 'updated'}`);
+      messages.push(before.equals(after)
+        ? `${file.path}: block current`
+        : `${file.path}: block updated — the edit is in the worktree, not committed; commit it with the project`);
     } catch (error) { messages.push(`${file.path}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
   }
   return messages;

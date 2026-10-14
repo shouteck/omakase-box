@@ -244,7 +244,10 @@ describe('GitHub bounty destination, entirely offline', () => {
     const observedAt = loadRecord(repo, id).github!.outside!.at;
     update({ fail: '/issues' });
     const stale = renderStatus(repo);
-    expect(stale).toContain('github-status-unavailable');
+    // A failed refresh names its reason (BT14) and offers the retry that
+    // could read a different answer.
+    expect(stale).toContain('github-command-failed');
+    expect(stale).toContain('retry box bounty status');
     expect(stale).toContain(observedAt);
     expect(stale).toContain('#1 by owner');
   }));

@@ -62,16 +62,16 @@ it('reads edited blocks as facts, ignores forged comment metadata and never repl
   update({ issues: [{ ...state().issues[0]!, body: altered }], comments: [{ body: renderFormat(formatFor(record)), user: { login: 'forger' }, created_at: '2026-10-13T00:00:00Z' }] });
   // An amount that parses but is not the record's is a stated difference,
   // never a silent accept and never a rewrite of the record.
-  expect(renderStatus(repo, { id })).toContain('GitHub format block: differs-from-record');
+  expect(renderStatus(repo, { id, full: true })).toContain('GitHub format block: differs-from-record');
   const malformed = body.replace('"amount":0', '"amount":0.5');
   update({ issues: [{ ...state().issues[0]!, body: malformed }] });
-  expect(renderStatus(repo, { id })).toContain('GitHub format block: invalid');
+  expect(renderStatus(repo, { id, full: true })).toContain('GitHub format block: invalid');
   expect(loadRecord(repo, id).stage).toBe('posted');
   expect(formatFor(loadRecord(repo, id)).reward.amount).toBe(0);
   update({ issues: [{ ...state().issues[0]!, body: body.replace('"withChanges":false', '"withChanges":true') }] });
-  expect(renderStatus(repo, { id })).toContain('differs-from-record');
+  expect(renderStatus(repo, { id, full: true })).toContain('differs-from-record');
   update({ issues: [{ ...state().issues[0]!, body }] });
-  expect(renderStatus(repo, { id })).toContain('matches-record');
+  expect(renderStatus(repo, { id, full: true })).toContain('matches-record');
 }, { collected: false }));
 
 it('escapes authored delimiters and rejects duplicate or nonterminal blocks', () => fixture(({ repo, id, state }) => {
@@ -117,7 +117,7 @@ it('malformed metadata never prevents outside close or branch removal', () => po
   expect(state().issues[0]!.body).toBe(body);
   expect(state().issues[0]!.state).toBe('closed');
   expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
-  expect(renderStatus(repo, { id })).toContain('preserved-invalid');
+  expect(renderStatus(repo, { id, full: true })).toContain('preserved-invalid');
 }));
 
 it('pre-format issue bodies remain readable and close without adding metadata', () => postedFixture(({ repo, id, state, update }) => {
@@ -126,7 +126,7 @@ it('pre-format issue bodies remain readable and close without adding metadata', 
   if (read.kind !== 'present') throw new Error('format missing');
   const legacy = body.slice(0, read.start);
   update({ issues: [{ ...state().issues[0]!, body: legacy }] });
-  expect(renderStatus(repo, { id })).toContain('GitHub format block: absent');
+  expect(renderStatus(repo, { id, full: true })).toContain('GitHub format block: absent');
   closeBounty(repo, id);
   expect(state().issues[0]!.body).toBe(legacy);
   expect(state().issues[0]!.state).toBe('closed');
@@ -152,7 +152,7 @@ it('a failed block write still closes and reports the stale block truthfully', (
   expect(state().issues[0]!.body).toBe(body);
   expect(state().issues[0]!.state).toBe('closed');
   expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
-  const status = renderStatus(repo, { id });
+  const status = renderStatus(repo, { id, full: true });
   expect(status).toContain('update-failed');
   expect(status).toContain('differs-from-record');
   expect(status).not.toContain('matches-record');

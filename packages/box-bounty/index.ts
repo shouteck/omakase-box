@@ -33,7 +33,7 @@ export type { GitHubChoice, GitHubPlan, GitHubPublication, IssueComment } from '
 export type { ApplyResult, ApplyTarget } from './answer.js';
 export { BountyUsage, parseCreateArgs } from './args.js';
 export type { CreateArgs } from './args.js';
-export { licenceOf, renderListing, renderPreview, resolveRepoRoot, TOOL_VERSION } from './create.js';
+export { deriveTitle, licenceOf, renderListing, renderPreview, resolveRepoRoot, TITLE_LIMIT, TOOL_VERSION } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';

@@ -75,7 +75,7 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     allowRepository(repo);
     expect(repoReward(repo)).toEqual({ amount: 10, limit: 30 });
     const denied = denyRepository(repo);
-    expect(denied).toContain('reward ($10) and limit went with the entry');
+    expect(denied).toContain('reward ($10) and limit ($30) went with the entry');
     const needsLimit = cli(repo, ['bounty', 'allow', '--reward', '10']);
     expect(needsLimit.status).toBe(3);
     expect(needsLimit.stderr).toContain('reward-needs-limit');
@@ -139,13 +139,15 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     const bare = renderConfig(repo);
-    expect(bare).toContain('a repository with no reward written states $0');
-    expect(bare).toContain('box bounty config set reward <whole dollars>');
-    expect(bare).toContain('box bounty config set reward-limit <whole dollars>');
     const address = Object.keys(loadSettings().repositories)[0]!;
     expect(bare).toContain(`${address}: allowed`);
     expect(bare).toContain('reward $0, no limit set');
     expect(bare).toContain('open bounties here promise $0; no limit set');
+    // The money explanations are the long form's (BT14).
+    const bareFull = renderConfig(repo, { full: true });
+    expect(bareFull).toContain('a repository with no reward written states $0');
+    expect(bareFull).toContain('box bounty config set reward <whole dollars>');
+    expect(bareFull).toContain('box bounty config set reward-limit <whole dollars>');
     changeConfig(repo, 'set', 'reward-limit', '20');
     changeConfig(repo, 'set', 'reward', '5');
     const full = renderConfig(repo);

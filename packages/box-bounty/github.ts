@@ -67,6 +67,9 @@ export interface GitHubPublication {
   scanBinary?: readonly string[];
   outside?: { readonly at: string; readonly issueState: 'open' | 'closed'; readonly answers: string };
   unavailableAt?: string | null;
+  /** The last refresh failure's own reason name — 'github-command-failed',
+      'github-issue-mismatch', ... — so status can say what failed (F6). */
+  unavailableReason?: string | null;
   formatRead?: 'absent' | 'invalid' | 'matches-record' | 'differs-from-record';
   formatReadAt?: string;
   formatUnavailableAt?: string | null;
@@ -933,7 +936,10 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     '',
     publicText(manifest.task.text.trim()),
     '',
-    '## What was already tried', '', note !== null ? publicText(note.text.trim()) : 'No public note was supplied.', '',
+    // The issue and the create preview agree on the note (BT14, F4): a
+    // generated note exists — the preview names it — it is simply not
+    // published; only a truly absent note says "none supplied".
+    '## What was already tried', '', note !== null ? publicText(note.text.trim()) : record.noteSource === 'generated' ? 'The note the tool wrote from the local changes is not published.' : 'No public note was supplied.', '',
     '## The code',
     '',
     `Branch from \`${branch}\` — it is the branch pull requests for this bounty target.`,
@@ -1115,7 +1121,13 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         ...plan.scan.hits.map(hit => `  Something in your project looks like a password or key: file ${hit.path}, line ${hit.line}.`),
         '  Nothing has been published.',
         '  You can say the file is safe to publish, say it must never be published, or have it changed first — which do you want?',
-        'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>; or remove the flagged content and post again — that sends the bounty; or end it — nothing was published and the owner\'s files are untouched.',
+        plan.scan.hits.some(hit => hit.commit !== undefined)
+          // A secret sitting inside an unpushed commit is not helped by a
+          // new commit removing the file's content — the commit carrying it
+          // would still publish (BT14). Changing that history is the
+          // owner's call, never the agent's to make alone.
+          ? 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>. For a hit inside an unpushed commit a new commit removing the content does not help — the commit carrying it would still be published; changing that history is the owner\'s call, not the agent\'s to make alone. Or end it — nothing was published and the owner\'s files are untouched.'
+          : 'for you — the owner\'s answer lands on the publish lists: box bounty config add safe-to-publish <path> or add never-publish <path>; or remove the flagged content and post again — that sends the bounty; or end it — nothing was published and the owner\'s files are untouched.',
         ...plan.scan.hits.map(hit => `  hit: ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
         ...(plan.scan.suppressed > 0 ? [`${plan.scan.suppressed} hit(s) on safe-listed paths are not held`] : []),
         ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`] : []),
@@ -1301,8 +1313,13 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
     publication.questions = { count: comments.length, latestAt: comments.map(comment => comment.at).sort().at(-1) ?? null, ...(unnamed > 0 ? { unnamed } : {}) };
     publication.outside = { at: new Date().toISOString(), issueState: issue['state'], answers };
     publication.unavailableAt = null;
-  } catch {
+    publication.unavailableReason = null;
+  } catch (error) {
     publication.unavailableAt = new Date().toISOString();
+    // The failure's own name, kept so status can say what went wrong rather
+    // than one generic label — and so a reason a rerun cannot fix is told
+    // apart from one it can (BT14, F6).
+    publication.unavailableReason = error instanceof BountyRefused ? error.reason : 'github-status-unavailable';
   }
   persistRecord(root, record);
 }
