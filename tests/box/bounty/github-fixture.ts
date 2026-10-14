@@ -99,6 +99,19 @@ const endpoint = args[args.indexOf('--hostname') + 2];
 const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8')) : null;
 if (state.failBodyUpdate && input && typeof input.body === 'string' && endpoint.includes('/issues/') && !endpoint.includes('/comments')) fail();
 if (state.fail && endpoint.includes(state.fail)) fail();
+// GitHub-faithful request handling (K19): query parameters are read as
+// parameters — 'per_page' is a page size, 'page' is which page — a single
+// issue or pull request answers as one object, lists are filtered by their
+// query and sliced to the requested page, comments belong to their issue,
+// and API-created issues and pull requests share the repository's one
+// number sequence. (Test-seeded prs/issues keep the numbers the test gave
+// them; pr() and prCommit() are seeding hooks, not API calls.)
+const query = new URLSearchParams(endpoint.split('?')[1] ?? '');
+const page = Math.max(1, Number(query.get('page') ?? 1) || 1);
+const perPage = Math.min(100, Math.max(1, Number(query.get('per_page') ?? 30) || 30));
+const paged = rows => rows.slice((page - 1) * perPage, page * perPage);
+const nextNumber = () => 1 + Math.max(0, ...state.issues.map(issue => issue.number), ...state.prs.map(pr => pr.number));
+const resource = endpoint.split('?')[0];
 let result;
 if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
   const pr = state.prs.find(pr => pr.number === input.variables.number);
@@ -108,40 +121,56 @@ if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')
 else if (endpoint === 'graphql') {
   const issue = state.issues.find(issue => issue.number === input.variables.number);
   if (!issue || state.fail && ('/issues/' + issue.number + '/comments').includes(state.fail)) fail();
+  const own = state.comments.filter(comment => comment.issue === undefined || comment.issue === issue.number);
   const offset = Number(input.variables.after ?? 0);
   const next = offset + 100;
-  const edges = state.comments.slice(offset, next).map((comment, index) => ({ cursor: String(offset + index + 1), node: { body: comment.body, author: comment.user } }));
+  const edges = own.slice(offset, next).map((comment, index) => ({ cursor: String(offset + index + 1), node: { body: comment.body, author: comment.user } }));
   if (state.graphqlMode === 'empty-next') edges.length = 0;
   if (state.graphqlMode === 'repeat-next') for (const edge of edges) edge.cursor = '1';
   if (state.graphqlMode === 'bad-edge') edges.push({ cursor: 5, node: null });
-  result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < state.comments.length } } } } } };
+  result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < own.length } } } } } };
 }
 else if (endpoint === 'user') result = { login: state.account };
 else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility };
+else if (resource.endsWith('/pulls') && input) {
+  const n = nextNumber();
+  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', ...input, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } }, files: [] };
+  state.prs.push(result);
+}
 else if (endpoint.includes('/pulls/')) {
-  const n = Number(endpoint.split('/pulls/')[1].split('/')[0]);
+  const n = Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);
   const pr = state.prs.find(pr => pr.number === n);
   if (!pr) fail();
-  result = endpoint.includes('/files') ? pr.files : pr;
-} else if (endpoint.includes('/pulls?')) result = state.prs.filter(pr => endpoint.includes(pr.base.ref));
+  result = endpoint.includes('/files') ? paged(pr.files) : pr;
+} else if (resource.endsWith('/pulls')) {
+  const wanted = query.get('state') ?? 'open';
+  const base = query.get('base');
+  result = paged(state.prs.filter(pr => (wanted === 'all' || (pr.state ?? 'open') === wanted) && (base === null || pr.base.ref === base)));
+}
 else if (endpoint.includes('/labels/')) {
   const name = decodeURIComponent(endpoint.split('/labels/')[1].split('?')[0]);
   result = state.labels.find(label => label.name === name);
   if (!result) fail();
 } else if (endpoint.includes('/labels')) {
-  if (input) { result = { name: input.name }; state.labels.push(result); } else result = state.labels;
+  if (input) { result = { name: input.name }; state.labels.push(result); } else result = paged(state.labels);
 } else if (endpoint.includes('/comments')) {
-  if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = state.comments;
+  const n = Number(resource.split('/issues/')[1].split('/')[0]);
+  if (input) { result = { ...input, issue: n, user: { login: state.account } }; state.comments.push(result); } else result = paged(state.comments.filter(comment => comment.issue === undefined || comment.issue === n));
 } else if (endpoint.includes('/issues/')) {
   const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
   result = state.issues.find(issue => issue.number === n);
+  if (!result) fail();
   if (input) Object.assign(result, input);
 } else if (endpoint.includes('/issues')) {
   if (input) {
-    result = { number: state.issues.length + 1, html_url: 'https://github.com/' + state.repository + '/issues/' + (state.issues.length + 1), ...input, labels: (input.labels ?? []).map(name => ({ name })), state: 'open', user: { login: state.account } };
+    result = { number: nextNumber(), html_url: 'https://github.com/' + state.repository + '/issues/' + nextNumber(), ...input, labels: (input.labels ?? []).map(name => ({ name })), state: 'open', user: { login: state.account } };
     state.issues.push(result);
     if (state.loseIssueResponse) { state.loseIssueResponse = false; fail(); }
-  } else result = state.issues;
+  } else {
+    const wanted = query.get('state') ?? 'open';
+    const labels = query.get('labels');
+    result = paged(state.issues.filter(issue => (wanted === 'all' || issue.state === wanted) && (labels === null || (issue.labels ?? []).some(label => label.name === labels))));
+  }
 } else fail();
 save(); console.log(JSON.stringify(result));
 `;
