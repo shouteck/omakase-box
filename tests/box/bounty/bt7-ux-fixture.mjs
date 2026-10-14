@@ -71,6 +71,8 @@ const fs = require('node:fs');
 const args = process.argv.slice(2);
 const file = process.env.BT7_UX_STATE;
 if (!file) throw Error('offline fixture state missing');
+if(args[0]==='version'||args[0]==='--version'){console.log('gh version 2.40.0');process.exit(0)}
+if(args[0]==='auth'){process.exit(0)}
 const state = JSON.parse(fs.readFileSync(file,'utf8'));
 const endpoint = args[args.indexOf('--hostname')+2];
 const input = args.includes('--input') ? JSON.parse(fs.readFileSync(args[args.indexOf('--input')+1],'utf8')) : null;
@@ -83,8 +85,6 @@ const paged=rows=>rows.slice((page-1)*perPage,page*perPage);
 const nextNumber=()=>1+Math.max(0,...state.issues.map(issue=>issue.number),...state.prs.map(pr=>pr.number));
 const resource=endpoint.split('?')[0];
 let result;
-if(args[0]==='version'||args[0]==='--version'){console.log('gh version 2.40.0');process.exit(0)}
-if(args[0]==='auth'){process.exit(0)}
 if(endpoint==='user') result={login:'owner'};
 else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public'};
 else if(endpoint==='graphql'&&input.query&&input.query.includes('pullRequest')){const pr=state.prs.find(pr=>pr.number===input.variables.number);if(!pr)fail();result={data:{repository:{pullRequest:{body:pr.body??'',userContentEdits:{nodes:[]}}}}}}
