@@ -125,7 +125,7 @@ describe('the pay message, under attack', () => {
     body(state, update, 1, 'fix\nnothing here now');
     const result = applyBounty(repo, id, 1);
     const message = result.payMessage!.join('\n');
-    expect(message).toContain('no recognised payment link');
+    expect(message).toContain('no usable payment link');
     expect(message).toContain('/pull/1');
     expect(message).not.toContain(STRIPE_LIVE);
   }, 'Repair app'));
@@ -155,6 +155,6 @@ describe('the pay message, under attack', () => {
       expect(text).not.toContain('hurry');
       expect(text).not.toContain('bonus');
     }
-    expect(hook).toContain('no recognised payment link');
+    expect(hook).toContain('no usable payment link');
   }, 'Repair app'));
 });

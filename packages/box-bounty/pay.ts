@@ -96,37 +96,49 @@ export function payToFactShape(value: unknown): value is PayToFact {
 }
 
 // The message the closing output carries for the agent to give the owner —
-// a statement, not a question: whom to pay, how much, where. Everything in
-// it is tool-built or allow-listed; the closing output also tells the agent
-// to repeat it at the end of its work, and that is all the tool does.
-export function payMessageLines(record: { id: string; title: string }, pay: PayOutcome, opts: { repository: string; issueUrl: string | null; merge: string | undefined; amount: number }): string[] {
+// a statement, not a question: whom to pay, how much, where. The owner block
+// opens it, in plain words the agent passes on unchanged; the agent's part
+// after it carries the facts (BT13). Everything in it is tool-built or
+// allow-listed; the closing output also tells the agent to repeat it at the
+// end of its work, and that is all the tool does.
+export function payMessageLines(record: { id: string; title: string }, pay: PayOutcome, opts: { repository: string; issueUrl: string | null; merge: string | undefined; amount: number; unasked?: boolean; partial?: readonly string[] }): string[] {
   const prUrl = pay.pr !== null ? `https://github.com/${opts.repository}/pull/${pay.pr}` : null;
   const solver = pay.solver ?? 'an account whose name could not be read';
+  const owner = [
+    `The bounty "${record.title}" ended with a solution merged into your code — it was written by ${solver}.`,
+    `The bounty stated $${opts.amount}, which you pay by hand — the tool never moves money.`
+  ];
+  if (pay.link !== null) {
+    owner.push(`Pay ${solver} at ${pay.link}${pay.testMode ? ' (a test link — no real money moves through it)' : ''}.`);
+    owner.push(`Before you pay, check the page asks for $${opts.amount} and that the account name there belongs to ${solver}.`);
+  } else {
+    owner.push(`The merged solution gave no usable payment link${prUrl !== null ? ` — the change is at ${prUrl}` : ''}.`);
+  }
+  if (pay.editedBy !== null) owner.push(`The text the payment link was read from was last edited by ${pay.editedBy}, not the solver.`);
+  if (pay.readFailed === true) owner.push('The solver\'s text could not be read again at close — this is what was recorded when it came in.');
+  if (opts.unasked === true) owner.push('You were not asked before this merge.');
+  if (opts.partial !== undefined && opts.partial.length > 0) owner.push(`Of the files the solution changed, the merge left these as they were: ${opts.partial.join(', ')}.`);
   const lines = [
-    `for the owner — this bounty stated a reward and a solution is merged; the tool does not pay and does not send this:`,
+    'for the owner — pass this on in these words:',
+    ...owner.map(line => `  ${line}`),
+    'for you — the tool does not pay and does not send this; repeat it when your work ends:',
     `  bounty: "${record.title}" — ${record.id}${opts.issueUrl !== null ? `; issue ${opts.issueUrl}` : ''}`,
     `  merged solution: ${prUrl !== null ? `pull request ${prUrl} from` : 'a returned folder collected from'} GitHub account ${solver}`,
     `  merged in: ${opts.merge ?? 'the recorded merge'}`,
     `  reward: $${opts.amount} — the amount from the owner's setting, to be paid by hand; the tool cannot know the amount a link asks for`
   ];
-  if (pay.link !== null) {
-    lines.push(`  pay the solver at: ${pay.link} — supplied by the solver${pay.testMode ? ' (test-mode: no real money moves through it)' : ''}`);
-    lines.push(`  check the checkout shows $${opts.amount} and that the account name shown there belongs to ${solver}`);
-  } else {
-    lines.push(`  the merged solution gave no recognised payment link${prUrl !== null ? ` — the pull request is ${prUrl}` : ''}`);
-  }
-  if (pay.editedBy !== null) lines.push(`  the description the link was read from was last edited by ${pay.editedBy}, not the solver`);
-  if (pay.readFailed === true) lines.push('  the description could not be read again at close — this is what collection recorded');
-  lines.push('  pass this on to the owner — the tool does not tell them; repeat it when your work ends');
   return lines;
 }
 
 // The lines above, assembled from the record alone: present only when a
 // GitHub-posted bounty closed on a merged solution with a pay outcome
 // recorded — the recorded merge the message names is the closing event's.
-export function payNotice(record: { id: string; title: string; events: readonly { stage?: string; merge?: string; command?: string }[]; github?: { repository: string; issue: { url: string } | null; pay?: PayOutcome } }, amount: number | undefined): string[] | null {
+// The closing event also carries the facts the message states: whether the
+// owner was asked before that merge, and which of the solution's files the
+// merge left as they were (BT13).
+export function payNotice(record: { id: string; title: string; events: readonly { stage?: string; merge?: string; command?: string; unasked?: boolean; partial?: readonly string[] }[]; github?: { repository: string; issue: { url: string } | null; pay?: PayOutcome } }, amount: number | undefined): string[] | null {
   const pay = record.github?.pay;
   if (pay === undefined || amount === undefined || amount <= 0) return null;
   const merged = [...record.events].reverse().find(event => event.merge !== undefined && ['apply', 'merged'].includes(event.command ?? ''));
-  return payMessageLines(record, pay, { repository: record.github!.repository, issueUrl: record.github!.issue?.url ?? null, merge: merged?.merge, amount });
+  return payMessageLines(record, pay, { repository: record.github!.repository, issueUrl: record.github!.issue?.url ?? null, merge: merged?.merge, amount, ...(merged?.unasked === true ? { unasked: true } : {}), ...(merged?.partial !== undefined ? { partial: merged.partial } : {}) });
 }

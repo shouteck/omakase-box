@@ -424,7 +424,9 @@ The owner has three words:
   repository. The disclosure says bounties are public under the owner's
   GitHub account, solutions the agent chooses are merged into the owner's
   code, and this decision covers this repository only. `--ask` means be
-  asked each time before publishing. `--reward <whole dollars>` and
+  asked each time before each post and before each merge — the tool's own
+  merge waits for the owner's answer, and `allow <waiting-bounty-id>`
+  releases it. `--reward <whole dollars>` and
   `--reward-limit <whole dollars>` set this repository's own reward and
   limit in the same breath; with neither, its bounties state $0 — a bare
   re-allow keeps what the entry already said.
@@ -438,7 +440,7 @@ The owner has three words:
   reward, its limit, and what its open bounties promise now and what is
   left. `config set all-projects true` allows all projects, except dated
   deny exceptions. It is off by default. `false` turns that default off;
-  `ask` asks before publishing in projects with no entry.
+  `ask` asks before each post and each merge in projects with no entry.
   `config add repositories owner/name` and `config remove repositories
   owner/name` change the same list as allow and deny.
 - `config set reward <whole dollars>` is the amount each new bounty on that
@@ -478,13 +480,24 @@ that path, even under an old blanket default. If two old paths have conflicting
 decisions for the same address, that address stays not allowed until a new
 decision. Migration notices and the old decision history remain visible.
 
-Ask me each time covers publishing and nothing else. Merging is not gated.
-The tool closes a bounty whose solution was merged without asking, in every
-mode. `allow <waiting-bounty-id>` posts that waiting bounty immediately and
-changes no repository permission. The first-use message offers, in order,
-allow this repository, be asked each time before publishing, and this one
-bounty only. Bare config uses the same choices. All-projects is not offered
-at first use. A later post says if the owner previously chose one bounty only.
+Ask me each time covers posts and merges. Under `allowed` — and where
+nothing is written — the tool's own merge proceeds as it always has; an `ask`
+mode merge becomes a named waiting state the owner releases with
+`allow <waiting-bounty-id>`, bound to the solution, its commit and the branch
+tip, so a changed solution or a moved branch asks again. The owner answer to
+a held merge is recorded in the owner's settings file, outside the
+repository — a bounty record lives inside the checkout and could be edited
+there, so nothing on it marks a merge approved. A merge the agent
+lands with its own Git still closes the bounty in every mode; where the
+owner's decision asked to be asked, the closing output, `status` and the pay
+message state that the owner was not asked before that merge. Closing never
+waits. `allow <waiting-bounty-id>` completes the held action immediately —
+a post or a merge — and changes no repository permission. The first-use
+message offers, in order, allow this repository, be asked each time before
+each post and each merge, and this one bounty only. Bare config uses the
+same choices. All-projects is not offered at first use. A later post says if
+the owner previously chose one bounty only. An `ask` written before this
+rule existed keeps its meaning; the tool says once that it now covers merges.
 
 Waiting is a successful command outcome with exit status 0. No command waits
 for typed input, and retrying a held post keeps its first waiting time. The
@@ -695,8 +708,10 @@ run a command at fixed moments, the owner can switch on the hook:
 `box bounty hook on --host <devin|claude>` prints a complete disclosure —
 what the entries run, which files they read and write, what the context
 costs, what may follow (including that a recognised merged solution closes
-the GitHub issue with a comment and nobody is asked, while publication is
-allowed), what it never does and how to stop it — and writes nothing until
+the GitHub issue with a comment — under `allowed` nobody is asked; under
+"ask me each time" a hand merge still closes and the closing output states
+the owner was not asked — while publication is allowed), what it never does
+and how to stop it — and writes nothing until
 the same command is repeated with `--confirm`. `box bounty hook` reports
 per-host state; `box bounty hook off --host <name>` removes exactly the
 entries it wrote and restores the settings file byte for byte.
@@ -722,7 +737,8 @@ cannot hold a session — and the host entry itself times out — a hook
 never blocks a session, waits for input or exits non-zero.
 Reading records recognises a merged solution as any record read does, so
 under the standing rules the hook can close a GitHub bounty with a comment
-and nobody asked — the disclosure says so before anything is written.
+— the disclosure says what that means under the decision in force before
+anything is written.
 
 Host support is limited to the hosts whose hook format was verified against
 installed documentation on this machine: Devin CLI (`.devin/hooks.v1.json`)
