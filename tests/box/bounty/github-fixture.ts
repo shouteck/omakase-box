@@ -155,7 +155,7 @@ else if (endpoint.includes('/labels/')) {
   if (input) { result = { name: input.name }; state.labels.push(result); } else result = paged(state.labels);
 } else if (endpoint.includes('/comments')) {
   const n = Number(resource.split('/issues/')[1].split('/')[0]);
-  if (input) { result = { ...input, issue: n, user: { login: state.account } }; state.comments.push(result); } else result = paged(state.comments.filter(comment => comment.issue === undefined || comment.issue === n));
+  if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = paged(state.comments.filter(comment => comment.issue === undefined || comment.issue === n));
 } else if (endpoint.includes('/issues/')) {
   const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
   result = state.issues.find(issue => issue.number === n);
