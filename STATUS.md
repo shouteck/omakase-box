@@ -13,4 +13,6 @@ Updated by the CTO on 14 October 2026, at the BT11c + K17 close.
 
 ## Next
 
+**K18** is briefed and ready when named: a critique of the whole flow for the agent and the owner, run with fresh agents and the sandbox, changing no product code ([waves/K18.md](waves/K18.md)). Send `START.md: K18`.
+
 No wave is named and none is briefed. Ready when wanted: publishing the K17 demo where the owner chooses; the hard-to-read product output list is candidate material for a future wave.
