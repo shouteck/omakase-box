@@ -12,4 +12,6 @@ Updated by the CTO on 15 October 2026 at the K21 close — the run's last wave; 
 
 ## Next
 
-Nothing is in flight. The owner queue is empty; **the next product direction is the owner's call.** K21 proposes five waves in order (draft-without-GitHub; legacy vocabulary trim; snapshot durable-half retirement; record.ts split; boundary fixes + the `syncGitHubDecision` owner question). K20 surfaces undeliberate departures worth deciding (`--help` below top level, `--json`, `--flag=value`, `--version` — several already BT12 bars). BACKLOG.md carries the rest.
+Nothing is in flight. The owner agreed on 15 October 2026 to the CTO's recommendations after reviewing the run: the queue below, and two decisions (closing up on GitHub runs whatever the standing answer and says so; `--json` on `status`, `look` and `config`), now in PLAN.md. All ten briefs are written in detail for a cook without deep reasoning.
+
+Queue, in dependency order: **K22**, **K23**, **BT18**, **BT19**, **BT20**, **BT21**, **BT22**, **BT23**, **BT24**, **BT25**. Each cooks only when named. K22 first: no hosted run has confirmed master green since BT15-ci. BT12 (the npm package) stays proposed and waits for the owner.
