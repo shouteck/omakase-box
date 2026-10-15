@@ -33,7 +33,7 @@ const pageOf = rows => rows.slice((page - 1) * perPage, page * perPage);
 // #1 the first pull request is #2.
 const nextNumber = () => 1 + Math.max(0, ...state.issues.map(issue => issue.number), ...state.prs.map(pr => pr.number));
 if (endpoint === 'user') emit({ login: 'owner' });
-if (endpoint === 'repos/owner/project') emit({ full_name: 'owner/project', private: false, visibility: 'public', html_url: 'https://github.com/owner/project' });
+if (endpoint === 'repos/owner/project') emit({ full_name: 'owner/project', private: false, visibility: 'public', permissions: { push: true }, html_url: 'https://github.com/owner/project' });
 if (endpoint === 'graphql') {
   if ((input.query || '').includes('pullRequest')) {
     const pr = state.prs.find(pr => pr.number === input.variables.number);
