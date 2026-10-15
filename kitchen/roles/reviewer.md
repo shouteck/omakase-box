@@ -12,6 +12,8 @@ Answer three questions:
 
 Machine capability assertions must control child executable lookup or explicitly belong to a live-host preflight. For portable missing-tool tests, try a runnable stand-in on the parent PATH and confirm it cannot alter the expected absence.
 
+For a wave that adds a shared test-process guard, inventory every executable creator across TS, MJS and CJS fixtures and demos before trusting its coverage, and prove each negative test reached the endpoint it intended rather than passing on a setup failure.
+
 If the brief ticks any review lenses, answer each one: say what you tried and what you found. A ticked lens you could not answer means the verdict is not PASS. Use the station card's "the pass checks" list as well.
 
 If the diff deletes, overwrites or recursively removes anything at a path it is given, run it against a directory that is not the wave's own and that already has files in it. It must refuse.
