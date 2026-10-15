@@ -35,7 +35,8 @@ it('drives the post-refusal path: clashing apply, own merge, a later command clo
   console.log('--- conflicted apply (exit ' + conflict.status + ') ---\n' + conflict.stdout + conflict.stderr);
   expect(conflict.status).toBe(0);
   expect(conflict.stdout).toContain('conflicts in: "app.txt"');
-  expect(conflict.stdout).toContain('the merge was aborted');
+  // BT17: the abort fact rides the conflict line itself now.
+  expect(conflict.stdout).toContain('aborted; worktree and index are exactly as before');
   expect(conflict.stdout).toContain('owner moved app');
   expect(conflict.stdout).toContain("owner's own Git settings");
   expect(conflict.stdout).toContain(`box bounty look ${id} 1`);

@@ -132,8 +132,9 @@ describe('several answers — each is its own attempt', () => {
     expect(record.attempts).toHaveLength(2);
     expect(refExists(repo, `refs/box-bounty/${id}-answer-1`)).toBe(true);
     expect(refExists(repo, `refs/box-bounty/${id}-answer-2`)).toBe(true);
-    // status lists every attempt in order — no check sorts one above another.
-    const status = statusGitHub(resolveRepoRoot(repo));
+    // status lists every attempt in order — no check sorts one above
+    // another. The per-attempt outcome list is the full view's (BT17).
+    const status = statusGitHub(resolveRepoRoot(repo), { full: true });
     const firstIdx = status.indexOf('#1 answered');
     const secondIdx = status.indexOf('#2 answered');
     expect(firstIdx).toBeGreaterThan(-1);
@@ -186,7 +187,9 @@ describe('older records still load', () => {
 
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`${id}  answered`);
-    expect(status).toContain('declared check'); // the recorded outcome still says what the check did back then
+    // The recorded outcome word lives on the attempts list — the full view's
+    // since BT17 — where it still says what the check did back then.
+    expect(statusGitHub(resolveRepoRoot(repo), { full: true })).toContain('declared check');
     expect(statusGitHub(repo, { id, full: true })).toContain('before fact reports existed');
     expect(applyGitHub(repo, id).outcome).toBe('applied');
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('fixed\n');
@@ -201,7 +204,10 @@ describe('the words are policed — facts, never verdicts', () => {
   // never the tool's statements — blanked out.
   const prose = (text: string): string => text.replace(/"(?:[^"\\]|\\.)*"/g, '""');
 
-  it("no attempt's report carries a verdict word", () => {
+  // Five full fixture worlds (post + collect + status each) sit just over the
+  // 30s default when the suite runs under parallel load — the same margin the
+  // heavy bt7b tests already carry. Assertions are unchanged.
+  it("no attempt's report carries a verdict word", { timeout: 120000 }, () => {
     // answered — clean merge read
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);

@@ -78,6 +78,13 @@ export interface OwnerSettings {
       and the branch tip the owner was shown — a changed solution or moved
       branch no longer matches and is asked again. */
   readonly mergeAnswers?: Record<string, MergeAnswer>;
+  /** Standing explanations the tool said once and never repeats (BT17),
+      keyed `<repository folder real path or *>#<topic>` — a repository
+      scope for facts that apply the first time they are true in one
+      project, `*` for facts about the settings themselves. The value is
+      the time the line was shown. It is state, not a setting: `config set`
+      never names it. */
+  readonly said?: Readonly<Record<string, string>>;
 }
 /** One recorded owner answer to a held merge (BT13). */
 export interface MergeAnswer {
@@ -199,7 +206,7 @@ export function loadSettings(): OwnerSettings {
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
-  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers'].includes(name)) unknownSetting(name);
+  for (const name of Object.keys(parsed)) if (!['kind', 'default', 'projects', 'repositories', 'migrations', 'firstMerges', 'instructions', 'publishing', 'reward', 'rewardLimit', 'retiredReward', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'mergeAnswers', 'said'].includes(name)) unknownSetting(name);
   if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-owner-settings') return bad('kind must be box-owner-settings');
   const repositories: Record<string, SettingsLevel> = {};
   const rawRepositories = parsed['repositories'];
@@ -302,7 +309,7 @@ export function loadSettings(): OwnerSettings {
       mergeAnswers[key] = { n: entry['n'] as number, commit: entry['commit'], head: entry['head'], at: entry['at'] };
     }
   }
-  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}), ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
+  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}), ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }), ...(parsed['said'] === undefined ? {} : { said: saidMap(parsed['said']) }) };
   const legacy = parsed['projects'];
   if (legacy === undefined) {
     if (retiring) persist(settings);
@@ -405,6 +412,49 @@ export function askMergeNoticeLine(): string | null {
   const at = new Date().toISOString();
   persist({ ...settings, askMergeNoticeAt: at });
   return `one fact about ask me each time: it now covers merges too — the owner is asked before each post and before each merge (noted ${at})`;
+}
+
+/** The `said` map is the tool's own record of standing explanations already
+    shown — a hand-edited or malformed entry fails loudly like every other
+    wrong shape rather than silently re-saying or never saying. */
+function saidMap(value: unknown): Record<string, string> {
+  if (!isObject(value)) return bad('said must hold an object of topic keys to times');
+  const out: Record<string, string> = {};
+  for (const [key, at] of Object.entries(value)) {
+    if (typeof at !== 'string') return bad('a said entry is unreadable');
+    out[key] = at;
+  }
+  return out;
+}
+
+const saidKey = (repoRoot: string | null, topic: string): string =>
+  `${repoRoot === null ? '*' : realpathSync(repoRoot)}#${topic}`;
+
+/** Read without recording — for a caller that must emit the explanation
+    before the record may be written (the allow disclosure prints while
+    authority is still unchanged, so its "said" record waits until after the
+    decision write — BT8a's order guard). */
+export function saidAlready(repoRoot: string | null, topic: string): boolean {
+  return loadSettings().said?.[saidKey(repoRoot, topic)] !== undefined;
+}
+
+/** Record that a standing explanation was said. */
+export function markSaid(repoRoot: string | null, topic: string): void {
+  const key = saidKey(repoRoot, topic);
+  const settings = loadSettings();
+  if (settings.said?.[key] !== undefined) return;
+  persist({ ...settings, said: { ...settings.said, [key]: new Date().toISOString() } });
+}
+
+/** Say a standing explanation exactly once — the first time it applies —
+    and record that it was said so it is never repeated (BT17). `repoRoot`
+    scopes the fact to one repository; `null` is the once-ever scope for a
+    fact about the settings themselves. Returns true when the caller should
+    print its line. */
+export function saidOnce(repoRoot: string | null, topic: string): boolean {
+  if (saidAlready(repoRoot, topic)) return false;
+  markSaid(repoRoot, topic);
+  return true;
 }
 
 // The key a merge answer is recorded under — the repository's GitHub

@@ -77,7 +77,9 @@ describe('compact status leads with what waits', () => {
     expect(context).toBeGreaterThan(-1);
     expect(waiting).toBeLessThan(context);
     expect(status).not.toContain('0 collected');
-    expect(status).toContain(`collect: box bounty look ${id} 1`);
+    // BT17: one `next:` line carries the collect command; the listing above
+    // it names the pull request's number.
+    expect(status).toContain(`next: box bounty look ${id} <number>`);
     expect(status).not.toContain('GitHub format block:');
     const full = renderStatus(repo, { full: true });
     expect(full).toContain('GitHub format block:');

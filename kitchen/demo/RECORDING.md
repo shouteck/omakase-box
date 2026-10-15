@@ -50,7 +50,8 @@ needs a screen, a browser and the recorder). It is the whole job.
   reward are written to a settings folder of the run's own — the owner's real
   settings file is only ever read, never written.
 - On Linux run it in `--standin` mode instead (the transcript in
-  `bt11b-transcript.txt` is one stand-in run); real mode on Linux is exactly
-  this recording session.
+  `bt17-transcript.txt` is the current stand-in run — `bt11b-transcript.txt`
+  is the pre-BT17 one kept for the before/after comparison); real mode on
+  Linux is exactly this recording session.
 - The run is about a minute at default `--auto` pauses; `--pause` and
   `--url-pause` lengthen the beat if a slower recording reads better.

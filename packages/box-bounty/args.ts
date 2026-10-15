@@ -24,9 +24,13 @@ export interface CreateArgs {
   readonly task?: string;
   readonly resume?: string;
   readonly repo?: string;
+  /** `--full` prints the draft preview and the publication plan — the
+      normal form is the three-line contract (BT17). */
+  readonly full?: boolean;
 }
 
-const VALUE_FLAGS = new Map<string, keyof CreateArgs>([['--why', 'why'], ['--title', 'title'], ['--task', 'task'], ['--resume', 'resume'], ['--repo', 'repo']]);
+type CreateValueField = 'why' | 'title' | 'task' | 'resume' | 'repo';
+const VALUE_FLAGS = new Map<string, CreateValueField>([['--why', 'why'], ['--title', 'title'], ['--task', 'task'], ['--resume', 'resume'], ['--repo', 'repo']]);
 const RETIRED_FLAGS: Readonly<Record<string, string>> = { '--note': 'put what you tried in the task file', '--job': 'put the unfinished work and the larger job in --resume', '--preview': 'create a private draft; post --preview shows what would become public' };
 const REMOVED_FLAGS = new Set(['--setup', '--check', '--guard']);
 // Money is the owner's to set, never the agent's (BT11a): create and post
@@ -37,7 +41,7 @@ const AMOUNT_FLAGS = new Set(['--reward', '--amount', '--price', '--pay', '--pay
 
 export function parseCreateArgs(argv: readonly string[]): CreateArgs {
   const seen = new Set<string>();
-  const parsed: { why?: string; title?: string; task?: string; resume?: string; repo?: string } = {};
+  const parsed: { [K in CreateValueField]?: string } & { full?: boolean } = {};
   const once = (flag: string): void => {
     if (seen.has(flag)) throw new BountyUsage(`${flag} was given twice`);
     seen.add(flag);
@@ -55,6 +59,9 @@ export function parseCreateArgs(argv: readonly string[]): CreateArgs {
       if (value === undefined) throw new BountyUsage(`${token} needs a value`);
       parsed[field] = value;
       i += 1;
+    } else if (token === '--full') {
+      once(token);
+      parsed.full = true;
     } else if (REMOVED_FLAGS.has(token)) {
       throw new BountyRefused('checks-removed', `${token} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; pass --task <file> and --why "<one line>"`);
     } else if (AMOUNT_FLAGS.has(token)) {

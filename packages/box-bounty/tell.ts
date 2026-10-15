@@ -9,6 +9,9 @@ export function renderDescribe(repoRoot: string | null): string {
   // amount is generated from this repository's own entry, never hard-coded.
   const at = DESCRIBE_LINES.indexOf('available.');
   const lines: string[] = [...DESCRIBE_LINES.slice(0, at + 1), describeRewardLine(amount), ...DESCRIBE_LINES.slice(at + 1), ''];
+  // The standing explanation said once at allow and never repeated (BT17)
+  // stays readable here permanently — ahead of the repository-gated facts.
+  lines.push('the owner\'s answers live in the owner\'s own settings outside the repository — they stop accidents and record changes; they are not a lock against an agent that deliberately changes them.');
   if (repoRoot === null) {
     lines.push('the facts for choosing need a repository: run inside a checkout or pass --repo <path>.');
     return lines.join('\n');
@@ -31,7 +34,8 @@ export function renderDescribe(repoRoot: string | null): string {
   if (posted.length === 0) lines.push('  expected wait: unknown; no bounty history yet. Nobody is known to be watching these issues yet.');
   else lines.push(`  expected wait: ${waits.length === 0 ? 'no solution wait recorded yet' : `${Math.min(...waits).toFixed(1)} to ${Math.max(...waits).toFixed(1)} hours from posting to the first solution recorded, across ${waits.length} bounty/bounties`}; ${merged.length} of ${ended.length} ended posted bounties had a solution merged. Past waits do not predict the next answer.`);
   lines.push('  how a solution is treated: each one arrives as a numbered attempt; the report states facts about the change and runs nothing. Choosing is yours.');
-  lines.push(`  ${ownerStatusLine(repoRoot)}`);
+  const owner = ownerStatusLine(repoRoot, true); // describe is the standing-explanation surface — the line always prints
+  if (owner !== null) lines.push(`  ${owner}`);
   lines.push(renderOpenLine(repoRoot));
   lines.push('', 'next: box bounty create --task <file> --why "<one line>" or box bounty help for the whole journey');
   return lines.join('\n');
