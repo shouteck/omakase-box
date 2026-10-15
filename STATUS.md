@@ -1,15 +1,15 @@
 # Status
 
-Updated by the CTO on 15 October 2026 at the BT16 close.
+Updated by the CTO on 15 October 2026 at the K20 close.
 
 ## Now
 
-- **BT16 completed.** Reviewed commit `cd99825`, independent PASS ui-verified; merged `d04a072`. A checkout whose remotes name several GitHub repositories — the fork workflow — now resolves through the owner's list: exactly one listed candidate is the repository, several listed refuse `repository-several-allowed`, and an unlisted checkout waits naming each candidate's `allow` command. Non-GitHub remotes and pushurls are ignored entirely; `repository-address-ambiguous` is retired. Pushes still go only to the chosen repository's canonical URL, and `post` now requires `permissions.push` first (`github-push-denied`).
-- Exact clean acceptance: `verify cd99825 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 741s` — 494/494 bounty, 142 package with six existing skips. The pass re-ran bt16 and bt8a (45/45) and replayed BT8a's probes plus six of its own (65 checks, no yes reaching a second repository); cold fork and mirror journeys posted only to the chosen repository.
-- The wave hit its designed K14 stop: rule 6's remote read cost +1 Git start on `describe` and five `status` legs. The CTO authorized rebaselining exactly those six ceilings inside the brief; measured counts are in the wave file.
-- Flakes seen under load: the known `report.test.ts` 30 s verdict-word timeout, and `bt11` promise-lock 15 s (7.8 s alone) — both green on rerun, recorded in BACKLOG.md.
-- No real bounty, payment, owner-settings change or solver-code execution. All wave scratch removed; the close sweep found none of the kitchen's named temp leftovers.
+- **K20 completed.** Reviewed commit `dd91b37`, independent PASS test-verified; merged `c31c856`. `kitchen/reviews/K20-conventions.md` measures every `box bounty` command against `git`/`gh`/`npm` with quoted runs: top departures are `--help` absent or inconsistent below top level, no machine-readable output (`--json` silently ignored), `--flag=value` unsupported/inconsistent, and no `--version`; waiting-post exit 0 and prose `config` are deliberate and stay.
+- **The wave also repaired a red master.** BT16's `github-push-denied` gate broke `test:kitchen` — `kitchen/demo/gh-standin.cjs` never returned `permissions`, and no check suite reaches it, so the hosted run went red (38687637404). K20's amended scope added the one-line `permissions: { push: true }` repair; `verify dd91b37 PASS test:kitchen=0 db=none 88s`. The parity-check gap is in BACKLOG.md.
+- BT16 earlier this run: fork/mirror remotes resolve through the owner's list; `repository-address-ambiguous` retired; `github-push-denied` added. Merged `d04a072`.
+- Flakes seen this run: the known `report.test.ts` 30 s timeout and `bt11` promise-lock 15 s under load — both green on rerun, in BACKLOG.md.
+- No real bounty, payment or solver-code execution; all scratch swept, including five leftover `box-k6-*` temp items.
 
 ## Next
 
-This run cooks **K20**, **BT17**, **K21** in that order, then stops and reports. K20 measures the tool against command-line conventions; BT17 shortens command output on K20's findings; K21 reviews the architecture last so it sees the final state. No wave is in flight.
+This run continues with **BT17**, then **K21**, then stops and reports. BT17 shortens command output under a measured budget, drawing on the K20 report; K21 reviews the architecture last so it sees the final state. No wave is in flight.

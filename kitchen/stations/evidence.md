@@ -23,6 +23,8 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 - **Parallelize by measuring workers, not cores.** Six cores did not mean six workers: measured runs picked three, and an instrumented run at three still timed out once. Prove files share no state first (temp roots, env in `finally`, per-call `-c safe.directory`) and pin the finding — K12's `k12-bounty-parallel.test.ts`.
 - **A produced artifact is not evidence of what it claims to show.** K16's first recording passed every recorder check while quietly running a stale pre-BT11b `dist`; only the live issue body's v2 block exposed it. Before a wave records or demos product behaviour, rebuild from the current commit — and the pass checks the artifact against the live thing, not against the run's own claims. A video or log is evidence only when its index and transcript can be audited without watching it.
 
+- **Convention and comparison waves need their own fixture checkout:** a `git init` plus two fake `github.com` remotes exercises repo-dependent commands against scratch settings (`BOX_BOUNTY_SETTINGS_DIR`) without touching the owner's. K20 needed this to see BT16's multi-remote paths.
+
 ## The pass checks
 
 - Tick the measurement-fairness lens for any wave on this station.
