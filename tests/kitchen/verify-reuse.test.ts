@@ -291,3 +291,101 @@ describe('verify adds test:kitchen when the diff owes it (K22, end to end)', () 
     expect(docs.steps.map((step: Json) => step.name)).toEqual(['test:x']);
   }, 180000);
 });
+
+describe('verify reuses an ancestor PASS when the commits between read nothing the step sees (K23, end to end)', () => {
+  it('a wave-file-only commit reuses test:box-bounty but reruns test:kitchen; a packages/ change reuses nothing; FAIL and dirty ancestors are never used; --fresh reruns', () => {
+    // The same fake-repository harness as the K22 test above, with check and
+    // build stubbed too so the whole step list runs.
+    const dir = temp();
+    mkdirSync(join(dir, 'scripts'), { recursive: true });
+    for (const name of readdirSync(join(root, 'scripts'))) {
+      if (name.endsWith('.mjs') || name === 'toolchain.json') copyFileSync(join(root, 'scripts', name), join(dir, 'scripts', name));
+    }
+    const pnpmBin = join(dir, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin');
+    mkdirSync(pnpmBin, { recursive: true });
+    writeFileSync(join(pnpmBin, 'pnpm.cjs'), "const { spawnSync } = require('child_process');\nconst { readFileSync } = require('fs');\nconst { join } = require('path');\nconst scripts = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).scripts;\nconst name = process.argv[process.argv.indexOf('run') + 1];\nconst command = scripts[name];\nif (!command) process.exit(2);\nprocess.exit(spawnSync(command, { shell: true, stdio: 'inherit', cwd: process.cwd() }).status ?? 1);\n");
+    const stub = 'node -e "process.exit(0)"';
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { check: stub, build: stub, 'test:box-bounty': stub, 'test:kitchen': stub } }));
+    writeFileSync(join(dir, '.gitignore'), '.kitchen/\n');
+    writeFileSync(join(dir, 'tracked.txt'), 'base\n');
+    const gitDir = dir.replace(/[\\/]+$/, '').replaceAll(String.fromCharCode(92), '/');
+    const git = (args: string[]) => execFileSync('git', ['-c', `safe.directory=${gitDir}`, '-c', 'user.email=kitchen@test.invalid', '-c', 'user.name=kitchen', ...args], { cwd: dir, encoding: 'utf8' }).trim();
+    const commit = (path: string, content: string) => { const parts = path.split('/'); mkdirSync(join(dir, ...parts.slice(0, -1)), { recursive: true }); writeFileSync(join(dir, ...parts), content); git(['add', '-A']); git(['commit', '-qm', path]); return git(['rev-parse', 'HEAD']); };
+    git(['init', '-q', '-b', 'master']);
+    git(['add', '-A']);
+    git(['commit', '-qm', 'init']);
+    git(['checkout', '-q', '-b', 'wave']);
+    const verify = (extra: string[] = []) => spawnSync(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--db=none', ...extra, 'test:box-bounty'], { cwd: dir, encoding: 'utf8', timeout: 120000 });
+    const runsDir = join(dir, '.kitchen', 'runs');
+    const latestRun = (before: Set<string>) => readdirSync(runsDir).find(name => !before.has(name))!;
+    const names = () => new Set(existsSync(runsDir) ? readdirSync(runsDir) : []);
+    const summary = (name: string): Json => JSON.parse(readFileSync(join(runsDir, name, 'summary.json'), 'utf8'));
+    // A hand-written run record for a sha that never really ran — FAIL or
+    // dirty — to prove the walk passes it by.
+    const fakeRun = (forSha: string, ms: number, extra: Record<string, unknown>) => {
+      const name = `${new Date(ms).toISOString().replace(/[:.]/g, '-')}-${forSha.slice(0, 7)}`;
+      const runDir = join(runsDir, name);
+      mkdirSync(runDir, { recursive: true });
+      writeFileSync(join(runDir, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha: forSha, startedAt: new Date(ms).toISOString(), seconds: 10, database: 'none', steps: [{ name: 'check', exit: 0, seconds: 3, log: 'check.log' }, { name: 'build', exit: 0, seconds: 3, log: 'build.log' }, { name: 'test:box-bounty', exit: 0, seconds: 3, log: 'test_box-bounty.log' }, { name: 'test:kitchen', exit: 0, seconds: 3, log: 'test_kitchen.log' }], notRun: [], failure: null, ...extra }));
+      for (const step of ['check', 'build', 'test_box-bounty', 'test_kitchen']) writeFileSync(join(runDir, `${step}.log`), `${step}\n`);
+      return name;
+    };
+
+    // C1 — a real change earns a real PASS on every step.
+    const code = commit('packages/box-bounty/index.ts', 'export {};\n');
+    let before = names();
+    const first = verify();
+    expect(first.status).toBe(0);
+    const firstRun = latestRun(before);
+    expect(summary(firstRun).steps.every((step: Json) => step.exit === 0 && step.reused === undefined)).toBe(true);
+
+    // C2 — a wave file alone: only inert-to-the-suite paths changed.
+    commit('waves/K99.md', '# wave\n');
+    before = names();
+    const waveRun = verify();
+    expect(waveRun.status).toBe(0);
+    expect(waveRun.stdout).toContain(`test:box-bounty=reused@${firstRun}(ancestor ${code.slice(0, 7)}, only inert paths changed)`);
+    const waveSummary = summary(latestRun(before));
+    const stepOf = (name: string): Json => waveSummary.steps.find((step: Json) => step.name === name);
+    expect(stepOf('test:box-bounty').ancestor).toBe(code);
+    expect(stepOf('check').ancestor).toBe(code);
+    expect(stepOf('build').ancestor).toBe(code);
+    // …but waves/*.md are kitchen inputs: the kitchen suite reruns for real.
+    expect(stepOf('test:kitchen').reused).toBeUndefined();
+    expect(stepOf('test:kitchen').exit).toBe(0);
+    expect(waveSummary.steps.find((step: Json) => step.name === 'test:kitchen').log).toBeDefined();
+
+    // C3 — packages/ is inert to nobody: nothing reuses anything.
+    const productSha = commit('packages/box-package/index.ts', 'export {};\n');
+    before = names();
+    const product = verify();
+    expect(product.status).toBe(0);
+    const productRun = latestRun(before);
+    const productSummary = summary(productRun);
+    expect(productSummary.steps.every((step: Json) => step.reused === undefined)).toBe(true);
+
+    // C4 fails (never ran — a hand-written FAIL), C5's record sat on a dirty
+    // tree. C6's wave file can only legitimately reach back to C3.
+    const failed = commit('waves/K98.md', '# wave\n');
+    fakeRun(failed, Date.parse('2026-02-02T00:00:00.000Z'), { verdict: 'FAIL', dirty: false });
+    const dirtied = commit('waves/K97.md', '# wave\n');
+    fakeRun(dirtied, Date.parse('2026-02-02T00:01:00.000Z'), { verdict: 'PASS', dirty: true });
+    commit('waves/K96.md', '# wave\n');
+    before = names();
+    const skipped = verify();
+    expect(skipped.status).toBe(0);
+    // The FAIL and dirty ancestors are passed by; the last real PASS is C3's.
+    expect(skipped.stdout).toContain(`test:box-bounty=reused@${productRun}(ancestor ${productSha.slice(0, 7)}, only inert paths changed)`);
+    const skippedSummary = summary(latestRun(before));
+    const skippedStep = (name: string): Json => skippedSummary.steps.find((step: Json) => step.name === name);
+    expect(skippedStep('test:box-bounty').ancestor).toBe(productSha);
+    expect(skippedStep('test:kitchen').reused).toBeUndefined();
+
+    // --fresh forces real runs even when an ancestor qualifies.
+    commit('waves/K95.md', '# wave\n');
+    before = names();
+    const forced = verify(['--fresh']);
+    expect(forced.status).toBe(0);
+    expect(summary(latestRun(before)).steps.every((step: Json) => step.reused === undefined)).toBe(true);
+  }, 240000);
+});

@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, readdirSync, readlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { allowBounty, applyBounty, closeBounty, gitOutcome, loadRecord, lookBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
-import { gitBlob, gitIndexWrite, gitWriteBlob } from '../../../packages/box-bounty/git.js';
+import { gitBlobs, gitIndexWrite, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import type { IndexChange } from '../../../packages/box-bounty/git.js';
 import { githubRepository } from './github-fixture.js';
 import { CLI_DIST, git, ownerSays, runRoot } from './support.js';
@@ -24,11 +24,16 @@ export function postToGitHub(repo: string, id: string) {
   const destination = join(runRoot('BT15-solver'), 'working');
   mkdirSync(join(destination, 'repo'), { recursive: true });
   const listing = git(repo, ['ls-tree', '-r', '-z', tip]);
+  const files: string[] = [];
   for (const entry of listing.split('\0')) {
     const match = /^\d+ blob [a-f\d]+\t(.+)$/s.exec(entry);
-    if (match?.[1] === undefined) continue;
-    const file = match[1];
-    const bytes = gitBlob(repo, tip, file);
+    if (match?.[1] !== undefined) files.push(match[1]);
+  }
+  // One cat-file --batch reads every blob — a solver copy used to pay one
+  // process per file (K23).
+  const blobs = gitBlobs(repo, tip, files);
+  for (const file of files) {
+    const bytes = blobs.get(file) ?? null;
     if (bytes === null) throw new Error('solver fixture blob missing');
     const target = join(destination, 'repo', ...file.split('/'));
     mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes);

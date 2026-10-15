@@ -4,8 +4,10 @@
 // writes one log per step plus summary.json under .kitchen/runs/, and exits 0 only when every step passed
 // on a committed tree.
 // K5: a step already PASS on this exact commit with a clean tree reports `reused` (~0s) instead of re-running —
-// the recorded summary.json is the trust anchor, `--fresh` forces real runs. `check` runs only the suites this
-// branch's diff can reach (`--full` runs them all), and no suite runs twice inside one invocation.
+// the recorded summary.json is the trust anchor, `--fresh` forces real runs. K23: a PASS on an ancestor (the
+// nearest 20 commits walked) also stands in for a step when every path between it and HEAD is one the step does
+// not read — a Result commit that only edits its wave file no longer re-runs the bounty suite. `check` runs only
+// the suites this branch's diff can reach (`--full` runs them all), and no suite runs twice inside one invocation.
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createWriteStream, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -16,7 +18,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { docker } from './docker.mjs';
 import { root } from './process.mjs';
-import { DB_CHECK_SUITES, DB_SUITES, changedPaths, kitchenSuiteReason, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
+import { DB_CHECK_SUITES, DB_SUITES, changedPaths, isInert, kitchenSuiteReason, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only');
@@ -148,6 +150,48 @@ function runStep(name, env) {
   });
 }
 
+// K23 — a recorded PASS on an ancestor also stands in for a step when every
+// path the commits since then changed is one the step does not read. "Reads"
+// is suite.mjs's own rule set: `isInert` names the paths no suite reads at
+// all, and the kitchen inputs (KITCHEN_TEST_READS, waves/*.md — the paths
+// kitchenSuiteReason reports as 'a file a kitchen test reads') count as read
+// by test:kitchen alone; to every other step they are the docs they look
+// like. Anything else every step reads — an unmapped path always means "run
+// it", never "skip it".
+const KITCHEN_READ_REASON = 'the change touches a file a kitchen test reads';
+const stepReadsPath = (step, path) =>
+  kitchenSuiteReason([path]) === KITCHEN_READ_REASON ? step === 'test:kitchen' : !isInert(path);
+// The nearest 20 ancestors of HEAD (rev-list order, HEAD itself skipped),
+// each paired with the paths it differs from HEAD by. Computed lazily, once
+// per invocation, shared by every step; a git answer that cannot be read ends
+// the walk — a missing diff is no basis for reuse.
+let ancestorDiffs;
+async function ancestorsBefore() {
+  if (ancestorDiffs !== undefined) return ancestorDiffs;
+  ancestorDiffs = [];
+  const list = await git(['rev-list', '--max-count=21', 'HEAD']);
+  if (list === null) return ancestorDiffs;
+  for (const ancestor of list.split('\n').map(line => line.trim()).filter(Boolean).slice(1)) {
+    const diff = await git(['diff', '--name-only', ancestor, 'HEAD']);
+    if (diff === null) break;
+    ancestorDiffs.push({ sha: ancestor, paths: diff.split('\n').filter(Boolean) });
+  }
+  return ancestorDiffs;
+}
+// Exact-commit reuse first; then ancestors nearest-first, each only when its
+// whole distance to HEAD is unread by this step. An ancestor whose recorded
+// run failed or sat on a dirty tree is skipped by reusableStep's own checks.
+async function reusableStepFor(name, options) {
+  const exact = reusableStep(runsDir, sha, name, options);
+  if (exact !== null) return exact;
+  for (const { sha: ancestor, paths } of await ancestorsBefore()) {
+    if (paths.some(path => stepReadsPath(name, path))) continue;
+    const hit = reusableStep(runsDir, ancestor, name, options);
+    if (hit !== null) return { ...hit, ancestor };
+  }
+  return null;
+}
+
 let db = { kind: 'none', stop: async () => undefined };
 const results = [];
 let failure;
@@ -184,13 +228,14 @@ try {
       console.log(`verify: ${name} already covered by this run — reused`);
       continue;
     }
-    // A recorded PASS on this exact commit with a clean tree stands in; a dirty
-    // tree or --fresh always runs for real.
-    const hit = fresh || dirty ? null : reusableStep(runsDir, sha, name, name === 'check' ? { suites: checkPlan.suites } : {});
+    // A recorded PASS on this exact commit with a clean tree stands in — or
+    // (K23) one on an ancestor whose whole distance to HEAD is paths this
+    // step does not read. A dirty tree or --fresh always runs for real.
+    const hit = fresh || dirty ? null : await reusableStepFor(name, name === 'check' ? { suites: checkPlan.suites } : {});
     if (hit) {
-      results.push({ name, exit: 0, seconds: 0, reused: hit.run, reusedSeconds: hit.seconds });
+      results.push({ name, exit: 0, seconds: 0, reused: hit.run, reusedSeconds: hit.seconds, ...(hit.ancestor === undefined ? {} : { ancestor: hit.ancestor }) });
       ran.add(name);
-      console.log(`verify: ${name} reused a recorded PASS from ${hit.run}`);
+      console.log(`verify: ${name} reused a recorded PASS from ${hit.run}${hit.ancestor === undefined ? '' : ` (ancestor ${hit.ancestor.slice(0, 7)}, only inert paths changed)`}`);
       if (name === 'check') for (const suite of checkPlan.suites) checkCovered.add(suite);
       continue;
     }
@@ -212,7 +257,8 @@ const passed = !failure && results.length === steps.length && results.every(resu
 const verdict = !passed ? 'FAIL' : dirtyEnd ? 'UNCOMMITTED' : 'PASS';
 const notRun = steps.slice(results.length);
 const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
-const line = `verify ${sha.slice(0, 7)}${dirtyEnd ? '+dirty' : ''} ${verdict} ${results.map(result => `${result.name}=${result.reused ? `reused@${result.reused}` : result.exit}`).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
+const stepCell = result => `${result.name}=${result.reused ? `reused@${result.reused}${result.ancestor === undefined ? '' : `(ancestor ${result.ancestor.slice(0, 7)}, only inert paths changed)`}` : result.exit}`;
+const line = `verify ${sha.slice(0, 7)}${dirtyEnd ? '+dirty' : ''} ${verdict} ${results.map(stepCell).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
 writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyEnd, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, finalStatus, dirtyPaths, line }, null, 2) + '\n');
 console.log(`\n${line}\nLogs: ${runDirectory}`);
 if (statusReadFailed) console.error('verify: final Git status could not be read (git status --porcelain failed) — the run is dirty/unreadable and not reusable.');

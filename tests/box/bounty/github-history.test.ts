@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -302,18 +303,20 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
   it('collects an answer on an enormous pull-request history without running any of it', () => postedFixture(({ repo, id, prCommit }) => {
     const pub = loadRecord(repo, id).github!;
     // 100 solver commits chained on the bounty branch — fetched, read and
-    // merged as history, with nothing in them ever executed.
-    let parent = pub.commit;
-    const env = { GIT_INDEX_FILE: join(runRoot('bt6a-huge'), 'index') };
+    // merged as history, with nothing in them ever executed. K23: the chain
+    // is one fast-import stream — the per-commit plumbing loop spent ~500
+    // Git starts and was the suite's slowest test (~70s) on this host.
+    let stream = '';
+    let from = `from ${pub.commit}`;
     for (let n = 0; n < 100; n += 1) {
-      objectGit(repo, ['read-tree', parent], env);
-      const blob = gitWriteBlob(repo, Buffer.from(`${n}\n`));
-      objectGit(repo, ['update-index', '--add', '--cacheinfo', `100644,${blob},counter.txt`], env);
-      const tree = objectGit(repo, ['write-tree'], env);
-      parent = objectGit(repo, ['-c', 'user.name=solver', '-c', 'user.email=solver@test.invalid', 'commit-tree', tree, '-p', parent, '-m', `solver ${n}`], env);
+      const message = `solver ${n}`, content = `${n}\n`;
+      stream += `commit refs/k23-huge/chain\nmark :${n + 1}\nauthor solver <solver@test.invalid> 1760000000 +0000\ncommitter solver <solver@test.invalid> 1760000000 +0000\ndata ${message.length}\n${message}\n${from}\nM 100644 inline counter.txt\ndata ${content.length}\n${content}\n`;
+      from = `from :${n + 1}`;
     }
+    const imported = spawnSync('git', ['-c', `safe.directory=${repo.replaceAll('\\', '/')}`, '-C', repo, 'fast-import', '--quiet'], { input: stream, encoding: 'utf8' });
+    if (imported.status !== 0) throw new Error(`git fast-import failed: ${imported.stderr}`);
     const sentinel = join(runRoot('bt6a-huge-sentinel'), 'ran');
-    prCommit(parent, 'solver', ['counter.txt']);
+    prCommit(git(repo, ['rev-parse', 'refs/k23-huge/chain']), 'solver', ['counter.txt']);
     const result = lookBounty(repo, id, 2);
     expect(result.attempt.outcome).toBe('answered');
     expect(result.attempt.report.join('\n')).toContain('100 commit(s)');
