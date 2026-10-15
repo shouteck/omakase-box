@@ -13,6 +13,8 @@ Updated by the CTO on 15 October 2026 at the BT15 close.
 
 ## Next
 
+**Red master first:** the hosted check after BT15 closed failed on one test whose fixture assumed the temp folder is under the home folder, true on Windows, not on Linux. **BT15-ci** fixes the fixture ([waves/BT15-ci.md](waves/BT15-ci.md)). Then the queue below.
+
 Only BT15 was requested and run. No wave is in flight.
 
 The owner queue remains **BT16**, **K20**, **BT17**, **K21**, in that order. Their briefs are present; BT17 follows K20 so K21 sees the final output. The newer BT12 npm-package direction is preserved in its brief and PLAN.md. None of these waves started here.
