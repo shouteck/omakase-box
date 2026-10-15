@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, postBounty, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, postBounty, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -213,6 +213,14 @@ if (command === 'export') {
   // --job file when one was recorded, else the title.
   const jobLine = (record: { job?: { file: string } | null; title: string }): string =>
     `the job it came from: ${record.job?.file ?? record.title}`;
+
+  // BT16 rule 8: when the checkout's remotes name several GitHub
+  // repositories and the owner's list settled one, every acting command says
+  // which first. The helper builds the line once and stays silent otherwise.
+  const sayActingOn = (root: string): void => {
+    const line = actingOn(root);
+    if (line !== null) console.log(line);
+  };
   try {
     if ((subcommand === 'look' || subcommand === 'apply') && bountyArgs.some(arg => arg === '--from' || arg.startsWith('--from='))) throw new BountyRefused('folder-delivery-retired', 'folder solutions were retired; collect a pull request with box bounty look <id> <number> or box bounty apply <id> <number>. Nothing changed');
     if (subcommand === 'post' && bountyArgs.some((arg, index) => arg === '--to' && bountyArgs[index + 1] !== 'github' || arg.startsWith('--to=') && arg !== '--to=github')) throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
@@ -280,6 +288,7 @@ if (command === 'export') {
       const sinceIndex = bountyArgs.indexOf('--since');
       const since = sinceIndex < 0 ? undefined : bountyArgs[sinceIndex + 1];
       if (sinceIndex >= 0 && (since === undefined || since.startsWith('--'))) usage('box bounty status --since <iso>');
+      sayActingOn(root);
       console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: bountyArgs.includes('--full'), comments: bountyArgs.includes('--comments') }));
       if (since !== undefined) console.log(renderSummary(root, since));
     } else if (subcommand === 'post') {
@@ -305,6 +314,7 @@ if (command === 'export') {
       });
       if (id === undefined || extraIds.length > 0 || to === undefined || (withChanges || include.length > 0) && to !== 'github') usage('box bounty post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]');
       const repoRoot = resolveRepoRoot(bountyRepo(), 'post');
+      sayActingOn(repoRoot);
       if (bountyArgs.includes('--preview')) {
         if (to !== 'github') usage('box bounty post <id> --preview — only a GitHub post has a preview');
         console.log(previewGitHub(repoRoot, id, { withChanges, include }));
@@ -329,7 +339,9 @@ if (command === 'export') {
         || (attemptText !== undefined && attempt === undefined)) {
         usage('box bounty apply [id] [<n>] [--repo <path>]');
       }
-      const result = applyBounty(resolveRepoRoot(bountyRepo(), 'apply'), id, attempt);
+      const applyRoot = resolveRepoRoot(bountyRepo(), 'apply');
+      sayActingOn(applyRoot);
+      const result = applyBounty(applyRoot, id, attempt);
       if (result.firstMergeNotice !== undefined) console.log(result.firstMergeNotice);
       if (result.payMessage !== undefined) for (const line of result.payMessage) console.log(line);
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
@@ -364,6 +376,7 @@ if (command === 'export') {
         usage('box bounty look [id] <n> [--full] [--repo <path>]');
       }
       const root = resolveRepoRoot(bountyRepo(), subcommand);
+      sayActingOn(root);
       const result = lookBounty(root, id, n!, { full: bountyArgs.includes('--full') });
       const label = result.attempt.n;
       console.log(`${id} solution ${label} — ${result.collected ? 'collected first — ' : ''}the change below was written by the solver, not by the tool; the tool ran nothing of the solver's to show it. It is read from fetched objects — nothing is checked out, nothing is left behind.`);
@@ -381,7 +394,9 @@ if (command === 'export') {
       const reason = reasonIndex >= 0 ? bountyArgs[reasonIndex + 1] : undefined;
       const [id, ...extraIds] = commandIds();
       if (id === undefined || extraIds.length > 0 || (reasonIndex >= 0 && (reason === undefined || reason.startsWith('--')))) usage('box bounty close [id] [--reason "<text>"] [--repo <path>]');
-      const { record, outcome, payMessage } = closeBounty(resolveRepoRoot(bountyRepo(), 'close'), id, reason);
+      const closeRoot = resolveRepoRoot(bountyRepo(), 'close');
+      sayActingOn(closeRoot);
+      const { record, outcome, payMessage } = closeBounty(closeRoot, id, reason);
       if (payMessage !== undefined) for (const line of payMessage) console.log(line);
       if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
       if (record.github?.closedNote !== undefined) console.log(`github: ${record.github.closedNote}`);

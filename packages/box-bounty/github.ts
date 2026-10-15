@@ -13,8 +13,8 @@ import { checkProjectClaims, publishListed, publishLists, shipRules } from './ne
 import type { NeverShipRule } from './never-ship.js';
 import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, requireCurrentDelivery, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
-import { repositoryAddress, requireRepository } from './repository.js';
-import { readReward } from './settings.js';
+import { repositoryAddress } from './repository.js';
+import { readReward, requireRepository } from './settings.js';
 import { boundAmount, formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
 import { parsePayTo, payToLine, type PayOutcome, type PayToFact } from './pay.js';
 
@@ -216,6 +216,11 @@ function publicRepository(root: string): string {
   catch { return invalid('github-visibility-unreadable', PUBLIC_ONLY); }
   if (!isObject(info) || typeof info['full_name'] !== 'string' || info['full_name'].toLowerCase() !== repository.toLowerCase() || typeof info['private'] !== 'boolean' || info['visibility'] !== 'public' && info['visibility'] !== 'private' && info['visibility'] !== 'internal') return invalid('github-visibility-unreadable', PUBLIC_ONLY);
   if (info['private'] !== false || info['visibility'] !== 'public') return invalid('github-private-repository', PUBLIC_ONLY);
+  // Push access is checked before any branch push or issue (BT16 rule 9):
+  // the bounty branch goes to this repository, so a sign-in that cannot push
+  // is named now rather than halfway through the post.
+  const permissions = isObject(info['permissions']) ? info['permissions'] : {};
+  if (permissions['push'] !== true) return invalid('github-push-denied', `your GitHub sign-in cannot push to ${repository}, and the bounty branch goes there; nothing was posted`);
   return info['full_name'];
 }
 

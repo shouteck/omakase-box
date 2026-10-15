@@ -9,8 +9,7 @@ import type { NeverShipRule } from './never-ship.js';
 import { looksBinary, previewGitHub, scanText } from './github.js';
 import type { ScanHit } from './github.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
-import { readDecision, repoReward } from './settings.js';
-import { requireRepository } from './repository.js';
+import { readDecision, repoReward, requireRepository } from './settings.js';
 import { createSnapshot } from './snapshot.js';
 import type { SnapshotFile, SnapshotRemoval } from './snapshot.js';
 

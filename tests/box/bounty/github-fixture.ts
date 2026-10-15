@@ -6,7 +6,7 @@ import { delimiter, join } from 'node:path';
 import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, runRoot, write } from './support.js';
-import { requireRepository } from '../../../packages/box-bounty/repository.js';
+import { requireRepository } from '../../../packages/box-bounty/settings.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
 
 export function withoutGh(run: () => void): void {
@@ -63,6 +63,9 @@ export interface GhState {
   visibility: string;
   private: boolean;
   auth: boolean;
+  /** The sign-in's push permission on this repository — true unless a test
+      turns it off (BT16 rule 9's github-push-denied probe). */
+  push?: boolean;
   /** The version `gh --version` reports — the tool asks once per process. */
   ghVersion?: string;
   malformed?: boolean;
@@ -133,7 +136,7 @@ else if (endpoint === 'graphql') {
   result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < own.length } } } } } };
 }
 else if (endpoint === 'user') result = { login: state.account };
-else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility };
+else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true } };
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
   result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', ...input, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } }, files: [] };
@@ -248,7 +251,7 @@ interface World {
 // The repo, bare "GitHub" remote, gh stand-in and drafted bounty every
 // fixture-style test starts from — one helper, so `fixture` and the shared
 // posted world build exactly the same thing.
-function makeWorld(title: string, files: Record<string, string>, resumeNote?: string, publicNote?: string, existing?: { repo: string; id: string }): World {
+function makeWorld(title: string, files: Record<string, string>, resumeNote?: string, publicNote?: string, existing?: { repo: string; id: string; repository?: string | undefined }): World {
   const repo = existing?.repo ?? makeRepo(files);
   const scratch = runRoot('bt6a');
   const bare = join(scratch, 'remote.git');
@@ -258,7 +261,10 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
     if (hasOrigin) git(repo, ['remote', 'set-url', 'origin', 'git@github.com:owner/project.git']);
     else git(repo, ['remote', 'add', 'origin', 'git@github.com:owner/project.git']);
   }
-  const repository = existing === undefined ? 'owner/project' : requireRepository(repo);
+  // An existing checkout's repository is its resolved identity; a test whose
+  // remotes the list cannot settle (several-allowed, unlisted) names the
+  // stand-in repository outright — the world then only plays GitHub for it.
+  const repository = existing === undefined ? 'owner/project' : existing.repository ?? requireRepository(repo);
   // The repository is already public: what is on the remote now is what a
   // bounty can point solvers at. The bare remote stands in for github.com.
   git(repo, ['push', bare, 'main']);
@@ -303,8 +309,8 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
 
 // An existing owner repository can use the same K19 stand-in as the ordinary
 // fixture. The caller drives real post/PR commands inside run, with no network.
-export function githubRepository(repo: string, id: string) {
-  const world = makeWorld('Existing repository', {}, undefined, undefined, { repo, id });
+export function githubRepository(repo: string, id: string, repository?: string) {
+  const world = makeWorld('Existing repository', {}, undefined, undefined, { repo, id, repository });
   const ownedSettings = process.env['BOX_BOUNTY_SETTINGS_DIR'];
   const isolated = ownedSettings === undefined ? world : { ...world, settings: ownedSettings };
   return { ...contextFor(isolated), run: <T>(action: () => T): T => withGhEnv(isolated, action) };

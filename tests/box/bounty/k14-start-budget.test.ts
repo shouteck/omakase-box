@@ -71,7 +71,10 @@ function tally(dir: string): Starts {
 // — the merged-solution check.
 const BUDGET: Record<string, { git: number; gh: number }> = {
   'help': { git: 0, gh: 0 },
-  'describe': { git: 2, gh: 0 },
+  // BT16: +1 Git each on describe and the status legs — readDecision's
+  // all-projects branch must read the remotes once to tell a one-candidate
+  // checkout from a several-unlisted one (rule 6; CTO ruling 15 October).
+  'describe': { git: 3, gh: 0 },
   'describe-rules': { git: 2, gh: 0 },
   // BT14: the preview's `posting permission:` line reads the repository's
   // GitHub address once — one `git remote` start the fact costs.
@@ -79,20 +82,20 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // master fixture (18/0), that read adds 10 Git and 3 gh calls: 28/3.
   // Other surviving ceilings stay unchanged, including the positive anchors.
   'create': { git: 28, gh: 3 },
-  'status-drafted': { git: 2, gh: 0 },
+  'status-drafted': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
   'close-draft': { git: 3, gh: 0 },
   'post-preview': { git: 18, gh: 3 },
   'post-github': { git: 21, gh: 8 },
-  'status-posted': { git: 2, gh: 5 },
-  'status-comments': { git: 3, gh: 7 },
+  'status-posted': { git: 3, gh: 5 }, // +1: BT16's all-projects remote read (see above)
+  'status-comments': { git: 4, gh: 7 }, // +1: BT16's all-projects remote read (see above)
   'look-pr': { git: 19, gh: 2 },
   'look': { git: 6, gh: 0 },
   'look-full': { git: 6, gh: 0 },
   'apply': { git: 15, gh: 5 },
-  'status-applied': { git: 2, gh: 0 },
+  'status-applied': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
   'close-ended': { git: 4, gh: 5 },
   'close-reason': { git: 4, gh: 0 },
-  'status-end': { git: 2, gh: 0 }
+  'status-end': { git: 3, gh: 0 } // +1: BT16's all-projects remote read (see above)
 };
 
 it('every bounty command stays within its Git and gh start budget', () => fixture(context => {
