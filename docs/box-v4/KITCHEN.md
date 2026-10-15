@@ -13,8 +13,8 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 2. **Branch.** `wave/<id>` from current master. Sequential work can use the main checkout. Parallel work gets its own worktree, one writer each.
 3. **Implement.** The worker gets its role file, the wave file and the station card, and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
 4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
-5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new approval. Rerunning a check is always allowed. If the CTO changes the scope mid-wave, the wave file is edited first and the worker is pointed at it. After a second correction, stop resuming the same worker: start a fresh one with the wave file brought up to date, because instructions decay across resumes. A FAIL whose cause is a design choice with no precedent goes to a prototype wave, not another correction.
-6. **Close.** On PASS the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the merged branch with `git branch -d` (the owner gave standing approval on 6 October 2026). If your host still wants a confirmation for that, do not ask and do not hold the close: leave the branch, and the next kickoff on any host sweeps merged `wave/*` branches. The research lab is paused: there is no brief to read, nothing to answer and no sync to run.
+5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new approval. Rerunning a check is always allowed. If the CTO changes the scope mid-wave, the wave file is edited first and the worker is pointed at it. After a second correction, stop resuming the same worker: start a fresh one with the wave file up to date — instructions decay across resumes. A FAIL whose cause is a design choice with no precedent goes to a prototype wave, not another correction.
+6. **Close.** On PASS the CTO merges with `--no-ff`, pushes master, removes every resource the wave created, replaces STATUS.md and deletes the merged branch with `git branch -d` (the owner gave standing approval on 6 October 2026). If your host still wants a confirmation for that, do not ask and do not hold the close: leave the branch; the next kickoff sweeps merged `wave/*` branches. The research lab is paused: there is no brief to read, nothing to answer and no sync to run.
 7. **Reflect.** Before the next wave, the CTO writes two lines in the Result: what went wrong or was repeated, and which script, template line, check or profile it becomes. Sort each lesson by reach. **Wave:** nothing more to do. **Station:** add it to the station card. **Kitchen:** add one line to `kitchen/INBOX.md`. Cooks and the pass only report; sorting is the head chef's job. "Nothing" is an acceptable answer; a lesson left as prose in a report is not.
 
 When the last wave of a milestone closes, send the CEO the finished card with the next proposal. While a decision is with the CEO, keep doing everything that does not depend on it: briefs for the proposed milestone, read-only investigation, cleanup waves. Do not sit idle behind a gate.
@@ -29,17 +29,17 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 `node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, boundary checks, build and the named suites on the host, gives them a disposable Postgres, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
 - The candidate's identity is its commit SHA. Verify refuses to call a run with uncommitted changes acceptable.
-- A step already PASS on this exact commit with a clean tree is `reused` instead of re-run; the recorded `summary.json` (commit, clean flag, step verdict) is the trust anchor, and `--fresh` forces a real run when anyone doubts the record.
+- A step already PASS on this exact commit with a clean tree is `reused` instead of re-run; the recorded `summary.json` (commit, clean flag, step verdict) is the trust anchor, and `--fresh` forces a real run when the record is doubted.
 - `check` runs typecheck, the boundary check and only the suites the branch's diff since master can reach; touching shared tooling or passing `--full` runs them all. A suite named in the invocation never runs twice. `tests/box/` and the milestone-BT packages reach no check suite; `box-contracts` and anything unmapped run all four.
 - The disposable Postgres starts only when a suite about to run needs it — named suites in `DB_SUITES` (derived and pinned by `tests/kitchen/k12-db-suites.test.ts`) or selected check suites in `DB_CHECK_SUITES`; the summary line says `db=embedded` or `db=none`.
 - The bounty test files run three workers in parallel, pinned in `tests/kitchen/k12-bounty-parallel.test.ts`; other suites keep one.
 - Measured on this host (K12, 12 October 2026): bounty suite ~350 s, `verify --full` ~120 s, a product-only `check` ~18 s; under saturated load 30 s test timeouts still occur.
 - Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
-- Tests named `*-live.test.ts` shell into the old container stack and are not part of ordinary verification until they are ported to the disposable database.
-- A lost or unclear result is fixed by running it again. Databases are created per run and destroyed after it, so a rerun costs nothing.
+- Tests named `*-live.test.ts` shell into the old container stack; not part of ordinary verification until ported to the disposable database.
+- A lost or unclear result is fixed by running it again. Databases are created and destroyed per run, so a rerun costs nothing.
 - The reviewer's run is the one that counts. The worker's run is a self-check.
 
-A wave that needs a real GitHub journey runs it in the sandbox `shouteck/box-bounty-sandbox` — the tool is allowed standing there and `kitchen/sandbox.md` has the rules. No live step touches the working repository, and none needing the owner as a test subject is written.
+A wave that needs a real GitHub journey runs it in the sandbox `shouteck/box-bounty-sandbox` — the tool is allowed standing there; `kitchen/sandbox.md` has the rules. No live step touches the working repository or needs the owner as a test subject.
 
 ## Review
 
@@ -49,15 +49,15 @@ The verdict carries its level, because "passed" means different things: `ui-veri
 
 **Lenses.** A generalist reviewer looks hardest where it is told to look. The brief therefore ticks the lenses that apply (security, user experience, measurement fairness) and the reviewer must answer each ticked one in the Result. An unanswered ticked lens means the verdict is not PASS. Tick only what applies; most waves need one or none.
 
-**Same model on both sides is normal here.** The pass is a fresh agent with no share in the cook's reasoning; that is the independence the kitchen relies on. What covers a shared blind spot is mechanical: attacks the pass runs, tests that must fail, and the off-machine run on every push.
+**Same model on both sides is normal here.** The pass is a fresh agent with no share in the cook's reasoning — the independence the kitchen relies on. What covers a shared blind spot is mechanical: attacks the pass runs, tests that must fail, and the off-machine run on every push.
 
 ## Recipients
 
-From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder, with no access to the owner repository, standing in for an outside contributor. It is a third role, separate from worker and reviewer. Its report of what was missing or unclear is evidence for the wave, not a defect in the recipient. The CTO gives it the folder path and nothing else, and places the folder outside the repository checkout. An agent run this way is not an independent human and is never reported as one.
+From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder and no access to the owner repository, standing in for an outside contributor — a third role besides worker and reviewer. Its report of what was missing or unclear is evidence for the wave, not a defect in the recipient. The CTO gives it the folder path and nothing else; the folder sits outside the repository checkout. An agent run this way is not an independent human and is never reported as one.
 
 ## When work stalls
 
-- Two attempts at the same blocker with no new information: stop. Write down the one assumption both attempts shared and question that before trying a third fix. Then the CTO simplifies the task, changes the approach or escalates with one recommendation.
+- Two attempts at the same blocker with no new information: stop. Write down the one assumption both attempts shared and question it before a third fix. Then the CTO simplifies the task, changes the approach or escalates with one recommendation.
 - A wave running at three times its size guess gets the same treatment.
 - Separate environment failures from product defects in the report. If the environment is the problem, fix the environment as its own small wave before continuing the product task.
 - Never stack unknowns. A wave that changes product code does not also introduce a new runtime, a new verification route or a new agent host.
@@ -74,7 +74,7 @@ When a wave has to choose a design nobody here has built before, do not argue it
 
 ## Resources
 
-Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. Scratch roots live outside the checkout — an in-repo `kitchen-<id>-*` makes verify refuse on a dirty tree. The owner has given standing approval (6 October 2026) to delete, at every wave close and with no test running, the items in the system temp folder named `box-d21-*`, `box-k6-*` and `kitchen-verify-pg*`, and to stop an embedded test database left by a killed verify with its own stop command: they are only ever created by this kitchen's tests. Do it without asking. After a wave closes, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
+Anything a wave creates outside Git (containers, databases, temp directories, background processes) is named `kitchen-<wave id>-...` and removed at close. Scratch roots live outside the checkout; verify refuses a dirty tree. The owner has given standing approval (6 October 2026) to delete, at every wave close and with no test running, the items in the system temp folder named `box-d21-*`, `box-k6-*` and `kitchen-verify-pg*`, and to stop an embedded test database a killed verify leaves, with its own stop command: only this kitchen's tests create them. Do it without asking. After a wave closes, `docker ps -a` shows nothing of ours. Nothing synthetic is preserved "just in case"; Git and the verify logs are the record.
 
 ## Records
 
