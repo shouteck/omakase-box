@@ -4,6 +4,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- Test time-limit flake: `tests/box/bounty/report.test.ts` > "no attempt's report carries a verdict word" ran 30.3 s and 30.7 s against its 30 s limit under three workers on this host (red twice on the BT15-ci tip; 21.2 s alone; it also timed out on 11 October). Make the test cheaper rather than raising the limit. See [BT15-ci](waves/BT15-ci.md).
 - BT15 task-text scan boundary: selected working files and newly published Git patches/includes are scanned; issue task text itself is not. External task files already had this boundary; stdin has no incidental in-repository file scan. Scanner rules were deliberately unchanged. See [BT15](waves/BT15.md).
 - BT15 UX follow-up for K20/BT17: the clean final cold agent used global usage and omitted attempted-work context from its task, despite the instruction in bounty help. It was 0/1 in the clean final trial, 1/2 across both attempted agents; the earlier trial had a disclosed wrapper failure. Stale folder/generated-note comments in look.ts, index.ts and composeNote also remain. See [BT15](waves/BT15.md).
 
