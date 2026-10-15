@@ -412,6 +412,23 @@ All fetch and push addresses must name one GitHub repository. A Git URL
 rewrite that changes that destination refuses before permission or posting.
 Remote names can change without changing the repository's identity.
 
+Several remotes. A checkout can carry more than one remote and still be
+allowed. Remotes that are not GitHub at all — a GitLab mirror, a company
+host, a plain path — are simply ignored: the tool never reads from them,
+never pushes to them, and they cannot block or fool the choice. When several
+remotes name different GitHub repositories, the owner's own list decides:
+the checkout is whichever listed repository its remotes name. If none of
+them is listed the checkout is undecided — posting waits and names each
+candidate with the exact `box bounty allow owner/name` that settles it, and
+the all-projects setting never picks one itself. If more than one is
+listed, the checkout refuses `repository-several-allowed` until all but one
+come off the list. A remote whose fetch and push addresses name two
+different GitHub repositories still refuses `github-remote-mismatch`. A yes
+still covers exactly one repository, and every push goes only to the chosen
+repository's canonical `https://github.com/owner/name.git` — while it is
+chosen, `post`, `status`, `look`, `apply` and `close` open with
+`acting on owner/name (2 GitHub remotes; the one on your list)`.
+
 The owner has three words:
 
 - `allow [owner/name]` adds a repository. Without a name it adds this

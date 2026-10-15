@@ -3,7 +3,8 @@ import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
-import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
+import { chooseRepository, repositoryAddress, repositoryChoiceLines } from './repository.js';
+import type { RemoteCandidate } from './repository.js';
 
 export const SETTINGS_FILE_NAME = 'settings.json';
 export const SETTINGS_ENV = 'BOX_BOUNTY_SETTINGS_DIR';
@@ -87,6 +88,63 @@ export interface MergeAnswer {
 }
 export const projectKey = requireRepository;
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/** The repositories the owner listed — an `allowed` or `ask` entry names a
+    repository the owner chose. A denied (`null`) or `off` entry is not on
+    the list, and the all-projects extra is never read as choosing between
+    remotes (BT16 rules 4 and 6). */
+function activeAddresses(settings: OwnerSettings): Set<string> {
+  return new Set(Object.entries(settings.repositories).filter(([, entry]) => entry.bounty === 'allowed' || entry.bounty === 'ask').map(([address]) => address));
+}
+
+/** This checkout's GitHub repository: the remotes' single candidate, or the
+    one candidate on the owner's list. `null` for no remotes and for a
+    checkout whose several candidates the list does not settle — that state
+    is *unlisted*, not a repository. The remote refusals still propagate:
+    github-remote-required, github-remote-mismatch, repository-several-allowed
+    and repository-destination-mismatch. */
+export function repositoryIdentity(root: string): string | null {
+  const choice = chooseRepository(root, activeAddresses(loadSettings()));
+  return choice?.kind === 'one' ? choice.address : null;
+}
+
+/** The checkout's repository or the named refusal — no GitHub remote at all
+    is repository-address-required; several candidates with none on the list
+    is repository-choice-needed carrying the candidate lines. */
+export function requireRepository(root: string): string {
+  const choice = chooseRepository(root, activeAddresses(loadSettings()));
+  if (choice === null) throw new BountyRefused('repository-address-required', 'this repository has no GitHub address, so it cannot be listed. Add a GitHub remote, then run box bounty allow');
+  if (choice.kind === 'unlisted') throw new BountyRefused('repository-choice-needed', `this checkout's remotes name several GitHub repositories; tell me which one it is — nothing was posted and nothing changed:\n${repositoryChoiceLines(choice.candidates).join('\n')}`);
+  return choice.address;
+}
+
+/** The several candidates when this checkout's remotes cannot be settled by
+    the owner's list — null otherwise and on any remote refusal, which the
+    gate itself names. The wait lines and nothing else need this view. */
+export function unlistedRemotes(repoRoot: string): readonly RemoteCandidate[] | null {
+  try {
+    const choice = chooseRepository(repoRoot, activeAddresses(loadSettings()));
+    return choice?.kind === 'unlisted' ? choice.candidates : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Rule 8's one line — built once here so the five commands share the
+    wording. Only a checkout whose several GitHub candidates the owner's
+    list settles earns it: with nothing on the list no remote can be the
+    chosen one, so no Git read runs. With one candidate nothing new prints. */
+export function actingOn(repoRoot: string): string | null {
+  const listed = activeAddresses(loadSettings());
+  if (listed.size === 0) return null;
+  try {
+    const choice = chooseRepository(repoRoot, listed);
+    if (choice === null || choice.kind !== 'one' || choice.candidates.length < 2) return null;
+    return `acting on ${choice.address} (${choice.candidates.length} GitHub remotes; the one on your list)`;
+  } catch {
+    return null;
+  }
+}
 const decision = (value: unknown): value is OwnerDecision | null => value === null || value === 'allowed' || value === 'ask' || value === 'off';
 const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', 'credential'];
 export function unknownSetting(name: string): never {
@@ -258,7 +316,13 @@ export function loadSettings(): OwnerSettings {
     try {
       if (isAbsolute(key) && existsSync(key)) {
         const top = gitOutcome(key, ['rev-parse', '--show-toplevel']);
-        if (top.status === 0 && realpathSync(key).toLowerCase() === realpathSync(top.stdout.trim()).toLowerCase()) address = repositoryIdentity(key);
+        if (top.status === 0 && realpathSync(key).toLowerCase() === realpathSync(top.stdout.trim()).toLowerCase()) {
+          // Never repositoryIdentity — it would recurse into loadSettings.
+          // An empty list means only a single candidate resolves, so a
+          // two-remote checkout keeps today's rule: no permission moved.
+          const choice = chooseRepository(key, new Set());
+          address = choice?.kind === 'one' ? choice.address : null;
+        }
       }
     } catch { /* no safe identity */ }
     if (address === null) {
@@ -380,9 +444,20 @@ export interface DecisionRead {
 export function readDecision(repoRoot: string): DecisionRead {
   const settings = loadSettings();
   if (Object.keys(settings.repositories).length === 0 && settings.migrations.length === 0) {
-    return settings.default === undefined ? { decision: null, level: null, at: null } : { decision: settings.default.bounty, level: 'default', at: settings.default.at };
+    if (settings.default === undefined) return { decision: null, level: null, at: null };
+    // The all-projects extra never chooses between remotes (BT16 rule 6): a
+    // checkout whose several GitHub candidates are not on the list stays
+    // undecided here. The remote read runs only on this branch, so a
+    // command that started no Git process before still starts none; a read
+    // that cannot settle keeps the default and the gate names the refusal.
+    let unlisted = false;
+    try { unlisted = chooseRepository(repoRoot, activeAddresses(settings))?.kind === 'unlisted'; }
+    catch { /* remotes that cannot name a GitHub repository keep the default */ }
+    return unlisted ? { decision: null, level: null, at: null } : { decision: settings.default.bounty, level: 'default', at: settings.default.at };
   }
-  const key = repositoryIdentity(repoRoot);
+  const choice = chooseRepository(repoRoot, activeAddresses(settings));
+  if (choice?.kind === 'unlisted') return { decision: null, level: null, at: null };
+  const key = choice?.kind === 'one' ? choice.address : null;
   const entry = key === null ? undefined : settings.repositories[key];
   if (entry !== undefined) return { decision: entry.bounty, level: 'project', at: entry.at, ...(entry.bounty === null ? { denied: true } : {}) };
   if (settings.migrations.some(notice => notice.repository === null && resolve(notice.path).toLowerCase() === resolve(repoRoot).toLowerCase())) return { decision: null, level: null, at: null };

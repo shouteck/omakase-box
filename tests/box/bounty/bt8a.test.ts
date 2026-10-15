@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allowBounty, allowRepository, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readDecision, renderConfig, renderStatus, renderSummary, settingsFile } from '../../../packages/box-bounty/index.js';
+import { allowBounty, allowRepository, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readDecision, renderConfig, renderStatus, renderSummary, repositoryIdentity, settingsFile } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
 import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
 
@@ -86,9 +86,15 @@ describe('repository authority replaces path authority', () => {
   it('a different second remote and an edited push destination cannot borrow a yes', () => {
     const root = repo();
     allowRepository(root);
-    const before = saved();
     git(root, ['remote', 'add', 'second', 'https://github.com/fork/project.git']);
-    refused(() => allowRepository(root), 'repository-address-ambiguous');
+    // BT16: several GitHub remotes resolve through the owner's list — the
+    // checkout is still owner/project, and the fork's own checkout holds no
+    // yes. Listing both is a named refusal to choose, not a borrowed one.
+    expect(repositoryIdentity(root)).toBe('owner/project');
+    expect(readDecision(repo('fork/project')).decision).toBeNull();
+    allowRepository(root, 'fork/project');
+    const before = saved();
+    refused(() => readDecision(root), 'repository-several-allowed');
     expect(saved()).toBe(before);
     git(root, ['remote', 'remove', 'second']);
     git(root, ['remote', 'set-url', '--push', 'origin', 'https://github.com/other/project.git']);

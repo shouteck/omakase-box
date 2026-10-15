@@ -3,14 +3,14 @@ import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBo
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
 import { checkInstructionFile, checkInstructionMarkers, discoverInstructions, instructionNotices, syncInstructions } from './instructions.js';
 import { checkInstructionSettingsWrite, readInstructions, writeInstructions } from './settings.js';
 import { changePublishList, publishLists } from './never-ship.js';
-import { repositoryAddress, repositoryIdentity, requireRepository } from './repository.js';
+import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
 
 export const DECISION_WORDS = {
@@ -65,18 +65,29 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   const limit = money?.rewardLimit === undefined ? previous?.rewardLimit?.amount ?? null : wholeDollars('--reward-limit', money.rewardLimit);
   if (reward > 0 && limit === null) throw new BountyRefused('reward-needs-limit', `a reward above $0 needs the most that may be promised across ${address}'s open bounties — add --reward-limit <whole dollars> or set it first: box bounty config set reward-limit <whole dollars> ${address}; nothing changed`);
   if (reward > 0 && limit !== null && limit < reward) throw new BountyRefused('limit-below-reward', `--reward-limit $${limit} sits below a $${reward} reward for ${address}; nothing changed`);
-  let currentAddress: string | null = null;
-  if (repoRoot !== null) {
-    try { currentAddress = repositoryIdentity(repoRoot); } catch { /* named addresses work outside this checkout */ }
-  }
   const words = disclosure(address, reward, limit, ask);
   const written = writeRepository(address, ask ? 'ask' : 'allowed', emitDisclosure === undefined ? undefined : () => emitDisclosure(words.join('\n')), money === undefined ? undefined : { reward, rewardLimit: limit });
+  // What this checkout now resolves to — computed after the write, because
+  // in a several-remote checkout the write is what settles the choice (BT16
+  // rule 7). A checkout whose remotes still cannot settle releases nothing.
+  let currentAddress: string | null = null;
+  let namesRemote = false;
+  if (repoRoot !== null) {
+    try {
+      namesRemote = githubRemotes(repoRoot)?.some(candidate => candidate.address === address) ?? false;
+      currentAddress = repositoryIdentity(repoRoot);
+    } catch { /* named addresses work outside this checkout */ }
+  }
   const lines = [...(emitDisclosure === undefined ? words : []), `${ask ? 'ask me each time' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
   const retiredNotice = rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
   const askNotice = askMergeNoticeLine();
   if (askNotice !== null) lines.push(askNotice);
+  // A name this checkout's remotes do not carry is still written — `allow`
+  // names any repository — but it cannot release this checkout's waits;
+  // that is said plainly (BT16 rule 7).
+  if (name !== undefined && repoRoot !== null && !namesRemote) lines.push(`${address} is not one of this checkout's remotes; nothing here was released`);
   // A named repository may be allowed from outside any checkout. Release
   // waits only when the current checkout has that same address.
   if (!ask && repoRoot !== null && currentAddress === address) {
@@ -132,6 +143,12 @@ export function allowBounty(repoRoot: string, id: string): string {
   if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed. box bounty status ${id} shows its state`);
   if (waiting.to !== 'github') throw new BountyRefused('legacy-delivery-retired', `this bounty waited for retired folder delivery; nothing changed. End it with box bounty close ${id}`);
   if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. Decide in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing changed`);
+  // A one-bounty yes cannot say which repository it covers (BT16 rule 6):
+  // in a checkout whose remotes name several GitHub repositories the list
+  // has not settled, this refuses repository-choice-needed before the
+  // answer is recorded — nothing changes, and the refusal lists the
+  // candidates and their commands.
+  requireRepository(repoRoot);
   // The answer is recorded bound to what the owner was shown before the held
   // post reruns: a wait the rerun uncovers carries it forward for the same
   // post, and a later `post` reuses it only while the published state still

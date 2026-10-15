@@ -21,8 +21,8 @@ import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js
 import { instructionNotices, syncInstructions } from './instructions.js';
 import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
-import { requireRepository } from './repository.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, rewardNoticeLine } from './settings.js';
+import { repositoryChoiceLines } from './repository.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, requireRepository, rewardNoticeLine, unlistedRemotes } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
@@ -655,6 +655,19 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
         `The owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off'} — may this one ${target === 'github' || target === undefined ? 'be posted' : 'be delivered'}? A yes or no is enough.`
       ]),
       `for you — the owner answers this one with: box bounty allow ${id}`
+    ];
+  }
+  // Several GitHub remotes and none on the owner's list (BT16 rule 6): the
+  // wait names each candidate with its remote and the one command that
+  // settles it. The one-bounty answer is not offered — a yes on this bounty
+  // alone cannot say which repository it covers.
+  const unlisted = unlistedRemotes(repoRoot);
+  if (unlisted !== null) {
+    return [
+      ...firstUseBlock(repoRoot),
+      'for you — this checkout\'s remotes name several GitHub repositories; the owner picks which one it is, and you run the matching command:',
+      ...repositoryChoiceLines(unlisted),
+      'box bounty config shows every setting and the command that changes it.'
     ];
   }
   return [
