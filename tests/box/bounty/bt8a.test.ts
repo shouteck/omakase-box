@@ -57,9 +57,12 @@ process.on('exit', () => write(process.env.BT8A_ORDER_LOG, JSON.stringify(events
     expect(events[written]?.before).toBe(previous);
     expect(saved()).not.toBe(previous);
   }
-  for (const args of [['allow', 'owner/shop', 'stray'], ['config', 'set', 'scan', 'false']]) {
+  // A stray word on allow is a usage error, exit 2 — BT18 moved argument
+  // shape out of authority-arguments; a hard-stop setting stays a named
+  // refusal, exit 3. Either way nothing is written.
+  for (const [args, status] of [[['allow', 'owner/shop', 'stray'], 2], [['config', 'set', 'scan', 'false'], 3]] as const) {
     const { previous, run, events } = observed(...args);
-    expect(run.status).toBe(3);
+    expect(run.status).toBe(status);
     expect(run.stdout).toBe('');
     expect(events.some(event => event.kind === 'settings-write')).toBe(false);
     expect(saved()).toBe(previous);
@@ -195,10 +198,19 @@ describe('the three owner words through the built CLI', () => {
   });
   it('stray arguments and unknown or hard-stop settings are named refusals with no write', () => {
     const root = repo();
-    for (const args of [['allow', 'owner/project', 'stray'], ['allow', '--yes'], ['deny', 'junk'], ['config', 'set', 'unknown', 'true'], ['config', 'set', 'never-ship', 'false']]) {
+    // BT18: unknown options and extra words are usage errors (exit 2) that
+    // name what was wrong; bad addresses and unknown or hard-stop settings
+    // stay named refusals (exit 3). Every case writes nothing.
+    for (const [args, status, needle] of [
+      [['allow', 'owner/project', 'stray'], 2, 'stray'],
+      [['allow', '--yes'], 2, '--yes'],
+      [['deny', 'junk'], 3, 'refused'],
+      [['config', 'set', 'unknown', 'true'], 3, 'refused'],
+      [['config', 'set', 'never-ship', 'false'], 3, 'refused']
+    ] as const) {
       const run = cli(root, ...args);
-      expect(run.status).toBe(3);
-      expect(run.stderr).toContain('refused');
+      expect(run.status).toBe(status);
+      expect(run.stderr).toContain(needle);
       expect(saved()).toBeNull();
     }
   });

@@ -111,6 +111,13 @@ named state: refusals print
 exit 1. `--task` is embedded verbatim, so a path the never-ship
 rules would remove is refused (`never-ship-input`).
 
+Every command reads options the same way: `--help` (or `-h`) prints that
+command's own usage on standard output and exits 0, `--name=value` is the
+same as `--name value`, and an option the command does not take is a usage
+error naming it — nothing is silently ignored. `--json` is refused by name
+(`json-not-supported`) until a command grows it. `box --version` and
+`box bounty --version` print the tool's version.
+
 With one open bounty, omit its identifier: `bounty look 1`, `bounty apply 1`,
 or `bounty status --comments`. With several, the refusal names them
 so you can choose. `status <id>` shows what needs doing first. `--full` adds
