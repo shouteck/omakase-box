@@ -44,10 +44,10 @@ The test builds its fixture under the home folder on every system, its assertion
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
+- Worker: Claude Code box-worker subagent (claude-opus-5-5) · Reviewer:
+- Commit: `50f33fb` — `tests/box/bounty/bt6b.test.ts` only: the hole-3 `~/` include test's fixture root is `mkdtempSync(join(homedir(), 'box-bt15-ci-home-include-'))` instead of `runRoot(...)`; the `finally` `rmSync` by exact path is unchanged; no assertion changed.
+- Verify: `verify 50f33fb PASS check=0 build=0 test:box-bounty=0 db=none 680s` (476 passed, 38 files), run directory `.kitchen/runs/2026-10-15T02-14-37-909Z-50f33fb`. During the run the folder `C:\Users\shout\box-bt15-ci-home-include-TFd2Ka` was observed under home; after the run no `box-bt15*` folder remained there.
 - Verdict: · Level:
-- Linux evidence:
+- Linux evidence: none from the cook. WSL on this host has only the `docker-desktop` distribution (stopped, no Node), so no Linux run was readily available without installing or changing settings; the head chef reads the hosted run after the push. On Linux `os.homedir()` and Git's `~` both read `HOME`, so the repo under `$HOME/box-bt15-ci-home-include-*` satisfies the precondition by construction.
 - Merged: · Resources removed:
 - Reflect:
