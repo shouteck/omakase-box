@@ -78,10 +78,9 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'describe-rules': { git: 2, gh: 0 },
   // BT14: the preview's `posting permission:` line reads the repository's
   // GitHub address once — one `git remote` start the fact costs.
-  // BT15 requires the create-time publication plan. Compared with the bound
-  // master fixture (18/0), that read adds 10 Git and 3 gh calls: 28/3.
-  // Other surviving ceilings stay unchanged, including the positive anchors.
-  'create': { git: 28, gh: 3 },
+  // BT20: a draft never contacts GitHub — the create-time publication plan
+  // is gone, so gh is 0 and Git drops to the measured count (15 here).
+  'create': { git: 15, gh: 0 },
   'status-drafted': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
   'close-draft': { git: 3, gh: 0 },
   'post-preview': { git: 18, gh: 3 },

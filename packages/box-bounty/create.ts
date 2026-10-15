@@ -6,8 +6,8 @@ import { BountyRefused } from './errors.js';
 import { gitOutcome, ownerGitOutcome } from './git.js';
 import { BUILTIN_RULES, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { looksBinary, previewGitHub, scanText } from './github.js';
-import type { ScanHit } from './github.js';
+import { looksBinary, scanText } from './scan.js';
+import type { ScanHit } from './scan.js';
 import { canonicalForNew, writeNewRecord } from './record.js';
 import { readDecision, repoReward, requireRepository } from './settings.js';
 import { createSnapshot } from './snapshot.js';
@@ -379,14 +379,8 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
   return { id, plan, recordPath: written.path };
 }
 
-export function createBounty(options: CreateOptions): BountyResult & { readonly publicationPreview: string } {
-  const result = finalizeBounty(planBounty(options));
-  let publicationPreview: string;
-  try {
-    publicationPreview = previewGitHub(result.plan.repoRoot, result.id).split('\nIssue title:')[0]!;
-  } catch (error) {
-    if (!(error instanceof BountyRefused)) throw error;
-    publicationPreview = `Publication plan unavailable (${error.reason}); post works it out and shows it before anything becomes public.`;
-  }
-  return { ...result, publicationPreview };
+// BT20: a draft is local — it never contacts GitHub. What posting would
+// publish is `post --preview`'s answer, computed at the moment that matters.
+export function createBounty(options: CreateOptions): BountyResult {
+  return finalizeBounty(planBounty(options));
 }

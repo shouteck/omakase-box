@@ -993,15 +993,16 @@ readable.
 
 ## The publication preview
 
-Create shows what posting would publish: the bounty branch commit, commits
-not yet pushed and which uncommitted work stays home. Never-ship removals
-are stated. No source copy or file count is written beside the project.
+`post --preview` is the only publication preview: the bounty branch commit,
+commits not yet pushed and which uncommitted work stays home, computed at
+the moment that matters — a plan worked out at create could be stale by
+post time. Never-ship removals are stated. No source copy or file count is
+written beside the project.
 
-Create still drafts when `gh` is missing, not signed in or GitHub cannot be
-reached. One line names the reason, such as `github-cli-missing`,
-`github-not-signed-in` or `github-visibility-unreadable`, and says post will
-work out and show the plan before anything becomes public. Drafting needs
-Git only. `post --preview` is the optional publication preview.
+Create drafts a local record only: it needs Git, starts no `gh` and makes
+no network call, and states nothing about what posting would publish —
+`post` works that out and shows the plan before anything becomes public.
+That holds when `gh` is missing, not signed in or GitHub cannot be reached.
 
 ## Checks were removed
 

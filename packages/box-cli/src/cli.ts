@@ -300,18 +300,15 @@ if (command === 'export') {
         ...(parsed.resume !== undefined ? { resumeNote: parsed.resume } : {})
       });
       // The contract (BT17): one line says what happened, then only facts
-      // needing attention now, then one next line. The draft preview and the
-      // publication plan are the detail — `--full` prints them.
+      // needing attention now, then one next line. The draft preview is the
+      // detail — `--full` prints it. What posting would publish is `post
+      // --preview`'s answer; create states none of it (BT20).
       const full = parsed.full === true;
       if (full) {
         console.log(renderPreview(result.plan));
-        console.log(result.publicationPreview);
       }
       const plan = result.plan;
       const lines = [`${result.id} — drafted in ${plan.repoRoot}`];
-      // The plan preview is the detail (`--full`); a preview that could not
-      // be computed at all is a fact needing attention now.
-      if (!full && result.publicationPreview.startsWith('Publication plan unavailable')) lines.push(`  ${result.publicationPreview}`);
       for (const hit of plan.scan.hits) lines.push(`  scan hit: ${hit.path}:${hit.line} — ${hit.rule}`);
       if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git would treat them as binary: ${plan.scan.binary.join(', ')}`);
       for (const entry of plan.ruleRemovals) lines.push(`  never-ship removed (${entry.rule}): ${entry.removed}`);

@@ -232,17 +232,19 @@ it('resume holds both unfinished work and the larger job without a tool length l
 }));
 
 it.each([
-  ['missing', 'github-cli-missing'],
-  ['not-signed-in', 'github-not-signed-in'],
-  ['unreachable', 'github-visibility-unreadable']
-])('create still drafts with GitHub %s and names the reason', (cause, reason) => fixture(({ repo, id, update }) => {
+  'missing',
+  'not-signed-in',
+  'unreachable'
+])('create drafts with GitHub %s, and never contacts it', (cause) => fixture(({ repo, id, state, update }) => {
   if (cause === 'not-signed-in') update({ auth: false });
   if (cause === 'unreachable') update({ fail: 'repos/' });
   const run = () => {
+    const calls = state().calls.length;
     const result = cli(repo, ['create', '--task', 'TASK.md', '--why', 'another opinion']);
     expect(result.status, result.stderr).toBe(0);
-    expect(result.stdout).toContain(`Publication plan unavailable (${reason})`);
-    expect(result.stdout).toContain('post works it out and shows it before anything becomes public');
+    // BT20: a draft is local — no publication plan, and no gh start at all.
+    expect(result.stdout).not.toContain('Publication plan');
+    expect(state().calls).toHaveLength(calls);
     const created = /(bt-[a-f0-9]{12}) — drafted/.exec(result.stdout)![1]!;
     expect(created).not.toBe(id);
     expect(loadRecord(repo, created).stage).toBe('drafted');
@@ -250,18 +252,23 @@ it.each([
   if (cause === 'missing') withoutGh(run); else run();
 }));
 
-it('create describes the same default publication as post preview and keeps uncommitted work home', () => fixture(({ repo }) => {
+it('create shows no publication plan; post --preview describes it and keeps uncommitted work home', () => fixture(({ repo }) => {
   write(repo, 'app.txt', 'uncommitted owner progress\n');
-  // The publication plan is create's detail view since BT17 — --full.
+  // The draft preview is create's detail view (--full, BT17); the
+  // publication plan is `post --preview`'s alone (BT20) — the draft names
+  // `post <id> --preview` and shows none of the plan itself.
   const created = cli(repo, ['create', '--task', 'TASK.md', '--why', 'another opinion', '--full']);
   expect(created.status, created.stderr).toBe(0);
   const id = /(bt-[a-f0-9]{12}) — drafted/.exec(created.stdout)![1]!;
+  expect(created.stdout).not.toContain('Publication plan');
+  expect(created.stdout).not.toContain('stay home');
+  expect(created.stdout).not.toContain('would ship:');
+  expect(created.stdout).toContain(`next: box bounty post ${id} (--preview shows what becomes public)`);
   const posted = cli(repo, ['post', id, '--preview']);
   expect(posted.status, posted.stderr).toBe(0);
-  const plan = posted.stdout.split('\nIssue title:')[0]!;
-  expect(created.stdout).toContain(plan);
-  expect(created.stdout).toContain('stay home');
-  expect(created.stdout).not.toContain('would ship:');
+  expect(posted.stdout).toContain('Issue title:');
+  expect(posted.stdout).toContain('stay home');
+  expect(posted.stdout).not.toContain('would ship:');
 }));
 
 it('an old folder-posted record is readable and closes offline, while collection refuses and leaves the folder alone', () => {
