@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyRefused, finalizeBounty, planBounty, renderPreview } from '../../../packages/box-bounty/index.js';
-import type { BountyManifest, CreateOptions } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, finalizeBounty, loadRecord, planBounty, renderPreview } from '../../../packages/box-bounty/index.js';
+import type { BountyResult, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { git, listTree, makeRepo, runRoot, write } from './support.js';
 
 // The create flow end to end: preview first, the folder written or a named
@@ -21,99 +21,13 @@ function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOption
     why: 'stuck after two approaches',
     title: 'make the check pass',
     taskPath: join(repo, 'TASK.md'),
-    outDir: join(runRoot('out'), 'bounty'),
     ...extra
   };
 }
 
-const readManifest = (outDir: string): BountyManifest => JSON.parse(readFileSync(join(outDir, 'bounty.json'), 'utf8')) as BountyManifest;
+const readDraft = (result: BountyResult) => ({ ...result.plan, ...loadRecord(result.plan.repoRoot, result.id).content });
 
 describe('bounty create end to end', () => {
-  it('creates a complete bounty on a Python repository', () => {
-    const repo = repoWithTask({
-      'app/main.py': 'def greet():\n    return "hi"\n',
-      'check.py': 'import sys\nsys.exit(1)\n',
-      'LICENSE': 'Apache License\nVersion 2.0\n',
-      'package.json': JSON.stringify({ name: 'fixture', license: 'Apache-2.0' }) + '\n',
-      'NOTE.md': 'I tried renaming; still red.\n'
-    });
-    const outDir = join(runRoot('out'), 'bounty');
-    const plan = planBounty(options(repo, { notePath: join(repo, 'NOTE.md'), outDir }));
-    const preview = renderPreview(plan);
-    expect(preview).toContain('would ship:');
-    expect(preview).toContain(outDir);
-    expect(preview).not.toContain('setup:');
-    expect(preview).not.toContain('level:');
-    const result = finalizeBounty(plan);
-    expect(result.id).toMatch(/^bt-[a-f0-9]{12}$/);
-    const manifest = readManifest(result.outDir);
-    expect(manifest.kind).toBe('box-bounty');
-    expect(manifest.title).toBe('make the check pass');
-    expect(manifest.task.text).toContain('Make the check pass');
-    expect(manifest.note?.text).toContain('still red');
-    // A bounty carries no command: the keys checks lived under are gone from
-    // what create writes, not merely null.
-    const raw = JSON.parse(readFileSync(join(result.outDir, 'bounty.json'), 'utf8')) as Record<string, unknown>;
-    for (const key of ['setup', 'check', 'guard', 'level', 'verification']) expect(key in raw).toBe(false);
-    expect(manifest.snapshot.commit).toMatch(/^[a-f0-9]{40}$/);
-    expect(manifest.licence).toEqual({ file: 'LICENSE', declared: 'Apache-2.0' });
-    expect(manifest.files.map(file => file.path)).toContain('app/main.py');
-    const entry = manifest.files.find(file => file.path === 'check.py');
-    expect(entry?.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(manifest.counts.files).toBe(manifest.files.length);
-    const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
-    expect(listing).toContain('# Bounty: make the check pass');
-    expect(listing.match(/^# /gm)).toHaveLength(1); // one title heading, never a duplicated one
-    expect(listing).toContain('What is wanted');
-    expect(listing).toContain('still red');
-    expect(listing).toContain('## How to answer');
-    expect(listing).toContain('reward: $0');
-    expect(listing).toContain('licence: LICENSE (package.json declares Apache-2.0)');
-    expect(listing).not.toContain('## Set up');
-    expect(listing).not.toContain('## How you know you are done');
-    expect(listing).not.toContain('· level');
-    expect(listTree(result.outDir)).toEqual(expect.arrayContaining(['README.md', 'bounty.json', 'repo/check.py', 'repo/app/main.py']));
-    // --why lives only in the record — never in bounty.json, the listing or
-    // the shipped folder — so the reasons for handing off can be learned.
-    const record = JSON.parse(readFileSync(result.recordPath, 'utf8')) as { why?: string; level?: string };
-    expect(record.why).toBe('stuck after two approaches');
-    expect(record.level).toBeUndefined(); // records carry no level either
-    expect(JSON.stringify(manifest)).not.toContain('stuck after two approaches');
-    expect(listing).not.toContain('stuck after two approaches');
-  });
-
-  it('names a licence file it finds without a package.json declaration', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n', 'LICENSE-MIT': 'MIT License\n' });
-    const result = finalizeBounty(planBounty(options(repo)));
-    expect(readManifest(result.outDir).licence).toEqual({ file: 'LICENSE-MIT', declared: null });
-    expect(readFileSync(join(result.outDir, 'README.md'), 'utf8')).toContain('licence: LICENSE-MIT');
-  });
-
-  it('refuses an out directory that is not empty', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    const outDir = join(runRoot('out'), 'bounty');
-    mkdirSync(outDir, { recursive: true });
-    write(outDir, 'stale.txt', 'left behind\n');
-    try {
-      finalizeBounty(planBounty(options(repo, { outDir })));
-      expect.unreachable('expected refusal');
-    } catch (error) {
-      expect(error).toBeInstanceOf(BountyRefused);
-      expect((error as BountyRefused).reason).toBe('out-dir-not-empty');
-    }
-    expect(readFileSync(join(outDir, 'stale.txt'), 'utf8')).toBe('left behind\n'); // untouched
-  });
-
-  it('refuses --out inside the repository, so a bounty folder can never ship inside the next', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    try {
-      planBounty(options(repo, { outDir: join(repo, 'bounty-out') }));
-      expect.unreachable('expected refusal');
-    } catch (error) {
-      expect(error).toBeInstanceOf(BountyRefused);
-      expect((error as BountyRefused).reason).toBe('out-inside-repo');
-    }
-  });
 
   it('refuses a negation line in .boxignore instead of silently ignoring it', () => {
     const repo = repoWithTask({ 'src/x.py': 'x\n', '.boxignore': '!keep-this.txt\n' });
@@ -125,21 +39,6 @@ describe('bounty create end to end', () => {
       expect((error as BountyRefused).reason).toBe('invalid-boxignore');
     }
   });
-
-  it('creates a bounty carrying no command — the listing states its facts', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    const result = finalizeBounty(planBounty(options(repo)));
-    const manifest = readManifest(result.outDir);
-    expect(manifest.licence).toEqual({ file: null, declared: null });
-    const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
-    expect(listing).toContain('licence: no licence file');
-    expect(listing).toContain('reward: $0');
-    expect(listing).toContain('## How to answer');
-    expect(listing).toContain('Nothing in an answer is ever run');
-    expect(listing).not.toContain('## Set up');
-    expect(listing).not.toContain('## How you know you are done');
-    expect(listing).not.toContain('· level');
-  });
 });
 
 describe('BT3b — fewer things to supply', () => {
@@ -147,7 +46,7 @@ describe('BT3b — fewer things to supply', () => {
     const repo = repoWithTask({ 'src/x.py': 'x\n' });
     for (const why of [undefined, '   '] as (string | undefined)[]) {
       try {
-        planBounty({ repoPath: repo, why: why ?? '', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty') });
+        planBounty({ repoPath: repo, why: why ?? '', taskPath: join(repo, 'TASK.md'), });
         expect.unreachable('expected refusal');
       } catch (error) {
         expect(error).toBeInstanceOf(BountyRefused);
@@ -159,23 +58,12 @@ describe('BT3b — fewer things to supply', () => {
   it('derives the title from the task\'s first non-empty line; --title still wins', () => {
     const repo = repoWithTask({ 'src/x.py': 'x\n' });
     write(repo, 'TASK.md', '\n\n  Make the check pass.\nwith more detail below\n');
-    const derived = planBounty({ repoPath: repo, why: 'w', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'b') });
+    const derived = planBounty({ repoPath: repo, why: 'w', taskPath: join(repo, 'TASK.md'), });
     expect(derived.title).toBe('Make the check pass.');
-    const blank = planBounty({ repoPath: repo, why: 'w', title: '   ', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'b2') });
+    const blank = planBounty({ repoPath: repo, why: 'w', title: '   ', taskPath: join(repo, 'TASK.md'), });
     expect(blank.title).toBe('Make the check pass.');
-    const given = planBounty({ repoPath: repo, why: 'w', title: 'given title', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'b3') });
+    const given = planBounty({ repoPath: repo, why: 'w', title: 'given title', taskPath: join(repo, 'TASK.md'), });
     expect(given.title).toBe('given title');
-  });
-
-  it('writes to bounties/<slug-of-title> next to the repository when --out is absent', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n' });
-    const plan = planBounty({ repoPath: repo, why: 'w', title: 'Make the check pass!', taskPath: join(repo, 'TASK.md') });
-    const expected = join(realpathSync(dirname(repo)), 'bounties', 'make-the-check-pass');
-    expect(plan.outDir).toBe(expected);
-    expect(plan.outDir.startsWith(repo)).toBe(false); // outside the checkout
-    const result = finalizeBounty(plan);
-    expect(result.outDir).toBe(expected);
-    expect(existsSync(join(expected, 'bounty.json'))).toBe(true);
   });
 
   it('composes the note from evidence when no --note is given: the files changed so far', () => {
@@ -189,16 +77,15 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const manifest = readManifest(result.outDir);
+    const manifest = readDraft(result);
     expect(manifest.note?.file).toBe('tool-written');
     const text = manifest.note?.text ?? '';
     expect(text).toContain('written by the tool');
     expect(text).toContain('src/app.py');
     expect(text).toContain('NEW.md');
     expect(text).not.toContain('.env'); // removed names never ship, even in the note
-    const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
+    const listing = loadRecord(repo, result.id).content?.note?.text ?? '';
     expect(listing).toContain('written by the tool');
   });
 
@@ -209,9 +96,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).not.toContain('matches the last commit');
     expect(text).not.toContain('id_rsa'); // the name still never ships
   });
@@ -224,9 +110,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).not.toContain('matches the last commit');
     expect(text).toContain('b.py (deleted)');
     expect(text).not.toContain('.env');
@@ -242,9 +127,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).not.toContain('only in files that do not ship'); // a.py shipped in the base — its loss is real change
     expect(text).toContain('a.py (deleted)'); // the folded-away rename source is still reported
     expect(text).not.toContain('.env'); // the rename target is a never-ship name — never inside the bounty
@@ -265,9 +149,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const manifest = readManifest(result.outDir);
+    const manifest = readDraft(result);
     expect(manifest.files.map(file => file.path)).toContain('realdir/f.py'); // it ships, canonically
     const text = manifest.note?.text ?? '';
     expect(text).toContain('realdir/f.py'); // named under the path it ships as
@@ -289,9 +172,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).toContain('a.py (deleted)'); // the spelling the owner deleted
     expect(text).not.toContain('realdir (deleted)'); // a live directory that was never deleted
     expect(text).not.toContain('only in files that do not ship');
@@ -310,9 +192,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).toContain('a.py (deleted)'); // a base-shipped file is gone — that fact must be said
     expect(text).not.toContain('only in files that do not ship'); // the false all-clear
     expect(text).not.toContain('secrets'); // the name behind the link still never ships
@@ -332,9 +213,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).toContain('dir/f.py (deleted)'); // repopulated through the link — no diff line, still gone
     expect(text).not.toContain('other/g.py'); // unchanged — the junction's new spelling is not a change
   });
@@ -353,9 +233,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const manifest = readManifest(result.outDir);
+    const manifest = readDraft(result);
     expect(manifest.files.map(file => file.path)).not.toContain('a/b.py'); // the spelling ships no more
     const text = manifest.note?.text ?? '';
     expect(text).toContain('a/b.py (deleted)'); // a base file the bounty no longer carries
@@ -376,9 +255,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).toContain('a/b.py (deleted)'); // a rule-free base spelling's loss is real
     expect(text).not.toContain('only in files that do not ship'); // the false all-clear
     expect(text).not.toContain('secrets'); // the name behind the link still never ships
@@ -400,9 +278,8 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).toContain('sub (submodule changed)');
     expect(text).not.toContain('sub (deleted)');
   });
@@ -413,26 +290,9 @@ describe('BT3b — fewer things to supply', () => {
       repoPath: repo,
       why: 'w',
       taskPath: join(repo, 'TASK.md'),
-      outDir: join(runRoot('out'), 'bounty')
     }));
-    const text = readManifest(result.outDir).note?.text ?? '';
+    const text = readDraft(result).note?.text ?? '';
     expect(text).toContain('written by the tool');
     expect(text).toContain('nothing else to report');
-  });
-
-  // Host-only (K10): junction semantics exist only on Windows — the same class
-  // the pass proved against post --to in BT2, here against --out.
-  it.skipIf(process.platform !== 'win32')('refuses --out under a junction pointing into the repository — a nonexistent tail cannot slip the check', () => {
-    const repo = repoWithTask({ 'src/x.py': 'x\n', 'target/.keep': 'x\n' });
-    const link = join(runRoot('link'), 'via-junction');
-    symlinkSync(join(repo, 'target'), link, 'junction');
-    try {
-      // link/sub does not exist — only the junction ancestor does.
-      planBounty(options(repo, { outDir: join(link, 'sub') }));
-      expect.unreachable('expected refusal');
-    } catch (error) {
-      expect(error).toBeInstanceOf(BountyRefused);
-      expect((error as BountyRefused).reason).toBe('out-inside-repo');
-    }
   });
 });

@@ -102,52 +102,6 @@ it('recognition without one receiving address saves a local notice and does not 
   expect(loadSettings().firstMerges).toEqual({});
 }, { prAuthor: 'solver', collected: true }));
 
-it('independent local-folder bounties notify once when a GitHub address is later added', () => {
-  const repo = makeRepo({ 'app.txt': 'broken\n', 'TASK.md': 'repair it\n' });
-  const scratch = runRoot('BT8a-local-merge'), deliveries = join(scratch, 'deliveries'), returned = join(scratch, 'returned');
-  changeConfig(repo, 'set', 'all-projects', 'true');
-  write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: [deliveries] }));
-  const ids: string[] = [], notices: boolean[] = [];
-  let firstCommit = '';
-  for (const n of [1, 2, 3]) {
-    if (n === 3) git(repo, ['remote', 'add', 'origin', 'https://github.com/owner/project.git']);
-    const created = cli(repo, 'create', '--task', 'TASK.md', '--why', 'independent eyes', '--title', `local repair ${n}`, '--out', join(scratch, `bounty-${n}`));
-    expect(created.status).toBe(0);
-    const id = /(bt-[a-f\d]+) — drafted/.exec(created.stdout)?.[1];
-    if (id === undefined) throw new Error('create did not name its bounty');
-    ids.push(id);
-    const resume = loadRecord(repo, id).resume;
-    expect(resume?.kind).toBe('recorded');
-    if (resume?.kind === 'recorded') expect(resume.changed.some(path => path.startsWith('.box/bounties/'))).toBe(false);
-    expect(cli(repo, 'post', id, '--to', deliveries).status).toBe(0);
-    cpSync(join(deliveries, id), join(returned, String(n)), { recursive: true });
-    expect(existsSync(join(deliveries, id, 'repo', '.box', 'bounties', 'FIRST_MERGE'))).toBe(false);
-    write(join(returned, String(n)), 'repo/app.txt', `fixed ${n}\n`);
-    expect(cli(repo, 'look', id, '--from', join(returned, String(n))).status).toBe(0);
-    const applied = cli(repo, 'apply', id, '1');
-    const commit = git(repo, ['rev-parse', 'HEAD']);
-    expect(applied.status).toBe(0);
-    notices.push(applied.stdout.includes('Tell the owner'));
-    if (n === 1) {
-      firstCommit = commit;
-      expect(applied.stdout).toContain(`was merged into this local repository, commit ${commit}`);
-      expect(applied.stdout).toContain('receiving GitHub address could not be determined');
-    }
-    expect(loadRecord(repo, id).stage).toBe('applied');
-  }
-  expect(new Set(ids).size).toBe(3);
-  expect(notices).toEqual([true, false, false]);
-  const marker = JSON.parse(readFileSync(join(repo, '.box', 'bounties', 'FIRST_MERGE'), 'utf8'));
-  expect(marker).toMatchObject({ kind: 'box-local-first-merge', repository: repo, commit: firstCommit });
-  const status = cli(repo, 'status');
-  expect(status.status).toBe(0);
-  expect(status.stdout).toContain(`first outside solution merged in local repository ${JSON.stringify(repo)}: commit ${firstCommit}`);
-  expect(status.stdout).not.toContain('corrupt');
-  expect(renderConfig(repo)).toContain(`commit ${firstCommit}`);
-  expect(loadSettings().firstMerges).toEqual({});
-  expect(loadSettings().repositories).toEqual({});
-});
-
 it.each([false, true])('a foreign or malformed local marker is preserved after apply with readable address %s', readable => postedFixture(({ repo, id }) => {
   if (!readable) git(repo, ['remote', 'remove', 'origin']);
   const marker = join(repo, '.box', 'bounties', 'FIRST_MERGE');

@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -32,6 +33,41 @@ process.once('exit', cleanupOwned);
 // settings dir instead (github-fixture.ts rebinds the variable).
 export const ownerSettingsRoot = runRoot('bt8-owner-settings');
 process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;
+// Create's optional publication preview must never turn a standalone scratch
+// fixture into a real GitHub call. Owned stand-in executables live under the
+// test root and are registered only while their fixture context is active.
+const networkGuard = join(runRoot('BT15-no-network'), 'guard.cjs');
+writeFileSync(networkGuard, String.raw`
+const cp = require('node:child_process');
+const paths = require('node:path');
+const original = cp.spawnSync;
+cp.spawnSync = function(program, args, options) {
+  const path = String(program).split(String.fromCharCode(92)).join('/');
+  const values = Array.isArray(args) ? args.map(String) : [];
+  const env = options && options.env ? options.env : process.env;
+  const registered = env.BT15_GH_PROGRAM;
+  const canonical = value => {
+    const absolute = paths.resolve(value);
+    return process.platform === 'win32' ? absolute.toLowerCase() : absolute;
+  };
+  const ownedGh = registered !== undefined && paths.isAbsolute(String(program)) && canonical(String(program)) === canonical(registered);
+  const realGh = /(?:^|\/)gh(?:\.exe|\.cmd)?$/i.test(path) && !ownedGh;
+  const shellGh = /(?:^|\/)(?:cmd(?:\.exe)?|powershell(?:\.exe)?|pwsh(?:\.exe)?|sh|bash)$/i.test(path) && /\bgh(?:\.exe|\.cmd)?\b/i.test(values.join(' '));
+  const realGitHub = /(?:^|\/)git(?:\.exe)?$/i.test(path) && values.some(value => ['clone', 'fetch', 'push', 'ls-remote'].includes(value)) && values.some(value => /(?:https:\/\/|git@)github\.com[\/:]/i.test(value));
+  if (realGh || shellGh || realGitHub) {
+    return { pid: 0, output: [null, '', 'real GitHub disabled in bounty tests'], stdout: '', stderr: 'real GitHub disabled in bounty tests', status: 1, signal: null };
+  }
+  return original.apply(this, arguments);
+};
+require('node:module').syncBuiltinESMExports();
+`);
+createRequire(import.meta.url)(networkGuard);
+const previousNodeOptions = process.env['NODE_OPTIONS'];
+process.env['NODE_OPTIONS'] = `${previousNodeOptions ?? ''} --require ${networkGuard.replaceAll('\\', '/')}`.trim();
+afterAll(() => {
+  if (previousNodeOptions === undefined) delete process.env['NODE_OPTIONS'];
+  else process.env['NODE_OPTIONS'] = previousNodeOptions;
+});
 beforeEach(() => {
   rmSync(join(ownerSettingsRoot, 'settings.json'), { force: true });
   if (process.env['BOX_BOUNTY_SETTINGS_DIR'] !== ownerSettingsRoot) process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;

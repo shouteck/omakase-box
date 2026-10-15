@@ -1,3 +1,4 @@
+import { postToGitHub, collectPullRequest, applyGitHub, closeGitHub, statusGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -14,7 +15,7 @@ import { CLI_DIST, git, listTree, makeRepo, ownerSays, runRoot, write } from './
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty'), ...extra };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), ...extra };
 }
 
 function created(repo: string) {
@@ -48,8 +49,8 @@ describe('the bounty record', () => {
     expect(record.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(record.snapshot.commit).toBe(result.plan.snapshot.commit);
     expect(record.snapshot.tree).toBe(result.plan.snapshot.tree);
-    expect(record.folder).toBe(result.outDir);
-    expect(record.folder).toMatch(/^[A-Za-z]:[/\\]|^\//); // absolute
+    expect(record.folder).toBeUndefined();
+    expect(record.content?.task.text).toBe('the task\n');
     expect(record.events).toEqual([{ stage: 'drafted', at: record.createdAt }]);
     // The durability ref pins snapshot.commit: gc --prune=now cannot take it.
     expect(git(repo, ['rev-parse', `refs/box-bounty/${result.id}`])).toBe(result.plan.snapshot.commit);
@@ -61,8 +62,8 @@ describe('the bounty record', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const first = created(repo);
     expect(existsSync(join(repo, '.box', 'bounties', `${first.id}.json`))).toBe(true);
-    const second = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'bounty2') })));
-    const shipped = listTree(join(second.outDir, 'repo'));
+    const second = finalizeBounty(planBounty(options(repo, { })));
+    const shipped = second.plan.files.map(file => file.path);
     expect(shipped.some(path => path.startsWith('.box/'))).toBe(false);
     expect(shipped.some(path => path.includes(first.id))).toBe(false);
     // The removal is accounted under the new built-in rule (names shown only in
@@ -75,7 +76,7 @@ describe('the bounty record', () => {
 
   it('status says what to do on an empty project — never nothing', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const status = renderStatus(resolveRepoRoot(repo));
+    const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain('no open bounties');
     expect(status).toContain('box bounty create');
     expect(status).toContain('ended: none');
@@ -84,14 +85,14 @@ describe('the bounty record', () => {
   it('status lists every open bounty with id, stage and next step; ended are a compact line', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const open = created(repo);
-    const second = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b2') })));
-    const closed = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b3') })));
-    closeBounty(repo, closed.id);
-    const status = renderStatus(resolveRepoRoot(repo));
+    const second = finalizeBounty(planBounty(options(repo, { })));
+    const closed = finalizeBounty(planBounty(options(repo, { })));
+    closeGitHub(repo, closed.id);
+    const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain('2 open');
     expect(status).toContain(`${open.id}  drafted`);
     expect(status).toContain(`${second.id}  drafted`);
-    expect(status).toContain(`box bounty post ${open.id} --to <dir|github>`);
+    expect(status).toContain(`box bounty post ${open.id}`);
     expect(status).toContain('owner: nothing written');
     expect(status).toContain(`ended: ${closed.id} withdrawn`);
   });
@@ -106,7 +107,7 @@ describe('the bounty record', () => {
     older.stage = 'undone';
     older.events = [...older.events, { stage: 'undone' as BountyRecord['stage'], at: new Date().toISOString() }];
     writeFileSync(file, JSON.stringify(older, null, 2) + '\n');
-    const status = renderStatus(resolveRepoRoot(repo));
+    const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`ended: ${id} undone`);
     expect(status).toContain(`box bounty status ${id} --full`);
     expect(status).toContain('box bounty create --task <file>');
@@ -128,7 +129,7 @@ describe('the owner\'s written yes — the gate every post passes once', () => {
     older.stage = 'confirmed';
     older.events = [...older.events, { stage: 'confirmed' as BountyRecord['stage'], at: new Date().toISOString(), command: 'confirm' }];
     writeFileSync(file, JSON.stringify(older, null, 2) + '\n');
-    const { record } = postBounty(repo, id, join(runRoot('dest'), 'inbox'));
+    const { record } = postToGitHub(repo, id);
     expect(record.stage).toBe('posted');
     expect(record.allowedBy?.decision).toBe('once');
     expect(readRecord(repo, id).events.map(event => event.stage)).toEqual(['drafted', 'confirmed', 'posted']);
@@ -137,7 +138,7 @@ describe('the owner\'s written yes — the gate every post passes once', () => {
   it('refuses an unknown id by name, whatever the owner wrote', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     ownerSays(repo, 'allowed');
-    expectRefusal(() => postBounty(repo, 'bt-000000000000', join(runRoot('dest'), 'inbox')), 'unknown-bounty');
+    expectRefusal(() => postToGitHub(repo, 'bt-000000000000'), 'unknown-bounty');
   });
 });
 
@@ -145,76 +146,8 @@ describe('post — gated first delivery to a local folder', () => {
   it('holds the first post when the owner has not decided: owner-allow-needed', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    const refusal = expectRefusal(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'owner-allow-needed');
+    const refusal = expectRefusal(() => postToGitHub(repo, id), 'owner-allow-needed');
     expect(loadRecord(repo, id).stage).toBe('waiting');
-  });
-
-  it('copies the bounty folder to <dir>/<id> and marks the record posted with the destination', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, outDir } = created(repo);
-    ownerSays(repo, 'allowed');
-    const inbox = join(runRoot('dest'), 'inbox');
-    const { record, destination } = postBounty(repo, id, inbox);
-    expect(destination).toBe(join(inbox, id));
-    expect(existsSync(join(destination, 'bounty.json'))).toBe(true);
-    expect(existsSync(join(destination, 'repo', 'src', 'app.py'))).toBe(true);
-    // Copy, not move: the recorded folder is still where create wrote it.
-    expect(existsSync(join(outDir, 'bounty.json'))).toBe(true);
-    expect(record.stage).toBe('posted');
-    const onDisk = readRecord(repo, id);
-    expect(onDisk.events.map(event => event.stage)).toEqual(['drafted', 'posted']);
-    expect(onDisk.events[1]!.destination).toBe(destination);
-  });
-
-  it('refuses a destination inside the repository, by name', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id } = created(repo);
-    ownerSays(repo, 'allowed');
-    const refusal = expectRefusal(() => postBounty(repo, id, join(repo, 'delivered')), 'destination-inside-repo');
-    expect(refusal.message).toContain('inside the repository');
-  });
-
-  it('refuses a destination that already exists, by name', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id } = created(repo);
-    ownerSays(repo, 'allowed');
-    const inbox = join(runRoot('dest'), 'inbox');
-    mkdirSync(join(inbox, id), { recursive: true });
-    expectRefusal(() => postBounty(repo, id, inbox), 'destination-exists');
-  });
-
-  it('refuses when the recorded folder is gone, by name', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, outDir } = created(repo);
-    ownerSays(repo, 'allowed');
-    rmSync(outDir, { recursive: true, force: true });
-    const refusal = expectRefusal(() => postBounty(repo, id, join(runRoot('dest'), 'inbox')), 'folder-missing');
-    expect(refusal.message).toContain(outDir);
-  });
-
-  it('refuses when the recorded folder\'s bounty.json names a different id', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const first = created(repo);
-    const second = finalizeBounty(planBounty(options(repo, { outDir: join(runRoot('out'), 'b2') })));
-    ownerSays(repo, 'allowed');
-    // Point the first record at the second bounty's folder — not the bounty it names.
-    const path = join(repo, '.box', 'bounties', `${first.id}.json`);
-    const tampered = { ...readRecord(repo, first.id), folder: second.outDir };
-    writeFileSync(path, JSON.stringify(tampered, null, 2) + '\n');
-    expectRefusal(() => postBounty(repo, first.id, join(runRoot('dest'), 'inbox')), 'folder-mismatch');
-  });
-
-  // Host-only (K10): junction semantics exist only on Windows — the residual
-  // the pass proved in BT2: a nonexistent --to under a junction used to land
-  // inside the repository because only an existing --to was realpathed.
-  it.skipIf(process.platform !== 'win32')('refuses a nonexistent --to under a junction pointing into the repository', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n', 'inbox/.keep': 'x\n' });
-    const { id } = created(repo);
-    ownerSays(repo, 'allowed');
-    const link = join(runRoot('link'), 'via-junction');
-    symlinkSync(join(repo, 'inbox'), link, 'junction');
-    // link/sub does not exist — its nearest existing ancestor is the junction.
-    expectRefusal(() => postBounty(repo, id, join(link, 'sub')), 'destination-inside-repo');
   });
 });
 
@@ -222,15 +155,15 @@ describe('close — ends an open bounty cleanly', () => {
   it('ends any open stage, removes the durability ref, and repeats as a named state', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
-    const first = closeBounty(repo, id);
+    const first = closeGitHub(repo, id);
     expect(first.outcome).toBe('withdrawn');
     expect(readRecord(repo, id).stage).toBe('withdrawn');
     expect(readRecord(repo, id).events.map(event => event.stage)).toEqual(['drafted', 'withdrawn']);
     const ref = spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${id}`], { encoding: 'utf8' });
     expect(ref.status).not.toBe(0); // the ref is gone; gc may now prune the snapshot
-    const second = closeBounty(repo, id);
+    const second = closeGitHub(repo, id);
     expect(second.outcome).toBe('already-ended'); // a named state, not an error
-    const status = renderStatus(resolveRepoRoot(repo));
+    const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain('no open bounties');
     expect(status).toContain(`${id} withdrawn`);
   });
@@ -239,8 +172,8 @@ describe('close — ends an open bounty cleanly', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id } = created(repo);
     ownerSays(repo, 'allowed');
-    postBounty(repo, id, join(runRoot('dest'), 'inbox'));
-    expect(closeBounty(repo, id).outcome).toBe('withdrawn');
+    postToGitHub(repo, id);
+    expect(closeGitHub(repo, id).outcome).toBe('withdrawn');
     expect(loadRecord(repo, id).stage).toBe('withdrawn');
   });
 });
@@ -260,26 +193,6 @@ describe('box bounty lifecycle (built cli)', () => {
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('no open bounties');
     expect(run.stdout).toContain('box bounty create');
-  });
-
-
-  it('typed `confirm` exits 3 as command-removed; an allowed post --to <dir> delivers through the CLI', () => {
-    need();
-    const repo = makeRepo({ 'src/app.py': 'x\n', 'TASK.md': 'the task\n' });
-    const out = join(runRoot('out'), 'bounty');
-    const create = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md', '--out', out]);
-    const id = /bt-[a-f0-9]{12}/.exec(create.stdout)![0];
-    const gone = cli(repo, ['bounty', 'confirm', id]);
-    expect(gone.status).toBe(3);
-    expect(gone.stderr).toContain('command-removed');
-    expect(gone.stderr).toContain('box bounty post');
-    ownerSays(repo, 'allowed');
-    const inbox = join(runRoot('dest'), 'inbox');
-    const post = cli(repo, ['bounty', 'post', id, '--to', inbox]);
-    expect(post.status).toBe(0);
-    expect(post.stdout).toContain('— posted —');
-    expect(post.stdout).toContain('allowed by');
-    expect(existsSync(join(inbox, id, 'bounty.json'))).toBe(true);
   });
 });
 

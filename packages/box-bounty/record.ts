@@ -14,7 +14,7 @@
 // `close` removes the ref.
 
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
@@ -22,8 +22,6 @@ import { instructionNotices, syncInstructions } from './instructions.js';
 import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import { requireRepository } from './repository.js';
-import { renderListing } from './create.js';
-import type { BountyManifest } from './manifest.js';
 import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, rewardNoticeLine } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
@@ -140,8 +138,8 @@ export interface WaitingFor {
 
 // One pre-publish scan finding kept on the record (BT8c): what was flagged,
 // where the scan ran, and what happened — the bounty went out (the content
-// changed, the flagged path is on safe to publish, or a folder post carried
-// it out unchecked) or it ended without posting.
+// changed or the flagged path is on safe to publish) or it ended without
+// posting. Old records retain their already-written settlement text.
 // `settled` starts null while the finding is live; settling rewrites only
 // that marker — the hits themselves are never edited.
 export interface ScanFinding {
@@ -162,11 +160,10 @@ export function recordScanFinding(record: BountyRecord, hits: readonly { readonl
 
 // Settle every live finding with what happened — the bounty went out, or it
 // ended without posting. The wording claims only what was verified: a GitHub
-// post ran the scan again, so it can say the flagged content changed; a
-// folder post runs no scan, so it can only say the content went out
-// unchecked. When every flagged path is on safe to publish the record says
+// post ran the scan again, so it can say the flagged content changed.
+// When every flagged path is on safe to publish the record says
 // the list's state — a local file write, so who wrote it is not claimed.
-export function settleScanFindings(repoRoot: string, record: BountyRecord, settled: 'went-out' | 'went-out-unchecked' | 'ended'): void {
+export function settleScanFindings(repoRoot: string, record: BountyRecord, settled: 'went-out' | 'ended'): void {
   const live = (record.scanFindings ?? []).filter(finding => finding.settled === null);
   if (live.length === 0) return;
   let text: string;
@@ -175,10 +172,8 @@ export function settleScanFindings(repoRoot: string, record: BountyRecord, settl
     const safe = publishLists(repoRoot).safe;
     if (live.every(finding => finding.hits.every(hit => publishListed(safe, hit.path)))) {
       text = 'the flagged path is on safe to publish — the bounty went out';
-    } else if (settled === 'went-out') {
-      text = 'the flagged content changed — the bounty went out';
     } else {
-      text = 'the bounty went out to a folder — the scan does not run on a folder post, so the flagged content was not re-checked';
+      text = 'the flagged content changed — the bounty went out';
     }
   }
   for (const finding of live) finding.settled = text;
@@ -234,7 +229,8 @@ export interface BountyRecord {
   stage: BountyStage; // the latest event's stage, denormalized for a one-glance read
   /** Absolute path of the bounty folder `create` wrote. The record lives on the
       machine that made the bounty, so an absolute path is honest. */
-  readonly folder: string;
+  readonly folder?: string;
+  readonly content?: { readonly task: { readonly file: string; readonly text: string }; readonly note: { readonly file: string; readonly text: string } | null; readonly tool: string };
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly createdAt: string;
   /** Every answer handed back, oldest first — each with its extracted change,
@@ -297,10 +293,8 @@ export interface RecordSeed {
   readonly title: string;
   readonly why?: string;
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
-  readonly folder: string;
+  readonly content: { readonly task: { readonly file: string; readonly text: string }; readonly note: { readonly file: string; readonly text: string } | null; readonly tool: string };
   readonly createdAt: string;
-  readonly job?: { readonly file: string; readonly text: string } | null;
-  readonly manifestSha256?: string;
   readonly scanFindings?: ScanFinding[];
 }
 
@@ -374,12 +368,16 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   const record = parsed as BountyRecord;
   if (record === null || typeof record !== 'object') return null;
   if (record.kind !== 'box-bounty-record' || typeof record.id !== 'string') return null;
-  if (typeof record.stage !== 'string' || !Array.isArray(record.events) || typeof record.folder !== 'string') return null;
+  if (typeof record.stage !== 'string' || !Array.isArray(record.events) || record.folder !== undefined && typeof record.folder !== 'string') return null;
   if (record.noteSource !== undefined && record.noteSource !== 'authored' && record.noteSource !== 'generated' && record.noteSource !== 'legacy') return null;
   if (record.scanFindings !== undefined && !Array.isArray(record.scanFindings)) return null;
   const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
   const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(entry => typeof entry === 'string');
   if (record.resume !== undefined && (!object(record.resume) || record.resume.kind !== 'not-recorded' && (record.resume.kind !== 'recorded' || typeof record.resume.branch !== 'string' || typeof record.resume.commit !== 'string' || !strings(record.resume.changed) || record.resume.note !== null && typeof record.resume.note !== 'string'))) return null;
+  if (record.content !== undefined) {
+    const text = (value: unknown): boolean => object(value) && typeof value['file'] === 'string' && typeof value['text'] === 'string';
+    if (!object(record.content) || !text(record.content.task) || record.content.note !== null && !text(record.content.note) || typeof record.content.tool !== 'string') return null;
+  }
   record.resume ??= { kind: 'not-recorded' };
   record.noteSource ??= 'legacy';
   // Every field the tool prints back out of a record — the open-bounties
@@ -459,6 +457,9 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
       .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'box bounty config')
       .replace(/retry box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `retry box bounty close ${record.id}`)
       .replace(/local (?:undo|reject|withdraw) stands/g, 'local close stands')
+      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `box bounty close ${record.id}`)
+      .replace(/ --to github\b/g, '')
+      .replace(/box bounty post [^\n;]*--to (?!github\b)[^\n;]*/g, `box bounty close ${record.id}`)
       .replace(/box bounty (?:undo|reject|withdraw|answer|questions|reply|remind)\b[^\n;]*/, `box bounty close ${record.id}`);
   }
   // `outside.answers` is the same kind of stored tool text — the listing
@@ -470,6 +471,8 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     const answers = record.github.outside.answers
       .replace(/box bounty owner answer (\S+)/g, 'box bounty allow $1')
       .replace(/box bounty owner (?:setup|allow|ask|off|on|summary)\b[^\n;]*/g, 'box bounty config')
+      .replace(/box bounty (?:look|apply) [^\n;]*--from[^\n;]*/g, `box bounty close ${record.id}`)
+      .replace(/ --to github\b/g, '')
       .replace(/box bounty answer (\S+) --pr (\d+)/g, 'box bounty look $1 $2 or box bounty apply $1 $2')
       .replace(/box bounty (?:answer|questions|reply|undo|reject|withdraw|remind)\b[^\n;]*/g, `box bounty status ${record.id}`);
     if (answers !== record.github.outside.answers) {
@@ -512,10 +515,8 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     resume: seed.resume ?? { kind: 'not-recorded' },
     noteSource: seed.noteSource ?? 'legacy',
     ...(seed.why !== undefined ? { why: seed.why } : {}),
-    ...(seed.job !== undefined ? { job: seed.job } : {}),
-    ...(seed.manifestSha256 !== undefined ? { manifestSha256: seed.manifestSha256 } : {}),
     stage: 'drafted',
-    folder: seed.folder,
+    content: seed.content,
     snapshot: { ...seed.snapshot },
     createdAt: seed.createdAt,
     ...(seed.scanFindings !== undefined && seed.scanFindings.length > 0 ? { scanFindings: seed.scanFindings } : {}),
@@ -574,36 +575,22 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
 const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
 
 const nextStep = (record: BountyRecord): string => {
+  if (record.github !== undefined && record.github.kind !== 'history'
+    || record.github === undefined && ['posted', 'taken', 'answered', 'verified'].includes(record.stage)
+    || record.waiting?.for === 'post' && record.waiting.to !== undefined && record.waiting.to !== 'github') {
+    return `this delivery route was retired; end it with box bounty close ${record.id}`;
+  }
   switch (record.stage) {
-    case 'drafted': return `deliver it — run box bounty post ${record.id} --to <dir|github> (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`;
-    case 'confirmed': return `deliver it — run box bounty post ${record.id} --to <dir>`;
+    case 'drafted':
+    case 'confirmed': return `deliver it — run box bounty post ${record.id} (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`;
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
-    case 'posted': {
-      if (record.github !== undefined) return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges; box bounty status ${record.id} --comments reads other accounts' comments`;
-      const count = attemptsOf(record).length;
-      if (count === 0) return `wait for the solver — when the bounty folder comes back, collect it with box bounty look ${record.id} --from <dir> to read it, or box bounty apply ${record.id} --from <dir> to merge it`;
-      return `the bounty is still open with ${count} recorded ${count === 1 ? 'attempt' : 'attempts'} — collect another return with box bounty apply ${record.id} --from <dir>, or end it with box bounty close ${record.id}`;
-    }
+    case 'posted': return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges; box bounty status ${record.id} --comments reads other accounts' comments`;
     case 'taken': return 'a solution is being read against the snapshot it was made for — run box bounty status again in a moment';
     case 'answered':
     case 'verified': {
       const conflicts = record.conflicts?.paths;
-      if (record.github !== undefined) {
-        if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
-        return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty status ${record.id} --full for reports and history`;
-      }
-      if (conflicts !== undefined && conflicts.length > 0) {
-        return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
-      }
-      const applicable = applicableAttempts(attemptsOf(record));
-      if (applicable.length === 0) {
-        return `no attempt has a usable result — name one anyway with box bounty apply ${record.id} <n>, or end the bounty with box bounty close ${record.id} --reason "<why>"`;
-      }
-      if (applicable.length === 1) {
-        const n = applicable[0]!.n;
-        return `attempt ${n} waits on a decision — run box bounty apply ${record.id} ${n} to merge it onto the current code, or box bounty close ${record.id} --reason "<why>"`;
-      }
-      return `attempts ${applicable.map(attempt => `#${attempt.n}`).join(' and ')} could be applied — pick one with box bounty apply ${record.id} <n>, or end it with box bounty close ${record.id} --reason "<why>"`;
+      if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
+      return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty close ${record.id} to end it; box bounty status ${record.id} --full for reports and history`;
     }
     default: return 'ended — nothing to do';
   }
@@ -657,14 +644,13 @@ export function firstUseBlock(repoRoot: string): string[] {
 // `box bounty allow`/`deny`, plainly named.
 export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: DecisionRead): string[] {
   const id = record.id;
+  if (record.waiting?.to !== undefined && record.waiting.to !== 'github') return [`This delivery route was retired; end it with box bounty close ${id}`];
   if (read.decision === 'ask' || read.decision === 'off') {
     const target = record.waiting?.to;
     const { amount } = repoReward(repoRoot);
     return [
       ...ownerBlock([
-        target === 'github' || target === undefined
-          ? `A bounty named "${record.title}" is ready to post publicly on GitHub under your account.`
-          : `A bounty named "${record.title}" is ready to be delivered to the folder ${target}.`,
+        `A bounty named "${record.title}" is ready to post publicly on GitHub under your account.`,
         `Each bounty on this repository states $${amount}, a promise in your name that you pay by hand.`,
         `The owner ${read.decision === 'ask' ? 'asked to be asked each time' : 'turned the permission off'} — may this one ${target === 'github' || target === undefined ? 'be posted' : 'be delivered'}? A yes or no is enough.`
       ]),
@@ -1026,22 +1012,23 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
 export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
-    'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues. Local folders remain available.',
-    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --to github --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
+    'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
     '',
     'the journey (what each command does → the stage it leaves):',
-    '  create    snapshot the repository minus never-ship files, with the task and a note; prints the preview → drafted',
-    '  post      first delivery: copies the folder to --to <dir>/<id>, or publishes the GitHub issue and branch → posted — or waits on the owner',
+    '  create    save the task and private context, snapshot the working state and preview publication → drafted',
+    '  post      publishes the GitHub issue and branch → posted — or waits on the owner',
     '  status    every open bounty, the pull requests waiting, the attempts and the next step; --comments prints comments written by others, marked as theirs',
-    '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; a returned folder goes to --from <dir>; --full prints a large change',
-    '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request; --from <dir> collects a returned folder — the recorded decision → applied',
+    '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change',
+    '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request — the recorded decision → applied',
     '  close [id]  end a bounty with nothing merged; --reason "<why>" stays on the record → rejected, without it → withdrawn',
     '  hook      owner-opt-in awareness at session moments: on --host <name> prints the full disclosure and changes nothing until run again with the flag it names; off removes it; start|pause|finish is the command a host entry runs',
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  help      this screen',
     '',
-    '  create needs only judgement: --task <file> and --why "<one line>" — title, place to write and the hand-off note have defaults.',
-    '  create --resume "<short note>" saves private job context. With one open bounty, commands accept no id.',
+    '  create --task <file|-> --why "<one line>" [--title "<text>"] [--resume "<context>"] [--repo <path>]',
+    '  The task is a file describing what needs doing, written for the solver; code is included automatically. "-" reads standard input.',
+    '  Put what you tried in the task. --resume saves private context for unfinished work and the larger job. With one open bounty, commands accept no id.',
     '  status [id] shows the next action; --full adds history and the full reports.',
     '',
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
@@ -1119,9 +1106,8 @@ const toPosix = (path: string): string => path.split('\\').join('/');
 
 // The canonical path a not-yet-existing target will land at: walk up to the
 // nearest EXISTING ancestor, realpath it, then re-append the missing tail. A
-// junction at any existing level resolves to its real location, so a --to or
-// --out spelling under a junction pointing into the repository can no longer
-// slip an inside-the-repo destination past the containment checks.
+// junction at any existing level resolves to its real location, so task-file
+// classification uses the actual location even when the final file is missing.
 export function canonicalForNew(target: string): string {
   const tail: string[] = [];
   let cursor = target;
@@ -1204,82 +1190,15 @@ export function ownerGate(repoRoot: string, record: BountyRecord, action: { for:
   );
 }
 
-export function postBounty(repoRoot: string, id: string, toDir: string, opts?: { answered?: boolean; choice?: import('./github.js').GitHubChoice }): { record: BountyRecord; destination: string } {
-  if (toDir === 'github') return postGitHub(repoRoot, id, opts);
-  const record = loadRecord(repoRoot, id);
-  // A `confirmed` record carries the owner's own written yes from before the
-  // decision moved to the settings folder — it stands. `drafted` and
-  // `waiting` go through the owner gate below.
-  const confirmed = record.stage === 'confirmed';
-  if (record.stage !== 'confirmed' && record.stage !== 'drafted' && record.stage !== 'waiting') {
-    throw new BountyRefused('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted`);
+export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./github.js').GitHubChoice }): { record: BountyRecord; destination: string } {
+  if (to !== 'github') throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
+  return postGitHub(repoRoot, id, opts);
+}
+
+export function requireCurrentDelivery(record: BountyRecord): void {
+  if (record.github !== undefined && record.github.kind !== 'history' || record.github === undefined && ['posted', 'taken', 'answered', 'verified'].includes(record.stage)) {
+    throw new BountyRefused('legacy-delivery-retired', `this bounty used a retired delivery route; its history is still readable. End it with box bounty close ${record.id}`);
   }
-  // A project file cannot name money or publish lists — claims are refused
-  // by name before anything else, so a refused post writes nothing.
-  checkProjectClaims(repoRoot);
-  // The amount in force at posting is what the record binds and the listing
-  // states (BT11a) — checked before anything else so a refused post writes
-  // nothing: no wait, no record change, no folder copy.
-  const reward = rewardForPost(repoRoot);
-  if (!confirmed && opts?.answered !== true) ownerGate(repoRoot, record, { for: 'post', to: toDir });
-  if (!existsSync(record.folder) || !statSync(record.folder).isDirectory()) {
-    throw new BountyRefused('folder-missing', `the recorded bounty folder ${record.folder} is gone — recreate it with box bounty create, or run box bounty close ${id} to end this bounty`);
-  }
-  const manifestBytes = readFileSync(join(record.folder, 'bounty.json'));
-  let manifestId: string | null = null;
-  let manifest: BountyManifest | null = null;
-  try {
-    const parsed = JSON.parse(manifestBytes.toString('utf8')) as { id?: unknown };
-    manifestId = typeof parsed.id === 'string' ? parsed.id : null;
-    manifest = parsed as BountyManifest;
-  } catch {
-    manifestId = null;
-  }
-  if (manifestId !== id) {
-    throw new BountyRefused('folder-mismatch', `${join(record.folder, 'bounty.json')} does not name bounty ${id} — the recorded folder is not the bounty it should deliver`);
-  }
-  const dest = resolve(toDir);
-  const destReal = canonicalForNew(dest);
-  if (existsSync(destReal) && !statSync(destReal).isDirectory()) {
-    throw new BountyRefused('destination-exists', `--to ${toDir} resolves to ${destReal}, which exists and is not a directory — point --to at a directory the bounty can be copied into`);
-  }
-  const destination = join(destReal, id);
-  // The delivered copy must never sit inside the repository: it would ship
-  // inside the next bounty. realpath the --to dir so a junction spelling
-  // pointing back into the checkout cannot slip past the containment check.
-  const rootKey = `${toPosix(realpathSync(repoRoot)).toLowerCase()}/`;
-  const destKey = `${toPosix(destination).toLowerCase()}/`;
-  if (destKey.startsWith(rootKey)) {
-    throw new BountyRefused('destination-inside-repo', `--to ${toDir} would put ${destination} inside the repository — a delivered copy there would ship inside the next bounty. Point --to outside the checkout`);
-  }
-  if (existsSync(destination)) {
-    throw new BountyRefused('destination-exists', `${destination} already exists — a delivered copy is never overwritten. Remove it or pick another --to`);
-  }
-  // Every refusal is behind us — a refused post changed nothing, the draft's
-  // README included. The limit is re-checked inside the promise lock at the
-  // moment the record binds: the check and the write are one span, so two
-  // posts running at once cannot both pass. A $0 post promises nothing, so it
-  // never takes the lock (BT11a fix round).
-  const bind = () => {
-    assertPromiseRoom(repoRoot, reward.amount);
-    record.reward = { amount: reward.amount };
-    // The listing states the amount bound now — rewritten whenever the manifest
-    // parses as this bounty, so an edited bounty.json or README can never ship
-    // a money line the owner did not set. The manifest bytes themselves ship
-    // as found: they carry no reward.
-    if (manifest !== null) {
-      writeFileSync(join(record.folder, 'README.md'), renderListing(manifest, manifest.note ?? null, reward.amount));
-    }
-    mkdirSync(dirname(destination), { recursive: true });
-    cpSync(record.folder, destination, { recursive: true }); // copy, not move — the recorded folder stays
-    record.allowedBy = allowedByFor(repoRoot, record, opts?.answered === true, confirmed);
-    // A folder post runs no scan — the record must not claim the flagged
-    // content was re-checked; only a safe-listed path settles as known.
-    settleScanFindings(repoRoot, record, 'went-out-unchecked');
-    transitionTo(repoRoot, record, 'posted', { destination });
-    return { record, destination };
-  };
-  return reward.amount === 0 ? bind() : withPromiseLock(repoRoot, bind);
 }
 
 // Which written answer of the owner's allowed this post: the standing

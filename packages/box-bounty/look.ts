@@ -1,8 +1,7 @@
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
-import { answerBounty } from './answer.js';
 import { resolveAttempt } from './github.js';
-import { attemptsOf, loadRecord, persistRecord } from './record.js';
+import { attemptsOf, loadRecord, persistRecord, requireCurrentDelivery } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 
 // `look` is a print path: the change the solver's pull request makes against
@@ -14,7 +13,6 @@ import type { Attempt, BountyRecord } from './record.js';
 //
 // `<n>` is a pull request's number: when no recorded attempt carries it and
 // the bounty is posted on GitHub, `look` collects the pull request first —
-// every refusal the old `answer` enforced — then shows the change. `--from
 // <dir>` collects a returned folder the same way and shows it.
 
 const refuse = (reason: string, detail: string, next = 'box bounty status'): never => { throw new BountyRefused(reason, `${detail}; next: ${next}`); };
@@ -26,9 +24,8 @@ export const LOOK_DIFF_LIMIT = 200;
 
 // A pull request's number, or a returned folder: `look <id> <n>` shows
 // attempt n — collecting pull request n first when the bounty is posted on
-// GitHub and no attempt carries that number — and `look <id> --from <dir>`
 // collects a returned folder and shows it.
-export type LookTarget = number | { readonly from: string };
+export type LookTarget = number;
 
 export interface LookResult {
   readonly record: BountyRecord;
@@ -46,19 +43,13 @@ export interface LookResult {
 
 export function lookBounty(root: string, id: string, target: LookTarget, options: { readonly full?: boolean } = {}): LookResult {
   let record = loadRecord(root, id);
+  requireCurrentDelivery(record);
   let attempt: Attempt;
   let collected = false;
-  if (typeof target === 'number') {
-    const resolved = resolveAttempt(root, record, target, 'look');
-    record = resolved.record;
-    attempt = resolved.attempt;
-    collected = resolved.collected;
-  } else {
-    const result = answerBounty(root, id, target.from, undefined, { via: 'look' });
-    record = result.record;
-    attempt = attemptsOf(record).find(entry => entry.n === result.attempt)!;
-    collected = true;
-  }
+  const resolved = resolveAttempt(root, record, target, 'look');
+  record = resolved.record;
+  attempt = resolved.attempt;
+  collected = resolved.collected;
   // Shown means seen: status marks the attempt seen-since from this run.
   record.attempts = attemptsOf(record).map(entry => entry.n === attempt.n && entry.seenAt === undefined ? { ...entry, seenAt: new Date().toISOString() } : entry);
   persistRecord(root, record);

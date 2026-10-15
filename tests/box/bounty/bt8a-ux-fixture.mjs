@@ -43,7 +43,7 @@ function create() {
     git(repo, ['add', '-A']);
     git(repo, ['commit', '-qm', 'BT8a fixture']);
     if (name === 'relay') {
-      const created = invoke(fixture, ['create', '--task', 'TASK.md', '--why', 'need another pair of eyes', '--out', join(root, name, 'bounty')]);
+      const created = invoke(fixture, ['create', '--task', 'TASK.md', '--why', 'need another pair of eyes']);
       const id = /bt-[a-f\d]{12}/.exec(created)?.[0];
       if (id === undefined) throw new Error('create did not name its bounty');
       fixture.id = id;

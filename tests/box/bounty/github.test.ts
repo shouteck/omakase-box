@@ -15,6 +15,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     withoutGh(() => {
       const poison = join(dirname(resolveProgram('git').path), process.platform === 'win32' ? 'gh.exe' : 'gh');
       copyFileSync(gh, poison);
+      const previousGhProgram = process.env['BT15_GH_PROGRAM'];
+      process.env['BT15_GH_PROGRAM'] = poison;
       try {
         expect(dirname(resolveProgram('gh').path)).toBe(dirname(resolveProgram('git').path));
         expect(dirname(resolveProgram('node').path)).toBe(dirname(resolveProgram('git').path));
@@ -33,7 +35,10 @@ describe('GitHub bounty destination, entirely offline', () => {
         expect(process.env.GIT_EXEC_PATH).toBe(parentExecPath);
         expect(resolveProgram('gh').path).toBe(poison);
         expect(state().calls).toEqual([['auth', 'status']]);
-      } finally { rmSync(poison); }
+      } finally {
+        if (previousGhProgram === undefined) delete process.env['BT15_GH_PROGRAM']; else process.env['BT15_GH_PROGRAM'] = previousGhProgram;
+        rmSync(poison);
+      }
     });
   }));
   it('points the branch at the newest commit the repository already has — no file content is uploaded', () => fixture(({ repo, bare, id, state }) => {
@@ -107,12 +112,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     git(repo, ['remote', 'set-url', '--push', 'origin', 'git@github.com:other/project.git']);
     refused(() => postBounty(repo, id, 'github'), 'github-remote-mismatch');
     expect(state().issues).toHaveLength(0);
-  }));
-
-  it('refuses a manifest tampered with before the GitHub preview is taken', () => fixture(({ repo, id, folder }) => {
-    writeFileSync(join(folder, 'bounty.json'), readFileSync(join(folder, 'bounty.json'), 'utf8') + ' ');
-    refused(() => previewGitHub(repo, id), 'manifest-tampered');
-    refused(() => postBounty(repo, id, 'github'), 'manifest-tampered');
   }));
 
   it('binds the repository a post was started for, even when a new origin is public', () => fixture(({ repo, id, update }) => {
@@ -306,24 +305,6 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(text).toContain('already-public'); expect(text).toContain('free'); expect(text).toContain('Nobody is known');
     expect(text).toContain('nothing a solver wrote is ever run');
   });
-
-  it('runs the whole folder journey with no gh and no GitHub remote', () => fixture(({ repo, state }) => {
-    git(repo, ['remote', 'remove', 'origin']);
-    write(repo, '.box/limits.json', '{}');
-    expect(resolveProgram('gh').path).toBeTruthy();
-    withoutGh(() => {
-      expect(() => resolveProgram('gh')).toThrow();
-      const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'local work', outDir: join(runRoot('bt6-no-gh'), 'bounty') }));
-      const id = created.id;
-      const destination = postBounty(repo, id, join(runRoot('bt6-local'), 'drop')).destination;
-      write(destination, 'repo/app.txt', 'fixed\n');
-      expect(lookBounty(repo, id, { from: destination }).attempt.outcome).toBe('answered');
-      expect(applyBounty(repo, id).outcome).toBe('applied');
-      expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('fixed\n');
-      expect(state().calls).toHaveLength(0);
-      expect(existsSync(join(created.outDir, 'bounty.json'))).toBe(true);
-    });
-  }));
 
   it('routes the built CLI preview, post, status and PR commands through the adapter', () => fixture(({ repo, id, state, pr }) => {
     const cli = (...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8' });

@@ -16,13 +16,12 @@
 
 export const DESCRIBE_LINES: readonly string[] = [
   'box bounty hands a piece of work to an outside solver: the task and what you',
-  'tried — on GitHub an issue on the repository\'s real history, in a folder a',
-  'snapshot minus never-ship files — the project keeps the record; solutions',
+  'tried, in a GitHub issue on the repository\'s real history. The project',
+  'keeps the record; solutions',
   'come back as facts you judge, and nothing a solver wrote is ever run.',
   'GitHub posting is public and free, only to this project\'s already-public',
   'repository — the preview says exactly what becomes public that was not.',
-  'Nobody is known to be watching these issues yet. A local folder is still',
-  'available.',
+  'Nobody is known to be watching these issues yet.',
   '',
   'worth it when: attempts keep failing, the task needs access or knowledge you',
   'lack, it is cheaper or faster solved elsewhere, or a second opinion counts.',

@@ -70,8 +70,8 @@ it('asking which bounty lists each title, usage lists the commands of this wave,
   const repo = makeRepo({ 'app.txt': 'x\n' });
   write(repo, 'TASK.md', 'the task\n');
   const out = runRoot('bt7-two');
-  const first = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'Mend the first thing', taskPath: join(repo, 'TASK.md'), outDir: join(out, 'one') }));
-  const second = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'Mend the second thing', taskPath: join(repo, 'TASK.md'), outDir: join(out, 'two') }));
+  const first = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'Mend the first thing', taskPath: join(repo, 'TASK.md'), }));
+  const second = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'Mend the second thing', taskPath: join(repo, 'TASK.md'), }));
   const which = cli(repo, 'look', '1');
   expect(which.status).toBe(3);
   expect(which.stderr).toContain('bounty-ambiguous');
@@ -79,7 +79,7 @@ it('asking which bounty lists each title, usage lists the commands of this wave,
   expect(which.stderr).toContain(`${second.id} "Mend the second thing"`);
   const usage = cli(repo, 'look', first.id);
   expect(usage.status).toBe(2);
-  for (const line of ['box bounty status [<id>] [--full] [--comments]', 'box bounty look [<id>] (<n> | --from <dir>)', 'box bounty apply [<id>] [<n> | --from <dir>]', 'box bounty close [<id>]']) expect(usage.stderr).toContain(line);
+  for (const line of ['box bounty status [<id>] [--full] [--comments]', 'box bounty look [<id>] <n>', 'box bounty apply [<id>] [<n>]', 'box bounty close [<id>]']) expect(usage.stderr).toContain(line);
   expect(usage.stderr).not.toContain('unlook');
   expect(quoteForeign('a‮b\u009bc​d\u007fe⁦f\u001bg')).toBe('"a\\u202eb\\u009bc\\u200bd\\u007fe\\u2066f\\u001bg"');
   expect(quoteForeign('plain "quoted" path/with spaces.txt')).toBe(JSON.stringify('plain "quoted" path/with spaces.txt'));

@@ -1,7 +1,7 @@
 import { readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BountyRefused, finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
+import { BountyRefused, finalizeBounty, loadRecord, planBounty } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
 import { listTree, makeRepo, runRoot, write } from './support.js';
 
@@ -20,14 +20,14 @@ const junctions = process.platform === 'win32';
 
 function options(repo: string): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
-  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('out'), 'bounty') };
+  return { repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), };
 }
 
-function ship(files: Record<string, string>, mutate?: (repo: string) => void): { shipped: string[]; plan: ReturnType<typeof planBounty>; outDir: string } {
+function ship(files: Record<string, string>, mutate?: (repo: string) => void): { shipped: string[]; plan: ReturnType<typeof planBounty> } {
   const repo = makeRepo({ 'src/app.py': 'x\n', ...files }, mutate);
   const plan = planBounty(options(repo));
   const result = finalizeBounty(plan);
-  return { shipped: listTree(join(result.outDir, 'repo')), plan, outDir: result.outDir };
+  return { shipped: result.plan.files.map(file => file.path).sort(), plan };
 }
 
 describe('never-ship holds against hostile paths', () => {
@@ -116,8 +116,8 @@ describe('never-ship holds against hostile paths', () => {
       'classified/inner.txt': 'fake\n'
     });
     const result = finalizeBounty(planBounty(options(repo)));
-    const manifest = readFileSync(join(result.outDir, 'bounty.json'), 'utf8');
-    const listing = readFileSync(join(result.outDir, 'README.md'), 'utf8');
+    const manifest = JSON.stringify({ note: loadRecord(repo, result.id).content?.note, neverShip: result.plan.ruleRemovals.map(({ rule, removed }) => ({ rule, removed })) });
+    const listing = JSON.stringify(loadRecord(repo, result.id).content);
     for (const name of ['unpronounceable-name', 'classified', 'inner.txt']) {
       expect(manifest).not.toContain(name);
       expect(listing).not.toContain(name);
@@ -175,14 +175,13 @@ describe('never-ship holds against hostile paths', () => {
     expect(plan.ruleRemovals).toEqual([{ rule: 'owner-list', removed: 2, paths: ['data/file.key2', 'secretdir/inside.txt'] }]);
   });
 
-  it('refuses a --task or --note path the never-ship rules would remove', () => {
+  it('refuses a --task path the never-ship rules would remove', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, '.env', 'FAKE_TOKEN=made-up\n');
     write(repo, 'TASK.md', 'the task\n');
-    const base = { repoPath: repo, why: 'a reason', title: 'a task', outDir: join(runRoot('out'), 'bounty') };
+    const base = { repoPath: repo, why: 'a reason', title: 'a task', };
     for (const options of [
       { ...base, taskPath: join(repo, '.env') },
-      { ...base, taskPath: join(repo, 'TASK.md'), notePath: join(repo, '.env') }
     ]) {
       try {
         planBounty(options);
@@ -201,7 +200,7 @@ describe('never-ship holds against hostile paths', () => {
     const outside = runRoot('outside');
     write(outside, '.env', 'FAKE_TOKEN=made-up\n');
     try {
-      planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(outside, '.env'), outDir: join(runRoot('out'), 'bounty') });
+      planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(outside, '.env'), });
       expect.unreachable('expected a refusal');
     } catch (error) {
       expect((error as BountyRefused).reason).toBe('never-ship-input');

@@ -22,7 +22,7 @@ const files = { 'app.txt': 'broken\n', 'untouched.txt': 'owner bytes\n' };
 it('a record written before this wave loads and says the job context was not recorded', () => {
   const repo = makeRepo({ 'app.txt': 'x\n' });
   write(repo, 'TASK.md', 'the task\n');
-  const made = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('bt7-older'), 'bounty'), resumeNote: 'CURRENT_NOTE_73c5' }));
+  const made = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'a task', taskPath: join(repo, 'TASK.md'), resumeNote: 'CURRENT_NOTE_73c5' }));
   // A record of this wave shows what was saved and never claims otherwise.
   const current = renderStatus(repo, { id: made.id });
   expect(current).toContain('CURRENT_NOTE_73c5');

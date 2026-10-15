@@ -1,5 +1,5 @@
+import { postToGitHub, closeGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -8,7 +8,7 @@ import { CLI_DIST, makeRepo, ownerSays, runRoot } from './support.js';
 const cli = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
 const openFile = (repo: string): string => readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8').trim();
 const createDraft = (repo: string): string => {
-  const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck', '--out', join(runRoot('out'), 'bounty')]);
+  const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck']);
   expect(run.status).toBe(0);
   return /bt-[a-f0-9]{12}/.exec(run.stdout)![0];
 };
@@ -21,7 +21,8 @@ it('describe retains the BT4 choice sentences and supplies facts with no history
   // re-pinned for BT11a, which adds the reward sentence where the text ended
   // its thought (the amount is generated from the owner's setting, not typed).
   const choice = result.stdout.split('\n\nthe facts for choosing')[0] ?? '';
-  expect(createHash('sha256').update(choice).digest('hex')).toBe('24d82fee44c5720851f2b0f7fc49fd325b450f2dbb68469b49df6d2ac4609d3f');
+  expect(choice).not.toContain('local folder');
+  expect(choice).toContain('GitHub issue');
   expect(result.stdout).toContain('worth it when: attempts keep failing');
   expect(result.stdout).toContain('not worth it when: you can plainly do the work');
   expect(result.stdout).toContain('create a draft any time');
@@ -57,9 +58,11 @@ describe('the detailed local open-bounties listing', () => {
     const id = createDraft(repo);
     expect(openFile(repo)).toBe(`open bounties: ${id} "task" (drafted)`);
     ownerSays(repo, 'allowed');
-    expect(cli(repo, ['bounty', 'post', id, '--to', join(runRoot('dest'), 'inbox')]).status).toBe(0);
-    expect(openFile(repo)).toBe(`open bounties: ${id} "task" (posted)`);
-    expect(cli(repo, ['bounty', 'close', id]).status).toBe(0);
+    const posted = postToGitHub(repo, id).record;
+    expect(posted.stage).toBe('posted');
+    if (posted.github?.issue == null) throw new Error('posted issue missing');
+    expect(openFile(repo)).toBe(`open bounties: ${id} "task" (posted) ${posted.github.issue.url} ${posted.github.branch}`);
+    expect(closeGitHub(repo, id).outcome).toBe('withdrawn');
     expect(openFile(repo)).toBe('open bounties: none');
   });
 

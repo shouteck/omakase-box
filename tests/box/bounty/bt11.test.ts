@@ -1,3 +1,4 @@
+import { postToGitHub, collectPullRequest, applyGitHub, closeGitHub, statusGitHub } from './github-solver.js';
 // BT11a — the owner's reward and the limit on what open bounties promise —
 // and BT11c, which moved both onto each repository's own entry: one reward
 // and one limit per repository on the owner's list, $0 unless the owner named
@@ -16,8 +17,8 @@ import { fixture, refused } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, ownerSays, runRoot, write } from './support.js';
 
 const cli = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8', timeout: 60000 });
-const draft = (repo: string, title?: string): { id: string; outDir: string } =>
-  finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', ...(title === undefined ? {} : { title }), outDir: join(runRoot('out'), 'bounty') }));
+const draft = (repo: string, title?: string): { id: string } =>
+  finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', ...(title === undefined ? {} : { title }), }));
 
 describe('BT11c — each repository carries its own reward and limit', () => {
   it('refuses every amount that is not a whole number of dollars at or above 0', () => {
@@ -96,13 +97,12 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     expect(repoReward(repoB)).toEqual({ amount: 0, limit: null });
     // A bounty posted on B states $0 while A promises $10 — and B's open
     // bounties owe nothing to A's limit.
-    const { id, outDir } = draft(repoB);
-    const { destination } = postBounty(repoB, id, runRoot('inbox-b'));
+    const { id } = draft(repoB);
+    const { destination } = postToGitHub(repoB, id);
     expect(loadRecord(repoB, id).reward).toEqual({ amount: 0 });
-    expect(readFileSync(join(destination, 'README.md'), 'utf8')).toContain('reward: $0');
-    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toContain('reward: $0');
-    expect(renderStatus(repoB)).toContain('each new bounty states $0');
-    expect(renderStatus(repoA)).toContain('each new bounty states $10');
+    expect(loadRecord(repoB, id).github!.body).toContain('reward: $0');
+    expect(statusGitHub(repoB)).toContain('each new bounty states $0');
+    expect(statusGitHub(repoA)).toContain('each new bounty states $10');
   });
 
   it('a repository reached only through all-projects states $0 and cannot be paid on', () => {
@@ -196,7 +196,7 @@ describe('BT11c — the setting written before this wave applies to nothing', ()
     changeConfig(repo, 'set', 'reward-limit', '50');
     changeConfig(repo, 'set', 'reward', '12');
     const { id } = draft(repo);
-    postBounty(repo, id, runRoot('inbox'));
+    postToGitHub(repo, id);
     expect(loadRecord(repo, id).reward).toEqual({ amount: 12 });
     // Retire this repository's money as a pre-wave shared setting — the
     // bounty out there still promises $12 even though new ones now state $0.
@@ -208,33 +208,14 @@ describe('BT11c — the setting written before this wave applies to nothing', ()
     settings['rewardLimit'] = { amount: 50, at: '2026-10-14T00:00:00.000Z' };
     writeFileSync(settingsFile(), JSON.stringify(settings, null, 2) + '\n');
     expect(repoReward(repo)).toEqual({ amount: 0, limit: null });
-    expect(renderStatus(repo)).toContain('open bounties here promise $12');
+    expect(statusGitHub(repo)).toContain('open bounties here promise $12');
     const second = draft(repo, 'next');
-    postBounty(repo, second.id, runRoot('inbox2'));
+    postToGitHub(repo, second.id);
     expect(loadRecord(repo, second.id).reward).toEqual({ amount: 0 });
   });
 });
 
 describe('BT11a — posting binds the amount in force', () => {
-  it('a folder post binds the post-time amount and rewrites the delivered listing', () => {
-    const repo = makeRepo({ 'TASK.md': 'task\n' });
-    ownerSays(repo, 'allowed');
-    const { id, outDir } = draft(repo);
-    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toContain('reward: $0');
-    changeConfig(repo, 'set', 'reward-limit', '50');
-    changeConfig(repo, 'set', 'reward', '12');
-    const { destination } = postBounty(repo, id, runRoot('inbox'));
-    const shipped = readFileSync(join(destination, 'README.md'), 'utf8');
-    expect(shipped).toContain('reward: $12');
-    expect(shipped).toContain('payment is the poster\'s to make by hand — posting an answer does not guarantee it.');
-    expect(shipped).not.toContain('reward: $0');
-    // The record's copy of the listing says the same — the two never disagree.
-    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toContain('reward: $12');
-    const record = loadRecord(repo, id);
-    expect(record.reward).toEqual({ amount: 12 });
-    // bounty.json is untouched: the sha256 binding the answer still holds.
-    expect(createHash('sha256').update(readFileSync(join(destination, 'bounty.json'))).digest('hex')).toBe(record.manifestSha256);
-  });
 
   it('a post that would pass the limit is refused by name, states both numbers and changes nothing', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
@@ -243,11 +224,11 @@ describe('BT11a — posting binds the amount in force', () => {
     const second = draft(repo, 'two');
     changeConfig(repo, 'set', 'reward-limit', '15');
     changeConfig(repo, 'set', 'reward', '10');
-    postBounty(repo, first.id, runRoot('inbox-a'));
+    postToGitHub(repo, first.id);
     expect(loadRecord(repo, first.id).reward?.amount).toBe(10);
     const before = readFileSync(join(repo, '.box', 'bounties', `${second.id}.json`), 'utf8');
     try {
-      postBounty(repo, second.id, runRoot('inbox-b'));
+      postToGitHub(repo, second.id);
       expect.unreachable('expected a refusal');
     } catch (error) {
       expect(error).toBeInstanceOf(BountyRefused);
@@ -258,8 +239,8 @@ describe('BT11a — posting binds the amount in force', () => {
     expect(readFileSync(join(repo, '.box', 'bounties', `${second.id}.json`), 'utf8')).toBe(before);
     expect(loadRecord(repo, second.id).stage).toBe('drafted');
     // A closed bounty stops counting — merged or not.
-    closeBounty(repo, first.id);
-    postBounty(repo, second.id, runRoot('inbox-c'));
+    closeGitHub(repo, first.id);
+    postToGitHub(repo, second.id);
     expect(loadRecord(repo, second.id).reward?.amount).toBe(10);
   });
 
@@ -270,20 +251,20 @@ describe('BT11a — posting binds the amount in force', () => {
     const path = join(repo, '.box', 'bounties', `${id}.json`);
     const record = JSON.parse(readFileSync(path, 'utf8'));
     expect(record.reward).toBeUndefined(); // create binds nothing
-    const { destination } = postBounty(repo, id, runRoot('inbox'));
+    const { destination } = postToGitHub(repo, id);
     expect(loadRecord(repo, id).reward).toEqual({ amount: 0 });
-    expect(readFileSync(join(destination, 'README.md'), 'utf8')).toContain('reward: $0');
+    expect(loadRecord(repo, id).github!.body).toContain('reward: $0');
   });
 
   it('status states the reward, the limit, what is promised and what is left', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     const { id } = draft(repo);
-    expect(renderStatus(repo)).toContain('each new bounty states $0 — no payment is promised');
+    expect(statusGitHub(repo)).toContain('each new bounty states $0 — no payment is promised');
     changeConfig(repo, 'set', 'reward-limit', '30');
     changeConfig(repo, 'set', 'reward', '10');
-    postBounty(repo, id, runRoot('inbox'));
-    const status = renderStatus(repo);
+    postToGitHub(repo, id);
+    const status = statusGitHub(repo);
     expect(status).toContain('each new bounty states $10');
     expect(status).toContain('promise $10 of a $30 limit — $20 left');
   });
@@ -294,13 +275,13 @@ describe('BT11a — the agent is asked nothing about money', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     for (const flag of ['--reward', '--amount', '--price', '--pay', '--payment', '--limit', '--budget', '--dollars']) {
-      const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck', '--out', join(runRoot('o'), 'b'), flag, '5']);
+      const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck', flag, '5']);
       expect(run.status).toBe(3);
       expect(run.stderr).toContain('reward-agent-set');
     }
     const { id } = draft(repo);
     for (const flag of ['--reward', '--amount', '--limit']) {
-      const run = cli(repo, ['bounty', 'post', id, '--to', join(runRoot('p'), 'x'), flag, '50']);
+      const run = cli(repo, ['bounty', 'post', id, flag, '50']);
       expect(run.status).toBe(3);
       expect(run.stderr).toContain('reward-agent-set');
     }
@@ -309,12 +290,12 @@ describe('BT11a — the agent is asked nothing about money', () => {
 
   it('a project file claiming a reward or a limit is refused by name and grants nothing', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n', '.box/settings.json': '{"reward": 50}\n' });
-    refused(() => planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', outDir: join(runRoot('o'), 'b') }), 'project-claims-reward');
+    refused(() => planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'stuck', }), 'project-claims-reward');
     const repo2 = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo2, 'allowed');
     const { id } = draft(repo2);
     write(repo2, 'settings.json', '{"rewardLimit": 500}\n');
-    refused(() => postBounty(repo2, id, runRoot('inbox')), 'project-claims-reward');
+    refused(() => postToGitHub(repo2, id), 'project-claims-reward');
     expect(repoReward(repo2)).toEqual({ amount: 0, limit: null }); // the claim granted nothing
   });
 
@@ -322,7 +303,7 @@ describe('BT11a — the agent is asked nothing about money', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     const { id } = draft(repo);
-    postBounty(repo, id, runRoot('inbox'));
+    postToGitHub(repo, id);
     const path = join(repo, '.box', 'bounties', `${id}.json`);
     writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 0.5 } }, null, 2) + '\n');
     refused(() => loadRecord(repo, id), 'record-corrupt');
@@ -352,7 +333,7 @@ describe('BT11a — the public side and the words around it', () => {
     changeConfig(repo, 'set', 'reward', '10');
     // A folder post already promises $10 of the $15 — this issue would take it to $20.
     const second = draft(repo, 'other');
-    postBounty(repo, second.id, runRoot('inbox'));
+    postToGitHub(repo, second.id);
     refused(() => postBounty(repo, id, 'github'), 'promise-limit-exceeded');
     expect(state().issues).toEqual([]);
     expect(loadRecord(repo, id).github).toBeUndefined();
@@ -375,7 +356,7 @@ describe('BT11a — the public side and the words around it', () => {
   it('the first-use message carries the reward fact as a fourth fact', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     const { id } = draft(repo);
-    const run = cli(repo, ['bounty', 'post', id, '--to', join(runRoot('x'), 'y')]);
+    const run = cli(repo, ['bounty', 'post', id]);
     expect(run.status).toBe(0); // a held post prints the owner lines and exits 0
     expect(run.stdout).toContain('waiting for the owner');
     expect(run.stdout).toContain('Each bounty states what it pays — $0 unless you set an amount, so nothing is promised now.');
@@ -385,10 +366,10 @@ describe('BT11a — the public side and the words around it', () => {
   it('an owner whose settings predate the wave is told once that each repository can state its own reward', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
-    const first = renderStatus(repo);
+    const first = statusGitHub(repo);
     expect(first).toContain('each repository can state its own reward');
     expect(first).toContain('box bounty config set reward <whole dollars>');
-    expect(renderStatus(repo)).not.toContain('each repository can state its own reward'); // once ever
+    expect(statusGitHub(repo)).not.toContain('each repository can state its own reward'); // once ever
     // Fresh settings are not told at all — first use already carries the fact.
     const fresh = runRoot('fresh-owner');
     const saved = process.env['BOX_BOUNTY_SETTINGS_DIR'];
@@ -421,7 +402,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
     // — the bound summary is rewritten between post and close.
     const path = join(repo, '.box', 'bounties', `${id}.json`);
     writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 99999 } }, null, 2) + '\n');
-    closeBounty(repo, id);
+    closeGitHub(repo, id);
     const body = state().issues[0]!.body;
     // Listing text and block state the one bound amount — the forged field
     // reached neither.
@@ -459,34 +440,18 @@ describe('BT11a fix round — the record file is never a render source', () => {
   it('the promise lock makes the limit check and the bind one span', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
-    const { id, outDir } = draft(repo);
+    const { id } = draft(repo);
     changeConfig(repo, 'set', 'reward-limit', '50');
     changeConfig(repo, 'set', 'reward', '12');
-    const before = readFileSync(join(outDir, 'README.md'), 'utf8');
+    const before = readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8');
     // A lock already held is the other post's bind in flight — this one
     // waits it out, then refuses by name rather than guessing.
     mkdirSync(join(repo, '.box', 'promise.lock'));
-    refused(() => postBounty(repo, id, runRoot('inbox')), 'promise-limit-busy');
-    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toBe(before); // a refused post changed nothing
+    refused(() => postToGitHub(repo, id), 'promise-limit-busy');
+    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8')).toBe(before); // a refused post changed nothing
     expect(loadRecord(repo, id).stage).toBe('drafted');
     rmSync(join(repo, '.box', 'promise.lock'), { recursive: true });
-    const { destination } = postBounty(repo, id, runRoot('inbox'));
-    expect(readFileSync(join(destination, 'README.md'), 'utf8')).toContain('reward: $12');
+    const { destination } = postToGitHub(repo, id);
+    expect(loadRecord(repo, id).github!.body).toContain('reward: $12');
   }, 15000);
-
-  it('a refused folder post leaves the draft README untouched', () => {
-    const repo = makeRepo({ 'TASK.md': 'task\n' });
-    ownerSays(repo, 'allowed');
-    const { id, outDir } = draft(repo);
-    const before = readFileSync(join(outDir, 'README.md'), 'utf8');
-    changeConfig(repo, 'set', 'reward-limit', '50');
-    changeConfig(repo, 'set', 'reward', '12');
-    const blocked = join(runRoot('blocked'), 'file');
-    writeFileSync(blocked, 'in the way\n');
-    refused(() => postBounty(repo, id, blocked), 'destination-exists');
-    // Before the fix the draft's stated amount was rewritten to $12 anyway.
-    expect(readFileSync(join(outDir, 'README.md'), 'utf8')).toBe(before);
-    expect(loadRecord(repo, id).reward).toBeUndefined();
-    expect(loadRecord(repo, id).stage).toBe('drafted');
-  });
 });

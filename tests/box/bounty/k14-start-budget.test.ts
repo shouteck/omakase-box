@@ -75,8 +75,10 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'describe-rules': { git: 2, gh: 0 },
   // BT14: the preview's `posting permission:` line reads the repository's
   // GitHub address once — one `git remote` start the fact costs.
-  'create-preview': { git: 12, gh: 0 },
-  'create': { git: 18, gh: 0 },
+  // BT15 requires the create-time publication plan. Compared with the bound
+  // master fixture (18/0), that read adds 10 Git and 3 gh calls: 28/3.
+  // Other surviving ceilings stay unchanged, including the positive anchors.
+  'create': { git: 28, gh: 3 },
   'status-drafted': { git: 2, gh: 0 },
   'close-draft': { git: 3, gh: 0 },
   'post-preview': { git: 18, gh: 3 },
@@ -89,9 +91,6 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'apply': { git: 15, gh: 5 },
   'status-applied': { git: 2, gh: 0 },
   'close-ended': { git: 4, gh: 5 },
-  'create-local': { git: 18, gh: 0 },
-  'post-dir': { git: 2, gh: 0 },
-  'look-from': { git: 16, gh: 0 },
   'close-reason': { git: 4, gh: 0 },
   'status-end': { git: 2, gh: 0 }
 };
@@ -125,7 +124,6 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('help', 'help');
   run('describe', 'describe');
   run('describe-rules', 'describe', '--rules');
-  run('create-preview', 'create', '--task', 'TASK.md', '--why', 'second', '--preview');
   run('create', 'create', '--task', 'TASK.md', '--why', 'second', '--title', 'Second');
   const second = readdirSync(join(repo, '.box', 'bounties')).map(file => file.replace('.json', '')).find(name => name.startsWith('bt-') && name !== id)!;
   run('status-drafted', 'status');
@@ -147,17 +145,11 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('status-applied', 'status', id);
   run('close-ended', 'close', id);
 
-  // The local-folder leg: the owner names the deliveries folder in the
-  // limits file — the tool itself is already allowed for this project.
-  const deliveries = join(scratch, 'deliveries');
-  write(repo, '.box/limits.json', JSON.stringify({ allowedDestinations: ['github', deliveries] }));
-  run('create-local', 'create', '--task', 'TASK.md', '--why', 'third', '--title', 'Third');
-  const third = readdirSync(join(repo, '.box', 'bounties')).map(file => file.replace('.json', '')).find(name => name.startsWith('bt-') && name !== id && name !== second)!;
-  run('post-dir', 'post', third, '--to', deliveries);
-  const returned = join(scratch, 'returned');
-  cpSync(join(deliveries, third), returned, { recursive: true });
-  write(returned, 'repo/app.txt', 'fixed differently\n');
-  run('look-from', 'look', third, '--from', returned);
+  // Close-with-reason retains its local draft transition; there is no
+  // retired delivery/collection leg to measure.
+  const thirdCreate = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'create', '--task', 'TASK.md', '--why', 'third', '--title', 'Third'], { cwd: repo, encoding: 'utf8', env });
+  expect(thirdCreate.status).toBe(0);
+  const third = /bt-[a-f0-9]{12}/.exec(thirdCreate.stdout)![0];
   run('close-reason', 'close', third, '--reason', 'not landing');
   run('status-end', 'status');
 

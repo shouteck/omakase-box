@@ -368,38 +368,4 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     closeBounty(repo, id);
     expect(state().comments.filter(comment => comment.body.includes('is removed'))).toHaveLength(1);
   }));
-
-  it('a record posted the old way still loads, reads as snapshot-posted, collects and closes', () => fixture(({ repo, bare, scratch, id, folder, state, pr, update }) => {
-    // Forge the pre-BT6a record shape: a publication with no kind, pointing at
-    // a parentless commit of the shipped snapshot — what the old tool pushed.
-    postBounty(repo, id, 'github');
-    const record = loadRecord(repo, id);
-    const issue = record.github!.issue!;
-    const title = record.github!.title;
-    const env = { GIT_INDEX_FILE: join(runRoot('bt6a-legacy'), 'index') };
-    objectGit(repo, ['read-tree', '--empty'], env);
-    const manifest = JSON.parse(readFileSync(join(folder, 'bounty.json'), 'utf8')) as { files: { path: string }[] };
-    for (const file of manifest.files) {
-      const blob = gitWriteBlob(repo, readFileSync(join(folder, 'repo', file.path)));
-      objectGit(repo, ['update-index', '--add', '--cacheinfo', `100644,${blob},${file.path}`], env);
-    }
-    const tree = objectGit(repo, ['write-tree'], env);
-    const shipped = objectGit(repo, ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost', 'commit-tree', tree, '-m', `box bounty ${id}`], env);
-    git(repo, ['push', 'https://github.com/owner/project.git', `+${shipped}:refs/heads/box-bounty/${id}`]);
-    // Rewrite the record to the old shape: no kind, no plan fields.
-    const file = join(repo, '.box/bounties', `${id}.json`);
-    const parsed = JSON.parse(readFileSync(file, 'utf8')) as { github: Record<string, unknown> };
-    parsed.github = { repository: 'owner/project', account: 'owner', branch: `box-bounty/${id}`, commit: shipped, title, body: state().issues[0]!.body, state: 'posted', issue, pending: null };
-    writeFileSync(file, JSON.stringify(parsed));
-    expect(renderStatus(repo, { full: true })).toContain('snapshot-posted');
-    // Still collectible: the solver's snapshot-shaped pull request binds to
-    // the shipped manifest like it always did.
-    pr('owner');
-    const result = lookBounty(repo, id, 1);
-    expect(result.attempt.outcome).toBe('answered');
-    expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('broken\n');
-    closeBounty(repo, id, 'done looking');
-    expect(git(bare, ['branch', '--list', 'box-bounty/*'])).toBe('');
-    expect(loadRecord(repo, id).github!.state).toBe('closed');
-  }));
 });

@@ -130,6 +130,7 @@ export function allowBounty(repoRoot: string, id: string): string {
   const waiting = record.waiting;
   if (record.stage === 'waiting' && waiting?.for === 'merge') return allowMerge(repoRoot, record, waiting);
   if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed. box bounty status ${id} shows its state`);
+  if (waiting.to !== 'github') throw new BountyRefused('legacy-delivery-retired', `this bounty waited for retired folder delivery; nothing changed. End it with box bounty close ${id}`);
   if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. Decide in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing changed`);
   // The answer is recorded bound to what the owner was shown before the held
   // post reruns: a wait the rerun uncovers carries it forward for the same

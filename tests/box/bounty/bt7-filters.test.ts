@@ -1,3 +1,4 @@
+import { gitBlob } from '../../../packages/box-bounty/git.js';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
@@ -57,16 +58,16 @@ it('create ships the bytes the owner\'s clean filter stores — for a committed 
   expect(git(repo, ['cat-file', 'blob', 'HEAD:secret.dat'])).toBe('ENC:committed plaintext');
   write(repo, 'TASK.md', 'the task\n');
   const before = fingerprint(repo);
-  const committed = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'filtered', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('bt7-filter-out'), 'bounty') }));
-  expect(readFileSync(join(committed.outDir, 'repo', 'secret.dat'), 'utf8')).toBe('ENC:committed plaintext\n');
+  const committed = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'filtered', taskPath: join(repo, 'TASK.md'), }));
+  expect(gitBlob(repo, committed.plan.snapshot.commit, ['secret.dat'].join('/'))!.toString('utf8')).toBe('ENC:committed plaintext\n');
   expect(fingerprint(repo)).toEqual(before);
 
   write(repo, 'secret.dat', 'edited plaintext\n');
   ahead(join(repo, 'secret.dat'));
   const edited = fingerprint(repo);
   filter.clear();
-  const uncommitted = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'filtered again', taskPath: join(repo, 'TASK.md'), outDir: join(runRoot('bt7-filter-out'), 'bounty') }));
-  expect(readFileSync(join(uncommitted.outDir, 'repo', 'secret.dat'), 'utf8')).toBe('ENC:edited plaintext\n');
+  const uncommitted = finalizeBounty(planBounty({ repoPath: repo, why: 'a reason', title: 'filtered again', taskPath: join(repo, 'TASK.md'), }));
+  expect(gitBlob(repo, uncommitted.plan.snapshot.commit, ['secret.dat'].join('/'))!.toString('utf8')).toBe('ENC:edited plaintext\n');
   expect(filter.ranIn(repo).some(line => line.startsWith('clean '))).toBe(true);
   expect(readFileSync(join(repo, 'secret.dat'), 'utf8')).toBe('edited plaintext\n');
   expect(fingerprint(repo)).toEqual(edited);

@@ -1,7 +1,7 @@
 import { asOneCommand } from './git.js';
-import { answerBounty as answerBountyCommand, applyBounty as applyBountyCommand } from './answer.js';
+import { applyBounty as applyBountyCommand } from './answer.js';
 import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand, previewGitHub as previewGitHubCommand } from './github.js';
-import { finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
+import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
 import { closeBounty as closeBountyCommand, postBounty as postBountyCommand, renderStatus as renderStatusCommand } from './record.js';
 import { lookBounty as lookBountyCommand } from './look.js';
 
@@ -10,16 +10,15 @@ import { lookBounty as lookBountyCommand } from './look.js';
 // its length and forgotten when it returns (see asOneCommand in git.ts).
 const command = <A extends unknown[], R>(run: (...args: A) => R) => (...args: A): R => asOneCommand(() => run(...args));
 // Collection is not a command of its own: `look` and `apply` reach it through
-// their target argument (an attempt or pull-request number, or --from a
 // returned folder), running every refusal it had before anything is written.
 // The collection primitives are library internals, not commands: `look` and
 // `apply` run them through their target, and tests and the GitHub fixture use
 // them to stand a solver's answer where the real network would.
-export const answerBounty = command(answerBountyCommand);
 export const answerGitHub = command(answerGitHubCommand);
 export const applyBounty = command(applyBountyCommand);
 export const listGitHubAnswers = command(listGitHubAnswersCommand);
 export const previewGitHub = command(previewGitHubCommand);
+export const createBounty = command(createBountyCommand);
 export const finalizeBounty = command(finalizeBountyCommand);
 export const planBounty = command(planBountyCommand);
 export const postBounty = command(postBountyCommand);
@@ -33,15 +32,14 @@ export type { GitHubChoice, GitHubPlan, GitHubPublication, IssueComment } from '
 export type { ApplyResult, ApplyTarget } from './answer.js';
 export { BountyUsage, parseCreateArgs } from './args.js';
 export type { CreateArgs } from './args.js';
-export { deriveTitle, licenceOf, renderListing, renderPreview, resolveRepoRoot, TITLE_LIMIT, TOOL_VERSION } from './create.js';
+export { deriveTitle, renderPreview, resolveRepoRoot, TITLE_LIMIT, TOOL_VERSION } from './create.js';
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';
 export { NOTHING_RUN } from './answer.js';
-export type { BountyManifest } from './manifest.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
-export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, canonicalForNew, firstUseBlock, isOpenStage, listRecords, loadRecord, mergeWaitLines, ownerBlock, ownerGate, ownerWaitLines, persistRecord, promisedTotal, recordDir, recordPath, refName, renderHelp, renderOpenLine, renderResume, renderOverview, rewardForPost, setInstructionNoticeListener, transitionTo, waitForOwner, waitingSummary, withPromiseLock, writeNewRecord } from './record.js';
+export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, canonicalForNew, firstUseBlock, isOpenStage, listRecords, loadRecord, mergeWaitLines, ownerBlock, ownerGate, ownerWaitLines, persistRecord, promisedTotal, recordDir, recordPath, refName, requireCurrentDelivery, renderHelp, renderOpenLine, renderResume, renderOverview, rewardForPost, setInstructionNoticeListener, transitionTo, waitForOwner, waitingSummary, withPromiseLock, writeNewRecord } from './record.js';
 export { boundAmount } from './format.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, CloseOutcome, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
 export { allowRepository, allowBounty, denyRepository, renderConfig, changeConfig, renderSummary } from './owner.js';
