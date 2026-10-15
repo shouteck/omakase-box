@@ -94,6 +94,10 @@ export interface Attempt {
   /** What the pull request description's `pay-to:` line parsed to at
       collection — a fact, never the text itself (BT11b). */
   readonly payTo?: PayToFact;
+  /** The pull request's own description text at collection, stored
+      credential-redacted (BT19). Stranger-written: it surfaces only under
+      `fromOthers` in `look --json`, never as the tool's own words. */
+  readonly description?: string;
 }
 
 // A held action (BT8): while the owner's decision is "ask"/"off" or nothing
@@ -407,6 +411,7 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
     if (attempt === null || typeof attempt !== 'object' || !Number.isInteger(attempt.n) || attempt.n < 1 || typeof attempt.commit !== 'string' || !sha.test(attempt.commit)) return null;
     if (attempt.pullRequest !== undefined && (!Number.isSafeInteger(attempt.pullRequest) || attempt.pullRequest < 1)) return null;
     if (attempt.payTo !== undefined && !payToFactShape(attempt.payTo)) return null;
+    if (attempt.description !== undefined && typeof attempt.description !== 'string') return null;
   }
   if (record.reward !== undefined && (!object(record.reward) || typeof record.reward.amount !== 'number' || !Number.isSafeInteger(record.reward.amount) || record.reward.amount < 0 || Object.keys(record.reward).some(key => key !== 'amount'))) return null;
   // `reward` is bound only at posting — in the same write as the GitHub
@@ -573,9 +578,11 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
 // A report was written when its answer arrived and ends with the step that
 // followed then. Replayed inside status, that line is left out: the bounty's
 // own next step is stated once, from what is true now.
-const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
+export const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
 
-const nextStep = (record: BountyRecord): string => {
+// The one `next:` command a bounty prints, shared by the text status and
+// the status --json document (BT19).
+export const nextStep = (record: BountyRecord): string => {
   if (record.github !== undefined && record.github.kind !== 'history'
     || record.github === undefined && ['posted', 'taken', 'answered', 'verified'].includes(record.stage)
     || record.waiting?.for === 'post' && record.waiting.to !== undefined && record.waiting.to !== 'github') {
@@ -596,6 +603,12 @@ const nextStep = (record: BountyRecord): string => {
     default: return 'ended — nothing to do';
   }
 };
+
+// The one `next:` an ended bounty prints — the job to go back to, the
+// revert when its merge landed, and the ways to look again or start fresh.
+// Shared by the text status and the status --json document (BT19).
+export const endedNextStep = (record: BountyRecord): string =>
+  `continue the saved job${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`;
 
 // What a waiting bounty waits on, in one clause — used by status and by the
 // lines a held command prints.
@@ -1041,7 +1054,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // flagged file sat in their working tree even when the agent stopped it.
       lines.push(...scanFindingLines(entry.record, '  '));
       // With a bounty still open, that bounty's line above is the next step.
-      if (open.length === 0) lines.push(`  next: continue the saved job${entry.record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${entry.record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${entry.record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`);
+      if (open.length === 0) lines.push(`  next: ${endedNextStep(entry.record)}`);
     } else if (options.full) {
       lines.push(...scanFindingLines(entry.record, '  '));
     }
@@ -1080,6 +1093,7 @@ export function renderHelp(): string {
     '  The task is a file describing what needs doing, written for the solver; code is included automatically. "-" reads standard input.',
     '  Put what you tried in the task. --resume saves private context for unfinished work and the larger job. With one open bounty, commands accept no id.',
     '  status [id] shows the next action; --full adds history and the full reports.',
+    '  status, look and config take --json: one complete document on standard output, nothing else.',
     '',
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',
     'numbered attempt, the report states facts about the change, and apply/close is always your call.',

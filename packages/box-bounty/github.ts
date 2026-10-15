@@ -1441,9 +1441,10 @@ export function answerGitHub(root: string, id: string, pr: number, via?: 'look' 
   remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`]);
   const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
   if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
-  const payTo = parsePayTo(typeof data['body'] === 'string' ? data['body'] : '');
+  const body = typeof data['body'] === 'string' ? data['body'] : '';
+  const payTo = parsePayTo(body);
   requireCurrentDelivery(record);
-  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo);
+  const result = collectHistoryPullRequest(root, record, publication, commit, author, pr, via, payTo, redact(body));
   if (publication.seenPullRequests?.some(entry => entry.n === pr && entry.commit === commit) !== true) {
     publication.seenPullRequests = [...publication.seenPullRequests ?? [], { n: pr, commit, at: result.record.attempts?.find(attempt => attempt.commit === commit)?.seenAt ?? new Date().toISOString() }];
     persistRecord(root, result.record);
@@ -1475,7 +1476,10 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
 // changing nothing: its history does not descend from the bounty branch; its
 // tree holds a link, a submodule or an unsafe name; a path it carries matches
 // never-ship anywhere in its new history; it changes nothing at all.
-function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }) {
+// `description` is the pull request's own description text, credential-redacted
+// by the caller. It is recorded for `look --json`'s `fromOthers` (BT19) — the
+// tool never renders it as its own words.
+function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }, description?: string) {
   if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
     return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected`);
   }
@@ -1548,7 +1552,8 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
     outcome: 'answered',
     conflicts: merge.kind === 'conflict' ? merge.paths : null,
     report,
-    payTo
+    payTo,
+    ...(description !== undefined ? { description } : {})
   };
   record.attempts = [...attemptsOf(record), attempt];
   persistRecord(root, record);
