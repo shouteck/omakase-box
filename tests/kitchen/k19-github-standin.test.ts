@@ -193,6 +193,12 @@ function parity(gh: Gh): void {
   expect(comment.value).toMatchObject({ body: 'a question?' });
   expect(gh.api('repos/owner/project/issues/1/comments?per_page=100&page=1').value).toHaveLength(1);
   expect(gh.api('repos/owner/project/issues/1/comments?per_page=100&page=2').value).toEqual([]);
+  // …and only to their issue (K22 correction): issue #4, posted above, does
+  // not list issue #1's comment — not by REST, not by the closing graphql read.
+  expect(gh.api('repos/owner/project/issues/4/comments?per_page=100&page=1').value, 'a comment on issue 1 must not be listed on issue 4').toEqual([]);
+  const otherIssue = gh.api('graphql', { query: 'query($owner:String!,$name:String!,$number:Int!,$after:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$after){edges{cursor node{body author{login}}} pageInfo{hasNextPage}}}}}', variables: { owner: 'owner', name: 'project', number: 4, after: null } });
+  expect(otherIssue.status).toBe(0);
+  expect(otherIssue.value?.data?.repository?.issue?.comments?.edges, 'a comment on issue 1 must not be read as issue 4\'s').toEqual([]);
   // Closing the issue: PATCH answers the issue object with the new state,
   // and the open filter then excludes it.
   const closed = gh.api('repos/owner/project/issues/1', { state: 'closed' }, 'PATCH');
