@@ -138,8 +138,8 @@ export interface WaitingFor {
 
 // One pre-publish scan finding kept on the record (BT8c): what was flagged,
 // where the scan ran, and what happened — the bounty went out (the content
-// changed, the flagged path is on safe to publish, or a folder post carried
-// it out unchecked) or it ended without posting.
+// changed or the flagged path is on safe to publish) or it ended without
+// posting. Old records retain their already-written settlement text.
 // `settled` starts null while the finding is live; settling rewrites only
 // that marker — the hits themselves are never edited.
 export interface ScanFinding {
@@ -160,11 +160,10 @@ export function recordScanFinding(record: BountyRecord, hits: readonly { readonl
 
 // Settle every live finding with what happened — the bounty went out, or it
 // ended without posting. The wording claims only what was verified: a GitHub
-// post ran the scan again, so it can say the flagged content changed; a
-// folder post runs no scan, so it can only say the content went out
-// unchecked. When every flagged path is on safe to publish the record says
+// post ran the scan again, so it can say the flagged content changed.
+// When every flagged path is on safe to publish the record says
 // the list's state — a local file write, so who wrote it is not claimed.
-export function settleScanFindings(repoRoot: string, record: BountyRecord, settled: 'went-out' | 'went-out-unchecked' | 'ended'): void {
+export function settleScanFindings(repoRoot: string, record: BountyRecord, settled: 'went-out' | 'ended'): void {
   const live = (record.scanFindings ?? []).filter(finding => finding.settled === null);
   if (live.length === 0) return;
   let text: string;
@@ -173,10 +172,8 @@ export function settleScanFindings(repoRoot: string, record: BountyRecord, settl
     const safe = publishLists(repoRoot).safe;
     if (live.every(finding => finding.hits.every(hit => publishListed(safe, hit.path)))) {
       text = 'the flagged path is on safe to publish — the bounty went out';
-    } else if (settled === 'went-out') {
-      text = 'the flagged content changed — the bounty went out';
     } else {
-      text = 'the bounty went out to a folder — the scan does not run on a folder post, so the flagged content was not re-checked';
+      text = 'the flagged content changed — the bounty went out';
     }
   }
   for (const finding of live) finding.settled = text;
@@ -1128,9 +1125,8 @@ const toPosix = (path: string): string => path.split('\\').join('/');
 
 // The canonical path a not-yet-existing target will land at: walk up to the
 // nearest EXISTING ancestor, realpath it, then re-append the missing tail. A
-// junction at any existing level resolves to its real location, so a --to or
-// --out spelling under a junction pointing into the repository can no longer
-// slip an inside-the-repo destination past the containment checks.
+// junction at any existing level resolves to its real location, so task-file
+// classification uses the actual location even when the final file is missing.
 export function canonicalForNew(target: string): string {
   const tail: string[] = [];
   let cursor = target;

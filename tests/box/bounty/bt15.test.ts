@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { applyBounty, closeBounty, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, renderDescribe, renderHelp, renderStatus, settingsFile } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, makeRepo, ownerSays, runRoot, write } from './support.js';
+import { settleScanFindings } from '../../../packages/box-bounty/record.js';
 
 const cli = (repo: string, args: string[], input?: string) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: process.env, ...(input === undefined ? {} : { input }) });
 const state = (repo: string) => ({
@@ -14,6 +15,91 @@ const state = (repo: string) => ({
   records: readdirSync(join(repo, '.box/bounties')).filter(name => name.endsWith('.json')).map(name => [name, readFileSync(join(repo, '.box/bounties', name), 'utf8')])
 });
 const draft = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'another perspective' }));
+
+it('global help advertises only supported create options and retains post preview', () => {
+  const result = spawnSync(process.execPath, [CLI_DIST, '--help'], { encoding: 'utf8', env: process.env });
+  expect(result.status, result.stderr).toBe(0);
+  const lines = result.stdout.split('\n');
+  expect(lines.find(line => line.startsWith('usage: box bounty create '))).toBe('usage: box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]');
+  expect(lines.find(line => line.includes('box bounty post '))).toContain('[--preview]');
+});
+
+it('an old folder post waiting for owner permission refuses before either saved file changes', () => {
+  const repo = makeRepo({ 'TASK.md': 'Legacy task.\n' });
+  const made = draft(repo);
+  const record = loadRecord(repo, made.id);
+  const folder = join(runRoot('BT15-waiting-folder'), 'old-delivery');
+  writeFileSync(made.recordPath, JSON.stringify({ ...record, stage: 'waiting', waiting: { for: 'post', reason: 'owner-allow', to: folder, at: record.createdAt } }));
+  ownerSays(repo, 'allowed');
+  const before = state(repo);
+  const result = cli(repo, ['allow', made.id]);
+  expect(result.status).toBe(3);
+  expect(result.stderr).toContain('(legacy-delivery-retired)');
+  expect(result.stderr).toContain(`box bounty close ${made.id}`);
+  expect(state(repo)).toEqual(before);
+  expect(loadRecord(repo, made.id).waiting?.answered).toBeUndefined();
+});
+
+it('new scan settlements name GitHub publication while old folder settlement text still loads', () => {
+  const repo = makeRepo({ 'TASK.md': 'Legacy task.\n' });
+  const made = draft(repo);
+  const record = loadRecord(repo, made.id);
+  const legacy = 'the bounty went out to a folder — the scan does not run on a folder post, so the flagged content was not re-checked';
+  record.scanFindings = [
+    { at: record.createdAt, where: 'post', hits: [{ path: 'app.txt', line: 1, rule: 'test' }], settled: legacy },
+    { at: record.createdAt, where: 'post', hits: [{ path: 'app.txt', line: 1, rule: 'test' }], settled: null }
+  ];
+  settleScanFindings(repo, record, 'went-out');
+  expect(record.scanFindings.map(finding => finding.settled)).toEqual([legacy, 'the flagged content changed — the bounty went out']);
+  writeFileSync(made.recordPath, JSON.stringify(record));
+  expect(loadRecord(repo, made.id).scanFindings?.[0]?.settled).toBe(legacy);
+});
+
+it('the network guard refuses an unregistered gh executable even inside a fixture-shaped path', () => {
+  const root = runRoot('BT15-unregistered-gh');
+  const program = join(root, 'gh.exe');
+  const marker = join(root, 'executed');
+  copyFileSync(process.execPath, program);
+  const result = spawnSync(program, ['-e', `require('node:fs').writeFileSync(${JSON.stringify(marker)}, 'ran')`], { encoding: 'utf8', env: { ...process.env, NODE_OPTIONS: '' } });
+  expect(result.status).toBe(1);
+  expect(result.stderr).toBe('real GitHub disabled in bounty tests');
+  expect(existsSync(marker)).toBe(false);
+});
+
+it('the network guard refuses shell gh regardless of a fixture-shaped argument', () => {
+  const root = runRoot('BT15-shell-gh');
+  const marker = join(root, 'executed');
+  const command = `"${process.execPath}" -e "require('node:fs').writeFileSync(${JSON.stringify(marker).replaceAll('"', "'")}, 'ran')" & rem gh box-bt1-`;
+  const result = process.platform === 'win32'
+    ? spawnSync(process.env['COMSPEC'] ?? 'cmd.exe', ['/d', '/s', '/c', command], { encoding: 'utf8', env: process.env })
+    : spawnSync('sh', ['-c', `touch '${marker}' # gh box-bt1-`], { encoding: 'utf8', env: process.env });
+  expect(result.status).toBe(1);
+  expect(result.stderr).toBe('real GitHub disabled in bounty tests');
+  expect(existsSync(marker)).toBe(false);
+});
+
+it('only the active fixture gh path is registered, including inherited children and nested restoration', () => {
+  const before = process.env['BT15_GH_PROGRAM'];
+  let outer: string | undefined;
+  fixture(() => {
+    outer = process.env['BT15_GH_PROGRAM'];
+    expect(outer).toBeDefined();
+    const child = spawnSync(process.execPath, ['-e', `const cp = require('node:child_process'); const r = cp.spawnSync(process.env.BT15_GH_PROGRAM, ['version'], { encoding: 'utf8', env: process.env }); process.stdout.write(r.stdout); process.exit(r.status);`], { encoding: 'utf8', env: process.env });
+    expect(child.status, child.stderr).toBe(0);
+    expect(child.stdout).toBe('gh version 2.40.0\n');
+    fixture(() => {
+      expect(process.env['BT15_GH_PROGRAM']).not.toBe(outer);
+      const blocked = spawnSync(outer!, ['version'], { encoding: 'utf8', env: process.env });
+      expect(blocked.status).toBe(1);
+      expect(blocked.stderr).toBe('real GitHub disabled in bounty tests');
+    });
+    expect(process.env['BT15_GH_PROGRAM']).toBe(outer);
+  });
+  expect(process.env['BT15_GH_PROGRAM']).toBe(before);
+  const blocked = spawnSync(outer!, ['version'], { encoding: 'utf8', env: process.env });
+  expect(blocked.status).toBe(1);
+  expect(blocked.stderr).toBe('real GitHub disabled in bounty tests');
+});
 
 it.each([
   ['--out', 'folder-delivery-retired', 'GitHub'],

@@ -47,7 +47,7 @@ function pnpmInvocation(argv: readonly string[]): PnpmInvocation {
 // The bounty tool leads every command list (BT14): it is the product an
 // agent is handed, the older export/submit/verify/trace commands after it.
 const HELP_LINES = [
-  'usage: box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>] [--preview]',
+  'usage: box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]',
   '       box bounty help',
   '       box bounty describe [--rules] [--repo <path>]',
   '       box bounty status [<id>] [--full] [--comments] [--repo <path>]',

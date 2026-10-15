@@ -317,6 +317,7 @@ function withGhEnv<T>(world: World, run: () => T): T {
   const oldPath = process.env.PATH;
   const oldState = process.env['BT6_GH_STATE'];
   const oldStandin = process.env['BT6_GH_STANDIN'];
+  const oldGhProgram = process.env['BT15_GH_PROGRAM'];
   const oldNodeOptions = process.env['NODE_OPTIONS'];
   const oldSettings = process.env['BOX_BOUNTY_SETTINGS_DIR'];
   const oldRemote = process.env['BT8A_GIT_REMOTE'];
@@ -324,6 +325,7 @@ function withGhEnv<T>(world: World, run: () => T): T {
   process.env.PATH = `${world.bin}${delimiter}${oldPath ?? ''}`;
   process.env['BT6_GH_STATE'] = world.stateFile;
   process.env['BT6_GH_STANDIN'] = join(world.bin, 'standin.cjs');
+  process.env['BT15_GH_PROGRAM'] = join(world.bin, process.platform === 'win32' ? 'gh.exe' : 'gh');
   process.env['BOX_BOUNTY_SETTINGS_DIR'] = world.settings;
   process.env['BT8A_GIT_REMOTE'] = world.bare;
   process.env['BT6_GH_REMOTE_URL'] = `https://github.com/${world.repository}.git`;
@@ -350,6 +352,7 @@ function withGhEnv<T>(world: World, run: () => T): T {
     if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
     if (oldState === undefined) delete process.env['BT6_GH_STATE']; else process.env['BT6_GH_STATE'] = oldState;
     if (oldStandin === undefined) delete process.env['BT6_GH_STANDIN']; else process.env['BT6_GH_STANDIN'] = oldStandin;
+    if (oldGhProgram === undefined) delete process.env['BT15_GH_PROGRAM']; else process.env['BT15_GH_PROGRAM'] = oldGhProgram;
     if (oldNodeOptions === undefined) delete process.env['NODE_OPTIONS']; else process.env['NODE_OPTIONS'] = oldNodeOptions;
     if (oldSettings === undefined) delete process.env['BOX_BOUNTY_SETTINGS_DIR']; else process.env['BOX_BOUNTY_SETTINGS_DIR'] = oldSettings;
     if (oldRemoteUrl === undefined) delete process.env['BT6_GH_REMOTE_URL']; else process.env['BT6_GH_REMOTE_URL'] = oldRemoteUrl;
