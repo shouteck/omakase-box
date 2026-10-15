@@ -55,8 +55,9 @@ export { actingOn, askMergeNoticeLine, loadSettings, projectKey, readDecision, r
 export type { DecisionRead, OwnerDecision, OwnerSettings } from './settings.js';
 export { chooseRepository, githubRemotes, repositoryAddress, repositoryChoiceLines } from './repository.js';
 export type { RemoteCandidate, RepositoryChoice } from './repository.js';
-export { binaryPatchPaths, looksBinary, SECRET_RULES, scanPatch, scanText, shownOfPlan } from './github.js';
-export type { ScanHit, SecretRule } from './github.js';
+export { shownOfPlan } from './github.js';
+export { binaryPatchPaths, looksBinary, SECRET_RULES, scanPatch, scanText } from './scan.js';
+export type { ScanHit, SecretRule } from './scan.js';
 export { recordScanFinding, settleScanFindings } from './record.js';
 export type { ScanFinding } from './record.js';
 export { renderDescribe, renderRules } from './tell.js';
