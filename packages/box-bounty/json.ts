@@ -18,12 +18,13 @@
 
 import { boundAmount } from './format.js';
 import type { GitHubPublication } from './github.js';
-import { issueComments, refreshGitHubStatus } from './github.js';
+import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './github.js';
+import { dryMergeOnto } from './git.js';
 import { discoverInstructions, instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
 import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
-import { attemptsOf, isOpenStage, listRecords, loadRecord, nextStep, persistRecord, promisedTotal } from './record.js';
+import { applicableAttempts, attemptsOf, endedNextStep, isOpenStage, listRecords, loadRecord, nextStep, notNext, persistRecord, promisedTotal } from './record.js';
 import type { Attempt, BountyRecord, ScanFinding, StageEvent, WaitingFor } from './record.js';
 import { actingOn, askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, readInstructions, repoReward, repositoryIdentity, rewardNoticeLine, saidOnce, settingsFile } from './settings.js';
 
@@ -80,7 +81,10 @@ const solutionEntry = (record: BountyRecord, attempt: Attempt): JsonObject => ({
   added: attempt.added ?? null,
   deleted: attempt.deleted ?? null,
   conflicts: attempt.conflicts ?? null,
-  report: [...attempt.report],
+  // Replayed inside status the recorded `next:` line is dropped — the
+  // bounty's own `next` field is stated once from what is true now, the
+  // same filter the text view applies (the pass's BT19 finding).
+  report: attempt.report.filter(notNext),
   payTo: attempt.payTo?.state ?? null,
   merged: record.events.some(event => event.stage === 'applied' && event.attempt === attempt.n)
 });
@@ -105,6 +109,12 @@ const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[
   state: publication.issue === null ? null : publication.outside?.issueState ?? null,
   lifecycle: publication.state,
   issue: publication.issue === null ? null : { number: publication.issue.number, url: publication.issue.url },
+  // The issue-format comparison cache — what `status --full` prints as the
+  // "GitHub format block" lines; the document carries the recorded facts.
+  formatRead: publication.formatRead ?? null,
+  formatReadAt: publication.formatReadAt ?? null,
+  formatUnavailableAt: publication.formatUnavailableAt ?? null,
+  formatRepair: publication.formatRepair ?? null,
   pending: publication.pending,
   pullRequests: publication.availablePullRequests?.map(pr => pullRequestEntry(pr, publication, attempts)) ?? null,
   comments: publication.questions === undefined ? null : {
@@ -127,31 +137,64 @@ const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[
   }
 });
 
+// The saved job context `renderResume` prints: the branch, the commit the
+// work stood on, the files still in flight and any note the agent saved.
+// A record from before contexts existed carries `not-recorded` — null here.
+const resumeEntry = (record: BountyRecord): JsonObject | null =>
+  record.resume?.kind === 'recorded'
+    ? { branch: record.resume.branch, commit: record.resume.commit, changed: [...record.resume.changed], note: record.resume.note }
+    : null;
+
+// The fresh "current code now" read the text status runs under --full (or
+// for a record with no publication): whether the leading applicable attempt
+// would merge onto the current branch right now. `solutions[].conflicts` is
+// the collection-time fact; this is the live one. Open records only — the
+// text view never merges for an ended bounty.
+const mergeNowEntry = (repoRoot: string, record: BountyRecord, attempts: readonly Attempt[]): JsonObject | null => {
+  if (!isOpenStage(record.stage)) return null;
+  const applicable = applicableAttempts(attempts);
+  if (applicable.length === 0) return null;
+  const fresh = dryMergeOnto(repoRoot, applicable[0]!.commit);
+  return {
+    attempt: applicable[0]!.n,
+    result: fresh.kind,
+    conflicts: fresh.kind === 'conflict' ? [...fresh.paths] : null,
+    detail: fresh.kind === 'untestable' ? fresh.detail : null
+  };
+};
+
 // One bounty entry — the full fact set either view knows, so `status --json`
-// is `status --full`'s facts without the prose.
-const bountyEntry = (record: BountyRecord): JsonObject => ({
-  id: record.id,
-  title: record.title,
-  why: record.why ?? null,
-  stage: record.stage,
-  createdAt: record.createdAt,
-  baseCommit: record.snapshot.baseCommit,
-  reward: boundAmount(record) ?? null,
-  job: record.job?.file ?? null,
-  waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
-  github: record.github === undefined ? null : githubEntry(record.github, attemptsOf(record)),
-  allowedBy: record.allowedBy === undefined ? null : {
-    decision: record.allowedBy.decision,
-    level: record.allowedBy.level,
-    decisionAt: record.allowedBy.decisionAt,
-    usedAt: record.allowedBy.usedAt
-  },
-  scanFindings: (record.scanFindings ?? []).map(scanFindingEntry),
-  solutions: attemptsOf(record).map(attempt => solutionEntry(record, attempt)),
-  events: record.events.map(eventEntry),
-  next: isOpenStage(record.stage) ? nextStep(record) : null,
-  corrupt: false
-});
+// is `status --full`'s facts without the prose. `next` is decided by the
+// caller: open bounties take `nextStep`, the asked-for or last-ended record
+// takes the saved-job line when nothing is open — the text view's own rule.
+const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null): JsonObject => {
+  const attempts = attemptsOf(record);
+  return {
+    id: record.id,
+    title: record.title,
+    why: record.why ?? null,
+    stage: record.stage,
+    createdAt: record.createdAt,
+    baseCommit: record.snapshot.baseCommit,
+    reward: boundAmount(record) ?? null,
+    job: record.job?.file ?? null,
+    resume: resumeEntry(record),
+    waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
+    github: record.github === undefined ? null : githubEntry(record.github, attempts),
+    allowedBy: record.allowedBy === undefined ? null : {
+      decision: record.allowedBy.decision,
+      level: record.allowedBy.level,
+      decisionAt: record.allowedBy.decisionAt,
+      usedAt: record.allowedBy.usedAt
+    },
+    scanFindings: (record.scanFindings ?? []).map(scanFindingEntry),
+    solutions: attempts.map(attempt => solutionEntry(record, attempt)),
+    mergeNow: mergeNowEntry(repoRoot, record, attempts),
+    events: record.events.map(eventEntry),
+    next,
+    corrupt: false
+  };
+};
 
 // A file whose JSON no longer reads as a record: status names it rather than
 // dropping it — the full key set stays, every fact null, `corrupt` says why.
@@ -164,11 +207,13 @@ const corruptEntry = (file: string): JsonObject => ({
   baseCommit: null,
   reward: null,
   job: null,
+  resume: null,
   waiting: null,
   github: null,
   allowedBy: null,
   scanFindings: [],
   solutions: [],
+  mergeNow: null,
   events: [],
   next: null,
   corrupt: true
@@ -192,17 +237,24 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
   const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
   for (const entry of listed) {
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
+    // The document always carries the --full fact set, so an ended record's
+    // issue-format comparison is refreshed here exactly as --full does.
+    else if (entry.record !== null) refreshGitHubFormat(repoRoot, entry.record);
   }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
   const corrupt = listed.filter(entry => entry.record === null);
+  // The job to go back to stays on show after a bounty ends — for the
+  // bounty asked for by id, or else the one that ended last, and only when
+  // nothing is open: the text view's own rule, same words.
+  const lastEnded = [...ended].sort((a, b) => (a.record!.events.at(-1)?.at ?? '').localeCompare(b.record!.events.at(-1)?.at ?? '')).at(-1)?.record ?? null;
 
   const bounties: JsonObject[] = [];
   for (const entry of open) {
     const record = entry.record!;
     // The document is captured before the seen-marking writes, so `seen`
     // reads what the text view printed this run.
-    const data = bountyEntry(record);
+    const data = bountyEntry(repoRoot, record, nextStep(record));
     if (options.comments === true) {
       // --comments reads what other accounts wrote, bound to this bounty's
       // own issue first — the same read the text view makes, kept under
@@ -224,7 +276,11 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
       persistRecord(repoRoot, record);
     }
   }
-  for (const entry of ended) bounties.push(bountyEntry(entry.record!));
+  for (const entry of ended) {
+    const record = entry.record!;
+    const detailed = options.id !== undefined || record === lastEnded;
+    bounties.push(bountyEntry(repoRoot, record, detailed && open.length === 0 ? endedNextStep(record) : null));
+  }
   for (const entry of corrupt) bounties.push(corruptEntry(entry.file));
 
   // The notices the text view interleaves, emitted here to stderr: the
@@ -256,8 +312,13 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
     owner: {
       decision: ownerRead.decision,
       denied: ownerRead.denied === true,
+      decisionAt: ownerRead.at,
+      decisionLevel: ownerRead.level,
       reward: amount,
-      rewardLimit: limit
+      rewardLimit: limit,
+      // The "open bounties here promise $N" half of the reward line —
+      // this checkout's open-bounty total, the same count the text prints.
+      promised: promisedTotal(open)
     },
     bounties
   };

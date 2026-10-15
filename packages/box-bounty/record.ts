@@ -578,7 +578,7 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
 // A report was written when its answer arrived and ends with the step that
 // followed then. Replayed inside status, that line is left out: the bounty's
 // own next step is stated once, from what is true now.
-const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
+export const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
 
 // The one `next:` command a bounty prints, shared by the text status and
 // the status --json document (BT19).
@@ -603,6 +603,12 @@ export const nextStep = (record: BountyRecord): string => {
     default: return 'ended — nothing to do';
   }
 };
+
+// The one `next:` an ended bounty prints — the job to go back to, the
+// revert when its merge landed, and the ways to look again or start fresh.
+// Shared by the text status and the status --json document (BT19).
+export const endedNextStep = (record: BountyRecord): string =>
+  `continue the saved job${record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`;
 
 // What a waiting bounty waits on, in one clause — used by status and by the
 // lines a held command prints.
@@ -1048,7 +1054,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // flagged file sat in their working tree even when the agent stopped it.
       lines.push(...scanFindingLines(entry.record, '  '));
       // With a bounty still open, that bounty's line above is the next step.
-      if (open.length === 0) lines.push(`  next: continue the saved job${entry.record.stage === 'applied' ? `; to reverse the merge: git revert -m 1 ${entry.record.events.find(event => event.stage === 'applied')?.merge ?? '<merge>'}` : ''}; inspect: box bounty status ${entry.record.id} --full; or create another with box bounty create --task <file> --why "<one line>"`);
+      if (open.length === 0) lines.push(`  next: ${endedNextStep(entry.record)}`);
     } else if (options.full) {
       lines.push(...scanFindingLines(entry.record, '  '));
     }

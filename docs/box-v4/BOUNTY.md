@@ -153,17 +153,27 @@ with the issue's comments as `{from, at, text}`; without it `fromOthers`
 is `null`.
 
 `status --json` prints `{schema, repository, acting, owner, bounties}` —
-`owner` is this checkout's read (`{decision, denied, reward,
-rewardLimit}`) and each bounty carries `id, title, why, stage, createdAt,
-baseCommit, reward, job, waiting, github, allowedBy, scanFindings,
-solutions, events, next, corrupt`. A record file that no longer reads is
-listed with `corrupt: true` and every fact `null`. `solutions` entries
-name `n, pullRequest, collected, seen, author, commit, outcome, changed,
-added, deleted, conflicts, report, payTo, merged`; `github`, when present,
-names the repository, branch, bound commit, issue number and URL, the
-issue's recorded `state` (open or closed) beside the publication's own
-`lifecycle`, waiting pull requests, comment count, any owed `pending`
-action and a merged bounty `pay` record.
+`owner` is this checkout's read (`{decision, denied, decisionAt,
+decisionLevel, reward, rewardLimit, promised}`) and each bounty carries
+`id, title, why, stage, createdAt, baseCommit, reward, job, resume,
+waiting, github, allowedBy, scanFindings, solutions, mergeNow, events,
+next, corrupt`. `resume` is the saved job context (`{branch, commit,
+changed, note}`) or `null` on records from before contexts were kept.
+A record file that no longer reads is listed with `corrupt: true` and
+every fact `null`. `solutions` entries name `n, pullRequest, collected,
+seen, author, commit, outcome, changed, added, deleted, conflicts,
+report, payTo, merged`; `mergeNow` is the fresh "would it merge now" read
+the text view runs under `--full` — `{attempt, result, conflicts,
+detail}` or `null` when nothing applies — beside `solutions[].conflicts`,
+which stays the collection-time fact. `github`, when present, names the
+repository, branch, bound commit, issue number and URL, the issue's
+recorded `state` (open or closed) beside the publication's own
+`lifecycle`, the issue-format comparison (`formatRead`, `formatReadAt`,
+`formatUnavailableAt`, `formatRepair`), waiting pull requests, comment
+count, any owed `pending` action and a merged bounty `pay` record.
+`next` is the text view's one next line — an open bounty's next step, or
+the asked-for / last-ended record's "continue the saved job" when nothing
+is open.
 
 `look <id> <n> --json` prints `{schema, id, n, pullRequest, collected,
 author, commit, files, report, payTo, large, diff, fromOthers}` — `files`
