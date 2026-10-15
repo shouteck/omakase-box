@@ -4,7 +4,7 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
-import { NOTHING_RUN, quoteForeign, showPath } from './answer.js';
+import { NOTHING_RUN, emitMergeNotice, quoteForeign, showPath } from './answer.js';
 import { TOOL_VERSION } from './create.js';
 import { BountyRefused } from './errors.js';
 import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, mergeBase, ownerGitOutcome } from './git.js';
@@ -16,7 +16,8 @@ import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { binaryPatchPaths, looksBinary, scanPatch, scanText } from './scan.js';
 import type { ScanHit } from './scan.js';
-import { readReward, requireRepository } from './settings.js';
+import { readDecision, readReward, requireRepository } from './settings.js';
+import type { DecisionRead } from './settings.js';
 import { boundAmount, formatFact, formatFor, publicText, readFormat, renderFormat } from './format.js';
 import { parsePayTo, payToLine, type PayOutcome, type PayToFact } from './pay.js';
 
@@ -1461,14 +1462,13 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   return { record, outcome: 'answered' as const, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
 }
 
-// Local decisions stand even when GitHub is unavailable. Retrying the same
-// decision resumes here, using a stable comment marker to avoid duplicates.
-// The owner's "ask me each time" (and "off", and nothing written) makes each
-// outside close a named waiting state: the local decision is recorded as a
-// fact, and the comment, issue close and branch removal wait for the owner's
-// one command — `box bounty allow <id>`, which re-enters here with
-// answered set.
-export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean }): void {
+// A local decision finishes outside: the decision comments, the issue close
+// and the bounty-branch removal — retried runs resume by stable comment
+// markers so nothing lands twice. The owner decided on 15 October 2026 that
+// this runs whatever the standing answer is; when the answer is not
+// 'allowed' and this run actually changed GitHub, one line says so through
+// the merge-notice listener.
+export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { answered?: boolean; decision?: DecisionRead }): void {
   const publication = record.github;
   if (publication === undefined) return;
   // 'reject', 'withdraw' and 'undo' stay in the list for records written
@@ -1476,6 +1476,9 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
   const decisions = record.events.filter(entry => ['apply', 'reject', 'withdraw', 'undo', 'merged', 'close'].includes(entry.command ?? ''));
   const event = decisions.at(-1);
   if (event === undefined) return;
+  // Whether this run touched GitHub at all — a posted comment, a closed
+  // issue or a removed branch. The unasked line below fires only on change.
+  let changed = false;
   try {
     if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'sign in to the account that started this post to finish outside work');
     if (publication.issue === null) {
@@ -1498,6 +1501,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
           const response = api(root, `${endpoint}/comments`, { body });
           if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment');
           comments.push(response);
+          changed = true;
         }
       }
       // Before the branch goes, name what removing it loses: a history post's
@@ -1512,6 +1516,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
           if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment');
+          changed = true;
         }
       }
       const read = readFormat(snapshot.body);
@@ -1536,12 +1541,15 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         } catch { publication.formatRepair = 'update-failed'; closed = api(root, endpoint, { state: 'closed' }, 'PATCH'); }
       } else closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
       if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure');
+      // The record not yet showing 'closed' means this run closed it; a
+      // body the PATCH rewrote (the format block) is a real change too.
+      if (publication.state !== 'closed' || closed['body'] !== snapshot.body) changed = true;
     }
     const tip = remoteBranchSha(root, publication.repository, publication.branch);
     if (tip !== null && tip !== publication.commit) {
       throw new BountyRefused('github-branch-changed', `${publication.branch} on the remote is ${tip}, not the ${publication.commit} this tool posted — it was changed outside the tool; removing it is not this tool's call`);
     }
-    if (tip !== null) remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]);
+    if (tip !== null) { remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]); changed = true; }
     git(root, ['update-ref', '-d', publicationRef(record.id)]);
     publication.state = 'closed';
     if (publication.kind === 'history' && (publication.pushed?.length ?? 0) > 0) {
@@ -1557,6 +1565,20 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
     }
     publication.pending = null;
     delete record.waiting; // the held outside close is done
+    // The owner decided the tool may still close up a bounty it opened
+    // (15 October 2026) — and says so when the standing answer is not
+    // 'allowed'. Only a run that changed GitHub gets the line; a retry that
+    // finds it all done, and every run under 'allowed', stays quiet.
+    if (changed) {
+      let answer = 'not given';
+      try {
+        const read = opts?.decision ?? readDecision(root);
+        if (read.decision === 'allowed') answer = '';
+        else if (read.decision === 'ask') answer = 'ask me each time';
+        else if (read.denied === true || read.decision === 'off') answer = 'deny';
+      } catch { /* a repository whose identity cannot be read counts as not allowed — 'not given' stands */ }
+      if (answer !== '') emitMergeNotice(`${record.id} — closed up on GitHub without asking: the issue is closed and the bounty branch removed; your standing answer here is ${answer}`);
+    }
   } catch (error) {
     const detail = error instanceof BountyRefused ? ` (${error.reason}: ${error.message})` : '';
     // The retry is `close` whatever the local decision was — on an ended

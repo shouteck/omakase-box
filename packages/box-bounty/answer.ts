@@ -14,6 +14,16 @@ const TAIL = 2000;
 
 const tail = (text: string): string => text.slice(-TAIL);
 
+// One line per notice a command owes the agent — a merge the tool itself
+// recognised and closed on, or a close-up on GitHub the owner did not answer
+// for (merged.ts and github.ts emit through here). The CLI registers a
+// printer; library callers see the same truth in the record's events.
+let mergeNoticeListener: ((line: string) => void) | null = null;
+export function setMergeNoticeListener(next: ((line: string) => void) | null): void {
+  mergeNoticeListener = next;
+}
+export const emitMergeNotice = (line: string): void => { mergeNoticeListener?.(line); };
+
 const endedRefusal = (record: BountyRecord): BountyRefused =>
   new BountyRefused('already-ended', `bounty ${record.id} already ended (${record.stage}) — an ended bounty takes no further transitions; the record is its history`);
 
@@ -291,7 +301,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // The bounty ended: every durability ref's work is done — the snapshot's
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
-    syncGitHubDecision(repoRoot, record);
+    syncGitHubDecision(repoRoot, record, { decision: mergeRead });
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);
     // A recorded first merge fuses into the payment block (BT14) — one
     // block, one 'for the owner'. With no payment to make, or when the
@@ -309,6 +319,12 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
       throw new GitFailed(`git merge --abort failed in ${repoRoot} after a conflict in ${paths.join(', ')}: ${aborted.stderr.trim()} — resolve the merge state by hand`);
     }
     restoreBytes(repoRoot, saved);
+    // The abort and the byte restore both write the worktree and can leave
+    // the index's stat cache stale on Windows (K15) — a file restored
+    // byte-identical still reads stat-dirty, and the agent's own `git merge`
+    // then refuses "needs update". Refresh it; exit 1 names real diffs,
+    // which a genuinely different restore would want shown anyway.
+    ownerGitOutcome(repoRoot, ['update-index', '-q', '--refresh'], ownerAttrs);
     record.conflicts = { paths, at: new Date().toISOString() };
     persistRecord(repoRoot, record);
     // The facts a clashing apply owes: which of the solution's files would

@@ -458,7 +458,10 @@ outside work without repeating the local merge. `status` shows pending
 work even after a bounty has ended. A `close` after an unfinished apply update
 preserves both facts and finishes the issue closure and branch removal. Retry
 uses the account that started the post; comments or copied listings from other
-accounts cannot stand in for tool facts.
+accounts cannot stand in for tool facts. This outside work finishes what was
+posted whatever the owner's current decision — closing never waits — and when
+that decision is not `allowed` the closing output says on one line that it
+closed up on GitHub without asking, naming the standing answer.
 
 If a push succeeds but the issue cannot be opened, the refusal is
 `github-post-incomplete`. The record states the known outside state. Repeat
@@ -769,7 +772,9 @@ their block. Imports are resolved relative to the importing file.
 The importer names that fact in config output. Cyclic imports are refused.
 
 For any other host or custom filename, choose an existing file inside the
-checkout, then enable maintenance:
+checkout — never one inside `.git/` or `.box/`, which belong to Git and to
+this tool and are refused as `instruction-file-tool-owned` — then enable
+maintenance:
 
 ```text
 box bounty config set instruction-file path/to/instructions.txt

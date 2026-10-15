@@ -21,10 +21,11 @@
 // once across sessions. A race between two sessions may announce an event
 // twice — never lose it.
 
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { refreshGitHubStatus } from './github.js';
+import { walkProjectPath } from './instructions.js';
 import { attemptsOf, isOpenStage, listRecords } from './record.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
@@ -585,34 +586,31 @@ const settingsPath = (repoRoot: string, host: HookHost): string => join(repoRoot
 const folded = (path: string): string => path.replaceAll('\\', '/').toLowerCase();
 
 // The settings file must stay inside this project. Every component from the
-// project root down is checked the way the instruction-file checker does —
-// a link or junction anywhere on the path is refused whether or not its
-// target exists yet, because a dangling link still writes through when the
-// file is created, and a plain file where a directory should be is refused
-// rather than left to an unhandled error from the write.
+// project root down is checked by the one containment walk the instruction-
+// file checker also uses — a link or junction anywhere on the path is
+// refused whether or not its target exists yet, because a dangling link
+// still writes through when the file is created, and a plain file where a
+// directory should be is refused rather than left to an unhandled error
+// from the write. A missing component is fine: the tool creates below the
+// last existing one.
 function checkedSettingsPath(repoRoot: string, host: HookHost): string {
-  const root = realpathSync(repoRoot);
-  // Built from the canonical root, so a checkout that itself sits behind a
-  // link still compares inside its real location.
-  const path = join(root, ...host.file.split('/'));
-  let current = root;
-  const parts = relative(root, path).split(sep);
-  for (let index = 0; index < parts.length; index += 1) {
-    current = join(current, parts[index]!);
-    const stat = lstatSync(current, { throwIfNoEntry: false });
-    if (stat === undefined) break; // below the last existing component the tool creates inside the project
-    if (stat.isSymbolicLink()) {
-      throw new BountyRefused('hook-settings-escape', `${current} is a link — the hook only writes settings that stay inside the project; nothing changed`);
+  const { root, path, problem, leaf, canonical } = walkProjectPath(repoRoot, host.file);
+  if (problem !== null) {
+    if (problem.kind === 'link') {
+      throw new BountyRefused('hook-settings-escape', `${problem.at} is a link — the hook only writes settings that stay inside the project; nothing changed`);
     }
-    if (index < parts.length - 1 && !stat.isDirectory()) {
-      throw new BountyRefused('hook-settings-blocked', `${current} is not a directory — the hook cannot write ${host.file}; nothing changed`);
+    if (problem.kind === 'outside') {
+      throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
     }
+    if (problem.kind === 'blocked') {
+      throw new BountyRefused('hook-settings-blocked', `${problem.at} is not a directory — the hook cannot write ${host.file}; nothing changed`);
+    }
+    // 'missing': below the last existing component the tool creates inside the project.
   }
-  const leaf = lstatSync(path, { throwIfNoEntry: false });
   if (leaf !== undefined) {
     if (leaf.isDirectory()) throw new BountyRefused('hook-settings-blocked', `${path} is a directory — ${host.file} must be a settings file; nothing changed`);
     if (leaf.nlink > 1) throw new BountyRefused('hook-settings-escape', `${path} is linked from more than one place — the hook only writes a file the project owns; nothing changed`);
-    const resolved = folded(realpathSync(path));
+    const resolved = folded(canonical!);
     if (resolved !== folded(root) && !resolved.startsWith(`${folded(root)}/`)) {
       throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
     }
