@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
@@ -15,6 +15,12 @@ export function settingsDir(): string {
   return join(process.env['XDG_CONFIG_HOME'] ?? join(homedir(), '.config'), 'box');
 }
 export const settingsFile = (): string => join(settingsDir(), SETTINGS_FILE_NAME);
+// The tool's own memory sits next to the owner's file — the same folder, so
+// BOX_BOUNTY_SETTINGS_DIR covers both — because gh keeps config.yml and
+// state.yml apart the same way: what the owner chose is never mixed with
+// what the tool noted for itself.
+export const STATE_FILE_NAME = 'state.json';
+export const stateFile = (): string => join(settingsDir(), STATE_FILE_NAME);
 export type OwnerDecision = 'allowed' | 'ask' | 'off';
 interface Change { readonly bounty: OwnerDecision | null; readonly at: string }
 interface MoneyEntry { readonly amount: number; readonly at: string }
@@ -35,11 +41,12 @@ export interface InstructionSettings {
   readonly notices: readonly string[];
   readonly retired?: boolean;
 }
+/** The owner's choices — the whole content of settings.json (BT22). Nothing
+    here is written by the tool for itself: every field is an answer the
+    owner gave or a list the owner set. */
 export interface OwnerSettings {
   readonly default?: SettingsLevel;
   readonly repositories: Readonly<Record<string, SettingsLevel>>;
-  readonly migrations: readonly Migration[];
-  readonly firstMerges: Readonly<Record<string, MergeNotice>>;
   readonly instructions?: Readonly<Record<string, InstructionSettings>>;
   /** The owner's two publish lists (BT8c), keyed by the repository's real
       folder path — they are about the working files in this checkout, not
@@ -47,12 +54,31 @@ export interface OwnerSettings {
       a never-ship rule; `safe` paths are the ones the pre-publish scan does
       not hold a bounty over. Both live here and never in the project. */
   readonly publishing?: Readonly<Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }>>;
+  /** Owner answers to held merges (BT13), keyed `<repository>#<bounty-id>`.
+      They live here, outside every repository, because the bounty record is
+      inside it: an approval written on the record could be forged where the
+      agent works. Each entry binds the answer to the attempt, its commit
+      and the branch tip the owner was shown — a changed solution or moved
+      branch no longer matches and is asked again. */
+  readonly mergeAnswers?: Record<string, MergeAnswer>;
+}
+/** The tool's own bookkeeping — the whole content of state.json (BT22).
+    Nothing here carries authority: no decision, reward, limit or answer is
+    ever read from this file, so a hand-edited one can only make the tool
+    forget — and an unreadable one is reset, never refused. */
+export interface ToolState {
+  /** Standing explanations the tool said once and never repeats (BT17),
+      keyed `<repository folder real path or *>#<topic>` — a repository
+      scope for facts that apply the first time they are true in one
+      project, `*` for facts about the settings themselves. The value is
+      the time the line was shown. */
+  readonly said?: Readonly<Record<string, string>>;
   /** The reward and limit are per repository since BT11c — they live on each
-      `repositories` entry. A file written before then carried one shared
-      `reward`/`rewardLimit` for everything; the owner never chose them per
-      repository (one was left by a demo run), so on first load they are
-      retired into this record — applied to nothing — and the tool says so
-      once, recording `toldAt` when the fact was shown. */
+      `repositories` entry in the owner's file. A file written before then
+      carried one shared `reward`/`rewardLimit` for everything; the owner
+      never chose them per repository (one was left by a demo run), so on
+      first load they are retired into this record — applied to nothing —
+      and the tool says so once, recording `toldAt` when the fact was shown. */
   readonly retiredReward?: {
     readonly reward: MoneyEntry | null;
     readonly limit: MoneyEntry | null;
@@ -71,20 +97,11 @@ export interface OwnerSettings {
       shown once ever. An `ask` written by this tool is marked at the write:
       the owner saw the merge sentence in the block they answered. */
   readonly askMergeNoticeAt?: string;
-  /** Owner answers to held merges (BT13), keyed `<repository>#<bounty-id>`.
-      They live here, outside every repository, because the bounty record is
-      inside it: an approval written on the record could be forged where the
-      agent works. Each entry binds the answer to the attempt, its commit
-      and the branch tip the owner was shown — a changed solution or moved
-      branch no longer matches and is asked again. */
-  readonly mergeAnswers?: Record<string, MergeAnswer>;
-  /** Standing explanations the tool said once and never repeats (BT17),
-      keyed `<repository folder real path or *>#<topic>` — a repository
-      scope for facts that apply the first time they are true in one
-      project, `*` for facts about the settings themselves. The value is
-      the time the line was shown. It is state, not a setting: `config set`
-      never names it. */
-  readonly said?: Readonly<Record<string, string>>;
+  /** First outside merges already told (BT8a), keyed by the receiving
+      repository's GitHub address. */
+  readonly firstMerges: Readonly<Record<string, MergeNotice>>;
+  /** What the one-time legacy `projects` migration did to each old path. */
+  readonly migrations: readonly Migration[];
 }
 /** One recorded owner answer to a held merge (BT13). */
 export interface MergeAnswer {
@@ -178,23 +195,159 @@ function level(value: unknown, where: string): SettingsLevel {
     ...(value['rewardLimit'] === undefined ? {} : { rewardLimit: moneySetting(value['rewardLimit'], `${where}.rewardLimit`) })
   };
 }
-function persist(settings: OwnerSettings): void {
-  mkdirSync(settingsDir(), { recursive: true });
-  writeFileSync(settingsFile(), `${JSON.stringify({ kind: 'box-owner-settings', ...settings }, null, 2)}\n`, 'utf8');
+// Both files land whole or not at all (BT22): the new content is written
+// beside the target under this process's own name, then renamed over it in
+// one move, so a crash mid-write leaves the previous complete file, never a
+// torn one — and a stale `<file>.<pid>.tmp` is just litter the next write
+// replaces. On Windows the rename can fail while another process holds the
+// target open, so it is retried for about a second; past that the write is
+// refused by name rather than gambled on.
+const WRITE_RENAME_MS = 1_000;
+function writeAtomic(path: string, text: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const temp = `${path}.${process.pid}.tmp`;
+  writeFileSync(temp, text, 'utf8');
+  const giveUp = Date.now() + WRITE_RENAME_MS;
+  for (;;) {
+    try {
+      renameSync(temp, path);
+      return;
+    } catch (error) {
+      if (Date.now() >= giveUp) {
+        try { rmSync(temp, { force: true }); } catch { /* litter over a wrong claim */ }
+        throw new BountyRefused('settings-write-failed', `${path}: the file could not be replaced (${error instanceof Error ? error.message : String(error)}); the previous file stands, nothing was lost`);
+      }
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+    }
+  }
 }
-// The one write path every settings mutation shares — exported for the
-// publish lists, which are validated in never-ship.ts before they land here.
+
+// The one write path to the owner's file — reached only when the owner
+// changed something: `allow`, `deny`, `config set`/`add`/`remove`, the merge
+// answers `allow <id>` records and `apply` releases, and the two one-time
+// migrations on load (legacy `projects`, and the bookkeeping keys moving to
+// state.json). A read command never reaches it. Exported for the publish
+// lists, which are validated in never-ship.ts before they land here.
+function persist(settings: OwnerSettings): void {
+  writeAtomic(settingsFile(), `${JSON.stringify({ kind: 'box-owner-settings', ...settings }, null, 2)}\n`);
+}
 export const saveSettings = persist;
+
+/** The write path for the tool's own file — any command may land here; the
+    owner's file is untouched by bookkeeping. */
+export function saveState(state: ToolState): void {
+  writeAtomic(stateFile(), `${JSON.stringify({ kind: 'box-tool-state', ...state }, null, 2)}\n`);
+}
+
+// ---- the tool's own state ---------------------------------------------------
+
+/** The keys a settings file once carried for the tool — still accepted there
+    so the first load can move them out; never written back (BT22). */
+const STATE_KEYS = ['said', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'firstMerges', 'migrations', 'retiredReward'] as const;
+
+// The moved fields read the same in either file — `refuse` and `unknownName`
+// are the file's own verdicts: settings-malformed/-unknown-name for the
+// owner's file, an unreadable reset for the tool's own.
+function movedState(parsed: Record<string, unknown>, refuse: (detail: string) => never, unknownName: (name: string) => never): ToolState {
+  const migrations: Migration[] = [];
+  const rawMigrations = parsed['migrations'];
+  if (rawMigrations !== undefined) {
+    if (!Array.isArray(rawMigrations)) return refuse('migrations must hold a list');
+    for (const entry of rawMigrations) {
+      if (!isObject(entry) || typeof entry['path'] !== 'string' || typeof entry['at'] !== 'string' || typeof entry['detail'] !== 'string' || !(entry['repository'] === null || typeof entry['repository'] === 'string')) return refuse('a migration notice is unreadable');
+      migrations.push({ path: entry['path'], at: entry['at'], repository: entry['repository'], detail: entry['detail'] });
+    }
+  }
+  const firstMerges: Record<string, MergeNotice> = {};
+  const rawMerges = parsed['firstMerges'];
+  if (rawMerges !== undefined) {
+    if (!isObject(rawMerges)) return refuse('firstMerges must hold an object');
+    for (const [key, entry] of Object.entries(rawMerges)) {
+      const address = repositoryAddress(key);
+      if (address === null || !isObject(entry) || typeof entry['commit'] !== 'string' || !/^[a-f\d]{40,64}$/.test(entry['commit']) || typeof entry['at'] !== 'string') return refuse('a first merge notice is unreadable');
+      firstMerges[address] = { commit: entry['commit'], at: entry['at'] };
+    }
+  }
+  let retiredReward: ToolState['retiredReward'];
+  const rawRetired = parsed['retiredReward'];
+  if (rawRetired !== undefined) {
+    if (!isObject(rawRetired) || typeof rawRetired['at'] !== 'string' || !(rawRetired['toldAt'] === undefined || typeof rawRetired['toldAt'] === 'string')
+      || !(rawRetired['reward'] === null || rawRetired['reward'] === undefined || isObject(rawRetired['reward']))
+      || !(rawRetired['limit'] === null || rawRetired['limit'] === undefined || isObject(rawRetired['limit']))) return refuse('a retired reward record is unreadable');
+    for (const name of Object.keys(rawRetired)) if (!['reward', 'limit', 'at', 'toldAt'].includes(name)) unknownName(name);
+    retiredReward = {
+      reward: rawRetired['reward'] === null || rawRetired['reward'] === undefined ? null : moneySetting(rawRetired['reward'], 'retiredReward.reward', refuse, unknownName),
+      limit: rawRetired['limit'] === null || rawRetired['limit'] === undefined ? null : moneySetting(rawRetired['limit'], 'retiredReward.limit', refuse, unknownName),
+      at: rawRetired['at'],
+      ...(typeof rawRetired['toldAt'] === 'string' ? { toldAt: rawRetired['toldAt'] } : {})
+    };
+  }
+  return {
+    ...(parsed['said'] === undefined ? {} : { said: saidMap(parsed['said'], refuse) }),
+    ...(retiredReward === undefined ? {} : { retiredReward }),
+    ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}),
+    ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}),
+    ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}),
+    firstMerges,
+    migrations
+  };
+}
+
+/** Fold records moved out of an old settings file into the tool's state —
+    the state's own entries win every clash: a said-once mark, a notice's
+    time, a first-merge commit. */
+function mergeState(state: ToolState, moved: ToolState): ToolState {
+  const scalar = <K extends 'retiredReward' | 'rewardPromiseSaid' | 'rewardNoticeAt' | 'askMergeNoticeAt'>(key: K): Pick<ToolState, K> | Record<never, never> => {
+    const value = state[key] ?? moved[key];
+    return value === undefined ? {} : { [key]: value } as Pick<ToolState, K>;
+  };
+  return {
+    ...(moved.said !== undefined || state.said !== undefined ? { said: { ...moved.said, ...state.said } } : {}),
+    ...scalar('retiredReward'),
+    ...scalar('rewardPromiseSaid'),
+    ...scalar('rewardNoticeAt'),
+    ...scalar('askMergeNoticeAt'),
+    firstMerges: { ...moved.firstMerges, ...state.firstMerges },
+    migrations: [...moved.migrations, ...state.migrations]
+  };
+}
+
+// The state file is the tool's own, so a bad shape is never the owner's
+// problem: one line says it was reset, the run continues with an empty
+// state, and the file is rewritten — an explanation may then be said once
+// more, but nothing the owner decided was ever kept here to lose. Anything
+// the tool does not write — a wrong kind, an unknown key, a bad value — is
+// unreadable; the file is never read for authority, so a hand edit can only
+// make the tool forget.
+class StateUnreadable { constructor(readonly detail: string) {} }
+export function loadState(): ToolState {
+  const path = stateFile();
+  if (!existsSync(path)) return { firstMerges: {}, migrations: [] };
+  const unreadable = (detail: string): never => { throw new StateUnreadable(detail); };
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+    if (!isObject(parsed)) return unreadable('must hold a JSON object');
+    for (const name of Object.keys(parsed)) if (!['kind', ...STATE_KEYS].includes(name)) unreadable(`"${name}" is not something the tool writes to its state`);
+    if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-tool-state') return unreadable('kind must be box-tool-state');
+    return movedState(parsed, unreadable, name => unreadable(`"${name}" is not something the tool writes to its state`));
+  } catch (error) {
+    if (!(error instanceof SyntaxError || error instanceof StateUnreadable)) throw error;
+    console.error(`the tool's own state at ${path} was unreadable and was reset`);
+    const empty: ToolState = { firstMerges: {}, migrations: [] };
+    try { saveState(empty); } catch { /* the reset could not be written — the next read tries again */ }
+    return empty;
+  }
+}
 
 /** A money setting holds {amount, at}: a whole US-dollar amount at or above
     0 and the time the tool wrote it. A hand-written or malformed entry fails
     loudly — the tool never guesses what the file means; an unknown key inside
     it is named like every other unknown setting. */
-function moneySetting(value: unknown, where: string): { readonly amount: number; readonly at: string } {
-  if (!isObject(value)) return bad(`${where} must hold {amount, at} — a whole dollar amount at or above 0`);
-  for (const name of Object.keys(value)) if (!['amount', 'at'].includes(name)) unknownSetting(name);
+function moneySetting(value: unknown, where: string, refuse: (detail: string) => never = bad, unknownName: (name: string) => never = unknownSetting): { readonly amount: number; readonly at: string } {
+  if (!isObject(value)) return refuse(`${where} must hold {amount, at} — a whole dollar amount at or above 0`);
+  for (const name of Object.keys(value)) if (!['amount', 'at'].includes(name)) unknownName(name);
   const amount = value['amount'];
-  if (typeof amount !== 'number' || !Number.isSafeInteger(amount) || amount < 0 || typeof value['at'] !== 'string') return bad(`${where} must hold a whole dollar amount at or above 0 with its written time`);
+  if (typeof amount !== 'number' || !Number.isSafeInteger(amount) || amount < 0 || typeof value['at'] !== 'string') return refuse(`${where} must hold a whole dollar amount at or above 0 with its written time`);
   return { amount, at: value['at'] };
 }
 
@@ -202,7 +355,7 @@ function moneySetting(value: unknown, where: string): { readonly amount: number;
 // default, and conflicting copies require a fresh repository decision.
 export function loadSettings(): OwnerSettings {
   const path = settingsFile();
-  if (!existsSync(path)) return { repositories: {}, migrations: [], firstMerges: {} };
+  if (!existsSync(path)) return { repositories: {} };
   let parsed: unknown;
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return bad('not readable JSON'); }
   if (!isObject(parsed)) return bad('must hold a JSON object');
@@ -217,25 +370,6 @@ export function loadSettings(): OwnerSettings {
       if (address === null) return bad(`repositories key ${JSON.stringify(key)} is not a GitHub address`);
       if (repositories[address] !== undefined) return bad(`duplicate repository address ${address}`);
       repositories[address] = level(value, `repositories[${JSON.stringify(key)}]`);
-    }
-  }
-  const migrations: Migration[] = [];
-  const rawMigrations = parsed['migrations'];
-  if (rawMigrations !== undefined) {
-    if (!Array.isArray(rawMigrations)) return bad('migrations must hold a list');
-    for (const entry of rawMigrations) {
-      if (!isObject(entry) || typeof entry['path'] !== 'string' || typeof entry['at'] !== 'string' || typeof entry['detail'] !== 'string' || !(entry['repository'] === null || typeof entry['repository'] === 'string')) return bad('a migration notice is unreadable');
-      migrations.push({ path: entry['path'], at: entry['at'], repository: entry['repository'], detail: entry['detail'] });
-    }
-  }
-  const firstMerges: Record<string, MergeNotice> = {};
-  const rawMerges = parsed['firstMerges'];
-  if (rawMerges !== undefined) {
-    if (!isObject(rawMerges)) return bad('firstMerges must hold an object');
-    for (const [key, entry] of Object.entries(rawMerges)) {
-      const address = repositoryAddress(key);
-      if (address === null || !isObject(entry) || typeof entry['commit'] !== 'string' || !/^[a-f\d]{40,64}$/.test(entry['commit']) || typeof entry['at'] !== 'string') return bad('a first merge notice is unreadable');
-      firstMerges[address] = { commit: entry['commit'], at: entry['at'] };
     }
   }
   const fallback = parsed['default'];
@@ -268,33 +402,29 @@ export function loadSettings(): OwnerSettings {
   // one there fails loudly like every other wrong shape.
   const defaultLevel = fallback === undefined ? undefined : level(fallback, 'default');
   if (defaultLevel !== undefined && (defaultLevel.reward !== undefined || defaultLevel.rewardLimit !== undefined)) return bad('default cannot hold a reward or a limit — money belongs to a named repository; fix the settings file or remove it');
-  // A retired shared reward: loaded so the once-only fact can say what it
-  // was, but it is applied to no repository ever again.
-  let retiredReward: OwnerSettings['retiredReward'];
-  const rawRetired = parsed['retiredReward'];
-  if (rawRetired !== undefined) {
-    if (!isObject(rawRetired) || typeof rawRetired['at'] !== 'string' || !(rawRetired['toldAt'] === undefined || typeof rawRetired['toldAt'] === 'string')
-      || !(rawRetired['reward'] === null || rawRetired['reward'] === undefined || isObject(rawRetired['reward']))
-      || !(rawRetired['limit'] === null || rawRetired['limit'] === undefined || isObject(rawRetired['limit']))) return bad('a retired reward record is unreadable');
-    for (const name of Object.keys(rawRetired)) if (!['reward', 'limit', 'at', 'toldAt'].includes(name)) unknownSetting(name);
-    retiredReward = {
-      reward: rawRetired['reward'] === null || rawRetired['reward'] === undefined ? null : moneySetting(rawRetired['reward'], 'retiredReward.reward'),
-      limit: rawRetired['limit'] === null || rawRetired['limit'] === undefined ? null : moneySetting(rawRetired['limit'], 'retiredReward.limit'),
-      at: rawRetired['at'],
-      ...(typeof rawRetired['toldAt'] === 'string' ? { toldAt: rawRetired['toldAt'] } : {})
-    };
-  }
-  // The shared reward/limit a pre-BT11c file carried apply to nothing: the
-  // owner never chose them per repository, so they retire into a record the
-  // once-only fact reports — they are never read as a setting again. Open
-  // bounties keep the amount they were posted with; that lives on records.
+  // What the tool once wrote into the owner's file is still read — and a
+  // bad shape still fails loudly — but it is never the owner's again: the
+  // first load that finds a moved key folds it into state.json (the state's
+  // own entries win every clash) and rewrites this file without it. That
+  // fold happens once; afterwards this file changes only on the owner's own
+  // commands.
+  let moved = movedState(parsed, bad, unknownSetting);
+  // A retired shared reward is kept so the once-only fact can say what it
+  // was, but it is applied to no repository ever again. The shared
+  // reward/limit a pre-BT11c file carried apply to nothing: the owner never
+  // chose them per repository, so they retire into the record the once-only
+  // fact reports — they are never read as a setting again. Open bounties
+  // keep the amount they were posted with; that lives on records.
   const retiring = parsed['reward'] !== undefined || parsed['rewardLimit'] !== undefined;
   if (retiring) {
-    if (retiredReward !== undefined) return bad('the settings file holds both a shared reward and a retired one; fix the settings file or remove it');
-    retiredReward = {
-      reward: parsed['reward'] === undefined ? null : moneySetting(parsed['reward'], 'reward'),
-      limit: parsed['rewardLimit'] === undefined ? null : moneySetting(parsed['rewardLimit'], 'rewardLimit'),
-      at: new Date().toISOString()
+    if (moved.retiredReward !== undefined) return bad('the settings file holds both a shared reward and a retired one; fix the settings file or remove it');
+    moved = {
+      ...moved,
+      retiredReward: {
+        reward: parsed['reward'] === undefined ? null : moneySetting(parsed['reward'], 'reward'),
+        limit: parsed['rewardLimit'] === undefined ? null : moneySetting(parsed['rewardLimit'], 'rewardLimit'),
+        at: new Date().toISOString()
+      }
     };
   }
   const mergeAnswers: Record<string, MergeAnswer> = {};
@@ -309,15 +439,20 @@ export function loadSettings(): OwnerSettings {
       mergeAnswers[key] = { n: entry['n'] as number, commit: entry['commit'], head: entry['head'], at: entry['at'] };
     }
   }
-  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, migrations, firstMerges, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(retiredReward === undefined ? {} : { retiredReward }), ...(typeof parsed['rewardPromiseSaid'] === 'string' ? { rewardPromiseSaid: parsed['rewardPromiseSaid'] } : {}), ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}), ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }), ...(parsed['said'] === undefined ? {} : { said: saidMap(parsed['said']) }) };
+  const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
   const legacy = parsed['projects'];
+  if (legacy !== undefined && !isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
+  const carried = STATE_KEYS.some(key => parsed[key] !== undefined);
   if (legacy === undefined) {
-    if (retiring) persist(settings);
+    // State first: if the owner's rewrite then fails, the moved keys still
+    // stand in this file and the fold-in runs again — and the state's own
+    // entries already win every clash.
+    if (carried || retiring) { saveState(mergeState(loadState(), moved)); persist(settings); }
     return settings;
   }
-  if (!isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
   const entries = Object.entries(legacy).map(([key, value]) => ({ key, entry: level(value, `projects[${JSON.stringify(key)}]`) }));
   const at = new Date().toISOString();
+  const notices: Migration[] = [];
   for (const { key, entry } of entries) {
     let address: string | null = null;
     try {
@@ -333,17 +468,18 @@ export function loadSettings(): OwnerSettings {
       }
     } catch { /* no safe identity */ }
     if (address === null) {
-      migrations.push({ path: key, repository: null, at, detail: 'could not read exactly one GitHub address; no permission moved. Re-add with box bounty allow <owner/name>' });
+      notices.push({ path: key, repository: null, at, detail: 'could not read exactly one GitHub address; no permission moved. Re-add with box bounty allow <owner/name>' });
       continue;
     }
     const previous = repositories[address];
     if (previous !== undefined && previous.bounty !== entry.bounty) {
       repositories[address] = { bounty: null, at, changes: [...previous.changes, { bounty: previous.bounty, at: previous.at }, ...entry.changes, { bounty: entry.bounty, at: entry.at }] };
-      migrations.push({ path: key, repository: address, at, detail: `conflicting old decisions; not allowed. Re-add with box bounty allow ${address}` });
+      notices.push({ path: key, repository: address, at, detail: `conflicting old decisions; not allowed. Re-add with box bounty allow ${address}` });
     } else if (previous === undefined) repositories[address] = entry;
     else repositories[address] = { ...previous, changes: [...previous.changes, ...entry.changes, { bounty: entry.bounty, at: entry.at }] };
-    if (!migrations.some(notice => notice.path === key)) migrations.push({ path: key, repository: address, at, detail: `moved to ${address}` });
+    if (!notices.some(notice => notice.path === key)) notices.push({ path: key, repository: address, at, detail: `moved to ${address}` });
   }
+  saveState(mergeState(loadState(), { ...moved, migrations: [...moved.migrations, ...notices] }));
   persist(settings);
   return settings;
 }
@@ -384,18 +520,21 @@ export function repoReward(repoRoot: string): { readonly amount: number; readonl
     was shown — told once ever, and a fresh settings file (no decisions
     written yet) is not told at all: first use already carries the fact. */
 export function rewardNoticeLine(): string | null {
+  // Settings first — its load runs any pending move-out, so the state read
+  // below already holds what an old file carried.
   const settings = loadSettings();
+  const state = loadState();
   const at = new Date().toISOString();
-  if (settings.retiredReward !== undefined) {
-    if (settings.retiredReward.toldAt !== undefined) return null;
-    const retired = settings.retiredReward;
-    persist({ ...settings, retiredReward: { ...retired, toldAt: at } });
+  if (state.retiredReward !== undefined) {
+    if (state.retiredReward.toldAt !== undefined) return null;
+    const retired = state.retiredReward;
+    saveState({ ...state, retiredReward: { ...retired, toldAt: at } });
     const was = retired.reward === null && retired.limit === null ? 'a shared reward entry without readable amounts' : `a shared reward of $${retired.reward?.amount ?? 0}${retired.limit === null ? '' : ` and a $${retired.limit.amount} limit`}`;
     return `one fact about money: ${was} applied to every repository — it applies to nothing now. Each repository states $0 until you set its own: box bounty config set reward <whole dollars> [owner/name]. Open bounties keep the amount they were posted with (noted ${at})`;
   }
-  if (settings.rewardNoticeAt !== undefined) return null;
+  if (state.rewardNoticeAt !== undefined) return null;
   if (settings.default === undefined && Object.keys(settings.repositories).length === 0) return null;
-  persist({ ...settings, rewardNoticeAt: at });
+  saveState({ ...state, rewardNoticeAt: at });
   return `each repository can state its own reward — the owner sets it inside its checkout or by name: box bounty config set reward <whole dollars> [owner/name]. Until then every bounty states $0 (noted ${at})`;
 }
 
@@ -406,22 +545,23 @@ export function rewardNoticeLine(): string | null {
     so the write itself marks the fact told. */
 export function askMergeNoticeLine(): string | null {
   const settings = loadSettings();
-  if (settings.askMergeNoticeAt !== undefined) return null;
+  const state = loadState();
+  if (state.askMergeNoticeAt !== undefined) return null;
   const asks = settings.default?.bounty === 'ask' || Object.values(settings.repositories).some(entry => entry.bounty === 'ask');
   if (!asks) return null;
   const at = new Date().toISOString();
-  persist({ ...settings, askMergeNoticeAt: at });
+  saveState({ ...state, askMergeNoticeAt: at });
   return `one fact about ask me each time: it now covers merges too — the owner is asked before each post and before each merge (noted ${at})`;
 }
 
 /** The `said` map is the tool's own record of standing explanations already
-    shown — a hand-edited or malformed entry fails loudly like every other
-    wrong shape rather than silently re-saying or never saying. */
-function saidMap(value: unknown): Record<string, string> {
-  if (!isObject(value)) return bad('said must hold an object of topic keys to times');
+    shown — a malformed entry fails loudly in the owner's file like every
+    other wrong shape, and resets the tool's own. */
+function saidMap(value: unknown, refuse: (detail: string) => never = bad): Record<string, string> {
+  if (!isObject(value)) return refuse('said must hold an object of topic keys to times');
   const out: Record<string, string> = {};
   for (const [key, at] of Object.entries(value)) {
-    if (typeof at !== 'string') return bad('a said entry is unreadable');
+    if (typeof at !== 'string') return refuse('a said entry is unreadable');
     out[key] = at;
   }
   return out;
@@ -435,15 +575,17 @@ const saidKey = (repoRoot: string | null, topic: string): string =>
     authority is still unchanged, so its "said" record waits until after the
     decision write — BT8a's order guard). */
 export function saidAlready(repoRoot: string | null, topic: string): boolean {
-  return loadSettings().said?.[saidKey(repoRoot, topic)] !== undefined;
+  loadSettings(); // its load runs any pending move-out, so the mark is read from state
+  return loadState().said?.[saidKey(repoRoot, topic)] !== undefined;
 }
 
 /** Record that a standing explanation was said. */
 export function markSaid(repoRoot: string | null, topic: string): void {
   const key = saidKey(repoRoot, topic);
-  const settings = loadSettings();
-  if (settings.said?.[key] !== undefined) return;
-  persist({ ...settings, said: { ...settings.said, [key]: new Date().toISOString() } });
+  loadSettings(); // move-out first, as in saidAlready
+  const state = loadState();
+  if (state.said?.[key] !== undefined) return;
+  saveState({ ...state, said: { ...state.said, [key]: new Date().toISOString() } });
 }
 
 /** Say a standing explanation exactly once — the first time it applies —
@@ -493,7 +635,8 @@ export interface DecisionRead {
 }
 export function readDecision(repoRoot: string): DecisionRead {
   const settings = loadSettings();
-  if (Object.keys(settings.repositories).length === 0 && settings.migrations.length === 0) {
+  const migrations = loadState().migrations;
+  if (Object.keys(settings.repositories).length === 0 && migrations.length === 0) {
     if (settings.default === undefined) return { decision: null, level: null, at: null };
     // The all-projects extra never chooses between remotes (BT16 rule 6): a
     // checkout whose several GitHub candidates are not on the list stays
@@ -510,7 +653,7 @@ export function readDecision(repoRoot: string): DecisionRead {
   const key = choice?.kind === 'one' ? choice.address : null;
   const entry = key === null ? undefined : settings.repositories[key];
   if (entry !== undefined) return { decision: entry.bounty, level: 'project', at: entry.at, ...(entry.bounty === null ? { denied: true } : {}) };
-  if (settings.migrations.some(notice => notice.repository === null && resolve(notice.path).toLowerCase() === resolve(repoRoot).toLowerCase())) return { decision: null, level: null, at: null };
+  if (migrations.some(notice => notice.repository === null && resolve(notice.path).toLowerCase() === resolve(repoRoot).toLowerCase())) return { decision: null, level: null, at: null };
   if (settings.default !== undefined) return { decision: settings.default.bounty, level: 'default', at: settings.default.at };
   return { decision: null, level: null, at: null };
 }
@@ -535,8 +678,15 @@ export function writeRepository(address: string, bounty: OwnerDecision | null, b
   const entry: SettingsLevel = { bounty, at, changes, ...moneyFields };
   beforeWrite?.();
   // An `ask` written through the tool was answered under wording that said
-  // it covers merges — the once-only fact is already told (BT13).
-  persist({ ...settings, ...(bounty === 'ask' ? { askMergeNoticeAt: settings.askMergeNoticeAt ?? at } : {}), repositories: { ...settings.repositories, [key]: entry } });
+  // it covers merges — the once-only fact is already told (BT13). The mark
+  // is the tool's own record: it lands in the state file before the
+  // decision does, so a refused settings write cannot leave a told-mark
+  // with no `ask` it marks.
+  if (bounty === 'ask') {
+    const state = loadState();
+    if (state.askMergeNoticeAt === undefined) saveState({ ...state, askMergeNoticeAt: at });
+  }
+  persist({ ...settings, repositories: { ...settings.repositories, [key]: entry } });
   return { path: settingsFile(), at, key };
 }
 
@@ -561,7 +711,11 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
   const settings = loadSettings();
   const at = new Date().toISOString();
   const previous = settings.default;
-  persist({ ...settings, ...(bounty === 'ask' ? { askMergeNoticeAt: settings.askMergeNoticeAt ?? at } : {}), default: { bounty, at, changes: [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])] } });
+  if (bounty === 'ask') {
+    const state = loadState();
+    if (state.askMergeNoticeAt === undefined) saveState({ ...state, askMergeNoticeAt: at });
+  }
+  persist({ ...settings, default: { bounty, at, changes: [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])] } });
   return { path: settingsFile(), at, key: 'all-projects' };
 }
 export function readInstructions(repoRoot: string): InstructionSettings {
@@ -643,9 +797,10 @@ export function recordFirstMerge(repoRoot: string, commit: string): FirstMergeNo
       checkLocalMergePath(repoRoot);
       writeFileSync(localMergeFile(repoRoot), `${JSON.stringify({ kind: 'box-local-first-merge', repository: realpathSync(repoRoot), commit, at: new Date().toISOString() }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
     } else {
-      const settings = loadSettings();
-      if (settings.firstMerges[address] !== undefined) return null;
-      persist({ ...settings, firstMerges: { ...settings.firstMerges, [address]: { commit, at: new Date().toISOString() } } });
+      loadSettings(); // move-out first, so a pending old file's marks are seen
+      const state = loadState();
+      if (state.firstMerges[address] !== undefined) return null;
+      saveState({ ...state, firstMerges: { ...state.firstMerges, [address]: { commit, at: new Date().toISOString() } } });
     }
   } catch (error) {
     const where = address === null || error instanceof BountyRefused && error.reason.startsWith('first-merge-notice-') ? '.box/bounties/FIRST_MERGE' : 'box bounty config';

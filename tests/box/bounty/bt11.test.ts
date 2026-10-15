@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { allowRepository, BountyRefused, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readReward, repoReward, renderConfig, renderDescribe, renderStatus, settingsFile } from '../../../packages/box-bounty/index.js';
+import { allowRepository, BountyRefused, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readReward, repoReward, renderConfig, renderDescribe, renderStatus, settingsFile, stateFile } from '../../../packages/box-bounty/index.js';
 import { readFormat } from '../../../packages/box-bounty/format.js';
 import { fixture, refused } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, ownerSays, runRoot, write } from './support.js';
@@ -188,7 +188,9 @@ describe('BT11c — the setting written before this wave applies to nothing', ()
     const migrated = JSON.parse(readFileSync(settingsFile(), 'utf8'));
     expect(migrated['reward']).toBeUndefined();
     expect(migrated['rewardLimit']).toBeUndefined();
-    expect(migrated['retiredReward']).toBeDefined();
+    // BT22: the retired record is the tool's memory — it lives in state.json.
+    expect(migrated['retiredReward']).toBeUndefined();
+    expect(JSON.parse(readFileSync(stateFile(), 'utf8'))['retiredReward']).toBeDefined();
     // The repository's own entry still states $0 until the owner names one.
     expect(readReward(address)).toEqual({ amount: 0, limit: null });
   });

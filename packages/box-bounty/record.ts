@@ -22,7 +22,7 @@ import { instructionNotices, syncInstructions } from './instructions.js';
 import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import { repositoryChoiceLines } from './repository.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, requireRepository, rewardNoticeLine, saidOnce, unlistedRemotes } from './settings.js';
+import { askMergeNoticeLine, loadState, localFirstMergeLine, readDecision, repoReward, requireRepository, rewardNoticeLine, saidOnce, unlistedRemotes } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
@@ -886,7 +886,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   if (askNotice !== null) lines.push(askNotice);
   const localMerge = localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);
-  for (const [address, notice] of Object.entries(loadSettings().firstMerges)) {
+  for (const [address, notice] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === notice.commit))) {
       lines.push(`first outside solution merged in ${address}: commit ${notice.commit} at ${notice.at}`);
     }
