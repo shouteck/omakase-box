@@ -204,7 +204,10 @@ describe('the words are policed — facts, never verdicts', () => {
   // never the tool's statements — blanked out.
   const prose = (text: string): string => text.replace(/"(?:[^"\\]|\\.)*"/g, '""');
 
-  it("no attempt's report carries a verdict word", () => {
+  // Five full fixture worlds (post + collect + status each) sit just over the
+  // 30s default when the suite runs under parallel load — the same margin the
+  // heavy bt7b tests already carry. Assertions are unchanged.
+  it("no attempt's report carries a verdict word", { timeout: 120000 }, () => {
     // answered — clean merge read
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const { id, delivered } = posted(repo);
