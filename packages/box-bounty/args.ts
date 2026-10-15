@@ -118,7 +118,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   },
   create: {
     label: 'box bounty create', usage: 'box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]',
-    blurb: 'save the task and private context, snapshot the working state and preview publication → drafted',
+    blurb: 'save the task and private context and snapshot the working state → drafted',
     positionals: 0,
     values: {
       '--task': { arg: '<file|->', help: 'the task file written for the solver; "-" reads standard input' },
@@ -127,7 +127,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--resume': { arg: '"<context>"', help: 'private context for unfinished work and the larger job' },
       '--repo': REPO
     },
-    switches: { '--full': { help: 'print the draft preview and the publication plan' } },
+    switches: { '--full': { help: 'print the draft preview' } },
     refused: (flag) => {
       if (RETIRED_FLAGS[flag] !== undefined) return new BountyRefused('create-option-retired', `${flag} was retired; ${RETIRED_FLAGS[flag]}. Nothing changed`);
       if (flag === '--out') return new BountyRefused('folder-delivery-retired', 'create writes a local record only; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
@@ -344,8 +344,8 @@ export interface CreateArgs {
   readonly task?: string;
   readonly resume?: string;
   readonly repo?: string;
-  /** `--full` prints the draft preview and the publication plan — the
-      normal form is the three-line contract (BT17). */
+  /** `--full` prints the draft preview — the normal form is the
+      three-line contract (BT17). */
   readonly full?: boolean;
 }
 

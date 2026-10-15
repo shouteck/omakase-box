@@ -1079,7 +1079,7 @@ export function renderHelp(): string {
     'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Those settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change, read from fetched objects — nothing is checked out, nothing is left behind. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
     '',
     'the journey (what each command does → the stage it leaves):',
-    '  create    save the task and private context, snapshot the working state and preview publication → drafted',
+    '  create    save the task and private context and snapshot the working state → drafted',
     '  post      publishes the GitHub issue and branch → posted — or waits on the owner',
     '  status    every open bounty, the pull requests waiting, the attempts and the next step; --comments prints comments written by others, marked as theirs',
     '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change',
