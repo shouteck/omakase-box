@@ -86,7 +86,7 @@ const paged=rows=>rows.slice((page-1)*perPage,page*perPage);
 const nextNumber=()=>1+Math.max(0,...state.issues.map(issue=>issue.number),...state.prs.map(pr=>pr.number));
 const resource=endpoint.split('?')[0];
 // A pull request object never carries its changed-files list — real GitHub
-// answers that only under pulls/<n>/files — so `files` stays in state and
+// answers that only under pulls/<n>/files — so files stays in state and
 // never leaves in a response (K22: the stand-ins must agree key-for-key).
 const publicPr=pr=>{const{files,...rest}=pr;return rest;};
 let result;
