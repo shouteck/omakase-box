@@ -369,8 +369,10 @@ describe('pass holes — configured commands that still reached a solver program
   it('hole 3: refuses a `~/`-spelled include that lands inside the tree — the test places the repo under the home directory', () => {
     // A `~/…` include can only land inside a repository that lives under ~,
     // so this test builds its fixture under the home directory itself rather
-    // than assuming the host's temp root is there.
-    const home = runRoot('BT15-home-include');
+    // than assuming the host's temp root is there (on Linux it is /tmp). The
+    // folder is this test's own, created directly under ~ and removed by its
+    // exact path below.
+    const home = mkdtempSync(join(homedir(), 'box-bt15-ci-home-include-'));
     try {
       const repo = filteredRepoUnder(home);
       const fromHome = relative(homedir(), repo).split(sep).join('/');
