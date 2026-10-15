@@ -85,17 +85,21 @@ const perPage=Math.min(100,Math.max(1,Number(query.get('per_page') ?? 30)||30));
 const paged=rows=>rows.slice((page-1)*perPage,page*perPage);
 const nextNumber=()=>1+Math.max(0,...state.issues.map(issue=>issue.number),...state.prs.map(pr=>pr.number));
 const resource=endpoint.split('?')[0];
+// A pull request object never carries its changed-files list — real GitHub
+// answers that only under pulls/<n>/files — so `files` stays in state and
+// never leaves in a response (K22: the stand-ins must agree key-for-key).
+const publicPr=pr=>{const{files,...rest}=pr;return rest;};
 let result;
 if(endpoint==='user') result={login:'owner'};
-else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public',permissions:{push:true}};
+else if(endpoint==='repos/owner/project') result={full_name:'owner/project',private:false,visibility:'public',permissions:{push:true},html_url:'https://github.com/owner/project'};
 else if(endpoint==='graphql'&&input.query&&input.query.includes('pullRequest')){const pr=state.prs.find(pr=>pr.number===input.variables.number);if(!pr)fail();result={data:{repository:{pullRequest:{body:pr.body??'',userContentEdits:{nodes:[]}}}}}}
 else if(endpoint==='graphql'){const issue=state.issues.find(issue=>issue.number===input.variables.number);if(!issue)fail();const own=state.comments.filter(c=>c.issue===undefined||c.issue===issue.number);const offset=Number(input.variables.after??0);result={data:{repository:{issue:{body:issue.body,author:{login:'owner'},comments:{edges:own.slice(offset,offset+100).map((c,i)=>({cursor:String(offset+i+1),node:{body:c.body,author:c.user}})),pageInfo:{hasNextPage:offset+100<own.length}}}}}}}
-else if(resource.endsWith('/pulls')&&input){const n=nextNumber();result={number:n,html_url:'https://github.com/owner/project/pull/'+n,state:'open',...input,user:{login:input.author??'solver'},base:{ref:input.base,repo:{full_name:'owner/project'}},head:{sha:input.head??'0'.repeat(40)},files:[]};state.prs.push(result);}
-else if(endpoint.includes('/pulls/')){const n=Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);const pr=state.prs.find(pr=>pr.number===n);if(!pr)fail();result=endpoint.includes('/files')?paged(pr.files):pr;}
-else if(resource.endsWith('/pulls')){const wanted=query.get('state')??'open';const base=query.get('base');result=paged(state.prs.filter(pr=>(wanted==='all'||(pr.state??'open')===wanted)&&(base===null||pr.base.ref===base)));}
+else if(resource.endsWith('/pulls')&&input){const n=nextNumber();result={number:n,html_url:'https://github.com/owner/project/pull/'+n,state:'open',title:input.title,body:input.body,user:{login:input.author??'solver'},base:{ref:input.base,repo:{full_name:'owner/project'}},head:{sha:input.head??'0'.repeat(40)}};state.prs.push({...result,files:[]});}
+else if(endpoint.includes('/pulls/')){const n=Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);const pr=state.prs.find(pr=>pr.number===n);if(!pr)fail();result=endpoint.includes('/files')?paged(pr.files):publicPr(pr);}
+else if(resource.endsWith('/pulls')){const wanted=query.get('state')??'open';const base=query.get('base');result=paged(state.prs.filter(pr=>(wanted==='all'||(pr.state??'open')===wanted)&&(base===null||pr.base.ref===base)).map(publicPr));}
 else if(endpoint.includes('/labels/')){result=state.labels.find(label=>endpoint.endsWith(label.name));if(!result)fail();}
 else if(endpoint.includes('/labels')){result=input?{name:input.name}:paged(state.labels);if(input)state.labels.push(result);}
-else if(endpoint.includes('/comments')){const n=Number(resource.split('/issues/')[1].split('/')[0]);result=input?{...input,issue:n,user:{login:'owner'},created_at:new Date().toISOString()}:paged(state.comments.filter(c=>c.issue===undefined||c.issue===n));if(input)state.comments.push(result);}
+else if(endpoint.includes('/comments')){const n=Number(resource.split('/issues/')[1].split('/')[0]);result=input?{...input,issue:n,user:{login:'owner'},created_at:new Date().toISOString(),html_url:'https://github.com/owner/project/issues/'+n+'#issuecomment-'+(state.comments.length+1)}:paged(state.comments.filter(c=>c.issue===undefined||c.issue===n));if(input)state.comments.push(result);}
 else if(endpoint.includes('/issues/')){result=state.issues.find(issue=>issue.number===Number(endpoint.split('/issues/')[1].split('?')[0]));if(!result)fail();if(input)Object.assign(result,input);}
 else if(endpoint.includes('/issues')){if(input){result={number:nextNumber(),html_url:'https://github.com/owner/project/issues/'+nextNumber(),...input,labels:input.labels.map(name=>({name})),state:'open',user:{login:'owner'}};state.issues.push(result);}else{const wanted=query.get('state')??'open';result=paged(state.issues.filter(issue=>wanted==='all'||issue.state===wanted));}}
 else fail();

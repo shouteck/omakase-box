@@ -117,6 +117,10 @@ const perPage = Math.min(100, Math.max(1, Number(query.get('per_page') ?? 30) ||
 const paged = rows => rows.slice((page - 1) * perPage, page * perPage);
 const nextNumber = () => 1 + Math.max(0, ...state.issues.map(issue => issue.number), ...state.prs.map(pr => pr.number));
 const resource = endpoint.split('?')[0];
+// A pull request object never carries its changed-files list — real GitHub
+// answers that only under pulls/<n>/files — so `files` stays in state and
+// never leaves in a response (K22: the stand-ins must agree key-for-key).
+const publicPr = pr => { const { files, ...rest } = pr; return rest; };
 let result;
 if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
   const pr = state.prs.find(pr => pr.number === input.variables.number);
@@ -136,21 +140,21 @@ else if (endpoint === 'graphql') {
   result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < own.length } } } } } };
 }
 else if (endpoint === 'user') result = { login: state.account };
-else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true } };
+else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true }, html_url: 'https://github.com/' + state.repository };
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
-  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', ...input, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } }, files: [] };
-  state.prs.push(result);
+  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };
+  state.prs.push({ ...result, files: [] });
 }
 else if (endpoint.includes('/pulls/')) {
   const n = Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);
   const pr = state.prs.find(pr => pr.number === n);
   if (!pr) fail();
-  result = endpoint.includes('/files') ? paged(pr.files) : pr;
+  result = endpoint.includes('/files') ? paged(pr.files) : publicPr(pr);
 } else if (resource.endsWith('/pulls')) {
   const wanted = query.get('state') ?? 'open';
   const base = query.get('base');
-  result = paged(state.prs.filter(pr => (wanted === 'all' || (pr.state ?? 'open') === wanted) && (base === null || pr.base.ref === base)));
+  result = paged(state.prs.filter(pr => (wanted === 'all' || (pr.state ?? 'open') === wanted) && (base === null || pr.base.ref === base)).map(publicPr));
 }
 else if (endpoint.includes('/labels/')) {
   const name = decodeURIComponent(endpoint.split('/labels/')[1].split('?')[0]);
@@ -160,7 +164,7 @@ else if (endpoint.includes('/labels/')) {
   if (input) { result = { name: input.name }; state.labels.push(result); } else result = paged(state.labels);
 } else if (endpoint.includes('/comments')) {
   const n = Number(resource.split('/issues/')[1].split('/')[0]);
-  if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = paged(state.comments.filter(comment => comment.issue === undefined || comment.issue === n));
+  if (input) { result = { ...input, issue: n, user: { login: state.account }, created_at: new Date().toISOString(), html_url: 'https://github.com/' + state.repository + '/issues/' + n + '#issuecomment-' + (state.comments.length + 1) }; state.comments.push(result); } else result = paged(state.comments.filter(comment => comment.issue === undefined || comment.issue === n));
 } else if (endpoint.includes('/issues/')) {
   const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
   result = state.issues.find(issue => issue.number === n);

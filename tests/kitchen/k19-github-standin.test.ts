@@ -12,6 +12,12 @@
 // object for a single thing, a list for a collection, `page` selecting the
 // page, filters honoured, new numbers minted on the shared sequence.
 //
+// K22 adds a drift guard on top: for every endpoint at least two stand-ins
+// answer, the full recursive key set of their answers — key names and value
+// types, never the values — must be identical. Chosen-field comparisons
+// cannot see a missing key: BT16 added `permissions.push` to the repository
+// read and gh-standin.cjs lacked it until the hosted kitchen run went red.
+//
 // Stand-ins on trial (any new `gh api` implementation must join this list):
 //   - kitchen/demo/gh-standin.cjs — the bt11b replay's stand-in
 //   - tests/box/bounty/github-fixture.ts — the STANDIN the bounty suite mocks
@@ -208,9 +214,76 @@ function parity(gh: Gh): void {
   expect(gh.api('repos/owner/project/pulls/99').status).not.toBe(0);
 }
 
+// The recursive shape of an answer: objects become sorted key -> shape maps,
+// arrays become the set of their elements' shapes, scalars become typeof.
+// Values are never compared — two stand-ins may say different words but must
+// say them under the same keys.
+function shapeOf(value: unknown): unknown {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return ['array', [...new Set(value.map(item => JSON.stringify(shapeOf(item))))].sort()];
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return Object.fromEntries(Object.keys(record).sort().map(key => [key, shapeOf(record[key])]));
+  }
+  return typeof value;
+}
+
+// The endpoint set parity() drives, in the same order, so mutated and paged
+// answers are compared too — not only reads of the seeded state.
+function collectShapes(gh: Gh): Map<string, { answered: boolean; shape: string | null }> {
+  const answers = new Map<string, { answered: boolean; shape: string | null }>();
+  const ask = (label: string, endpoint: string, payload?: object, method = 'POST') => {
+    const res = gh.api(endpoint, payload, method);
+    answers.set(label, { answered: res.status === 0, shape: res.status === 0 ? JSON.stringify(shapeOf(res.value)) : null });
+  };
+  ask('GET user', 'user');
+  ask('GET repos/owner/project', 'repos/owner/project');
+  ask('GET issues/1', 'repos/owner/project/issues/1');
+  ask('GET issues state=all p1', 'repos/owner/project/issues?state=all&per_page=100&page=1');
+  ask('GET issues state=all p2', 'repos/owner/project/issues?state=all&per_page=100&page=2');
+  ask('GET issues state=open', 'repos/owner/project/issues?state=open&per_page=100&page=1');
+  ask('GET issues state=closed', 'repos/owner/project/issues?state=closed&per_page=100&page=1');
+  ask('GET pulls base=branch p1', `repos/owner/project/pulls?state=open&base=${BRANCH}&per_page=100&page=1`);
+  ask('GET pulls base=branch p2', `repos/owner/project/pulls?state=open&base=${BRANCH}&per_page=100&page=2`);
+  ask('GET pulls base=other', `repos/owner/project/pulls?state=open&base=other-branch&per_page=100&page=1`);
+  ask('GET pulls/2', 'repos/owner/project/pulls/2');
+  ask('GET pulls/2/files p1', 'repos/owner/project/pulls/2/files?per_page=100&page=1');
+  ask('GET pulls/2/files p2', 'repos/owner/project/pulls/2/files?per_page=100&page=2');
+  ask('GET labels/box-bounty', 'repos/owner/project/labels/box-bounty');
+  gh.reset();
+  ask('POST issues', 'repos/owner/project/issues', { title: 't', body: 'b <!-- box-bounty:bt-0000000000aa -->', labels: ['box-bounty'] });
+  ask('POST pulls', 'repos/owner/project/pulls', { title: 'fix', body: 'b', base: BRANCH, author: 'solver-c' });
+  ask('POST issues/1/comments', 'repos/owner/project/issues/1/comments', { body: 'a question?' });
+  ask('GET issues/1/comments p1', 'repos/owner/project/issues/1/comments?per_page=100&page=1');
+  ask('GET issues/1/comments p2', 'repos/owner/project/issues/1/comments?per_page=100&page=2');
+  ask('POST labels', 'repos/owner/project/labels', { name: 'extra-label' });
+  ask('PATCH issues/1', 'repos/owner/project/issues/1', { state: 'closed' }, 'PATCH');
+  ask('graphql issue comments', 'graphql', { query: 'query($owner:String!,$name:String!,$number:Int!,$after:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$after){edges{cursor node{body author{login}}} pageInfo{hasNextPage}}}}}', variables: { owner: 'owner', name: 'project', number: 1, after: null } });
+  ask('graphql pull request', 'graphql', { query: 'query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){body userContentEdits(last:1){nodes{editor{login}}}}}}', variables: { owner: 'owner', name: 'project', number: 2 } });
+  ask('GET issues/99 (unminted)', 'repos/owner/project/issues/99');
+  ask('GET pulls/99 (unminted)', 'repos/owner/project/pulls/99');
+  return answers;
+}
+
 describe('every committed stand-in GitHub answers the way GitHub answered in the real transcript', () => {
   const { bare, shaA, shaB } = makeBare();
   for (const standin of standins(bare, shaA, shaB)) {
     it(standin.name, () => parity(drive(standin, bare)));
   }
+});
+
+describe('the stand-ins cannot drift apart (K22)', () => {
+  const { bare, shaA, shaB } = makeBare();
+  it('the recursive key set of every answer at least two give is identical', () => {
+    const observed = standins(bare, shaA, shaB).map(standin => ({ name: standin.name, answers: collectShapes(drive(standin, bare)) }));
+    for (const [label] of observed[0]!.answers) {
+      const answered = observed.filter(entry => entry.answers.get(label)!.answered);
+      if (answered.length < 2) continue; // fewer than two answers — nothing to compare
+      for (const entry of observed) {
+        const answer = entry.answers.get(label)!;
+        expect(answer.answered, `${entry.name} did not answer "${label}" but ${answered.map(item => item.name).join(', ')} did`).toBe(true);
+        expect(answer.shape, `"${label}": ${entry.name}'s answer shape differs from ${answered[0]!.name}'s`).toBe(answered[0]!.answers.get(label)!.shape);
+      }
+    }
+  });
 });

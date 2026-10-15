@@ -38,10 +38,28 @@ const CHECK_PATH_SUITES = [
   ['packages/box-trace/', []],
   ...CHECK_SUITES.map(suite => [`tests/${suite}/`, [suite]])
 ];
+// K22 — files a kitchen test reads are never inert, however doc-shaped:
+// scripts/kitchen-stats.mjs reads the four limit files and every waves/*.md
+// (its "Runs per wave branch" section), and tests/kitchen drives the demo
+// scripts directly. The hosted workflow's `paths` list mirrors this —
+// isInert plus these exemptions is exactly what it encodes.
+export const KITCHEN_TEST_READS = [
+  'AGENTS.md',
+  'STATUS.md',
+  'kitchen/INBOX.md',
+  'docs/box-v4/KITCHEN.md',
+  'kitchen/demo/bt11b-replay.mjs',
+  'kitchen/demo/gh-standin.cjs',
+  'kitchen/demo/record.mjs',
+];
+const isKitchenRead = path => KITCHEN_TEST_READS.includes(path) || /^waves\/[^/]+\.md$/.test(path);
 // Prose and process only: no test reads these.
-const INERT = path => path.endsWith('.md') || /^(docs|waves|kitchen|templates|milestones|research|tasks|\.devin|\.cursor)\//.test(path) || path === '.gitignore';
+export const isInert = path => !isKitchenRead(path) && (path.endsWith('.md') || /^(docs|waves|kitchen|templates|milestones|research|tasks|\.devin|\.cursor)\//.test(path) || path === '.gitignore');
 function checkSuitesForPath(path) {
-  if (INERT(path)) return [];
+  // Non-inert but read by no check suite — test:kitchen owes them instead
+  // (kitchenSuiteReason below), so `check` owes them nothing.
+  if (isKitchenRead(path)) return [];
+  if (isInert(path)) return [];
   for (const [prefix, suites] of CHECK_PATH_SUITES) if (path.startsWith(prefix)) return suites;
   return CHECK_SUITES;
 }
@@ -90,6 +108,22 @@ export function selectCheckSuites(rootDir = root, { full = false } = {}) {
   const paths = changedPaths(rootDir);
   if (paths === null) return { suites: [...CHECK_SUITES], reason: 'cannot diff against master — running everything' };
   return checkSuitesForPaths(paths);
+}
+
+// K22 — when a diff owes test:kitchen beyond the check map. `check`'s table
+// only covers its own four suites, so a bounty-tool change used to skip the
+// kitchen suite entirely: BT16 drifted the GitHub stand-ins under
+// packages/box-bounty and only the hosted run noticed. The diff owes the
+// suite when it touches the packages the built CLI is assembled from (the
+// kitchen demo drives that build) or any file a kitchen test reads. An
+// unreadable diff owes it too — the same fail-safe as check's every-suite
+// fallback. Returns the reason for verify to print, or null.
+const KITCHEN_SUITE_TRIGGERS = ['packages/box-bounty/', 'packages/box-cli/'];
+export function kitchenSuiteReason(paths) {
+  if (paths === null) return 'the diff cannot be read — run it rather than guess';
+  if (paths.some(path => KITCHEN_SUITE_TRIGGERS.some(prefix => path.startsWith(prefix)))) return 'the change reaches the built CLI the kitchen demo drives';
+  if (paths.some(isKitchenRead)) return 'the change touches a file a kitchen test reads';
+  return null;
 }
 
 // --- when an earlier PASS may stand in ----------------------------------------

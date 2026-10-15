@@ -35,6 +35,7 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 - The bounty test files run three workers in parallel, pinned in `tests/kitchen/k12-bounty-parallel.test.ts`; other suites keep one.
 - Measured on this host (K12, 12 October 2026): bounty suite ~350 s, `verify --full` ~120 s, a product-only `check` ~18 s; under saturated load 30 s test timeouts still occur.
 - Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
+- A brief that changes what a command does or prints names `test:kitchen` in Done when; verify adds it anyway.
 - Tests named `*-live.test.ts` shell into the old container stack; not part of ordinary verification until ported to the disposable database.
 - A lost or unclear result is fixed by running it again. Databases are created and destroyed per run, so a rerun costs nothing.
 - The reviewer's run is the one that counts. The worker's run is a self-check.
