@@ -21,19 +21,16 @@ import { shipRules } from './never-ship.js';
 import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
-import { showPath } from './answer.js';
+import { emitMergeNotice as emit, showPath } from './answer.js';
 import { readDecision, recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
-// truth in the record's events.
-let noticeListener: ((line: string) => void) | null = null;
-export function setMergeNoticeListener(next: ((line: string) => void) | null): void {
-  noticeListener = next;
-}
-const emit = (line: string): void => { noticeListener?.(line); };
+// truth in the record's events. The listener lives with the emit path in
+// answer.ts so the GitHub close-up can share it (BT21).
+export { setMergeNoticeListener } from './answer.js';
 
 let noticing = false;
 const noticed = new Set<string>();
@@ -186,7 +183,8 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   // owner was not asked before it, and the closing output, status and the
   // pay message all say so. The merge still closes the bounty: closing
   // never waits (BT13).
-  const unasked = record.waiting?.for === 'merge' || readDecision(repoRoot).decision !== 'allowed';
+  const decision = readDecision(repoRoot);
+  const unasked = record.waiting?.for === 'merge' || decision.decision !== 'allowed';
   const label = candidate.attempt !== undefined ? `solution ${candidate.attempt.n}` : `a solution from pull request #${candidate.pr}`;
   record.conflicts = null;
   transitionTo(repoRoot, record, 'applied', {
@@ -198,7 +196,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
     ...(partial.length > 0 ? { partial } : {})
   });
   dropDurabilityRefs(repoRoot, record);
-  syncGitHubDecision(repoRoot, record);
+  syncGitHubDecision(repoRoot, record, { decision });
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
   if (partial.length > 0) emit(`${record.id} — fact: of the files the solution changed, the merge left these as they were: ${partial.map(showPath).join(', ')}`);
