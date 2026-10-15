@@ -581,35 +581,16 @@ const nextStep = (record: BountyRecord): string => {
     return `this delivery route was retired; end it with box bounty close ${record.id}`;
   }
   switch (record.stage) {
-    case 'drafted': return `deliver it — run box bounty post ${record.id} (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`;
-    case 'confirmed': return `deliver it — run box bounty post ${record.id} --to <dir>`;
+    case 'drafted':
+    case 'confirmed': return `deliver it — run box bounty post ${record.id} (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`;
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
-    case 'posted': {
-      if (record.github !== undefined) return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges; box bounty status ${record.id} --comments reads other accounts' comments`;
-      const count = attemptsOf(record).length;
-      if (count === 0) return `the retired delivery route is still recorded; end it with box bounty close ${record.id}`;
-      return `the retired delivery route has ${count} recorded ${count === 1 ? 'attempt' : 'attempts'}; end it with box bounty close ${record.id}`;
-    }
+    case 'posted': return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges; box bounty status ${record.id} --comments reads other accounts' comments`;
     case 'taken': return 'a solution is being read against the snapshot it was made for — run box bounty status again in a moment';
     case 'answered':
     case 'verified': {
       const conflicts = record.conflicts?.paths;
-      if (record.github !== undefined) {
-        if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
-        return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty close ${record.id} to end it; box bounty status ${record.id} --full for reports and history`;
-      }
-      if (conflicts !== undefined && conflicts.length > 0) {
-        return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
-      }
-      const applicable = applicableAttempts(attemptsOf(record));
-      if (applicable.length === 0) {
-        return `no attempt has a usable result — name one anyway with box bounty apply ${record.id} <n>, or end the bounty with box bounty close ${record.id} --reason "<why>"`;
-      }
-      if (applicable.length === 1) {
-        const n = applicable[0]!.n;
-        return `attempt ${n} waits on a decision — run box bounty apply ${record.id} ${n} to merge it onto the current code, or box bounty close ${record.id} --reason "<why>"`;
-      }
-      return `attempts ${applicable.map(attempt => `#${attempt.n}`).join(' and ')} could be applied — pick one with box bounty apply ${record.id} <n>, or end it with box bounty close ${record.id} --reason "<why>"`;
+      if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
+      return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty close ${record.id} to end it; box bounty status ${record.id} --full for reports and history`;
     }
     default: return 'ended — nothing to do';
   }

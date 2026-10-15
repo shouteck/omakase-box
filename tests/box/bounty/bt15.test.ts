@@ -55,6 +55,28 @@ it('new scan settlements name GitHub publication while old folder settlement tex
   expect(loadRecord(repo, made.id).scanFindings?.[0]?.settled).toBe(legacy);
 });
 
+it('old confirmed drafts name GitHub post while every retired posted stage names close', () => {
+  const repo = makeRepo({ 'TASK.md': 'Legacy task.\n' });
+  const made = draft(repo);
+  const { content, ...legacy } = loadRecord(repo, made.id);
+  const record = { ...legacy, folder: join(runRoot('BT15-legacy-stages'), 'old-folder') };
+  writeFileSync(made.recordPath, JSON.stringify({ ...record, stage: 'confirmed' }));
+  const before = readFileSync(made.recordPath);
+  const confirmed = renderStatus(repo, { id: made.id });
+  expect(confirmed).toContain(`next: deliver it — run box bounty post ${made.id} (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`);
+  expect(confirmed).not.toContain('--to');
+  expect(readFileSync(made.recordPath)).toEqual(before);
+  for (const stage of ['posted', 'taken', 'answered', 'verified']) {
+    writeFileSync(made.recordPath, JSON.stringify({ ...record, stage }));
+    const saved = readFileSync(made.recordPath);
+    const status = renderStatus(repo, { id: made.id });
+    expect(status).toContain(`next: this delivery route was retired; end it with box bounty close ${made.id}`);
+    expect(status).not.toContain('--to');
+    expect(status).not.toContain(`box bounty apply ${made.id}`);
+    expect(readFileSync(made.recordPath)).toEqual(saved);
+  }
+});
+
 it('the network guard refuses an unregistered gh executable even inside a fixture-shaped path', () => {
   const root = runRoot('BT15-unregistered-gh');
   const program = join(root, 'gh.exe');

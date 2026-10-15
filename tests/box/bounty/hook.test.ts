@@ -267,6 +267,7 @@ it('a tampered record degrades to a named fact line — its fields never reach t
 // budget — the review reproduced `hook start` hanging until killed.
 const FOREVER_STANDIN = String.raw`
 const args = process.argv.slice(2);
+require('node:fs').appendFileSync(process.env.BT15_HOOK_CALLS, JSON.stringify(args) + '\n');
 if (args[0] === 'version') { console.log('gh version 2.40.0'); process.exit(0); }
 const endpoint = args[args.indexOf('--hostname') + 2] ?? '';
 if (endpoint === 'user') { console.log(JSON.stringify({ login: 'me' })); process.exit(0); }
@@ -301,6 +302,9 @@ it('a gh that paginates forever stays inside the run budget — the hook returns
   const oldOptions = process.env['NODE_OPTIONS'];
   const oldStandin = process.env['BT9_GH_STANDIN'];
   const oldId = process.env['BT9_HOOK_ID'];
+  const oldProgram = process.env['BT15_GH_PROGRAM'];
+  const oldCalls = process.env['BT15_HOOK_CALLS'];
+  const callsFile = join(bin, 'calls.jsonl');
   try {
     if (process.platform === 'win32') {
       try { linkSync(process.execPath, join(bin, 'gh.exe')); } catch { writeFileSync(join(bin, 'gh.exe'), readFileSync(process.execPath)); }
@@ -314,6 +318,8 @@ it('a gh that paginates forever stays inside the run budget — the hook returns
     }
     process.env.PATH = `${bin}${delimiter}${oldPath ?? ''}`;
     process.env['BT9_HOOK_ID'] = id;
+    process.env['BT15_GH_PROGRAM'] = join(bin, process.platform === 'win32' ? 'gh.exe' : 'gh');
+    process.env['BT15_HOOK_CALLS'] = callsFile;
     // The same budget the slot command sets — a hanging or endless gh still
     // cannot hold the session.
     limitGitHubCalls(HOOK_GH_CALL_LIMIT_MS, HOOK_GH_CALL_COUNT, Date.now() + HOOK_GITHUB_BUDGET_MS);
@@ -323,12 +329,18 @@ it('a gh that paginates forever stays inside the run budget — the hook returns
     // The refresh ended in the named fact, not a hang.
     const record = JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
     expect(record.github?.unavailableAt).not.toBeNull();
+    expect(record.github?.unavailableReason).toBe('github-call-budget');
+    const calls = readFileSync(callsFile, 'utf8');
+    expect(calls).toContain('comments?per_page=100&page=1');
+    expect(calls).toContain('comments?per_page=100&page=2');
   } finally {
     limitGitHubCalls(60000); // the module default other tests see
     if (oldPath === undefined) delete process.env.PATH; else process.env.PATH = oldPath;
     if (oldOptions === undefined) delete process.env['NODE_OPTIONS']; else process.env['NODE_OPTIONS'] = oldOptions;
     if (oldStandin === undefined) delete process.env['BT9_GH_STANDIN']; else process.env['BT9_GH_STANDIN'] = oldStandin;
     if (oldId === undefined) delete process.env['BT9_HOOK_ID']; else process.env['BT9_HOOK_ID'] = oldId;
+    if (oldProgram === undefined) delete process.env['BT15_GH_PROGRAM']; else process.env['BT15_GH_PROGRAM'] = oldProgram;
+    if (oldCalls === undefined) delete process.env['BT15_HOOK_CALLS']; else process.env['BT15_HOOK_CALLS'] = oldCalls;
   }
 });
 

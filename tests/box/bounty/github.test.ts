@@ -15,6 +15,8 @@ describe('GitHub bounty destination, entirely offline', () => {
     withoutGh(() => {
       const poison = join(dirname(resolveProgram('git').path), process.platform === 'win32' ? 'gh.exe' : 'gh');
       copyFileSync(gh, poison);
+      const previousGhProgram = process.env['BT15_GH_PROGRAM'];
+      process.env['BT15_GH_PROGRAM'] = poison;
       try {
         expect(dirname(resolveProgram('gh').path)).toBe(dirname(resolveProgram('git').path));
         expect(dirname(resolveProgram('node').path)).toBe(dirname(resolveProgram('git').path));
@@ -33,7 +35,10 @@ describe('GitHub bounty destination, entirely offline', () => {
         expect(process.env.GIT_EXEC_PATH).toBe(parentExecPath);
         expect(resolveProgram('gh').path).toBe(poison);
         expect(state().calls).toEqual([['auth', 'status']]);
-      } finally { rmSync(poison); }
+      } finally {
+        if (previousGhProgram === undefined) delete process.env['BT15_GH_PROGRAM']; else process.env['BT15_GH_PROGRAM'] = previousGhProgram;
+        rmSync(poison);
+      }
     });
   }));
   it('points the branch at the newest commit the repository already has — no file content is uploaded', () => fixture(({ repo, bare, id, state }) => {

@@ -32,7 +32,7 @@ const shim = join(root, 'shim.cjs');
 mkdirSync(settings, { recursive: true });
 writeFileSync(state, JSON.stringify({ account: 'owner', issues: [], comments: [], prs: [], labels: [] }));
 writeFileSync(shim, `const cp = require('node:child_process');\nconst { syncBuiltinESMExports } = require('node:module');\nconst standin = process.env.REPLAY_GH_STANDIN;\nconst bare = process.env.REPLAY_BARE;\nconst remoteUrl = process.env.REPLAY_REMOTE_URL;\nconst original = cp.spawnSync;\ncp.spawnSync = function (file, args, options) {\n  const base = String(file).split(/[\\\\/]/).pop().toLowerCase();\n  if (standin && (base === 'gh' || base === 'gh.exe')) return original.call(this, process.execPath, [standin, ...(args ?? [])], options);\n  if (bare && remoteUrl && (base === 'git' || base === 'git.exe')) return original.call(this, file, (args ?? []).map(a => a === remoteUrl ? bare : a), options);\n  return original.call(this, file, args, options);\n};\ntry { syncBuiltinESMExports(); } catch {}\n`);
-const env = { ...process.env, BOX_BOUNTY_SETTINGS_DIR: settings, NODE_OPTIONS: `--require ${shim.replaceAll(String.fromCharCode(92), '/')}`, REPLAY_STATE: state, REPLAY_BARE: bare, REPLAY_REMOTE_URL: REMOTE_URL, REPLAY_GH_STANDIN: STANDIN };
+const env = { ...process.env, BOX_BOUNTY_SETTINGS_DIR: settings, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --require ${shim.replaceAll(String.fromCharCode(92), '/')}`.trim(), REPLAY_STATE: state, REPLAY_BARE: bare, REPLAY_REMOTE_URL: REMOTE_URL, REPLAY_GH_STANDIN: STANDIN };
 
 const git = (cwd, args) => {
   const out = spawnSync('git', ['-c', `safe.directory=${cwd.replaceAll(String.fromCharCode(92), '/')}`, '-c', 'user.name=measure', '-c', 'user.email=measure@invalid', '-C', cwd, ...args], { encoding: 'utf8', env });
