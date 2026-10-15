@@ -41,9 +41,9 @@ node packages/box-cli/dist/cli.js bounty create --task <file|-> --why "<one line
 node packages/box-cli/dist/cli.js bounty [--repo <path>]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty status [id] [--full] [--comments] [--json] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty post <id> [--with-changes] [--include <file>] [--preview] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--json] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply [id] [<n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
 ```
@@ -63,7 +63,7 @@ The owner has three commands. An agent can run them after the owner's decision:
 ```
 node packages/box-cli/dist/cli.js bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty deny [owner/name] [--repo <path>]
-node packages/box-cli/dist/cli.js bounty config [set|add|remove <setting> <value>] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty config [set|add|remove <setting> <value>] [--json] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty status --since <iso> [--repo <path>]
 ```
 
@@ -114,15 +114,74 @@ rules would remove is refused (`never-ship-input`).
 Every command reads options the same way: `--help` (or `-h`) prints that
 command's own usage on standard output and exits 0, `--name=value` is the
 same as `--name value`, and an option the command does not take is a usage
-error naming it — nothing is silently ignored. `--json` is refused by name
-(`json-not-supported`) until a command grows it. `box --version` and
-`box bounty --version` print the tool's version.
+error naming it — nothing is silently ignored. `status`, `look` and
+`config` take `--json` — one complete document, described below; on every
+other command it is refused by name (`json-not-supported`). `box --version`
+and `box bounty --version` print the tool's version.
 
 With one open bounty, omit its identifier: `bounty look 1`, `bounty apply 1`,
 or `bounty status --comments`. With several, the refusal names them
 so you can choose. `status <id>` shows what needs doing first. `--full` adds
 the history and reports. A listing marks a solution as new the first time the
 tool shows it, then as seen since that time. Seen means only that it was shown.
+
+## Reading as JSON
+
+`status`, `look` and `config` take `--json`: one JSON object on standard
+output — a newline after it and nothing else — printed instead of the text
+view, built from the same facts, never by parsing the text. `"schema"` is
+always the first key, `box-bounty/<command>@1`; a change to a field's
+meaning grows `@2`, never silently. Times are ISO 8601, amounts are
+whole-dollar numbers, commits are full hashes, and an absent fact is
+`null`, never a missing key. Text written by someone else — a pull request
+description, an issue comment — appears only inside `fromOthers` objects,
+marked as theirs.
+
+The choice follows npm rather than `gh --json <fields>`: `--json` selects
+one complete document, so a field an agent assumed was there can never be
+missing because nobody asked for it. A field-list mode could be added
+later without breaking `@1`.
+
+What the text view prints as lines — an acting-on notice, a merge
+recognised, a said-once explanation — goes to standard error under
+`--json`, unchanged; standard output carries the document alone. A refusal
+stays a refusal: same text, same exit code, no document. `--full` adds
+nothing to a document — it already carries the full facts; `status
+--since` is a text report the document does not carry, so the combination
+is refused. `status --comments --json` fills each bounty's `fromOthers`
+with the issue's comments as `{from, at, text}`; without it `fromOthers`
+is `null`.
+
+`status --json` prints `{schema, repository, acting, owner, bounties}` —
+`owner` is this checkout's read (`{decision, denied, reward,
+rewardLimit}`) and each bounty carries `id, title, why, stage, createdAt,
+baseCommit, reward, job, waiting, github, allowedBy, scanFindings,
+solutions, events, next, corrupt`. A record file that no longer reads is
+listed with `corrupt: true` and every fact `null`. `solutions` entries
+name `n, pullRequest, collected, seen, author, commit, outcome, changed,
+added, deleted, conflicts, report, payTo, merged`; `github`, when present,
+names the repository, branch, bound commit, issue number and URL, the
+issue's recorded `state` (open or closed) beside the publication's own
+`lifecycle`, waiting pull requests, comment count, any owed `pending`
+action and a merged bounty `pay` record.
+
+`look <id> <n> --json` prints `{schema, id, n, pullRequest, collected,
+author, commit, files, report, payTo, large, diff, fromOthers}` — `files`
+is `{path, change}` pairs in Git's name order, `diff` is the unified diff
+or `null` on a large change without `--full` (the text view's rule), and
+`fromOthers` is `{from, text}` — the pull request's own description — or
+`null` on attempts recorded before the description was kept.
+
+`config --json` prints `{schema, settingsFile, allProjects,
+allProjectsChangedAt, repositories, thisRepository, decision, denied,
+decisionAt, decisionLevel, reward, rewardLimit, promised, instructions,
+publishLists, waiting}` — outside a checkout the repository facts are
+`null` and the settings still read. `repositories` maps each `owner/name`
+to `{decision, addedAt, changedAt, reward, rewardLimit, history}`; a
+`null` bounty on file reads back as `"denied"`. `instructions` is
+`{enabled, file, found}`; `publishLists` is `{safeToPublish,
+neverPublish}`; `promised` is this checkout's open-bounty total;
+`waiting` lists each held action as `{id, for, reason, since, to, hits}`.
 
 ## Look at a solution
 

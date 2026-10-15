@@ -69,8 +69,9 @@ describe('4. an unknown option on every command is a usage error naming it', () 
 
 it('5. --json refuses json-not-supported until a command grows it', () => {
   const dir = runRoot('bt18-json');
-  // post is the brief's case; status and config are BT19's other two.
-  for (const command of ['post', 'status', 'config']) {
+  // post is the brief's case; BT19 grew it on status, look and config, so
+  // the refusal is pinned here on commands that still do not take it.
+  for (const command of ['post', 'apply', 'create']) {
     const run = bounty(dir, [command, '--json']);
     expect(run.status, run.stderr).toBe(3);
     expect(run.stderr).toContain('json-not-supported');

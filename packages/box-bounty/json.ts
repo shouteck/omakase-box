@@ -1,0 +1,401 @@
+// The JSON documents for `status --json`, `look --json` and `config --json`
+// (BT19). Each is one object printed on standard output and nothing else:
+// `"schema"` is the first key — a changed field meaning needs `@2` — times
+// are ISO 8601, amounts whole dollars, commits full hashes, and an absent
+// fact is null, never a missing key. Text written by someone else — a pull
+// request description, an issue comment — appears only inside `fromOthers`,
+// marked as theirs; it is never the tool's own words.
+//
+// Every document is built from the same typed facts the text views read —
+// the record, the settings, the GitHub refresh — never by parsing the text.
+// Building one starts no process the text read would not start: the GitHub
+// refresh, the comments read, the merged-solution scan and the once-only
+// notices all run for `box bounty status` in its text form too, and the
+// repository's one `git config` read is shared through the command pins.
+// What a text view prints as a line — an owner's notice, a merge
+// recognised, an acting-on line — goes to the `notice` callback instead,
+// so the document stays the only thing on standard output.
+
+import { boundAmount } from './format.js';
+import type { GitHubPublication } from './github.js';
+import { issueComments, refreshGitHubStatus } from './github.js';
+import { discoverInstructions, instructionNotices } from './instructions.js';
+import type { LookResult } from './look.js';
+import { publishLists } from './never-ship.js';
+import { BountyRefused } from './errors.js';
+import { attemptsOf, isOpenStage, listRecords, loadRecord, nextStep, persistRecord, promisedTotal } from './record.js';
+import type { Attempt, BountyRecord, ScanFinding, StageEvent, WaitingFor } from './record.js';
+import { actingOn, askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, readInstructions, repoReward, repositoryIdentity, rewardNoticeLine, saidOnce, settingsFile } from './settings.js';
+
+type JsonObject = Record<string, unknown>;
+
+// ---- shared field builders ----------------------------------------------
+
+// A scan hit names file, line and rule — never the flagged text itself.
+const scanHit = (hit: { readonly path: string; readonly line: number; readonly rule: string; readonly commit?: string }): JsonObject => ({
+  path: hit.path,
+  line: hit.line,
+  rule: hit.rule,
+  commit: hit.commit ?? null
+});
+
+const waitingEntry = (waiting: WaitingFor): JsonObject => ({
+  for: waiting.for,
+  reason: waiting.reason,
+  since: waiting.at,
+  to: waiting.to ?? null,
+  hits: waiting.hits?.map(scanHit) ?? null
+});
+
+const scanFindingEntry = (finding: ScanFinding): JsonObject => ({
+  at: finding.at,
+  where: finding.where,
+  hits: finding.hits.map(scanHit),
+  settled: finding.settled
+});
+
+// Every event field rides one object shape, so a reader can walk the
+// history without knowing which transitions carry which facts.
+const eventEntry = (event: StageEvent): JsonObject => ({
+  stage: event.stage,
+  at: event.at,
+  command: event.command ?? null,
+  attempt: event.attempt ?? null,
+  destination: event.destination ?? null,
+  reason: event.reason ?? null,
+  merge: event.merge ?? null,
+  unasked: event.unasked === true,
+  partial: event.partial ?? null
+});
+
+const solutionEntry = (record: BountyRecord, attempt: Attempt): JsonObject => ({
+  n: attempt.n,
+  pullRequest: attempt.pullRequest ?? null,
+  collected: attempt.at,
+  seen: attempt.seenAt !== undefined,
+  author: attempt.author ?? null,
+  commit: attempt.commit,
+  outcome: attempt.outcome,
+  changed: attempt.changed ?? null,
+  added: attempt.added ?? null,
+  deleted: attempt.deleted ?? null,
+  conflicts: attempt.conflicts ?? null,
+  report: [...attempt.report],
+  payTo: attempt.payTo?.state ?? null,
+  merged: record.events.some(event => event.stage === 'applied' && event.attempt === attempt.n)
+});
+
+const pullRequestEntry = (pr: NonNullable<GitHubPublication['availablePullRequests']>[number], publication: GitHubPublication, attempts: readonly Attempt[]): JsonObject => ({
+  n: pr.n,
+  commit: pr.commit,
+  author: pr.author ?? null,
+  seenAt: publication.seenPullRequests?.find(seen => seen.n === pr.n && seen.commit === pr.commit)?.at ?? null,
+  payTo: pr.payTo?.state ?? null,
+  collectedAs: attempts.find(attempt => attempt.pullRequest === pr.n && attempt.commit === pr.commit)?.n ?? null
+});
+
+const githubEntry = (publication: GitHubPublication, attempts: readonly Attempt[]): JsonObject => ({
+  repository: publication.repository,
+  account: publication.account,
+  branch: publication.branch,
+  commit: publication.commit,
+  kind: publication.kind ?? null,
+  // `state` is the issue's recorded state, open or closed, as the shape
+  // names it; `lifecycle` is the publication's own stage.
+  state: publication.issue === null ? null : publication.outside?.issueState ?? null,
+  lifecycle: publication.state,
+  issue: publication.issue === null ? null : { number: publication.issue.number, url: publication.issue.url },
+  pending: publication.pending,
+  pullRequests: publication.availablePullRequests?.map(pr => pullRequestEntry(pr, publication, attempts)) ?? null,
+  comments: publication.questions === undefined ? null : {
+    count: publication.questions.count,
+    latestAt: publication.questions.latestAt,
+    unnamed: publication.questions.unnamed ?? 0
+  },
+  unavailable: publication.unavailableAt === undefined || publication.unavailableAt === null ? null : {
+    at: publication.unavailableAt,
+    reason: publication.unavailableReason ?? null
+  },
+  closedNote: publication.closedNote ?? null,
+  pay: publication.pay === undefined ? null : {
+    pr: publication.pay.pr,
+    solver: publication.pay.solver,
+    link: publication.pay.link,
+    testMode: publication.pay.testMode,
+    editedBy: publication.pay.editedBy,
+    readFailed: publication.pay.readFailed === true
+  }
+});
+
+// One bounty entry — the full fact set either view knows, so `status --json`
+// is `status --full`'s facts without the prose.
+const bountyEntry = (record: BountyRecord): JsonObject => ({
+  id: record.id,
+  title: record.title,
+  why: record.why ?? null,
+  stage: record.stage,
+  createdAt: record.createdAt,
+  baseCommit: record.snapshot.baseCommit,
+  reward: boundAmount(record) ?? null,
+  job: record.job?.file ?? null,
+  waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
+  github: record.github === undefined ? null : githubEntry(record.github, attemptsOf(record)),
+  allowedBy: record.allowedBy === undefined ? null : {
+    decision: record.allowedBy.decision,
+    level: record.allowedBy.level,
+    decisionAt: record.allowedBy.decisionAt,
+    usedAt: record.allowedBy.usedAt
+  },
+  scanFindings: (record.scanFindings ?? []).map(scanFindingEntry),
+  solutions: attemptsOf(record).map(attempt => solutionEntry(record, attempt)),
+  events: record.events.map(eventEntry),
+  next: isOpenStage(record.stage) ? nextStep(record) : null,
+  corrupt: false
+});
+
+// A file whose JSON no longer reads as a record: status names it rather than
+// dropping it — the full key set stays, every fact null, `corrupt` says why.
+const corruptEntry = (file: string): JsonObject => ({
+  id: file.replace(/\.json$/, ''),
+  title: null,
+  why: null,
+  stage: null,
+  createdAt: null,
+  baseCommit: null,
+  reward: null,
+  job: null,
+  waiting: null,
+  github: null,
+  allowedBy: null,
+  scanFindings: [],
+  solutions: [],
+  events: [],
+  next: null,
+  corrupt: true
+});
+
+// ---- status --------------------------------------------------------------
+
+export interface StatusDocumentOptions {
+  readonly id?: string;
+  readonly comments?: boolean;
+}
+
+// Reads exactly what `renderStatus` reads: the owner decision first (its
+// refusal must land before any refresh, as in the text path), the records —
+// which runs the merged-solution scan — the GitHub refresh per open record,
+// then the seen-marking writes the text view performs while rendering.
+export function statusDocument(repoRoot: string, options: StatusDocumentOptions, notice: (line: string) => void): JsonObject {
+  const ownerRead = readDecision(repoRoot);
+  const { amount, limit } = repoReward(repoRoot);
+  if (options.id !== undefined) loadRecord(repoRoot, options.id);
+  const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
+  for (const entry of listed) {
+    if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
+  }
+  const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
+  const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
+  const corrupt = listed.filter(entry => entry.record === null);
+
+  const bounties: JsonObject[] = [];
+  for (const entry of open) {
+    const record = entry.record!;
+    // The document is captured before the seen-marking writes, so `seen`
+    // reads what the text view printed this run.
+    const data = bountyEntry(record);
+    if (options.comments === true) {
+      // --comments reads what other accounts wrote, bound to this bounty's
+      // own issue first — the same read the text view makes, kept under
+      // `fromOthers` so their words are never the tool's.
+      data['fromOthers'] = record.github !== undefined && record.github.issue !== null
+        ? issueComments(repoRoot, record).map(comment => ({ from: comment.author, at: comment.at, text: comment.body }))
+        : [];
+    } else {
+      data['fromOthers'] = null;
+    }
+    bounties.push(data);
+    if (record.github?.outside !== undefined) {
+      record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
+      persistRecord(repoRoot, record);
+    }
+    const attempts = attemptsOf(record);
+    if (attempts.length > 0) {
+      record.attempts = attempts.map(attempt => attempt.seenAt === undefined ? { ...attempt, seenAt: new Date().toISOString() } : attempt);
+      persistRecord(repoRoot, record);
+    }
+  }
+  for (const entry of ended) bounties.push(bountyEntry(entry.record!));
+  for (const entry of corrupt) bounties.push(corruptEntry(entry.file));
+
+  // The notices the text view interleaves, emitted here to stderr: the
+  // reward read's said-once line, each recognised-merge fact and the
+  // instruction-file notices — same wording, same once-only semantics.
+  if (amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')) {
+    notice("a promise in the owner's name, paid by hand; the owner sets it in box bounty config");
+  }
+  const settings = loadSettings();
+  for (const [address, firstMerge] of Object.entries(settings.firstMerges)) {
+    if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === firstMerge.commit))) {
+      notice(`first outside solution merged in ${address}: commit ${firstMerge.commit} at ${firstMerge.at}`);
+    }
+  }
+  const localMerge = localFirstMergeLine(repoRoot);
+  if (localMerge !== null) notice(localMerge);
+  const rewardNotice = rewardNoticeLine();
+  if (rewardNotice !== null) notice(rewardNotice);
+  const askNotice = askMergeNoticeLine();
+  if (askNotice !== null) notice(askNotice);
+  for (const line of instructionNotices(repoRoot)) notice(line);
+
+  let repository: string | null = null;
+  try { repository = repositoryIdentity(repoRoot); } catch { /* an unreadable remote set is null, not a refusal — the decision above already read what it could */ }
+  return {
+    schema: 'box-bounty/status@1',
+    repository,
+    acting: actingOn(repoRoot),
+    owner: {
+      decision: ownerRead.decision,
+      denied: ownerRead.denied === true,
+      reward: amount,
+      rewardLimit: limit
+    },
+    bounties
+  };
+}
+
+// ---- look ----------------------------------------------------------------
+
+// From the LookResult `lookBounty` returned — the same record, attempt and
+// diff the text view prints; nothing is recomputed here.
+export function lookDocument(result: LookResult): JsonObject {
+  const attempt = result.attempt;
+  const changeOf = (path: string): string =>
+    attempt.changed?.includes(path) ? 'changed'
+      : attempt.added?.includes(path) ? 'added'
+        : attempt.deleted?.includes(path) ? 'deleted'
+          : 'changed';
+  return {
+    schema: 'box-bounty/look@1',
+    id: result.record.id,
+    n: attempt.n,
+    pullRequest: attempt.pullRequest ?? null,
+    collected: result.collected,
+    author: attempt.author ?? null,
+    commit: attempt.commit,
+    files: result.files.map(path => ({ path, change: changeOf(path) })),
+    report: [...attempt.report],
+    payTo: attempt.payTo?.state ?? null,
+    large: result.large,
+    diff: result.diff,
+    // The pull request's own description, recorded credential-redacted at
+    // collection: the solver's words, marked as theirs. Null on attempts
+    // recorded before the description was kept.
+    fromOthers: attempt.description === undefined ? null : { from: attempt.author ?? null, text: attempt.description }
+  };
+}
+
+// ---- config ---------------------------------------------------------------
+
+// The settings the text config prints, as facts: the file, the all-projects
+// row, every repository entry with its history, this repository's read,
+// the instruction settings and discovered files, the two publish lists,
+// the promised total and what waits on the owner.
+export function configDocument(repoRoot: string | null, notice: (line: string) => void): JsonObject {
+  const settings = loadSettings();
+  const repositories: JsonObject = {};
+  for (const [key, entry] of Object.entries(settings.repositories)) {
+    repositories[key] = {
+      decision: entry.bounty === null ? 'denied' : entry.bounty,
+      addedAt: entry.changes[0]?.at ?? entry.at,
+      changedAt: entry.at,
+      reward: entry.reward?.amount ?? 0,
+      rewardLimit: entry.rewardLimit?.amount ?? null,
+      history: entry.changes.map(change => ({ decision: change.bounty === null ? 'denied' : change.bounty, at: change.at }))
+    };
+  }
+
+  let thisRepository: string | null = null;
+  let decision: string | null = null;
+  let denied = false;
+  let decisionAt: string | null = null;
+  let decisionLevel: string | null = null;
+  let reward = 0;
+  let rewardLimit: number | null = null;
+  if (repoRoot !== null) {
+    // A remote set the identity read cannot settle is a fact for the owner,
+    // not a refusal — the text view prints it as the repository's line;
+    // here it rides stderr and the field stays null.
+    try { thisRepository = repositoryIdentity(repoRoot); }
+    catch (error) { notice(`this repository could not be identified: ${error instanceof BountyRefused ? `${error.reason}: ${error.message}` : String(error)}`); }
+    if (thisRepository !== null) {
+      try {
+        const read = readDecision(repoRoot);
+        decision = read.decision;
+        denied = read.denied === true;
+        decisionAt = read.at;
+        decisionLevel = read.level;
+        const money = repoReward(repoRoot);
+        reward = money.amount;
+        rewardLimit = money.limit;
+      } catch (error) { notice(`this repository's permission could not be read: ${error instanceof BountyRefused ? `${error.reason}: ${error.message}` : String(error)}`); }
+    }
+  }
+
+  let instructions: JsonObject | null = null;
+  let lists: JsonObject | null = null;
+  let promised: number | null = null;
+  const waiting: JsonObject[] = [];
+  if (repoRoot !== null) {
+    const choice = readInstructions(repoRoot);
+    instructions = {
+      enabled: choice.enabled,
+      file: choice.file ?? null,
+      found: discoverInstructions(repoRoot).map(file => ({ path: file.path, refused: file.refusal ?? null }))
+    };
+    const publish = publishLists(repoRoot);
+    lists = { safeToPublish: [...publish.safe], neverPublish: [...publish.never] };
+    const listed = listRecords(repoRoot);
+    promised = promisedTotal(listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+    for (const entry of listed) {
+      if (entry.record?.stage === 'waiting' && entry.record.waiting !== undefined) {
+        waiting.push({ id: entry.record.id, ...waitingEntry(entry.record.waiting) });
+      }
+    }
+  }
+
+  const rewardNotice = rewardNoticeLine();
+  if (rewardNotice !== null) notice(rewardNotice);
+  const askNotice = askMergeNoticeLine();
+  if (askNotice !== null) notice(askNotice);
+  for (const migration of settings.migrations) {
+    notice(`migration ${migration.at}: ${JSON.stringify(migration.path)} ${migration.detail}; re-add: box bounty allow ${migration.repository ?? '<owner/name>'}`);
+  }
+  for (const [key, firstMerge] of Object.entries(settings.firstMerges)) {
+    notice(`first outside solution merged in ${key}: commit ${firstMerge.commit} at ${firstMerge.at}; see: box bounty status --full`);
+  }
+  if (repoRoot !== null) {
+    const localMerge = localFirstMergeLine(repoRoot);
+    if (localMerge !== null) notice(localMerge);
+    for (const line of instructionNotices(repoRoot, false)) notice(line);
+  }
+
+  return {
+    schema: 'box-bounty/config@1',
+    settingsFile: settingsFile(),
+    allProjects: settings.default?.bounty ?? null,
+    allProjectsChangedAt: settings.default?.at ?? null,
+    repositories,
+    thisRepository,
+    decision,
+    denied,
+    decisionAt,
+    decisionLevel,
+    reward,
+    rewardLimit,
+    promised,
+    instructions,
+    publishLists: lists,
+    waiting
+  };
+}
+

@@ -4,6 +4,7 @@ import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAns
 import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
 import { closeBounty as closeBountyCommand, postBounty as postBountyCommand, renderStatus as renderStatusCommand } from './record.js';
 import { lookBounty as lookBountyCommand } from './look.js';
+import { statusDocument as statusDocumentCommand, configDocument as configDocumentCommand } from './json.js';
 
 // Each command the package offers is one command to Git's pins: the names of
 // configured filters and merge drivers are read once per repository path for
@@ -25,6 +26,13 @@ export const postBounty = command(postBountyCommand);
 export const closeBounty = command(closeBountyCommand);
 export const renderStatus = command(renderStatusCommand);
 export const lookBounty = command(lookBountyCommand);
+// The --json documents (BT19): same reads the text views make, so the same
+// pin-window treatment. `lookDocument` is a pure map of the LookResult —
+// no reads — and rides unwrapped.
+export const statusDocument = command(statusDocumentCommand);
+export const configDocument = command(configDocumentCommand);
+export { lookDocument } from './json.js';
+export type { StatusDocumentOptions } from './json.js';
 export type { LookResult, LookTarget } from './look.js';
 export { LOOK_DIFF_LIMIT } from './look.js';
 export { quoteForeign, showPath } from './answer.js';

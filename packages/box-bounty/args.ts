@@ -10,8 +10,9 @@
 //      is a usage error ("--full takes no value").
 //   3. The named refusals run before the unknown-option rule: retired,
 //      removed and money spellings each keep their own reason.
-//   4. --json is a named refusal (json-not-supported) until a command
-//      grows it.
+//   4. --json is a named refusal (json-not-supported) on every command
+//      whose table entry does not list it — status, look and config take
+//      it (BT19); every other command still refuses it by name.
 //   5. Any other option is a usage error naming it and the command.
 //   6. An option that takes a value, given none, is a usage error.
 //   7. An option given twice is a usage error — --include is the only
@@ -135,7 +136,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   status: {
-    label: 'box bounty status', usage: 'box bounty status [<id>] [--full] [--comments] [--since <iso>] [--repo <path>]',
+    label: 'box bounty status', usage: 'box bounty status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]',
     blurb: 'every open bounty, the pull requests waiting, the attempts and the next step',
     positionals: 1,
     values: {
@@ -144,7 +145,8 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     },
     switches: {
       '--full': { help: 'add history and the full reports' },
-      '--comments': { help: 'print comments written by others, marked as theirs' }
+      '--comments': { help: 'print comments written by others, marked as theirs' },
+      '--json': { help: 'print one JSON document (schema box-bounty/status@1) instead of text' }
     }
   },
   post: {
@@ -166,11 +168,14 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     }
   },
   look: {
-    label: 'box bounty look', usage: 'box bounty look [<id>] <n> [--full] [--repo <path>]',
+    label: 'box bounty look', usage: 'box bounty look [<id>] <n> [--full] [--json] [--repo <path>]',
     blurb: 'collect pull request <n> (or show solution <n> already collected) — its change, written by the solver and marked as theirs',
     positionals: 2,
     values: { '--repo': REPO },
-    switches: { '--full': { help: 'print the whole change, however large' } },
+    switches: {
+      '--full': { help: 'print the whole change, however large' },
+      '--json': { help: 'print one JSON document (schema box-bounty/look@1) instead of text' }
+    },
     refused: folderRefusal
   },
   apply: {
@@ -212,12 +217,15 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     values: { '--repo': REPO }
   },
   config: {
-    label: 'box bounty config', usage: 'box bounty config [set|add|remove <setting> <value> [owner/name]] [--full] [--repo <path>]',
+    label: 'box bounty config', usage: 'box bounty config [set|add|remove <setting> <value> [owner/name]] [--full] [--json] [--repo <path>]',
     blurb: "the owner's settings — the reward, the repository list, what the tool may do",
     positionals: 4,
     authority: true,
     values: { '--repo': REPO },
-    switches: { '--full': { help: 'print every setting and where it came from' } }
+    switches: {
+      '--full': { help: 'print every setting and where it came from' },
+      '--json': { help: 'print one JSON document (schema box-bounty/config@1) instead of text' }
+    }
   },
   hook: {
     label: 'box bounty hook', usage: 'box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain] [--repo <path>]',
@@ -270,7 +278,7 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
     const flag = equals < 0 ? token : token.slice(0, equals);
     const refusal = spec.refused?.(flag, equals < 0 ? argv[i + 1] : token.slice(equals + 1));
     if (refusal !== undefined) throw refusal;
-    if (flag === '--json') throw new BountyRefused('json-not-supported', `--json is not available on ${spec.label} yet`);
+    if (flag === '--json' && spec.switches?.['--json'] === undefined) throw new BountyRefused('json-not-supported', `--json is not available on ${spec.label} yet`);
   }
   const positionals: string[] = [];
   const values: Record<string, string> = {};

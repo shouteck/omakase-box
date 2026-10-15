@@ -23,7 +23,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, BOUNTY_COMMANDS, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, BOUNTY_COMMANDS, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
@@ -334,9 +334,20 @@ if (command === 'export') {
       const [id] = parsed.positionals;
       const root = resolveRepoRoot(repoPath(parsed), 'status');
       const since = parsed.values['--since'];
-      sayActingOn(root);
-      console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: parsed.switches.has('--full'), comments: parsed.switches.has('--comments') }));
-      if (since !== undefined) console.log(renderSummary(root, since));
+      if (parsed.switches.has('--json')) {
+        // BT19: one document on standard output and nothing else. Everything
+        // the text view prints — the acting-on line, the once-only notices,
+        // a recognised merge — is stderr here; --since is a text report
+        // the document does not carry, so it is refused by name.
+        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report — run box bounty status --since <iso> without --json');
+        setInstructionNoticeListener(line => console.error(line));
+        setMergeNoticeListener(line => console.error(line));
+        console.log(JSON.stringify(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line))));
+      } else {
+        sayActingOn(root);
+        console.log(renderStatus(root, { ...(id === undefined ? {} : { id }), full: parsed.switches.has('--full'), comments: parsed.switches.has('--comments') }));
+        if (since !== undefined) console.log(renderSummary(root, since));
+      }
     } else if (subcommand === 'post') {
       const parsed = parse('post');
       const to = parsed.values['--to'] ?? 'github';
@@ -409,11 +420,22 @@ if (command === 'export') {
       if (id === undefined || extraIds.length > 0
         || n === undefined
         || (text !== undefined && n === undefined)) {
-        usage('box bounty look [id] <n> [--full] [--repo <path>]');
+        usage('box bounty look [id] <n> [--full] [--json] [--repo <path>]');
       }
       const root = resolveRepoRoot(repoPath(parsed), subcommand);
-      sayActingOn(root);
+      const asJson = parsed.switches.has('--json');
+      // Under --json the acting-on line and any collection notice are
+      // stderr — standard output carries the document alone (BT19).
+      if (asJson) {
+        setInstructionNoticeListener(line => console.error(line));
+        setMergeNoticeListener(line => console.error(line));
+        const acting = actingOn(root);
+        if (acting !== null) console.error(acting);
+      } else sayActingOn(root);
       const result = lookBounty(root, id, n!, { full: parsed.switches.has('--full') });
+      if (asJson) {
+        console.log(JSON.stringify(lookDocument(result)));
+      } else {
       const label = result.attempt.n;
       // The stranger-text label stays every time — the solver's words are
       // never the tool's own. The read-off-objects reassurance is the help's
@@ -427,6 +449,7 @@ if (command === 'export') {
       } else {
         for (const line of result.diff.split('\n')) console.log(`solver change | ${quoteForeign(line)}`);
         console.log(`next: box bounty apply ${id} ${label} chooses this solution; box bounty status ${id} shows what else waits`);
+      }
       }
     } else if (subcommand === 'close') {
       const parsed = parse('close');
@@ -462,6 +485,13 @@ if (command === 'export') {
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error; }
       if (subcommand === 'allow') console.log(allowRepository(root, values[0], parsed.switches.has('--ask'), money, text => console.log(text)));
       else if (subcommand === 'deny') console.log(denyRepository(root, values[0]));
+      else if (values.length === 0 && parsed.switches.has('--json')) {
+        // One settings document on standard output; notices ride stderr (BT19).
+        setInstructionNoticeListener(line => console.error(line));
+        setMergeNoticeListener(line => console.error(line));
+        console.log(JSON.stringify(configDocument(root, line => console.error(line))));
+      }
+      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them; run it without --json. Nothing changed');
       else console.log(values.length === 0 ? renderConfig(root, { full: parsed.switches.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot
