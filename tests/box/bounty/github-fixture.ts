@@ -77,6 +77,10 @@ export interface GhState {
   repository: string;
   issues: { number: number; html_url: string; title: string; body: string; state: string; labels?: { name: string }[]; user: { login: string } }[];
   comments: { body: string; user: { login: string }; created_at?: string }[];
+  // Which issue an API-posted comment belongs to, by its index in comments.
+  // Kept beside the comment, not on it: tests assert the stored comment as
+  // exactly {body, user}. Seeded comments have no entry and show on every issue.
+  commentIssue?: Record<string, number>;
   prs: { number: number; user: { login: string }; base: { ref: string; repo: { full_name: string } }; head: { sha: string }; files: { filename: string }[]; body?: string; editedBy?: string }[];
   labels: { name: string }[];
   calls: string[][];
@@ -117,6 +121,12 @@ const perPage = Math.min(100, Math.max(1, Number(query.get('per_page') ?? 30) ||
 const paged = rows => rows.slice((page - 1) * perPage, page * perPage);
 const nextNumber = () => 1 + Math.max(0, ...state.issues.map(issue => issue.number), ...state.prs.map(pr => pr.number));
 const resource = endpoint.split('?')[0];
+const issueOf = (comment, index) => comment.issue ?? (state.commentIssue ?? {})[String(index)];
+const onIssue = n => state.comments.filter((comment, index) => issueOf(comment, index) === undefined || issueOf(comment, index) === n);
+// A pull request object never carries its changed-files list — real GitHub
+// answers that only under pulls/<n>/files — so files stays in state and
+// never leaves in a response (K22: the stand-ins must agree key-for-key).
+const publicPr = pr => { const { files, ...rest } = pr; return rest; };
 let result;
 if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')) {
   const pr = state.prs.find(pr => pr.number === input.variables.number);
@@ -126,7 +136,7 @@ if (endpoint === 'graphql' && input.query && input.query.includes('pullRequest')
 else if (endpoint === 'graphql') {
   const issue = state.issues.find(issue => issue.number === input.variables.number);
   if (!issue || state.fail && ('/issues/' + issue.number + '/comments').includes(state.fail)) fail();
-  const own = state.comments.filter(comment => comment.issue === undefined || comment.issue === issue.number);
+  const own = onIssue(issue.number);
   const offset = Number(input.variables.after ?? 0);
   const next = offset + 100;
   const edges = own.slice(offset, next).map((comment, index) => ({ cursor: String(offset + index + 1), node: { body: comment.body, author: comment.user } }));
@@ -136,21 +146,21 @@ else if (endpoint === 'graphql') {
   result = { data: { repository: { issue: { body: issue.body, author: issue.user, comments: { edges, pageInfo: { hasNextPage: state.graphqlMode ? true : next < own.length } } } } } };
 }
 else if (endpoint === 'user') result = { login: state.account };
-else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true } };
+else if (endpoint === 'repos/' + state.repository) result = state.malformed ? { visibility: '${leakCanary}' } : { full_name: state.repository, private: state.private, visibility: state.visibility, permissions: { push: state.push ?? true }, html_url: 'https://github.com/' + state.repository };
 else if (resource.endsWith('/pulls') && input) {
   const n = nextNumber();
-  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', ...input, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } }, files: [] };
-  state.prs.push(result);
+  result = { number: n, html_url: 'https://github.com/' + state.repository + '/pull/' + n, state: 'open', title: input.title, body: input.body, user: { login: input.user ?? input.author ?? 'solver' }, head: { sha: input.head ?? '0'.repeat(40) }, base: { ref: input.base ?? 'main', repo: { full_name: state.repository } } };
+  state.prs.push({ ...result, files: [] });
 }
 else if (endpoint.includes('/pulls/')) {
   const n = Number(endpoint.split('/pulls/')[1].split('/')[0].split('?')[0]);
   const pr = state.prs.find(pr => pr.number === n);
   if (!pr) fail();
-  result = endpoint.includes('/files') ? paged(pr.files) : pr;
+  result = endpoint.includes('/files') ? paged(pr.files) : publicPr(pr);
 } else if (resource.endsWith('/pulls')) {
   const wanted = query.get('state') ?? 'open';
   const base = query.get('base');
-  result = paged(state.prs.filter(pr => (wanted === 'all' || (pr.state ?? 'open') === wanted) && (base === null || pr.base.ref === base)));
+  result = paged(state.prs.filter(pr => (wanted === 'all' || (pr.state ?? 'open') === wanted) && (base === null || pr.base.ref === base)).map(publicPr));
 }
 else if (endpoint.includes('/labels/')) {
   const name = decodeURIComponent(endpoint.split('/labels/')[1].split('?')[0]);
@@ -160,7 +170,8 @@ else if (endpoint.includes('/labels/')) {
   if (input) { result = { name: input.name }; state.labels.push(result); } else result = paged(state.labels);
 } else if (endpoint.includes('/comments')) {
   const n = Number(resource.split('/issues/')[1].split('/')[0]);
-  if (input) { result = { ...input, user: { login: state.account } }; state.comments.push(result); } else result = paged(state.comments.filter(comment => comment.issue === undefined || comment.issue === n));
+  const issueUrl = 'https://api.github.com/repos/' + state.repository + '/issues/' + n;
+  if (input) { result = { ...input, issue_url: issueUrl, user: { login: state.account }, created_at: new Date().toISOString(), html_url: 'https://github.com/' + state.repository + '/issues/' + n + '#issuecomment-' + (state.comments.length + 1) }; state.commentIssue = { ...state.commentIssue, [String(state.comments.length)]: n }; state.comments.push({ ...input, user: { login: state.account } }); } else result = paged(onIssue(n).map(comment => ({ body: comment.body, created_at: comment.created_at ?? '1970-01-01T00:00:00.000Z', html_url: comment.html_url ?? 'https://github.com/' + state.repository + '/issues/' + n + '#issuecomment-' + (state.comments.indexOf(comment) + 1), issue_url: issueUrl, user: comment.user })));
 } else if (endpoint.includes('/issues/')) {
   const n = Number(endpoint.split('/issues/')[1].split('?')[0]);
   result = state.issues.find(issue => issue.number === n);
@@ -369,7 +380,8 @@ function withGhEnv<T>(world: World, run: () => T): T {
 function contextFor(world: World): GithubFixture {
   const { repo, bare, scratch, id, stateFile, bin } = world;
   const state = (): GhState => JSON.parse(readFileSync(stateFile, 'utf8')) as GhState;
-  const update = (change: Partial<GhState>) => writeFileSync(stateFile, JSON.stringify({ ...state(), ...change }));
+  // Replacing the comments drops the old index -> issue map with them.
+  const update = (change: Partial<GhState>) => writeFileSync(stateFile, JSON.stringify({ ...state(), ...(change.comments === undefined ? {} : { commentIssue: {} }), ...change }));
   /** Register a pull request head already reachable on the remote. */
   const prCommit = (sha: string, author = 'solver', files = ['app.txt'], base = `box-bounty/${id}`) => {
     const n = state().prs.length + 1;

@@ -4,22 +4,35 @@ name: verify
 
 on:
   push:
-    # Master only — doc-only pushes are skipped by paths-ignore below.
+    # Master only — doc-only pushes are skipped by the negated paths below.
     branches: [master]
-    # paths-ignore mirrors the "no test reads these" set (INERT) in scripts/suite.mjs: a push
-    # that only touches docs/process files costs nothing. Anything else still runs.
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'waves/**'
-      - 'kitchen/**'
-      - 'templates/**'
-      - 'milestones/**'
-      - 'research/**'
-      - 'tasks/**'
-      - '.devin/**'
-      - '.cursor/**'
-      - '.gitignore'
+    # paths mirrors the "no test reads these" set (INERT) in scripts/suite.mjs:
+    # '**' includes everything, each '!' drops an inert set, and the files a
+    # kitchen test reads are re-included after the negations (GitHub applies
+    # path patterns in order; a later positive pattern re-includes). A push
+    # that only touches inert files costs nothing; anything else still runs.
+    paths:
+      - '**'
+      - '!**/*.md'
+      - '!docs/**'
+      - '!waves/**'
+      - '!kitchen/**'
+      - '!templates/**'
+      - '!milestones/**'
+      - '!research/**'
+      - '!tasks/**'
+      - '!.devin/**'
+      - '!.cursor/**'
+      - '!.gitignore'
+      # The INERT exemptions: files tests/kitchen or kitchen-stats.mjs reads.
+      - 'AGENTS.md'
+      - 'STATUS.md'
+      - 'kitchen/INBOX.md'
+      - 'kitchen/demo/bt11b-replay.mjs'
+      - 'kitchen/demo/gh-standin.cjs'
+      - 'kitchen/demo/record.mjs'
+      - 'docs/box-v4/KITCHEN.md'
+      - 'waves/*.md'
 
 # A newer push to the same ref cancels a stale run, queued or in progress.
 concurrency:

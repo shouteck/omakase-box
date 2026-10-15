@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { docker } from './docker.mjs';
 import { root } from './process.mjs';
-import { DB_CHECK_SUITES, DB_SUITES, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
+import { DB_CHECK_SUITES, DB_SUITES, changedPaths, kitchenSuiteReason, reusableStep, selectCheckSuites, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only');
@@ -29,6 +29,15 @@ const unknown = suites.filter(name => !Object.hasOwn(scripts, name));
 if (unknown.length || !['auto', 'embedded', 'docker', 'none'].includes(dbMode)) {
   console.error(unknown.length ? `Unknown package script: ${unknown.join(', ')}` : `Unknown --db mode: ${dbMode}`);
   process.exit(2);
+}
+// K22: the committed diff against master can owe test:kitchen even when the
+// caller did not name it — `check`'s reach map only covers its own suites,
+// and BT16's stand-in drift shipped under a bounty change verify ran without
+// the kitchen suite. --only narrows check/build, never this.
+const kitchenReason = kitchenSuiteReason(changedPaths(root));
+if (kitchenReason !== null && !suites.includes('test:kitchen')) {
+  suites.push('test:kitchen');
+  console.log(`added test:kitchen: ${kitchenReason}`);
 }
 const steps = [...(only ? [] : ['check', 'build']), ...suites];
 if (!steps.length) { console.error('Nothing to run.'); process.exit(2); }

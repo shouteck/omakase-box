@@ -3,8 +3,8 @@
 // before it lets a recorded PASS stand in for a real run. Everything runs on
 // fabricated run dirs under the OS temp dir through node -e probes, same
 // pattern as kitchen-stats.test.ts; nothing touches the real .kitchen/runs.
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -158,4 +158,136 @@ describe('reusableStep — when a recorded PASS may stand in', () => {
     const newer = fakePass(dir, NOW + 60000, sha('a'));
     expect(reusable(dir, sha('a'), 'build').run).toBe(newer);
   });
+});
+
+describe('kitchenSuiteReason — when a diff owes test:kitchen (K22)', () => {
+  const reason = (paths: string[] | null): Json => probe(`s.kitchenSuiteReason(${JSON.stringify(paths)})`);
+
+  it('a diff reaching the bounty tool owes the suite the kitchen demo drives', () => {
+    for (const path of ['packages/box-bounty/index.ts', 'packages/box-cli/src/cli.ts']) {
+      expect(reason([path]), path).toBe('the change reaches the built CLI the kitchen demo drives');
+    }
+  });
+
+  it('a docs-only diff owes nothing', () => {
+    expect(reason(['docs/box-v4/PLAN.md'])).toBeNull();
+    expect(reason(['kitchen/roles/worker.md'])).toBeNull();
+    expect(reason(['packages/box-package/index.ts'])).toBeNull(); // no demo drives that package
+    expect(reason([])).toBeNull();
+  });
+
+  it('a file a kitchen test reads owes test:kitchen however doc-shaped it is', () => {
+    for (const path of ['AGENTS.md', 'STATUS.md', 'kitchen/INBOX.md', 'docs/box-v4/KITCHEN.md', 'waves/K21.md', 'kitchen/demo/gh-standin.cjs', 'kitchen/demo/record.mjs', 'kitchen/demo/bt11b-replay.mjs']) {
+      expect(reason([path]), path).toBe('the change touches a file a kitchen test reads');
+    }
+    // …but no check suite reads them — `check` still owes them nothing.
+    expect(probe(`s.checkSuitesForPaths(${JSON.stringify(['AGENTS.md', 'docs/box-v4/KITCHEN.md', 'kitchen/demo/gh-standin.cjs', 'waves/K21.md'])})`).suites).toEqual([]);
+  });
+
+  it('an unreadable diff owes it — the same fail-safe as check', () => {
+    expect(reason(null)).not.toBeNull();
+  });
+});
+
+describe('the hosted workflow mirrors INERT (K22)', () => {
+  // GitHub applies `paths` patterns in order — a later positive re-includes
+  // what an earlier '!' excluded. Evaluate the committed list the same way
+  // and require agreement with suite.mjs's isInert on every probe path.
+  const patterns = (() => {
+    const workflow = readFileSync(join(root, '.github', 'workflows', 'verify.yml'), 'utf8');
+    const list: { negated: boolean; re: RegExp }[] = [];
+    let inPaths = false;
+    for (const line of workflow.split('\n')) {
+      if (/^\s+paths:/.test(line)) { inPaths = true; continue; }
+      if (!inPaths) continue;
+      const match = /^\s+-\s+'([^']+)'/.exec(line);
+      if (!match) { if (/^\s*(#|$)/.test(line)) continue; break; }
+      let pattern = match[1]!;
+      const negated = pattern.startsWith('!');
+      if (negated) pattern = pattern.slice(1);
+      const source = pattern
+        .replace(/[.+^${}()|[\]\\?]/g, '\\$&')
+        .replace(/\*\*\/|\*\*|\*/g, token => (token === '**/' ? '(?:.*/)?' : token === '**' ? '.*' : '[^/]*'));
+      list.push({ negated, re: new RegExp(`^${source}$`) });
+    }
+    return list;
+  })();
+  const hostedRuns = (path: string): boolean => {
+    let run = false;
+    for (const { negated, re } of patterns) if (re.test(path)) run = !negated;
+    return run;
+  };
+  const SAMPLES = [
+    'AGENTS.md', 'STATUS.md', 'kitchen/INBOX.md', 'docs/box-v4/KITCHEN.md',
+    'kitchen/demo/gh-standin.cjs', 'kitchen/demo/record.mjs', 'kitchen/demo/bt11b-replay.mjs',
+    'waves/K22.md', 'waves/night-2026-10-05.md',
+    'packages/box-bounty/index.ts', 'scripts/suite.mjs', 'package.json',
+    'tests/kitchen/x.test.ts', '.github/workflows/verify.yml',
+    'docs/box-v4/PLAN.md', 'README.md', 'kitchen/README.md', 'kitchen/roles/worker.md',
+    'kitchen/demo/RECORDING.md', 'templates/x.md', 'milestones/x.md', 'research/x.md',
+    'tasks/x.md', '.devin/rules/x.md', '.cursor/x.mdc', '.gitignore', 'waves/x.txt', 'docs/legacy/x.md',
+  ];
+
+  it('a push runs exactly when a changed path is not inert', () => {
+    expect(patterns.length).toBeGreaterThan(0);
+    const expected: boolean[] = probe(`${JSON.stringify(SAMPLES)}.map(path => !s.isInert(path))`);
+    SAMPLES.forEach((path, index) => {
+      expect(hostedRuns(path), `${path}: workflow ${hostedRuns(path) ? 'runs' : 'skips'}; isInert says ${expected[index] ? 'non-inert' : 'inert'}`).toBe(expected[index]);
+    });
+  });
+});
+
+describe('verify adds test:kitchen when the diff owes it (K22, end to end)', () => {
+  it('a product path adds it; a docs-only diff does not', () => {
+    // A fake repository running the real scripts — the same harness
+    // k7-ci-clean-checkout uses, plus the minimal pnpm stub k7-ci2 wrote so
+    // each named script actually runs.
+    const dir = temp();
+    mkdirSync(join(dir, 'scripts'), { recursive: true });
+    for (const name of readdirSync(join(root, 'scripts'))) {
+      if (name.endsWith('.mjs') || name === 'toolchain.json') copyFileSync(join(root, 'scripts', name), join(dir, 'scripts', name));
+    }
+    const pnpmBin = join(dir, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin');
+    mkdirSync(pnpmBin, { recursive: true });
+    writeFileSync(join(pnpmBin, 'pnpm.cjs'), "const { spawnSync } = require('child_process');\nconst { readFileSync } = require('fs');\nconst { join } = require('path');\nconst scripts = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).scripts;\nconst name = process.argv[process.argv.indexOf('run') + 1];\nconst command = scripts[name];\nif (!command) process.exit(2);\nprocess.exit(spawnSync(command, { shell: true, stdio: 'inherit', cwd: process.cwd() }).status ?? 1);\n");
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { 'test:x': 'node -e "process.exit(0)"', 'test:kitchen': 'node -e "process.exit(0)"' } }));
+    writeFileSync(join(dir, '.gitignore'), '.kitchen/\n');
+    writeFileSync(join(dir, 'tracked.txt'), 'base\n');
+    const gitDir = dir.replace(/[\\/]+$/, '').replaceAll(String.fromCharCode(92), '/');
+    const git = (args: string[]) => execFileSync('git', ['-c', `safe.directory=${gitDir}`, '-c', 'user.email=kitchen@test.invalid', '-c', 'user.name=kitchen', ...args], { cwd: dir, encoding: 'utf8' });
+    git(['init', '-q', '-b', 'master']);
+    git(['add', '-A']);
+    git(['commit', '-qm', 'init']);
+    const verify = () => spawnSync(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--only', '--db=none', 'test:x'], { cwd: dir, encoding: 'utf8', timeout: 120000 });
+    const runsDir = join(dir, '.kitchen', 'runs');
+    const runs = () => (existsSync(runsDir) ? readdirSync(runsDir) : []);
+    const latestRun = (before: Set<string>) => runs().find(name => !before.has(name))!;
+    const summary = (name: string): Json => JSON.parse(readFileSync(join(runsDir, name, 'summary.json'), 'utf8'));
+
+    git(['checkout', '-q', '-b', 'product-change']);
+    mkdirSync(join(dir, 'packages', 'box-bounty'), { recursive: true });
+    writeFileSync(join(dir, 'packages', 'box-bounty', 'index.ts'), 'export {};\n');
+    git(['add', '-A']);
+    git(['commit', '-qm', 'touch the bounty package']);
+    const before = new Set(runs());
+    const productRun = verify();
+    expect(productRun.stdout).toContain('added test:kitchen: the change reaches the built CLI the kitchen demo drives');
+    expect(productRun.status).toBe(0);
+    const product = summary(latestRun(before));
+    expect(product.steps.map((step: Json) => step.name)).toEqual(['test:x', 'test:kitchen']);
+    expect(product.steps.every((step: Json) => step.exit === 0)).toBe(true);
+
+    git(['checkout', '-q', 'master']);
+    git(['checkout', '-q', '-b', 'docs-only']);
+    mkdirSync(join(dir, 'docs'), { recursive: true });
+    writeFileSync(join(dir, 'docs', 'note.md'), 'prose\n');
+    git(['add', '-A']);
+    git(['commit', '-qm', 'docs only']);
+    const beforeDocs = new Set(runs());
+    const docsRun = verify();
+    expect(docsRun.stdout).not.toContain('added test:kitchen');
+    expect(docsRun.status).toBe(0);
+    const docs = summary(latestRun(beforeDocs));
+    expect(docs.steps.map((step: Json) => step.name)).toEqual(['test:x']);
+  }, 180000);
 });

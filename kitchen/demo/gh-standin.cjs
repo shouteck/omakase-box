@@ -57,11 +57,14 @@ if (rest === 'issues' && method === 'POST') {
 if (/^issues\/\d+\/comments$/.test(rest)) {
   const n = Number(rest.split('/')[1]);
   if (!state.issues.some(issue => issue.number === n)) fail();
+  // The stored comment keeps its issue number; the answer carries GitHub's
+  // issue_url instead, never a bare `issue` key.
+  const wire = ({ issue, ...comment }) => ({ ...comment, issue_url: 'https://api.github.com/repos/owner/project/issues/' + n });
   if (method === 'POST') {
     const comment = { issue: n, body: input.body, user: { login: 'owner' }, created_at: new Date().toISOString(), html_url: 'https://github.com/owner/project/issues/' + n + '#comment-' + (state.comments.length + 1) };
-    state.comments.push(comment); save(state); emit(comment);
+    state.comments.push(comment); save(state); emit(wire(comment));
   }
-  emit(pageOf(state.comments.filter(comment => comment.issue === undefined || comment.issue === n)));
+  emit(pageOf(state.comments.filter(comment => comment.issue === undefined || comment.issue === n).map(wire)));
 }
 if (/^issues\/\d+$/.test(rest)) {
   const n = Number(rest.split('/')[1]);
