@@ -23,7 +23,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, postBounty, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
+import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
 import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
 // box-package and box-trace load behind the commands that need them: their
@@ -276,11 +276,36 @@ if (command === 'export') {
         taskPath: parsed.task === '-' ? '-' : resolve(parsed.task),
         ...(parsed.resume !== undefined ? { resumeNote: parsed.resume } : {})
       });
-      console.log(renderPreview(result.plan));
-      console.log(result.publicationPreview);
-      console.log(`${result.id} — drafted — kept in the project record`);
-      console.log(`record: ${result.recordPath} — the tool writes it; commit it with the project`);
-      console.log(`next: box bounty post ${result.id} (--preview shows what becomes public). Nothing has been posted.`);
+      // The contract (BT17): one line says what happened, then only facts
+      // needing attention now, then one next line. The draft preview and the
+      // publication plan are the detail — `--full` prints them.
+      const full = parsed.full === true;
+      if (full) {
+        console.log(renderPreview(result.plan));
+        console.log(result.publicationPreview);
+      }
+      const plan = result.plan;
+      const lines = [`${result.id} — drafted in ${plan.repoRoot}`];
+      // The plan preview is the detail (`--full`); a preview that could not
+      // be computed at all is a fact needing attention now.
+      if (!full && result.publicationPreview.startsWith('Publication plan unavailable')) lines.push(`  ${result.publicationPreview}`);
+      for (const hit of plan.scan.hits) lines.push(`  scan hit: ${hit.path}:${hit.line} — ${hit.rule}`);
+      if (plan.scan.binary.length > 0) lines.push(`  not scanned — Git would treat them as binary: ${plan.scan.binary.join(', ')}`);
+      for (const entry of plan.ruleRemovals) lines.push(`  never-ship removed (${entry.rule}): ${entry.removed}`);
+      if (plan.titleShortened) lines.push(`  title: ${plan.title} (shortened)`);
+      const { amount } = repoReward(plan.repoRoot);
+      if (amount > 0) lines.push(`  states $${amount} when posted — the reward in force now for this repository`);
+      try {
+        const address = requireRepository(plan.repoRoot);
+        const decision = readDecision(plan.repoRoot).decision;
+        if (decision !== 'allowed') lines.push(`  a GitHub post waits for the owner — ${decision === 'ask' ? 'they asked to be asked each time' : 'they have not allowed the tool'}; box bounty allow ${address} is their answer`);
+      } catch { /* an unlistable repository leaves permission unsaid — post names it */ }
+      if (full) {
+        lines.push(`  record: ${result.recordPath}`);
+        if (plan.task.file !== 'standard input') lines.push('  the task file stays where it is — the tool reads it and never commits or removes it');
+      }
+      lines.push(`next: box bounty post ${result.id} (--preview shows what becomes public)`);
+      console.log(lines.join('\n'));
     } else if (subcommand === 'status') {
       const [id, ...extraIds] = bountyIds();
       if (extraIds.length > 0) usage('box bounty status [id] [--full] [--comments]');
@@ -324,8 +349,9 @@ if (command === 'export') {
       const { record, destination } = postBounty(repoRoot, id, to, { choice: { withChanges, include } });
       console.log(`${record.id} — posted — delivered to ${destination}`);
       if (record.github?.scanBinary !== undefined && record.github.scanBinary.length > 0) console.log(`scan: not scanned — Git treats them as binary: ${record.github.scanBinary.join(', ')}`);
-      if (record.allowedBy !== undefined) console.log(`allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
-      console.log(`next: box bounty status reads open pull requests; box bounty look ${record.id} <number> collects one and shows its change`);
+      // Which written owner answer allowed the post is an audit fact —
+      // `status <id> --full` carries it; the compact post stays at three lines.
+      console.log(`next: box bounty status reads the pull requests; box bounty look ${record.id} <number> collects one and shows its change`);
     } else if (subcommand === 'apply') {
       // Approval is the owner's, never the agent's (BT13): a flag that tries
       // to mark a merge as asked-for or approved is a named refusal that
@@ -347,13 +373,14 @@ if (command === 'export') {
       if (result.record.github?.pending !== null && result.record.github?.pending !== undefined) console.log(result.record.github.pending);
       if (result.record.github?.closedNote !== undefined) console.log(`github: ${result.record.github.closedNote}`);
       if (result.outcome === 'applied') {
-        console.log(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit}, which is on this branch and names the bounty`);
-        console.log(`ended — ${jobLine(result.record)}; the durability refs are removed. To reverse it: git revert -m 1 ${result.mergeCommit} — the merge is one ordinary commit`);
+        // The saved job the bounty came from is what the agent returns to —
+        // the compact form names it; the commit hash is `status --full`'s.
+        console.log(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit} on this branch`);
+        console.log(`ended — ${jobLine(result.record)}; to reverse it: git revert -m 1 ${result.mergeCommit}`);
         console.log(renderResume(result.record));
       } else {
         const branch = result.record.resume?.kind === 'recorded' ? result.record.resume.branch : 'the branch the bounty was created on';
-        console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')}`);
-        console.log('the merge was aborted — the worktree and index are exactly as before; the record stays where it was');
+        console.log(`${result.record.id} — merging attempt ${result.attempt} onto the current code conflicts in: ${(result.conflicts ?? []).map(showPath).join(', ')} — aborted; worktree and index are exactly as before`);
         const clean = result.clean ?? [];
         console.log(clean.length === 0
           ? 'none of the solution\'s files would merge cleanly'
@@ -379,7 +406,10 @@ if (command === 'export') {
       sayActingOn(root);
       const result = lookBounty(root, id, n!, { full: bountyArgs.includes('--full') });
       const label = result.attempt.n;
-      console.log(`${id} solution ${label} — ${result.collected ? 'collected first — ' : ''}the change below was written by the solver, not by the tool; the tool ran nothing of the solver's to show it. It is read from fetched objects — nothing is checked out, nothing is left behind.`);
+      // The stranger-text label stays every time — the solver's words are
+      // never the tool's own. The read-off-objects reassurance is the help's
+      // standing explanation (BT17).
+      console.log(`${id} solution ${label} — ${result.collected ? 'collected — ' : ''}written by the solver, not by the tool; nothing in it was run or checked out.`);
       if (result.attempt.payTo !== undefined && (boundAmount(result.record) ?? 0) > 0) console.log(payToLine(result.attempt.payTo));
       if (result.diff === null) {
         console.log(`${result.files.length} file(s) changed:`);
@@ -401,11 +431,9 @@ if (command === 'export') {
       if (record.github?.pending !== null && record.github?.pending !== undefined) console.log(record.github.pending);
       if (record.github?.closedNote !== undefined) console.log(`github: ${record.github.closedNote}`);
       if (outcome === 'already-ended') {
-        console.log(`${record.id} — already ended (${record.stage}) — nothing to do`);
-        console.log(`ended — ${jobLine(record)}`);
+        console.log(`${record.id} — already ended (${record.stage}) — nothing to do; ${jobLine(record)}`);
       } else {
-        console.log(`${record.id} — ${record.stage} — ${record.stage === 'rejected' ? 'the reason is recorded and' : 'the durability ref is removed and'} the record says ended`);
-        console.log(`ended — ${jobLine(record)}`);
+        console.log(`${record.id} — ${record.stage} — ${record.stage === 'rejected' ? 'the reason is recorded' : 'the bounty is withdrawn'}; ${jobLine(record)}`);
       }
     } else if (subcommand === 'allow' || subcommand === 'deny' || subcommand === 'config') {
       const values: string[] = [];

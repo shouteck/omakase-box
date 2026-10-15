@@ -23,9 +23,11 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   // look <n> collects the pull request itself, then shows its change.
   const look = cli(context.repo, 'look', '1');
   expect(look.status).toBe(0);
-  expect(look.stdout).toContain('collected first');
+  // BT17's label: collected, the solver's authorship, nothing run or
+  // checked out — the same facts in fewer words.
+  expect(look.stdout).toContain('collected');
   expect(look.stdout).toContain('written by the solver');
-  expect(look.stdout).toContain('ran nothing of the solver');
+  expect(look.stdout).toContain('nothing in it was run or checked out');
   expect(look.stdout).toContain('+fixed');
   expect(look.stdout).toContain(`box bounty apply ${context.id} 1`);
   // Nothing is created to remove: no copy, no unlook.

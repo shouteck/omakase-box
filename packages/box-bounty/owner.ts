@@ -3,7 +3,7 @@ import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBo
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saveSettings, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, markSaid, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saidAlready, saveSettings, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
@@ -36,8 +36,12 @@ const disclosure = (address: string, amount: number, limit: number | null, ask: 
       : 'You will not be asked before a post or a merge.',
     'Do you allow this?'
   ]),
-  'for you — these settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.'
+  'for you — the answer is recorded in the owner\'s own settings, outside the repository.'
 ];
+
+// What the settings are not is a standing explanation: said once ever,
+// recorded, and kept in help and describe (BT17).
+const NOT_A_LOCK = 'the settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them.';
 
 const wholeDollars = (flag: string, value: string): number => {
   if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('reward-amount-invalid', `${flag} "${value}" is not a whole dollar amount at or above 0; nothing changed`);
@@ -66,7 +70,13 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   if (reward > 0 && limit === null) throw new BountyRefused('reward-needs-limit', `a reward above $0 needs the most that may be promised across ${address}'s open bounties — add --reward-limit <whole dollars> or set it first: box bounty config set reward-limit <whole dollars> ${address}; nothing changed`);
   if (reward > 0 && limit !== null && limit < reward) throw new BountyRefused('limit-below-reward', `--reward-limit $${limit} sits below a $${reward} reward for ${address}; nothing changed`);
   const words = disclosure(address, reward, limit, ask);
-  const written = writeRepository(address, ask ? 'ask' : 'allowed', emitDisclosure === undefined ? undefined : () => emitDisclosure(words.join('\n')), money === undefined ? undefined : { reward, rewardLimit: limit });
+  // The once-ever explanation is decided now but recorded only after the
+  // decision write — recording it first would write the owner's settings
+  // before the disclosure the owner reads was shown (the BT8a order guard).
+  const sayNotALock = !saidAlready(null, 'settings-not-a-lock');
+  const wordsForOwner = sayNotALock ? [...words, NOT_A_LOCK] : words;
+  writeRepository(address, ask ? 'ask' : 'allowed', emitDisclosure === undefined ? undefined : () => emitDisclosure(wordsForOwner.join('\n')), money === undefined ? undefined : { reward, rewardLimit: limit });
+  if (sayNotALock) markSaid(null, 'settings-not-a-lock');
   // What this checkout now resolves to — computed after the write, because
   // in a several-remote checkout the write is what settles the choice (BT16
   // rule 7). A checkout whose remotes still cannot settle releases nothing.
@@ -78,7 +88,7 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
       currentAddress = repositoryIdentity(repoRoot);
     } catch { /* named addresses work outside this checkout */ }
   }
-  const lines = [...(emitDisclosure === undefined ? words : []), `${ask ? 'ask me each time' : 'allowed'}: ${address}, written ${written.at} to ${written.path}.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
+  const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
   const retiredNotice = rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
@@ -126,7 +136,7 @@ export function denyRepository(repoRoot: string | null, name?: string): string {
   // deny returns the repository to nothing written — its reward and limit go
   // with the entry, so a re-allowed repository states $0 again.
   const previous = loadSettings().repositories[address];
-  const written = writeRepository(address, null);
+  writeRepository(address, null);
   // The removal's consequence is named in the same breath (BT14): the
   // reward and the limit that went with the entry, so a later re-allow
   // knows what to state again.
@@ -134,7 +144,7 @@ export function denyRepository(repoRoot: string | null, name?: string): string {
     ? ` Its reward ($${previous.reward?.amount ?? 0})${previous.rewardLimit !== undefined ? ` and limit ($${previous.rewardLimit.amount})` : ''} went with the entry — re-allow states them again.` : '';
   const retiredNotice = rewardNoticeLine();
   const askNotice = askMergeNoticeLine();
-  return `${address}: not allowed; denied at ${written.at}. Removed from the active list. All-projects does not apply after deny. Open bounties are untouched.${money}\nRe-allow: box bounty allow ${address}${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
+  return `${address}: not allowed — removed from the active list; all-projects does not re-allow it; open bounties are untouched.${money}\nnext: box bounty allow ${address} re-allows it${retiredNotice === null ? '' : `\n${retiredNotice}`}${askNotice === null ? '' : `\n${askNotice}`}`;
 }
 export function allowBounty(repoRoot: string, id: string): string {
   const record = loadRecord(repoRoot, id);
@@ -218,7 +228,9 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
       : `${current.decision === 'ask' ? DECISION_WORDS.ask : 'allowed'}${current.level === 'default' ? ' by the all-projects setting' : ' by this repository entry'}, changed ${current.at}`;
   const lines = [
     `the owner's settings: ${settingsFile()}`,
-    'Allowing a repository means bounties are public under your GitHub account and a solution the agent chooses is merged into your code. Each repository entry covers that repository only.',
+    // What allowing means is a standing explanation — said on `allow` and
+    // kept in help and describe; the bare surface names facts in force (BT17).
+    ...(full ? ['Allowing a repository means bounties are public under your GitHub account and a solution the agent chooses is merged into your code. Each repository entry covers that repository only.'] : []),
     `this repository: ${identityFact}; ${effective}`,
     // A never-set all-projects is not a setting — nothing was written, so
     // the bare surface omits the row (BT14). --full always shows it.

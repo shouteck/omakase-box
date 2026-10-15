@@ -58,7 +58,7 @@ describe('box bounty create (built cli)', () => {
     const out = join(runRoot('out'), 'bounty');
     const run = cli(repo, ['bounty', 'create', '--why', 'w', '--title', 't', '--task', 'TASK.md']);
     expect(run.status).toBe(0);
-    expect(run.stdout).toContain('— drafted —');
+    expect(run.stdout).toContain('— drafted in '); // BT17: <id> — drafted in <repository>
     expect(run.stdout).toMatch(/bt-[a-f0-9]{12}/);
     const id = /bt-[a-f0-9]{12}/.exec(run.stdout)![0];
     expect(existsSync(join(repo, '.box/bounties', id + '.json'))).toBe(true);
@@ -99,8 +99,12 @@ describe('box bounty create (built cli)', () => {
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'Fix the thing.\n' });
     const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck']);
     expect(run.status).toBe(0);
-    expect(run.stdout).toContain('— drafted —');
-    expect(run.stdout).toContain('title: Fix the thing.');
+    expect(run.stdout).toContain('— drafted in ');
+    // The derived title is detail now — the compact surface prints it only
+    // when it was shortened; --full carries the whole draft preview (BT17).
+    const full = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck', '--full']);
+    expect(full.status).toBe(0);
+    expect(full.stdout).toContain('title: Fix the thing.');
     // The default place to write: bounties/<slug> next to the repository root.
     const out = join(realpathSync(dirname(repo)), 'bounties', 'fix-the-thing');
     expect(existsSync(out)).toBe(false);

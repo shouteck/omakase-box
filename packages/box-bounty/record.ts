@@ -22,7 +22,7 @@ import { instructionNotices, syncInstructions } from './instructions.js';
 import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import { repositoryChoiceLines } from './repository.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, requireRepository, rewardNoticeLine, unlistedRemotes } from './settings.js';
+import { askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, repoReward, requireRepository, rewardNoticeLine, saidOnce, unlistedRemotes } from './settings.js';
 import { DECISION_WORDS } from './owner.js';
 import type { DecisionRead } from './settings.js';
 import { noticeMergedSolutions } from './merged.js';
@@ -552,11 +552,12 @@ export function listRecords(repoRoot: string): ListedBounty[] {
 }
 
 // The saved job context, under the bounty it belongs to: `indent` places it
-// inside that bounty's lines.
-export function renderResume(record: BountyRecord, indent = ''): string {
+// inside that bounty's lines. The commit hash is the full form's detail —
+// the compact form names the branch and the work in flight (BT17).
+export function renderResume(record: BountyRecord, indent = '', full = false): string {
   const context = record.resume;
   if (context?.kind !== 'recorded') return [`${indent}Return to your job`, `${indent}  The branch, commit and changed files were not recorded for this older bounty.`].join('\n');
-  return [`${indent}Saved job context (${record.id}) — where the work stood when the bounty was created`, `${indent}  branch: ${showPath(context.branch)}; commit: ${context.commit}`, `${indent}  changed files: ${context.changed.length === 0 ? 'none' : context.changed.map(showPath).join(', ')}`, ...(context.note === null ? [] : [`${indent}  note: ${JSON.stringify(context.note)}`])].join('\n');
+  return [`${indent}Saved job context (${record.id}) — where the work stood when the bounty was created`, `${indent}  branch: ${showPath(context.branch)}${full ? `; commit: ${context.commit}` : ''}`, `${indent}  changed files: ${context.changed.length === 0 ? 'none' : context.changed.map(showPath).join(', ')}`, ...(context.note === null ? [] : [`${indent}  note: ${JSON.stringify(context.note)}`])].join('\n');
 }
 
 const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
@@ -582,15 +583,15 @@ const nextStep = (record: BountyRecord): string => {
   }
   switch (record.stage) {
     case 'drafted':
-    case 'confirmed': return `deliver it — run box bounty post ${record.id} (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`;
+    case 'confirmed': return `deliver it — box bounty post ${record.id} (preview first with --preview)`;
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
-    case 'posted': return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges; box bounty status ${record.id} --comments reads other accounts' comments`;
+    case 'posted': return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges`;
     case 'taken': return 'a solution is being read against the snapshot it was made for — run box bounty status again in a moment';
     case 'answered':
     case 'verified': {
       const conflicts = record.conflicts?.paths;
       if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
-      return `box bounty look ${record.id} <n> to read a solution; box bounty apply ${record.id} <n> to choose one; box bounty close ${record.id} to end it; box bounty status ${record.id} --full for reports and history`;
+      return `box bounty apply ${record.id} <n> chooses a solution (box bounty look ${record.id} <n> reads it first); box bounty close ${record.id} ends it`;
     }
     default: return 'ended — nothing to do';
   }
@@ -666,8 +667,7 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
     return [
       ...firstUseBlock(repoRoot),
       'for you — this checkout\'s remotes name several GitHub repositories; the owner picks which one it is, and you run the matching command:',
-      ...repositoryChoiceLines(unlisted),
-      'box bounty config shows every setting and the command that changes it.'
+      ...repositoryChoiceLines(unlisted)
     ];
   }
   return [
@@ -675,8 +675,7 @@ export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: Dec
     'for you — the owner picks one; you run the matching command:',
     `  ${DECISION_WORDS.allow}: box bounty allow`,
     `  ${DECISION_WORDS.ask}: box bounty allow --ask`,
-    `  ${DECISION_WORDS.once}: box bounty allow ${id}`,
-    'box bounty config shows every setting and the command that changes it.'
+    `  ${DECISION_WORDS.once}: box bounty allow ${id}`
   ];
 }
 
@@ -725,12 +724,22 @@ export function promisedTotal(open: readonly ListedBounty[]): number {
 // repository's own limit and what is left of it (BT11c — one repository's
 // money never leans on another's). A record written before BT11a counts $0 —
 // the amount it was posted with.
-function rewardStatusLine(repoRoot: string, open: readonly ListedBounty[]): string {
+// The reward line says what money is in force and what is already promised —
+// money owed is a fact every call. The standing explanation of what a reward
+// is (a promise in the owner's name, paid by hand, set in box bounty config)
+// is said once per repository, recorded in the owner's settings, and lives in
+// help and describe (BT17). With no amount, nothing promised and no limit
+// there is nothing to say and the compact form stays silent.
+function rewardStatusLine(repoRoot: string, open: readonly ListedBounty[], full: boolean): string | null {
   const { amount, limit } = repoReward(repoRoot);
   const promised = promisedTotal(open);
-  const stated = amount === 0 ? 'each new bounty states $0 — no payment is promised' : `each new bounty states $${amount} — a promise in the owner's name, paid by hand`;
-  const counted = limit === null ? `open bounties here promise $${promised}; no limit is set` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
-  return `reward: ${stated}; ${counted}; the owner sets both for this repository in box bounty config`;
+  if (!full && amount === 0 && promised === 0 && limit === null) return null;
+  const stated = amount === 0 ? 'each new bounty states $0' : `each new bounty states $${amount}`;
+  const counted = limit === null ? `open bounties here promise $${promised}` : `open bounties here promise $${promised} of a $${limit} limit — ${promised <= limit ? `$${limit - promised} left` : `$${promised - limit} over`}`;
+  const once = !full && amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')
+    ? " — a promise in the owner's name, paid by hand; the owner sets it in box bounty config"
+    : '';
+  return `reward: ${stated}${once}; ${counted}`;
 }
 
 // The money gate every fresh post passes (BT11a, scoped per repository in
@@ -796,17 +805,19 @@ export function withPromiseLock<T>(repoRoot: string, run: () => T): T {
 // of the current code, and the next step; ended bounties one compact line; an
 // empty project says so and says what to do. `--comments` prints the issue's
 // comments marked as written by others. Never prints nothing.
-// The owner-decision line status always carries: what is written for this
-// repository and when it last changed. Nothing written says so — it is
-// never read as allowed.
-export function ownerStatusLine(repoRoot: string): string {
+// The owner-decision line: a flat `allowed` is the state that needs nothing
+// every call — it prints only in the full view (BT17), where the change
+// time lives too. Everything that holds work — nothing written, ask, off,
+// a deny — needs attention each time and stays on every compact status.
+export function ownerStatusLine(repoRoot: string, full = false): string | null {
   const read = readDecision(repoRoot);
   if (read.denied) return `owner: this repository is no longer allowed; denied at ${read.at}; all-projects does not apply after deny`;
   const where = read.level === 'project' ? 'this project' : 'all projects';
+  const changed = full ? `, changed ${read.at}` : '';
   switch (read.decision) {
-    case 'allowed': return `owner: allowed for ${where} (changed ${read.at})`;
-    case 'ask': return `owner: ask me each time (${where}, changed ${read.at})`;
-    case 'off': return `owner: off — the tool asks each time (${where}, changed ${read.at})`;
+    case 'allowed': return full ? `owner: allowed for ${where}${changed}` : null;
+    case 'ask': return `owner: ask me each time (${where}${changed})`;
+    case 'off': return `owner: off — the tool asks each time (${where}${changed})`;
     case null: return 'owner: nothing written — the first post will wait for the owner';
   }
 }
@@ -849,8 +860,13 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     }
     if (!isOpenStage(record.stage) && !options.full) lines.push(`${record.id} compact status uses the cached last observation; current comparison: box bounty status ${record.id} --full`);
   }
-  lines.push(ownerStatusLine(repoRoot));
-  lines.push(rewardStatusLine(repoRoot, open));
+  // The standing state lines: each prints only when it has something that
+  // needs attention — a flat "allowed" and a $0 reward are silent in the
+  // compact view and both print in the full one (BT17).
+  const owner = ownerStatusLine(repoRoot, options.full === true);
+  if (owner !== null) lines.push(owner);
+  const reward = rewardStatusLine(repoRoot, open, options.full === true);
+  if (reward !== null) lines.push(reward);
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
   const askNotice = askMergeNoticeLine();
@@ -879,13 +895,16 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // command beside it. `0 collected` beside waiting pull requests read
       // as "nothing waiting" — the count now only prints when there is one.
       if (!options.full && record.github?.pending !== null && record.github?.pending !== undefined) lines.push(`      github: ${record.github.pending}`);
-      let answerShown = false;
       if (record.github?.outside !== undefined) {
         if (options.full) lines.push(`      outside state recorded ${record.github.outside.at}: issue ${record.github.outside.issueState}`);
+        // The recorded listing embeds a collect/look command per pull
+        // request — in the compact view that is this bounty's one `next:`
+        // line below, so the commands are dropped from the listed lines and
+        // kept in the record (BT17).
+        const noCommands = (line: string): string => line.replace(/; (?:collect|look): box bounty [^;]+/g, '');
         for (const line of record.github.outside.answers.split('\n')) {
           if (!options.full && (line.startsWith('GitHub answers for ') || line.includes('collected as solution'))) continue;
-          lines.push(`      ${line}`);
-          answerShown = true;
+          lines.push(`      ${options.full ? line : noCommands(line)}`);
         }
       }
       if (record.waiting !== undefined) {
@@ -903,9 +922,18 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       // something when there is one.
       if (attempts.length > 0) lines.push(`      ${attempts.length} collected solution(s) (${unseen} new, ${attempts.length - unseen} shown before); next: ${nextStep(record)}`);
       else lines.push(`      next: ${nextStep(record)}`);
-      if (attempts.length === 0 && record.github?.outside !== undefined && !answerShown) lines.push(`      collect: box bounty look ${record.id} <number> or box bounty apply ${record.id} <number>`);
-      for (const attempt of attempts) if (attempt.seenAt !== undefined) lines.push(`      solution #${attempt.n}: seen and not decided, age ${seenAge(attempt.seenAt)}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}`);
-      for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}${pays && pr.payTo !== undefined ? `; ${payToLine(pr.payTo)}` : ''}`);
+      // Collected attempts and still-waiting pull requests each print once
+      // (BT17): the outside listing above already names every pull request,
+      // so the pull-request loop prints only when no listing was recorded.
+      // The solution line is the compact per-attempt line: a posted record's
+      // attempts are all listed here — new or seen — while the fuller
+      // `attempts (n)` table below is the full form's (and a record with no
+      // GitHub publication still keeps the old seen-only view here).
+      for (const attempt of attempts) {
+        if (attempt.seenAt === undefined && (record.github === undefined || options.full === true)) continue;
+        lines.push(`      solution #${attempt.n}: ${attempt.seenAt === undefined ? 'new, not decided' : `seen and not decided, age ${seenAge(attempt.seenAt)}`}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts !== undefined && attempt.conflicts.length > 0 ? `; merging onto the current code conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+      }
+      if (record.github?.outside === undefined) for (const pr of record.github?.seenPullRequests ?? []) if (!attempts.some(attempt => attempt.commit === pr.commit) && record.github?.availablePullRequests?.some(available => available.n === pr.n && available.commit === pr.commit)) lines.push(`      pull request #${pr.n}: seen and not decided, age ${seenAge(pr.at)}${pays && pr.payTo !== undefined ? `; ${payToLine(pr.payTo)}` : ''}`);
       // A failed refresh names its reason (BT14); a retry is offered only
       // where a rerun could read a different answer.
       if (record.github?.unavailableAt !== null && record.github?.unavailableAt !== undefined) {
@@ -915,7 +943,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           ? `      rerunning box bounty status reads the same answer — if the recorded issue is not this bounty's, end it with box bounty close ${record.id}`
           : '      retry box bounty status');
       }
-      if (record.github?.questions !== undefined) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
+      // A zero count is nothing to say; comments that exist need attention.
+      if (record.github?.questions !== undefined && (record.github.questions.count > 0 || options.full === true)) lines.push(`      comments from other accounts: ${record.github.questions.count}${record.github.questions.unnamed === undefined ? '' : ` (${record.github.questions.unnamed} from an account whose name could not be read)`}; latest: ${record.github.questions.latestAt ?? 'none'}; read: box bounty status ${record.id} --comments`);
       // `--comments` prints the issue's comments, each line marked as written
       // by another account — the issue is bound to this bounty first, so a
       // record pointed at the wrong issue is a named refusal, not a leak.
@@ -929,10 +958,11 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
         lines.push(`      next: answer on issue ${record.github.issue.number} in your own words with your own gh — gh issue comment ${record.github.issue.number} --body "<your own words>"; or box bounty status ${record.id}`);
       }
       // Saved context follows the work it explains (BT14).
-      lines.push(renderResume(record, '      '));
+      lines.push(renderResume(record, '      ', options.full === true));
       // The github: facts are the long form's — reviews found agents never
       // used them in the short one.
       if (options.full && record.github !== undefined) lines.push(`      github: ${record.github.repository} ${record.github.branch} ${record.github.issue?.url ?? 'issue pending'} (${record.github.state}${record.github.kind !== 'history' ? ', snapshot-posted — from before the bounty became an issue on the code that is already there' : ''})${record.github.pending !== null ? `; ${record.github.pending}` : ''}`);
+      if (options.full && record.allowedBy !== undefined) lines.push(`      allowed by: the owner's ${record.allowedBy.decision === 'allowed' ? `${record.allowedBy.level === 'default' ? 'all-projects setting' : 'repository entry'} "allowed" written ${record.allowedBy.decisionAt}` : 'one-bounty answer'}`);
       if (record.github?.outside !== undefined) {
         record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
         persistRecord(repoRoot, record);
@@ -944,9 +974,16 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
           const bOk = b.outcome === 'verified' || b.outcome === 'answered' ? 0 : 1;
           return aOk - bOk || a.n - b.n;
         });
-        lines.push(`      attempts (${attempts.length}):`);
-        for (const attempt of ordered) {
-          lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+        // The per-attempt outcome list, the reports and the fresh merge read
+        // are the full form's detail (BT17): in the compact view a posted
+        // bounty's pull requests came from the outside listing above and its
+        // collected solutions print on the `solution #n` lines. A record with
+        // no GitHub publication has no listing, so it keeps the list here.
+        if (record.github === undefined || options.full === true) {
+          lines.push(`      attempts (${attempts.length}):`);
+          for (const attempt of ordered) {
+            lines.push(`        #${attempt.n} ${attempt.outcome} — ${ATTEMPT_WORD[attempt.outcome]}; ${attempt.seenAt === undefined ? 'new' : `seen since ${attempt.seenAt}`}${attempt.author !== undefined ? `; from GitHub account ${attempt.author}` : ''}${pays && attempt.payTo !== undefined ? `; ${payToLine(attempt.payTo)}` : ''}${attempt.conflicts !== null && attempt.conflicts.length > 0 ? `; merges with conflicts in ${attempt.conflicts.map(showPath).join(', ')}` : ''}`);
+          }
         }
         const top = ordered[0]!;
         if ((record.github === undefined || options.full) && top.report.length > 0) {
@@ -995,7 +1032,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     if (entry.record === null) continue;
     const detailed = options.id !== undefined || entry.record === lastEnded;
     if (detailed) {
-      lines.push(renderResume(entry.record, '  '));
+      lines.push(renderResume(entry.record, '  ', options.full === true));
       const pay = entry.record.github?.pay;
       if (pay !== undefined) {
         lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${pay.solver}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${pay.solver ?? 'the solver'}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
@@ -1026,7 +1063,7 @@ export function renderHelp(): string {
   return [
     'box bounty — hand off work you cannot or should not do: packaged safely, remembered in the project, returned as facts.',
     'GitHub posting is free and public, only to this project\'s already-public repository. Nobody is known to be watching these issues.',
-    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
+    'the owner allows the tool once — a decision kept in the owner\'s own settings outside the repository. Those settings stop accidents and record changes; they are not a lock against an agent that deliberately changes them. Until then the first post waits and prints the few lines to put to them. post <id> --preview shows exactly what becomes public — the commit already there, unpushed commits, and only the uncommitted work you ask for (--with-changes, --include <file>). status reads the pull requests waiting; look <id> <n> collects one and shows its change, read from fetched objects — nothing is checked out, nothing is left behind. Every bounty states the reward the owner set for its repository — $0 until the owner sets one in box bounty config.',
     '',
     'the journey (what each command does → the stage it leaves):',
     '  create    save the task and private context, snapshot the working state and preview publication → drafted',

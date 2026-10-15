@@ -63,7 +63,7 @@ it('old confirmed drafts name GitHub post while every retired posted stage names
   writeFileSync(made.recordPath, JSON.stringify({ ...record, stage: 'confirmed' }));
   const before = readFileSync(made.recordPath);
   const confirmed = renderStatus(repo, { id: made.id });
-  expect(confirmed).toContain(`next: deliver it — run box bounty post ${made.id} (preview first with --preview); if the owner has not allowed the tool, the post waits and prints what they run`);
+  expect(confirmed).toContain(`next: deliver it — box bounty post ${made.id} (preview first with --preview)`);
   expect(confirmed).not.toContain('--to');
   expect(readFileSync(made.recordPath)).toEqual(before);
   for (const stage of ['posted', 'taken', 'answered', 'verified']) {
@@ -169,7 +169,9 @@ it('standard input keeps the exact task in the record, creates no task file and 
   write(old, 'keep.txt', 'owner folder stays\n');
   const before = fingerprint(repo);
   const task = '# Repair the app. More detail for the solver.\nI tried the existing implementation twice.\n';
-  const result = cli(repo, ['create', '--task', '-', '--why', 'need another view'], task);
+  // The stdin/task-file facts are create's detail — named in the --full
+  // output (BT17); the record itself is checked either way.
+  const result = cli(repo, ['create', '--task', '-', '--why', 'need another view', '--full'], task);
   expect(result.status, result.stderr).toBe(0);
   const id = /bt-[a-f0-9]{12}/.exec(result.stdout)![0];
   const record = loadRecord(repo, id);
@@ -250,7 +252,8 @@ it.each([
 
 it('create describes the same default publication as post preview and keeps uncommitted work home', () => fixture(({ repo }) => {
   write(repo, 'app.txt', 'uncommitted owner progress\n');
-  const created = cli(repo, ['create', '--task', 'TASK.md', '--why', 'another opinion']);
+  // The publication plan is create's detail view since BT17 — --full.
+  const created = cli(repo, ['create', '--task', 'TASK.md', '--why', 'another opinion', '--full']);
   expect(created.status, created.stderr).toBe(0);
   const id = /(bt-[a-f0-9]{12}) — drafted/.exec(created.stdout)![1]!;
   const posted = cli(repo, ['post', id, '--preview']);

@@ -58,7 +58,10 @@ describe('BT7a look', () => {
     expect(git(context.repo, ['branch', '--list'])).toBe(branches);
     expect(existsSync(join(context.repo, '.git', 'box-bt7-copies'))).toBe(false);
     expect(lookBounty(context.repo, context.id, 1).diff).toBe(looked.diff);
-    expect(renderStatus(context.repo)).toContain('seen since');
+    // Compact status marks it seen on the per-solution line; the dated
+    // "seen since" fact is the full form's (BT17).
+    expect(renderStatus(context.repo)).toContain('seen and not decided');
+    expect(renderStatus(context.repo, { full: true })).toContain('seen since');
   }, { files, prAuthor: 'outside-solver', collected: true }));
 
   it('a large change lists its files first and prints the whole change only on request', () => postedFixture(context => {

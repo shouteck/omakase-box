@@ -37,7 +37,7 @@ agent's or the owner's.
 
 ```
 node packages/box-cli/dist/cli.js bounty create --task <file|-> --why "<one line>" \
-    [--title "<text>"] [--resume "<context>"] [--repo <path>]
+    [--title "<text>"] [--resume "<context>"] [--full] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty [--repo <path>]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
@@ -47,6 +47,16 @@ node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply [id] [<n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
 ```
+
+Every command's normal output follows the same shape (BT17): one line
+saying what happened — naming the bounty and, for a command that changes
+something, the repository it acted on — then only the facts that need
+attention now, then one `next:` line holding the one command to run (or both
+real choices on that same line). Everything else — hashes, timestamps,
+record paths, format observations, cached readings, reports and history —
+sits one option away behind `--full`. Standing explanations are said once
+the first time they apply, recorded in the owner's settings so they are
+never repeated, and live permanently in `help` and `describe`.
 
 The owner has three commands. An agent can run them after the owner's decision:
 

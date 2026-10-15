@@ -238,7 +238,9 @@ describe('GitHub bounty destination, entirely offline', () => {
     const refreshed = renderStatus(repo);
     expect(refreshed).toContain('#1 by owner: "app.txt"');
     expect(renderStatus(repo, { full: true })).toContain('issue open');
-    expect(refreshed).toContain(`box bounty look ${id} 1`);
+    // BT17: the per-request collect commands are said once — the bounty's one
+    // `next:` names the command shape and the listing names the request.
+    expect(refreshed).toContain(`box bounty look ${id} <number>`);
     expect(renderOpenLine(repo)).toContain('#1 by owner');
     const observedAt = loadRecord(repo, id).github!.outside!.at;
     update({ fail: '/issues' });
@@ -319,7 +321,7 @@ describe('GitHub bounty destination, entirely offline', () => {
     // `answer` is gone: status carries the listing, and look collects the PR.
     expect(cli('answer', id).status).toBe(3);
     const collected = cli('look', id, '1');
-    expect(collected.status).toBe(0); expect(collected.stdout).toContain('collected first');
+    expect(collected.status).toBe(0); expect(collected.stdout).toContain('collected');
     expect(cli('apply', id).status).toBe(0);
     expect(state().issues[0]!.state).toBe('closed');
     // `undo` is gone: the agent's own git revert reverses the merge it named.

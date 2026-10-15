@@ -101,7 +101,10 @@ describe('BT11c — each repository carries its own reward and limit', () => {
     const { destination } = postToGitHub(repoB, id);
     expect(loadRecord(repoB, id).reward).toEqual({ amount: 0 });
     expect(loadRecord(repoB, id).github!.body).toContain('reward: $0');
-    expect(statusGitHub(repoB)).toContain('each new bounty states $0');
+    // Compact status stays silent on a bare $0 (BT17); the full view states
+    // it, and neither surface ever names A's $10 on B.
+    expect(statusGitHub(repoB)).not.toContain('$10');
+    expect(statusGitHub(repoB, { full: true })).toContain('each new bounty states $0');
     expect(statusGitHub(repoA)).toContain('each new bounty states $10');
   });
 
@@ -260,7 +263,10 @@ describe('BT11a — posting binds the amount in force', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     const { id } = draft(repo);
-    expect(statusGitHub(repo)).toContain('each new bounty states $0 — no payment is promised');
+    // A bare $0 with nothing promised is silent in the compact view (BT17);
+    // the full view always states it.
+    expect(statusGitHub(repo)).not.toContain('reward:');
+    expect(statusGitHub(repo, { full: true })).toContain('each new bounty states $0');
     changeConfig(repo, 'set', 'reward-limit', '30');
     changeConfig(repo, 'set', 'reward', '10');
     postToGitHub(repo, id);
