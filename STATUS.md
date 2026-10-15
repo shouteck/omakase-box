@@ -1,16 +1,15 @@
 # Status
 
-Updated by the CTO on 15 October 2026 at the BT17 close.
+Updated by the CTO on 15 October 2026 at the K21 close — the run's last wave; the run is complete.
 
 ## Now
 
-- **BT17 completed.** Reviewed tip `8631d08` (code commit `736d09c`), independent PASS ui-verified — the pass ran a fresh full verify (`1036s`) and re-measured the after column byte-identically. Merged `c5fdd79`. Every bounty command's normal output is now one outcome line, only facts needing attention, and one `next:` line: 290 → 243 lines / 26.5k → 20.7k chars over the standard journey. Detail sits behind `--full`; standing explanations are said once via a `said` map in owner settings and live permanently in `help`/`describe`. A new guard test (`bt17.test.ts`) holds each command to a line/char budget.
-- Cold fresh posting and collecting agents (dispatched by the head chef, worlds under a temp root now removed) each completed their journey from the tool's output alone — the collecting one applied the correct fix over the paying-but-wrong one. Relay check 15/15; demo transcript re-recorded (`bt17-transcript.txt`), same 11 steps with shorter steps 4/5/8/11; stranger-text labels and the owner block byte-preserved.
-- `--json` and the silent-ignore flag bugs (`status --help`, `--repo=`) were deliberately out of scope per the dispatch revision — the former waits on the owner's call, the latter is BT12's bar.
-- `report.test.ts`'s verdict-word timeout was raised to the suite's 120 s heavy margin — a stopgap; the cheaper-fix preference stays in BACKLOG.md.
-- K20 earlier this run delivered `kitchen/reviews/K20-conventions.md` and repaired the `gh-standin.cjs` regression that had turned hosted `test:kitchen` red after BT16.
-- No real bounty, payment or solver-code execution; scratch swept (including accumulating `box-k6-stats-*.jsonl`).
+- **K21 completed.** Reviewed commit `8b06799`, independent PASS test-verified; merged `563428f`. `kitchen/reviews/K21-architecture.md` maps the eight components, lands verdicts on all thirteen suspects (9 confirmed, 4 partly, 0 refuted) plus five found in the work, recommends the snapshot's middle course, and proposes five waves. Headline: the hard stops sit at real boundaries and the big redesigns hold; the debt is two hub files, legacy vocabulary, and the snapshot's durable half.
+- **K21 also repaired the second red master of the run** — my own K20-close line pushed AGENTS.md + KITCHEN.md over the 20 KB rule; the wave's trim brings the pair to 20,357 B. The cto.md role file now carries the byte-check line.
+- The run's earlier waves: **BT16** (several-remote selection via the owner's list; `github-push-denied`), **K20** (the conventions report + the `gh-standin.cjs` repair that fixed `test:kitchen` on master), **BT17** (output contract, said-once explanations, measured budgets; cold agents completed both journeys from output alone). Merged `d04a072`, `c31c856`, `c5fdd79`.
+- Hosted runs: two reds this run, both explained and already repaired on master — `test:kitchen` via the stand-in fix (green in the BT17-merge run's kitchen leg) and `kitchen-stats` via the K21 trim. The K21 merge's own run is the expected-green confirmation.
+- No real bounty, payment, owner-settings change or solver-code execution anywhere in the run; all scratch removed.
 
 ## Next
 
-This run's last wave is **K21** — the component-by-component architecture review, which reads BT16's selection model, K20's report and BT17's output changes as final. Then the run stops and reports. No wave is in flight.
+Nothing is in flight. The owner queue is empty; **the next product direction is the owner's call.** K21 proposes five waves in order (draft-without-GitHub; legacy vocabulary trim; snapshot durable-half retirement; record.ts split; boundary fixes + the `syncGitHubDecision` owner question). K20 surfaces undeliberate departures worth deciding (`--help` below top level, `--json`, `--flag=value`, `--version` — several already BT12 bars). BACKLOG.md carries the rest.
