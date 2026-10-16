@@ -79,8 +79,10 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // BT14: the preview's `posting permission:` line reads the repository's
   // GitHub address once — one `git remote` start the fact costs.
   // BT20: a draft never contacts GitHub — the create-time publication plan
-  // is gone, so gh is 0 and Git drops to the measured count (15 here).
-  'create': { git: 15, gh: 0 },
+  // is gone, so gh is 0 and Git drops to the measured count.
+  // BT24: the snapshot pin went with the record field — one `update-ref`
+  // start fewer than BT20's 15.
+  'create': { git: 14, gh: 0 },
   'status-drafted': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
   'close-draft': { git: 3, gh: 0 },
   'post-preview': { git: 18, gh: 3 },

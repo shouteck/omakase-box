@@ -370,7 +370,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
   const createdAt = new Date().toISOString();
   const id = `bt-${sha256(`${plan.snapshot.commit}\n${plan.title}\n${createdAt}`).slice(0, 12)}`;
   const written = writeNewRecord(plan.repoRoot, {
-    id, title: plan.title, why: plan.why, snapshot: plan.snapshot, createdAt,
+    id, title: plan.title, why: plan.why, createdAt,
     resume: plan.resume,
     content: { task: plan.task, note, tool: TOOL_VERSION },
     noteSource: 'generated',

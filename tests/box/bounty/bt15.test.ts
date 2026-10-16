@@ -185,7 +185,8 @@ it('standard input keeps the exact task in the record, creates no task file and 
   expect(fingerprint(repo)).toEqual(before);
   expect(readFileSync(join(old, 'keep.txt'), 'utf8')).toBe('owner folder stays\n');
   expect(readdirSync(old)).toEqual(['keep.txt']);
-  expect(git(repo, ['rev-parse', `refs/box-bounty/${id}`])).toBe(record.snapshot.commit);
+  expect(record.snapshot).toBeUndefined(); // a draft made now keeps no snapshot
+  expect(git(repo, ['for-each-ref', '--format=%(refname)', `refs/box-bounty/${id}`])).toBe('');
 });
 
 it('empty standard input is missing-task and writes no new draft or bookmark', () => {

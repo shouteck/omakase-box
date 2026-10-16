@@ -120,8 +120,10 @@ describe('collection — every solution is a numbered attempt, and nothing in it
     expect(result.attempt.report.join('\n')).toContain('nothing in the solution was run');
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore); // nothing was applied
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('x\n');
-    // Still open: the durability ref stays, and status says so.
-    expect(refGone(repo, id)).toBe(false);
+    // Still open: the collected attempt's pin stays, and status says so —
+    // the draft itself pins nothing, the snapshot ref is never written.
+    expect(refGone(repo, id)).toBe(true);
+    expect(refGone(repo, `${id}-answer-1`)).toBe(false);
     expect(statusGitHub(resolveRepoRoot(repo))).toContain(`${id}  answered`);
   });
 
@@ -257,7 +259,7 @@ describe('collection — the extracted change', () => {
     const refusal = expectRefusal(() => collectPullRequest(repo, id, returned(delivered)), 'answer-empty');
     expect(refusal.message).toContain('changes nothing against the bounty branch');
     expect(readRecord(repo, id).stage).toBe('posted');
-    expect(refGone(repo, id)).toBe(false); // still durable — the bounty is open
+    expect(refGone(repo, id)).toBe(true); // open — and the draft pins nothing: the snapshot ref is never written
   });
 
   it('changed, added and deleted paths are all carried into the merge', () => {

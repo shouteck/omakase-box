@@ -9,15 +9,17 @@
 // reach `posted`/`withdrawn`, but the stage set is the whole journey's so BT3
 // extends the same record rather than redesigning it.
 //
-// Durability: `bounty create` also pins `refs/box-bounty/<id>` at the snapshot
-// commit, so `git gc --prune=now` cannot take the bytes the identifier names.
-// `close` removes the ref.
+// Durability: each collected answer's commit is pinned under
+// `refs/box-bounty/<id>-answer-<n>` while the bounty is open; every end stage
+// drops the refs. Records written before BT24 also pinned the create-time
+// snapshot commit at `refs/box-bounty/<id>` — drafts made now keep neither
+// the ref nor the `snapshot` field, and removing that name is a no-op delete.
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
+import { dryMergeOnto, gitOutcome, gitRefsWrite, GIT_LEAST } from './git.js';
 import { instructionNotices, syncInstructions } from './instructions.js';
 import { planGitHub, postGitHub, refreshGitHubStatus, refreshGitHubFormat, shownOfPlan, syncGitHubDecision, issueComments, GH_LEAST } from './github.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
@@ -234,7 +236,11 @@ export interface BountyRecord {
       machine that made the bounty, so an absolute path is honest. */
   readonly folder?: string;
   readonly content?: { readonly task: { readonly file: string; readonly text: string }; readonly note: { readonly file: string; readonly text: string } | null; readonly tool: string };
-  readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
+  /** The create-time capture: commit, tree and the HEAD it was parented on.
+      Old records only — the snapshot was kept for the bounty's life while
+      something still read it after `create`; drafts made now use the capture
+      during `create` (the scan and the note) and store nothing. */
+  readonly snapshot?: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly createdAt: string;
   /** Every answer handed back, oldest first — each with its extracted change,
       its outcome and its fact report. `apply` names one by `n`. */
@@ -291,7 +297,6 @@ export interface RecordSeed {
   readonly id: string;
   readonly title: string;
   readonly why?: string;
-  readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   readonly content: { readonly task: { readonly file: string; readonly text: string }; readonly note: { readonly file: string; readonly text: string } | null; readonly tool: string };
   readonly createdAt: string;
   readonly scanFindings?: ScanFinding[];
@@ -532,10 +537,10 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
   return record;
 }
 
-// `bounty create` calls this to make the draft durable: pin the snapshot
-// commit under refs/box-bounty/<id> so gc cannot prune it, then write the
-// record at stage `drafted`. A Git failure here is operational (exit 1) —
-// the draft's own writes already happened and the error says so.
+// `bounty create` calls this to write the record at stage `drafted`. Nothing
+// is pinned: the create-time capture serves the scan and the note while
+// `create` runs and nothing reads it after — only records from before BT24
+// carry `snapshot` and its `refs/box-bounty/<id>` pin, and they keep both.
 export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: BountyRecord; path: string } {
   const record: BountyRecord = {
     schemaVersion: 1,
@@ -547,12 +552,10 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     ...(seed.why !== undefined ? { why: seed.why } : {}),
     stage: 'drafted',
     content: seed.content,
-    snapshot: { ...seed.snapshot },
     createdAt: seed.createdAt,
     ...(seed.scanFindings !== undefined && seed.scanFindings.length > 0 ? { scanFindings: seed.scanFindings } : {}),
     events: [{ stage: 'drafted', at: seed.createdAt }]
   };
-  git(repoRoot, ['update-ref', refName(seed.id), seed.snapshot.commit]);
   const path = recordPath(repoRoot, seed.id);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(record, null, 2) + '\n');

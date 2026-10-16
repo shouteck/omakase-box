@@ -7,11 +7,12 @@ import { BountyRefused, closeBounty, finalizeBounty, loadRecord, planBounty, pos
 import type { BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, git, listTree, makeRepo, ownerSays, runRoot, write } from './support.js';
 
-// The record and the lifecycle: `.box/bounties/<id>.json` is written at create,
-// the snapshot commit is pinned under refs/box-bounty/<id>, and the bounty moves
-// drafted → posted through recorded events — or ends as withdrawn, or waits on
-// the owner. Every wrong move is a named refusal, never a crash and never
-// silence.
+// The record and the lifecycle: `.box/bounties/<id>.json` is written at create
+// and the bounty moves drafted → posted through recorded events — or ends as
+// withdrawn, or waits on the owner. The create-time capture is used while
+// `create` runs and kept nowhere; records from before that carry `snapshot`
+// and a `refs/box-bounty/<id>` pin and still load and close. Every wrong move
+// is a named refusal, never a crash and never silence.
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
@@ -38,7 +39,7 @@ const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
 };
 
 describe('the bounty record', () => {
-  it('create writes .box/bounties/<id>.json at stage drafted and pins the snapshot under a ref gc cannot prune', () => {
+  it('create writes .box/bounties/<id>.json at stage drafted and pins nothing — no snapshot field, no ref', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const result = created(repo);
     const record = readRecord(repo, result.id);
@@ -47,15 +48,31 @@ describe('the bounty record', () => {
     expect(record.title).toBe('a task');
     expect('level' in record).toBe(false); // records written now carry no level
     expect(record.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    expect(record.snapshot.commit).toBe(result.plan.snapshot.commit);
-    expect(record.snapshot.tree).toBe(result.plan.snapshot.tree);
+    expect('snapshot' in record).toBe(false); // records written now keep no snapshot
     expect(record.folder).toBeUndefined();
     expect(record.content?.task.text).toBe('the task\n');
     expect(record.events).toEqual([{ stage: 'drafted', at: record.createdAt }]);
+    // The capture serves the scan and the note while create runs; nothing is
+    // pinned afterwards, so the draft leaves no refs/box-bounty/<id> behind.
+    expect(git(repo, ['for-each-ref', '--format=%(refname)', 'refs/box-bounty/'])).toBe('');
+  });
+
+  it('an old record that kept `snapshot` and its ref still loads, survives gc and closes the ref away', () => {
+    const repo = makeRepo({ 'src/app.py': 'x\n' });
+    const result = created(repo);
+    // Hand-made pre-BT24 shape: the record stored the snapshot field and
+    // create had pinned refs/box-bounty/<id> at its commit.
+    const file = join(repo, '.box', 'bounties', `${result.id}.json`);
+    const record = { ...readRecord(repo, result.id), snapshot: result.plan.snapshot };
+    writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+    git(repo, ['update-ref', `refs/box-bounty/${result.id}`, result.plan.snapshot.commit]);
+    expect(loadRecord(repo, result.id).snapshot?.commit).toBe(result.plan.snapshot.commit);
     // The durability ref pins snapshot.commit: gc --prune=now cannot take it.
-    expect(git(repo, ['rev-parse', `refs/box-bounty/${result.id}`])).toBe(result.plan.snapshot.commit);
     git(repo, ['gc', '--prune=now', '-q']);
     expect(git(repo, ['cat-file', '-t', result.plan.snapshot.commit])).toBe('commit');
+    closeGitHub(repo, result.id);
+    const ref = spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${result.id}`], { encoding: 'utf8' });
+    expect(ref.status).not.toBe(0); // the ref is gone with the record closed
   });
 
   it('never ships .box records inside a later bounty', () => {
