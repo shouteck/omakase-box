@@ -494,6 +494,19 @@ of a solution, a pull request or a collaborator:
 - elsewhere: `$XDG_CONFIG_HOME/box/settings.json`, or `~/.config/box/settings.json`
 - tests and fixtures point `BOX_BOUNTY_SETTINGS_DIR` at a temporary folder.
 
+Two files live there. `settings.json` holds only the owner's choices — the
+decisions, rewards, limits, publish lists, instruction settings and merge
+answers — and changes only when the owner changes them through `allow`,
+`deny`, `config` or an answer to a held action; a read command never
+rewrites it. `state.json` beside it is the tool's own memory — what it
+already said once, the notices it showed, each checkout's instruction marks,
+the migration and first-merge records — so a command that only reads can
+still mark something told
+without touching the owner's file; a state file the tool cannot read is
+reset with one line, never a refusal, because nothing the owner decided
+lives there. Both are written atomically (temp file then rename), so a
+crash mid-write leaves the previous whole file.
+
 A repository entry is keyed by its GitHub address, owner/name, with letter
 case and a trailing .git normalized. Every copy on this machine is covered.
 A fork, or another repository at the same folder path, is a different entry.
@@ -632,7 +645,9 @@ refusal (`settings-malformed`, `settings-unknown-name`) — refused, never
 ignored, on every command that reads it. A name that reaches for a hard stop
 (`settings-hard-stop`) is refused the same way: **the three hard stops —
 never-ship files, a private repository, the owner's standing rules — cannot
-be expressed as settings or switched off by one.**
+be expressed as settings or switched off by one.** The state file is the
+tool's own, so its malformation is not a refusal: `the tool's own state at
+<path> was unreadable and was reset` is said once and the run goes on.
 
 ## The pre-publish scan
 

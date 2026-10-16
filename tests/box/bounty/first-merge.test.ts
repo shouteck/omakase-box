@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { changeConfig, loadRecord, loadSettings, postBounty, renderConfig } from '../../../packages/box-bounty/index.js';
+import { changeConfig, loadRecord, loadSettings, loadState, postBounty, renderConfig } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import { recordFirstMerge } from '../../../packages/box-bounty/settings.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
@@ -15,7 +15,7 @@ it('direct apply records the receiving repository after its remote changes', () 
   const commit = git(repo, ['rev-parse', 'HEAD']);
   expect(applied.status).toBe(0);
   expect(applied.stdout).toContain(`was merged into fork/project, commit ${commit}`);
-  expect(loadSettings().firstMerges).toEqual({ 'fork/project': { commit, at: expect.any(String) } });
+  expect(loadState().firstMerges).toEqual({ 'fork/project': { commit, at: expect.any(String) } });
   expect(loadRecord(repo, id).github?.repository).toBe('owner/project');
   git(repo, ['remote', 'rename', 'origin', 'renamed']);
   git(repo, ['remote', 'set-url', 'renamed', 'https://github.com/owner/project.git']);
@@ -35,7 +35,7 @@ it('recognition records the receiving repository and retains that address in lat
   expect(recognised.stdout).toContain(`was merged into fork/project, commit ${commit}`);
   expect(loadRecord(repo, id).stage).toBe('applied');
   expect(loadRecord(repo, id).github?.repository).toBe('owner/project');
-  expect(loadSettings().firstMerges).toEqual({ 'fork/project': { commit, at: expect.any(String) } });
+  expect(loadState().firstMerges).toEqual({ 'fork/project': { commit, at: expect.any(String) } });
   git(repo, ['remote', 'set-url', 'origin', 'https://github.com/owner/project.git']);
   const again = cli(repo, 'status');
   expect(again.status).toBe(0);
@@ -62,10 +62,10 @@ it('independent bounties in same-address copies notify once and a different rece
       expect(applied.status).toBe(0);
       notices.push(applied.stdout.includes('Tell the owner'));
       commits.push(git(repo, ['rev-parse', 'HEAD']));
-      expect(loadSettings().firstMerges[address.toLowerCase()]?.commit).toBe(address === 'OWNER/PROJECT' ? commits[0] : commits.at(-1));
+      expect(loadState().firstMerges[address.toLowerCase()]?.commit).toBe(address === 'OWNER/PROJECT' ? commits[0] : commits.at(-1));
       expect(loadSettings().repositories).toEqual({});
       if (address === 'fork/project') {
-        expect(loadSettings().firstMerges).toEqual({
+        expect(loadState().firstMerges).toEqual({
           'owner/project': { commit: commits[0], at: expect.any(String) },
           'fork/project': { commit: commits[2], at: expect.any(String) }
         });
@@ -84,7 +84,7 @@ it('an unavailable receiving identity does not refuse a landed merge or borrow i
   expect(applied.stdout).toContain(`was merged into this local repository, commit ${commit}`);
   expect(applied.stdout).toContain('receiving GitHub address could not be determined');
   expect(applied.stdout).not.toContain('was merged into owner/project');
-  expect(loadSettings().firstMerges).toEqual({});
+  expect(loadState().firstMerges).toEqual({});
   expect(loadRecord(repo, id).stage).toBe('applied');
 }, { prAuthor: 'solver', collected: true }));
 
@@ -99,7 +99,7 @@ it('recognition without one receiving address saves a local notice and does not 
   expect(status.stdout).toContain(`first outside solution merged in local repository ${JSON.stringify(repo)}: commit ${commit}`);
   expect(cli(repo, 'status').stdout).not.toContain('Tell the owner');
   expect(loadRecord(repo, id).stage).toBe('applied');
-  expect(loadSettings().firstMerges).toEqual({});
+  expect(loadState().firstMerges).toEqual({});
 }, { prAuthor: 'solver', collected: true }));
 
 it.each([false, true])('a foreign or malformed local marker is preserved after apply with readable address %s', readable => postedFixture(({ repo, id }) => {
@@ -113,7 +113,7 @@ it.each([false, true])('a foreign or malformed local marker is preserved after a
   expect(applied.stdout).toContain('the merge stands');
   expect(readFileSync(marker, 'utf8')).toBe('foreign bytes\n');
   expect(loadRecord(repo, id).stage).toBe('applied');
-  expect(loadSettings().firstMerges).toEqual({});
+  expect(loadState().firstMerges).toEqual({});
 }, { prAuthor: 'solver', collected: true }));
 
 it('local notice persistence does not follow a linked marker or parent', () => {
@@ -133,7 +133,7 @@ it('local notice persistence does not follow a linked marker or parent', () => {
     }
     expect(recordFirstMerge(repo, commit)?.line).toContain('first-merge-notice-unsafe-path');
     expect(readFileSync(sentinel, 'utf8')).toBe('owned by another writer\n');
-    expect(loadSettings().firstMerges).toEqual({});
+    expect(loadState().firstMerges).toEqual({});
   }
 });
 

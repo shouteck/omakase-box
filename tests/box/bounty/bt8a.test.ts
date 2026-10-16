@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allowBounty, allowRepository, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readDecision, renderConfig, renderStatus, renderSummary, repositoryIdentity, settingsFile } from '../../../packages/box-bounty/index.js';
+import { allowBounty, allowRepository, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, loadState, planBounty, postBounty, readDecision, renderConfig, renderStatus, renderSummary, repositoryIdentity, settingsFile } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
 import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
 
@@ -36,6 +36,13 @@ const write = fs.writeFileSync;
 fs.writeFileSync = function(file, data, ...args) {
   if (path.resolve(String(file)) === path.resolve(settings)) events.push({ kind: 'settings-write', before: before() });
   return Reflect.apply(write, this, [file, data, ...args]);
+};
+// BT22: the file is written atomically — temp file plus rename — so the
+// rename to the settings path is the moment its content changes.
+const rename = fs.renameSync;
+fs.renameSync = function(from, to, ...args) {
+  if (path.resolve(String(to)) === path.resolve(settings)) events.push({ kind: 'settings-write', before: before() });
+  return Reflect.apply(rename, this, [from, to, ...args]);
 };
 require('node:module').syncBuiltinESMExports();
 process.on('exit', () => write(process.env.BT8A_ORDER_LOG, JSON.stringify(events)));
@@ -168,7 +175,8 @@ describe('one-time legacy settings migration', () => {
     const missing = join(runRoot('BT8a-missing'), 'gone'), root = repo();
     git(root, ['remote', 'add', 'other', 'https://github.com/other/project.git']);
     writeFileSync(settingsFile(), JSON.stringify({ kind: 'box-owner-settings', default: oldLevel('allowed'), projects: { [root]: oldLevel('ask'), [missing]: oldLevel('allowed') } }));
-    expect(loadSettings().migrations).toHaveLength(2);
+    loadSettings(); // the fold-in runs on the settings read; its record lands in state.json
+    expect(loadState().migrations).toHaveLength(2);
     expect(renderConfig(root)).toContain('no permission moved');
     git(root, ['remote', 'remove', 'other']);
     expect(readDecision(root).decision).toBeNull();
@@ -357,5 +365,5 @@ it('a stranger merge notice names the commit once per repository and status reta
   expect(git(root, ['merge-base', '--is-ancestor', waitingPr, 'HEAD'])).toBe('');
   expect(cli(root, 'apply', id, '1').stdout).not.toContain('Tell the owner');
   expect(statusGitHub(root)).toContain(`first outside solution merged in owner/project: commit ${merge}`);
-  expect(loadSettings().firstMerges['owner/project']?.commit).toBe(merge);
+  expect(loadState().firstMerges['owner/project']?.commit).toBe(merge);
 }, { prAuthor: 'solver' }));

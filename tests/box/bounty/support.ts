@@ -69,7 +69,10 @@ afterAll(() => {
   else process.env['NODE_OPTIONS'] = previousNodeOptions;
 });
 beforeEach(() => {
+  // BT22: both files the folder holds — the owner's settings and the tool's
+  // own state beside it.
   rmSync(join(ownerSettingsRoot, 'settings.json'), { force: true });
+  rmSync(join(ownerSettingsRoot, 'state.json'), { force: true });
   if (process.env['BOX_BOUNTY_SETTINGS_DIR'] !== ownerSettingsRoot) process.env['BOX_BOUNTY_SETTINGS_DIR'] = ownerSettingsRoot;
 });
 // Write one level of the owner's decision inside the temp folder — the same

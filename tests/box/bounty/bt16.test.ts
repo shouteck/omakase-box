@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allowRepository, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readDecision, renderConfig, renderStatus, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
+import { allowRepository, denyRepository, finalizeBounty, loadRecord, loadSettings, loadState, planBounty, postBounty, readDecision, renderConfig, renderStatus, settingsFile, writeDecision } from '../../../packages/box-bounty/index.js';
 import { repositoryIdentity, requireRepository } from '../../../packages/box-bounty/settings.js';
 import { CLI_DIST, git, makeRepo } from './support.js';
 import { githubRepository, refused } from './github-fixture.js';
@@ -229,8 +229,9 @@ describe('a checkout with several GitHub remotes resolves through the owner list
   it('case 14: a legacy projects entry over a two-remote checkout still migrates as no permission moved', () => {
     const root = fork();
     writeFileSync(settingsFile(), JSON.stringify({ kind: 'box-owner-settings', projects: { [root]: oldLevel('allowed') } }));
-    expect(loadSettings().migrations[0]).toMatchObject({ repository: null });
-    expect(loadSettings().migrations[0]?.detail).toContain('no permission moved');
+    loadSettings(); // the fold-in runs on the settings read; its record lands in state.json
+    expect(loadState().migrations[0]).toMatchObject({ repository: null });
+    expect(loadState().migrations[0]?.detail).toContain('no permission moved');
     expect(loadSettings().repositories).toEqual({});
     expect(renderConfig(root)).toContain('no permission moved');
   });

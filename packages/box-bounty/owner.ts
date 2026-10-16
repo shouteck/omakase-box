@@ -3,7 +3,7 @@ import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBo
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
-import { askMergeNoticeLine, loadSettings, localFirstMergeLine, markSaid, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saidAlready, saveSettings, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
+import { askMergeNoticeLine, loadSettings, loadState, localFirstMergeLine, markSaid, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saidAlready, saveState, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
@@ -301,8 +301,11 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   if (rewardNotice !== null) lines.push(rewardNotice);
   const askNotice = askMergeNoticeLine();
   if (askNotice !== null) lines.push(askNotice);
-  for (const notice of settings.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
-  for (const [key, notice] of Object.entries(settings.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
+  // Migration and first-merge facts are the tool's records, kept in its own
+  // state file — the render is the same, the source is not the owner's file.
+  const toolState = loadState();
+  for (const notice of toolState.migrations) lines.push(`migration ${notice.at}: ${JSON.stringify(notice.path)} ${notice.detail}; re-add: box bounty allow ${notice.repository ?? '<owner/name>'}`);
+  for (const [key, notice] of Object.entries(toolState.firstMerges)) lines.push(`first outside solution merged in ${key}: commit ${notice.commit} at ${notice.at}; see: box bounty status --full`);
   const localMerge = repoRoot === null ? null : localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);
   return lines.join('\n');
@@ -360,9 +363,9 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
         : `${address}'s open-bounty limit is $${limit}, below a $${amount} reward — raise it first: box bounty config set reward-limit <whole dollars> ${address}; nothing changed`);
       // The first amount above 0 is the moment the tool says in plain words
       // what a reward is — once ever, recorded so it is never repeated.
-      const firstNaming = amount > 0 && settings.rewardPromiseSaid === undefined;
+      const firstNaming = amount > 0 && loadState().rewardPromiseSaid === undefined;
       const written = writeMoney(address, { reward: amount });
-      if (firstNaming) saveSettings({ ...loadSettings(), rewardPromiseSaid: written.at });
+      if (firstNaming) saveState({ ...loadState(), rewardPromiseSaid: written.at });
       lines.push(`${address} reward: $${amount}, written ${written.at} to ${settingsFile()} — each bounty posted on ${address} now states it; other repositories are unchanged.`);
       if (firstNaming) lines.push('A bounty reward is a promise, made in your name, that you pay by hand — the tool never moves money.');
     } else {

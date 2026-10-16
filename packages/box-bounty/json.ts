@@ -26,7 +26,7 @@ import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
 import { applicableAttempts, attemptsOf, endedNextStep, isOpenStage, listRecords, loadRecord, nextStep, notNext, persistRecord, promisedTotal } from './record.js';
 import type { Attempt, BountyRecord, ScanFinding, StageEvent, WaitingFor } from './record.js';
-import { actingOn, askMergeNoticeLine, loadSettings, localFirstMergeLine, readDecision, readInstructions, repoReward, repositoryIdentity, rewardNoticeLine, saidOnce, settingsFile } from './settings.js';
+import { actingOn, askMergeNoticeLine, loadSettings, loadState, localFirstMergeLine, readDecision, readInstructions, repoReward, repositoryIdentity, rewardNoticeLine, saidOnce, settingsFile } from './settings.js';
 
 type JsonObject = Record<string, unknown>;
 
@@ -289,8 +289,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
   if (amount > 0 && saidOnce(repoRoot, 'reward-is-a-promise')) {
     notice("a promise in the owner's name, paid by hand; the owner sets it in box bounty config");
   }
-  const settings = loadSettings();
-  for (const [address, firstMerge] of Object.entries(settings.firstMerges)) {
+  for (const [address, firstMerge] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === firstMerge.commit))) {
       notice(`first outside solution merged in ${address}: commit ${firstMerge.commit} at ${firstMerge.at}`);
     }
@@ -428,10 +427,11 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
   if (rewardNotice !== null) notice(rewardNotice);
   const askNotice = askMergeNoticeLine();
   if (askNotice !== null) notice(askNotice);
-  for (const migration of settings.migrations) {
+  const toolState = loadState();
+  for (const migration of toolState.migrations) {
     notice(`migration ${migration.at}: ${JSON.stringify(migration.path)} ${migration.detail}; re-add: box bounty allow ${migration.repository ?? '<owner/name>'}`);
   }
-  for (const [key, firstMerge] of Object.entries(settings.firstMerges)) {
+  for (const [key, firstMerge] of Object.entries(toolState.firstMerges)) {
     notice(`first outside solution merged in ${key}: commit ${firstMerge.commit} at ${firstMerge.at}; see: box bounty status --full`);
   }
   if (repoRoot !== null) {

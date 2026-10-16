@@ -5,7 +5,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { attemptsOf, isOpenStage, listRecords } from './record.js';
-import { readInstructions, writeInstructions } from './settings.js';
+import { readInstructionNotes, readInstructions, writeInstructionNotes } from './settings.js';
 import { renderRulesBlock, RULES_MARKERS } from './wording.js';
 
 // Confirmed against each host's documentation on 2026-10-13. Only this
@@ -278,10 +278,12 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
 }
 
 export function instructionNotices(repoRoot: string, includeMissing = true): string[] {
-  const choice = readInstructions(repoRoot);
-  const notices = [...choice.notices];
+  // The once-only marks this function writes are the tool's memory, so they
+  // go to state.json — a read command must never touch the owner's file.
+  const noted = readInstructionNotes(repoRoot);
+  const notices = [...noted.notices];
   const lines: string[] = [];
-  let retired = choice.retired;
+  let retired = noted.retired;
   if (existsSync(join(repoRoot, '.box', 'limits.json')) && retired !== true) {
     lines.push('.box/limits.json is no longer read and can be deleted. If you used rulesFile, re-set maintenance with box bounty config set instructions true and any custom file with box bounty config set instruction-file <existing-path>. allowedDestinations and reminders are dropped; cost and expectedAnswer now come from facts.');
     retired = true;
@@ -298,6 +300,6 @@ export function instructionNotices(repoRoot: string, includeMissing = true): str
       notices.push(key);
     } catch (error) { lines.push(`${file.path}: refused (${error instanceof BountyRefused ? error.reason : 'instruction-file-unreadable'}); nothing changed`); }
   }
-  if (retired !== choice.retired || notices.length !== choice.notices.length) writeInstructions(repoRoot, { ...choice, notices, ...(retired === undefined ? {} : { retired }) });
+  if (retired !== noted.retired || notices.length !== noted.notices.length) writeInstructionNotes(repoRoot, { notices, ...(retired === undefined ? {} : { retired }) });
   return lines;
 }

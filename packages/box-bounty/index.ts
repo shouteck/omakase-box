@@ -51,8 +51,8 @@ export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, cano
 export { boundAmount } from './format.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, CloseOutcome, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
 export { allowRepository, allowBounty, denyRepository, renderConfig, changeConfig, renderSummary } from './owner.js';
-export { actingOn, askMergeNoticeLine, loadSettings, projectKey, readDecision, readReward, repoReward, repositoryIdentity, requireRepository, rewardNoticeLine, settingsDir, settingsFile, unlistedRemotes, writeDecision, SETTINGS_ENV } from './settings.js';
-export type { DecisionRead, OwnerDecision, OwnerSettings } from './settings.js';
+export { actingOn, askMergeNoticeLine, loadSettings, loadState, projectKey, readDecision, readReward, repoReward, repositoryIdentity, requireRepository, rewardNoticeLine, saveState, settingsDir, settingsFile, stateFile, unlistedRemotes, writeDecision, SETTINGS_ENV, STATE_FILE_NAME } from './settings.js';
+export type { DecisionRead, OwnerDecision, OwnerSettings, ToolState } from './settings.js';
 export { chooseRepository, githubRemotes, repositoryAddress, repositoryChoiceLines } from './repository.js';
 export type { RemoteCandidate, RepositoryChoice } from './repository.js';
 export { shownOfPlan } from './github.js';
