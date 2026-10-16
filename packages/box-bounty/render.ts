@@ -60,6 +60,7 @@ export const nextStep = (record: BountyRecord): string => {
   }
 };
 
+// The one `next:` an ended bounty prints — the job to go back to, the
 // revert when its merge landed, and the ways to look again or start fresh.
 // Shared by the text status and the status --json document (BT19).
 export const endedNextStep = (record: BountyRecord): string =>
@@ -98,7 +99,6 @@ function rewardStatusLine(repoRoot: string, open: readonly ListedBounty[], full:
   return `reward: ${stated}${once}; ${counted}`;
 }
 
-// comments marked as written by others. Never prints nothing.
 // Every scan finding on the record, one line per hit — what was flagged and
 // what happened. Open bounties print these inside their block; ended ones
 // print them on the asked-for or last-ended detail (every one under --full),
@@ -118,7 +118,7 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 // attempts (passing first), the top attempt's fact report, a fresh merge read
 // of the current code, and the next step; ended bounties one compact line; an
 // empty project says so and says what to do. `--comments` prints the issue's
-
+// comments marked as written by others. Never prints nothing.
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
   if (options.id !== undefined) loadRecord(repoRoot, options.id);
   const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);

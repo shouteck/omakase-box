@@ -24,7 +24,7 @@ import { discoverInstructions, instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
 import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
-import { applicableAttempts, attemptsOf, isOpenStage, listRecords, loadRecord, persistRecord } from './record.js';
+import { applicableAttempts, attemptsOf, baseCommitOf, isOpenStage, listRecords, loadRecord, persistRecord } from './record.js';
 import { promisedTotal } from './money.js';
 import { endedNextStep, nextStep, notNext } from './render.js';
 import type { Attempt, BountyRecord, ScanFinding, StageEvent, WaitingFor } from './record.js';
@@ -179,9 +179,9 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
     createdAt: record.createdAt,
     // Old records carry the snapshot's base commit; records made now keep no
     // snapshot, so the resume context's recorded commit stands in — it is the
-    // same HEAD `create` captured. Its '(no commits yet)' display sentinel is
-    // not a commit, so only a real hash reports here.
-    baseCommit: record.snapshot?.baseCommit ?? (record.resume?.kind === 'recorded' && /^[0-9a-f]{40}$/.test(record.resume.commit) ? record.resume.commit : null),
+    // same HEAD `create` captured. baseCommitOf is the one read: the
+    // '(no commits yet)' display sentinel is not a commit.
+    baseCommit: baseCommitOf(record),
     reward: boundAmount(record) ?? null,
     job: record.job?.file ?? null,
     resume: resumeEntry(record),

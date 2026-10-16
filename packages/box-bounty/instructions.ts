@@ -42,11 +42,37 @@ export interface ProjectPathWalk {
       'blocked' — a non-directory mid-path component; 'missing' — a
       component that does not exist (nothing below it is checked). */
   readonly problem: { readonly kind: 'outside' } | { readonly kind: 'link' | 'blocked' | 'missing'; readonly at: string } | null;
+  /** `rel` re-spelled with each component's real on-disk name wherever the
+      component exists — a directory listing reports long names, so an 8.3
+      short-name alias like `GIT~1` reads as `.git` here even though the
+      declared spelling and realpathSync both keep the alias. A missing
+      component and the tail below the first anomaly keep the declared
+      spelling. */
+  readonly actual: string;
   /** lstat of the leaf — set only when no problem stopped the walk. */
   readonly leaf: Stats | undefined;
   /** realpathSync(path), or null when it does not resolve. Set even when a
       link is on the path, so callers can classify where the link lands. */
   readonly canonical: string | null;
+}
+
+// The name the parent's own listing gives the entry the declared component
+// resolves to. A case-insensitive match is the same entry; when none exists
+// — an 8.3 short-name alias like `GIT~1`, or any other spelling the
+// filesystem folds to a different stored name — the entry sharing the
+// component's inode is the real name. The declared spelling stands on a
+// listing failure or a racing rename: the declared and canonical checks
+// still apply to it.
+function onDiskName(dir: string, declared: string, stat: Stats): string {
+  let entries: string[];
+  try { entries = readdirSync(dir); } catch { return declared; }
+  const found = entries.find(name => name.toLowerCase() === declared.toLowerCase());
+  if (found !== undefined) return found;
+  for (const name of entries) {
+    const entry = lstatSync(join(dir, name), { throwIfNoEntry: false });
+    if (entry !== undefined && entry.dev === stat.dev && entry.ino === stat.ino) return name;
+  }
+  return declared;
 }
 
 export function walkProjectPath(repoRoot: string, named: string): ProjectPathWalk {
@@ -56,22 +82,27 @@ export function walkProjectPath(repoRoot: string, named: string): ProjectPathWal
   let canonical: string | null = null;
   try { canonical = realpathSync(path); } catch { /* missing or unresolvable — the walk still reports what it found */ }
   if (rel === '' || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
-    return { root, path, rel, problem: { kind: 'outside' }, leaf: undefined, canonical };
+    return { root, path, rel, problem: { kind: 'outside' }, actual: rel, leaf: undefined, canonical };
   }
   let current = root;
   const parts = rel.split(sep);
+  const actual: string[] = [];
   for (let index = 0; index < parts.length; index += 1) {
+    const stat = lstatSync(join(current, parts[index]!), { throwIfNoEntry: false });
+    if (stat === undefined) {
+      actual.push(...parts.slice(index));
+      return { root, path, rel, problem: { kind: 'missing', at: join(current, parts[index]!) }, actual: actual.join(sep), leaf: undefined, canonical };
+    }
+    actual.push(onDiskName(current, parts[index]!, stat));
     current = join(current, parts[index]!);
-    const stat = lstatSync(current, { throwIfNoEntry: false });
-    if (stat === undefined) return { root, path, rel, problem: { kind: 'missing', at: current }, leaf: undefined, canonical };
-    if (stat.isSymbolicLink()) return { root, path, rel, problem: { kind: 'link', at: current }, leaf: undefined, canonical };
-    if (index < parts.length - 1 && !stat.isDirectory()) return { root, path, rel, problem: { kind: 'blocked', at: current }, leaf: undefined, canonical };
+    if (stat.isSymbolicLink()) { actual.push(...parts.slice(index + 1)); return { root, path, rel, problem: { kind: 'link', at: current }, actual: actual.join(sep), leaf: undefined, canonical }; }
+    if (index < parts.length - 1 && !stat.isDirectory()) { actual.push(...parts.slice(index + 1)); return { root, path, rel, problem: { kind: 'blocked', at: current }, actual: actual.join(sep), leaf: undefined, canonical }; }
   }
-  return { root, path, rel, problem: null, leaf: lstatSync(path), canonical };
+  return { root, path, rel, problem: null, actual: actual.join(sep), leaf: lstatSync(path), canonical };
 }
 
 // The git dir as `git rev-parse --git-dir` reports it, memoised per process.
-// A `.git` directory IS the git dir — the first-segment rule already covers
+// A `.git` directory IS the git dir — the segment rule already covers
 // it, so rev-parse is asked only for the file form (worktree, submodule,
 // separate-git-dir): never on a normal checkout, so no Git start is spent.
 const gitDirByRoot = new Map<string, string | null>();
@@ -94,21 +125,26 @@ const toolOwned = (named: string): BountyRefused => new BountyRefused('instructi
 
 // `.git/` and `.box/` belong to Git and to this tool — a block synced into
 // `.git/config` breaks Git in the checkout and one in `.box/bounties/`
-// corrupts the record (BT8b). Judged on the declared spelling, folded, and
-// again on the canonical path, so `.GIT/config`, a `..` spelling and a link
-// landing inside them all read the same refusal — before the link refusal
-// itself, because a file inside them is wrong for a stronger reason than
-// how it was reached. A worktree's or a separate git dir elsewhere under
-// the root is refused the same way.
+// corrupts the record (BT8b), and a nested checkout's own `.git` is just as
+// off-limits. Every segment is judged, not the first one (BT26):
+// `sub/.git/config` and `a/b/.box/x` refuse exactly as `.git/config` does —
+// on the declared spelling, folded, on each component's real on-disk name
+// (an 8.3 alias like `GIT~1` reaches `.git` through a spelling nothing else
+// sees), and again on the canonical path, so `.GIT/config`, a `..` spelling
+// and a link landing inside them all read the same refusal — before the
+// link refusal itself, because a file inside them is wrong for a stronger
+// reason than how it was reached. A worktree's or a separate git dir
+// elsewhere under the root is refused the same way.
 export function checkInstructionFile(repoRoot: string, named: string): string {
-  const { root, path, rel, problem, leaf, canonical } = walkProjectPath(repoRoot, named);
+  const { root, path, rel, actual, problem, leaf, canonical } = walkProjectPath(repoRoot, named);
   if (problem?.kind === 'outside') throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed`);
-  const segment = (value: string) => folded(value).split('/')[0];
-  if (segment(rel) === '.git' || segment(rel) === '.box') throw toolOwned(named);
+  const owns = (value: string) => folded(value).split('/').some(part => part === '.git' || part === '.box');
+  if (owns(rel)) throw toolOwned(named);
+  if (owns(actual)) throw toolOwned(named);
   if (canonical !== null) {
     const inside = relative(root, canonical);
     if (inside !== '' && inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside)) {
-      if (segment(inside) === '.git' || segment(inside) === '.box') throw toolOwned(named);
+      if (owns(inside)) throw toolOwned(named);
       const gitDir = projectGitDir(root);
       if (gitDir !== null) {
         const inGit = relative(gitDir, canonical);
