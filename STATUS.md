@@ -12,4 +12,4 @@ Updated by the CTO on 17 October 2026 at the BT12 close.
 
 ## Next
 
-Nothing is in flight. This run's remaining named wave is **BT27** (split `github.ts`, zero import cycles). Also briefed and waiting: **K25** (the tool's memory for agents). Owner decision open: **BT12 Part B**, publishing `box-bounty` to npm.
+Nothing is in flight. This run's remaining named wave is **BT27** (split `github.ts`, zero import cycles). Also briefed and waiting: **K25** (the tool's memory for agents). **BT12 Part B** (publishing to npm) is deferred by the owner until the tool is more ready; the install line stays held until then.
