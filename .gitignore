@@ -16,3 +16,4 @@ __pycache__/
 *.pyc
 .kitchen/
 .execution/**/*.tar
+packages/box-cli/dist-package/
