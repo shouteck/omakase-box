@@ -3,11 +3,14 @@
 // same shape git-missing and github-cli-missing use. This lives in module
 // init and is imported first by every entrypoint, so it fires before any
 // other bundled code runs; keep it free of imports and of syntax an older
-// Node cannot parse. NODE_MINIMUM is derived from what the tool's code
-// uses (asserted by the packaging test, which scans the built bundle for
-// the newest runtime feature and compares), and copied into the artifact
-// manifest's engines field by pack.mjs.
-export const NODE_MINIMUM = '16.7.0';
+// Node cannot parse. NODE_MINIMUM is the oldest Node the install test
+// actually runs on — the hosted install-node22 job runs the packed
+// artifact's whole journey on the current Node 22 release, the host and the
+// main job on 24 — never a guess from scanning the code: a syntax scan
+// cannot see API floors or behaviour changes. Node 22 and 24 are the
+// supported LTS lines; 16 and 18 are end-of-life. pack.mjs copies it into
+// the artifact manifest's engines field.
+export const NODE_MINIMUM = '22.0.0';
 
 const parse = (text: string): number[] =>
   text.split('-')[0]!.split('.').map(part => Number.parseInt(part, 10) || 0);

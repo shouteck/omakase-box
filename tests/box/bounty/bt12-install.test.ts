@@ -8,7 +8,7 @@
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -71,16 +71,43 @@ beforeAll(() => {
   if (process.platform === 'win32') copyFileSync(process.execPath, join(bin, 'gh.exe'));
   else { writeFileSync(join(bin, 'gh'), `#!/bin/sh\nexec "${process.execPath}" "$@"\n`); const { chmodSync } = require('node:fs'); chmodSync(join(bin, 'gh'), 0o755); }
   git(root, ['init', '--bare', '-q', bare]);
+  // The scrubbed environment: nothing of the runner's is inherited but what
+  // starting programs needs. PATH holds only the gh stand-in folder, the
+  // folder of the running node (npm and npx live beside it), the folder git
+  // is found in and, on Windows, System32 for cmd.exe. HOME, USERPROFILE,
+  // APPDATA and LOCALAPPDATA point into the scratch root, so no global git
+  // config, npm config or npm cache of this machine is read.
+  const home = join(root, 'home');
+  mkdirSync(join(home, 'AppData', 'Roaming'), { recursive: true });
+  mkdirSync(join(home, 'AppData', 'Local'), { recursive: true });
+  const found = (name: string) => (process.env.PATH ?? '').split(delimiter).find(dir => dir !== ''
+    && (process.platform === 'win32' ? ['.exe', '.cmd'].some(ext => existsSync(join(dir, name + ext))) : existsSync(join(dir, name))));
+  const gitDir = found('git');
+  expect(gitDir, 'git on the runner PATH').toBeDefined();
+  const path = [bin, dirname(process.execPath), gitDir!];
+  const keep: Record<string, string> = {};
+  if (process.platform === 'win32') {
+    const system = process.env.SystemRoot ?? 'C:\Windows';
+    path.push(join(system, 'System32'));
+    for (const name of ['SystemRoot', 'windir', 'COMSPEC', 'PATHEXT', 'TEMP', 'TMP', 'NoDefaultCurrentDirectoryInExePath']) {
+      if (process.env[name] !== undefined) keep[name] = process.env[name]!;
+    }
+  } else if (process.env.TMPDIR !== undefined) keep.TMPDIR = process.env.TMPDIR;
   env = {
-    ...process.env,
-    PATH: `${bin}${delimiter}${process.env.PATH ?? ''}`,
+    ...keep,
+    PATH: path.join(delimiter),
+    HOME: home,
+    USERPROFILE: home,
+    APPDATA: join(home, 'AppData', 'Roaming'),
+    LOCALAPPDATA: join(home, 'AppData', 'Local'),
     BOX_BOUNTY_SETTINGS_DIR: settings,
-    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --require ${shim.replaceAll(BS, '/')}`.trim(),
+    NODE_OPTIONS: `--require ${shim.replaceAll(BS, '/')}`,
     REPLAY_STATE: state,
     REPLAY_BARE: bare,
     REPLAY_REMOTE_URL: REMOTE_URL,
     REPLAY_GH_STANDIN: STANDIN
-  } as Record<string, string>;
+  };
+  for (const dir of path) expect(dir.toLowerCase().startsWith(ROOT.toLowerCase()), `${dir} is inside the checkout`).toBe(false);
 }, 300000);
 
 describe('one install command on an empty machine', () => {

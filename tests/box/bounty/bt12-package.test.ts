@@ -6,12 +6,12 @@
 import { gunzipSync } from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { userInfo } from 'node:os';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { INSTALL_PACKAGE, renderRulesBlock, scanText } from '../../../packages/box-bounty/index.js';
+import { INSTALL_PACKAGE, renderRulesBlock, rulesBlockInterior, scanText } from '../../../packages/box-bounty/index.js';
 import { NODE_MINIMUM } from '../../../packages/box-cli/src/node-check.js';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -119,14 +119,22 @@ describe('the artifact carries no secrets and no machine paths', () => {
 });
 
 describe('what it needs is stated and checked', () => {
-  it('declares the manifest name the instruction notice installs from', () => {
+  it('pins the manifest name, and the notice names no unpublished package', () => {
     expect(manifest()['name']).toBe(INSTALL_PACKAGE);
-    const block = renderRulesBlock('idle');
-    expect(block).toContain(`npx ${INSTALL_PACKAGE} bounty help`);
+    // Held until the owner publishes the name (Part B): an unpublished name
+    // in an instruction an agent executes can be claimed by anyone first.
+    for (const state of ['idle', 'open', 'new'] as const) {
+      // The markers are `<!-- box-bounty -->`; the interior is what an agent reads.
+      expect(renderRulesBlock(state), state).not.toContain('npx');
+      expect(rulesBlockInterior(state).join('\n'), state).not.toContain(INSTALL_PACKAGE);
+    }
   });
-  it('declares the Node floor the code actually uses', () => {
-    // The newest runtime feature found in the bundle sets the floor;
-    // engines may state it exactly or sit above it, never below.
+  it('declares Node 22 as the floor, and no scanned feature needs newer', () => {
+    // The floor is NODE_MINIMUM — the oldest Node the install test runs on
+    // (the hosted install-node22 job). This table does not derive or prove
+    // it: a syntax sample cannot see API floors or behaviour changes. It is
+    // a tripwire only — any pattern found in the bundle that needs a Node
+    // newer than the declared floor fails here.
     const FEATURES: readonly (readonly [RegExp, string])[] = [
       [/\.at\(/, '16.6.0'],           // Array/String.prototype.at
       [/\.replaceAll\(/, '15.0.0'],
@@ -151,15 +159,39 @@ describe('what it needs is stated and checked', () => {
       return am! > bm! || (am === bm && (an! > bn! || (an === bn && ap! >= bp!)));
     };
     const engines = (manifest()['engines'] as { node: string })['node'];
-    const declared = /^>=\s*(\d+\.\d+\.\d+)/.exec(engines)?.[1];
-    expect(declared, `engines.node ${engines}`).toBe(NODE_MINIMUM);
+    expect(engines).toBe('>=22.0.0');
+    expect(engines).toBe(`>=${NODE_MINIMUM}`);
     for (const [pattern, since] of FEATURES) {
       if (pattern.test(bundle())) expect(atLeast(NODE_MINIMUM, since), `${pattern} needs Node ${since}`).toBe(true);
     }
   });
-  it('carries the named refusal for a Node below the floor', () => {
-    expect(bundle()).toContain('node-too-old');
-    expect(bundle()).toContain('or later is required');
-    expect(bundle()).toContain('https://nodejs.org');
+  it('refuses a Node below the floor by running, and runs on one at or above it', () => {
+    // The bundle itself runs under a faked Node version: a --require preload
+    // (CommonJS, so it runs before the ESM entry and its node-check import)
+    // replaces process.versions with a copy whose `node` is the fake. Only
+    // the version string changes; the real runtime executes everything.
+    const dir = temp();
+    const preload = join(dir, 'fake-node-version.cjs');
+    writeFileSync(preload, "Object.defineProperty(process, 'versions', { value: { ...process.versions, node: process.env.BT12_FAKE_NODE }, configurable: true });\n");
+    const entry = join(out, 'package', 'dist', 'box.js');
+    const run = (fake: string | undefined) => spawnSync(process.execPath, [...(fake === undefined ? [] : ['--require', preload]), entry, 'bounty', 'help'], {
+      encoding: 'utf8',
+      env: { ...process.env, NODE_OPTIONS: '', BT12_FAKE_NODE: fake ?? '' }
+    });
+    for (const fake of ['21.99.99', '18.20.4', '16.7.0']) {
+      const refused = run(fake);
+      expect(refused.status, `${fake}: ${refused.stdout}${refused.stderr}`).toBe(3);
+      expect(refused.stderr).toContain('box refused (node-too-old)');
+      expect(refused.stderr).toContain(`Node ${NODE_MINIMUM} or later is required — found node ${fake}`);
+      expect(refused.stderr).toContain('https://nodejs.org');
+      expect(refused.stdout).toBe('');
+    }
+    // At the floor exactly, and on the real runtime, it continues to the command.
+    for (const fake of ['22.0.0', undefined]) {
+      const ran = run(fake);
+      expect(ran.status, `${fake ?? process.versions.node}: ${ran.stdout}${ran.stderr}`).toBe(0);
+      expect(ran.stdout).toContain('the journey');
+      expect(ran.stderr).not.toContain('node-too-old');
+    }
   });
 });

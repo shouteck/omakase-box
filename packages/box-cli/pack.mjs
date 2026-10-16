@@ -27,7 +27,7 @@ const PKG = join(OUT, 'package');
 // the owner's Part-B decision; wording.ts's INSTALL_PACKAGE says the same
 // name and the packaging test pins them equal.
 const NODE_MINIMUM = /NODE_MINIMUM = '([^']+)'/.exec(readFileSync(join(HERE, 'src', 'node-check.ts'), 'utf8'))?.[1];
-if (NODE_MINIMUM === null) { console.error('pack: could not read NODE_MINIMUM from src/node-check.ts'); process.exit(1); }
+if (NODE_MINIMUM === undefined) { console.error('pack: could not read NODE_MINIMUM from src/node-check.ts'); process.exit(1); }
 const MANIFEST = {
   name: 'box-bounty',
   version: '0.1.0',
@@ -46,7 +46,7 @@ mkdirSync(PKG, { recursive: true });
 // One file: the entry's whole import graph is static, so the build emits a
 // single dist/box.js — no chunks, no externals beyond node: builtins.
 // Target es2020 keeps the bundle parseable well below the runtime floor
-// (Node 16.7), so a too-old Node reaches the named refusal instead of a
+// (Node 22), so a too-old Node reaches the named refusal instead of a
 // syntax error.
 await build({
   root: HERE,
