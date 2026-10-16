@@ -47,7 +47,7 @@ export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js'
 export { NOTHING_RUN } from './answer.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
-export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, canonicalForNew, firstUseBlock, isOpenStage, listRecords, loadRecord, mergeWaitLines, ownerBlock, ownerGate, ownerWaitLines, persistRecord, promisedTotal, recordDir, recordPath, refName, requireCurrentDelivery, renderHelp, renderOpenLine, renderResume, renderOverview, rewardForPost, setInstructionNoticeListener, transitionTo, waitForOwner, waitingSummary, withPromiseLock, writeNewRecord } from './record.js';
+export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, canonicalForNew, firstUseBlock, isOpenStage, listRecords, loadRecord, mergeWaitLines, ownerBlock, ownerGate, ownerWaitLines, persistRecord, promisedTotal, recordDir, recordPath, refName, requireCurrentDelivery, renderHelp, renderOpenLine, renderResume, renderOverview, retiredRoute, rewardForPost, setInstructionNoticeListener, transitionTo, waitForOwner, waitingSummary, withPromiseLock, writeNewRecord } from './record.js';
 export { boundAmount } from './format.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, CloseOutcome, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
 export { allowRepository, allowBounty, denyRepository, renderConfig, changeConfig, renderSummary } from './owner.js';

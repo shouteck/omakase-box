@@ -110,7 +110,7 @@ describe('several answers — each is its own attempt', () => {
     collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'first\n')));
     collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')));
     const record = readRecord(repo, id);
-    record.attempts = attemptsOf(record).map((attempt): Attempt => ({ ...attempt, outcome: attempt.n === 1 ? 'check-failed' : 'answered', report: [attempt.n === 1 ? 'FIRST_FAILED_REPORT_73c5' : 'SECOND_ANSWERED_REPORT_73c5'] }));
+    record.attempts = attemptsOf(record).map((attempt): Attempt => ({ ...attempt, outcome: attempt.n === 1 ? 'set-aside' : 'answered', report: [attempt.n === 1 ? 'FIRST_FAILED_REPORT_73c5' : 'SECOND_ANSWERED_REPORT_73c5'] }));
     writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record));
     const status = statusGitHub(repo, { id, full: true });
     expect(status.split('FIRST_FAILED_REPORT_73c5')).toHaveLength(2);
@@ -175,8 +175,9 @@ describe('older records still load', () => {
     collectPullRequest(repo, id, dir);
     // Rewrite the record into the pre-BT3a shape: a single `answer`, no
     // `attempts`, the ref named <id>-answer — and a `level` key, which records
-    // written while checks existed carried. A mechanical record's single
-    // answer reads as `verified` history; a reviewed one's as `answered`.
+    // written while checks existed carried. The load converts it to one
+    // `answered` attempt (BT23): a check outcome means the same now nothing
+    // runs checks, and the level is dropped.
     const record = readRecord(repo, id);
     const attempt = attemptsOf(record)[0]!;
     const legacy: Record<string, unknown> = { ...record, level: 'mechanical', answer: { commit: attempt.commit, changed: attempt.changed, added: attempt.added, deleted: attempt.deleted } };
@@ -187,9 +188,9 @@ describe('older records still load', () => {
 
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`${id}  answered`);
-    // The recorded outcome word lives on the attempts list — the full view's
-    // since BT17 — where it still says what the check did back then.
-    expect(statusGitHub(resolveRepoRoot(repo), { full: true })).toContain('declared check');
+    // The converted outcome word lives on the attempts list — the full
+    // view's since BT17 — where the attempt still says what it is today.
+    expect(statusGitHub(resolveRepoRoot(repo), { full: true })).toContain('#1 answered');
     expect(statusGitHub(repo, { id, full: true })).toContain('before fact reports existed');
     expect(applyGitHub(repo, id).outcome).toBe('applied');
     expect(readFileSync(join(repo, 'src', 'app.py'), 'utf8')).toBe('fixed\n');

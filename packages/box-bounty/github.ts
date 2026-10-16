@@ -11,7 +11,7 @@ import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, g
 import type { DryMerge, IndexChange } from './git.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, requireCurrentDelivery, recordScanFinding, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
+import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, requireCurrentDelivery, recordScanFinding, retiredRoute, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { binaryPatchPaths, looksBinary, scanPatch, scanText } from './scan.js';
@@ -776,6 +776,8 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
   if (record.content !== undefined) return record.content;
   // Only an unposted draft from before BT15 reads its old public text. No
   // source copy or returned folder is consulted, and no folder is changed.
+  const retired = retiredRoute(record);
+  if (retired !== null) return invalid(retired, `this bounty used a retired delivery route; end it with box bounty close ${record.id}`);
   if (record.folder === undefined) return invalid('record-corrupt', 'this draft has no public task text');
   let bytes: Buffer;
   try {
@@ -1145,7 +1147,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; post it with box bounty post ${id}, or end it with box bounty close ${id}`);
-  if (record.github.kind !== 'history') return `This bounty used a retired delivery route; end it with box bounty close ${id}`;
+  if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with box bounty close ${id}`;
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   const lines = [`GitHub answers for ${id} against ${branch}:`];

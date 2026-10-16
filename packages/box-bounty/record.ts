@@ -33,12 +33,16 @@ import { boundAmount } from './format.js';
 
 const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
 
-export type OpenStage = 'drafted' | 'confirmed' | 'waiting' | 'posted' | 'taken' | 'answered' | 'verified';
-export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'expired' | 'undone';
+// `undone` stays: nothing moves a record into it any more, but real records
+// carry it and status shows them as the old ended records they are. Every
+// other word retired designs wrote is converted or refused at load, inside
+// asRecord (BT23).
+export type OpenStage = 'drafted' | 'confirmed' | 'waiting' | 'posted' | 'taken' | 'answered';
+export type EndedStage = 'applied' | 'rejected' | 'withdrawn' | 'undone';
 export type BountyStage = OpenStage | EndedStage;
 
-const OPEN_STAGES: ReadonlySet<BountyStage> = new Set(['drafted', 'confirmed', 'waiting', 'posted', 'taken', 'answered', 'verified']);
-const ENDED_STAGES: ReadonlySet<BountyStage> = new Set(['applied', 'rejected', 'withdrawn', 'expired', 'undone']);
+const OPEN_STAGES: ReadonlySet<BountyStage> = new Set(['drafted', 'confirmed', 'waiting', 'posted', 'taken', 'answered']);
+const ENDED_STAGES: ReadonlySet<BountyStage> = new Set(['applied', 'rejected', 'withdrawn', 'undone']);
 export const isOpenStage = (stage: BountyStage): stage is OpenStage => OPEN_STAGES.has(stage);
 
 export interface StageEvent {
@@ -62,10 +66,9 @@ export interface StageEvent {
 }
 
 // Attempt outcomes written since checks were removed (11 October 2026) are
-// only ever 'answered'. The other words belong to records written before that
-// day — they stay in the union so those records still load and their attempts
-// still read back honestly.
-export type AttemptOutcome = 'answered' | 'verified' | 'check-failed' | 'check-unrunnable' | 'check-not-run';
+// only ever 'answered'. 'set-aside' is what the check era's never-green
+// outcomes load as — recorded, readable, never a default pick (BT23).
+export type AttemptOutcome = 'answered' | 'set-aside';
 
 export interface Attempt {
   readonly pullRequest?: number;
@@ -194,10 +197,9 @@ export interface AllowedBy {
   readonly usedAt: string;
 }
 
+// The `answer` block a record written before `attempts` carries — read and
+// converted to attempt 1 inside asRecord; nothing else names it (BT23).
 export interface AnswerSpec {
-  /** A commit parented on snapshot.baseCommit whose tree is the base plus the
-      solver's extracted change — built on a temporary index, merged by `apply`.
-      Pinned at refs/box-bounty/<id>-answer while the bounty is open. */
   readonly commit: string;
   readonly changed: readonly string[];
   readonly added: readonly string[];
@@ -207,7 +209,6 @@ export interface AnswerSpec {
 export interface BountyRecord {
   noteSource?: 'authored' | 'generated' | 'legacy';
   resume?: ResumeContext;
-  replies?: { readonly at: string; readonly issue: number }[];
   readonly schemaVersion: 1;
   readonly kind: 'box-bounty-record';
   readonly id: string; // bt-<12 hex>, the same id bounty.json carries
@@ -216,11 +217,9 @@ export interface BountyRecord {
       since BT3b and kept only here (never shipped), so the reasons for
       handing off can be learned from use. Absent on older records. */
   readonly why?: string;
-  /** Records written before checks were removed carry the declared level.
-      New records do not — a level described a check's role and there is none. */
-  readonly level?: 'mechanical' | 'reviewed';
-  /** Owner context from `create --job`: lives only in this record — never in
-      bounty.json, the listing or the shipped folder. */
+  /** The job file `create --job` recorded before BT15 retired the flag:
+      nothing writes it, but an ended record that carries it still names it —
+      the ended line falls back to the title when there is none. */
   readonly job?: { readonly file: string; readonly text: string } | null;
   /** sha256 of the exact bounty.json bytes `create` wrote: the answer's manifest
       must come back byte-identical, which is what binds it to this bounty. */
@@ -240,12 +239,8 @@ export interface BountyRecord {
   /** Every answer handed back, oldest first — each with its extracted change,
       its outcome and its fact report. `apply` names one by `n`. */
   attempts?: Attempt[];
-  /** The extracted answer on records written before attempts existed — kept so
-      older records still load; attemptsOf reads it as attempt 1. New writes
-      only fill `attempts`. */
-  answer?: AnswerSpec | null;
   /** Set when a merge onto current code conflicted and was aborted clean; the
-      record stays `verified`/`answered` and these paths are the next step.
+      record stays `answered` and these paths are the next step.
       Cleared when a later apply lands. */
   conflicts?: { readonly paths: readonly string[]; readonly at: string } | null;
   events: StageEvent[];
@@ -309,37 +304,18 @@ export type ResumeContext = { readonly kind: 'not-recorded' } | {
 export const refName = (id: string): string => `refs/box-bounty/${id}`;
 export const attemptRefName = (id: string, n: number): string => `refs/box-bounty/${id}-answer-${n}`;
 
-// Normalizes the two shapes on disk: records from before this wave carry one
-// `answer` block pinned at refs/box-bounty/<id>-answer and no report; newer
-// records carry `attempts`. An older answered/verified/applied record reads as
-// a single attempt — verified when the bounty is mechanical, answered when
-// reviewed — with an empty report, which status says plainly.
+// One shape on the way out of asRecord: a record written before `attempts`
+// carried a single `answer` block, which the load converts to attempt 1 —
+// so today's shape is the only shape any reader sees (BT23).
 export function attemptsOf(record: BountyRecord): Attempt[] {
-  if (record.attempts !== undefined) return record.attempts;
-  if (record.answer !== null && record.answer !== undefined) {
-    return [{
-      n: 1,
-      at: record.events.at(-1)?.at ?? record.createdAt,
-      commit: record.answer.commit,
-      changed: record.answer.changed,
-      added: record.answer.added,
-      deleted: record.answer.deleted,
-      outcome: record.level === 'mechanical' ? 'verified' : 'answered',
-      conflicts: record.conflicts?.paths ?? null,
-      report: []
-    }];
-  }
-  return [];
+  return record.attempts ?? [];
 }
 
-// The attempts `apply` will take without a number: every attempt recorded
-// since checks were removed is 'answered', so today this is all of them —
-// and any may also be applied by naming it (`apply <id> <n>`). The filter
-// stays so attempts on older records keep the meaning they were recorded
-// with: a check outcome that was never green does not become the default
-// pick just because checks are gone now.
+// The attempts `apply` will take without a number: 'answered' only. An
+// attempt the check era never passed loads as 'set-aside' — recorded and
+// readable, but never the default pick; `apply <id> <n>` can still name it.
 export const applicableAttempts = (attempts: readonly Attempt[]): Attempt[] =>
-  attempts.filter(attempt => attempt.outcome === 'verified' || attempt.outcome === 'answered');
+  attempts.filter(attempt => attempt.outcome === 'answered');
 
 // An open bounty can pin several commits: the snapshot at <id>, each attempt's
 // answer commit at <id>-answer-<n>, and the single <id>-answer of records from
@@ -369,7 +345,14 @@ export const persistRecord = (repoRoot: string, record: BountyRecord): void => {
 };
 
 const asRecord = (parsed: unknown): BountyRecord | null => {
-  const record = parsed as BountyRecord;
+  // The extra names below belong to records retired designs wrote: they are
+  // read, converted to today's shape or dropped right here — the one place a
+  // file becomes a record — so no other code ever mentions them (BT23).
+  const record = parsed as BountyRecord & {
+    answer?: AnswerSpec | null;
+    replies?: unknown;
+    level?: unknown;
+  };
   if (record === null || typeof record !== 'object') return null;
   if (record.kind !== 'box-bounty-record' || typeof record.id !== 'string') return null;
   if (typeof record.stage !== 'string' || !Array.isArray(record.events) || record.folder !== undefined && typeof record.folder !== 'string') return null;
@@ -396,8 +379,16 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   const safeBranch = (branch: string) => branch === '(detached HEAD)' || printable.test(branch) && !branch.includes('..');
   if (!/^bt-[a-f\d]{12}$/.test(record.id)) return null;
   if (typeof record.createdAt !== 'string' || !stamp.test(record.createdAt)) return null;
+  // 'verified' was the check era's green: with checks gone it reads as
+  // 'answered', on the record and in its history. The stage checks below then
+  // decide — a word no design ever wrote fails to load as it always did
+  // ('expired' was never written anywhere and now reads corrupt like any
+  // other unknown stage).
+  if ((record.stage as string) === 'verified') record.stage = 'answered';
+  record.events = record.events.map(event => event !== null && typeof event === 'object' && (event.stage as string) === 'verified' ? { ...event, stage: 'answered' } : event);
   for (const event of record.events) {
     if (event === null || typeof event !== 'object') return null;
+    if (!OPEN_STAGES.has(event.stage) && !ENDED_STAGES.has(event.stage)) return null;
     if (event.merge !== undefined && (typeof event.merge !== 'string' || !sha.test(event.merge))) return null;
     if (event.attempt !== undefined && (!Number.isSafeInteger(event.attempt) || event.attempt < 1)) return null;
     if (event.reason !== undefined && typeof event.reason !== 'string') return null;
@@ -422,8 +413,42 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   // reads corrupt rather than lend a forged amount to a public render or to
   // the promised count (BT11a fix round).
   if (record.reward !== undefined && (record.githubApproval !== undefined || record.github === undefined && (record.stage === 'drafted' || record.stage === 'confirmed' || record.stage === 'waiting'))) return null;
-  if (record.answer !== undefined && record.answer !== null && (typeof record.answer !== 'object' || typeof record.answer.commit !== 'string' || !sha.test(record.answer.commit))) return null;
+  if (record.answer !== undefined && record.answer !== null && (typeof record.answer !== 'object' || typeof record.answer.commit !== 'string' || !sha.test(record.answer.commit) || !strings(record.answer.changed) || !strings(record.answer.added) || !strings(record.answer.deleted))) return null;
   if (record.conflicts !== undefined && record.conflicts !== null && (typeof record.conflicts !== 'object' || !strings(record.conflicts.paths) || typeof record.conflicts.at !== 'string' || !stamp.test(record.conflicts.at))) return null;
+  // A record written before `attempts` carries one `answer` block — it becomes
+  // attempt 1, exactly the values attemptsOf used to build on every read: its
+  // own at, commit and change lists, the conflicts the last merge try left,
+  // an empty report status says plainly, and 'answered' — the check era's
+  // 'verified' reads the same once nothing runs checks.
+  if (record.attempts === undefined && record.answer !== undefined && record.answer !== null) {
+    record.attempts = [{
+      n: 1,
+      at: record.events.at(-1)?.at ?? record.createdAt,
+      commit: record.answer.commit,
+      changed: record.answer.changed,
+      added: record.answer.added,
+      deleted: record.answer.deleted,
+      outcome: 'answered',
+      conflicts: record.conflicts?.paths ?? null,
+      report: []
+    }];
+  }
+  // Check-era outcome words convert the same way: the green one is 'answered',
+  // the three never-green ones are 'set-aside' — recorded, never a default
+  // pick. Any other word is not an outcome this tool wrote, so the record
+  // fails to load.
+  const outcomeToday: Record<string, AttemptOutcome> = { answered: 'answered', 'set-aside': 'set-aside', verified: 'answered', 'check-failed': 'set-aside', 'check-unrunnable': 'set-aside', 'check-not-run': 'set-aside' };
+  if (record.attempts !== undefined) {
+    if (record.attempts.some(attempt => outcomeToday[attempt.outcome] === undefined)) return null;
+    record.attempts = record.attempts.map(attempt => ({ ...attempt, outcome: outcomeToday[attempt.outcome]! }));
+  }
+  // And the fields nothing writes or reads any more — the singular answer
+  // (converted above), the replies list nothing ever read, the check level —
+  // are dropped: the record a reader holds names only today's shape, and a
+  // record written back carries no old words.
+  delete record.answer;
+  delete record.replies;
+  delete record.level;
   const github = record.github;
   if (github !== undefined) {
     if (github === null || typeof github !== 'object') return null;
@@ -507,10 +532,10 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
   return record;
 }
 
-// `bounty create` calls this after the folder is in place: pin the snapshot
+// `bounty create` calls this to make the draft durable: pin the snapshot
 // commit under refs/box-bounty/<id> so gc cannot prune it, then write the
-// record at stage `drafted`. A Git failure here is operational (exit 1) — the
-// folder already exists and the error says so.
+// record at stage `drafted`. A Git failure here is operational (exit 1) —
+// the draft's own writes already happened and the error says so.
 export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: BountyRecord; path: string } {
   const record: BountyRecord = {
     schemaVersion: 1,
@@ -567,12 +592,9 @@ export function renderResume(record: BountyRecord, indent = '', full = false): s
 
 const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
   answered: 'arrived — nothing in it was run',
-  // Words for attempts recorded while checks existed: the record still says
-  // what the check did back then — history, not a current promise.
-  verified: 'the declared check exited 0 on it (checks were removed on 11 October 2026)',
-  'check-failed': 'the declared check exited nonzero on it (checks were removed on 11 October 2026)',
-  'check-unrunnable': 'the declared check could not run (checks were removed on 11 October 2026)',
-  'check-not-run': 'the declared check was not run on it (checks were removed on 11 October 2026)'
+  // Attempts the check era recorded and never passed, set aside at load —
+  // history, not a current promise, and never the default pick.
+  'set-aside': 'recorded while checks ran and never green (checks were removed on 11 October 2026)'
 };
 
 // A report was written when its answer arrived and ends with the step that
@@ -583,9 +605,7 @@ export const notNext = (line: string): boolean => !line.trimStart().startsWith('
 // The one `next:` command a bounty prints, shared by the text status and
 // the status --json document (BT19).
 export const nextStep = (record: BountyRecord): string => {
-  if (record.github !== undefined && record.github.kind !== 'history'
-    || record.github === undefined && ['posted', 'taken', 'answered', 'verified'].includes(record.stage)
-    || record.waiting?.for === 'post' && record.waiting.to !== undefined && record.waiting.to !== 'github') {
+  if (retiredRoute(record) !== null) {
     return `this delivery route was retired; end it with box bounty close ${record.id}`;
   }
   switch (record.stage) {
@@ -594,8 +614,7 @@ export const nextStep = (record: BountyRecord): string => {
     case 'waiting': return `waiting for the owner — ${waitingSummary(record)}`;
     case 'posted': return `box bounty look ${record.id} <number> collects a pull request and shows its change; box bounty apply ${record.id} <number> collects and merges`;
     case 'taken': return 'a solution is being read against the snapshot it was made for — run box bounty status again in a moment';
-    case 'answered':
-    case 'verified': {
+    case 'answered': {
       const conflicts = record.conflicts?.paths;
       if (conflicts !== undefined && conflicts.length > 0) return `the last merge try conflicted in ${conflicts.map(showPath).join(', ')} — read the solution with box bounty look ${record.id} <n>; once its commit is merged on the bounty's branch the next bounty command closes it, or end it with box bounty close ${record.id} --reason "<why>"`;
       return `box bounty apply ${record.id} <n> chooses a solution (box bounty look ${record.id} <n> reads it first); box bounty close ${record.id} ends it`;
@@ -658,7 +677,7 @@ export function firstUseBlock(repoRoot: string): string[] {
 // `box bounty allow`/`deny`, plainly named.
 export function ownerWaitLines(repoRoot: string, record: BountyRecord, read: DecisionRead): string[] {
   const id = record.id;
-  if (record.waiting?.to !== undefined && record.waiting.to !== 'github') return [`This delivery route was retired; end it with box bounty close ${id}`];
+  if (retiredRoute(record) !== null) return [`This delivery route was retired; end it with box bounty close ${id}`];
   if (read.decision === 'ask' || read.decision === 'off') {
     const target = record.waiting?.to;
     const { amount } = repoReward(repoRoot);
@@ -983,8 +1002,8 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       if (attempts.length > 0) {
         const applicable = applicableAttempts(attempts);
         const ordered = [...attempts].sort((a, b) => {
-          const aOk = a.outcome === 'verified' || a.outcome === 'answered' ? 0 : 1;
-          const bOk = b.outcome === 'verified' || b.outcome === 'answered' ? 0 : 1;
+          const aOk = a.outcome === 'answered' ? 0 : 1;
+          const bOk = b.outcome === 'answered' ? 0 : 1;
           return aOk - bOk || a.n - b.n;
         });
         // The per-attempt outcome list, the reports and the fresh merge read
@@ -1259,9 +1278,22 @@ export function postBounty(repoRoot: string, id: string, to = 'github', opts?: {
   return postGitHub(repoRoot, id, opts);
 }
 
+// One check names every retired delivery route (BT23): a GitHub publication
+// made before the post became part of the code's own history, a posted or
+// collected-on record that left no publication (a folder post), or a wait
+// still bound to folder delivery. Returns the refusal reason callers report,
+// or null — what "old" means is decided here and nowhere else.
+export function retiredRoute(record: BountyRecord): string | null {
+  return record.github !== undefined && record.github.kind !== 'history'
+    || record.github === undefined && (record.stage === 'posted' || record.stage === 'taken' || record.stage === 'answered')
+    || record.waiting?.to !== undefined && record.waiting.to !== 'github'
+    ? 'legacy-delivery-retired' : null;
+}
+
 export function requireCurrentDelivery(record: BountyRecord): void {
-  if (record.github !== undefined && record.github.kind !== 'history' || record.github === undefined && ['posted', 'taken', 'answered', 'verified'].includes(record.stage)) {
-    throw new BountyRefused('legacy-delivery-retired', `this bounty used a retired delivery route; its history is still readable. End it with box bounty close ${record.id}`);
+  const retired = retiredRoute(record);
+  if (retired !== null) {
+    throw new BountyRefused(retired, `this bounty used a retired delivery route; its history is still readable. End it with box bounty close ${record.id}`);
   }
 }
 

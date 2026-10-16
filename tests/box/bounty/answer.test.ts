@@ -222,7 +222,7 @@ describe('collection — an answered bounty waits on a decision', () => {
     expect(record.events.map(event => event.stage)).toEqual(['drafted', 'posted', 'taken', 'answered']);
     expect(record.attempts?.[0]?.added).toEqual(['notes.md']);
     // No check-only stage ever exists: nothing claims a run that did not happen.
-    expect(record.events.some(event => event.stage === 'verified')).toBe(false);
+    expect(record.events.some(event => (event.stage as string) === 'verified')).toBe(false);
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`box bounty apply ${id}`);
     expect(status).toContain(`box bounty close ${id}`);

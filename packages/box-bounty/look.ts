@@ -12,8 +12,7 @@ import type { Attempt, BountyRecord } from './record.js';
 // A large change lists its files first; --full prints the whole diff.
 //
 // `<n>` is a pull request's number: when no recorded attempt carries it and
-// the bounty is posted on GitHub, `look` collects the pull request first —
-// <dir>` collects a returned folder the same way and shows it.
+// the bounty is posted on GitHub, `look` collects the pull request first.
 
 const refuse = (reason: string, detail: string, next = 'box bounty status'): never => { throw new BountyRefused(reason, `${detail}; next: ${next}`); };
 
@@ -22,9 +21,9 @@ const refuse = (reason: string, detail: string, next = 'box bounty status'): nev
 // flooding the agent's context with hundreds of lines it may not need.
 export const LOOK_DIFF_LIMIT = 200;
 
-// A pull request's number, or a returned folder: `look <id> <n>` shows
-// attempt n — collecting pull request n first when the bounty is posted on
-// collects a returned folder and shows it.
+// A solution's number: `look <id> <n>` shows attempt n — collecting pull
+// request n first when the bounty is posted on GitHub and no attempt
+// carries it yet.
 export type LookTarget = number;
 
 export interface LookResult {

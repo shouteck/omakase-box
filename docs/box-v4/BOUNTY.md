@@ -884,7 +884,7 @@ drafted → posted → taken → answered → applied
       written or "ask each time" written, a post held by the pre-publish
       scan or a named untracked file, an outside close held under
       "ask each time"
-(ended early: rejected, withdrawn, expired;
+(ended early: rejected, withdrawn;
  an applied merge is reversed with ordinary git — the record
  stays applied; older records carry `confirmed` and `undone`
  stages and still load — a `confirmed` record's written yes
@@ -899,11 +899,12 @@ each one's commit, change, outcome, conflict paths and report; `status` lists
 them all. Records written before attempts existed — a single `answer` on the
 record — load as attempt number 1 and still apply.
 
-Records written while checks existed still load. They carry a `level` and
-check outcomes (`verified`, `check-failed`, `check-unrunnable`,
-`check-not-run`); `status` prints each as the history it is — "the declared
-check exited 0 on it (checks were removed on 11 October 2026)" — never as a
-promise about the current code, and no new record writes a level.
+Records written while checks existed still load: the load converts their
+check-era vocabulary to today's — a `verified` stage or outcome reads as
+`answered`, the never-green check outcomes as `set-aside` (recorded, never
+a default pick) — and drops the `level`, `replies` and singular `answer`
+they carried. `status` prints the converted words as history, never a
+promise about the current code.
 
 `status` lists open bounties first and names the next step. Ended ones are
 compact lines. The public task is held directly in the record; old note and

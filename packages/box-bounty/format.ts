@@ -86,7 +86,7 @@ export function formatFor(record: BountyRecord, publication: Pick<GitHubPublicat
     const pr = attempt?.pullRequest ?? (attempt === undefined ? undefined : publication.seenPullRequests?.find(entry => entry.commit === attempt.commit)?.n) ?? Number(/pull request #(\d+)/.exec(decision.reason ?? '')?.[1]);
     if (!Number.isSafeInteger(pr) || pr < 1) throw new Error('the merged solution has no recorded pull request');
     state = { kind: 'closed-merged', pullRequest: pr, commit: decision.merge };
-  } else if (['withdrawn', 'rejected', 'undone', 'expired'].includes(record.stage)) state = { kind: 'closed-none' };
+  } else if (['withdrawn', 'rejected', 'undone'].includes(record.stage)) state = { kind: 'closed-none' };
   // The block and the listing state the same amount: the caller that is
   // about to bind a reward passes it in, so a preview states what a post
   // would bind. A record already published keeps rendering the version the
