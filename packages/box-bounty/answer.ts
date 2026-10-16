@@ -414,4 +414,5 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
 
 
 
+
 export { setMergeNoticeListener, emitMergeNotice, quoteForeign, showPath, NOTHING_RUN } from './notice.js';

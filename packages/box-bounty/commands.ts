@@ -14,7 +14,7 @@ import { payNotice } from './pay.js';
 import { dropDurabilityRefs, isOpenStage, loadRecord, settleScanFindings, transitionTo } from './record.js';
 import type { BountyRecord } from './record.js';
 
-export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./github.js').GitHubChoice }): { record: BountyRecord; destination: string } {
+export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./gh.js').GitHubChoice }): { record: BountyRecord; destination: string } {
   if (to !== 'github') throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
   return postGitHub(repoRoot, id, opts);
 }

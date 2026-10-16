@@ -17,7 +17,7 @@
 // so the document stays the only thing on standard output.
 
 import { boundAmount } from './format.js';
-import type { GitHubPublication } from './github.js';
+import type { GitHubPublication } from './gh.js';
 import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './github.js';
 import { dryMergeOnto } from './git.js';
 import { discoverInstructions, instructionNotices } from './instructions.js';

@@ -1,5 +1,5 @@
 import type { BountyRecord } from './record.js';
-import type { GitHubPublication } from './github.js';
+import type { GitHubPublication } from './gh.js';
 
 export const FORMAT_MARKER = '<!-- box-bounty-format';
 export type FormatState = { readonly kind: 'open' } | { readonly kind: 'closed-none' } | { readonly kind: 'closed-merged'; readonly pullRequest: number; readonly commit: string };
