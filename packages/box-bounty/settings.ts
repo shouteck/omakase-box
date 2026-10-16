@@ -38,6 +38,15 @@ interface MergeNotice { readonly commit: string; readonly at: string }
 export interface InstructionSettings {
   readonly enabled: boolean;
   readonly file?: string;
+}
+/** The tool's own per-checkout instruction marks (BT22 correction): which
+    "this file lacks the block" notices were already shown — kept as each
+    file path's hash — and whether the retired `.box/limits.json` fact was
+    said once. These are the tool's memory, never the owner's choice, so
+    they live in state.json beside `said`; `enabled` and `file` stay in the
+    owner's file. Keyed by the repository's real folder path — the same key
+    the owner's `instructions` map uses. */
+export interface InstructionNotes {
   readonly notices: readonly string[];
   readonly retired?: boolean;
 }
@@ -102,6 +111,11 @@ export interface ToolState {
   readonly firstMerges: Readonly<Record<string, MergeNotice>>;
   /** What the one-time legacy `projects` migration did to each old path. */
   readonly migrations: readonly Migration[];
+  /** Per-checkout instruction marks — the "file lacks the block" hashes and
+      the `.box/limits.json` retirement mark the tool shows once ever. Same
+      key shape as the owner's `instructions` map, which keeps only the
+      owner's own `enabled`/`file` fields. */
+  readonly instructionNotes: Readonly<Record<string, InstructionNotes>>;
 }
 /** One recorded owner answer to a held merge (BT13). */
 export interface MergeAnswer {
@@ -268,6 +282,16 @@ function movedState(parsed: Record<string, unknown>, refuse: (detail: string) =>
       firstMerges[address] = { commit: entry['commit'], at: entry['at'] };
     }
   }
+  const instructionNotes: Record<string, InstructionNotes> = {};
+  const rawNotes = parsed['instructionNotes'];
+  if (rawNotes !== undefined) {
+    if (!isObject(rawNotes)) return refuse('instructionNotes must hold an object keyed by repository folder');
+    for (const [key, entry] of Object.entries(rawNotes)) {
+      if (!isAbsolute(key) || !isObject(entry) || !Array.isArray(entry['notices']) || entry['notices'].some(item => typeof item !== 'string') || !(entry['retired'] === undefined || typeof entry['retired'] === 'boolean')) return refuse('an instruction notes entry is unreadable');
+      for (const name of Object.keys(entry)) if (!['notices', 'retired'].includes(name)) unknownName(name);
+      instructionNotes[key] = { notices: entry['notices'], ...(entry['retired'] === undefined ? {} : { retired: entry['retired'] }) };
+    }
+  }
   let retiredReward: ToolState['retiredReward'];
   const rawRetired = parsed['retiredReward'];
   if (rawRetired !== undefined) {
@@ -289,7 +313,8 @@ function movedState(parsed: Record<string, unknown>, refuse: (detail: string) =>
     ...(typeof parsed['rewardNoticeAt'] === 'string' ? { rewardNoticeAt: parsed['rewardNoticeAt'] } : {}),
     ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}),
     firstMerges,
-    migrations
+    migrations,
+    instructionNotes
   };
 }
 
@@ -308,7 +333,8 @@ function mergeState(state: ToolState, moved: ToolState): ToolState {
     ...scalar('rewardNoticeAt'),
     ...scalar('askMergeNoticeAt'),
     firstMerges: { ...moved.firstMerges, ...state.firstMerges },
-    migrations: [...moved.migrations, ...state.migrations]
+    migrations: [...moved.migrations, ...state.migrations],
+    instructionNotes: { ...moved.instructionNotes, ...state.instructionNotes }
   };
 }
 
@@ -322,18 +348,18 @@ function mergeState(state: ToolState, moved: ToolState): ToolState {
 class StateUnreadable { constructor(readonly detail: string) {} }
 export function loadState(): ToolState {
   const path = stateFile();
-  if (!existsSync(path)) return { firstMerges: {}, migrations: [] };
+  if (!existsSync(path)) return { firstMerges: {}, migrations: [], instructionNotes: {} };
   const unreadable = (detail: string): never => { throw new StateUnreadable(detail); };
   try {
     const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
     if (!isObject(parsed)) return unreadable('must hold a JSON object');
-    for (const name of Object.keys(parsed)) if (!['kind', ...STATE_KEYS].includes(name)) unreadable(`"${name}" is not something the tool writes to its state`);
+    for (const name of Object.keys(parsed)) if (!['kind', ...STATE_KEYS, 'instructionNotes'].includes(name)) unreadable(`"${name}" is not something the tool writes to its state`);
     if (parsed['kind'] !== undefined && parsed['kind'] !== 'box-tool-state') return unreadable('kind must be box-tool-state');
     return movedState(parsed, unreadable, name => unreadable(`"${name}" is not something the tool writes to its state`));
   } catch (error) {
     if (!(error instanceof SyntaxError || error instanceof StateUnreadable)) throw error;
     console.error(`the tool's own state at ${path} was unreadable and was reset`);
-    const empty: ToolState = { firstMerges: {}, migrations: [] };
+    const empty: ToolState = { firstMerges: {}, migrations: [], instructionNotes: {} };
     try { saveState(empty); } catch { /* the reset could not be written — the next read tries again */ }
     return empty;
   }
@@ -374,13 +400,23 @@ export function loadSettings(): OwnerSettings {
   }
   const fallback = parsed['default'];
   const instructions: Record<string, InstructionSettings> = {};
+  // `notices`/`retired` inside an instruction entry were the tool's own
+  // once-only marks written into the owner's file before the state split —
+  // still accepted so the first load can move them out; never written back.
+  const movedInstructionNotes: Record<string, InstructionNotes> = {};
   const rawInstructions = parsed['instructions'];
   if (rawInstructions !== undefined) {
     if (!isObject(rawInstructions)) return bad('instructions must hold an object keyed by repository folder');
     for (const [key, value] of Object.entries(rawInstructions)) {
-      if (!isAbsolute(key) || !isObject(value) || typeof value['enabled'] !== 'boolean' || !(value['file'] === undefined || typeof value['file'] === 'string') || !Array.isArray(value['notices']) || value['notices'].some(entry => typeof entry !== 'string') || !(value['retired'] === undefined || typeof value['retired'] === 'boolean')) return bad('an instruction maintenance choice is unreadable');
+      if (!isAbsolute(key) || !isObject(value) || typeof value['enabled'] !== 'boolean' || !(value['file'] === undefined || typeof value['file'] === 'string')
+        || !(value['notices'] === undefined || (Array.isArray(value['notices']) && !value['notices'].some(entry => typeof entry !== 'string')))
+        || !(value['retired'] === undefined || typeof value['retired'] === 'boolean')) return bad('an instruction maintenance choice is unreadable');
       for (const name of Object.keys(value)) if (!['enabled', 'file', 'notices', 'retired'].includes(name)) unknownSetting(name);
-      instructions[key] = { enabled: value['enabled'], ...(value['file'] === undefined ? {} : { file: value['file'] }), notices: value['notices'], ...(value['retired'] === undefined ? {} : { retired: value['retired'] }) };
+      instructions[key] = { enabled: value['enabled'], ...(value['file'] === undefined ? {} : { file: value['file'] }) };
+      if (value['notices'] !== undefined || value['retired'] !== undefined) {
+        const notes = value['notices'] === undefined ? [] : value['notices'] as readonly string[];
+        movedInstructionNotes[key] = { notices: notes, ...(value['retired'] === undefined ? {} : { retired: value['retired'] as boolean }) };
+      }
     }
   }
   const publishing: Record<string, { readonly never: readonly string[]; readonly safe: readonly string[] }> = {};
@@ -409,6 +445,7 @@ export function loadSettings(): OwnerSettings {
   // fold happens once; afterwards this file changes only on the owner's own
   // commands.
   let moved = movedState(parsed, bad, unknownSetting);
+  if (Object.keys(movedInstructionNotes).length > 0) moved = { ...moved, instructionNotes: { ...moved.instructionNotes, ...movedInstructionNotes } };
   // A retired shared reward is kept so the once-only fact can say what it
   // was, but it is applied to no repository ever again. The shared
   // reward/limit a pre-BT11c file carried apply to nothing: the owner never
@@ -442,7 +479,7 @@ export function loadSettings(): OwnerSettings {
   const settings: OwnerSettings = { ...(defaultLevel !== undefined ? { default: defaultLevel } : {}), repositories, ...(rawInstructions === undefined ? {} : { instructions }), ...(rawPublishing === undefined ? {} : { publishing }), ...(Object.keys(mergeAnswers).length === 0 ? {} : { mergeAnswers }) };
   const legacy = parsed['projects'];
   if (legacy !== undefined && !isObject(legacy)) return bad('projects must hold an object keyed by legacy folder path');
-  const carried = STATE_KEYS.some(key => parsed[key] !== undefined);
+  const carried = STATE_KEYS.some(key => parsed[key] !== undefined) || Object.keys(movedInstructionNotes).length > 0;
   if (legacy === undefined) {
     // State first: if the owner's rewrite then fails, the moved keys still
     // stand in this file and the fold-in runs again — and the state's own
@@ -719,7 +756,7 @@ export function writeDecision(repoRoot: string, scope: 'project' | 'default', bo
   return { path: settingsFile(), at, key: 'all-projects' };
 }
 export function readInstructions(repoRoot: string): InstructionSettings {
-  return loadSettings().instructions?.[realpathSync(repoRoot)] ?? { enabled: false, notices: [] };
+  return loadSettings().instructions?.[realpathSync(repoRoot)] ?? { enabled: false };
 }
 export function checkInstructionSettingsWrite(repoRoot: string): void {
   const root = realpathSync(repoRoot);
@@ -744,6 +781,23 @@ export function writeInstructions(repoRoot: string, choice: InstructionSettings)
   const root = realpathSync(repoRoot);
   const settings = loadSettings();
   persist({ ...settings, instructions: { ...settings.instructions, [root]: choice } });
+}
+
+/** The tool's instruction marks for one checkout — the "file lacks the
+    block" hashes and the retired-`.box/limits.json` mark — read from
+    state.json. The settings load runs first so an old file's per-instruction
+    `notices`/`retired` are already folded into state before this read. */
+export function readInstructionNotes(repoRoot: string): InstructionNotes {
+  loadSettings(); // move-out first, as in saidAlready
+  return loadState().instructionNotes[realpathSync(repoRoot)] ?? { notices: [] };
+}
+
+/** The write path for those marks — the state writer alone, so a read
+    command's once-only marks never touch the owner's file. */
+export function writeInstructionNotes(repoRoot: string, notes: InstructionNotes): void {
+  loadSettings(); // move-out first, so a pending old file's marks are kept
+  const state = loadState();
+  saveState({ ...state, instructionNotes: { ...state.instructionNotes, [realpathSync(repoRoot)]: notes } });
 }
 interface LocalMergeNotice extends MergeNotice { readonly repository: string }
 const localMergeFile = (repoRoot: string): string => join(repoRoot, '.box', 'bounties', 'FIRST_MERGE');

@@ -100,7 +100,7 @@ it('a saved instruction-file inside .git is refused at sync, named in config, an
   const gitConfig = readFileSync(join(repo, '.git', 'config'));
   // As if an older tool had saved the choice straight into the owner's
   // settings — the sync is where a stored bad value is caught now.
-  writeInstructions(repo, { enabled: true, file: '.git/config', notices: [] });
+  writeInstructions(repo, { enabled: true, file: '.git/config' });
   const out = changeConfig(repo, 'set', 'instructions', 'true');
   expect(out).toContain('.git/config');
   expect(out).toContain('instruction-file-tool-owned');

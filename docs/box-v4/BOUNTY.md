@@ -499,8 +499,9 @@ decisions, rewards, limits, publish lists, instruction settings and merge
 answers — and changes only when the owner changes them through `allow`,
 `deny`, `config` or an answer to a held action; a read command never
 rewrites it. `state.json` beside it is the tool's own memory — what it
-already said once, the notices it showed, the migration and first-merge
-records — so a command that only reads can still mark something told
+already said once, the notices it showed, each checkout's instruction marks,
+the migration and first-merge records — so a command that only reads can
+still mark something told
 without touching the owner's file; a state file the tool cannot read is
 reset with one line, never a refusal, because nothing the owner decided
 lives there. Both are written atomically (temp file then rename), so a

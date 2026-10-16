@@ -1,15 +1,17 @@
 // BT22 — the owner's settings file holds only the owner's choices. The
 // tool's own bookkeeping (what it said once, notices shown, migration and
-// first-merge records, the retired shared reward) lives in state.json beside
-// it. Both files are written atomically; a read command never rewrites
-// settings.json, and a malformed state file is reset, never refused.
+// first-merge records, the retired shared reward, the per-checkout
+// instruction marks) lives in state.json beside it. Both files are written
+// atomically; a read command never rewrites settings.json, and a malformed
+// state file is reset, never refused.
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadState, saveState, settingsFile, stateFile } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
-import { CLI_DIST, git, makeRepo } from './support.js';
+import { CLI_DIST, git, makeRepo, write } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -178,7 +180,8 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     writeFileSync(settingsFile(), JSON.stringify({ kind: 'box-owner-settings', repositories: { 'owner/project': LEVEL } }));
     saveState({
       migrations: [{ path: 'C:\\old\\checkout', at: '2026-10-14T00:00:00.000Z', repository: 'owner/project', detail: 'moved to owner/project' }],
-      firstMerges: { 'owner/project': { commit: 'a'.repeat(40), at: '2026-10-14T00:00:00.000Z' } }
+      firstMerges: { 'owner/project': { commit: 'a'.repeat(40), at: '2026-10-14T00:00:00.000Z' } },
+      instructionNotes: {}
     });
     for (const args of [['config'], ['config', '--full']]) {
       const run = box(root, args);
@@ -186,5 +189,63 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
       expect(run.stdout).toContain('moved to owner/project');
       expect(run.stdout).toContain(`first outside solution merged in owner/project: commit ${'a'.repeat(40)}`);
     }
+  });
+
+  it('8: a read under the instruction-notice conditions marks state.json and never touches settings.json', () => {
+    const root = repo();
+    // The two firing conditions the pass caught still reaching persist: a
+    // retired `.box/limits.json` in the checkout and a discovered instruction
+    // file without the block.
+    write(root, 'AGENTS.md', 'agent guide\n');
+    write(root, '.box/limits.json', '{"allowedDestinations":["github"]}\n');
+    writeFileSync(settingsFile(), JSON.stringify({ kind: 'box-owner-settings', repositories: { 'owner/project': LEVEL } }));
+    const before = readFileSync(settingsFile(), 'utf8');
+    const once = (args: string[]) => {
+      const run = box(root, args);
+      expect(run.status, `${args.join(' ')} exited ${run.status}: ${run.stderr}`).toBe(0);
+      expect(readFileSync(settingsFile(), 'utf8'), `${args.join(' ')} rewrote the owner's settings`).toBe(before);
+      return run;
+    };
+    const first = once(['status']);
+    expect(first.stdout).toContain('.box/limits.json is no longer read');
+    expect(first.stdout).toContain('AGENTS.md lacks the block');
+    once(['status', '--json']);
+    once(['config']);
+    once(['config', '--json']);
+    // The marks landed in the tool's own file, under the checkout's real path.
+    const notes = JSON.parse(readFileSync(stateFile(), 'utf8'))['instructionNotes'][realpathSync(root)];
+    expect(notes['retired']).toBe(true);
+    expect(notes['notices']).toContain(createHash('sha256').update('AGENTS.md').digest('hex'));
+    // Said once, honoured: a repeat says neither line and writes neither file.
+    const stateBytes = readFileSync(stateFile(), 'utf8');
+    const second = once(['status']);
+    expect(second.stdout).not.toContain('.box/limits.json is no longer read');
+    expect(second.stdout).not.toContain('lacks the block');
+    expect(readFileSync(stateFile(), 'utf8')).toBe(stateBytes);
+    once(['config']);
+  });
+
+  it('9: an old instruction entry hands its notices and retired marks to state.json once', () => {
+    const root = repo();
+    write(root, 'AGENTS.md', 'agent guide\n');
+    const key = realpathSync(root);
+    writeFileSync(settingsFile(), JSON.stringify({
+      kind: 'box-owner-settings',
+      repositories: { 'owner/project': LEVEL },
+      instructions: { [key]: { enabled: true, file: 'AGENTS.md', notices: ['oldhash'], retired: true } }
+    }));
+    expect(box(root, ['status']).status).toBe(0);
+    const settings = JSON.parse(readFileSync(settingsFile(), 'utf8'));
+    const state = JSON.parse(readFileSync(stateFile(), 'utf8'));
+    // The owner's fields stand; the tool's marks moved out.
+    expect(settings['instructions'][key]).toEqual({ enabled: true, file: 'AGENTS.md' });
+    expect(state['instructionNotes'][key]['notices']).toContain('oldhash');
+    expect(state['instructionNotes'][key]['retired']).toBe(true);
+    // Once: a second read writes neither file.
+    const settingsBytes = readFileSync(settingsFile(), 'utf8');
+    const stateBytes = readFileSync(stateFile(), 'utf8');
+    expect(box(root, ['status']).status).toBe(0);
+    expect(readFileSync(settingsFile(), 'utf8')).toBe(settingsBytes);
+    expect(readFileSync(stateFile(), 'utf8')).toBe(stateBytes);
   });
 });
