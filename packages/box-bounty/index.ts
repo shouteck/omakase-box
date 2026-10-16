@@ -1,6 +1,6 @@
 import { asOneCommand } from './git.js';
 import { applyBounty as applyBountyCommand } from './answer.js';
-import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand } from './github.js';
+import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand } from './collect.js';
 import { previewGitHub as previewGitHubCommand } from './post.js';
 import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
 import { closeBounty as closeBountyCommand, postBounty as postBountyCommand } from './commands.js';
@@ -40,7 +40,7 @@ export { LOOK_DIFF_LIMIT } from './look.js';
 export { quoteForeign, showPath } from './notice.js';
 export type { GitHubChoice, GitHubPublication } from './gh.js';
 export type { GitHubPlan } from './publish-plan.js';
-export type { IssueComment } from './github.js';
+export type { IssueComment } from './collect.js';
 export type { ApplyResult, ApplyTarget } from './answer.js';
 export { BountyUsage, parseCreateArgs, parseOptions, commandHelp, BOUNTY_COMMANDS, OPTIONS_NOTE } from './args.js';
 export type { CreateArgs, ParsedOptions } from './args.js';

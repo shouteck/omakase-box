@@ -24,7 +24,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { refreshGitHubStatus } from './github.js';
+import { refreshGitHubStatus } from './collect.js';
 import { walkProjectPath } from './instructions.js';
 import { attemptsOf, isOpenStage, listRecords } from './record.js';
 import type { BountyRecord } from './record.js';

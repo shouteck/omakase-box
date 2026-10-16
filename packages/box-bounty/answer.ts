@@ -9,7 +9,8 @@ import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isO
 import { waitForOwner } from './gate.js';
 import { mergeWaitLines, waitingSummary } from './owner-text.js';
 import type { Attempt, BountyRecord } from './record.js';
-import { resolveAttempt, syncGitHubDecision } from './github.js';
+import { resolveAttempt } from './collect.js';
+import { syncGitHubDecision } from './github.js';
 import { dropMergeAnswer, readDecision, readMergeAnswer, recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
@@ -411,6 +412,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
   return lines;
 }
+
 
 
 

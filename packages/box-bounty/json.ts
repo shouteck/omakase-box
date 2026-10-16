@@ -18,7 +18,7 @@
 
 import { boundAmount } from './format.js';
 import type { GitHubPublication } from './gh.js';
-import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './github.js';
+import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './collect.js';
 import { dryMergeOnto } from './git.js';
 import { discoverInstructions, instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';

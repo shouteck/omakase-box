@@ -10,7 +10,7 @@ import { quoteForeign, showPath } from './notice.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto, GIT_LEAST } from './git.js';
 import { GH_LEAST } from './gh.js';
-import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './github.js';
+import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './collect.js';
 import { instructionNotices, syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine, waitingSummary } from './owner-text.js';
