@@ -11,7 +11,9 @@ import { dryMergeOnto, git, gitBlob, gitBlobs, gitFilteredBlob, gitIndexWrite, g
 import type { DryMerge, IndexChange } from './git.js';
 import { checkProjectClaims, publishListed, publishLists, shipRules } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import { allowedByFor, assertPromiseRoom, attemptRefName, attemptsOf, isOpenStage, loadRecord, ownerGate, persistRecord, requireCurrentDelivery, recordScanFinding, retiredRoute, rewardForPost, sameShown, settleScanFindings, transitionTo, waitForOwner, withPromiseLock } from './record.js';
+import { allowedByFor, ownerGate, sameShown, waitForOwner } from './gate.js';
+import { attemptRefName, attemptsOf, isOpenStage, loadRecord, persistRecord, requireCurrentDelivery, recordScanFinding, retiredRoute, settleScanFindings, transitionTo } from './record.js';
+import { assertPromiseRoom, rewardForPost, withPromiseLock } from './money.js';
 import type { Attempt, BountyRecord, WaitingFor } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { binaryPatchPaths, looksBinary, scanPatch, scanText } from './scan.js';

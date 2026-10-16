@@ -18,7 +18,7 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gitOutcome, gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, transitionTo } from './record.js';
+import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, setRecordReadScan, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
 import { emitMergeNotice as emit, showPath } from './answer.js';
@@ -31,6 +31,11 @@ import { payNotice } from './pay.js';
 // truth in the record's events. The listener lives with the emit path in
 // answer.ts so the GitHub close-up can share it (BT21).
 export { setMergeNoticeListener } from './answer.js';
+
+// Every record read runs this scan first — registered into record.ts at
+// load rather than imported by it, so the edge stays one-directional and no
+// import cycle runs through the store (BT25).
+setRecordReadScan(noticeMergedSolutions);
 
 let noticing = false;
 const noticed = new Set<string>();

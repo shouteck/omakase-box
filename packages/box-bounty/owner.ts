@@ -1,5 +1,8 @@
 import { BountyRefused } from './errors.js';
-import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBounty, promisedTotal, retiredRoute } from './record.js';
+import { postBounty } from './commands.js';
+import { isOpenStage, listRecords, loadRecord, persistRecord, retiredRoute } from './record.js';
+import { promisedTotal } from './money.js';
+import { DECISION_WORDS, ownerBlock } from './owner-text.js';
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
@@ -13,11 +16,6 @@ import { changePublishList, publishLists } from './never-ship.js';
 import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
 
-export const DECISION_WORDS = {
-  allow: 'allow this repository',
-  ask: 'be asked each time before each post and each merge',
-  once: 'this one bounty only'
-} as const;
 // What `allow` prints before it writes: the owner block first — the plain
 // sentences that say what a bounty is, that it is public under the owner's
 // account, that the answer covers this repository only, what each bounty

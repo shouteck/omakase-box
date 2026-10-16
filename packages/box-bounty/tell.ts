@@ -1,4 +1,6 @@
-import { attemptsOf, isOpenStage, listRecords, ownerStatusLine, renderOpenLine } from './record.js';
+import { attemptsOf, isOpenStage, listRecords } from './record.js';
+import { ownerStatusLine } from './owner-text.js';
+import { renderOpenLine } from './render.js';
 import { instructionBlock } from './instructions.js';
 import { repoReward } from './settings.js';
 import { DESCRIBE_LINES, describeRewardLine, renderRulesBlock } from './wording.js';
