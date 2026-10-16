@@ -5,7 +5,7 @@
 // record.ts unchanged (BT25).
 
 import { BountyRefused } from './errors.js';
-import { planGitHub, shownOfPlan } from './github.js';
+import { planGitHub, shownOfPlan } from './publish-plan.js';
 import { shipRules } from './never-ship.js';
 import { ownerWaitLines, waitingSummary } from './owner-text.js';
 import { listRecords, persistRecord, transitionTo } from './record.js';

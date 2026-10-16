@@ -38,7 +38,8 @@ export type { LookResult, LookTarget } from './look.js';
 export { LOOK_DIFF_LIMIT } from './look.js';
 export { quoteForeign, showPath } from './notice.js';
 export type { GitHubChoice, GitHubPublication } from './gh.js';
-export type { GitHubPlan, IssueComment } from './github.js';
+export type { GitHubPlan } from './publish-plan.js';
+export type { IssueComment } from './github.js';
 export type { ApplyResult, ApplyTarget } from './answer.js';
 export { BountyUsage, parseCreateArgs, parseOptions, commandHelp, BOUNTY_COMMANDS, OPTIONS_NOTE } from './args.js';
 export type { CreateArgs, ParsedOptions } from './args.js';
@@ -63,7 +64,7 @@ export { actingOn, askMergeNoticeLine, loadSettings, loadState, projectKey, read
 export type { DecisionRead, OwnerDecision, OwnerSettings, ToolState } from './settings.js';
 export { chooseRepository, githubRemotes, repositoryAddress, repositoryChoiceLines } from './repository.js';
 export type { RemoteCandidate, RepositoryChoice } from './repository.js';
-export { shownOfPlan } from './github.js';
+export { shownOfPlan } from './publish-plan.js';
 export { binaryPatchPaths, looksBinary, SECRET_RULES, scanPatch, scanText } from './scan.js';
 export type { ScanHit, SecretRule } from './scan.js';
 export { recordScanFinding, settleScanFindings } from './record.js';
