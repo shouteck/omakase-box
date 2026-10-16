@@ -21,7 +21,7 @@ import { shipRules } from './never-ship.js';
 import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, setRecordReadScan, transitionTo } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { syncGitHubDecision } from './github.js';
-import { emitMergeNotice as emit, showPath } from './answer.js';
+import { emitMergeNotice as emit, showPath } from './notice.js';
 import { readDecision, recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
@@ -30,7 +30,7 @@ import { payNotice } from './pay.js';
 // command noticed. The CLI registers a printer; library callers see the same
 // truth in the record's events. The listener lives with the emit path in
 // answer.ts so the GitHub close-up can share it (BT21).
-export { setMergeNoticeListener } from './answer.js';
+export { setMergeNoticeListener } from './notice.js';
 
 // Every record read runs this scan first — registered into record.ts at
 // load rather than imported by it, so the edge stays one-directional and no

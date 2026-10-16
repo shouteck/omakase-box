@@ -1,3 +1,4 @@
+import { showPath, NOTHING_RUN } from './notice.js';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -15,16 +16,6 @@ import { payNotice } from './pay.js';
 const TAIL = 2000;
 
 const tail = (text: string): string => text.slice(-TAIL);
-
-// One line per notice a command owes the agent — a merge the tool itself
-// recognised and closed on, or a close-up on GitHub the owner did not answer
-// for (merged.ts and github.ts emit through here). The CLI registers a
-// printer; library callers see the same truth in the record's events.
-let mergeNoticeListener: ((line: string) => void) | null = null;
-export function setMergeNoticeListener(next: ((line: string) => void) | null): void {
-  mergeNoticeListener = next;
-}
-export const emitMergeNotice = (line: string): void => { mergeNoticeListener?.(line); };
 
 const endedRefusal = (record: BountyRecord): BountyRefused =>
   new BountyRefused('already-ended', `bounty ${record.id} already ended (${record.stage}) — an ended bounty takes no further transitions; the record is its history`);
@@ -366,19 +357,6 @@ const isTestPath = (path: string): boolean => {
 const LARGE_FILES = 20;
 const LARGE_LINES = 400;
 
-// A stranger's text — a solver's path, a line of a solver's change, a line of
-// another account's comment — is shown quoted and on one line: it can carry
-// words, separators or spaces that would read as the tool's own prose. JSON
-// quoting escapes the quote, the backslash and the C0 controls (ESC, CR, LF);
-// DEL, the C1 controls and the characters that hide or reorder text on a
-// terminal (zero-width, bidirectional overrides and isolates, line and
-// paragraph separators, the byte-order mark) are escaped the same way, so what
-// is printed is what is there. Every surface uses this one helper.
-const HIDDEN = /[\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb]/g;
-export const quoteForeign = (text: string): string =>
-  JSON.stringify(text).replace(HIDDEN, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
-export const showPath = quoteForeign;
-
 // Flags are plain observations, deliberately eager: a false alarm costs a
 // minute, a missed one costs a wrong fix. No flag blocks anything.
 function attemptFlags(change: AnswerChange, linesAdded: number, linesRemoved: number): string[] {
@@ -414,11 +392,6 @@ function lineCounts(repoRoot: string, commit: string): { added: number; removed:
   return { added, removed, binary };
 }
 
-// The report of facts: who sent the answer and when, the change with counts
-// and lines, the dry merge read, and eager flags — never a verdict. The
-// nothing-was-run sentence is always there, verbatim.
-export const NOTHING_RUN = 'nothing in the solution was run and this report says nothing about whether it works';
-
 function renderAttemptReport(record: BountyRecord, n: number, at: string, author: string | undefined, change: AnswerChange, merge: DryMerge, counts: { added: number; removed: number; binary: number }): string[] {
   const lines: string[] = [];
   lines.push(`report — attempt ${n} for ${record.id}`);
@@ -438,3 +411,7 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
   return lines;
 }
+
+
+
+export { setMergeNoticeListener, emitMergeNotice, quoteForeign, showPath, NOTHING_RUN } from './notice.js';

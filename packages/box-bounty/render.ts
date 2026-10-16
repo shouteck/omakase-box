@@ -6,7 +6,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { quoteForeign, showPath } from './answer.js';
+import { quoteForeign, showPath } from './notice.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto, GIT_LEAST } from './git.js';
 import { GH_LEAST, issueComments, refreshGitHubFormat, refreshGitHubStatus } from './github.js';
