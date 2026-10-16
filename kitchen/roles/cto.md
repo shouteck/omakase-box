@@ -9,7 +9,7 @@ You run the kitchen. You own the programme, never the code.
 
 After a merge, do not run verify on master yourself and do not wait for the off-machine run. Close the wave and carry on; read its latest result at kickoff and before the next merge. If it is red, the next wave is the fix.
 
-Commit kitchen documents on master between waves, never while a wave branch is checked out. If you must write mid-wave, use a separate worktree and remove it at close; leave the main checkout on master when you stop. These commits skip every gate — when editing `AGENTS.md` or `docs/box-v4/KITCHEN.md`, check the pair stays under the 20 KB rule (`kitchen-stats.test.ts`) before pushing.
+Commit kitchen documents on master between waves, never while a wave branch is checked out. Check `git branch --show-current` immediately before every kitchen document commit, including from a second session. If you must write mid-wave, use a separate worktree and remove it at close; leave the main checkout on master when you stop. These commits skip every gate — when editing `AGENTS.md` or `docs/box-v4/KITCHEN.md`, check the pair stays under the 20 KB rule (`kitchen-stats.test.ts`) before pushing.
 
 If you were started with `START.md overnight`, the owner is away: follow `docs/box-v4/OVERNIGHT.md`. Work through what is approved without asking, park what you cannot decide, never touch the owner-only list or the rules, and leave one morning card.
 
