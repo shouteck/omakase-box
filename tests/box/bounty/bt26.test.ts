@@ -6,7 +6,7 @@
 // value reads the next word as the value even when it is -h or --help.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, changeConfig, finalizeBounty, loadRecord, lookBounty, parseOptions, planBounty, settingsFile } from '../../../packages/box-bounty/index.js';
 import { postedFixture, refused } from './github-fixture.js';
@@ -40,6 +40,42 @@ it('an instruction file under any .git or .box segment is refused by name — by
   write(repo, 'notes/git.md', 'x\n');
   expect(changeConfig(repo, 'set', 'instruction-file', 'docs/.github/x.md')).toContain('instruction-file: docs/.github/x.md');
   expect(changeConfig(repo, 'set', 'instruction-file', 'notes/git.md')).toContain('instruction-file: notes/git.md');
+});
+
+// The pass found the boundary still writable through a Windows 8.3
+// short-name alias: `sub/GIT~1/config` reached `sub/.git/config` because
+// neither the declared spelling nor realpathSync names the real segment.
+// The fix judges each component's on-disk name, so the alias form refuses
+// the same way. The alias is discovered (`for %~sI` reports the volume's
+// own short spelling — `dir /x` showed GIT~1/BOX~1 on this host), never
+// assumed; a filesystem with 8.3 disabled has no alias class to test.
+it('an 8.3 short-name alias for a .git or .box segment is still tool-owned', (context) => {
+  const repo = makeRepo({ 'a.txt': 'a\n' });
+  mkdirSync(join(repo, 'sub', '.git'), { recursive: true });
+  writeFileSync(join(repo, 'sub', '.git', 'config'), '[core]\n\tbare = false\n');
+  mkdirSync(join(repo, 'a', 'b', '.box'), { recursive: true });
+  writeFileSync(join(repo, 'a', 'b', '.box', 'x.json'), '{}\n');
+  const aliasOf = (target: string): string | null => {
+    // `for %~sI` echoes the volume's short spelling; the set stays unquoted —
+    // a space in the temp path would misparse and read as "no alias" below.
+    const run = spawnSync('cmd.exe', ['/d', '/c', `for %I in (${target}) do @echo %~sI`], { encoding: 'utf8' });
+    const short = run.status === 0 ? basename(run.stdout.trim()) : '';
+    return short !== '' && short !== basename(target) && existsSync(join(dirname(target), short)) ? short : null;
+  };
+  const gitAlias = aliasOf(join(repo, 'sub', '.git'));
+  const boxAlias = aliasOf(join(repo, 'a', 'b', '.box'));
+  if (gitAlias === null && boxAlias === null) context.skip('this filesystem hands back no 8.3 short names — the alias class does not exist here');
+  const gitConfig = readFileSync(join(repo, 'sub', '.git', 'config'));
+  const boxFile = readFileSync(join(repo, 'a', 'b', '.box', 'x.json'));
+  const named: string[] = [];
+  if (gitAlias !== null) named.push(`sub/${gitAlias}/config`, `sub/${gitAlias}`);
+  if (boxAlias !== null) named.push(`a/b/${boxAlias}/x.json`, `a/b/${boxAlias}`);
+  for (const path of named) {
+    refused(() => changeConfig(repo, 'set', 'instruction-file', path), 'instruction-file-tool-owned');
+  }
+  expect(readFileSync(join(repo, 'sub', '.git', 'config'))).toEqual(gitConfig);
+  expect(readFileSync(join(repo, 'a', 'b', '.box', 'x.json'))).toEqual(boxFile);
+  expect(existsSync(settingsFile())).toBe(false);
 });
 
 it('a record with no commits diffs its attempts against the empty tree — never (no commits yet)', () => {
