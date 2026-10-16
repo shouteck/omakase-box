@@ -1,17 +1,17 @@
-import { type GitHubPlan, PREVIEW_PUBLIC_NAMES, planGitHub, shownOfPlan } from './publish-plan.js';
-import { invalid, type GitHubChoice, digest, isObject, publicRepository, signedAccount, type GitHubPublication, publicationRef, remoteBranchSha, remoteGit, recoverIssue, ensureLabel, api, issueNumber } from './gh.js';
-import { lstatSync, readFileSync } from 'node:fs';
+import { type GitHubPlan,PREVIEW_PUBLIC_NAMES,planGitHub,shownOfPlan } from './publish-plan.js';
+import { invalid,type GitHubChoice,digest,isObject,publicRepository,signedAccount,type GitHubPublication,publicationRef,remoteBranchSha,remoteGit,recoverIssue,ensureLabel,api,issueNumber } from './gh.js';
+import { lstatSync,readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TOOL_VERSION } from './create.js';
 import { git } from './git.js';
-import { checkProjectClaims, shipRules } from './never-ship.js';
-import { allowedByFor, ownerGate, sameShown, waitForOwner } from './gate.js';
-import { loadRecord, persistRecord, recordScanFinding, retiredRoute, settleScanFindings, transitionTo } from './record.js';
-import { assertPromiseRoom, rewardForPost, withPromiseLock } from './money.js';
+import { checkProjectClaims,shipRules } from './never-ship.js';
+import { allowedByFor,ownerGate,sameShown,waitForOwner } from './gate.js';
+import { loadRecord,persistRecord,recordScanFinding,retiredRoute,settleScanFindings,transitionTo } from './record.js';
+import { assertPromiseRoom,rewardForPost,withPromiseLock } from './money.js';
 import type { BountyRecord } from './record.js';
 import { repositoryAddress } from './repository.js';
 import { readReward } from './settings.js';
-import { boundAmount, formatFor, publicText, renderFormat } from './format.js';
+import { boundAmount,formatFor,publicText,renderFormat } from './format.js';
 
 // The listing a stranger reads: the task, what was tried, the branch to work
 // from (with the base commit as context — never the bare commit to branch

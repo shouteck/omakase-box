@@ -18,17 +18,17 @@
 
 import { boundAmount } from './format.js';
 import type { GitHubPublication } from './gh.js';
-import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './collect.js';
+import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect.js';
 import { dryMergeOnto } from './git.js';
-import { discoverInstructions, instructionNotices } from './instructions.js';
+import { discoverInstructions,instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
 import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
-import { applicableAttempts, attemptsOf, baseCommitOf, isOpenStage, listRecords, loadRecord, persistRecord } from './record.js';
+import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord } from './record.js';
 import { promisedTotal } from './money.js';
-import { endedNextStep, nextStep, notNext } from './render.js';
-import type { Attempt, BountyRecord, ScanFinding, StageEvent, WaitingFor } from './record.js';
-import { actingOn, askMergeNoticeLine, loadSettings, loadState, localFirstMergeLine, readDecision, readInstructions, repoReward, repositoryIdentity, rewardNoticeLine, saidOnce, settingsFile } from './settings.js';
+import { endedNextStep,nextStep,notNext } from './render.js';
+import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
+import { actingOn,askMergeNoticeLine,loadSettings,loadState,localFirstMergeLine,readDecision,readInstructions,repoReward,repositoryIdentity,rewardNoticeLine,saidOnce,settingsFile } from './settings.js';
 
 type JsonObject = Record<string, unknown>;
 

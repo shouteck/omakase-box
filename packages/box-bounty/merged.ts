@@ -16,13 +16,13 @@
 // first, and it runs at most once per repository per process.
 import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { gitOutcome, gitProgram } from './git.js';
+import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptsOf, dropDurabilityRefs, isOpenStage, listRecords, setRecordReadScan, transitionTo } from './record.js';
-import type { Attempt, BountyRecord } from './record.js';
-import { syncGitHubDecision } from './github.js';
-import { emitMergeNotice as emit, showPath } from './notice.js';
-import { readDecision, recordFirstMerge } from './settings.js';
+import { attemptsOf,dropDurabilityRefs,isOpenStage,listRecords,setRecordReadScan,transitionTo } from './record.js';
+import type { Attempt,BountyRecord } from './record.js';
+import { syncGitHubDecision } from './close.js';
+import { emitMergeNotice as emit,showPath } from './notice.js';
+import { readDecision,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
 

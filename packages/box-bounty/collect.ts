@@ -1,15 +1,14 @@
-import { parseNameStatus, neverShipViolations, commitStatuses, EMPTY_TREE } from './publish-plan.js';
-import { invalid, isObject, type GitHubPublication, remoteBranchSha, remoteGit, api, pages, number, redact, login, READABLE_LOGIN } from './gh.js';
-import { join } from 'node:path';
-import { NOTHING_RUN, quoteForeign, showPath } from './notice.js';
+import { parseNameStatus,neverShipViolations,commitStatuses,EMPTY_TREE } from './publish-plan.js';
+import { invalid,isObject,type GitHubPublication,remoteBranchSha,remoteGit,api,pages,number,redact,login,READABLE_LOGIN } from './gh.js';
+import { NOTHING_RUN,quoteForeign,showPath } from './notice.js';
 import { BountyRefused } from './errors.js';
-import { dryMergeOnto, git, gitOutcome } from './git.js';
+import { dryMergeOnto,git,gitOutcome } from './git.js';
 import type { DryMerge } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptRefName, attemptsOf, isOpenStage, loadRecord, persistRecord, requireCurrentDelivery, retiredRoute, transitionTo } from './record.js';
-import type { Attempt, BountyRecord } from './record.js';
-import { boundAmount, formatFact, formatFor } from './format.js';
-import { parsePayTo, payToLine, type PayToFact } from './pay.js';
+import { attemptRefName,attemptsOf,isOpenStage,loadRecord,persistRecord,requireCurrentDelivery,retiredRoute,transitionTo } from './record.js';
+import type { Attempt,BountyRecord } from './record.js';
+import { boundAmount,formatFact,formatFor } from './format.js';
+import { parsePayTo,payToLine,type PayToFact } from './pay.js';
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; post it with box bounty post ${id}, or end it with box bounty close ${id}`);

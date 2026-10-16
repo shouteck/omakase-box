@@ -1,13 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync,rmSync,writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { requireRepository } from './settings.js';
-import { type PayOutcome, type PayToFact } from './pay.js';
+import { type PayOutcome,type PayToFact } from './pay.js';
 
 // The bounty branch as it is posted now (BT6a): a name pointing at commits of
 // the repository's real history — the newest commit GitHub already had, the

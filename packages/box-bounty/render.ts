@@ -6,18 +6,18 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { quoteForeign, showPath } from './notice.js';
+import { quoteForeign,showPath } from './notice.js';
 import { boundAmount } from './format.js';
-import { dryMergeOnto, GIT_LEAST } from './git.js';
+import { dryMergeOnto,GIT_LEAST } from './git.js';
 import { GH_LEAST } from './gh.js';
-import { issueComments, refreshGitHubFormat, refreshGitHubStatus } from './collect.js';
-import { instructionNotices, syncInstructions } from './instructions.js';
+import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect.js';
+import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
-import { ownerStatusLine, waitingSummary } from './owner-text.js';
+import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { payToLine } from './pay.js';
-import { applicableAttempts, attemptsOf, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, retiredRoute, setOpenSurfacesSync } from './record.js';
-import { askMergeNoticeLine, loadState, localFirstMergeLine, repoReward, rewardNoticeLine, saidOnce } from './settings.js';
-import type { AttemptOutcome, BountyRecord, ListedBounty, StageEvent } from './record.js';
+import { applicableAttempts,attemptsOf,isOpenStage,listRecords,loadRecord,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync } from './record.js';
+import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
+import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
 // The saved job context, under the bounty it belongs to: `indent` places it
 // inside that bounty's lines. The commit hash is the full form's detail —

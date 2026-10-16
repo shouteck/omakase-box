@@ -21,12 +21,12 @@
 // once across sessions. A race between two sessions may announce an event
 // twice — never lose it.
 
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync } from 'node:fs';
+import { dirname,join } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { refreshGitHubStatus } from './collect.js';
 import { walkProjectPath } from './instructions.js';
-import { attemptsOf, isOpenStage, listRecords } from './record.js';
+import { attemptsOf,isOpenStage,listRecords } from './record.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import { boundAmount } from './format.js';

@@ -1,17 +1,17 @@
-import { showPath, NOTHING_RUN } from './notice.js';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { showPath,NOTHING_RUN } from './notice.js';
+import { mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname,join } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { GitFailed, dryMergeOnto, git, gitIndexWrite, gitOutcome, gitWriteBlob, mergeBase, ownerGitOutcome, unsafeOwnerCommands } from './git.js';
-import type { DryMerge, IndexChange } from './git.js';
-import { applicableAttempts, attemptRefName, attemptsOf, dropDurabilityRefs, isOpenStage, loadRecord, persistRecord, requireCurrentDelivery, refName, transitionTo } from './record.js';
+import { GitFailed,git,gitOutcome,mergeBase,ownerGitOutcome,unsafeOwnerCommands } from './git.js';
+import type { DryMerge } from './git.js';
+import { applicableAttempts,attemptsOf,dropDurabilityRefs,isOpenStage,loadRecord,persistRecord,requireCurrentDelivery,transitionTo } from './record.js';
 import { waitForOwner } from './gate.js';
-import { mergeWaitLines, waitingSummary } from './owner-text.js';
-import type { Attempt, BountyRecord } from './record.js';
+import { mergeWaitLines,waitingSummary } from './owner-text.js';
+import type { Attempt,BountyRecord } from './record.js';
 import { resolveAttempt } from './collect.js';
-import { syncGitHubDecision } from './github.js';
-import { dropMergeAnswer, readDecision, readMergeAnswer, recordFirstMerge } from './settings.js';
+import { syncGitHubDecision } from './close.js';
+import { dropMergeAnswer,readDecision,readMergeAnswer,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
 const TAIL = 2000;
@@ -412,11 +412,5 @@ function renderAttemptReport(record: BountyRecord, n: number, at: string, author
   lines.push(`  next: box bounty look ${record.id} ${n} to read the change; box bounty apply ${record.id} ${n} to merge it; or box bounty close ${record.id} --reason "<why>"`);
   return lines;
 }
-
-
-
-
-
-
 
 export { setMergeNoticeListener, emitMergeNotice, quoteForeign, showPath, NOTHING_RUN } from './notice.js';

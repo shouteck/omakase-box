@@ -5,12 +5,12 @@
 // record.ts unchanged (BT25).
 
 import { BountyRefused } from './errors.js';
-import { planGitHub, shownOfPlan } from './publish-plan.js';
+import { planGitHub,shownOfPlan } from './publish-plan.js';
 import { shipRules } from './never-ship.js';
-import { ownerWaitLines, waitingSummary } from './owner-text.js';
-import { listRecords, persistRecord, transitionTo } from './record.js';
-import type { AllowedBy, BountyRecord, WaitingFor } from './record.js';
-import { readDecision, requireRepository } from './settings.js';
+import { ownerWaitLines,waitingSummary } from './owner-text.js';
+import { listRecords,persistRecord,transitionTo } from './record.js';
+import type { AllowedBy,BountyRecord,WaitingFor } from './record.js';
+import { readDecision,requireRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 
 // `confirm` is removed (BT8): the owner allows the tool once, in the owner's

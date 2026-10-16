@@ -10,9 +10,9 @@
 import { BountyRefused } from './errors.js';
 import { boundAmount } from './format.js';
 import { postGitHub } from './post.js';
-import { syncGitHubDecision } from './github.js';
+import { syncGitHubDecision } from './close.js';
 import { payNotice } from './pay.js';
-import { dropDurabilityRefs, isOpenStage, loadRecord, settleScanFindings, transitionTo } from './record.js';
+import { dropDurabilityRefs,isOpenStage,loadRecord,settleScanFindings,transitionTo } from './record.js';
 import type { BountyRecord } from './record.js';
 
 export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./gh.js').GitHubChoice }): { record: BountyRecord; destination: string } {

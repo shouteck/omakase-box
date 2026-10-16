@@ -1,12 +1,12 @@
 import { asOneCommand } from './git.js';
 import { applyBounty as applyBountyCommand } from './answer.js';
-import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand } from './collect.js';
+import { answerGitHub as answerGitHubCommand,listGitHubAnswers as listGitHubAnswersCommand } from './collect.js';
 import { previewGitHub as previewGitHubCommand } from './post.js';
-import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
-import { closeBounty as closeBountyCommand, postBounty as postBountyCommand } from './commands.js';
+import { createBounty as createBountyCommand,finalizeBounty as finalizeBountyCommand,planBounty as planBountyCommand } from './create.js';
+import { closeBounty as closeBountyCommand,postBounty as postBountyCommand } from './commands.js';
 import { renderStatus as renderStatusCommand } from './render.js';
 import { lookBounty as lookBountyCommand } from './look.js';
-import { statusDocument as statusDocumentCommand, configDocument as configDocumentCommand } from './json.js';
+import { statusDocument as statusDocumentCommand,configDocument as configDocumentCommand } from './json.js';
 
 // Each command the package offers is one command to Git's pins: the names of
 // configured filters and merge drivers are read once per repository path for

@@ -1,15 +1,15 @@
-import { remoteUrl, invalid, type GitHubChoice } from './gh.js';
+import { remoteUrl,invalid,type GitHubChoice } from './gh.js';
 import { spawnSync } from 'node:child_process';
-import { lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { lstatSync,mkdtempSync,readFileSync,realpathSync,rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { isAbsolute,join,relative,resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { git, gitBlob, gitFilteredBlob, gitIndexWrite, gitOutcome, gitProgram, gitRefsWrite, ownerGitOutcome } from './git.js';
+import { git,gitBlob,gitFilteredBlob,gitIndexWrite,gitOutcome,gitProgram,gitRefsWrite,ownerGitOutcome } from './git.js';
 import type { IndexChange } from './git.js';
-import { publishListed, publishLists } from './never-ship.js';
+import { publishListed,publishLists } from './never-ship.js';
 import type { NeverShipRule } from './never-ship.js';
-import type { BountyRecord, WaitingFor } from './record.js';
-import { binaryPatchPaths, looksBinary, scanPatch, scanText } from './scan.js';
+import type { BountyRecord,WaitingFor } from './record.js';
+import { binaryPatchPaths,looksBinary,scanPatch,scanText } from './scan.js';
 import type { ScanHit } from './scan.js';
 
 // ---------------------------------------------------------------------------
