@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, BountyRefused, closeBounty, finalizeBounty, loadRecord, lookBounty, persistRecord, planBounty, postBounty, renderDescribe, renderHelp, renderOpenLine, renderRules, renderRulesBlock, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
-import { postedFixture } from './github-fixture.js';
+import { postedFixture, sharedPostedFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
 
 // BT7c pass review — reproduced on 1ed01f9 by hand: a record written while
@@ -47,11 +47,25 @@ it('a stored outside-answers text written before BT7c names no removed command',
 const REMOVED_NAME = /\bbox bounty (?:answer|questions|reply|undo|reject|withdraw|remind|confirm)\b/;
 
 describe('no output names a removed command', () => {
-  it('scans every renderer, refusal and CLI print path the tool can reach', () => postedFixture(context => {
-    const { repo, id } = context;
-    const corpus: Record<string, string> = {};
-    const scan = (name: string, text: string): void => { corpus[name] = (corpus[name] ?? '') + '\n' + text; };
+  // One posted world for the whole scan (K24): the single corpus `it` ran
+  // past half its limit. The corpus and the grab helper live at describe
+  // scope so each leg adds to the same accumulation — same scans, same
+  // order, the leak check last.
+  const world = sharedPostedFixture();
+  const context = world;
+  const { repo, id } = world;
+  const cli = (...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8' });
+  const corpus: Record<string, string> = {};
+  const scan = (name: string, text: string): void => { corpus[name] = (corpus[name] ?? '') + '\n' + text; };
+  // Refusals from each command path, collected as printed text.
+  const grab = (fn: () => unknown): void => {
+    try { fn(); } catch (error) {
+      if (error instanceof BountyRefused) { scan('refusals', `refused (${error.reason}): ${error.message}`); return; }
+      throw error;
+    }
+  };
 
+  it('scans every renderer and every stored-record path the tool can reach', () => world.run(() => {
     // The comments path reads GitHub live — scan it while the stand-in still
     // answers, with a stranger's comment on the wire.
     context.update({ comments: [{ body: 'a question from a solver', user: { login: 'stranger' }, created_at: '2026-10-12T01:00:00Z' }] });
@@ -95,14 +109,9 @@ describe('no output names a removed command', () => {
     scan('status-full', statusGitHub(repo, { id, full: true }));
     try { scan('status-comments-stale', statusGitHub(repo, { id, comments: true })); } catch (error) { if (error instanceof BountyRefused) scan('status-comments-stale', `refused (${error.reason}): ${error.message}`); else throw error; }
     scan('open-file', readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8'));
+  }));
 
-    // Refusals from each command path, collected as printed text.
-    const grab = (fn: () => unknown): void => {
-      try { fn(); } catch (error) {
-        if (error instanceof BountyRefused) { scan('refusals', `refused (${error.reason}): ${error.message}`); return; }
-        throw error;
-      }
-    };
+  it('scans every refusal a command path can raise', () => world.run(() => {
     grab(() => loadRecord(repo, 'bt-000000000000'));
     grab(() => postToGitHub(repo, id));
     grab(() => postToGitHub(repo, id));
@@ -113,14 +122,18 @@ describe('no output names a removed command', () => {
     grab(() => closeGitHub(repo, ended.id, '   ')); // empty reason refused
     closeGitHub(repo, ended.id);
     grab(() => applyBounty(repo, ended.id)); // already-ended
+  }));
 
+  it('scans the built CLI journey output', () => world.run(() => {
     // The built CLI's own output: the journey and the removed-name refusals.
     if (!existsSync(CLI_DIST)) throw new Error('packages/box-cli/dist/cli.js is missing — run the build first');
-    const cli = (...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8' });
     for (const args of [['help'], ['describe'], ['describe', '--rules'], ['status'], ['status', id], ['status', id, '--full'], ['status', id, '--comments'], ['look', id, '1'], ['close', id, '--reason'], ['frobnicate']]) {
       const run = cli(...args);
       scan(`cli-${args.join(' ')}`, `${run.stdout}\n${run.stderr}`);
     }
+  }));
+
+  it('scans the removed-name refusals and checks the corpus', () => world.run(() => {
     for (const gone of ['answer', 'questions', 'reply', 'undo', 'reject', 'withdraw', 'remind', 'confirm']) {
       const run = cli(gone, id);
       expect(run.status).toBe(3);

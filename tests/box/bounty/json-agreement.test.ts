@@ -9,8 +9,8 @@
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, it } from 'vitest';
-import { fixture } from './github-fixture.js';
+import { expect, it, describe } from 'vitest';
+import { sharedFixture } from './github-fixture.js';
 import { CLI_DIST } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
@@ -103,7 +103,11 @@ const has = (document: unknown, pointer: string): boolean => {
   return true;
 };
 
-it('every label a --full text view prints is a document fact or a named non-fact', () => fixture(({ repo, id, scratch, pr }) => {
+describe('every label a --full text view prints is a document fact or a named non-fact', () => {
+  // One world, consecutive steps — the journey's six checkpoints were a
+  // single `it` past half the suite's limit (K24). Same checks, same order.
+  const world = sharedFixture();
+  const { repo, id, scratch, pr } = world;
   const failures: string[] = [];
   const documentOf = (args: string[]): Record<string, unknown> => {
     const run = box(repo, args);
@@ -125,17 +129,25 @@ it('every label a --full text view prints is a document fact or a named non-fact
     check(name, 'config --full', ['config', '--full'], ['config', '--json']);
     if (look) check(name, 'look --full', ['look', id, '1', '--full'], ['look', id, '1', '--json']);
   };
+  it('the drafted view, the held post and the waiting view', () => world.run(() => {
   step('drafted', false);
   writeFileSync(join(scratch, 'settings', 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', repositories: {} }));
   box(repo, ['post', id]);
   step('waiting', false);
+  }));
+
+  it('the allowed and pull-request-seen views', () => world.run(() => {
   box(repo, ['allow', 'owner/project', '--reward', '10', '--reward-limit', '30']);
   step('posted', false);
   pr('solver-a');
   step('pr-seen', false);
+  }));
+
+  it('the collected and applied views', () => world.run(() => {
   box(repo, ['look', id, '1']);
   step('answered', true);
   box(repo, ['apply', id, '1']);
   step('applied', true);
   expect(failures).toEqual([]);
-}));
+  }));
+});

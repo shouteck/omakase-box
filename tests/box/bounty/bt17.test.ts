@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { fixture } from './github-fixture.js';
+import { fixture, sharedFixture } from './github-fixture.js';
 import { CLI_DIST, write } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
@@ -49,7 +49,13 @@ function budget(label: string, run: ReturnType<typeof box>): string {
 }
 
 describe('every normal output on the journey stays inside its budget', () => {
-  it('the posting and collecting journey, command by command', () => fixture(({ repo, id, scratch, pr }) => {
+  // One world for the whole journey, split into consecutive steps (K24):
+  // the single budget `it` ran past half its limit. Same budgets, same
+  // order — each leg its own `it` against the shared world.
+  const journey = sharedFixture();
+  const { repo, id, scratch, pr } = journey;
+
+  it('the posting and collecting journey, command by command — the draft, the held post and the owner answer', () => journey.run(() => {
     // Nothing allowed yet: draft, read the wait, then the owner answers and
     // `allow` releases the held post — the posting journey in one world.
     writeFileSync(join(scratch, 'settings', 'settings.json'), JSON.stringify({ kind: 'box-owner-settings', repositories: {} }));
@@ -66,7 +72,9 @@ describe('every normal output on the journey stays inside its budget', () => {
     const allowed = budget('allow', box(repo, ['allow', 'owner/project']));
     expect(allowed).toContain('allowed: owner/project');
     expect(allowed).toContain('the waiting bounty went out');
+  }));
 
+  it('the posting and collecting journey, command by command — the pull request, look and apply', () => journey.run(() => {
     // The collecting journey: one pull request waiting.
     pr('solver-a');
     budget('bounty (overview)', box(repo, []));
@@ -79,7 +87,9 @@ describe('every normal output on the journey stays inside its budget', () => {
     const applied = budget('apply', box(repo, ['apply', id, '1']));
     expect(applied).toContain('applied');
     budget('status (ended)', box(repo, ['status']));
+  }));
 
+  it('the posting and collecting journey, command by command — the second draft, close and the reference commands', () => journey.run(() => {
     // The second draft ends with a reason — `close` stays at two lines.
     write(repo, 'TASK2.md', 'Something else.\n');
     const second = box(repo, ['create', '--task', 'TASK2.md', '--why', 'a second handoff']);

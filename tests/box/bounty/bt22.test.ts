@@ -10,7 +10,7 @@ import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadState, saveState, settingsFile, stateFile } from '../../../packages/box-bounty/index.js';
-import { fixture } from './github-fixture.js';
+import { fixture, sharedFixture } from './github-fixture.js';
 import { CLI_DIST, git, makeRepo, write } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
@@ -25,17 +25,23 @@ function repo(address = 'owner/project'): string {
 }
 
 describe('the owner\'s settings file holds only the owner\'s choices', () => {
-  it('1: no command on the journey rewrites settings.json; the said-once records land in state.json', () => fixture(({ repo, id, scratch, pr }) => {
-    const settings = join(scratch, 'settings', 'settings.json');
-    const state = join(scratch, 'settings', 'state.json');
+  // One world, two legs (K24): the settings-file journey ran past half its
+  // limit. The file paths and the reads helper hoist to describe scope;
+  // every check keeps its order.
+  const journey = sharedFixture();
+  const settings = join(journey.scratch, 'settings', 'settings.json');
+  const state = join(journey.scratch, 'settings', 'state.json');
+  const reads = (args: string[]) => {
+    const before = readFileSync(settings, 'utf8');
+    const run = box(journey.repo, args);
+    expect(run.status, `${args.join(' ')} exited ${run.status}: ${run.stderr}`).toBe(0);
+    expect(readFileSync(settings, 'utf8'), `${args.join(' ')} rewrote the owner's settings`).toBe(before);
+    return run;
+  };
+
+  it('1: no command on the journey rewrites settings.json; the said-once records land in state.json — the reads up to the owner answer', () => journey.run(() => {
+    const { repo, id, scratch, pr } = journey;
     writeFileSync(settings, JSON.stringify({ kind: 'box-owner-settings', repositories: {} }));
-    const reads = (args: string[]) => {
-      const before = readFileSync(settings, 'utf8');
-      const run = box(repo, args);
-      expect(run.status, `${args.join(' ')} exited ${run.status}: ${run.stderr}`).toBe(0);
-      expect(readFileSync(settings, 'utf8'), `${args.join(' ')} rewrote the owner's settings`).toBe(before);
-      return run;
-    };
     // The journey's read commands, each for the first time.
     reads(['status']);
     reads(['status', '--full']);
@@ -48,6 +54,10 @@ describe('the owner\'s settings file holds only the owner\'s choices', () => {
     // to the first read that renders the reward line, and it lands in state.json.
     const overview = reads([]);
     expect(overview.stdout).toContain('a promise in the owner\'s name, paid by hand');
+  }));
+
+  it('1: no command on the journey rewrites settings.json; the said-once records land in state.json — the collecting reads and where the bookkeeping lands', () => journey.run(() => {
+    const { repo, id, scratch, pr } = journey;
     reads(['status']);
     reads(['status', '--full']);
     reads(['look', id, '1']);

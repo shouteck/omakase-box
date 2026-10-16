@@ -445,21 +445,36 @@ describe('BT11a fix round — the record file is never a render source', () => {
     refused(() => loadRecord(repo, id), 'record-corrupt');
   });
 
-  it('the promise lock makes the limit check and the bind one span', () => {
+  // K24: one repository for the two steps — the single lock `it` ran past
+  // half its 15 s limit (the held lock is waited out for up to 3 s before the
+  // named refusal). The suite wipes the owner settings before every `it`, so
+  // each leg writes the same decision and amounts itself — same assertions,
+  // same order.
+  describe('the promise lock makes the limit check and the bind one span', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
-    ownerSays(repo, 'allowed');
     const { id } = draft(repo);
-    changeConfig(repo, 'set', 'reward-limit', '50');
-    changeConfig(repo, 'set', 'reward', '12');
     const before = readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8');
-    // A lock already held is the other post's bind in flight — this one
-    // waits it out, then refuses by name rather than guessing.
-    mkdirSync(join(repo, '.box', 'promise.lock'));
-    refused(() => postToGitHub(repo, id), 'promise-limit-busy');
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8')).toBe(before); // a refused post changed nothing
-    expect(loadRecord(repo, id).stage).toBe('drafted');
-    rmSync(join(repo, '.box', 'promise.lock'), { recursive: true });
-    const { destination } = postToGitHub(repo, id);
-    expect(loadRecord(repo, id).github!.body).toContain('reward: $12');
-  }, 15000);
+    const arm = (): void => {
+      ownerSays(repo, 'allowed');
+      changeConfig(repo, 'set', 'reward-limit', '50');
+      changeConfig(repo, 'set', 'reward', '12');
+    };
+
+    it('a held lock refuses by name and changes nothing', () => {
+      arm();
+      // A lock already held is the other post's bind in flight — this one
+      // waits it out, then refuses by name rather than guessing.
+      mkdirSync(join(repo, '.box', 'promise.lock'));
+      refused(() => postToGitHub(repo, id), 'promise-limit-busy');
+      expect(readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8')).toBe(before); // a refused post changed nothing
+      expect(loadRecord(repo, id).stage).toBe('drafted');
+      rmSync(join(repo, '.box', 'promise.lock'), { recursive: true });
+    }, 15000);
+
+    it('the post then binds the amount on the record', () => {
+      arm();
+      const { destination } = postToGitHub(repo, id);
+      expect(loadRecord(repo, id).github!.body).toContain('reward: $12');
+    });
+  });
 });
