@@ -1,5 +1,5 @@
 import { BountyRefused } from './errors.js';
-import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBounty, promisedTotal } from './record.js';
+import { isOpenStage, listRecords, loadRecord, ownerBlock, persistRecord, postBounty, promisedTotal, retiredRoute } from './record.js';
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
@@ -151,7 +151,8 @@ export function allowBounty(repoRoot: string, id: string): string {
   const waiting = record.waiting;
   if (record.stage === 'waiting' && waiting?.for === 'merge') return allowMerge(repoRoot, record, waiting);
   if (record.stage !== 'waiting' || waiting?.for !== 'post' || waiting.to === undefined) throw new BountyRefused('owner-answer-not-waiting', `${id} is not waiting for a post; nothing changed. box bounty status ${id} shows its state`);
-  if (waiting.to !== 'github') throw new BountyRefused('legacy-delivery-retired', `this bounty waited for retired folder delivery; nothing changed. End it with box bounty close ${id}`);
+  const retired = retiredRoute(record);
+  if (retired !== null) throw new BountyRefused(retired, `this bounty waited for retired folder delivery; nothing changed. End it with box bounty close ${id}`);
   if (waiting.reason === 'secrets') throw new BountyRefused('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. Decide in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing changed`);
   // A one-bounty yes cannot say which repository it covers (BT16 rule 6):
   // in a checkout whose remotes name several GitHub repositories the list
@@ -413,7 +414,7 @@ export function renderSummary(repoRoot: string, since?: string): string {
       if (event.at < from) continue;
       if (event.stage === 'posted') posted.push(`${record.id} at ${event.at} (${event.destination ?? 'unspecified destination'})`);
       else if (event.stage === 'applied') merged.push(`${record.id} at ${event.at} (merge ${event.merge ?? 'unnamed'})`);
-      else if (['rejected', 'withdrawn', 'expired', 'undone'].includes(event.stage)) closed.push(`${record.id} ${event.stage} at ${event.at}`);
+      else if (['rejected', 'withdrawn', 'undone'].includes(event.stage)) closed.push(`${record.id} ${event.stage} at ${event.at}`);
     }
     if (record.waiting !== undefined) waiting.push(`${record.id} (${record.waiting.reason}, since ${record.waiting.at})`);
     // Scan findings are standing facts, not events — a settled one carries no

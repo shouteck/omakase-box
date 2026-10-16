@@ -1,0 +1,185 @@
+== bt-22f3b1723a38 ==
+bt-22f3b1723a38 current GitHub format read unavailable at <ts>; cached last comparison matches-record at <ts>; local record governs
+bt-22f3b1723a38 GitHub format update: updated
+owner: nothing written — the first post will wait for the owner
+reward: each new bounty states $0; open bounties here promise $0
+box bounty status — no open bounties in <repo>
+ended: bt-22f3b1723a38 applied — scan finding recorded (job: job.txt)
+  Saved job context (bt-22f3b1723a38) — where the work stood when the bounty was created
+    branch: "master"; commit: dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3
+    changed files: "BACKLOG.md"
+    note: "Was in the middle of finishing the BT10 real bounty journey: record each step, replace STATUS.md, return the checkout to master, stop after BT10."
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:385 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:394 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:397 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:403 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff:134 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff:139 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff:134 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff:139 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-launcher-r2/scripts/box-verification/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/gate-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/source-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:385 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:394 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:397 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:403 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/gate-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/source-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/metadata-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/scripts/box-verification/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/scripts/box-verification/environment-manifest.json:2171 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts:8 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts:9 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/cookie-policy.test.ts:5 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/owner.test.ts:6 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:385 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:394 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:397 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:403 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/scripts/box-verification/environment-manifest.json:2171 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/preflight-receipt.md:17 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/workspace-recipe.md:29 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md:114 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): scripts/verify.mjs:67 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): scripts/verify.mjs:107 (passworded-connection-string) — the flagged content changed — the bounty went out
+  next: continue the saved job; to reverse the merge: git revert -m 1 d493dbe35f0dbdb0724c73ff339e18ce39d56978; inspect: box bounty status bt-22f3b1723a38 --full; or create another with box bounty create --task <file> --why "<one line>"
+  history: {"stage":"drafted","at":"2026-10-13T12:48:51.187Z"}
+  history: {"stage":"waiting","at":"2026-10-13T12:49:08.821Z"}
+  history: {"stage":"posted","at":"2026-10-13T13:11:17.831Z","destination":"https://github.com/shouteck/omakase-box/issues/5"}
+  history: {"stage":"taken","at":"2026-10-13T13:20:08.122Z","attempt":7,"command":"look"}
+  history: {"stage":"answered","at":"2026-10-13T13:20:08.139Z","attempt":7}
+  history: {"stage":"taken","at":"2026-10-13T13:20:15.635Z","attempt":8,"command":"look"}
+  history: {"stage":"answered","at":"2026-10-13T13:20:15.653Z","attempt":8}
+  history: {"stage":"applied","at":"2026-10-13T13:22:13.366Z","reason":"commit 7d94c4ed9fd78dbeb306fbda9d1ef6a5eeefe1d3","attempt":8,"command":"merged","merge":"d493dbe35f0dbdb0724c73ff339e18ce39d56978"}
+  report — attempt 7 for bt-22f3b1723a38
+    from: GitHub account shouteck — arrived 2026-10-13T13:20:08.152Z
+    change: 1 commit(s) on the bounty branch — 1 changed, 0 added, 0 deleted — 1 lines added, 1 removed
+    current code: merging onto the current branch would conflict in "BACKLOG.md"
+    flags: none
+    nothing in the solution was run and this report says nothing about whether it works
+  report — attempt 8 for bt-22f3b1723a38
+    from: GitHub account shouteck — arrived 2026-10-13T13:20:15.668Z
+    change: 1 commit(s) on the bounty branch — 1 changed, 0 added, 0 deleted — 1 lines added, 1 removed
+    current code: merging onto the current branch would conflict in "BACKLOG.md"
+    flags: none
+    nothing in the solution was run and this report says nothing about whether it works
+== bt-26bb9883d6b2 ==
+bt-26bb9883d6b2 current GitHub format read unavailable at <ts>; cached last comparison matches-record at <ts>; local record governs
+bt-26bb9883d6b2 GitHub format update: updated
+owner: nothing written — the first post will wait for the owner
+reward: each new bounty states $0; open bounties here promise $0
+box bounty status — no open bounties in <repo>
+ended: bt-26bb9883d6b2 rejected — scan finding recorded (job: Clarify the unresolved BT9 real-host hook evidence in BACKLOG)
+  Saved job context (bt-26bb9883d6b2) — where the work stood when the bounty was created
+    branch: "master"; commit: dc71f2ba28a3a988dc174b5aa47e44b27e70d9b3
+    changed files: "BACKLOG.md"
+    note: "Running the BT10 real bounty journey"
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/attempt3-prior/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:385 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:394 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:397 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/base/environment-readiness.test.ts:403 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff:134 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped-attempt2.diff:139 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff:134 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/devin-h1-worker/worker-scoped.diff:139 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-launcher-r2/scripts/box-verification/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/gate-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1-attempt3/source-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:385 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:394 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:397 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/environment-readiness.test.ts:403 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/gate-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2-h1/source-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/metadata-environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/pre-stage-overlay-r2/scripts/box-verification/environment-manifest.json:2741 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/scripts/box-verification/environment-manifest.json:2171 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts:8 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/browser-cookie.test.ts:9 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/cookie-policy.test.ts:5 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/auth/bootstrap/owner.test.ts:6 (assigned-secret) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:385 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:394 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:397 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/stopped-candidate/tests/box/verification/environment-readiness.test.ts:403 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/cto-repair-20261005/supervisor-checkpoint/scripts/box-verification/environment-manifest.json:2171 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/preflight-receipt.md:17 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): .execution/box-v4/evidence/B1.1/workspace-recipe.md:29 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): docs/box-v4/delegation/FIRST-IMPLEMENTATION-BRIEF.md:114 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): scripts/verify.mjs:67 (passworded-connection-string) — the flagged content changed — the bounty went out
+  scan finding (recorded at create): scripts/verify.mjs:107 (passworded-connection-string) — the flagged content changed — the bounty went out
+  next: continue the saved job; inspect: box bounty status bt-26bb9883d6b2 --full; or create another with box bounty create --task <file> --why "<one line>"
+  history: {"stage":"drafted","at":"2026-10-13T12:54:57.037Z"}
+  history: {"stage":"waiting","at":"2026-10-13T12:55:33.311Z"}
+  history: {"stage":"posted","at":"2026-10-13T13:11:31.743Z","destination":"https://github.com/shouteck/omakase-box/issues/6"}
+  history: {"stage":"rejected","at":"2026-10-13T13:24:00.456Z","reason":"reader check complete; the two-open-bounty criterion is met — closing with no solution","command":"close"}
+== bt-4ad668353616 ==
+bt-4ad668353616 current GitHub format read unavailable at <ts>; cached last comparison not read at time not recorded; local record governs
+owner: nothing written — the first post will wait for the owner
+reward: each new bounty states $0; open bounties here promise $0
+box bounty status — no open bounties in <repo>
+ended: bt-4ad668353616 undone (job: Quote solver-supplied paths in the fact report)
+  Return to your job
+    The branch, commit and changed files were not recorded for this older bounty.
+  next: continue the saved job; inspect: box bounty status bt-4ad668353616 --full; or create another with box bounty create --task <file> --why "<one line>"
+  history: {"stage":"drafted","at":"2026-10-11T06:56:50.745Z"}
+  history: {"stage":"confirmed","at":"2026-10-11T06:59:22.432Z"}
+  history: {"stage":"posted","at":"2026-10-11T07:01:59.275Z","destination":"https://github.com/shouteck/omakase-box/issues/3"}
+  history: {"stage":"taken","at":"2026-10-11T07:20:24.460Z","attempt":1,"command":"look"}
+  history: {"stage":"answered","at":"2026-10-11T07:20:24.499Z","attempt":1}
+  history: {"stage":"applied","at":"2026-10-11T07:24:39.134Z","attempt":1,"command":"apply","merge":"2421c4e9b0dc7bc7137213d328c9f2f4283ed758"}
+  history: {"stage":"undone","at":"2026-10-11T07:25:28.646Z","reason":"reverses merge 2421c4e9b0dc7bc7137213d328c9f2f4283ed758","attempt":1,"command":"revert","merge":"6670a5750ac31871e41031187260c21bbcb46a11"}
+  report — attempt 1 for bt-4ad668353616
+    from: GitHub account shouteck — arrived 2026-10-11T07:20:24.515Z
+    change: 1 commit(s) on the bounty branch — 6 changed, 0 added, 0 deleted — 47 lines added, 13 removed
+    current code: the answer would merge cleanly onto the current branch
+    flag: the answer touches tests/box/bounty/report.test.ts, marked as a test by the stated rule (a test/, tests/ or __tests__/ segment, or a test_*, *_test.*, *.test.* or *.spec.* basename)
+    nothing in the solution was run and this report says nothing about whether it works
+== bt-6b7b1d15d8f0 ==
+bt-6b7b1d15d8f0 current GitHub format read unavailable at <ts>; cached last comparison not read at time not recorded; local record governs
+owner: nothing written — the first post will wait for the owner
+reward: each new bounty states $0; open bounties here promise $0
+box bounty status — no open bounties in <repo>
+ended: bt-6b7b1d15d8f0 applied (job: Explain how to bootstrap a cold copy of this repository)
+  Return to your job
+    The branch, commit and changed files were not recorded for this older bounty.
+  next: continue the saved job; to reverse the merge: git revert -m 1 48b461cd30b6424fc16dce3fdf3c66eba424f186; inspect: box bounty status bt-6b7b1d15d8f0 --full; or create another with box bounty create --task <file> --why "<one line>"
+  history: {"stage":"drafted","at":"2026-10-11T03:28:02.311Z"}
+  history: {"stage":"confirmed","at":"2026-10-11T03:36:56.594Z"}
+  history: {"stage":"posted","at":"2026-10-11T03:44:38.802Z","destination":"https://github.com/shouteck/omakase-box/issues/1"}
+  history: {"stage":"taken","at":"2026-10-11T03:49:27.343Z","attempt":1,"command":"look"}
+  history: {"stage":"answered","at":"2026-10-11T03:49:27.359Z","attempt":1}
+  history: {"stage":"applied","at":"2026-10-11T03:49:58.997Z","attempt":1,"command":"apply","merge":"48b461cd30b6424fc16dce3fdf3c66eba424f186"}
+  report — attempt 1 for bt-6b7b1d15d8f0
+    from: GitHub account shouteck — arrived 2026-10-11T03:49:27.365Z
+    change: 1 changed, 0 added, 0 deleted — 15 lines added, 1 removed
+    current code: the answer would merge cleanly onto the current branch
+    flags: none
+    nothing in the solution was run and this report says nothing about whether it works
+== bt-e197a6998847 ==
+owner: nothing written — the first post will wait for the owner
+reward: each new bounty states $0; open bounties here promise $0
+box bounty status — no open bounties in <repo>
+ended: bt-e197a6998847 applied (job: # Fix the dangling rendering of an empty `allowedDestinations` list)
+  Return to your job
+    The branch, commit and changed files were not recorded for this older bounty.
+  next: continue the saved job; to reverse the merge: git revert -m 1 e720caa3cf301a8f1738b6ae8e14568a13224ef5; inspect: box bounty status bt-e197a6998847 --full; or create another with box bounty create --task <file> --why "<one line>"
+  history: {"stage":"drafted","at":"2026-10-10T13:17:44.447Z"}
+  history: {"stage":"confirmed","at":"2026-10-10T13:17:50.916Z"}
+  history: {"stage":"posted","at":"2026-10-10T13:17:55.367Z","destination":"C:\\Users\\shout\\AppData\\Local\\Temp\\bt5-journey\\delivered\\bt-e197a6998847"}
+  history: {"stage":"taken","at":"2026-10-10T13:30:32.246Z","attempt":1,"command":"look"}
+  history: {"stage":"answered","at":"2026-10-10T13:30:32.250Z","attempt":1}
+  history: {"stage":"verified","at":"2026-10-10T13:36:40.990Z","attempt":1,"command":"look"}
+  history: {"stage":"applied","at":"2026-10-10T13:38:36.821Z","attempt":1,"command":"apply","merge":"e720caa3cf301a8f1738b6ae8e14568a13224ef5"}
+  report — attempt 1 for bt-e197a6998847
+    check: node kitchen/bt5/check.mjs — exited 1 at create; on the answer it exits 0
+    guard: none declared for this bounty
+    change: 2 changed, 0 added, 0 deleted — 13 lines added, 2 removed
+    current code: the answer would merge cleanly onto the current branch
+    flags: none
+    not checked: this report states the declared commands' exits and a merge read only — it says nothing about behaviour those commands do not cover
