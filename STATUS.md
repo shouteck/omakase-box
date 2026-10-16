@@ -1,22 +1,14 @@
 # Status
 
-Updated by the CTO on 16 October 2026 at the BT18–BT25 run close.
+Updated by the CTO on 16 October 2026 at the BT26 close. Run in flight: `START.md: BT26, K24, BT12, BT27` — naming BT12 approved it (it was proposed and waiting).
 
 ## Now
 
-- **The BT18–BT25 run completed.** Eight waves, eight merges, all reviewed PASS test-verified; master pushed. What changed:
-  - BT18 `b0a3290` — one table-driven option parser: `--help`/`-h` on every command, unknown options refused by name, `--name=value` everywhere, `box --version` prints.
-  - BT19 `8974284` — `--json` on `status`/`look`/`config` (`box-bounty/<command>@1`, stranger text only under `fromOthers`); one FAIL-and-correction round for five missing `--full` facts.
-  - BT20 `a850b30` — `create` never contacts GitHub; scan functions in `scan.ts`; K14 create row 28/3 → 15/0.
-  - BT21 `5e26797` — close-up on GitHub says when unasked; instruction files refused inside `.git`/`.box`; index refreshed after aborted apply; one shared path check.
-  - BT22 `2deec5b` — `settings.json` holds only owner choices; tool memory in `state.json`; both atomic; one correction round moved instruction marks to state.
-  - BT23 `47707bb` — old record shapes convert in `asRecord`; `retiredRoute` unifies three checks; the five real records load unchanged.
-  - BT24 `7922c24` — new drafts keep no snapshot ref or field; capture still runs during `create`, byte-identical scan/note.
-  - BT25 `7f1c7f0` — `record.ts` 1353→667 lines, record only; `render`/`owner-text`/`money`/`gate`/`commands` modules; zero cycles through `record.ts`; CLI output byte-identical.
-- Two correction rounds total (BT19 rule-7 gaps; BT22's instruction-notice write). Residuals went to BACKLOG: nested `sub/.git/` instruction paths, the `status --json` fact-agreement gap class, `look.ts`'s unguarded `resume.commit`, two cosmetic comment splits.
-- Kitchen carried forward: worker role fills the Result; the wave template now asks for the mechanical check behind any claimed invariant; packaging card gained rebuilt-dist, inner-loop and hub-split lines.
-- No real bounty, payment, owner-settings change or solver-code execution anywhere in the run; all scratch removed.
+- **BT26 merged** (`44852b9`, product `1ec435f` + correction `213872f`; PASS test-verified after one correction round): the six leftovers the BT18–BT25 passes named are closed — `.git`/`.box` refused at any path depth including 8.3 aliases (`GIT~1`→`.git`, found by the pass), one `baseCommitOf` reader so `look` never hands Git `(no commits yet)`, the no-`snapshot:` merge message pinned, BT25's split comments rejoined, `-h` taken as a value after a value-taking option, and a JSON/text label-agreement tripwire (`json-agreement.test.ts`) that the pass proved non-vacuous by mutation. BACKLOG's four lines removed.
+- An outside session committed the K25 brief (`1b2c01b`) onto the wave branch mid-verify; docs-only, merged with the wave, lesson in `kitchen/INBOX.md`.
+- Kitchen carried forward: the packaging card now records that `realpathSync` does not expand 8.3 short names — only the parent's `readdir` reveals the true name.
+- No real bounty, payment or owner-settings change; all scratch and the `wave/BT26` branch removed; `box-k6-*` temp files swept.
 
 ## Next
 
-Nothing is in flight. The CTO reviewed K23 and BT18 to BT25 (cooked by a lower-reasoning model) on 16 October 2026 at the owner's request: all nine merged with independent passes and green hosted runs; two needed a correction round, which the passes caught. Three follow-up waves are briefed in detail: **BT26** (the leftovers the passes named), **K24** (no test near its time limit; a wave-file edit during verify costs no rerun), **BT27** (split `github.ts`, zero import cycles). Suggested order: BT26, K24, BT27. **K25** (the tool's memory for agents, measured and compared with other agent-memory tools, under a rule that what an agent sees unasked stays constant) is briefed too and depends on none of them. Each cooks only when named. BT12 (the npm package) stays proposed and waits for the owner.
+This run continues: **K24** (no test near its time limit; a wave-file edit during verify costs no rerun), then **BT12** (the npm package — owner-named in this run's START; brief needs revision for the 14-October direction, sandbox repo, removed commands and the existing `kitchen/demo` rig before dispatch), then **BT27** (split `github.ts`, zero import cycles). Also briefed and waiting for a future run: **K25**.
