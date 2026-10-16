@@ -175,7 +175,11 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
     why: record.why ?? null,
     stage: record.stage,
     createdAt: record.createdAt,
-    baseCommit: record.snapshot.baseCommit,
+    // Old records carry the snapshot's base commit; records made now keep no
+    // snapshot, so the resume context's recorded commit stands in — it is the
+    // same HEAD `create` captured. Its '(no commits yet)' display sentinel is
+    // not a commit, so only a real hash reports here.
+    baseCommit: record.snapshot?.baseCommit ?? (record.resume?.kind === 'recorded' && /^[0-9a-f]{40}$/.test(record.resume.commit) ? record.resume.commit : null),
     reward: boundAmount(record) ?? null,
     job: record.job?.file ?? null,
     resume: resumeEntry(record),

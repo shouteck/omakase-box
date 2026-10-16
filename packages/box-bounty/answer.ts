@@ -254,7 +254,9 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     '',
     `attempt: ${attempt.n}`,
     `solution: ${attempt.commit}`,
-    `snapshot: ${record.snapshot.commit}`
+    // Old records only: the snapshot line names the capture the bounty was
+    // made from — a record written now keeps no snapshot to name.
+    ...(record.snapshot === undefined ? [] : [`snapshot: ${record.snapshot.commit}`])
   ].join('\n');
   // The merge runs under the repository's own config — pinning eol filters off
   // would make every file clean under the repo's convention look modified to

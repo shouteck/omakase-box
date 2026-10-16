@@ -67,7 +67,7 @@ describe('the snapshot is the repository as it stands', () => {
     expect(fingerprint(repo)).toEqual(before);
   });
 
-  it('records an identifier Git itself resolves, and recreation reproduces the tree', () => {
+  it('the capture is a real Git object during create, and recreation reproduces the tree', () => {
     const repo = makeRepo(BASE_FILES, r => {
       write(r, 'src/app.py', 'print("v2-uncommitted")\n');
       write(r, 'new-file.txt', 'untracked\n');

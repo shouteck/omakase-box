@@ -291,6 +291,14 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
     // manifest remains on disk solely to prove read-only draft migration.
     const recordFile = join(repo, '.box/bounties', created.id + '.json');
     const record = JSON.parse(readFileSync(recordFile, 'utf8'));
+    // A pre-BT15 draft's record carried the snapshot field and its pin at
+    // refs/box-bounty/<id> — the folder-era bounty.json is still checked
+    // against it. Records made now store neither, so the fixture puts the
+    // old shape back by hand.
+    if (record.snapshot === undefined && 'plan' in created) {
+      record.snapshot = created.plan.snapshot;
+      git(repo, ['update-ref', `refs/box-bounty/${record.id}`, created.plan.snapshot.commit]);
+    }
     const folder = join(scratch, 'legacy-draft');
     mkdirSync(folder);
     const bytes = JSON.stringify({ ...record.content, id: record.id, title: record.title, createdAt: record.createdAt, snapshot: record.snapshot, note: { file: 'PUBLIC_NOTE.md', text: publicNote } });

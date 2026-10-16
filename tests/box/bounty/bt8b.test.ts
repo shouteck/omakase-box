@@ -236,7 +236,7 @@ it('describe reports observed waits and current terminal outcomes, with invalid 
     { stage: 'applied', at: '2026-10-02T00:00:00.000Z' },
     { stage: 'undone', at: '2026-10-03T00:00:00.000Z' }
   ];
-  record.attempts = [{ n: 1, commit: record.snapshot.commit, at: '2026-10-02T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
+  record.attempts = [{ n: 1, commit: git(repo, ['rev-parse', 'HEAD']), at: '2026-10-02T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
   write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
   expect(renderDescribe(repo)).toContain('24.0 to 24.0 hours');
   expect(renderDescribe(repo)).toContain('0 of 1 ended posted bounties had a solution merged');

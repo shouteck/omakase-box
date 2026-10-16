@@ -790,7 +790,7 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
   let value: unknown;
   try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', 'the old draft public text is unreadable'); }
   const inputText = (item: unknown): item is { file: string; text: string } => isObject(item) && typeof item['file'] === 'string' && typeof item['text'] === 'string';
-  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot.commit || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', 'the old draft public text is unreadable');
+  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot?.commit || record.snapshot === undefined || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', 'the old draft public text is unreadable');
   return { task: value['task'], note: value['note'], tool: typeof value['tool'] === 'string' ? value['tool'] : TOOL_VERSION };
 }
 

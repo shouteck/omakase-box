@@ -874,9 +874,12 @@ in the owner's settings outside the repository.
 
 `create` also writes `.box/bounties/<id>.json` inside the repository and prints
 its path. The tool writes the file; committing it is the agent's normal flow.
-The record holds the id, title, the snapshot identifier
-(commit + tree + base), the public task and generated note facts, and the stage
-history — one event appended per transition, never rewritten:
+The record holds the id, title, the public task and generated note facts, and
+the stage
+history — one event appended per transition, never rewritten. Records written
+before 15 October 2026 also carry the snapshot identifier
+(commit + tree + base); drafts made now keep none — the capture is used while
+`create` runs and nothing reads it after:
 
 ```
 drafted → posted → taken → answered → applied
@@ -911,9 +914,11 @@ compact lines. The public task is held directly in the record; old note and
 job files remain readable. Private `--resume` context and the required
 `--why` line never enter an issue.
 
-`refs/box-bounty/<id>` pins the working-state snapshot while the bounty is
-open. Each collected pull request is pinned under
-`refs/box-bounty/<id>-answer-<n>`. Ended stages remove those durability refs.
+Each collected pull request is pinned under
+`refs/box-bounty/<id>-answer-<n>`. Bounties drafted before 15 October 2026
+also pinned the working-state snapshot at `refs/box-bounty/<id>`; a draft made
+now pins nothing — the capture is a create-time working object. Ended stages
+remove those durability refs.
 
 ## The commands after create
 
@@ -1039,17 +1044,22 @@ dated history, not as anything about the current code.
 
 ## The snapshot identifier
 
-`snapshot.commit` in the local record is a real commit object parented on
-HEAD, recording the full working state. A temporary index records it with
+`create` builds the capture as a real commit object parented on HEAD,
+recording the full working state. A temporary index records it with
 `read-tree`, `add -A`, `write-tree` and `commit-tree`; the real index,
 working tree and branch remain unchanged. Owner clean filters run as they do
 for an ordinary commit, so this snapshot holds Git's stored byte form.
 
-`snapshot.tree` identifies that tree and `snapshot.baseCommit` identifies
-the original HEAD. The local `refs/box-bounty/<id>` bookmark prevents pruning
-while the bounty is open. Removed never-ship bytes remain reachable in the
-local snapshot; publication independently enforces the boundary on what goes
-to GitHub. The snapshot is unchanged by retiring delivery.
+The commit's tree is the shipped set the pre-publish scan reads, and the note
+names what changed against `snapshot.baseCommit` — the original HEAD. Both
+uses finish inside `create`: a draft written now stores no `snapshot` field
+on its record and pins no `refs/box-bounty/<id>` ref, so the object is
+unreferenced afterwards and `gc` may take it whenever it runs. Removed
+never-ship bytes sit in the local object store while it lives; publication
+independently enforces the boundary on what goes to GitHub. Records written
+before 15 October 2026 still carry `snapshot.commit`, `snapshot.tree` and
+`snapshot.baseCommit`, and their `refs/box-bounty/<id>` bookmark survives
+until the bounty closes.
 
 ## Never-ship
 
