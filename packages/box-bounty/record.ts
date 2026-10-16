@@ -333,6 +333,15 @@ export function attemptsOf(record: BountyRecord): Attempt[] {
 export const applicableAttempts = (attempts: readonly Attempt[]): Attempt[] =>
   attempts.filter(attempt => attempt.outcome === 'answered');
 
+// The commit a diff or document measures the bounty's solutions against:
+// the snapshot's base on records old enough to carry one, else the resume
+// context's recorded commit — and only when it is a real hash, because the
+// context's '(no commits yet)' sentinel is display text, never a commit
+// (BT26: the one reader for this fact — the status document's guard moved
+// here and `look`'s fallback shares it; the empty tree stands in for null).
+export const baseCommitOf = (record: BountyRecord): string | null =>
+  record.snapshot?.baseCommit ?? (record.resume?.kind === 'recorded' && /^[0-9a-f]{40}$/.test(record.resume.commit) ? record.resume.commit : null);
+
 // An open bounty can pin several commits: the snapshot at <id>, each attempt's
 // answer commit at <id>-answer-<n>, and the single <id>-answer of records from
 // before this wave (an attempt commit's parent is the base commit, so it does
@@ -594,14 +603,6 @@ export function listRecords(repoRoot: string): ListedBounty[] {
   listed.sort((a, b) => (a.record?.createdAt ?? a.file).localeCompare(b.record?.createdAt ?? b.file));
   return listed;
 }
-
-
-
-
-
-// The one `next:` an ended bounty prints — the job to go back to, the
-
-
 
 
 

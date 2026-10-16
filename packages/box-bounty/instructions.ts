@@ -71,7 +71,7 @@ export function walkProjectPath(repoRoot: string, named: string): ProjectPathWal
 }
 
 // The git dir as `git rev-parse --git-dir` reports it, memoised per process.
-// A `.git` directory IS the git dir — the first-segment rule already covers
+// A `.git` directory IS the git dir — the segment rule already covers
 // it, so rev-parse is asked only for the file form (worktree, submodule,
 // separate-git-dir): never on a normal checkout, so no Git start is spent.
 const gitDirByRoot = new Map<string, string | null>();
@@ -94,21 +94,23 @@ const toolOwned = (named: string): BountyRefused => new BountyRefused('instructi
 
 // `.git/` and `.box/` belong to Git and to this tool — a block synced into
 // `.git/config` breaks Git in the checkout and one in `.box/bounties/`
-// corrupts the record (BT8b). Judged on the declared spelling, folded, and
-// again on the canonical path, so `.GIT/config`, a `..` spelling and a link
-// landing inside them all read the same refusal — before the link refusal
-// itself, because a file inside them is wrong for a stronger reason than
-// how it was reached. A worktree's or a separate git dir elsewhere under
-// the root is refused the same way.
+// corrupts the record (BT8b), and a nested checkout's own `.git` is just as
+// off-limits. Every segment is judged, not the first one (BT26):
+// `sub/.git/config` and `a/b/.box/x` refuse exactly as `.git/config` does —
+// on the declared spelling, folded, and again on the canonical path, so
+// `.GIT/config`, a `..` spelling and a link landing inside them all read
+// the same refusal — before the link refusal itself, because a file inside
+// them is wrong for a stronger reason than how it was reached. A worktree's
+// or a separate git dir elsewhere under the root is refused the same way.
 export function checkInstructionFile(repoRoot: string, named: string): string {
   const { root, path, rel, problem, leaf, canonical } = walkProjectPath(repoRoot, named);
   if (problem?.kind === 'outside') throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed`);
-  const segment = (value: string) => folded(value).split('/')[0];
-  if (segment(rel) === '.git' || segment(rel) === '.box') throw toolOwned(named);
+  const owns = (value: string) => folded(value).split('/').some(part => part === '.git' || part === '.box');
+  if (owns(rel)) throw toolOwned(named);
   if (canonical !== null) {
     const inside = relative(root, canonical);
     if (inside !== '' && inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside)) {
-      if (segment(inside) === '.git' || segment(inside) === '.box') throw toolOwned(named);
+      if (owns(inside)) throw toolOwned(named);
       const gitDir = projectGitDir(root);
       if (gitDir !== null) {
         const inGit = relative(gitDir, canonical);

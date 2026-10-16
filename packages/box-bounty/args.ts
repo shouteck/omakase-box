@@ -4,8 +4,11 @@
 // option is either listed there and understood, or refused by name. One
 // function — parseOptions — applies the same rules to every command:
 //
-//   1. --help or -h anywhere: the command prints its usage and does nothing
-//      else (parseOptions returns { help: true }).
+//   1. --help or -h where an option name or a positional is expected: the
+//      command prints its usage and does nothing else (parseOptions returns
+//      { help: true }). The word after an option that takes a value is that
+//      value, whatever it looks like — `close --reason -h` records `-h` as
+//      the reason, as git and gh do (BT26).
 //   2. --name=value is read exactly as --name value; a switch given a value
 //      is a usage error ("--full takes no value").
 //   3. The named refusals run before the unknown-option rule: retired,
@@ -14,7 +17,9 @@
 //      whose table entry does not list it — status, look and config take
 //      it (BT19); every other command still refuses it by name.
 //   5. Any other option is a usage error naming it and the command.
-//   6. An option that takes a value, given none, is a usage error.
+//   6. An option that takes a value, given none, is a usage error — none
+//      means the line ends or the next word is another option the command
+//      lists; every other word is the value, dashes and all.
 //   7. An option given twice is a usage error — --include is the only
 //      repeatable one.
 //   8. More positionals than the command takes is a usage error naming the
@@ -267,8 +272,16 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
   const spec = BOUNTY_COMMANDS[command];
   if (spec === undefined) throw new Error(`no option table for ${command}`);
   const empty = { help: true as const, positionals: [], values: {}, repeated: {}, switches: new Set<string>() };
-  // 1. Help anywhere wins over everything — the command does nothing else.
-  if (argv.includes('--help') || argv.includes('-h')) return empty;
+  // 1. Help where an option name or a positional is expected wins over
+  //    everything — the command does nothing else. The word after an option
+  //    that takes a value is its value and is skipped here (a `--name=`
+  //    word carries its value inside itself), so `--reason -h` is a value
+  //    while `close --reason x -h` still prints help.
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i]!;
+    if (token === '--help' || token === '-h') return empty;
+    if (token.startsWith('-') && token !== '-' && !token.includes('=') && spec.values?.[token] !== undefined) i += 1;
+  }
   // 3. The named refusals scan the whole line before any option can be
   //    unknown (5); --json is itself a named refusal (4).
   for (let i = 0; i < argv.length; i += 1) {
@@ -314,9 +327,17 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
     if (rule !== undefined) {
       let value: string | undefined = inline;
       if (value === undefined) {
-        // 6. A value option with none — end of arguments, or a `--` word.
+        // 6. A value option with none — end of arguments, or a next word
+        //    that names an option the command lists. Every other word is
+        //    the value, whatever it looks like: `-`, `-h`, `--help`, an
+        //    unknown option — the git rule for an option needing a value.
         const next = argv[i + 1];
-        if (next === undefined || next.startsWith('--')) {
+        const namesOption = (word: string): boolean => {
+          if (!word.startsWith('-') || word === '-') return false;
+          const name = word.includes('=') ? word.slice(0, word.indexOf('=')) : word;
+          return spec.values?.[name] !== undefined || spec.switches?.[name] !== undefined;
+        };
+        if (next === undefined || namesOption(next)) {
           if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} needs ${rule.missing ?? 'a value'}; nothing changed`);
           throw new BountyUsage(`${flag} needs a value`, [`usage: ${spec.usage}`]);
         }

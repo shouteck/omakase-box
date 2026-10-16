@@ -1,7 +1,7 @@
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { resolveAttempt } from './github.js';
-import { attemptsOf, loadRecord, persistRecord, requireCurrentDelivery } from './record.js';
+import { attemptsOf, baseCommitOf, loadRecord, persistRecord, requireCurrentDelivery } from './record.js';
 import type { Attempt, BountyRecord } from './record.js';
 
 // `look` is a print path: the change the solver's pull request makes against
@@ -53,10 +53,11 @@ export function lookBounty(root: string, id: string, target: LookTarget, options
   record.attempts = attemptsOf(record).map(entry => entry.n === attempt.n && entry.seenAt === undefined ? { ...entry, seenAt: new Date().toISOString() } : entry);
   persistRecord(root, record);
   // The diff runs against the commit the bounty was made on: the published
-  // commit for a history post, else the recorded snapshot's base — new
-  // records store no snapshot, so the base the resume context recorded stands
-  // in (it is the same commit; a record from before contexts has none).
-  const base = record.github?.kind === 'history' ? record.github.commit : record.snapshot?.baseCommit ?? (record.resume?.kind === 'recorded' ? record.resume.commit : null);
+  // commit for a history post, else the record's base — new records store
+  // no snapshot, so the base the resume context recorded stands in (it is
+  // the same commit; a record from before contexts has none). baseCommitOf
+  // is the one read — its '(no commits yet)' sentinel is not a commit.
+  const base = record.github?.kind === 'history' ? record.github.commit : baseCommitOf(record);
   const from = base ?? '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
   const diffArgs = ['--no-ext-diff', '--no-textconv', '--no-renames'];
   const files = gitOutcome(root, ['diff', ...diffArgs, '--name-only', '-z', from, attempt.commit]).stdout.split('\0').filter(Boolean);
