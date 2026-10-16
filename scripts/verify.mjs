@@ -6,10 +6,10 @@
 // K5: a step already PASS on this exact commit with a clean tree reports `reused` (~0s) instead of re-running —
 // the recorded summary.json is the trust anchor, `--fresh` forces real runs. K23: a PASS on an ancestor (the
 // nearest 20 commits walked) also stands in for a step when every path between it and HEAD is one the step does
-// not read — a Result commit that only edits its wave file no longer re-runs the bounty suite. K24: a dirty
-// tree no longer refuses the run — the verdict stays UNCOMMITTED, but a step's PASS counts for the commit when
-// every path the tree was dirty in (start and end) is one that step does not read, so a wave file edited
-// mid-run costs no rerun. `check` runs only
+// not read — a Result commit that only edits its wave file no longer re-runs the bounty suite. K24: a tree
+// dirty at the start still refuses, but a run that ends dirty keeps a per-step reusable verdict — a step's
+// PASS counts for the commit when every path the tree was dirty in (start and end) is one that step does
+// not read, so a wave file edited mid-run costs no rerun. `check` runs only
 // the suites this branch's diff can reach (`--full` runs them all), and no suite runs twice inside one invocation.
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -136,17 +136,21 @@ async function database() {
 const startedAt = new Date();
 const runDirectory = join(root, '.kitchen', 'runs', `${startedAt.toISOString().replace(/[:.]/g, '-')}-${sha.slice(0, 7)}`);
 mkdirSync(runDirectory, { recursive: true });
-// K24: a dirty tree no longer refuses the run — the verdict stays
-// UNCOMMITTED (+dirty, exit 3) and every step still executes, but a step's
-// PASS counts for the commit when every path the tree was dirty in, at the
-// start and again at the end, is one that step does not read (the same
-// stepReadsPath rule the ancestor reuse below uses). A step that read a
-// dirty path ran against uncommitted content: its result is recorded with
-// reusable:false and stands for nothing.
 if (dirty) {
-  console.error('verify: the working tree has uncommitted changes — every step runs, but only a step that reads none of these paths counts for the commit:');
+  const line = `verify ${sha.slice(0, 7)}+dirty UNCOMMITTED not-run=${steps.join(',')} db=none 0s (refused before database, build and tests: uncommitted changes)`;
+  writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: true, verdict: 'UNCOMMITTED', startedAt: startedAt.toISOString(), seconds: 0, database: 'none', profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: null, steps: [], notRun: steps, dirtyPaths: dirtyPathsStart, failure: 'uncommitted changes in the working tree', line }, null, 2) + '\n');
+  console.error('verify: refusing before database, build or test work — the working tree has uncommitted changes:');
   for (const path of dirtyPathsStart) console.error(`  ${path}`);
+  console.log(`\n${line}\nLogs: ${runDirectory}`);
+  process.exit(3);
 }
+// K24: a run that STARTS clean but ends dirty — a wave file edited while the
+// suites ran — is no longer wasted. The verdict stays UNCOMMITTED (+dirty,
+// exit 3), but a step's PASS counts for the commit when every path the tree
+// was dirty in, at the start and again at the end, is one that step does not
+// read (the same stepReadsPath rule the ancestor reuse below uses). A step
+// that read a dirty path ran against uncommitted content: its result is
+// recorded with reusable:false and stands for nothing.
 const pnpm = fileURLToPath(new URL('./pnpm.mjs', import.meta.url));
 function runStep(name, env) {
   return new Promise(resolve => {

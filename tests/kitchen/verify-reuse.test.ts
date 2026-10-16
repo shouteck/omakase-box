@@ -420,8 +420,12 @@ describe('verify reuses an ancestor PASS when the commits between read nothing t
 });
 
 describe('verify counts a dirty run for the steps that read none of it (K24, end to end)', () => {
-  it('a tree dirty only in waves/ still runs and counts for test:box-bounty, not test:kitchen; a packages/ dirty run counts for nothing', () => {
-    // The same fake-repository harness as the K22/K23 tests above.
+  it('a run that ends dirty only in waves/ counts for test:box-bounty, not test:kitchen; one dirty in packages/ counts for nothing', () => {
+    // The same fake-repository harness as the K22/K23 tests above, with one
+    // addition: the `build` stub dirties the path DIRTY_STEP names while the
+    // run is in flight — the wave-file-edit-during-verify case. A tree dirty
+    // before verify starts is still refused (k7-ci-clean-checkout), so a
+    // dirty run only ever comes from mid-run edits.
     const dir = temp();
     mkdirSync(join(dir, 'scripts'), { recursive: true });
     for (const name of readdirSync(join(root, 'scripts'))) {
@@ -431,7 +435,8 @@ describe('verify counts a dirty run for the steps that read none of it (K24, end
     mkdirSync(pnpmBin, { recursive: true });
     writeFileSync(join(pnpmBin, 'pnpm.cjs'), "const { spawnSync } = require('child_process');\nconst { readFileSync } = require('fs');\nconst { join } = require('path');\nconst scripts = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).scripts;\nconst name = process.argv[process.argv.indexOf('run') + 1];\nconst command = scripts[name];\nif (!command) process.exit(2);\nprocess.exit(spawnSync(command, { shell: true, stdio: 'inherit', cwd: process.cwd() }).status ?? 1);\n");
     const stub = 'node -e "process.exit(0)"';
-    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { check: stub, build: stub, 'test:box-bounty': stub, 'test:kitchen': stub } }));
+    const dirtyStub = 'node -e "const p=process.env.DIRTY_STEP;if(p){const fs=require(\'fs\');const path=require(\'path\');fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,\'x\')}process.exit(0)"';
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { check: stub, build: dirtyStub, 'test:box-bounty': stub, 'test:kitchen': stub } }));
     writeFileSync(join(dir, '.gitignore'), '.kitchen/\n');
     writeFileSync(join(dir, 'tracked.txt'), 'base\n');
     const gitDir = dir.replace(/[\\/]+$/, '').replaceAll(String.fromCharCode(92), '/');
@@ -441,7 +446,7 @@ describe('verify counts a dirty run for the steps that read none of it (K24, end
     git(['add', '-A']);
     git(['commit', '-qm', 'init']);
     git(['checkout', '-q', '-b', 'wave']);
-    const verify = (extra: string[] = []) => spawnSync(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--db=none', ...extra, 'test:box-bounty'], { cwd: dir, encoding: 'utf8', timeout: 120000 });
+    const verify = (extra: string[] = [], env: Record<string, string> = {}) => spawnSync(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--db=none', ...extra, 'test:box-bounty'], { cwd: dir, encoding: 'utf8', timeout: 120000, env: { ...process.env, ...env } });
     const runsDir = join(dir, '.kitchen', 'runs');
     const names = () => new Set(existsSync(runsDir) ? readdirSync(runsDir) : []);
     const latestRun = (before: Set<string>) => readdirSync(runsDir).find(name => !before.has(name))!;
@@ -453,14 +458,12 @@ describe('verify counts a dirty run for the steps that read none of it (K24, end
     const first = verify();
     expect(first.status).toBe(0);
 
-    // Now a wave file sits uncommitted in the tree. The run still executes —
+    // A wave file appears while the run is in flight. The run finishes —
     // verdict UNCOMMITTED, exit 3 — and its record says which steps count:
     // everything but test:kitchen, the only step that reads waves/*.md.
     // --fresh so this run's own step results (with logs) are what get judged.
-    mkdirSync(join(dir, 'waves'), { recursive: true });
-    writeFileSync(join(dir, 'waves', 'K99.md'), '# wave\n');
     before = names();
-    const dirtyRun = verify(['--fresh']);
+    const dirtyRun = verify(['--fresh'], { DIRTY_STEP: 'waves/K99.md' });
     expect(dirtyRun.status).toBe(3);
     expect(dirtyRun.stdout).toContain('+dirty UNCOMMITTED');
     const dirtyName = latestRun(before);
@@ -486,13 +489,11 @@ describe('verify counts a dirty run for the steps that read none of it (K24, end
     expect(afterStep('test:box-bounty').reused).toBe(dirtyName);
     expect(afterStep('test:kitchen').reused).toBeUndefined();
 
-    // A packages/ path is read by every step: the run still executes and is
+    // A packages/ path is read by every step: the run finishes and is
     // recorded, but nothing in it counts — reusable:false across the board,
     // and once committed the suites run for real.
-    mkdirSync(join(dir, 'packages', 'box-package'), { recursive: true });
-    writeFileSync(join(dir, 'packages', 'box-package', 'index.ts'), 'export {};\n');
     before = names();
-    const productDirty = verify(['--fresh']);
+    const productDirty = verify(['--fresh'], { DIRTY_STEP: 'packages/box-package/index.ts' });
     expect(productDirty.status).toBe(3);
     const productSummary = summary(latestRun(before));
     expect(productSummary.steps.every((step: Json) => step.reusable === false)).toBe(true);
