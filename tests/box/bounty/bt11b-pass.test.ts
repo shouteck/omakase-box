@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import './support.js';
 import { applyBounty, answerGitHub, parsePayTo, postBounty, renderStatus, runHook } from '../../../packages/box-bounty/index.js';
 import { readFormat } from '../../../packages/box-bounty/format.js';
-import { fixture } from './github-fixture.js';
+import { fixture, sharedFixture } from './github-fixture.js';
 import type { GhState } from './github-fixture.js';
 
 // BT11b — the pass's own probes, written by the reviewer on the branch. They
@@ -88,13 +88,21 @@ describe('the format block, wrongly versioned', () => {
 // Whom the message names: the merged solution's solver and pull request,
 // never a different one and never text the solver wrote.
 describe('the pay message, under attack', () => {
-  it('names the solver whose solution was merged — the other solver never appears', () => fixture(({ repo, id, scratch, state, update, pr }) => {
+  // K24: one world for the two legs — the single journey timed out at the
+  // suite limit under verify's embedded-db load. Same calls, same order.
+  const twoSolverWorld = sharedFixture('Repair app');
+  const { repo, id, scratch, state, update, pr } = twoSolverWorld;
+
+  it('names the solver whose solution was merged — both answers collected', () => twoSolverWorld.run(() => {
     reward5(scratch);
     postBounty(repo, id, 'github');
     pr('solver-a'); body(state, update, 1, `fix\npay-to: ${STRIPE_LIVE}`);
     pr('solver-b'); body(state, update, 2, `fix\npay-to: ${STRIPE_TEST}`);
     answerGitHub(repo, id, 1);
     answerGitHub(repo, id, 2);
+  }));
+
+  it('names the solver whose solution was merged — the other solver never appears', () => twoSolverWorld.run(() => {
     const result = applyBounty(repo, id, 2); // the second solution is the merged one
     const message = result.payMessage!.join('\n');
     expect(message).toContain('solver-b');
@@ -102,7 +110,7 @@ describe('the pay message, under attack', () => {
     expect(message).toContain(STRIPE_TEST);
     expect(message).not.toContain('solver-a');
     expect(message).not.toContain(STRIPE_LIVE); // the unmerged solver's link never shows
-  }, 'Repair app'));
+  }));
 
   it('carries the link as the description stands at close — a solver swap wins, stated', () => fixture(({ repo, id, scratch, state, update, pr }) => {
     reward5(scratch);
