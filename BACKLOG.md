@@ -4,6 +4,7 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- BT25 cosmetic nits: two comments were split mid-sentence by the module extraction — `record.ts:602` keeps an orphaned first line (rest above `endedNextStep` in `render.ts`) and `render.ts:101` holds the tail of `renderStatus`'s doc. Cosmetic reader-load only; fix when either file is next touched. See [BT25](waves/BT25.md).
 - BT24 leftovers: `look.ts`'s base fallback reads `record.resume.commit` unguarded (a `'(no commits yet)'` sentinel record would print an empty diff as fact — unreachable on tool-written records today; `json.ts` already gates it, one clause would fix); and no suite test pins the merge message's `snapshot:` line absent on new records. See [BT24](waves/BT24.md).
 - BT19 leftover: no invariant pins "every fact the `--full` text view prints has a `status --json` document counterpart" — the first draft dropped five such facts (caught at review, fixed in `7d6151e`), and a future text line can regress the same way. Candidate check: a derived agreement test over the text view's fact list. See [BT19](waves/BT19.md).
 - BT15 task-text scan boundary: selected working files and newly published Git patches/includes are scanned; issue task text itself is not. External task files already had this boundary; stdin has no incidental in-repository file scan. Scanner rules were deliberately unchanged. See [BT15](waves/BT15.md).
