@@ -19,6 +19,7 @@ What will be true when this is done, as something a person can observe or a comm
 - <behavioural check 1, including at least one case that must fail>
 - <behavioural check 2>
 - <if a check is a search for leftover names, list the renames you expect, so a legitimate one is not a surprise>
+- <if the wave claims an invariant over code paths — "no read calls the writer", "nothing reaches X" — name the mechanical check that enumerates every caller (a grep, a spy); a list written from memory missed one in BT22 and the pass caught it>
 - <if this wave removes, skips or speeds up a check: first write the test that proves a real break is still caught, then make the change>
 
 ## Review lenses
