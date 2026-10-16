@@ -24,7 +24,9 @@ import { discoverInstructions, instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
 import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
-import { applicableAttempts, attemptsOf, endedNextStep, isOpenStage, listRecords, loadRecord, nextStep, notNext, persistRecord, promisedTotal } from './record.js';
+import { applicableAttempts, attemptsOf, isOpenStage, listRecords, loadRecord, persistRecord } from './record.js';
+import { promisedTotal } from './money.js';
+import { endedNextStep, nextStep, notNext } from './render.js';
 import type { Attempt, BountyRecord, ScanFinding, StageEvent, WaitingFor } from './record.js';
 import { actingOn, askMergeNoticeLine, loadSettings, loadState, localFirstMergeLine, readDecision, readInstructions, repoReward, repositoryIdentity, rewardNoticeLine, saidOnce, settingsFile } from './settings.js';
 

@@ -2,7 +2,8 @@ import { asOneCommand } from './git.js';
 import { applyBounty as applyBountyCommand } from './answer.js';
 import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand, previewGitHub as previewGitHubCommand } from './github.js';
 import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
-import { closeBounty as closeBountyCommand, postBounty as postBountyCommand, renderStatus as renderStatusCommand } from './record.js';
+import { closeBounty as closeBountyCommand, postBounty as postBountyCommand } from './commands.js';
+import { renderStatus as renderStatusCommand } from './render.js';
 import { lookBounty as lookBountyCommand } from './look.js';
 import { statusDocument as statusDocumentCommand, configDocument as configDocumentCommand } from './json.js';
 
@@ -47,9 +48,15 @@ export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js'
 export { NOTHING_RUN } from './answer.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
-export { applicableAttempts, assertPromiseRoom, attemptRefName, attemptsOf, canonicalForNew, firstUseBlock, isOpenStage, listRecords, loadRecord, mergeWaitLines, ownerBlock, ownerGate, ownerWaitLines, persistRecord, promisedTotal, recordDir, recordPath, refName, requireCurrentDelivery, renderHelp, renderOpenLine, renderResume, renderOverview, retiredRoute, rewardForPost, setInstructionNoticeListener, transitionTo, waitForOwner, waitingSummary, withPromiseLock, writeNewRecord } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, transitionTo, writeNewRecord } from './record.js';
+export { ownerGate, waitForOwner } from './gate.js';
+export { assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
+export { waitingSummary } from './owner-text.js';
+export { renderHelp, renderOpenLine, renderResume, renderOverview, setInstructionNoticeListener } from './render.js';
+export { firstUseBlock, mergeWaitLines, ownerBlock, ownerWaitLines } from './owner-text.js';
 export { boundAmount } from './format.js';
-export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, CloseOutcome, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
+export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
+export type { CloseOutcome } from './commands.js';
 export { allowRepository, allowBounty, denyRepository, renderConfig, changeConfig, renderSummary } from './owner.js';
 export { actingOn, askMergeNoticeLine, loadSettings, loadState, projectKey, readDecision, readReward, repoReward, repositoryIdentity, requireRepository, rewardNoticeLine, saveState, settingsDir, settingsFile, stateFile, unlistedRemotes, writeDecision, SETTINGS_ENV, STATE_FILE_NAME } from './settings.js';
 export type { DecisionRead, OwnerDecision, OwnerSettings, ToolState } from './settings.js';

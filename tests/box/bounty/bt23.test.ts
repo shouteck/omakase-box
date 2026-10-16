@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applicableAttempts, applyBounty, attemptsOf, BountyRefused, closeBounty, finalizeBounty, loadRecord, planBounty, renderStatus } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
-import { nextStep, ownerWaitLines, retiredRoute } from '../../../packages/box-bounty/record.js';
+import { retiredRoute } from '../../../packages/box-bounty/record.js';
+import { nextStep } from '../../../packages/box-bounty/render.js';
+import { ownerWaitLines } from '../../../packages/box-bounty/owner-text.js';
 import { ROOT, git, makeRepo, runRoot } from './support.js';
 import { withoutGh } from './github-fixture.js';
 
