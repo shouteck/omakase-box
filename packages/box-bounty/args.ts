@@ -65,6 +65,8 @@ export interface CommandSpec {
   readonly usage: string;
   /** One line on what the command does — its line from `bounty help`. */
   readonly blurb: string;
+  /** One command line a newcomer can copy — printed by --help (BT12). */
+  readonly example: string;
   /** Positionals accepted; one more is a usage error naming the word. */
   readonly positionals: number;
   readonly values?: Readonly<Record<string, OptionRule>>;
@@ -106,17 +108,20 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   overview: {
     label: 'box bounty', usage: 'box bounty [--repo <path>]',
     blurb: 'the standing picture — every open bounty, what each waits on, and the next step',
+    example: 'box bounty',
     positionals: 0,
     values: { '--repo': REPO }
   },
   help: {
     label: 'box bounty help', usage: 'box bounty help',
     blurb: 'the whole journey on one screen — what each command does and the stage it leaves',
+    example: 'box bounty help',
     positionals: 0
   },
   describe: {
     label: 'box bounty describe', usage: 'box bounty describe [--rules] [--repo <path>]',
     blurb: 'what the tool does, when it is worth using and when not, plus the facts to choose',
+    example: 'box bounty describe',
     positionals: 0,
     values: { '--repo': REPO },
     switches: { '--rules': { help: "print the block for a project's rules file" } }
@@ -124,6 +129,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   create: {
     label: 'box bounty create', usage: 'box bounty create --task <file|-> --why "<one line>" [--title "<one line>"] [--resume "<context>"] [--repo <path>]',
     blurb: 'save the task and private context and snapshot the working state → drafted',
+    example: 'box bounty create --task TASK.md --why "beyond what this agent can do"',
     positionals: 0,
     values: {
       '--task': { arg: '<file|->', help: 'the task file written for the solver; "-" reads standard input' },
@@ -143,6 +149,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   status: {
     label: 'box bounty status', usage: 'box bounty status [<id>] [--full] [--comments] [--since <iso>] [--json] [--repo <path>]',
     blurb: 'every open bounty, the pull requests waiting, the attempts and the next step',
+    example: 'box bounty status bt-a1b2c3d4e5f6 --comments',
     positionals: 1,
     values: {
       '--since': { arg: '<iso>', help: 'also print the summary of what changed since that time' },
@@ -157,6 +164,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   post: {
     label: 'box bounty post', usage: 'box bounty post [<id>] [--with-changes] [--include <file>] [--preview] [--repo <path>]',
     blurb: 'publishes the GitHub issue and branch → posted — or waits on the owner',
+    example: 'box bounty post bt-a1b2c3d4e5f6 --preview',
     positionals: 1,
     values: {
       '--include': { arg: '<file>', repeatable: true, help: 'publish this untracked file too; once per file' },
@@ -175,6 +183,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   look: {
     label: 'box bounty look', usage: 'box bounty look [<id>] <n> [--full] [--json] [--repo <path>]',
     blurb: 'collect pull request <n> (or show solution <n> already collected) — its change, written by the solver and marked as theirs',
+    example: 'box bounty look bt-a1b2c3d4e5f6 2',
     positionals: 2,
     values: { '--repo': REPO },
     switches: {
@@ -186,6 +195,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   apply: {
     label: 'box bounty apply', usage: 'box bounty apply [<id>] [<n>] [--repo <path>]',
     blurb: 'merge a solution onto the current code — collects like look when <n> names a pull request → applied',
+    example: 'box bounty apply bt-a1b2c3d4e5f6 2',
     positionals: 2,
     values: { '--repo': REPO },
     refused: (flag) => folderRefusal(flag)
@@ -196,6 +206,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   close: {
     label: 'box bounty close', usage: 'box bounty close [<id>] [--reason "<text>"] [--repo <path>]',
     blurb: 'end a bounty with nothing merged → rejected with --reason, withdrawn without',
+    example: 'box bounty close bt-a1b2c3d4e5f6 --reason "solved it myself"',
     positionals: 1,
     values: {
       '--reason': { arg: '"<text>"', help: 'the why, kept on the record' },
@@ -205,6 +216,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   allow: {
     label: 'box bounty allow', usage: 'box bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>] [--repo <path>]',
     blurb: 'the owner allows the tool — for this repository, or by default; answers a waiting bounty or merge',
+    example: 'box bounty allow owner/project',
     positionals: 1,
     authority: true,
     values: {
@@ -217,6 +229,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   deny: {
     label: 'box bounty deny', usage: 'box bounty deny [owner/name] [--repo <path>]',
     blurb: 'the owner refuses the tool for this repository',
+    example: 'box bounty deny owner/project',
     positionals: 1,
     authority: true,
     values: { '--repo': REPO }
@@ -224,6 +237,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   config: {
     label: 'box bounty config', usage: 'box bounty config [set|add|remove <setting> <value> [owner/name]] [--full] [--json] [--repo <path>]',
     blurb: "the owner's settings — the reward, the repository list, what the tool may do",
+    example: 'box bounty config set reward 10',
     positionals: 4,
     authority: true,
     values: { '--repo': REPO },
@@ -235,6 +249,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
   hook: {
     label: 'box bounty hook', usage: 'box bounty hook | box bounty hook on|off --host <name> | box bounty hook start|pause|finish [--explain] [--repo <path>]',
     blurb: 'owner-opt-in awareness at session moments: on|off per host; start|pause|finish is what a host entry runs',
+    example: 'box bounty hook on --host devin',
     positionals: 1,
     values: {
       '--host': { arg: '<name>', help: 'the host the hook is for' },
@@ -265,7 +280,30 @@ export function commandHelp(command: string): string {
   const lines = [`usage: ${spec.usage}`, `  ${spec.blurb}`];
   for (const [flag, rule] of Object.entries(spec.values ?? {})) lines.push(`  ${flag}${rule.arg === undefined ? '' : ` ${rule.arg}`} — ${rule.help}`);
   for (const [flag, rule] of Object.entries(spec.switches ?? {})) lines.push(`  ${flag} — ${rule.help}`);
+  lines.push(`  example: ${spec.example}`);
   return lines.join('\n');
+}
+
+// Edit distance for the did-you-mean on an unknown option — small, exact, no
+// library. The nearest listed option is named however far away it is: the
+// refusal's job is to point at a real spelling, not to guess well (BT12).
+function nearestOption(flag: string, spec: CommandSpec): string | undefined {
+  const known = [...Object.keys(spec.values ?? {}), ...Object.keys(spec.switches ?? {})];
+  if (known.length === 0) return undefined;
+  const distance = (a: string, b: string): number => {
+    const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i += 1) {
+      let diagonal = row[0]!;
+      row[0] = i;
+      for (let j = 1; j <= b.length; j += 1) {
+        const next = row[j]!;
+        row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, diagonal + (a[i - 1] === b[j - 1] ? 0 : 1));
+        diagonal = next;
+      }
+    }
+    return row[b.length]!;
+  };
+  return known.reduce((best, option) => distance(flag, option) < distance(flag, best) ? option : best);
 }
 
 export function parseOptions(command: string, argv: readonly string[]): ParsedOptions {
@@ -351,8 +389,10 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
       } else values[flag] = value;
       continue;
     }
-    // 5. An option the command does not list is a usage error naming it.
-    fail(`unknown option ${flag} for ${spec.label}`);
+    // 5. An option the command does not list is a usage error naming it and
+    //    the nearest option the command does list — never silently ignored.
+    const nearest = nearestOption(flag, spec);
+    fail(`unknown option ${flag} for ${spec.label}${nearest === undefined ? '' : ` — did you mean ${nearest}?`}`);
   }
   return { help: false, positionals, values, repeated, switches };
 }

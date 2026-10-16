@@ -127,3 +127,42 @@ jobs:
           path: .kitchen/runs/
           retention-days: 3
           if-no-files-found: ignore
+
+  # BT12: the installable package's declared floor is Node 22 (NODE_MINIMUM in
+  # packages/box-cli/src/node-check.ts), so the packed artifact's install
+  # test and packaging test run on Node 22 here — the oldest Node the
+  # package claims. The repository's own toolchain pins Node 24 (root
+  # engines ">=24.11.0 <25"; pnpm refuses to install a project whose own
+  # engines exclude the running Node), so dependencies are installed and the
+  # artifact is packed with 24 first; only then does the job switch to the
+  # current Node 22 release and run the two files, which pack the artifact
+  # again under 22 and drive the whole $0 journey through it.
+  install-node22:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # Pinned to a full commit SHA, never a moving tag: v7.1.0.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+
+      - name: Install repository-local pnpm
+        run: npm ci --prefix scripts/tooling --ignore-scripts
+
+      - name: Install dependencies (frozen lockfile)
+        run: node scripts/pnpm.mjs install --frozen-lockfile
+
+      - name: Build the package artifact (Node 24)
+        run: node packages/box-cli/pack.mjs
+
+      - name: Switch to Node 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+
+      - name: Install and packaging tests on Node 22
+        run: |
+          node --version
+          node scripts/suite.mjs box --suite bounty tests/box/bounty/bt12-install.test.ts tests/box/bounty/bt12-package.test.ts

@@ -69,7 +69,7 @@ export { recordScanFinding, settleScanFindings } from './record.js';
 export type { ScanFinding } from './record.js';
 export { renderDescribe, renderRules } from './tell.js';
 export { readGitPinsOncePerProcess } from './git.js';
-export { DESCRIBE_LINES, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
+export { DESCRIBE_LINES, INSTALL_PACKAGE, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
 export { checkMergedSolutions, noticeMergedSolutions, setMergeNoticeListener } from './merged.js';

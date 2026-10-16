@@ -15,6 +15,13 @@ Open the project in Claude Code, Devin, Cursor or Codex and give the agent:
 
 It reads the status, continues the approved milestone or presents the next proposal, and waits for your "Approve" only at milestone boundaries.
 
+## The bounty tool, for users
+
+`box bounty` is the product this repository builds: one command for an agent to
+hand off work it cannot or should not do. [FIRST-FIVE-MINUTES.md](FIRST-FIVE-MINUTES.md)
+is the page for a new owner or agent — what it does, the one install command,
+the first bounty, and how to remove it.
+
 ## Development
 
     npm ci --prefix scripts/tooling --ignore-scripts
