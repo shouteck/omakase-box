@@ -19,4 +19,4 @@ Updated by the CTO on 16 October 2026 at the BT18–BT25 run close.
 
 ## Next
 
-Nothing is in flight; the agreed queue is empty. The two owner decisions (closing up says so; `--json` on the three readers) are shipped. BT12 (the npm package) stays proposed and waits for the owner. Kitchen waves cook only when named or from the night queue.
+Nothing is in flight. The CTO reviewed K23 and BT18 to BT25 (cooked by a lower-reasoning model) on 16 October 2026 at the owner's request: all nine merged with independent passes and green hosted runs; two needed a correction round, which the passes caught. Three follow-up waves are briefed in detail: **BT26** (the leftovers the passes named), **K24** (no test near its time limit; a wave-file edit during verify costs no rerun), **BT27** (split `github.ts`, zero import cycles). Suggested order: BT26, K24, BT27. Each cooks only when named. BT12 (the npm package) stays proposed and waits for the owner.
