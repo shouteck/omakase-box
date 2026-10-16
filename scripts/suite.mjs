@@ -119,32 +119,49 @@ export function selectCheckSuites(rootDir = root, { full = false } = {}) {
 // unreadable diff owes it too — the same fail-safe as check's every-suite
 // fallback. Returns the reason for verify to print, or null.
 const KITCHEN_SUITE_TRIGGERS = ['packages/box-bounty/', 'packages/box-cli/'];
+const KITCHEN_READ_REASON = 'the change touches a file a kitchen test reads';
 export function kitchenSuiteReason(paths) {
   if (paths === null) return 'the diff cannot be read — run it rather than guess';
   if (paths.some(path => KITCHEN_SUITE_TRIGGERS.some(prefix => path.startsWith(prefix)))) return 'the change reaches the built CLI the kitchen demo drives';
-  if (paths.some(isKitchenRead)) return 'the change touches a file a kitchen test reads';
+  if (paths.some(isKitchenRead)) return KITCHEN_READ_REASON;
   return null;
 }
+
+// Does this step read this path? K23's ancestor reuse and K24's dirty-tree
+// reuse share the one answer: the files a kitchen test reads
+// (KITCHEN_TEST_READS, waves/*.md — the paths kitchenSuiteReason reports)
+// count as read by test:kitchen alone; to every other step they are the docs
+// they look like. Any other non-inert path every step reads — an unmapped
+// path always means "run it", never "skip it".
+export const stepReadsPath = (step, path) =>
+  kitchenSuiteReason([path]) === KITCHEN_READ_REASON ? step === 'test:kitchen' : !isInert(path);
 
 // --- when an earlier PASS may stand in ----------------------------------------
 
 // The trust anchor is the summary.json content — never the directory name or
 // its mtime. A step may report `reused` only from a run whose summary says:
-// this exact commit, a clean tree, verdict PASS, and this step exited 0.
-// Consistency checks ride along so copied or hand-written records fail safe:
-// the directory name must be exactly what verify would have made from that
-// summary's own fields, and the step's log must exist. A reused `check` must
-// also have covered at least the suites this invocation needs (pass `suites`),
-// so a --full request never inherits a partial check; summaries from before
-// this field existed ran all check suites. Anything that doesn't parse or
-// match means a real run.
+// this exact commit, verdict PASS on a clean tree, and this step exited 0 —
+// or (K24) a run whose tree was dirty only in paths this step does not read:
+// the summary's dirtyPaths (start and end of that run) decide, with
+// stepReadsPath giving the same answer the ancestor walk gives. A dirty run
+// that recorded no path list proves nothing. Consistency checks ride along
+// so copied or hand-written records fail safe: the directory name must be
+// exactly what verify would have made from that summary's own fields, and
+// the step's log must exist. A reused `check` must also have covered at
+// least the suites this invocation needs (pass `suites`), so a --full
+// request never inherits a partial check; summaries from before this field
+// existed ran all check suites. Anything that doesn't parse or match means
+// a real run.
 export function reusableStep(runsDir, sha, stepName, { suites = null } = {}) {
   for (const run of readRuns(runsDir).reverse()) {
-    if (run.summary !== 'ok' || run.sha !== sha || run.dirty !== false || run.verdict !== 'PASS') continue;
+    if (run.summary !== 'ok' || run.sha !== sha) continue;
     let parsed;
     try { parsed = JSON.parse(readFileSync(join(runsDir, run.name, 'summary.json'), 'utf8')); } catch { continue; }
     if (typeof parsed?.startedAt !== 'string' || Number.isNaN(Date.parse(parsed.startedAt))) continue;
     if (run.name !== `${parsed.startedAt.replace(/[:.]/g, '-')}-${sha.slice(0, 7)}`) continue;
+    if (run.dirty === true) {
+      if (!Array.isArray(parsed.dirtyPaths) || parsed.dirtyPaths.some(path => stepReadsPath(stepName, path))) continue;
+    } else if (run.dirty !== false || run.verdict !== 'PASS') continue;
     if (suites) {
       const covered = Array.isArray(parsed.checkSuites) ? parsed.checkSuites : CHECK_SUITES;
       if (!suites.every(suite => covered.includes(suite))) continue;
