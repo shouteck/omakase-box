@@ -236,18 +236,31 @@ describe('collection — an answered bounty waits on a decision', () => {
     expect(refGone(repo, id)).toBe(true);
   });
 
-  it('close --reason ends an answered bounty with the reason kept on the event', () => {
-    const repo = makeRepo({ 'src/app.py': 'x\n' });
-    const { id, delivered } = posted(repo);
-    const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
-    expect(collectPullRequest(repo, id, dir).attempt.outcome).toBe('answered');
+  // K24: one posted world, two legs — the single close journey ran past
+  // half its 30 s limit under load. Same assertions, same order; the suite
+  // wipes owner settings before each `it`, so the second leg re-states the
+  // same decision the first leg's post needed.
+  describe('close --reason ends an answered bounty with the reason kept on the event', () => {
+    let repo: string;
+    let id: string;
 
-    closeGitHub(repo, id, 'not what was asked for');
-    const record = readRecord(repo, id);
-    expect(record.stage).toBe('rejected');
-    expect(record.events.at(-1)!.reason).toBe('not what was asked for');
-    expect(refGone(repo, id)).toBe(true);
-    expect(statusGitHub(resolveRepoRoot(repo))).toContain(`${id} rejected (job: a task)`);
+    it('the answer is collected', () => {
+      repo = makeRepo({ 'src/app.py': 'x\n' });
+      const { id: bountyId, delivered } = posted(repo);
+      id = bountyId;
+      const dir = returned(delivered, root => write(root, 'repo/src/app.py', 'y\n'));
+      expect(collectPullRequest(repo, id, dir).attempt.outcome).toBe('answered');
+    });
+
+    it('the close keeps the reason on the event', () => {
+      ownerSays(repo, 'allowed');
+      closeGitHub(repo, id, 'not what was asked for');
+      const record = readRecord(repo, id);
+      expect(record.stage).toBe('rejected');
+      expect(record.events.at(-1)!.reason).toBe('not what was asked for');
+      expect(refGone(repo, id)).toBe(true);
+      expect(statusGitHub(resolveRepoRoot(repo))).toContain(`${id} rejected (job: a task)`);
+    });
   });
 });
 

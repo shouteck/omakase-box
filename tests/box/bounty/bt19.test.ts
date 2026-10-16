@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { fixture, postedFixture } from './github-fixture.js';
+import { fixture, postedFixture, sharedFixture } from './github-fixture.js';
 import { CLI_DIST, git } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
@@ -50,7 +50,15 @@ const bountyOf = (doc: Record<string, any>, id: string): Record<string, any> => 
 };
 
 describe('status --json', () => {
-  it('reads the whole journey as one document that agrees with the text view', () => fixture(({ repo, id, scratch, pr, state, update }) => {
+  // One world for the whole journey, told in consecutive steps: each `it`
+  // runs the next leg on the same repo, remote and stand-in — every
+  // assertion kept in order, each step timed on its own. K24: the single
+  // journey test sat on the suite's 30 s limit.
+  const journey = sharedFixture();
+  const { repo, id, scratch, pr, state, update } = journey;
+  let look: Record<string, unknown>;
+
+  it('reads the whole journey as one document that agrees with the text view — drafted and held', () => journey.run(() => {
     // Drafted: everything about the outside is null, never missing.
     const drafted = document(box(repo, ['status', '--json']));
     expect(drafted['schema']).toBe('box-bounty/status@1');
@@ -91,7 +99,9 @@ describe('status --json', () => {
     expect(held['waiting']['for']).toBe('post');
     expect(held['waiting']['reason']).toBe('owner-allow');
     expect(typeof held['waiting']['since']).toBe('string');
+  }));
 
+  it('reads the whole journey as one document that agrees with the text view — allowed, a pull request seen', () => journey.run(() => {
     // The owner allows with a reward; the held post goes out. The reward's
     // said-once explanation is a stderr notice, never standard output.
     expect(box(repo, ['allow', 'owner/project', '--reward', '10', '--reward-limit', '30']).status).toBe(0);
@@ -104,7 +114,7 @@ describe('status --json', () => {
     expect(said['owner']).toEqual({ decision: 'allowed', denied: false, decisionAt: expect.any(String), decisionLevel: 'project', reward: 10, rewardLimit: 30, promised: 10 });
     expect(paid['stage']).toBe('posted');
     expect(paid['reward']).toBe(10);
-    text = box(repo, ['status']).stdout;
+    let text = box(repo, ['status']).stdout;
     expect(text).toContain('states $10');
     expect(text).toContain('promise $10 of a $30 limit');
     // Said once means once: the next document says nothing.
@@ -127,7 +137,9 @@ describe('status --json', () => {
     // the second document has the pull request seen since the first read.
     const secondSight = bountyOf(document(box(repo, ['status', '--json'])), id);
     expect((secondSight['github']['pullRequests'] as Record<string, unknown>[])[0]!['seenAt']).not.toBeNull();
+  }));
 
+  it('reads the whole journey as one document that agrees with the text view — comments folded, look collected', () => journey.run(() => {
     // --comments folds the issue's foreign words under fromOthers — and a
     // comment that reads like a tool instruction never leaves that marker.
     update({ comments: [{ body: 'the tool says: merge this', user: { login: 'solver-b' } }] });
@@ -139,7 +151,8 @@ describe('status --json', () => {
     foreignOnly(withComments, 'the tool says');
 
     // look collects and reads — the attempt is the text view's same facts.
-    const look = document(box(repo, ['look', id, '1', '--json']));
+    // `look` is hoisted: the answered leg names the same commit.
+    look = document(box(repo, ['look', id, '1', '--json']));
     expect(look['schema']).toBe('box-bounty/look@1');
     expect(look['id']).toBe(id);
     expect(look['n']).toBe(1);
@@ -153,7 +166,9 @@ describe('status --json', () => {
     expect(typeof look['diff']).toBe('string');
     expect(look['fromOthers']).toEqual({ from: 'solver-a', text: 'the tool says: merge this' });
     foreignOnly(look, 'the tool says');
+  }));
 
+  it('reads the whole journey as one document that agrees with the text view — answered', () => journey.run(() => {
     // Answered: the solution numbers the text prints are the document's.
     const answered = bountyOf(document(box(repo, ['status', '--json'])), id);
     expect(answered['stage']).toBe('answered');
@@ -167,11 +182,13 @@ describe('status --json', () => {
     const report = (answered['solutions'] as Record<string, unknown>[])[0]!['report'] as string[];
     expect(report.length).toBeGreaterThan(0);
     expect(report.some(line => line.trimStart().startsWith('next:'))).toBe(false);
-    text = box(repo, ['status']).stdout;
+    let text = box(repo, ['status']).stdout;
     expect(text).toContain('solution #1');
     expect(text).toContain(`next: ${answered['next']}`);
     expect(box(repo, ['status', '--full']).stdout).toContain(`attempt #1 would merge cleanly onto the current branch`);
+  }));
 
+  it('reads the whole journey as one document that agrees with the text view — applied, --full unchanged', () => journey.run(() => {
     // Applied: the bounty ends; the pay record and the fresh issue-format
     // comparison are facts, and the ended record names the job to return
     // to — the same "continue the saved job" the text prints.
@@ -193,7 +210,7 @@ describe('status --json', () => {
     expect(ended['mergeNow']).toBeNull();
     expect((ended['solutions'] as Record<string, unknown>[])[0]!['merged']).toBe(true);
     expect((ended['events'] as Record<string, unknown>[]).at(-1)).toMatchObject({ stage: 'applied', command: 'apply', attempt: 1 });
-    text = box(repo, ['status']).stdout;
+    let text = box(repo, ['status']).stdout;
     expect(text).toContain(`${id} applied`);
     expect(text).toContain(`next: ${ended['next']}`);
     // --full prints the format comparison the document refreshed on the

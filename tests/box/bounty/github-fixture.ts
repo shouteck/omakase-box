@@ -512,6 +512,25 @@ export function postedFixture(run: (context: GithubFixture & { readonly waitingP
   withGhEnv(world, () => run({ ...contextFor(world), waitingPr: world.prSha }));
 }
 
+
+// K24: one whole journey split across consecutive `it`s shares ONE world —
+// the steps are the same story told in file order, so they run against a
+// single built world instead of a fresh clone each (fixture()'s per-test
+// copy stays the default for anything that stands alone). `run` wraps a
+// step's body in the stand-in environment exactly as fixture() does, so
+// each step is still a real `it` whose own time the runner measures.
+export function sharedFixture(title = 'Repair app', files: Record<string, string> = DEFAULT_FILES) {
+  const world = makeWorld(title, files);
+  return { ...contextFor(world), run: <T>(action: () => T): T => withGhEnv(world, action) };
+}
+
+// The posted-world variant for a split journey that starts posted.
+export function sharedPostedFixture(options: PostedOptions = {}) {
+  const settled = { prAuthor: options.prAuthor ?? 'owner', collected: options.collected ?? false, files: options.files ?? DEFAULT_FILES };
+  const world = buildPostedMaster(settled);
+  return { ...contextFor(world), waitingPr: world.prSha, run: <T>(action: () => T): T => withGhEnv(world, action) };
+}
+
 export function refused(action: () => unknown, reason: string) {
   try { action(); expect.unreachable('expected a refusal'); }
   catch (error) { expect(error).toBeInstanceOf(BountyRefused); expect(error).toMatchObject({ reason }); }

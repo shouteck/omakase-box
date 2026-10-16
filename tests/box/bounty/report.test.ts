@@ -209,35 +209,48 @@ describe('the words are policed — facts, never verdicts', () => {
   // the returned solution and the owner's later commit, never in the world's
   // build, so four attempts on one bounty prove exactly what four worlds did
   // at a fifth of the Git starts. Assertions are unchanged.
-  it("no attempt's report carries a verdict word", () => {
-    // answered — clean merge read
-    const repo = makeRepo({ 'src/app.py': 'x\n', 'tests/t.js': 'x\n' });
-    const { id, delivered } = posted(repo);
-    const clean = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
-    expect(clean.attempt.report.join('\n')).not.toMatch(BANNED);
-    expect(statusGitHub(resolveRepoRoot(repo))).not.toMatch(BANNED);
+  // K24: the single four-answer `it` ran past half its 30 s limit under load,
+  // so it is two consecutive legs on the same world — same checks, same
+  // order. The suite wipes owner settings before each `it`, so the second
+  // leg re-states the same decision.
+  describe("no attempt's report carries a verdict word", () => {
+    let repo: string;
+    let id: string;
+    let delivered: string;
 
-    // answered — with flags firing
-    const flagged = collectPullRequest(repo, id, returned(delivered, root => {
-      write(root, 'repo/tests/t.js', 'y\n');
-      write(root, 'repo/new.txt', 'n\n');
-    }));
-    expect(flagged.attempt.report.join('\n')).not.toMatch(BANNED);
+    it('the clean answer and the flagged answer', () => {
+      repo = makeRepo({ 'src/app.py': 'x\n', 'tests/t.js': 'x\n' });
+      ({ id, delivered } = posted(repo));
+      // answered — clean merge read
+      const clean = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
+      expect(clean.attempt.report.join('\n')).not.toMatch(BANNED);
+      expect(statusGitHub(resolveRepoRoot(repo))).not.toMatch(BANNED);
 
-    // answered — a solver-named path carrying verdict words stays quoted data
-    const named = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')));
-    const namedReport = named.attempt.report.join('\n');
-    expect(namedReport).toContain('"tests/should accept.py"');
-    expect(prose(namedReport)).not.toMatch(BANNED);
-    expect(prose(statusGitHub(resolveRepoRoot(repo)))).not.toMatch(BANNED);
+      // answered — with flags firing
+      const flagged = collectPullRequest(repo, id, returned(delivered, root => {
+        write(root, 'repo/tests/t.js', 'y\n');
+        write(root, 'repo/new.txt', 'n\n');
+      }));
+      expect(flagged.attempt.report.join('\n')).not.toMatch(BANNED);
+    });
 
-    // answered — with a merge conflict
-    write(repo, 'src/app.py', 'moved\n');
-    git(repo, ['add', '-A']);
-    git(repo, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'moved']);
-    const conflicted = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
-    expect(conflicted.attempt.report.join('\n')).not.toMatch(BANNED);
-    expect(statusGitHub(resolveRepoRoot(repo))).not.toMatch(BANNED);
+    it('the quoted-path answer and the conflicted answer', () => {
+      ownerSays(repo, 'allowed');
+      // answered — a solver-named path carrying verdict words stays quoted data
+      const named = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/tests/should accept.py', 'x\n')));
+      const namedReport = named.attempt.report.join('\n');
+      expect(namedReport).toContain('"tests/should accept.py"');
+      expect(prose(namedReport)).not.toMatch(BANNED);
+      expect(prose(statusGitHub(resolveRepoRoot(repo)))).not.toMatch(BANNED);
+
+      // answered — with a merge conflict
+      write(repo, 'src/app.py', 'moved\n');
+      git(repo, ['add', '-A']);
+      git(repo, ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'moved']);
+      const conflicted = collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'fixed\n')));
+      expect(conflicted.attempt.report.join('\n')).not.toMatch(BANNED);
+      expect(statusGitHub(resolveRepoRoot(repo))).not.toMatch(BANNED);
+    });
   });
 
   it('a quoted path cannot break out of the prose — a double quote or a newline shows JSON-escaped, not raw', () => {

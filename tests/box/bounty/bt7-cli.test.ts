@@ -3,13 +3,20 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
-import { fixture } from './github-fixture.js';
+import { fixture, sharedFixture } from './github-fixture.js';
 import { CLI_DIST, git, write } from './support.js';
 
 const cli = (repo: string, ...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8', env: process.env });
 const files = { 'app.txt': 'broken\n', 'unrelated.txt': 'owner\n', 'staged.txt': 'owner staged base\n' };
 
-it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files', () => fixture(context => {
+// One world for the whole journey, split into consecutive `it`s (K24):
+// the single journey test ran past half its limit. `context` names the
+// shared world so the moved lines keep their shape — same calls, same
+// order.
+const journey = sharedFixture('Repair app', files);
+const context = journey;
+
+it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files — posting and the folded-away commands', () => journey.run(() => {
   expect(cli(context.repo, 'post', '--to', 'github').status).toBe(0);
   context.pr('solver', { 'extra.txt': 'solver added\n' });
   // The commands BT7c and BT8 folded away each refuse by name and say what
@@ -20,6 +27,9 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
     expect(result.status).toBe(3);
     expect(result.stderr).toContain('command-removed');
   }
+}));
+
+it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files — look, the staged-change refusal and the reset', () => journey.run(() => {
   // look <n> collects the pull request itself, then shows its change.
   const look = cli(context.repo, 'look', '1');
   expect(look.status).toBe(0);
@@ -45,6 +55,9 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   expect(git(context.repo, ['ls-files', '--stage'])).toBe(index);
   expect(readFileSync(join(context.repo, 'staged.txt'), 'utf8')).toBe('precious staged bytes\n');
   git(context.repo, ['reset', '-q', 'HEAD', '--', 'staged.txt']);
+}));
+
+it('names and runs the whole CLI journey with omitted ids, preserving unrelated dirty and staged owner files — the clash, the land and the revert', () => journey.run(() => {
   const apply = cli(context.repo, 'apply', '1');
   expect(apply.status).toBe(0); expect(apply.stdout).toContain('conflict'); expect(apply.stdout).toContain(`box bounty look ${context.id} 1`);
   // Resolving a clash is the agent's own work: resolve the path, commit, apply again.
@@ -63,7 +76,7 @@ it('names and runs the whole CLI journey with omitted ids, preserving unrelated 
   git(context.repo, ['-c', 'user.name=owner', '-c', 'user.email=owner@example.invalid', 'revert', '--no-edit', '-m', '1', 'HEAD']);
   // The merge brought the solver's new file; the revert commit takes it out.
   expect(git(context.repo, ['ls-files', '--', 'extra.txt'])).toBe('');
-}, 'Repair app', files));
+}));
 
 it('names each bounty when omitted ids are ambiguous and keeps explicit ended inspection available', () => fixture(context => {
   const second = finalizeBounty(planBounty({ repoPath: context.repo, title: 'Another task', taskPath: join(context.repo, 'TASK.md'), why: 'separate task', }));

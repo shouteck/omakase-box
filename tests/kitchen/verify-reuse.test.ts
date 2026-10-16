@@ -141,6 +141,35 @@ describe('reusableStep — when a recorded PASS may stand in', () => {
     expect(reusable(noStartedAt, sha('a'), 'check')).toBeNull();
   });
 
+  it('K24: a run dirty only in waves/ counts for every step but test:kitchen', () => {
+    // A verify run whose tree was dirty only in a wave file: every step ran,
+    // the verdict stayed UNCOMMITTED, and the dirty path list is what the
+    // reuse rule reads. waves/*.md are kitchen inputs, so only test:kitchen
+    // read them.
+    const dir = temp();
+    const steps = [...STEPS, { name: 'test:box-bounty', exit: 0, seconds: 40, log: 'test_box-bounty.log' }];
+    const name = fakePass(dir, NOW, sha('a'), { dirty: true, verdict: 'UNCOMMITTED', dirtyPaths: ['waves/K99.md'], steps });
+    writeFileSync(join(dir, '.kitchen', 'runs', name, 'test_box-bounty.log'), 'test:box-bounty output\n');
+    expect(reusable(dir, sha('a'), 'test:box-bounty').run).toBe(name);
+    expect(reusable(dir, sha('a'), 'check').run).toBe(name);
+    expect(reusable(dir, sha('a'), 'build').run).toBe(name);
+    expect(reusable(dir, sha('a'), 'test:kitchen')).toBeNull();
+  });
+
+  it('K24: a run dirty in a path every step reads counts for nothing — and an unlisted dirty path never does', () => {
+    const dir = temp();
+    fakePass(dir, NOW, sha('a'), { dirty: true, verdict: 'UNCOMMITTED', dirtyPaths: ['packages/box-bounty/index.ts'] });
+    for (const step of ['check', 'build', 'test:kitchen']) expect(reusable(dir, sha('a'), step), step).toBeNull();
+
+    const unlisted = temp(); // dirty recorded without its path list — nothing to reason from
+    fakePass(unlisted, NOW, sha('a'), { dirty: true, verdict: 'UNCOMMITTED' });
+    expect(reusable(unlisted, sha('a'), 'build')).toBeNull();
+
+    const unreadable = temp(); // the same for a null list — the end-of-run status could not be read
+    fakePass(unreadable, NOW, sha('a'), { dirty: true, verdict: 'UNCOMMITTED', dirtyPaths: null });
+    expect(reusable(unreadable, sha('a'), 'build')).toBeNull();
+  });
+
   it('a reused check must have covered at least the suites this run needs — --full never inherits a partial check', () => {
     const dir = temp();
     fakePass(dir, NOW, sha('a'), { checkSuites: ['auth'] });
@@ -387,5 +416,91 @@ describe('verify reuses an ancestor PASS when the commits between read nothing t
     const forced = verify(['--fresh']);
     expect(forced.status).toBe(0);
     expect(summary(latestRun(before)).steps.every((step: Json) => step.reused === undefined)).toBe(true);
+  }, 240000);
+});
+
+describe('verify counts a dirty run for the steps that read none of it (K24, end to end)', () => {
+  it('a run that ends dirty only in waves/ counts for test:box-bounty, not test:kitchen; one dirty in packages/ counts for nothing', () => {
+    // The same fake-repository harness as the K22/K23 tests above, with one
+    // addition: the `build` stub dirties the path DIRTY_STEP names while the
+    // run is in flight — the wave-file-edit-during-verify case. A tree dirty
+    // before verify starts is still refused (k7-ci-clean-checkout), so a
+    // dirty run only ever comes from mid-run edits.
+    const dir = temp();
+    mkdirSync(join(dir, 'scripts'), { recursive: true });
+    for (const name of readdirSync(join(root, 'scripts'))) {
+      if (name.endsWith('.mjs') || name === 'toolchain.json') copyFileSync(join(root, 'scripts', name), join(dir, 'scripts', name));
+    }
+    const pnpmBin = join(dir, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin');
+    mkdirSync(pnpmBin, { recursive: true });
+    writeFileSync(join(pnpmBin, 'pnpm.cjs'), "const { spawnSync } = require('child_process');\nconst { readFileSync } = require('fs');\nconst { join } = require('path');\nconst scripts = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).scripts;\nconst name = process.argv[process.argv.indexOf('run') + 1];\nconst command = scripts[name];\nif (!command) process.exit(2);\nprocess.exit(spawnSync(command, { shell: true, stdio: 'inherit', cwd: process.cwd() }).status ?? 1);\n");
+    const stub = 'node -e "process.exit(0)"';
+    const dirtyStub = 'node -e "const p=process.env.DIRTY_STEP;if(p){const fs=require(\'fs\');const path=require(\'path\');fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,\'x\')}process.exit(0)"';
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { check: stub, build: dirtyStub, 'test:box-bounty': stub, 'test:kitchen': stub } }));
+    writeFileSync(join(dir, '.gitignore'), '.kitchen/\n');
+    writeFileSync(join(dir, 'tracked.txt'), 'base\n');
+    const gitDir = dir.replace(/[\\/]+$/, '').replaceAll(String.fromCharCode(92), '/');
+    const git = (args: string[]) => execFileSync('git', ['-c', `safe.directory=${gitDir}`, '-c', 'user.email=kitchen@test.invalid', '-c', 'user.name=kitchen', ...args], { cwd: dir, encoding: 'utf8' }).trim();
+    const commit = (path: string, content: string) => { const parts = path.split('/'); mkdirSync(join(dir, ...parts.slice(0, -1)), { recursive: true }); writeFileSync(join(dir, ...parts), content); git(['add', '-A']); git(['commit', '-qm', path]); return git(['rev-parse', 'HEAD']); };
+    git(['init', '-q', '-b', 'master']);
+    git(['add', '-A']);
+    git(['commit', '-qm', 'init']);
+    git(['checkout', '-q', '-b', 'wave']);
+    const verify = (extra: string[] = [], env: Record<string, string> = {}) => spawnSync(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--db=none', ...extra, 'test:box-bounty'], { cwd: dir, encoding: 'utf8', timeout: 120000, env: { ...process.env, ...env } });
+    const runsDir = join(dir, '.kitchen', 'runs');
+    const names = () => new Set(existsSync(runsDir) ? readdirSync(runsDir) : []);
+    const latestRun = (before: Set<string>) => readdirSync(runsDir).find(name => !before.has(name))!;
+    const summary = (name: string): Json => JSON.parse(readFileSync(join(runsDir, name, 'summary.json'), 'utf8'));
+
+    // A real change earns a clean PASS on every step first.
+    commit('packages/box-bounty/index.ts', 'export {};\n');
+    let before = names();
+    const first = verify();
+    expect(first.status).toBe(0);
+
+    // A wave file appears while the run is in flight. The run finishes —
+    // verdict UNCOMMITTED, exit 3 — and its record says which steps count:
+    // everything but test:kitchen, the only step that reads waves/*.md.
+    // --fresh so this run's own step results (with logs) are what get judged.
+    before = names();
+    const dirtyRun = verify(['--fresh'], { DIRTY_STEP: 'waves/K99.md' });
+    expect(dirtyRun.status).toBe(3);
+    expect(dirtyRun.stdout).toContain('+dirty UNCOMMITTED');
+    const dirtyName = latestRun(before);
+    const dirtySummary = summary(dirtyName);
+    const dirtyStep = (name: string): Json => dirtySummary.steps.find((step: Json) => step.name === name);
+    expect(dirtySummary.steps.map((step: Json) => step.name)).toEqual(['check', 'build', 'test:box-bounty', 'test:kitchen']);
+    expect(dirtySummary.dirtyPaths).toEqual(['waves/K99.md']);
+    expect(dirtyStep('check').reusable).toBe(true);
+    expect(dirtyStep('build').reusable).toBe(true);
+    expect(dirtyStep('test:box-bounty').reusable).toBe(true);
+    expect(dirtyStep('test:kitchen').reusable).toBe(false);
+
+    // Committing the wave file changes nothing the bounty suite reads: the
+    // next verify reuses the DIRTY run's own record through the ancestor
+    // walk — editing the wave file cost no rerun. The kitchen suite reruns.
+    commit('waves/K99.md', '# wave\n');
+    before = names();
+    const after = verify();
+    expect(after.status).toBe(0);
+    expect(after.stdout).toContain(`test:box-bounty=reused@${dirtyName}(ancestor ${summary(dirtyName).sha.slice(0, 7)}, only inert paths changed)`);
+    const afterSummary = summary(latestRun(before));
+    const afterStep = (name: string): Json => afterSummary.steps.find((step: Json) => step.name === name);
+    expect(afterStep('test:box-bounty').reused).toBe(dirtyName);
+    expect(afterStep('test:kitchen').reused).toBeUndefined();
+
+    // A packages/ path is read by every step: the run finishes and is
+    // recorded, but nothing in it counts — reusable:false across the board,
+    // and once committed the suites run for real.
+    before = names();
+    const productDirty = verify(['--fresh'], { DIRTY_STEP: 'packages/box-package/index.ts' });
+    expect(productDirty.status).toBe(3);
+    const productSummary = summary(latestRun(before));
+    expect(productSummary.steps.every((step: Json) => step.reusable === false)).toBe(true);
+    commit('packages/box-package/index.ts', 'export {};\n');
+    before = names();
+    const product = verify();
+    expect(product.status).toBe(0);
+    expect(product.stdout).not.toContain('reused@');
   }, 240000);
 });
