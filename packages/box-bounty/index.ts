@@ -1,6 +1,7 @@
 import { asOneCommand } from './git.js';
 import { applyBounty as applyBountyCommand } from './answer.js';
-import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand, previewGitHub as previewGitHubCommand } from './github.js';
+import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand } from './github.js';
+import { previewGitHub as previewGitHubCommand } from './post.js';
 import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
 import { closeBounty as closeBountyCommand, postBounty as postBountyCommand } from './commands.js';
 import { renderStatus as renderStatusCommand } from './render.js';

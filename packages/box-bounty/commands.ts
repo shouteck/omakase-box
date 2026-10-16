@@ -9,7 +9,8 @@
 
 import { BountyRefused } from './errors.js';
 import { boundAmount } from './format.js';
-import { postGitHub, syncGitHubDecision } from './github.js';
+import { postGitHub } from './post.js';
+import { syncGitHubDecision } from './github.js';
 import { payNotice } from './pay.js';
 import { dropDurabilityRefs, isOpenStage, loadRecord, settleScanFindings, transitionTo } from './record.js';
 import type { BountyRecord } from './record.js';
