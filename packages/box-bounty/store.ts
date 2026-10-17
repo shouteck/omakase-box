@@ -180,11 +180,16 @@ interface StoreEntry {
   readonly stmts: Map<string, StatementSync>;
   /** row.json strings already proven valid (or not) through asRecord —
       rows only ever enter `records` post-validation, so a known-valid
-      string needs JSON.parse, not the validator, on each read. */
-  readonly validJson: Map<string, boolean>;
+      string needs JSON.parse, not the validator, on each read. The value is
+      the VALIDATED record — asRecord rewrites migrated fields (retired
+      command names in stored text), so the raw parse is never handed out. */
+  readonly validJson: Map<string, BountyRecord | null>;
   /** id -> last-parsed record and the exact json string it came from.
       Readers get a shallow clone (events copied — callers append to it),
-      so a caller mutating its copy never rewrites what other readers see. */
+      so a caller mutating its copy never rewrites what other readers see.
+      Entries are always asRecord-validated: reads go through
+      canonicalRecord, writes validate only when `github` is present —
+      the retired-command scrubs live entirely under it. */
   readonly records: Map<string, { readonly json: string; readonly record: BountyRecord }>;
   /** Bumped by every local write; paired with PRAGMA data_version (which
       moves on OTHER connections' commits) it lets listOpen reuse its
@@ -225,18 +230,21 @@ const stmt = (entry: StoreEntry, sql: string): StatementSync => {
 function acquire(repoRoot: string, write: boolean): StoreEntry | undefined {
   const path = storeDbPath(repoRoot);
   let entry = stores.get(repoRoot);
-  if (entry !== undefined) {
-    // Re-stat at most every 250 ms: a deleted/recreated checkout drops the
-    // stale entry instead of writing into an unlinked file, without paying
-    // two syscalls on every read.
+  if (entry !== undefined && write) {
+    // Re-stat at most every 250 ms, on writes only: a deleted/recreated
+    // checkout drops the stale entry instead of writing into an unlinked
+    // file. Reads never restat — a live handle cannot be unlinked under us
+    // on Windows, and every test-removal path closes stores first; the
+    // compat scan below still runs on every operation.
     const now = Date.now();
-    if (now - entry.statCheckedAt < 250) return entry;
-    entry.statCheckedAt = now;
-    const stat = lstatSync(path, { throwIfNoEntry: false });
-    if (stat === undefined || !stat.isFile() || stat.ino !== entry.ino || stat.birthtimeMs !== entry.birthtimeMs) {
-      try { entry.db.close(); } catch { /* already closed */ }
-      stores.delete(repoRoot);
-      entry = undefined;
+    if (now - entry.statCheckedAt >= 250) {
+      entry.statCheckedAt = now;
+      const stat = lstatSync(path, { throwIfNoEntry: false });
+      if (stat === undefined || !stat.isFile() || stat.ino !== entry.ino || stat.birthtimeMs !== entry.birthtimeMs) {
+        try { entry.db.close(); } catch { /* already closed */ }
+        stores.delete(repoRoot);
+        entry = undefined;
+      }
     }
   }
   if (entry === undefined) {
@@ -332,10 +340,12 @@ const upsertRow = (entry: StoreEntry, record: BountyRecord): void => {
     stmt(entry, 'INSERT OR REPLACE INTO records_fts(rowid, id, title, why, part_of, task, note) VALUES(?, ?, ?, ?, ?, ?, ?)')
       .run(row.rowid, record.id, record.title, why, partOf, task, note);
   }
-  // Cache a copy, not the caller's reference — a caller mutating its own
-  // object after the write must not move the cache.
-  entry.records.set(record.id, { json, record: cloneRecord(record) });
-  entry.validJson.set(json, true);
+  // Cache what a fresh read would return: asRecord's in-place migrations
+  // (retired command names in stored text) all live under `github`, so a
+  // github-free clone is already canonical. Clone either way — a caller
+  // mutating its own reference after the write must not move the cache.
+  const canonical = record.github === undefined ? cloneRecord(record) : (validate(cloneRecord(record)) ?? cloneRecord(record));
+  entry.records.set(record.id, { json, record: canonical });
   entry.epoch++;
 };
 
@@ -420,18 +430,15 @@ function syncJsonFiles(entry: StoreEntry, repoRoot: string): void {
 const canonicalRecord = (entry: StoreEntry, id: string, json: string): BountyRecord | null => {
   const cached = entry.records.get(id);
   if (cached !== undefined && cached.json === json) return cached.record;
-  let valid = entry.validJson.get(json);
-  if (valid === undefined) {
-    try { valid = validate(JSON.parse(json)) !== null; } catch { valid = false; }
+  let record = entry.validJson.get(json);
+  if (record === undefined) {
+    try { record = validate(JSON.parse(json)); } catch { record = null; }
     if (entry.validJson.size > 65536) entry.validJson.clear();
-    entry.validJson.set(json, valid);
+    entry.validJson.set(json, record);
   }
-  if (!valid) return null;
-  try {
-    const record = JSON.parse(json) as BountyRecord;
-    entry.records.set(id, { json, record });
-    return record;
-  } catch { return null; }
+  if (record === null) return null;
+  entry.records.set(id, { json, record });
+  return record;
 };
 
 const cloneRecord = (record: BountyRecord): BountyRecord => ({ ...record, events: [...record.events] });

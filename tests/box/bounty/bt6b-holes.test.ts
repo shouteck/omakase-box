@@ -5,6 +5,7 @@ import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { fingerprint, git, runRoot, write } from './support.js';
 import { cli, delivered, filteredRepo, filteredRepoUnder, loggingFilter, readLog, withLog } from './bt6b-shared.js';
+import { closeStores } from '../../../packages/box-bounty/index.js';
 
 // BT6b pass holes — three ways the first refusal layer still let a solver's
 // program run, each proven live through the built CLI. `undo` is gone since
@@ -130,7 +131,11 @@ describe('pass holes — configured commands that still reached a solver program
       expect(applied.stderr).toContain('include.path');
       expect(fingerprint(repo)).toEqual(before);
     } finally {
-      rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+      // In-process calls (postBounty and friends) cached this repo's
+      // box.db connection in this worker — close it before removal or
+      // Windows refuses to delete the still-open WAL files.
+      closeStores();
+      rmSync(home, { recursive: true, force: true, maxRetries: 40, retryDelay: 500 });
     }
   });
 

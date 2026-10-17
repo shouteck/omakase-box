@@ -431,10 +431,22 @@ function openJsonIndexed(dir) {
 
 // ---------- shared op harness ----------
 
+// Sub-millisecond ops are noise-dominated as single shots on this host
+// (readOne measured 0.16–0.55 ms run-to-run). Every runOps op is
+// idempotent — reads repeat cleanly and the one writeAtMilestone writes
+// the same payload — so run each op MEDIAN_OF times and report the
+// median; out comes from the last call.
+const MEDIAN_OF = 7;
 function timeIt(fn) {
-  const t = performance.now();
-  const out = fn();
-  return { ms: Math.round((performance.now() - t) * 100) / 100, out };
+  const ms = [];
+  let out;
+  for (let i = 0; i < MEDIAN_OF; i++) {
+    const t = performance.now();
+    out = fn();
+    ms.push(performance.now() - t);
+  }
+  ms.sort((a, b) => a - b);
+  return { ms: Math.round(ms[Math.floor(ms.length / 2)] * 100) / 100, out };
 }
 
 function dirSize(dir) {
