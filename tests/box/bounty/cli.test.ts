@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, BountyUsage, parseCreateArgs } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, makeRepo, recordExists, runRoot, write } from './support.js';
 
 // The command line: how a person or agent actually drives it, and the arg shapes
 // it must take without a shell.
@@ -61,7 +61,7 @@ describe('box bounty create (built cli)', () => {
     expect(run.stdout).toContain('— drafted in '); // BT17: <id> — drafted in <repository>
     expect(run.stdout).toMatch(/bt-[a-f0-9]{12}/);
     const id = /bt-[a-f0-9]{12}/.exec(run.stdout)![0];
-    expect(existsSync(join(repo, '.box/bounties', id + '.json'))).toBe(true);
+    expect(recordExists(repo, id)).toBe(true);
     expect(existsSync(out)).toBe(false);
   });
 

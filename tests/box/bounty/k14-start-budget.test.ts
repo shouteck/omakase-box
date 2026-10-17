@@ -8,7 +8,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync
 import { basename, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { fixture } from './github-fixture.js';
-import { CLI_DIST, git, runRoot, write } from './support.js';
+import { CLI_DIST, git, recordIds, runRoot, write } from './support.js';
 
 // The spy, loaded into each CLI process (and inherited by its children):
 // append one JSON line per child_process start to <K14_BUDGET_DIR>/<pid>.jsonl.
@@ -129,7 +129,7 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   run('describe', 'describe');
   run('describe-rules', 'describe', '--rules');
   run('create', 'create', '--task', 'TASK.md', '--why', 'second', '--title', 'Second');
-  const second = readdirSync(join(repo, '.box', 'bounties')).map(file => file.replace('.json', '')).find(name => name.startsWith('bt-') && name !== id)!;
+  const second = recordIds(repo).find(name => name.startsWith('bt-') && name !== id)!;
   run('status-drafted', 'status');
   run('close-draft', 'close', second);
   // BT8: `confirm` is gone — the preview moved to `post --preview`, and the

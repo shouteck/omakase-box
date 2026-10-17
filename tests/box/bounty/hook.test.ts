@@ -8,7 +8,7 @@ import { delimiter, dirname, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { BountyRefused, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, resolveRepoRoot, runHook, setMergeNoticeListener, writeNewRecord } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, git, makeRepo, ownerSays, runRoot } from './support.js';
+import { CLI_DIST, git, makeRepo, ownerSays, readRecord, recordsDir, runRoot, writeRecord, writeRecordRaw } from './support.js';
 
 const cli = (repo: string, ...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8', env: process.env });
 
@@ -18,10 +18,11 @@ const cli = (repo: string, ...args: string[]) => spawnSync(process.execPath, [CL
 function seedRecord(repo: string, id: string, edit?: (record: BountyRecord) => void): BountyRecord {
   const head = git(repo, ['rev-parse', 'HEAD']);
   const { record } = writeNewRecord(repo, { id, title: `${id} task`, content: { task: { file: 'TASK.md', text: 'fixture task' }, note: null, tool: 'box-bounty@0.1.0' }, createdAt: new Date().toISOString(), resume: { kind: 'recorded', branch: 'main', commit: head, changed: [], note: null } });
-  const path = join(repo, '.box', 'bounties', `${id}.json`);
-  const current = JSON.parse(readFileSync(path, 'utf8')) as BountyRecord;
+  const current = readRecord(repo, id);
   edit?.(current);
-  writeFileSync(path, `${JSON.stringify(current, null, 2)}\n`);
+  // The file keeps the name writeNewRecord chose even when edit() rewrote
+  // record.id — a tampered id must not rename the file it lives in.
+  writeRecordRaw(repo, id, `${JSON.stringify(current, null, 2)}\n`);
   return current;
 }
 
@@ -199,7 +200,7 @@ it('a merge the slot run itself recognised reaches the envelope — the record c
   const landed = git(repo, ['rev-parse', 'HEAD']);
   const id = 'bt-cccc33334444';
   const at = new Date().toISOString();
-  mkdirSync(join(repo, '.box', 'bounties'), { recursive: true });
+  mkdirSync(recordsDir(repo), { recursive: true });
   const record: BountyRecord = {
     schemaVersion: 1, kind: 'box-bounty-record', id, title: `${id} task`,
     resume: { kind: 'recorded', branch: 'main', commit: head, changed: [], note: null },
@@ -208,7 +209,7 @@ it('a merge the slot run itself recognised reaches the envelope — the record c
     attempts: [{ n: 1, at, commit: landed, changed: ['a.txt'], added: [], deleted: [], outcome: 'answered', conflicts: null, report: [] }],
     events: [{ stage: 'answered', at }]
   };
-  writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), `${JSON.stringify(record, null, 2)}\n`);
+  writeRecord(repo, record);
   const notices: string[] = [];
   setMergeNoticeListener(line => notices.push(line));
   try {
@@ -327,7 +328,7 @@ it('a gh that paginates forever stays inside the run budget — the hook returns
     runHook(repo, 'start', []);
     expect(Date.now() - start).toBeLessThan(HOOK_GH_CALL_LIMIT_MS);
     // The refresh ended in the named fact, not a hang.
-    const record = JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
+    const record = readRecord(repo, id);
     expect(record.github?.unavailableAt).not.toBeNull();
     expect(record.github?.unavailableReason).toBe('github-call-budget');
     const calls = readFileSync(callsFile, 'utf8');

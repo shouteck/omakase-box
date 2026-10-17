@@ -1,12 +1,10 @@
 import { postToGitHub, closeGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CLI_DIST, makeRepo, ownerSays, runRoot } from './support.js';
+import { CLI_DIST, RECORDS_DIR_REL, makeRepo, openLine, ownerSays, runRoot } from './support.js';
 
 const cli = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8' });
-const openFile = (repo: string): string => readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8').trim();
+const openFile = (repo: string): string => openLine(repo).trim();
 const createDraft = (repo: string): string => {
   const run = cli(repo, ['bounty', 'create', '--task', 'TASK.md', '--why', 'stuck']);
   expect(run.status).toBe(0);
@@ -53,7 +51,7 @@ it('bare bounty gives a cold overview, open work and the next command', () => {
 });
 
 describe('the detailed local open-bounties listing', () => {
-  it('.box/bounties/OPEN mirrors the records on every mutation', () => {
+  it(`${RECORDS_DIR_REL}/OPEN mirrors the records on every mutation`, () => {
     const repo = makeRepo({ 'src/x.py': 'x\n', 'TASK.md': 'task\n' });
     const id = createDraft(repo);
     expect(openFile(repo)).toBe(`open bounties: ${id} "task" (drafted)`);

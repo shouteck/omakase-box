@@ -1,10 +1,10 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { applyBounty, closeBounty, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, renderDescribe, renderHelp, renderStatus, settingsFile } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
-import { CLI_DIST, fingerprint, git, makeRepo, ownerSays, runRoot, write } from './support.js';
+import { CLI_DIST, fingerprint, git, makeRepo, ownerSays, readRecordRaw, recordIds, runRoot, write, writeRecordRaw } from './support.js';
 import { settleScanFindings } from '../../../packages/box-bounty/record.js';
 
 const cli = (repo: string, args: string[], input?: string) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: repo, encoding: 'utf8', env: process.env, ...(input === undefined ? {} : { input }) });
@@ -12,7 +12,7 @@ const state = (repo: string) => ({
   files: fingerprint(repo),
   refs: git(repo, ['for-each-ref', '--format=%(refname) %(objectname)', 'refs/box-bounty/']),
   settings: existsSync(settingsFile()) ? readFileSync(settingsFile(), 'utf8') : null,
-  records: readdirSync(join(repo, '.box/bounties')).filter(name => name.endsWith('.json')).map(name => [name, readFileSync(join(repo, '.box/bounties', name), 'utf8')])
+  records: recordIds(repo).map(id => [`${id}.json`, readRecordRaw(repo, id)])
 });
 const draft = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'another perspective' }));
 
@@ -29,7 +29,7 @@ it('an old folder post waiting for owner permission refuses before either saved 
   const made = draft(repo);
   const record = loadRecord(repo, made.id);
   const folder = join(runRoot('BT15-waiting-folder'), 'old-delivery');
-  writeFileSync(made.recordPath, JSON.stringify({ ...record, stage: 'waiting', waiting: { for: 'post', reason: 'owner-allow', to: folder, at: record.createdAt } }));
+  writeRecordRaw(repo, made.id, JSON.stringify({ ...record, stage: 'waiting', waiting: { for: 'post', reason: 'owner-allow', to: folder, at: record.createdAt } }));
   ownerSays(repo, 'allowed');
   const before = state(repo);
   const result = cli(repo, ['allow', made.id]);
@@ -51,7 +51,7 @@ it('new scan settlements name GitHub publication while old folder settlement tex
   ];
   settleScanFindings(repo, record, 'went-out');
   expect(record.scanFindings.map(finding => finding.settled)).toEqual([legacy, 'the flagged content changed — the bounty went out']);
-  writeFileSync(made.recordPath, JSON.stringify(record));
+  writeRecordRaw(repo, made.id, JSON.stringify(record));
   expect(loadRecord(repo, made.id).scanFindings?.[0]?.settled).toBe(legacy);
 });
 
@@ -60,20 +60,20 @@ it('old confirmed drafts name GitHub post while every retired posted stage names
   const made = draft(repo);
   const { content, ...legacy } = loadRecord(repo, made.id);
   const record = { ...legacy, folder: join(runRoot('BT15-legacy-stages'), 'old-folder') };
-  writeFileSync(made.recordPath, JSON.stringify({ ...record, stage: 'confirmed' }));
-  const before = readFileSync(made.recordPath);
+  writeRecordRaw(repo, made.id, JSON.stringify({ ...record, stage: 'confirmed' }));
+  const before = readRecordRaw(repo, made.id);
   const confirmed = renderStatus(repo, { id: made.id });
   expect(confirmed).toContain(`next: deliver it — box bounty post ${made.id} (preview first with --preview)`);
   expect(confirmed).not.toContain('--to');
-  expect(readFileSync(made.recordPath)).toEqual(before);
+  expect(readRecordRaw(repo, made.id)).toEqual(before);
   for (const stage of ['posted', 'taken', 'answered', 'verified']) {
-    writeFileSync(made.recordPath, JSON.stringify({ ...record, stage }));
-    const saved = readFileSync(made.recordPath);
+    writeRecordRaw(repo, made.id, JSON.stringify({ ...record, stage }));
+    const saved = readRecordRaw(repo, made.id);
     const status = renderStatus(repo, { id: made.id });
     expect(status).toContain(`next: this delivery route was retired; end it with box bounty close ${made.id}`);
     expect(status).not.toContain('--to');
     expect(status).not.toContain(`box bounty apply ${made.id}`);
-    expect(readFileSync(made.recordPath)).toEqual(saved);
+    expect(readRecordRaw(repo, made.id)).toEqual(saved);
   }
 });
 
@@ -280,13 +280,13 @@ it('an old folder-posted record is readable and closes offline, while collection
   const original = loadRecord(repo, made.id);
   const { content, ...legacy } = original;
   const record = { ...legacy, folder: old, job: { file: 'OLD_JOB.md', text: 'the larger job' }, stage: 'posted', events: [...original.events, { stage: 'posted', at: original.createdAt, destination: old }] };
-  writeFileSync(made.recordPath, JSON.stringify(record));
-  const before = readFileSync(made.recordPath);
+  writeRecordRaw(repo, made.id, JSON.stringify(record));
+  const before = readRecordRaw(repo, made.id);
   withoutGh(() => {
     expect(renderStatus(repo, { id: made.id })).toContain(`box bounty close ${made.id}`);
     refused(() => lookBounty(repo, made.id, 1), 'legacy-delivery-retired');
     refused(() => applyBounty(repo, made.id, 1), 'legacy-delivery-retired');
-    expect(readFileSync(made.recordPath)).toEqual(before);
+    expect(readRecordRaw(repo, made.id)).toEqual(before);
     expect(closeBounty(repo, made.id, 'retired delivery').outcome).toBe('rejected');
     expect(renderStatus(repo, { id: made.id })).toContain('OLD_JOB.md');
   });
@@ -297,13 +297,12 @@ it('a pre-BT6a GitHub publication still shows its history and closes; collection
   const record = loadRecord(repo, id);
   const { kind, ...publication } = record.github!;
   const old = { ...record, github: publication };
-  const file = join(repo, '.box/bounties', id + '.json');
-  writeFileSync(file, JSON.stringify(old));
+  writeRecordRaw(repo, id, JSON.stringify(old));
   expect(renderStatus(repo, { id, full: true })).toContain('snapshot-posted');
-  const before = readFileSync(file);
+  const before = readRecordRaw(repo, id);
   refused(() => lookBounty(repo, id, 1), 'legacy-delivery-retired');
   refused(() => applyBounty(repo, id, 1), 'legacy-delivery-retired');
-  expect(readFileSync(file)).toEqual(before);
+  expect(readRecordRaw(repo, id)).toEqual(before);
   expect(closeBounty(repo, id).outcome).toBe('withdrawn');
   expect(remote().issues[0]?.state).toBe('closed');
 }));

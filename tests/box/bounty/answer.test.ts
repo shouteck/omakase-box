@@ -4,17 +4,14 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readlinkSync, rmSync, syml
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, BountyRefused, closeBounty, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
-import type { BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, fingerprint, git, listTree, makeRepo, ownerSays, runRoot, write } from './support.js';
+import type { CreateOptions } from '../../../packages/box-bounty/index.js';
+import { CLI_DIST, fingerprint, git, listTree, makeRepo, ownerSays, readRecord, runRoot, write } from './support.js';
 
 // The return journey: a solver hands the bounty folder back; `look --from`
 // collects it — binds it to this bounty, extracts the change against the
 // recorded hashes, reports the facts, running nothing — and `apply` lands it
 // with git's own merge, or names exactly why not. Every wrong move is a named
 // refusal, never a crash and never silence.
-
-const readRecord = (repo: string, id: string): BountyRecord =>
-  JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
 
 
 // The refusal reason a command carries, or '' when it did not refuse.

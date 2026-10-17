@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, finalizeBounty, planBounty } from '../../../packages/box-bounty/index.js';
 import type { CreateOptions } from '../../../packages/box-bounty/index.js';
-import { fingerprint, git, listTree, makeRepo, recreateSnapshot, runRoot, write } from './support.js';
+import { fingerprint, git, listTree, makeRepo, recreateSnapshot, recordExists, runRoot, write } from './support.js';
 
 // Snapshot semantics: the bounty ships the repository as it stands — tracked files
 // with uncommitted changes, untracked files that are not ignored, no .git, no
@@ -63,7 +63,7 @@ describe('the snapshot is the repository as it stands', () => {
     const opts = options(repo); // options() writes TASK.md into the tree — snapshot it before fingerprinting
     const before = fingerprint(repo);
     const result = finalizeBounty(planBounty(opts));
-    expect(existsSync(result.recordPath)).toBe(true);
+    expect(recordExists(repo, result.id)).toBe(true);
     expect(fingerprint(repo)).toEqual(before);
   });
 

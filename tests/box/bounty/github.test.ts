@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'n
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, closeBounty, finalizeBounty, listGitHubAnswers, loadRecord, lookBounty, planBounty, postBounty, previewGitHub, renderDescribe, renderHelp, renderOpenLine, renderStatus } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, fingerprint, git, runRoot, write } from './support.js';
+import { CLI_DIST, fingerprint, git, readRecordRaw, runRoot, write } from './support.js';
 import { resolveProgram, runDeclaredCheck } from '../../../packages/box-package/commands.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import { fixture, leakCanary, postedFixture, refused, withoutGh } from './github-fixture.js';
@@ -95,10 +95,10 @@ describe('GitHub bounty destination, entirely offline', () => {
   ])('refuses %s without changing anything', (_label, reason, mutation) => fixture(({ repo, bare, id, update, state }) => {
     update(mutation as Partial<GhState>);
     const before = fingerprint(repo);
-    const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+    const record = readRecordRaw(repo, id);
     refused(() => postBounty(repo, id, 'github'), String(reason));
     expect(fingerprint(repo)).toEqual(before);
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
+    expect(readRecordRaw(repo, id)).toEqual(record);
     expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
     expect(state().issues).toHaveLength(0);
   }));
@@ -121,9 +121,9 @@ describe('GitHub bounty destination, entirely offline', () => {
     refused(() => postBounty(repo, id, 'github'), 'github-post-incomplete');
     git(repo, ['remote', 'set-url', 'origin', 'git@github.com:other/public.git']);
     update({ repository: 'other/public', fail: undefined });
-    const before = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+    const before = readRecordRaw(repo, id);
     refused(() => postBounty(repo, id, 'github'), 'github-repository-changed');
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(before);
+    expect(readRecordRaw(repo, id)).toEqual(before);
   }));
 
   it('recovers a branch-only post and an issue created with a lost response without duplicates', () => fixture(({ repo, bare, id, state, update }) => {
@@ -215,10 +215,10 @@ describe('GitHub bounty destination, entirely offline', () => {
     git(repo, ['push', bare, `${sha}:refs/pull/1/head`]);
     update({ prs: [{ number: 1, user: { login: 'owner' }, base: { ref: publication.branch, repo: { full_name: publication.repository } }, head: { sha }, files: [{ filename: 'evil-link' }] }] });
     const before = fingerprint(repo);
-    const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+    const record = readRecordRaw(repo, id);
     refused(() => lookBounty(repo, id, 1), 'answer-unsafe-path');
     expect(fingerprint(repo)).toEqual(before);
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
+    expect(readRecordRaw(repo, id)).toEqual(record);
   }));
 
   it('keeps titles and hostile pull-request text out of shell command arguments', () => fixture(({ repo, id, state, update, pr }) => {
@@ -262,10 +262,10 @@ describe('GitHub bounty destination, entirely offline', () => {
     // waits beside it, uncollected.
     pr(label === 'hostile author' ? leakCanary : 'owner', extra, base);
     const before = fingerprint(repo);
-    const record = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+    const record = readRecordRaw(repo, id);
     refused(() => lookBounty(repo, id, 2), reason);
     expect(fingerprint(repo)).toEqual(before);
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(record);
+    expect(readRecordRaw(repo, id)).toEqual(record);
   }));
 
   it('refuses a missing PR and leaks no credential from gh errors or fields', () => postedFixture(({ repo, id, state, update, pr }) => {
@@ -310,11 +310,11 @@ describe('GitHub bounty destination, entirely offline', () => {
 
   it('routes the built CLI preview, post, status and PR commands through the adapter', () => fixture(({ repo, id, state, pr }) => {
     const cli = (...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args, '--repo', repo], { encoding: 'utf8' });
-    const before = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+    const before = readRecordRaw(repo, id);
     const preview = cli('post', id, '--to', 'github', '--preview');
     expect(preview.status).toBe(0);
     expect(preview.stdout).toContain('Issue body:');
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(before);
+    expect(readRecordRaw(repo, id)).toEqual(before);
     expect(cli('post', id, '--to', 'github').status).toBe(0);
     pr();
     expect(cli('status').stdout).toContain('#1 by owner');

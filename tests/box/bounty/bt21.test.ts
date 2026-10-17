@@ -11,7 +11,7 @@ import { expect, it } from 'vitest';
 import { applyBounty, changeConfig, checkMergedSolutions, closeBounty, hookHost, hookOn, loadRecord, renderConfig, renderStatus, resolveRepoRoot, setMergeNoticeListener, settingsFile } from '../../../packages/box-bounty/index.js';
 import { writeInstructions } from '../../../packages/box-bounty/settings.js';
 import { postedFixture, refused } from './github-fixture.js';
-import { git, makeRepo, runRoot, write } from './support.js';
+import { RECORDS_DIR_REL, boxFile, git, makeRepo, recordsDir, runRoot, write } from './support.js';
 
 const noticed: string[] = [];
 setMergeNoticeListener(line => noticed.push(line));
@@ -79,11 +79,11 @@ it("under 'ask me each time' the same close-up happens — and says so once", ()
 
 it('instruction-file aimed at .git or .box is refused by name — bytes and settings untouched', () => {
   const repo = makeRepo({ 'a.txt': 'a\n' });
-  mkdirSync(join(repo, '.box', 'bounties'), { recursive: true });
-  writeFileSync(join(repo, '.box', 'bounties', 'x.json'), '{}');
+  mkdirSync(recordsDir(repo), { recursive: true });
+  writeFileSync(boxFile(repo, 'x.json'), '{}');
   const gitConfig = readFileSync(join(repo, '.git', 'config'));
-  const boxFile = readFileSync(join(repo, '.box', 'bounties', 'x.json'));
-  for (const named of ['.git/config', '.box/bounties/x.json', '.GIT/config']) {
+  const boxed = readFileSync(boxFile(repo, 'x.json'));
+  for (const named of ['.git/config', `${RECORDS_DIR_REL}/x.json`, '.GIT/config']) {
     refused(() => changeConfig(repo, 'set', 'instruction-file', named), 'instruction-file-tool-owned');
   }
   // A link spelling into .git reads the same refusal — judged on where it
@@ -91,7 +91,7 @@ it('instruction-file aimed at .git or .box is refused by name — bytes and sett
   symlinkSync(join(repo, '.git'), join(repo, 'guides'), 'junction');
   refused(() => changeConfig(repo, 'set', 'instruction-file', 'guides/config'), 'instruction-file-tool-owned');
   expect(readFileSync(join(repo, '.git', 'config'))).toEqual(gitConfig);
-  expect(readFileSync(join(repo, '.box', 'bounties', 'x.json'))).toEqual(boxFile);
+  expect(readFileSync(boxFile(repo, 'x.json'))).toEqual(boxed);
   expect(existsSync(settingsFile())).toBe(false);
 });
 

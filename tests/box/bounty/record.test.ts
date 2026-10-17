@@ -1,13 +1,13 @@
 import { postToGitHub, collectPullRequest, applyGitHub, closeGitHub, statusGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BountyRefused, closeBounty, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, git, listTree, makeRepo, ownerSays, runRoot, write } from './support.js';
+import { CLI_DIST, RECORDS_DIR_REL, git, listTree, makeRepo, ownerSays, readRecord, recordExists, runRoot, write, writeRecord } from './support.js';
 
-// The record and the lifecycle: `.box/bounties/<id>.json` is written at create
+// The record and the lifecycle: the record file is written at create
 // and the bounty moves drafted → posted through recorded events — or ends as
 // withdrawn, or waits on the owner. The create-time capture is used while
 // `create` runs and kept nowhere; records from before that carry `snapshot`
@@ -23,9 +23,6 @@ function created(repo: string) {
   return finalizeBounty(planBounty(options(repo)));
 }
 
-const readRecord = (repo: string, id: string): BountyRecord =>
-  JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
-
 const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
   try {
     fn();
@@ -39,7 +36,7 @@ const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
 };
 
 describe('the bounty record', () => {
-  it('create writes .box/bounties/<id>.json at stage drafted and pins nothing — no snapshot field, no ref', () => {
+  it(`create writes ${RECORDS_DIR_REL}/<id>.json at stage drafted and pins nothing — no snapshot field, no ref`, () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const result = created(repo);
     const record = readRecord(repo, result.id);
@@ -62,9 +59,8 @@ describe('the bounty record', () => {
     const result = created(repo);
     // Hand-made pre-BT24 shape: the record stored the snapshot field and
     // create had pinned refs/box-bounty/<id> at its commit.
-    const file = join(repo, '.box', 'bounties', `${result.id}.json`);
     const record = { ...readRecord(repo, result.id), snapshot: result.plan.snapshot };
-    writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+    writeRecord(repo, record);
     git(repo, ['update-ref', `refs/box-bounty/${result.id}`, result.plan.snapshot.commit]);
     expect(loadRecord(repo, result.id).snapshot?.commit).toBe(result.plan.snapshot.commit);
     // The durability ref pins snapshot.commit: gc --prune=now cannot take it.
@@ -78,7 +74,7 @@ describe('the bounty record', () => {
   it('never ships .box records inside a later bounty', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     const first = created(repo);
-    expect(existsSync(join(repo, '.box', 'bounties', `${first.id}.json`))).toBe(true);
+    expect(recordExists(repo, first.id)).toBe(true);
     const second = finalizeBounty(planBounty(options(repo, { })));
     const shipped = second.plan.files.map(file => file.path);
     expect(shipped.some(path => path.startsWith('.box/'))).toBe(false);
@@ -88,7 +84,7 @@ describe('the bounty record', () => {
     // open-bounties line file BT4 writes alongside it.
     const dotBox = second.plan.ruleRemovals.find(entry => entry.rule === 'dot-box');
     expect(dotBox?.removed).toBe(2);
-    expect(dotBox?.paths).toEqual([`.box/bounties/${first.id}.json`, '.box/bounties/OPEN'].sort());
+    expect(dotBox?.paths).toEqual([`${RECORDS_DIR_REL}/${first.id}.json`, `${RECORDS_DIR_REL}/OPEN`].sort());
   });
 
   it('status says what to do on an empty project — never nothing', () => {
@@ -119,11 +115,10 @@ describe('the bounty record', () => {
     const { id } = created(repo);
     // Only `undo` could leave this stage; the file is rewritten the way an
     // old record sits on disk, never produced through a live command.
-    const file = join(repo, '.box', 'bounties', `${id}.json`);
-    const older = JSON.parse(readFileSync(file, 'utf8')) as BountyRecord;
+    const older = readRecord(repo, id);
     older.stage = 'undone';
     older.events = [...older.events, { stage: 'undone' as BountyRecord['stage'], at: new Date().toISOString() }];
-    writeFileSync(file, JSON.stringify(older, null, 2) + '\n');
+    writeRecord(repo, older);
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(`ended: ${id} undone`);
     expect(status).toContain(`box bounty status ${id} --full`);
@@ -141,11 +136,10 @@ describe('the owner\'s written yes — the gate every post passes once', () => {
     // The file is rewritten the way a record from before the owner decision
     // moved to the settings folder sits on disk — `confirm` wrote this stage
     // and its event; nothing writes it today.
-    const file = join(repo, '.box', 'bounties', `${id}.json`);
-    const older = JSON.parse(readFileSync(file, 'utf8')) as BountyRecord;
+    const older = readRecord(repo, id);
     older.stage = 'confirmed';
     older.events = [...older.events, { stage: 'confirmed' as BountyRecord['stage'], at: new Date().toISOString(), command: 'confirm' }];
-    writeFileSync(file, JSON.stringify(older, null, 2) + '\n');
+    writeRecord(repo, older);
     const { record } = postToGitHub(repo, id);
     expect(record.stage).toBe('posted');
     expect(record.allowedBy?.decision).toBe('once');

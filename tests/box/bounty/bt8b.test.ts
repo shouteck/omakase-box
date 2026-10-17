@@ -8,7 +8,7 @@ import { discoverInstructions, INSTRUCTION_HOSTS, instructionBlock, syncInstruct
 import { fixture } from './github-fixture.js';
 import { refreshGitHubStatus } from '../../../packages/box-bounty/github.js';
 import { postBounty, scanText, settingsFile } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, ROOT, runRoot, write } from './support.js';
+import { git, makeRepo, ROOT, runRoot, write, writeRecordRaw } from './support.js';
 
 const bytes = (repo: string, name: string) => readFileSync(join(repo, name));
 const setup = (files: Record<string, string>) => makeRepo({ 'TASK.md': 'Fix the sum.\n', ...files });
@@ -35,7 +35,7 @@ describe('instruction blocks', () => {
     const tree = git(repo, ['rev-parse', 'HEAD^{tree}']);
     const commit = git(repo, ['commit-tree', tree, '-m', 'outside change']);
     record.attempts = [{ n: 1, commit, at: '2026-10-01T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
-    write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
+    writeRecordRaw(repo, id, JSON.stringify(record));
     syncInstructions(repo);
     expect(block(repo, 'AGENTS.md')).toContain('a bounty has a new solution; `box bounty` shows more.');
     expect(block(repo, 'AGENTS.md')).toBe(block(repo, 'GEMINI.md'));
@@ -237,10 +237,10 @@ it('describe reports observed waits and current terminal outcomes, with invalid 
     { stage: 'undone', at: '2026-10-03T00:00:00.000Z' }
   ];
   record.attempts = [{ n: 1, commit: git(repo, ['rev-parse', 'HEAD']), at: '2026-10-02T00:00:00.000Z', outcome: 'answered', changed: [], added: [], deleted: [], report: [], conflicts: null }];
-  write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
+  writeRecordRaw(repo, id, JSON.stringify(record));
   expect(renderDescribe(repo)).toContain('24.0 to 24.0 hours');
   expect(renderDescribe(repo)).toContain('0 of 1 ended posted bounties had a solution merged');
   record.events = record.events.map(event => event.stage === 'posted' ? { ...event, at: 'unusable' } : event);
-  write(repo, `.box/bounties/${id}.json`, JSON.stringify(record));
+  writeRecordRaw(repo, id, JSON.stringify(record));
   expect(renderDescribe(repo)).toContain('no solution wait recorded yet');
 });

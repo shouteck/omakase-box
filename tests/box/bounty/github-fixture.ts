@@ -5,7 +5,7 @@ import { chmodSync, copyFileSync, cpSync, linkSync, mkdirSync, readFileSync, rea
 import { delimiter, join } from 'node:path';
 import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, runRoot, write } from './support.js';
+import { git, makeRepo, readRecordRaw, recordFilePath, runRoot, write, writeRecordRaw } from './support.js';
 import { requireRepository } from '../../../packages/box-bounty/settings.js';
 import { resolveProgram } from '../../../packages/box-package/commands.js';
 
@@ -289,8 +289,8 @@ function makeWorld(title: string, files: Record<string, string>, resumeNote?: st
   if (publicNote !== undefined) {
     // A note from the removed input is a pre-BT15 draft fixture. Its original
     // manifest remains on disk solely to prove read-only draft migration.
-    const recordFile = join(repo, '.box/bounties', created.id + '.json');
-    const record = JSON.parse(readFileSync(recordFile, 'utf8'));
+    const recordFile = recordFilePath(repo, created.id);
+    const record = JSON.parse(readRecordRaw(repo, created.id));
     // A pre-BT15 draft's record carried the snapshot field and its pin at
     // refs/box-bounty/<id> — the folder-era bounty.json is still checked
     // against it. Records made now store neither, so the fixture puts the
@@ -481,11 +481,10 @@ function cloneWorld<M extends World & { readonly prSha?: string }>(master: M, sc
   // master's: otherwise every git transport would reach the shared world.
   const configPath = join(repo, '.git', 'config');
   writeFileSync(configPath, readFileSync(configPath, 'utf8').replaceAll(master.bare.replaceAll('\\', '/'), bare.replaceAll('\\', '/')));
-  const recordPath = join(repo, '.box', 'bounties', `${master.id}.json`);
-  const record = JSON.parse(readFileSync(recordPath, 'utf8'));
+  const record = JSON.parse(readRecordRaw(repo, master.id));
   if (record.folder !== undefined) {
     record.folder = join(scratch, 'legacy-draft');
-    writeFileSync(recordPath, JSON.stringify(record));
+    writeRecordRaw(repo, master.id, JSON.stringify(record));
   }
   // The gh launcher needs no path rewrite on Windows — gh.exe is node itself
   // and finds its script through BT6_GH_STANDIN, which withGhEnv rebinds to

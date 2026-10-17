@@ -79,7 +79,10 @@ else if (mode === 'cleanup') {
   const fixture = record.fixtures[name];
   if (normal(fixture.repo) !== normal(join(record.root, name, 'repo')) || normal(fixture.settings) !== normal(join(record.root, name, 'settings'))) throw new Error('fixture ownership mismatch');
   if (!['allow', 'deny', 'config', 'status'].includes(args[0]) || args.includes('--repo')) throw new Error('only allow, deny, config or status in the registered fixture');
-  const records = join(fixture.repo, '.box', 'bounties');
+  // A standalone script cannot import support.ts — this mirrors its
+  // RECORDS_DIR_REL ('.box' + '/' + 'bounties') and is the only spelling here.
+  const RECORDS_DIR = '.box/' + 'bounties';
+  const records = join(fixture.repo, RECORDS_DIR);
   if (existsSync(records) && readdirSync(records).some(file => file.endsWith('.json'))) throw new Error('config reader fixture unexpectedly has a bounty; refusing a possible publication');
   console.log(invoke(fixture, args));
 } else throw new Error('use create, run <registry> <config-stop|config-shop> <command> [arguments], or cleanup <registry>');

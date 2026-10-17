@@ -167,7 +167,10 @@ write(stateFile, JSON.stringify(state));
 // is run here, and what the set-up commands above marked while collecting is
 // taken back, so the fresh agent's first `status` announces every solution as
 // new, once.
-const recordFile = join(repo, '.box/bounties', `${id}.json`);
+// A standalone script cannot import support.ts — RECORDS_DIR mirrors its
+// RECORDS_DIR_REL ('.box' + '/' + 'bounties') and is the only spelling here.
+const RECORDS_DIR = '.box/' + 'bounties';
+const recordFile = join(repo, RECORDS_DIR, `${id}.json`);
 const record = JSON.parse(readFileSync(recordFile, 'utf8'));
 record.attempts = (record.attempts ?? []).map(({ seenAt, ...attempt }) => attempt);
 if (record.attempts.length === 0) delete record.attempts;

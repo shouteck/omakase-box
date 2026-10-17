@@ -1,11 +1,11 @@
-import { readFileSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { expect, it } from 'vitest';
 import { closeBounty, applyBounty, loadRecord, postBounty, previewGitHub, renderHelp, renderStatus, settingsFile } from '../../../packages/box-bounty/index.js';
 import { FORMAT_MARKER, formatFor, readFormat, renderFormat } from '../../../packages/box-bounty/format.js';
 import { fixture, postedFixture } from './github-fixture.js';
-import { CLI_DIST, ROOT, git, write } from './support.js';
+import { CLI_DIST, ROOT, git, readRecordRaw, write } from './support.js';
 
 it('pins the public v2 fields, exact work commit and fixed terms — and still reads v1', () => fixture(({ repo, id, state }) => {
   write(repo, 'app.txt', 'task-needed poster work\n');
@@ -32,14 +32,14 @@ it('pins the public v2 fields, exact work commit and fixed terms — and still r
 
 it('the real CLI previews exact issue bytes before any owner authority and posts nothing', () => fixture(({ repo, id, state }) => {
   rmSync(settingsFile(), { force: true });
-  const before = readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8');
+  const before = readRecordRaw(repo, id);
   const result = spawnSync(process.execPath, [CLI_DIST, 'bounty', 'post', id, '--to', 'github', '--preview'], { cwd: repo, encoding: 'utf8', timeout: 30000 });
   expect(result.status, result.stderr).toBe(0);
   expect(result.stdout).toContain(`"id":"${id}"`);
   expect(result.stdout).toContain(`"workCommit":"${git(repo, ['rev-parse', 'HEAD'])}"`);
   expect(result.stdout).toContain('preview only');
   expect(state().issues).toEqual([]);
-  expect(readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8')).toBe(before);
+  expect(readRecordRaw(repo, id)).toBe(before);
 }));
 
 it('the independent page-only reader lists two offline issues without product imports', () => fixture(({ repo, id, state }) => {

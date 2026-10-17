@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { fixture, postedFixture, sharedFixture } from './github-fixture.js';
-import { CLI_DIST, git } from './support.js';
+import { CLI_DIST, git, readRecordRaw, writeRecordRaw } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -224,7 +224,7 @@ describe('status --json', () => {
   }));
 
   it('keeps a recognised merge on stderr while the document stays whole', () => postedFixture(({ repo, id }) => {
-    const record = JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as { attempts: { commit: string }[] };
+    const record = JSON.parse(readRecordRaw(repo, id)) as { attempts: { commit: string }[] };
     git(repo, ['merge', '--no-ff', '-m', 'merged by hand', record.attempts[0]!.commit]);
     const run = box(repo, ['status', '--json']);
     const doc = document(run);
@@ -271,10 +271,9 @@ describe('look --json', () => {
   it('reports fromOthers null on an attempt recorded before descriptions were kept', () => postedFixture(({ repo, id }) => {
     // Pre-BT19 records carry no description on the attempt — strip it the
     // way an old record reads, and look still works with fromOthers null.
-    const file = join(repo, '.box', 'bounties', `${id}.json`);
-    const record = JSON.parse(readFileSync(file, 'utf8')) as { attempts: Record<string, unknown>[] };
+    const record = JSON.parse(readRecordRaw(repo, id)) as { attempts: Record<string, unknown>[] };
     delete record.attempts[0]!['description'];
-    writeFileSync(file, JSON.stringify(record));
+    writeRecordRaw(repo, id, JSON.stringify(record));
     const doc = document(box(repo, ['look', id, '1', '--json']));
     expect(doc['fromOthers']).toBeNull();
     expect(doc['author']).not.toBeNull();

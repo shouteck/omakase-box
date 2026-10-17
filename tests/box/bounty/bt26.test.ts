@@ -10,7 +10,7 @@ import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, changeConfig, finalizeBounty, loadRecord, lookBounty, parseOptions, planBounty, settingsFile } from '../../../packages/box-bounty/index.js';
 import { postedFixture, refused } from './github-fixture.js';
-import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, git, makeRepo, readRecordRaw, recordFilePath, runRoot, write, writeRecordRaw } from './support.js';
 
 const bounty = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -87,8 +87,8 @@ it('a record with no commits diffs its attempts against the empty tree — never
   write(repo, 'app.txt', 'broken\n');
   const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title: 'Repair app', why: 'stuck' }));
   // The premise: a repository with no commits records the display sentinel.
-  const file = join(repo, '.box', 'bounties', `${created.id}.json`);
-  expect((JSON.parse(readFileSync(file, 'utf8')) as { resume: { commit: string } }).resume.commit).toBe('(no commits yet)');
+  const file = recordFilePath(repo, created.id);
+  expect((JSON.parse(readRecordRaw(repo, created.id)) as { resume: { commit: string } }).resume.commit).toBe('(no commits yet)');
   // The solver's work lands as the repository's first commit, hand-recorded.
   write(repo, 'sol.txt', 'fixed\n');
   git(repo, ['add', 'sol.txt']);
@@ -114,11 +114,10 @@ it('a new record\'s apply merge message has no snapshot: line; a record carrying
   // The pin is not vacuous: a hand-made old record that carries `snapshot`
   // still names the capture in its merge message.
   postedFixture(({ repo, id }) => {
-    const file = join(repo, '.box', 'bounties', `${id}.json`);
-    const record = JSON.parse(readFileSync(file, 'utf8')) as { snapshot?: unknown; github: { commit: string } };
+    const record = JSON.parse(readRecordRaw(repo, id)) as { snapshot?: unknown; github: { commit: string } };
     const head = record.github.commit;
     record.snapshot = { commit: head, tree: head, baseCommit: head };
-    writeFileSync(file, JSON.stringify(record));
+    writeRecordRaw(repo, id, JSON.stringify(record));
     const result = applyBounty(repo, id, 1);
     expect(result.outcome).toBe('applied');
     const message = git(repo, ['log', '-1', '--format=%B']);

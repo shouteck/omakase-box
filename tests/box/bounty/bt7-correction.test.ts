@@ -1,12 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
 import { answerGitHub, finalizeBounty, loadRecord, lookBounty, planBounty, postBounty, quoteForeign, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
-import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, git, makeRepo, readRecordRaw, runRoot, write } from './support.js';
 
 // BT7 Correction 1, the cases the pass found that BT7a keeps: named refusals,
 // hidden characters, and seen-once marking.
@@ -93,7 +93,7 @@ it('the fresh-agent fixture shows nothing to anybody while it is built: the firs
   try {
     const from = created.stdout.indexOf('{');
     const made = JSON.parse(created.stdout.slice(from, created.stdout.indexOf('\n}', from) + 2)) as { id: string; repository: string };
-    const record = JSON.parse(readFileSync(join(made.repository, '.box', 'bounties', `${made.id}.json`), 'utf8')) as { attempts?: { seenAt?: string }[]; github?: { seenPullRequests?: unknown[] } };
+    const record = JSON.parse(readRecordRaw(made.repository, made.id)) as { attempts?: { seenAt?: string }[]; github?: { seenPullRequests?: unknown[] } };
     expect((record.attempts ?? []).filter(attempt => attempt.seenAt !== undefined)).toEqual([]);
     expect(record.github?.seenPullRequests ?? []).toEqual([]);
     const status = (): string => spawnSync(process.execPath, [join(root, 'invoke.cjs'), 'bounty', 'status'], { encoding: 'utf8' }).stdout;

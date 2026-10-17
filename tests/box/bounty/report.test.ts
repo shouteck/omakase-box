@@ -1,11 +1,11 @@
 import { postToGitHub, collectPullRequest, applyPullRequest, applyGitHub, closeGitHub, statusGitHub, pullRequestFor, solverCli } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
-import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, attemptsOf, BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
-import type { Attempt, BountyRecord, CreateOptions } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo, ownerSays, runRoot, write } from './support.js';
+import type { Attempt, CreateOptions } from '../../../packages/box-bounty/index.js';
+import { git, makeRepo, ownerSays, readRecord, runRoot, write, writeRecord, writeRecordRaw } from './support.js';
 
 // Report, do not judge. `look` binds the returned folder and writes a report
 // of facts: who sent it and when, the change with counts and lines, a dry merge
@@ -13,9 +13,6 @@ import { git, makeRepo, ownerSays, runRoot, write } from './support.js';
 // sentence. Every answer is a numbered attempt that waits on a decision;
 // `apply` names the attempt, and ordinary git reverts an applied merge.
 // Nothing in the report is a verdict.
-
-const readRecord = (repo: string, id: string): BountyRecord =>
-  JSON.parse(readFileSync(join(repo, '.box', 'bounties', `${id}.json`), 'utf8')) as BountyRecord;
 
 function options(repo: string, extra: Partial<CreateOptions> = {}): CreateOptions {
   write(repo, 'TASK.md', 'the task\n');
@@ -111,7 +108,7 @@ describe('several answers — each is its own attempt', () => {
     collectPullRequest(repo, id, returned(delivered, root => write(root, 'repo/src/app.py', 'second\n')));
     const record = readRecord(repo, id);
     record.attempts = attemptsOf(record).map((attempt): Attempt => ({ ...attempt, outcome: attempt.n === 1 ? 'set-aside' : 'answered', report: [attempt.n === 1 ? 'FIRST_FAILED_REPORT_73c5' : 'SECOND_ANSWERED_REPORT_73c5'] }));
-    writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record));
+    writeRecordRaw(repo, id, JSON.stringify(record));
     const status = statusGitHub(repo, { id, full: true });
     expect(status.split('FIRST_FAILED_REPORT_73c5')).toHaveLength(2);
     expect(status.split('SECOND_ANSWERED_REPORT_73c5')).toHaveLength(2);
@@ -182,7 +179,7 @@ describe('older records still load', () => {
     const attempt = attemptsOf(record)[0]!;
     const legacy: Record<string, unknown> = { ...record, level: 'mechanical', answer: { commit: attempt.commit, changed: attempt.changed, added: attempt.added, deleted: attempt.deleted } };
     delete legacy['attempts'];
-    writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(legacy, null, 2) + '\n');
+    writeRecordRaw(repo, id, JSON.stringify(legacy, null, 2) + '\n');
     git(repo, ['update-ref', `refs/box-bounty/${id}-answer`, attempt.commit]);
     git(repo, ['update-ref', '-d', `refs/box-bounty/${id}-answer-1`]);
 
@@ -264,7 +261,7 @@ describe('the words are policed — facts, never verdicts', () => {
     const record = readRecord(repo, id);
     record.conflicts = { paths: [hostile], at: new Date().toISOString() };
     record.attempts = attemptsOf(record).map(attempt => ({ ...attempt, conflicts: [hostile] }));
-    writeFileSync(join(repo, '.box', 'bounties', `${id}.json`), JSON.stringify(record, null, 2) + '\n');
+    writeRecord(repo, record);
     const status = statusGitHub(resolveRepoRoot(repo));
     expect(status).toContain(JSON.stringify(hostile));
     expect(status).not.toContain(hostile);

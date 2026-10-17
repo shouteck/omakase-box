@@ -6,7 +6,7 @@ import type { BountyRecord } from '../../../packages/box-bounty/index.js';
 import { retiredRoute } from '../../../packages/box-bounty/record.js';
 import { nextStep } from '../../../packages/box-bounty/render.js';
 import { ownerWaitLines } from '../../../packages/box-bounty/owner-text.js';
-import { ROOT, git, makeRepo, runRoot } from './support.js';
+import { ROOT, git, makeRepo, readRecordRaw, recordFilePath, recordsDir, rewriteRecordRaw, runRoot } from './support.js';
 import { withoutGh } from './github-fixture.js';
 
 // BT23: old record shapes are converted in `asRecord` — the one place a file
@@ -15,15 +15,10 @@ import { withoutGh } from './github-fixture.js';
 
 const created = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'a reason' }));
 
-// Rewrite a created record on disk in an older shape — the way the files in
-// `.box/bounties/` actually sit. `rewrite` then reads it through the load
+// Rewrite a created record on disk in an older shape — the way the record
+// files actually sit. `rewrite` then reads it through the load
 // gate; `writeRaw` is for shapes the gate must refuse.
-const writeRaw = (repo: string, id: string, change: (record: Record<string, unknown>) => void): void => {
-  const file = join(repo, '.box', 'bounties', `${id}.json`);
-  const raw = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
-  change(raw);
-  writeFileSync(file, JSON.stringify(raw, null, 2) + '\n');
-};
+const writeRaw = rewriteRecordRaw;
 const rewrite = (repo: string, id: string, change: (record: Record<string, unknown>) => void): BountyRecord => {
   writeRaw(repo, id, change);
   return loadRecord(repo, id);
@@ -42,7 +37,7 @@ const refused = (fn: () => unknown, reason: string): BountyRefused => {
 const TODAY_STAGES = new Set(['drafted', 'confirmed', 'waiting', 'posted', 'taken', 'answered', 'applied', 'rejected', 'withdrawn', 'undone']);
 
 describe('the repository’s own old records', () => {
-  // `.box/bounties/` in this checkout holds five ended records written by the
+  // The records folder in this checkout holds five ended records written by the
   // folder era and the snapshot era — applied, rejected and one undone. They
   // are the compatibility promise made concrete: each must load, land on a
   // stage that exists today, and `status --full` must show what it showed
@@ -52,12 +47,12 @@ describe('the repository’s own old records', () => {
   it('all five load and `status --full` shows them as before', () => {
     const fixturePath = join(ROOT, 'tests', 'box', 'bounty', 'bt23-real-records.fixture.txt');
     const repo = makeRepo({ 'TASK.md': 'x\n' });
-    const recordsDir = join(repo, '.box', 'bounties');
-    mkdirSync(recordsDir, { recursive: true });
-    const realDir = join(ROOT, '.box', 'bounties');
+    const targetDir = recordsDir(repo);
+    mkdirSync(targetDir, { recursive: true });
+    const realDir = recordsDir(ROOT);
     const files = readdirSync(realDir).filter(name => name.endsWith('.json')).sort();
     expect(files.length).toBe(5);
-    for (const name of files) copyFileSync(join(realDir, name), join(recordsDir, name));
+    for (const name of files) copyFileSync(join(realDir, name), join(targetDir, name));
     // Only the volatile fields move between runs: the refresh stamps the
     // format-read lines with the clock, and the header names the scratch
     // repo. Stored record values keep their bytes.
@@ -141,7 +136,7 @@ describe('the conversion table, row by row', () => {
     expect(renderStatus(repo, { id: made.id })).toContain('(job: JOB.md)');
     // A write-back carries today's shape — nothing the tool writes names the
     // dropped fields again.
-    const written = readFileSync(join(repo, '.box', 'bounties', `${made.id}.json`), 'utf8');
+    const written = readRecordRaw(repo, made.id);
     for (const gone of ['"answer"', '"level"', '"replies"']) expect(written).not.toContain(gone);
   });
 
@@ -167,7 +162,7 @@ describe('the conversion table, row by row', () => {
   it('a check-era attempt that never went green is never `apply`’s default pick — only a number names it', () => {
     const repo = makeRepo({ 'TASK.md': 'x\n' });
     const made = created(repo);
-    const file = join(repo, '.box', 'bounties', `${made.id}.json`);
+    const file = recordFilePath(repo, made.id);
     // A GitHub-posted record reaches the attempt check — an answered record
     // with no publication is the retired folder route and refuses earlier.
     rewrite(repo, made.id, raw => {
