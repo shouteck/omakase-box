@@ -11,4 +11,4 @@ Updated by the CTO on 17 October 2026 at the K25 close.
 
 ## Next
 
-No wave is in flight. This run stops after K25. The five proposed memory waves in `kitchen/reviews/K25-memory.md` and the deferred **BT12 Part B** wait for the owner's direction.
+**BT28** (the five approved K25 memory improvements in one wave) is briefed in `waves/BT28.md` and cooking now. BT12 Part B stays deferred until the owner resumes it.
