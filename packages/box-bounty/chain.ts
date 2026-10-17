@@ -332,6 +332,14 @@ export function syncChains(root: string, force = false): void {
   retryPending(root, url);
 }
 
+// The only commands allowed to touch the remote for memory (brief, reading):
+// `box bounty`, `status`, `find`, `status --json` and `hook start` call this
+// before they read records. Every other command works the imported cache.
+// A failure never blocks the read — the cache answers and says so once.
+export function refreshSharedMemory(root: string): void {
+  try { syncChains(root); } catch { /* shared memory is a read cache — never a reason a read fails */ }
+}
+
 // Remote-tracking chains: adopt into local refs (merging diverged ones) and
 // import the events of every chain whose tip moved since the last import.
 function adoptAndImport(root: string): void {

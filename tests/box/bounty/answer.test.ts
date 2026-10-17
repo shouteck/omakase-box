@@ -44,8 +44,15 @@ function returned(delivered: string, mutate?: (dir: string) => void): string {
   return dir;
 }
 
-const refGone = (repo: string, id: string): boolean =>
-  spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${id}`], { encoding: 'utf8' }).status !== 0;
+// `refs/box-bounty/<id>` had one job before BT32 — the legacy snapshot pin,
+// which these tests assert was never written for today's records. BT32 gives
+// the same name to the shared chain ref, so "the pin was not written" now
+// reads: the ref is absent, or its tip holds `event.json` (a chain commit).
+const refGone = (repo: string, id: string): boolean => {
+  const tip = spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${id}`], { encoding: 'utf8' });
+  if (tip.status !== 0) return true;
+  return spawnSync('git', ['-C', repo, 'cat-file', '-e', `${tip.stdout.trim()}:event.json`], { encoding: 'utf8' }).status === 0;
+};
 
 const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
   try {

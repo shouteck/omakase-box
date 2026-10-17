@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
@@ -14,7 +14,10 @@ export const GIT_LEAST = '2.40';
 
 let pinnedGit: string | undefined;
 export function gitProgram(): string {
-  if (pinnedGit !== undefined) return pinnedGit;
+  // The pin saves one probe spawn per call; a path that vanished (a stripped
+  // PATH in a test, a Git upgrade mid-session) falls back to resolving again.
+  if (pinnedGit !== undefined && existsSync(pinnedGit)) return pinnedGit;
+  pinnedGit = undefined;
   let program: string;
   try { program = resolve(resolveProgram('git').path); }
   catch { throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — none was found on PATH. Get it at https://git-scm.com`); }

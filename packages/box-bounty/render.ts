@@ -19,6 +19,7 @@ import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { payToLine } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
+import { refreshSharedMemory } from './chain.js';
 import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
@@ -129,6 +130,8 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 // empty project says so and says what to do. `--comments` prints the issue's
 // comments marked as written by others. Never prints nothing.
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
+  // BT32: `status` is one of the five commands that refresh shared memory.
+  refreshSharedMemory(repoRoot);
   let single: BountyRecord | undefined;
   if (options.id !== undefined) {
     try {

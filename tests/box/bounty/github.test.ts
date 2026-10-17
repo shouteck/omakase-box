@@ -60,7 +60,12 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(pub.pushed).toEqual([]);
     expect(git(bare, ['rev-parse', `refs/heads/${pub.branch}`])).toBe(head);
     // Zero file content was uploaded: the branch is a name, nothing more.
-    expect(git(bare, ['count-objects', '-v'])).toBe(objects);
+    // BT32: the `posted` chain event does land on the remote — exactly one
+    // commit, one tree and the event.json blob under refs/box-bounty/<id>.
+    const chainObjects = git(bare, ['rev-list', '--objects', `refs/box-bounty/${id}`]).trim().split('\n').length;
+    expect(chainObjects).toBe(3);
+    const countOf = (text: string): number => Number(/count: (\d+)/.exec(text)![1]);
+    expect(countOf(git(bare, ['count-objects', '-v']))).toBe(countOf(objects) + chainObjects);
     expect(state().issues).toHaveLength(1);
     const issue = state().issues[0]!;
     expect(issue.body).toContain('Repair the app.');
@@ -163,7 +168,9 @@ describe('GitHub bounty destination, entirely offline', () => {
     expect(state().issues.find(issue => issue.number === 2)!.state).toBe('open');
     expect(state().comments).toHaveLength(1);
     expect(state().comments[0]!.body).toContain('Withdrawn.');
-    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toContain('box-bounty');
+    // BT32: the pushed chain ref `refs/box-bounty/<id>` stays by design —
+    // what a close removes is the solver branch under refs/heads/.
+    expect(spawnSync('git', ['-C', bare, 'show-ref'], { encoding: 'utf8' }).stdout).not.toMatch(/refs\/heads\/box-bounty/);
     expect(spawnSync('git', ['-C', repo, 'show-ref', '--verify', '--quiet', `refs/box-bounty/${id}-github`]).status).toBe(1);
   }));
 

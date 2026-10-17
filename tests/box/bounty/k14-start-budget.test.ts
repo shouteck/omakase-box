@@ -82,21 +82,32 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // is gone, so gh is 0 and Git drops to the measured count.
   // BT24: the snapshot pin went with the record field — one `update-ref`
   // start fewer than BT20's 15.
-  'create': { git: 14, gh: 0 },
-  'status-drafted': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
-  'close-draft': { git: 3, gh: 0 },
+  'create': { git: 14, gh: 0 }, // BT32: create is not a fetching surface and writes no chain — count unchanged.
+  // BT32: `status` refreshes shared memory once a minute — one config read,
+  // one `fetch +refs/box-bounty/*`, one `for-each-ref` of the tracking
+  // namespace (measured +3 over BT16's count).
+  'status-drafted': { git: 6, gh: 0 },
+  'close-draft': { git: 4, gh: 0 }, // BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
   'post-preview': { git: 18, gh: 3 },
-  'post-github': { git: 21, gh: 8 },
-  'status-posted': { git: 3, gh: 5 }, // +1: BT16's all-projects remote read (see above)
-  'status-comments': { git: 4, gh: 7 }, // +1: BT16's all-projects remote read (see above)
-  'look-pr': { git: 19, gh: 2 },
-  'look': { git: 6, gh: 0 },
+  // BT32: +6 — posting appends the `posted` event (hash-object, mktree,
+  // commit-tree, update-ref) and pushes the chain ref.
+  'post-github': { git: 27, gh: 8 },
+  // BT32: +6 — refresh (fetch + for-each-ref) plus adopting/importing the
+  // returned chain tips for the posted bounty.
+  'status-posted': { git: 9, gh: 5 },
+  'status-comments': { git: 10, gh: 7 },
+  // BT32: +9 — `look` is a fetching surface; collecting the answer also
+  // appends the `solution` chain event and pushes it.
+  'look-pr': { git: 28, gh: 2 },
+  'look': { git: 6, gh: 0 }, // second read inside the minute: the throttle serves the cache — count unchanged
   'look-full': { git: 6, gh: 0 },
-  'apply': { git: 15, gh: 5 },
-  'status-applied': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
+  // BT32: +11 — the merge appends `solution`/`merged` events and pushes the
+  // chain on top of the refresh the command already pays.
+  'apply': { git: 26, gh: 5 },
+  'status-applied': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 5 },
   'close-reason': { git: 4, gh: 0 },
-  'status-end': { git: 3, gh: 0 } // +1: BT16's all-projects remote read (see above)
+  'status-end': { git: 9, gh: 0 } // BT32: +6 — same refresh + import as status-posted
 };
 
 it('every bounty command stays within its Git and gh start budget', () => fixture(context => {

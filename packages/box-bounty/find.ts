@@ -9,6 +9,7 @@
 import { BountyRefused } from './errors.js';
 import { isOpenStage,noticeMergedOnce } from './record.js';
 import { searchRecords,sharedSearch } from './store.js';
+import { refreshSharedMemory } from './chain.js';
 import type { BountyRecord } from './record.js';
 
 export const FIND_RESULT_LIMIT = 20;
@@ -39,6 +40,9 @@ export function findBounties(repoRoot: string, query: string): { readonly total:
   // itself is the store's: one plain substring search, the same on every
   // Node — then the same per-field check names what matched, so `matched:`
   // reads as it always has.
+  // BT32: `find` is one of the five commands that refresh shared memory —
+  // throttled inside; it runs before the merged-scan read it feeds.
+  refreshSharedMemory(repoRoot);
   noticeMergedOnce(repoRoot);
   // BT32: shared rows join the read — one search over local records and the
   // imported chains, local winning every id it owns.

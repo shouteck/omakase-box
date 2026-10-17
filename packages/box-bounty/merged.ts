@@ -25,7 +25,7 @@ import { emitMergeNotice as emit,showPath } from './notice.js';
 import { readDecision,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
-import { shareMerged,syncChains } from './chain.js';
+import { shareMerged } from './chain.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
@@ -54,10 +54,10 @@ export function noticeMergedSolutions(repoRoot: string): void {
   try { key = resolve(realpathSync(repoRoot)); } catch { key = resolve(repoRoot); }
   if (noticed.has(key)) return;
   noticed.add(key);
-  // BT32: every record-reading command refreshes the shared bounty memory
-  // first — fetch throttled at once a minute, import and pending retries
-  // inside; a failure leaves the cache answering and says so once.
-  try { syncChains(repoRoot); } catch { /* shared memory is a read cache — never a reason a read fails */ }
+  // BT32: the shared bounty memory refreshes only where the brief names it —
+  // `box bounty`, `status`, `find`, `status --json` and `hook start` call
+  // refreshSharedMemory themselves; every other record reader runs this scan
+  // against the last imported cache and never touches the remote.
   noticing = true;
   try { scan(repoRoot); } finally { noticing = false; }
 }

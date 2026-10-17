@@ -28,6 +28,7 @@ import { refreshGitHubStatus } from './collect.js';
 import { walkProjectPath } from './instructions.js';
 import { attemptsOf,openRecords } from './record.js';
 import { countCorrupt,endedContaining } from './store.js';
+import { refreshSharedMemory } from './chain.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import { boundAmount } from './format.js';
@@ -173,6 +174,9 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   let corrupt;
   let ended: BountyRecord[] = [];
   try {
+    // BT32: `hook start` is one of the five commands that refresh shared
+    // memory — the other slots read the cache like every other command.
+    if (slot === 'start') refreshSharedMemory(repoRoot);
     open = openRecords(repoRoot);
     corrupt = countCorrupt(repoRoot);
     // Only ended bounties that recorded a pay fact can print a pay line —

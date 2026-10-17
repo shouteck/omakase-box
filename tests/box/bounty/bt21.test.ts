@@ -41,7 +41,7 @@ it('under allowed an agent-merged solution closes up on GitHub — quietly', () 
   expect(loadRecord(repo, id).events.at(-1)?.merge).toBe(merge);
   expect(state().issues[0]!.state).toBe('closed');
   expect(state().comments.some(comment => comment.body.includes(`<!-- box-bounty:${id}:merged -->`))).toBe(true);
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   expect(unasked()).toEqual([]);
 }, { collected: true }));
 
@@ -51,7 +51,7 @@ it('under deny the same close-up happens — and says so once, naming deny', () 
   noticed.length = 0;
   checkMergedSolutions(repo);
   expect(state().issues[0]!.state).toBe('closed');
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   const lines = unasked();
   expect(lines).toHaveLength(1);
   expect(lines[0]).toContain(id);
@@ -71,7 +71,7 @@ it("under 'ask me each time' the same close-up happens — and says so once", ()
   noticed.length = 0;
   checkMergedSolutions(repo);
   expect(state().issues[0]!.state).toBe('closed');
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   const lines = unasked();
   expect(lines).toHaveLength(1);
   expect(lines[0]).toContain('ask me each time');

@@ -105,7 +105,7 @@ it('closes without a solution and supports older issues with no block', () => po
   closeBounty(repo, id);
   const read = readFormat(state().issues[0]!.body);
   expect(read.kind === 'present' && read.value.state).toEqual({ kind: 'closed-none' });
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   expect(body).not.toBe(state().issues[0]!.body);
 }, { collected: false }));
 
@@ -116,7 +116,7 @@ it('malformed metadata never prevents outside close or branch removal', () => po
   expect(result.outcome).toBe('applied');
   expect(state().issues[0]!.body).toBe(body);
   expect(state().issues[0]!.state).toBe('closed');
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   expect(renderStatus(repo, { id, full: true })).toContain('preserved-invalid');
 }));
 
@@ -151,7 +151,7 @@ it('a failed block write still closes and reports the stale block truthfully', (
   applyBounty(repo, id, 1);
   expect(state().issues[0]!.body).toBe(body);
   expect(state().issues[0]!.state).toBe('closed');
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   const status = renderStatus(repo, { id, full: true });
   expect(status).toContain('update-failed');
   expect(status).toContain('differs-from-record');

@@ -91,7 +91,7 @@ export { GH_LEAST } from './gh.js';
 export { HOOK_COMMAND, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, HOOK_GITHUB_INTERVAL_MS, HOOK_HOSTS, HOOK_SLOTS, HOOK_START_OPEN_LIMIT, hookDisclosure, hookGroups, hookHost, hookOff, hookOn, hookStatus, runHook } from './hook.js';
 export type { HookHost, HookRun, HookSlot } from './hook.js';
 export { limitGitHubCalls } from './gh.js';
-export { CHAIN_NS, CHAIN_REMOTE_NS, chainRef, syncChains, sharePosted, shareSolution, shareMerged, shareClosed, sharedOnlyRefusal, appendEvent, pushChain } from './chain.js';
+export { CHAIN_NS, CHAIN_REMOTE_NS, chainRef, syncChains, refreshSharedMemory, sharePosted, shareSolution, shareMerged, shareClosed, sharedOnlyRefusal, appendEvent, pushChain } from './chain.js';
 export type { PushResult } from './chain.js';
 export { sharedOpen, sharedEnded, sharedRead, sharedSearch, metaGet, metaSet, metaKeys } from './store.js';
 export type { SharedRow } from './store.js';

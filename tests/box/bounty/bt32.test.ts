@@ -2,12 +2,27 @@
 // event per commit. These tests run the real sync against the fixture's bare
 // "GitHub" remote and a genuine second clone — never a mocked chain.
 import { execFileSync } from 'node:child_process';
+import { readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { closeBounty, loadRecord, renderStatus, findBounties, postBounty, BountyRefused, syncChains, sharedRead, appendEvent, pushChain } from '../../../packages/box-bounty/index.js';
+import { closeBounty, createBounty, loadRecord, renderStatus, statusDocument, findBounties, postBounty, answerGitHub, applyBounty, renderHelp, renderDescribe, configDocument, setMergeNoticeListener, BountyRefused, syncChains, sharedRead, appendEvent, pushChain } from '../../../packages/box-bounty/index.js';
 import { sharedFixture, sharedPostedFixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { git, readRecordRaw, runRoot, writeRecordRaw } from './support.js';
+
+// Every git process the tool spawns lands in this trace file — the way a
+// test counts fetches and pushes instead of trusting throttle state.
+function traceGit(label: string, action: () => void): string {
+  const file = join(runRoot(label), 'git-trace.log');
+  const before = process.env.GIT_TRACE;
+  process.env.GIT_TRACE = file;
+  try { action(); } finally {
+    if (before === undefined) delete process.env.GIT_TRACE; else process.env.GIT_TRACE = before;
+  }
+  try { return readFileSync(file, 'utf8'); } catch { return ''; }
+}
+const gitCalls = (trace: string, verb: string): number =>
+  trace.split('\n').filter(line => new RegExp(`git ${verb}\\b`).test(line)).length;
 
 // A real second machine: a clone of the bare remote with the same repository
 // identity, so its sync fetches/pushes the same URLs the first machine's did.
@@ -32,13 +47,27 @@ const eventsOf = (repo: string, tip: string): Record<string, unknown>[] =>
   git(repo, ['rev-list', '--topo-order', '--reverse', tip]).split('\n').filter(line => line !== '').map(commit =>
     JSON.parse(git(repo, ['cat-file', 'blob', `${commit}:event.json`])) as Record<string, unknown>);
 
-describe('BT32 shared bounty memory', () => {
+describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
   it('a post writes one chain commit and pushes the ref — clone does not see it by default', () => {
     { const world = sharedFixture(); world.run(() => {
+      // Case 1: a created draft is local — no chain ref anywhere, no push.
+      expect(chainTip(world.repo, world.id)).toBeNull();
+      expect(bareTip(world, world.id)).toBeNull();
+
       postBounty(world.repo, world.id, 'github');
       const tip = chainTip(world.repo, world.id);
       expect(tip).not.toBeNull();
-      expect(eventsOf(world.repo, tip!)).toMatchObject([{ v: 1, type: 'posted', id: world.id }]);
+      const events = eventsOf(world.repo, tip!);
+      expect(events).toHaveLength(1);
+      const posted = events[0]!;
+      expect(posted).toMatchObject({ v: 1, type: 'posted', id: world.id });
+      // Case 2, field by field: exactly the allow-list — common fields plus
+      // posted's own — and every "never in a chain" name absent.
+      const allowed = new Set(['v', 'type', 'at', 'actor', 'id', 'title', 'task', 'why', 'partOf', 'followup', 'base', 'branch', 'issue', 'published', 'reward', 'allowedBy']);
+      for (const key of Object.keys(posted)) expect(allowed.has(key), `field ${key} is not on the posted allow-list`).toBe(true);
+      for (const never of ['folder', 'resume', 'seenAt', 'waiting', 'scanFindings', 'githubApproval', 'conflicts', 'snapshot', 'decisionMode', 'promised', 'questions', 'told']) {
+        expect(posted[never], `never-field ${never} leaked into the chain`).toBeUndefined();
+      }
       expect(bareTip(world, world.id)).toBe(tip);
       // An ordinary clone downloads no chain refs (step-0 fact, kept honest).
       const plain = join(runRoot('bt32-plain'), 'repo');
@@ -46,12 +75,20 @@ describe('BT32 shared bounty memory', () => {
       // give this remote the ordinary main HEAD real remotes always carry.
       execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'symbolic-ref', 'HEAD', 'refs/heads/main'], { encoding: 'utf8' });
       execFileSync('git', ['-c', `safe.directory=${world.bare}`, 'clone', '--no-local', world.bare, plain], { encoding: 'utf8' });
-      // No local chain ref, and nothing of the bounty in the checkout — the
-      // GitHub-side fact (a fresh clone downloads no chain ref at all) is
-      // Step 0's evidence; the file transport this fixture uses maps remote
-      // refs more eagerly than github.com does.
+      // No local chain ref, and no chain commit reachable from any ref the
+      // clone created — the GitHub-side fact (a fresh clone downloads no
+      // chain ref at all) is Step 0's evidence. Note: the remote also carries
+      // the published solver branch refs/heads/box-bounty/<id>, which every
+      // clone legitimately maps to refs/remotes/origin/box-bounty/<id> — it
+      // holds the ordinary base commit, never a chain commit.
       expect(git(plain, ['for-each-ref', 'refs/box-bounty'])).toBe('');
+      expect(git(plain, ['for-each-ref'])).not.toContain(tip!);
       expect(git(plain, ['ls-files'])).not.toContain('box-bounty');
+      // Case 11: grep and log -p over the branch show nothing of the chains.
+      let grepped = '';
+      try { grepped = execFileSync('git', ['-c', `safe.directory=${plain}`, '-C', plain, 'grep', '-l', 'box-bounty', 'HEAD'], { encoding: 'utf8' }); } catch { /* exit 1 = no match */ }
+      expect(grepped.trim()).toBe('');
+      expect(execFileSync('git', ['-c', `safe.directory=${plain}`, '-C', plain, 'log', '-p', '--all', '--format=%H'], { encoding: 'utf8' })).not.toContain('event.json');
     }); }
   });
 
@@ -67,8 +104,31 @@ describe('BT32 shared bounty memory', () => {
       expect(failure).toThrowError(BountyRefused);
       try { loadRecord(other, world.id); expect.unreachable(); }
       catch (error) { expect(error).toMatchObject({ reason: 'shared-only' }); }
-      // find sees it too — recall by purpose crosses machines.
+      // find sees it too — recall by purpose crosses machines, including a
+      // word that only ever lived in the why (M3/M5).
       expect(findBounties(other, 'repair').total).toBeGreaterThan(0);
+      expect(findBounties(other, 'eyes').total).toBeGreaterThan(0);
+      // status --json carries the shared bounty with its facts.
+      const doc = statusDocument(other, {}, () => {});
+      const entry = (doc['bounties'] as Record<string, unknown>[]).find(row => row['id'] === world.id);
+      expect(entry, 'status --json names the shared bounty').toBeDefined();
+      expect(JSON.stringify(entry)).toContain('need another pair of eyes');
+    }); }
+  });
+
+  it('collection and apply append solution and merged events; the merge commit carries the why', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      answerGitHub(world.repo, world.id, 1);
+      const result = applyBounty(world.repo, world.id, 1);
+      expect(result.outcome).toBe('applied');
+      const events = eventsOf(world.repo, bareTip(world, world.id)!);
+      const types = events.map(e => e['type']);
+      expect(types).toEqual(['posted', 'solution', 'merged']);
+      const merged = events.at(-1)!;
+      expect(merged).toMatchObject({ v: 1, type: 'merged', mergeCommit: result.mergeCommit });
+      // Decision 6: git log/blame answer why without the tool (M10).
+      const message = git(world.repo, ['log', '-1', '--format=%B', result.mergeCommit!]);
+      expect(message).toContain('why: need another pair of eyes');
     }); }
   });
 
@@ -156,6 +216,54 @@ describe('BT32 shared bounty memory', () => {
       syncChains(world.repo, true);
       expect(bareTip(world, world.id)).not.toBeNull();
       expect(eventsOf(world.repo, bareTip(world, world.id)!).length).toBe(events.length);
+    }); }
+  });
+
+  it('five refreshes inside a minute fetch once', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      const other = secondMachine(world);
+      const trace = traceGit('bt32-throttle', () => {
+        for (let n = 0; n < 5; n += 1) syncChains(other);
+      });
+      expect(gitCalls(trace, 'fetch')).toBe(1);
+    }); }
+  });
+
+  it('a dead remote answers from the cache and says so once per spell', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      const other = secondMachine(world);
+      syncChains(other);
+      expect(sharedRead(other, world.id)?.id).toBe(world.id);
+      // Kill the remote: the URL still names the project, the path is gone —
+      // the fixture maps the URL to this bare dir, so removing the dir is the
+      // dead remote.
+      rmSync(world.bare, { recursive: true, force: true });
+      const notices: string[] = [];
+      setMergeNoticeListener(line => notices.push(line));
+      try {
+        syncChains(other, true);
+        syncChains(other, true);
+      } finally {
+        setMergeNoticeListener(null);
+      }
+      // The cache still answers — the bounty is there, stale but stated.
+      expect(sharedRead(other, world.id)?.id).toBe(world.id);
+      const stale = notices.filter(line => line.includes('shared bounty memory not refreshed'));
+      expect(stale).toHaveLength(1);
+      expect(stale[0]).toContain('showing what this machine last saw');
+    }); }
+  });
+
+  it('create, help, describe and config never fetch and never push', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      const trace = traceGit('bt32-quiet', () => {
+        createBounty({ repoPath: world.repo, taskPath: join(world.repo, 'TASK.md'), title: 'Another task', why: 'still need eyes' });
+        renderHelp();
+        renderDescribe(world.repo);
+        configDocument(world.repo, () => {});
+      });
+      expect(gitCalls(trace, 'fetch')).toBe(0);
+      expect(gitCalls(trace, 'push')).toBe(0);
     }); }
   });
 

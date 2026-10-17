@@ -51,7 +51,7 @@ it('drives the post-refusal path: clashing apply, own merge, a later command clo
   expect(status.stdout).toContain('applied');
   expect(state().issues[0]!.state).toBe('closed');
   expect(state().comments.some(c => c.body.includes(`<!-- box-bounty:${id}:merged -->`) && c.body.includes(merge))).toBe(true);
-  expect(git(bare, ['show-ref'])).not.toContain(`box-bounty/${id}`);
+  expect(git(bare, ['show-ref'])).not.toContain(`refs/heads/box-bounty/${id}`); // BT32: the chain ref stays; the solver branch is what close removes
   const again = cli(repo, process.env, 'status');
   expect(again.stdout).not.toContain('is merged on');
 }, { collected: false }), 120000);
