@@ -36,9 +36,9 @@ export function findBounties(repoRoot: string, query: string): { readonly total:
   if (needle === '') throw new BountyRefused('missing-query', 'find needs words to look for — box bounty find "<words>"');
   // The merged-solution scan still runs first — a record read is the moment
   // an outside merge is recognised, and find is a record read. The matching
-  // itself is the store's: FTS5 for a needle of three letters or more, the
-  // substring listing below that — then the same per-field check names what
-  // matched, so `matched:` reads as it always has.
+  // itself is the store's: one plain substring search, the same on every
+  // Node — then the same per-field check names what matched, so `matched:`
+  // reads as it always has.
   noticeMergedOnce(repoRoot);
   const candidates = searchRecords(repoRoot, needle);
   const matches: FindMatch[] = [];

@@ -890,6 +890,8 @@ in the owner's settings outside the repository.
 `create` also writes the record inside the repository — since BT31, one row
 per bounty in the checkout's SQLite store at `.box/local/box.db` (a folder
 the tool keeps ignored; nothing under it is ever shipped or committed).
+`find` is one plain case-insensitive substring search over a lower-cased text
+column, the same on every Node; SQLite's FTS5 is not used.
 Records written before that wave sat at `.box/bounties/<id>.json`; those
 files are still imported and honoured. The record holds the id, title, the
 public task and generated note facts, and the stage
