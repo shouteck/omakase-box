@@ -83,9 +83,9 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // BT24: the snapshot pin went with the record field — one `update-ref`
   // start fewer than BT20's 15.
   'create': { git: 14, gh: 0 }, // BT32: create is not a fetching surface and writes no chain — count unchanged.
-  // BT32: `status` refreshes shared memory once a minute — one config read,
-  // one `fetch +refs/box-bounty/*`, one `for-each-ref` of the tracking
-  // namespace (measured +3 over BT16's count).
+  // BT32: `status` refreshes shared memory once a minute — one config read
+  // and one `fetch +refs/box-bounty/*`; an empty shared memory skips the
+  // ref listings entirely (measured +2 over BT16's count).
   'status-drafted': { git: 6, gh: 0 },
   'close-draft': { git: 4, gh: 0 }, // BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
   'post-preview': { git: 18, gh: 3 },

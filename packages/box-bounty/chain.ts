@@ -27,7 +27,7 @@ import { emitMergeNotice } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
 import { scanText } from './scan.js';
 import { loadState, requireRepository, saveState } from './settings.js';
-import { importShared, metaGet, metaSet } from './store.js';
+import { importShared, metaGet, metaKeys, metaSet } from './store.js';
 import type { SharedRow } from './store.js';
 
 export const CHAIN_NS = 'refs/box-bounty';
@@ -349,7 +349,10 @@ function adoptAndImport(root: string): void {
   // mergeRemoteTip probe — on a large shared memory that is two git starts
   // per unchanged bounty on every reading command, minutes at 1,000 chains.
   const localTips = new Map(
-    gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_NS]).stdout
+    // No remote-tracking refs means nothing to compare: skip the listing so
+    // a plain read on an empty shared memory costs no extra git start (K14).
+    (remoteLines.length === 0 ? { stdout: '' } :
+    gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_NS])).stdout
       .split('\n').filter(line => line !== '')
       .map(line => { const [ref, sha] = line.split(' '); return [ref!.slice(`${CHAIN_NS}/`.length), sha!] as const; })
   );
@@ -370,6 +373,10 @@ function adoptAndImport(root: string): void {
 // A chain this machine has that the remote does not reflect: a pending push
 // retries here, and a remote-deleted chain restores from the local copy.
 function retryPending(root: string, url?: string): void {
+  // Every chain this machine knows leaves a chain_* meta key (pending,
+  // pushed or imported tip) — without one the ref listing below can only
+  // be empty, so skip its git start on reads with no shared memory (K14).
+  if (metaKeys(root, 'chain_').length === 0) return;
   url ??= remoteUrl(root) ?? undefined;
   if (url === undefined) return;
   const localLines = gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_NS]).stdout

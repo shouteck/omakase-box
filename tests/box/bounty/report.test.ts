@@ -48,6 +48,16 @@ const expectRefusal = (fn: () => unknown, reason: string): BountyRefused => {
 const refExists = (repo: string, ref: string): boolean =>
   spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', ref], { encoding: 'utf8' }).status === 0;
 
+// `refs/box-bounty/<id>` meant the legacy snapshot pin before BT32, which is
+// what "gone" asserts here; BT32 gives the same name to the shared chain
+// ref, so gone reads: absent, or its tip holds `event.json` (a chain
+// commit). The `-answer-N` pins keep the strict check above.
+const refGone = (repo: string, id: string): boolean => {
+  const tip = spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', `refs/box-bounty/${id}`], { encoding: 'utf8' });
+  if (tip.status !== 0) return true;
+  return spawnSync('git', ['-C', repo, 'cat-file', '-e', `${tip.stdout.trim()}:event.json`], { encoding: 'utf8' }).status === 0;
+};
+
 describe('the fact report', () => {
   it('states who sent it and when, the change, the merge read, flags, the nothing-was-run sentence, and the next command', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
@@ -140,7 +150,7 @@ describe('several answers — each is its own attempt', () => {
     expect(applyGitHub(repo, id, 2).outcome).toBe('applied');
     expect(refExists(repo, `refs/box-bounty/${id}-answer-1`)).toBe(false); // the other's ref is gone
     expect(refExists(repo, `refs/box-bounty/${id}-answer-2`)).toBe(false);
-    expect(refExists(repo, `refs/box-bounty/${id}`)).toBe(false);
+    expect(refGone(repo, id)).toBe(true);
   });
 
   it('two answered attempts make apply name which one; apply <n> lands it', () => {
