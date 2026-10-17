@@ -135,11 +135,20 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 
 ### Order (dependencies, no dates)
 
-1. K28 (cooking) → BT32 rewritten and built (G8).
-2. BT34 → K29 (the lean retirement), so every later wave is cheaper.
-3. A real-use wave in the sandbox repository (G9).
-4. G3 and G5 (small).
-5. G7, publishing, when the owner says.
+| # | Wave | Serves | Needs first | Independent? |
+|---|---|---|---|---|
+| 1 | **K28** the delegation record, researched (cooking) | memory (G8) | — | — |
+| 2 | **BT34** the bounty tool stands alone | lean | — | **yes**: any time |
+| 3 | **BT32** shared memory, rewritten from K28 | memory (G8) | K28, and the owner's approval of the rewritten brief | no |
+| 4 | **K29** retire the older Box platform | lean | BT34 | no |
+| 5 | **BT35** open bounties show their age | track (G3) | — | **yes**: any time |
+| 6 | **BT36** the owner records that a solver was paid | pay (G5) | the owner confirms its decision 1; its shared-memory test needs BT32 | mostly: all but one test any time |
+| 7 | **K31** the tool in real use, in the sandbox | all stages (G9) | BT32; the owner's "go" for real $0 public posts; best after BT35 and BT36 so it tests them too | no |
+| 8 | **K30** stage contracts audited | every stage | K29 and BT32 (so it audits only the product, with its memory) | no |
+| 9 | hardening waves, one per stage that needs one | the stages K30 names | K30 (briefed from its list) | no |
+| 10 | publishing (BT12 Part B) | getting the tool (G7) | the owner's decision | owner's |
+
+The kitchen has one stove, so waves cook one at a time; "independent" means it can be named at any point without waiting for another wave.
 
 ## Built
 
@@ -207,6 +216,10 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **BT33** (parked) | **Private sync of the shared memory through a free online database (Turso).** Briefed and approved, then parked by the owner on 17 October 2026: not important now. Revive only on a real need. | Brief kept: [waves/BT33.md](waves/BT33.md). |
 | **BT34** | **The bounty tool stands alone.** Copies the one function it uses from the older platform (`resolveProgram`) into `box-bounty`; a guard test keeps any older package from being imported again. No behaviour change. | Brief: [waves/BT34.md](waves/BT34.md). Lean, owner-approved 18 October 2026. |
 | **K29** | **Retire the older Box platform from master.** Archive branch first; inventory of who uses what; removal in green chunks (older `box` subcommands refuse by name; packages, apps, services; root wiring and lockfile; kitchen tooling without a database; the hosted check reduced to the product's suites; docs and backlog). `.execution/` and `docs/legacy/` untouched. | Brief: [waves/K29.md](waves/K29.md). Owner-approved 18 October 2026. |
+| **BT35** | **Open bounties show their age, and a long wait is said once.** Open and last-activity age in `status`, `box bounty` and `--json`; after 14 days with no new solution, one line per bounty, said once, naming keep waiting or close. Nothing automatic. | Brief: [waves/BT35.md](waves/BT35.md). Roadmap G3. |
+| **BT36** | **The owner can record that a solver was paid.** `config set paid <id>` (owner to confirm), amount copied from the bound reward, shown as owed or paid, shared with the memory; never verified, moved or posted. | Brief: [waves/BT36.md](waves/BT36.md). Roadmap G5. |
+| **K31** | **The tool in real use, measured against the roadmap's questions.** Five genuine $0 tasks in the sandbox: fresh posting, solver and later agents on two machines; every actor question scored from transcripts; real timings; only fixes real use shows. Needs the owner's go. | Brief: [waves/K31.md](waves/K31.md). Roadmap G9. |
+| **K30** | **Every stage's contract written down, and every guarantee proven or named as unproven.** `docs/box-v4/CONTRACTS.md`; each guarantee mapped to the test that would fail; the most important shown to bite; scale targets mapped to measurements; gaps ranked; hardening waves proposed. | Brief: [waves/K30.md](waves/K30.md). The engineering roadmap made provable. |
 | **BT12** (Part A merged `155f3da`; Part B waits for the owner) | **Someone else can install it.** One artifact holding only the bounty tool, a `box` command, proven from a clean machine on Linux and Windows, with a first-five-minutes page, and shown in a live demo: a fresh agent, driving a terminal and a browser the way a person would, installs it into a fresh clone of this repository and goes through the whole workflow with a real test bounty, the kitchen as solver and the owner's test payment link. Then, separately, whether to publish it. | Brief: [waves/BT12.md](waves/BT12.md). **Not approved.** Making it installable is product work; publishing it under a name is the owner's decision alone, after seeing exactly what would be published, and the owner holds the registry account. **Direction, owner 14 October 2026: agents are the users, so an npm package runnable with `npx`, everything bundled into one file, a stated minimum Node with a named refusal, the install line in the instruction-file notice, proven in an empty sandbox; a `gh` extension later; no single-file executable for now.** |
 
 Every remaining wave has its brief, written ahead on 11 October 2026. The head chef checks each against the Result of the wave before it and corrects names only; a change of substance comes back to the owner.
