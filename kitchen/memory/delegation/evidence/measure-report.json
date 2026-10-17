@@ -1,35 +1,35 @@
 {
-  "at": "2026-10-17T16:09:56.159Z",
+  "at": "2026-10-17T16:25:54.865Z",
   "node": "v24.11.0",
   "report": [
     {
       "name": "push-one-event ms (5 runs)",
-      "value": "162, 175, 156, 156, 172",
-      "note": "spread 156-175"
+      "value": "282, 417, 312, 221, 231",
+      "note": "spread 221-417"
     },
     {
       "name": "fetch-one-event ms (5 runs)",
-      "value": "210, 287, 277, 260, 253",
-      "note": "spread 210-287"
+      "value": "446, 590, 498, 611, 549",
+      "note": "spread 446-611"
     },
     {
       "name": "seed-1000x5 s",
-      "value": "3.6",
+      "value": "7.3",
       "note": ""
     },
     {
       "name": "push-1000-chains ms",
-      "value": 1890,
+      "value": 2937,
       "note": ""
     },
     {
       "name": "remote size after 1000x5",
-      "value": "count: 21 | size: 1.94 KiB | size-pack: 1.54 MiB",
+      "value": "count: 21 | size: 1.93 KiB | size-pack: 1.54 MiB",
       "note": ""
     },
     {
       "name": "first-fetch-1000-chains ms",
-      "value": 3159,
+      "value": 5995,
       "note": ""
     },
     {
@@ -49,7 +49,7 @@
     },
     {
       "name": "merge+retry push ms",
-      "value": 694,
+      "value": 832,
       "note": "ok=true"
     },
     {
@@ -65,7 +65,7 @@
     {
       "name": "restore push ok",
       "value": true,
-      "note": "578 ms"
+      "note": "1241 ms"
     },
     {
       "name": "default clone refs",

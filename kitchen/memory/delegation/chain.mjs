@@ -23,6 +23,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const MAIN = 'C:/Users/shout/Desktop/Projects/private-task-mvp';
 export const NS = 'refs/box-bounty';
@@ -159,12 +160,18 @@ export function seed(repo, n, k) {
   return marks;
 }
 
-const [, , cmd, ...a] = process.argv;
-if (cmd === 'append') console.log(append(a[0], a[1], JSON.parse(readFileSync(a[2], 'utf8'))));
-else if (cmd === 'fetch') console.log(JSON.stringify(fetchChains(a[0])));
-else if (cmd === 'push') { const r = pushChains(a[0], a[1]); if (!r.ok) { console.error(r.stderr); process.exit(1); } }
-else if (cmd === 'merge') console.log(mergeOne(a[0], a[1]));
-else if (cmd === 'ids') console.log(ids(a[0]).join('\n'));
-else if (cmd === 'events') { const ids2 = a[1] ? [a[1]] : ids(a[0]); for (const id of ids2) for (const e of events(a[0], id)) console.log(JSON.stringify({ id, ...e })); }
-else if (cmd === 'seed') { const m = seed(a[0], Number(a[1]), Number(a[2])); console.log(`seeded ${m.length} chains`); }
-else if (cmd) { console.error(`unknown command ${cmd}`); process.exit(2); }
+// CLI dispatch only when this file is the entry point. Importing chain.mjs
+// from measure.mjs / worlds.mjs must not consume the importer's argv (the
+// pass's finding: `--out` used to exit 2 here before the caller parsed it).
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  const [cmd, ...a] = process.argv.slice(2);
+  if (cmd === 'append') console.log(append(a[0], a[1], JSON.parse(readFileSync(a[2], 'utf8'))));
+  else if (cmd === 'fetch') console.log(JSON.stringify(fetchChains(a[0])));
+  else if (cmd === 'push') { const r = pushChains(a[0], a[1]); if (!r.ok) { console.error(r.stderr); process.exit(1); } }
+  else if (cmd === 'merge') console.log(mergeOne(a[0], a[1]));
+  else if (cmd === 'ids') console.log(ids(a[0]).join('\n'));
+  else if (cmd === 'events') { const ids2 = a[1] ? [a[1]] : ids(a[0]); for (const id of ids2) for (const e of events(a[0], id)) console.log(JSON.stringify({ id, ...e })); }
+  else if (cmd === 'seed') { const m = seed(a[0], Number(a[1]), Number(a[2])); console.log(`seeded ${m.length} chains`); }
+  else { console.error(`unknown command ${cmd}`); process.exit(2); }
+}
