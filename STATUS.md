@@ -1,14 +1,17 @@
 # Status
 
-Updated by the CTO on 17 October 2026 at the K25 close.
+Updated by the CTO on 17 October 2026 at the BT28 close.
 
 ## Now
 
-- **K25 merged** (`2e96b75`; independent PASS `6e82c6f` on `038f1b9`, test-verified). The tool's agent-memory surfaces are mapped, measured from N = 1 to 1,000 in `kitchen/memory/measure.mjs`, and compared with Claude Code, AGENTS.md, Beads, Letta, Mem0, Zep and GitHub's native issue relations in `kitchen/reviews/K25-memory.md`.
-- **Measurements (N = 1 → 1,000):** the instruction-file block stays constant at 7 lines / 327 chars (~82 tokens) in every mix. The hook `start` line stays 1 line but grows ~24 chars per open bounty (155 → 24,136 chars all-open; constant 253 chars at 5 open). Overview (`box bounty`, `status`) grows without bound in both mixes: 847 → 565,182 chars (~141k tokens) all-open, and 859 → 79,513 chars (~20k tokens) at 5 open + 995 ended because the `ended:` line joins every ended record (~75 chars each). Single-record `status <id>` stays flat (~750 chars).
-- **Decisions and five proposed waves** (awaiting the owner's pick before any is briefed): (1) bound the ended list in `status`/`box bounty` to a count plus the few most recent; (2) cap the hook `start` line past ~10 open bounties so unasked context is constant in characters; (3) optional `--job` relation field on the record (with optional GitHub blocked-by/sub-issue mirror at `post`); (4) state in `status`/`config` whether `.box/bounties/` is tracked and warn on public remotes that records hold owner-only context; (5) `box bounty find "<text>"` purpose search across open and ended records.
+- **BT28 merged** (`18a14cd`; independent PASS `5932543` on `07e1bac`, test-verified; 655 bounty tests, 142 package tests + 6 skips, 83 kitchen tests green, zero import cycles). All five K25 memory improvements are live:
+  1. **Bounded ended overview (`ENDED_OVERVIEW_LIMIT = 5`):** compact `status` and `box bounty` show a count plus the 5 most recently ended records (`all <total>: box bounty status --full`); steady-state overview at N = 1,000 (5 open, 995 ended) dropped from **79,513 → 3,940 chars** (~985 tokens), flat from N = 100 to N = 1,000.
+  2. **Bounded unasked hook start (`HOOK_START_OPEN_LIMIT = 10`):** `hook start` and `.box/bounties/OPEN` cap open listings past 10 while still marking all open arrivals/conflicts told; at N = 1,000 all-open, `hook start` dropped from **24,136 → 389 chars** (~97 tokens) and `OPEN` from **71,945 → 754 chars**, constant from N = 100 to N = 1,000.
+  3. **Bounty relations (`create --part-of "<job or id>"`):** stored on the record (`partOf`, validated in `asRecord`), shown on open and ended lines and carried in `status --json`.
+  4. **Record-tracking notice (`records:`):** `status` and `config` warn when `.box/bounties/` has files tracked in Git (including linked worktrees, with zero extra `git` spawns when untracked), and `--full`/`--json` state the tracking status.
+  5. **Purpose search (`box bounty find <query> [--json]`):** searches `id`, `title`, `why`, `partOf`/`job`, task text and `--resume` note across open and ended records, bounded to 20 matches (`box-bounty/find@1`).
 - **BT12 Part A remains merged. Part B, npm publishing, remains deferred by the owner.** The install line stays held until publishing. The live demo was dropped.
 
 ## Next
 
-**BT28** (the five approved K25 memory improvements in one wave) is briefed in `waves/BT28.md` and cooking now. BT12 Part B stays deferred until the owner resumes it.
+No wave is in flight. All planned K and BT waves except the owner-deferred **BT12 Part B** (npm publishing) are merged and green. This run stops after BT28.
