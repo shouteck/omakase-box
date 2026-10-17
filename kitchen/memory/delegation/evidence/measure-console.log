@@ -1,0 +1,24 @@
+scratch: C:\Users\shout\AppData\Local\Temp\kitchen-K28-measure-ddeckY\run
+push-one-event ms (5 runs): 162, 175, 156, 156, 172  (spread 156-175)
+fetch-one-event ms (5 runs): 210, 287, 277, 260, 253  (spread 210-287)
+seed-1000x5 s: 3.6
+push-1000-chains ms: 1890
+remote size after 1000x5: count: 21 | size: 1.94 KiB | size-pack: 1.54 MiB
+first-fetch-1000-chains ms: 3159
+clone-b size after fetch: size-pack: 1.54 MiB
+concurrent second push rejected: true  (non-fast-forward)
+clone-a merge action for bt-0001: merged
+merge+retry push ms: 694  (ok=true)
+concurrent merge: events in A: 13  (in B 13; both A and B events present: true)
+remote ref deleted (namespace count after): 999
+restore push ok: true  (578 ms)
+default clone refs: refs/heads/master refs/remotes/origin/HEAD refs/remotes/origin/master  (note: no refs/box-bounty/*, no refs/remotes/origin/box-bounty/*)
+default clone sees chains: false
+default clone pack: in-pack: 3 | size-pack: 1.34 KiB  (compare with clone-b above: what a default clone downloads)
+git grep on default clone finds chain data: false
+ripgrep on default clone finds chain data: false
+git log -p master mentions any bounty id: false
+ls-remote shows chain refs: 1000  (they exist on the remote; a default clone just does not fetch them)
+
+report written: C:\Users\shout\AppData\Local\Temp\kitchen-K28-measure-ddeckY\run\measure-report.json
+scratch left at C:\Users\shout\AppData\Local\Temp\kitchen-K28-measure-ddeckY\run (kitchen-K28 owned; remove at wave close)

@@ -1,0 +1,106 @@
+{
+  "at": "2026-10-17T16:09:56.159Z",
+  "node": "v24.11.0",
+  "report": [
+    {
+      "name": "push-one-event ms (5 runs)",
+      "value": "162, 175, 156, 156, 172",
+      "note": "spread 156-175"
+    },
+    {
+      "name": "fetch-one-event ms (5 runs)",
+      "value": "210, 287, 277, 260, 253",
+      "note": "spread 210-287"
+    },
+    {
+      "name": "seed-1000x5 s",
+      "value": "3.6",
+      "note": ""
+    },
+    {
+      "name": "push-1000-chains ms",
+      "value": 1890,
+      "note": ""
+    },
+    {
+      "name": "remote size after 1000x5",
+      "value": "count: 21 | size: 1.94 KiB | size-pack: 1.54 MiB",
+      "note": ""
+    },
+    {
+      "name": "first-fetch-1000-chains ms",
+      "value": 3159,
+      "note": ""
+    },
+    {
+      "name": "clone-b size after fetch",
+      "value": "size-pack: 1.54 MiB",
+      "note": ""
+    },
+    {
+      "name": "concurrent second push rejected",
+      "value": true,
+      "note": "non-fast-forward"
+    },
+    {
+      "name": "clone-a merge action for bt-0001",
+      "value": "merged",
+      "note": ""
+    },
+    {
+      "name": "merge+retry push ms",
+      "value": 694,
+      "note": "ok=true"
+    },
+    {
+      "name": "concurrent merge: events in A",
+      "value": 13,
+      "note": "in B 13; both A and B events present: true"
+    },
+    {
+      "name": "remote ref deleted (namespace count after)",
+      "value": 999,
+      "note": ""
+    },
+    {
+      "name": "restore push ok",
+      "value": true,
+      "note": "578 ms"
+    },
+    {
+      "name": "default clone refs",
+      "value": "refs/heads/master refs/remotes/origin/HEAD refs/remotes/origin/master",
+      "note": "note: no refs/box-bounty/*, no refs/remotes/origin/box-bounty/*"
+    },
+    {
+      "name": "default clone sees chains",
+      "value": false,
+      "note": ""
+    },
+    {
+      "name": "default clone pack",
+      "value": "in-pack: 3 | size-pack: 1.34 KiB",
+      "note": "compare with clone-b above: what a default clone downloads"
+    },
+    {
+      "name": "git grep on default clone finds chain data",
+      "value": false,
+      "note": ""
+    },
+    {
+      "name": "ripgrep on default clone finds chain data",
+      "value": false,
+      "note": ""
+    },
+    {
+      "name": "git log -p master mentions any bounty id",
+      "value": false,
+      "note": ""
+    },
+    {
+      "name": "ls-remote shows chain refs",
+      "value": 1000,
+      "note": "they exist on the remote; a default clone just does not fetch them"
+    }
+  ]
+}

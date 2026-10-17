@@ -10,9 +10,11 @@ Wave K28, branch `wave/K28`, 17–18 October 2026. Cook: box-worker (Subagent De
 
 **Our design and why.** git-bug's shape, simpler: one ref `refs/box-bounty/<id>` per bounty; each event is one commit holding one small JSON event; a merge commit with an empty event joins two machines' concurrent appends. Sync is one explicit fetch refspec for commands that show bounties (at most once a minute) and a fast-forward push at milestones; on rejection: fetch, merge, retry — measured under one second end-to-end. The local BT31 `node:sqlite` database becomes a rebuildable cache of the chains, never the source of truth. Nothing is committed into the project's files, so `git grep`, ripgrep and `git log -p` on the default branch stay clean (verified). The owner needs no account, no program and no setup beyond the remote that already exists.
 
-**What it costs.** Measured on this host: one event pushed in ~0.2 s and fetched in ~0.3 s (5 runs each, spreads 179–239 ms / 250–334 ms); a first fetch of 1,000 bounties' chains took ~3.2 s once, then nothing until new events exist; 1,000 bounties × 5 events costs the remote **1.54 MiB** of pack — nothing in any clone that does not ask for it. Limits: refs outside `refs/heads/*`/`refs/tags/*` are not covered by GitHub rulesets (they cannot be protected against deletion; any clone that fetched can restore them — measured 0.6 s); GitHub's web UI does not display these refs (they appear in `git ls-remote` only); and a lost local cache is just rebuilt. What is not yet shown: GitHub's push-protection scanning on custom refs, and whether GitHub ever garbage-collects the objects (refs keep them reachable; unverified on a real GitHub remote — the prototype remote is `file://`).
+**What the experiment showed.** Two fresh agents got the same eight questions about a scratch project's eight-bounty history — one with the chains fetched, one with only the public issue texts. The chains agent scored **6 right / 2 partly / 0 wrong**; the issues-only agent scored **3 right / 2 partly / 3 wrong**. The chains agent clearly beat the issues-only one on exactly the record's questions (why, tried, larger job, paid) — but it did **not** answer every question right, so the brief's all-right pass bar is **not met**; both misses trace to fixture/question defects (detailed in step 5), not to the storage mechanism, and one of them exposes a real schema point worth carrying into BT32.
 
-**The one decision needed.** Whether the project-agents memory lives on custom refs as designed here — in which case BT32 proceeds from the outline in step 6 — or the owner prefers a different store.
+**What it costs.** Measured on this host: one event pushed in ~0.17 s and fetched in ~0.26 s (5 runs each, spreads 156–175 ms / 210–287 ms); a first fetch of 1,000 bounties' chains took ~3.2 s once, then nothing until new events exist; 1,000 bounties × 5 events costs the remote **1.54 MiB** of pack — nothing in any clone that does not ask for it. Limits: refs outside `refs/heads/*`/`refs/tags/*` are not covered by GitHub rulesets (they cannot be protected against deletion; any clone that fetched can restore them — measured 0.6 s); GitHub's web UI does not display these refs (they appear in `git ls-remote` only); and a lost local cache is just rebuilt. **Not yet shown, honestly:** these numbers are `file://`-protocol only — real GitHub compatibility, push latency, push-protection scanning and object retention on `github.com` are unverified; commit-author fields are display-only (write access is the trust boundary, not authentication of the named author); and deletion durability rests on every clone holding a copy.
+
+**The one decision needed.** Whether the project-agents memory lives on custom refs as designed here — in which case BT32 proceeds from the outline in step 6 — or the owner prefers a different store. (BT32 stays on hold until the owner answers, whatever this review recommends.)
 
 ---
 
@@ -104,28 +106,46 @@ a wiped remote is rebuilt from any one machine. A lost local cache refetches.
 
 | measurement | result |
 |---|---|
-| push one event (5 runs) | 179, 182, 196, 226, 239 ms — spread 179–239 |
-| fetch one event incl. ref discovery (5 runs) | 250, 301, 304, 305, 334 ms — spread 250–334 |
-| push 1,000 chains (first push, ~5,000 commits) | 2,098 ms (1 run) |
-| first fetch of 1,000 chains on a fresh clone | 3,182 ms (1 run) |
-| remote pack after 1,000 × 5 events | **1.54 MiB** (`count-objects -vH`; loose 1.93 KiB) |
-| concurrent append same bounty, both clones | second push rejected non-fast-forward → fetch+merge (empty-ops) → retry ok in **619 ms**; 13/13 events on both clones, both writers' events present, none lost |
-| remote ref deleted, restored from a clone | `update-ref -d` then `push <ref>` — restored in **614 ms** |
+| push one event (5 runs) | 156, 156, 162, 172, 175 ms — spread 156–175 |
+| fetch one event incl. ref discovery (5 runs) | 210, 253, 260, 277, 287 ms — spread 210–287 |
+| push 1,000 chains (first push, ~5,000 commits) | 1,890 ms (1 run) |
+| first fetch of 1,000 chains on a fresh clone | 3,159 ms (1 run) |
+| remote pack after 1,000 × 5 events | **1.54 MiB** (`count-objects -vH`; loose 1.94 KiB) |
+| concurrent append same bounty, both clones | second push rejected non-fast-forward → fetch+merge (empty-ops) → retry ok in **694 ms**; 13/13 events on both clones, both writers' events present, none lost |
+| remote ref deleted, restored from a clone | `update-ref -d` then `push <ref>` — restored in **578 ms** |
 | default `git clone --no-local` of the remote | downloads **3 objects, 1.34 KiB** — `for-each-ref` shows only `master`+`origin/master`: **no chain refs, no chain objects**. (`git ls-remote` on the remote lists all 1,000 chain refs — they exist, a default clone just never asks) |
 | `git grep` / ripgrep / `git log -p` on the default branch | nothing: zero hits for any bounty id (local-path clone caveat noted and avoided with `--no-local`) |
 
-Raw data: `%TEMP%\kitchen-K28-measure-*\run\measure-report.json` (this run's scratch is preserved for the pass).
+Raw data: `kitchen/memory/delegation/evidence/measure-report.json` + `measure-console.log` (this run). Earlier identical run agreed within noise (push 179–239 ms, first fetch 3,182 ms, same pack size); committed numbers are the rerun.
 
-## Step 5: the agents' test — staged, awaiting the CTO's two fresh agents
+## Step 5: the agents' test — run and scored
 
-`kitchen/memory/delegation/worlds.mjs` built both worlds under `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\` (see the handoff section below): a scratch "Acme service" history, 8 bounties across jobs `oauth-migration` (4) and `report-export` (2) plus 2 misc, 5 merged, 1 abandoned, 1 closed-unsolved, 1 open; merge commits carry the real `box bounty <id>: <title> / attempt: / solution:` message shape. World (a) = `--no-local` clone with all 8 chains fetched and the `chain.mjs` reader bundled; world (b) = `--no-local` clone with only `issues/<id>.md` public issue texts and no chain refs (verified: `for-each-ref` shows only `master`/`origin`). `truth-key.json` holds the known history + rubric; `prompts/` holds the two standalone prompts with the identical 8-question list. **The cook did not run agents** per the handoff instruction.
+`kitchen/memory/delegation/worlds.mjs` built both worlds under `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\` (kept for the pass; regenerable via `--out`): a scratch "Acme service" history, 8 bounties across jobs `oauth-migration` (4) and `report-export` (2) plus 2 misc, 5 merged, 1 abandoned, 1 closed-unsolved, 1 open; merge commits carry the real `box bounty <id>: <title> / attempt: / solution:` message shape. World (a) = `--no-local` clone with all 8 chains fetched and the `chain.mjs` reader bundled; world (b) = `--no-local` clone with only `issues/<id>.md` public issue texts and no chain refs (verified: `for-each-ref` shows only `master`/`origin`).
 
-## Step 6: recommendation and the BT32 outline (draft pending step 5)
+**Participants** (dispatched by the CTO, sequentially, ~2026-10-18T00:08+08 — exact run timestamps not recorded, reported missing): participant A = subagent `538de45c`, participant B = subagent `0033eb48`, both `subagent_general` profile on Devin Desktop, exact model not disclosed. Each got its staged prompt plus an identical isolation/read-only instruction (own world only; no owner repository, sibling files, truth key, external sources, skills or agents). Isolation was by instruction, not sandbox — the evidence-station caveat applies. Both reported read-only use. Verbatim reports: `kitchen/memory/delegation/participant-a.txt`, `participant-b.txt` (unchanged). Prompts, question list and truth key: `kitchen/memory/delegation/evidence/`.
 
-**Recommend the per-bounty chain design** as written in step 3: it is the git-bug model, measured here to cost ~0.2–0.3 s per event op, a one-time ~3 s first fetch at 1,000 bounties, 1.54 MiB remote growth, zero bytes in ordinary clones or the default branch, no account and no new program — and it directly answers the owner's two rejections: nothing is committed to the project's files, and the memory lives in the project's own Git, not a deletable issue store. (If the agents' test (step 5) shows world (a) does not beat world (b) on the record's own questions, this recommendation must be revisited — recorded before the experiment runs.)
+**Scores against the pre-existing `truth-key.json`** (rubric: right = all key facts, none invented; partly = some right/incomplete/one error; wrong = missing/invented/contradicted):
+
+| Q | A (chains) | B (issues only) |
+|---|---|---|
+| 1 outstanding | **right** — bt-b203 open awaiting a solution; all others closed, incl. bt-b202 unsolved | **right** — same, from issue files |
+| 2 why/tried | **right** — scaling blocker + both failed fixes cited | **wrong** — correctly reported the facts are absent from the issues |
+| 3 larger job/standing | **partly** — partOf, tried and job outcomes right; the expected *historical mid-migration standing was never encoded in the fixture's events* (a `decided` event carries why/partOf/tried but no job-state snapshot — fixture defect plus a real schema lesson below); A's "does not establish the job was completed" is arguably better-calibrated than the key | **wrong** — partOf absent from issues; correctly reported it cannot be established |
+| 4 what came back | **right** — erin-t, attempt 1, merge sha, paid | **right** — erin-t, attempt 1, merged (could not enumerate other submissions, none existed) |
+| 5 blame→bounty | **right** — blame→solution commit→merge→chain→solver→paid | **right** — same chain via the merge-commit message alone (the pre-existing code link, no chains needed) |
+| 6 handed off like this before | **partly** — stated every expected fact (bt-b201 merged+paid; bt-b202 rejected, 40 MB reason, unpaid) but framed the answer as "no previous scheduled-email task" — question/fixture ambiguity between exact-kind and same-job | **partly** — named the same two related bounties with outcomes; missing the paid fact and the 40 MB reason (absent from its issue texts) |
+| 7 paid | **right** — carol-ops paid with receipt; a103 `paid:null`, correctly distinguished record from verified transaction | **wrong** — payment facts absent from issues; correctly reported unconfirmable |
+| 8 job membership/endings | **right** — all four oauth-migration bounties with outcomes, incl. the second machine's | **partly** — named the right four with endings but could not attribute job membership |
+| **Total** | **6 right / 2 partly / 0 wrong** | **3 right / 2 partly / 3 wrong** |
+
+**The brief's pass bar — "world (a) answers every question right and clearly beats (b)" — is NOT met:** 6 of 8 right, not 8. (a) does clearly beat (b) on exactly the questions the record exists for (Q2, Q3, Q7, Q8 — the why, the job, the payment, the membership are absent from issue texts). No rerun was staged and the bar is not softened: the two partly answers trace to defects in the fixture/question, not the storage — Q3's expected job-standing was never written into any event, and Q6's "like this" was ambiguously framed. **Real lesson for the schema (not a retrieval miss):** the record should carry the job's standing at handoff — the K26 `resume.note` belongs in the `decided` event as an explicit field (the fixture emitted none); and "paid" needs a distinct recorded event since it is the only thing that distinguished (a) from (b) on Q7.
+
+## Step 6: recommendation and the BT32 outline
+
+**Recommend the per-bounty chain design** as written in step 3 — with one schema addition the experiment exposed (below). It is the git-bug model, measured here to cost ~0.2–0.3 s per event op, a one-time ~3 s first fetch at 1,000 bounties, 1.54 MiB remote growth, zero bytes in ordinary clones or the default branch, no account and no new program — and it directly answers the owner's two rejections: nothing is committed to the project's files, and the memory lives in the project's own Git, not a deletable issue store. The experiment did **not** meet the all-right bar (6/8 for world (a)); the misses were fixture/question defects, and (a) clearly beat (b) on every question the record exists to answer — this is reported plainly rather than treated as a pass. BT32 remains held for the owner's decision regardless of this recommendation.
 
 **BT32 outline** (replaces the on-hold brief; not an edit to `waves/BT32.md`):
-1. Event schema `v:1`: `{type, at, actor, …}` for `decided|posted|question|solution-arrived|set-aside|merged|closed` — allow-listed shared fields only (K26 tiers anyone+project-agents); never `folder|waiting|scanFindings|githubApproval|conflicts|local caches|rejected text`.
+1. Event schema `v:1`: `{type, at, actor, …}` for `decided|posted|question|solution-arrived|set-aside|merged|closed` — allow-listed shared fields only (K26 tiers anyone+project-agents); never `folder|waiting|scanFindings|githubApproval|conflicts|local caches|rejected text`. `decided` must carry the K26 `resume.note` (the larger job's standing at handoff) as a first-class field — step 5's Q3 miss showed why; `closed.paid` is a distinct recorded event, not an implication.
 2. Refs: `refs/box-bounty/<id>`; remote-tracking `refs/remotes/origin/box-bounty/<id>`; fetch `+refs/box-bounty/*:refs/remotes/origin/box-bounty/*` (≤1/min, display commands only); push `refs/box-bounty/<id>` at `post`/`apply`/`close`; non-ff → fetch → empty-ops merge → retry.
 3. Trust: accept chains only fetched from the configured remote; writer = commit author (display); push access = the trust boundary (say so in BOUNTY.md).
 4. Cache: `shared` table in `box.db` rebuilt from chains; `find`/`status`/`hook start`/`OPEN` read it; offline = last cache + the K26 said-once line.
@@ -149,5 +169,5 @@ Raw data: `%TEMP%\kitchen-K28-measure-*\run\measure-report.json` (this run's scr
 - **World (b), issue texts only:** `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\world-b`
 - **Participant prompts (identical 8-question list):** `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\prompts\participant-a.txt` and `participant-b.txt`
 - **Truth key + rubric:** `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\truth-key.json`
-- **Preserve:** leave `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\` untouched until the run; both worlds are regenerable with `node kitchen/memory/delegation/worlds.mjs --out <dir>`.
-- Run the two fresh agents **sequentially** (one at a time; Windows host, 16 GB), each with its prompt file as the whole prompt, then hand the cook their verbatim reports for scoring and step 6/finalization.
+- **Preserve:** `C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\` kept until the pass decides it is no longer needed (handoff exception); worlds are regenerable with `node kitchen/memory/delegation/worlds.mjs --out <dir>`.
+- Run completed ~2026-10-18T00:08+08 (timestamps not recorded — reported missing); verbatim reports and prompts preserved under `kitchen/memory/delegation/` and `evidence/`.

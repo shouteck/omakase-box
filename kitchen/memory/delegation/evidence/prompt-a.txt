@@ -1,0 +1,20 @@
+You are working in the git repository at C:\Users\shout\AppData\Local\Temp\kitchen-K28-worlds\world-a.
+
+This repository carries a "delegation record" for handed-off work on git refs refs/box-bounty/*, readable with the bundled helper:
+  node .k28/chain.mjs ids
+  node .k28/chain.mjs events
+  node .k28/chain.mjs events . <bounty-id>
+(see .k28/README.md). You may also use ordinary git commands.
+
+Answer the following questions about this project's handed-off work, using whatever is in this repository. Cite where each answer came from.
+
+1. What bounty work is outstanding on this project, and what is it waiting on?
+2. Why was bt-a101 handed off instead of done in-house, and what had been tried?
+3. Which larger job does bt-a102 belong to, and where did that job stand?
+4. For bt-b201: what came back, from whom, and which was accepted?
+5. Look at src/session/store.js — why does it look the way it does? Trace the last change to the work that produced it.
+6. Has this project handed off work like bt-b203 (its kind of task) before? How did it go?
+7. Were the solvers paid — for bt-a102, and for bt-a103?
+8. Which bounties belong to the oauth-migration job, and how did each one end?
+
+Report one numbered answer per question.

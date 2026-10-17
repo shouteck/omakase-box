@@ -1,0 +1,107 @@
+{
+  "note": "Known history of the scratch project. Score each answer right / partly / wrong.",
+  "bounties": [
+    {
+      "id": "bt-a101",
+      "title": "Replace session store with Redis",
+      "partOf": "oauth-migration",
+      "state": "closed-merged",
+      "sol": "96254b190d969fd74cfc3a967c304d1735792b95",
+      "merge": "75a37b87c01ce47fc290e16a2b8474611b1f6258",
+      "issue": 11
+    },
+    {
+      "id": "bt-a102",
+      "title": "Fix flaky refresh-token test",
+      "partOf": "oauth-migration",
+      "state": "closed-merged",
+      "sol": "f31df0983307ee183811217f02a31524b8ed442a",
+      "merge": "ce999e8b14787ea6e8bb71238901e77fad076904",
+      "issue": 12
+    },
+    {
+      "id": "bt-a104",
+      "title": "Rate-limit the login endpoint",
+      "partOf": "oauth-migration",
+      "state": "closed-merged",
+      "sol": "4827f316dc236fe3d5c46d815a3e75bdc675db33",
+      "merge": "cc62a7a1b45820799c96353f43c1b91c26be06b5",
+      "issue": 14
+    },
+    {
+      "id": "bt-b201",
+      "title": "CSV export of the audit log",
+      "partOf": "report-export",
+      "state": "closed-merged",
+      "sol": "15817486ea0e1accef623410c0dca2568fb68362",
+      "merge": "79ccee149a1faa6f2482719e1891024889bd5f45",
+      "issue": 21
+    },
+    {
+      "id": "bt-c301",
+      "title": "Fix README typo",
+      "partOf": null,
+      "state": "closed-merged",
+      "sol": "173651b3142ad88ce69d92b5d1d0aaa91bc8ee4d",
+      "merge": "a46990becea3e6df82d53abce5c983ecb2c557e5",
+      "issue": 30,
+      "reward": 0
+    },
+    {
+      "id": "bt-a103",
+      "title": "Revoke-session cleanup job",
+      "partOf": "oauth-migration",
+      "state": "closed-abandoned",
+      "issue": 13
+    },
+    {
+      "id": "bt-b202",
+      "title": "PDF summary of the audit report",
+      "partOf": "report-export",
+      "state": "closed-rejected",
+      "issue": 22
+    },
+    {
+      "id": "bt-b203",
+      "title": "Weekly email of the audit report",
+      "partOf": "report-export",
+      "state": "open",
+      "issue": 23
+    }
+  ],
+  "questions": [
+    {
+      "q": 1,
+      "expect": "One open bounty: bt-b203 (weekly email of the audit report, part of report-export, posted, no solutions yet). Everything else is closed: bt-a101, bt-a102, bt-a104, bt-b201, bt-c301 merged; bt-a103 abandoned; bt-b202 closed unsolved. Only bt-b203 is waiting (for any solution)."
+    },
+    {
+      "q": 2,
+      "expect": "bt-a101 was handed off because the in-memory session store blocked horizontal scaling for the oauth-migration job; two in-house fixes (write-through map, sticky sessions) had been tried and failed."
+    },
+    {
+      "q": 3,
+      "expect": "bt-a102 belongs to oauth-migration; the job stood mid-migration (session store already replaced via bt-a101, rate limiting in flight via bt-a104, the flaky test still open)."
+    },
+    {
+      "q": 4,
+      "expect": "bt-b201: one solution came back from solver erin-t; it was accepted and merged (attempt 1)."
+    },
+    {
+      "q": 5,
+      "expect": "src/session/store.js was last changed by the merge commit for bt-a101 (\"Replace session store with Redis\") — the Redis store is the merged bounty solution; reachable via git log/blame to the merge commit naming bt-a101."
+    },
+    {
+      "q": 6,
+      "expect": "Yes — report-export had two earlier bounties: bt-b201 (CSV export, merged, paid) and bt-b202 (PDF summary, one solution rejected for a 40 MB dependency, closed unsolved)."
+    },
+    {
+      "q": 7,
+      "expect": "bt-a102 solver carol-ops was paid $100 (attempt 2 merged). bt-a103 was never paid — cancelled after the solution arrived too late."
+    },
+    {
+      "q": 8,
+      "expect": "oauth-migration: bt-a101 (merged, paid), bt-a102 (merged at attempt 2, paid), bt-a104 (merged, paid, run from the second machine), bt-a103 (abandoned/cancelled, unpaid)."
+    }
+  ],
+  "rubric": "right = all key facts stated, none invented; partly = some key facts right but incomplete or one error; wrong = missing, invented, or contradicted."
+}

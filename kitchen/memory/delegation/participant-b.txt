@@ -1,0 +1,21 @@
+1. **bt-b203 is the only bounty explicitly still open:** weekly scheduling and emailing of the audit report, advertised at $100. It has no solutions yet, so the documented outstanding need is a submission; no other blocker is recorded. The other seven issue files say closed. **Evidence:** `issues/bt-b203.md:1–5`; `issues/bt-a101.md:1`, `bt-a102.md:1`, `bt-a103.md:1`, `bt-a104.md:1`, `bt-b201.md:1`, `bt-b202.md:1`, `bt-c301.md:1`.
+
+2. **The reason for outsourcing bt-a101 and any previous in-house attempts are not recorded here.** The documented technical goal was replacing the in-memory session store with Redis so sessions survive restarts and horizontal scaling. Alice-dev’s solution was merged. Neither that requirement nor the merge establishes why the team handed it off. **Evidence:** `issues/bt-a101.md:3–5`; merge commit `75a37b8`, identifying attempt 1 and solution `96254b1`.
+
+3. **The larger job and its overall status cannot be established from this repository.** bt-a102 itself concerned a refresh-token test flaking approximately once in eight runs; retries and increased timeouts had already been tried. It closed after carol-ops’s second solution was merged, following an earlier solution being set aside. **Evidence:** `issues/bt-a102.md:1–5`; merge `ce999e8` records attempt 2 and solution `f31df09`; `tests/auth/refresh.test.js:1` mentions fake timers and mocked `Date.now`. None identifies a parent job.
+
+4. **The repository documents a CSV-export solution from erin-t, which was accepted and merged.** The accepted solution is commit `1581748`, merged by `79ccee1` as attempt 1. There is insufficient evidence to enumerate any other submissions or submitters. **Evidence:** `issues/bt-b201.md:3–5`; commits `79ccee1` and `1581748`; resulting implementation at `src/report/csv.js:1–3`.
+
+5. **The file is the result of bt-a101’s accepted Redis replacement.** Initially, `61d3620` provided an in-memory object and synchronous lookup. The last content-changing commit, `96254b1` (“solution for bt-a101”), replaced those three lines with the Redis import and asynchronous `redis.get` lookup now present. Merge `75a37b8` brought that solution into the main history as attempt 1; the issue credits alice-dev. The stated purpose was persistence across restarts and horizontal scaling—not a recorded explanation of any finer design decisions. **Evidence:** `git log -p -- src/session/store.js`, commits `61d3620`, `96254b1`, and `75a37b8`; `src/session/store.js:1–3`; `issues/bt-a101.md:3–5`.
+
+6. **Prior handoffs of the same kind—scheduled email delivery—are not established.** Related audit-report work was handed off: CSV export, bt-b201, was merged from erin-t; PDF summary, bt-b202, received one solution from heidi-r but closed without merging it. Neither proves previous experience handing off scheduling or email delivery. **Evidence:** `issues/bt-b203.md:3`; `issues/bt-b201.md:3–5`; `issues/bt-b202.md:3–5`.
+
+7. **Payment cannot be confirmed for either bounty.** bt-a102 advertised $100 and merged carol-ops’s solution; bt-a103 advertised $100, received grace-p’s solution, and was cancelled. An advertised reward, merge, or cancellation is not a payment record. **Evidence:** `issues/bt-a102.md:1,5`; `issues/bt-a103.md:1,5`; merge `ce999e8` records the accepted bt-a102 attempt but no payment.
+
+8. **The repository does not identify which bounties belong to `oauth-migration`, so its membership and complete outcomes cannot be reliably reported.** The potentially related authentication/session issues have these individually documented endings, without an explicit job association:
+   - bt-a101: alice-dev’s solution merged (`issues/bt-a101.md:5`; merge `75a37b8`).
+   - bt-a102: first solution set aside; carol-ops’s second solution merged (`issues/bt-a102.md:5`; merge `ce999e8`).
+   - bt-a103: grace-p submitted; bounty cancelled (`issues/bt-a103.md:5`).
+   - bt-a104: dave-h’s solution merged (`issues/bt-a104.md:5`; merge `cc62a7a`).
+
+   All investigation was read-only within this world, using local file reads and Git listing/history/object checks; no files were modified.
