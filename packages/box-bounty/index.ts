@@ -7,6 +7,7 @@ import { closeBounty as closeBountyCommand,postBounty as postBountyCommand } fro
 import { renderStatus as renderStatusCommand } from './render.js';
 import { lookBounty as lookBountyCommand } from './look.js';
 import { statusDocument as statusDocumentCommand,configDocument as configDocumentCommand } from './json.js';
+import { findBounties as findBountiesCommand,findDocument as findDocumentCommand,renderFind as renderFindCommand } from './find.js';
 
 // Each command the package offers is one command to Git's pins: the names of
 // configured filters and merge drivers are read once per repository path for
@@ -33,6 +34,11 @@ export const lookBounty = command(lookBountyCommand);
 // no reads — and rides unwrapped.
 export const statusDocument = command(statusDocumentCommand);
 export const configDocument = command(configDocumentCommand);
+export const findBounties = command(findBountiesCommand);
+export const findDocument = command(findDocumentCommand);
+export const renderFind = command(renderFindCommand);
+export { FIND_RESULT_LIMIT } from './find.js';
+export type { FindMatch } from './find.js';
 export { lookDocument } from './json.js';
 export type { StatusDocumentOptions } from './json.js';
 export type { LookResult, LookTarget } from './look.js';
@@ -51,11 +57,11 @@ export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js'
 export { NOTHING_RUN } from './notice.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
-export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, transitionTo, writeNewRecord } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, trackedRecordFiles, transitionTo, writeNewRecord } from './record.js';
 export { ownerGate, waitForOwner } from './gate.js';
 export { assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
 export { waitingSummary } from './owner-text.js';
-export { renderHelp, renderOpenLine, renderResume, renderOverview, setInstructionNoticeListener } from './render.js';
+export { ENDED_OVERVIEW_LIMIT, renderHelp, renderOpenLine, renderResume, renderOverview, setInstructionNoticeListener } from './render.js';
 export { firstUseBlock, mergeWaitLines, ownerBlock, ownerWaitLines } from './owner-text.js';
 export { boundAmount } from './format.js';
 export type { AllowedBy, AnswerSpec, Attempt, AttemptOutcome, BountyRecord, BountyStage, EndedStage, ListedBounty, OpenStage, RecordSeed, StageEvent, WaitingFor } from './record.js';
@@ -81,6 +87,6 @@ export { parsePayTo, payToLine, payMessageLines, payNotice } from './pay.js';
 export type { PayOutcome, PayToFact } from './pay.js';
 export { GIT_LEAST } from './git.js';
 export { GH_LEAST } from './gh.js';
-export { HOOK_COMMAND, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, HOOK_GITHUB_INTERVAL_MS, HOOK_HOSTS, HOOK_SLOTS, hookDisclosure, hookGroups, hookHost, hookOff, hookOn, hookStatus, runHook } from './hook.js';
+export { HOOK_COMMAND, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, HOOK_GITHUB_INTERVAL_MS, HOOK_HOSTS, HOOK_SLOTS, HOOK_START_OPEN_LIMIT, hookDisclosure, hookGroups, hookHost, hookOff, hookOn, hookStatus, runHook } from './hook.js';
 export type { HookHost, HookRun, HookSlot } from './hook.js';
 export { limitGitHubCalls } from './gh.js';

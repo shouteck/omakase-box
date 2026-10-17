@@ -178,3 +178,43 @@ Playbook followed: `investigation` — map and measure before judging; Steps 1�
 - **minimize-reader-load** — the report opens with a one-page owner summary and a single growth table rather than the raw measurement tables, and each proposal is one paragraph.
 - **subtract-before-you-add** — proposals 1, 2 and 4 bound or annotate surfaces that already exist; only proposal 5 adds a command, justified because the record shape is the tool's to own (a grepper would break on `asRecord` migrations).
 - **model-the-domain** — the four needs and three tiers became the structure every surface, option and proposal is classified against, instead of judging each surface ad hoc; Step 4's exposure list groups fields by the domain fact that matters (already public vs owner-only).
+
+---
+
+## After BT28 — the same measurement rerun on the built candidate
+
+`node kitchen/memory/measure.mjs`, 17 October 2026, same script and cells as Step 2 (`lines / characters / ~tokens / wall ms`). Proposals 1, 2, 4 and the `find` half of 5 are in; the numbers below are the measured after-state, not the estimates Step 5 made.
+
+### Mix A — every record open
+
+| surface | N=1 | N=10 | N=100 | N=1,000 |
+|---|---|---|---|---|
+| instruction-block sync (wall) | 167 ms | 185 ms | 282 ms | 1,296 ms |
+| instruction block in AGENTS.md | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 |
+| `.box/bounties/OPEN` | 1 / 125 / 31 | 1 / 755 / 189 | 1 / 753 / 188 | 1 / 754 / 189 |
+| `hook start` | 1 / 155 / 39 / 147 | 1 / 374 / 94 / 165 | 1 / 387 / 97 / 267 | 1 / 389 / 97 / 1,342 |
+| `box bounty` | 10 / 847 / 212 / 163 | 64 / 5,918 / 1,480 / 175 | 604 / 56,680 / 14,170 / 275 | 6,004 / 565,182 / 141,296 / 1,292 |
+| `status` | 9 / 751 / 188 / 158 | 63 / 5,822 / 1,456 / 174 | 603 / 56,584 / 14,146 / 275 | 6,003 / 565,086 / 141,272 / 1,372 |
+| `status --json` | 1 / 1,261 / 315 / 201 | 1 / 12,781 / 3,195 / 204 | 1 / 128,071 / 32,018 / 346 | 1 / 1,281,871 / 320,468 / 1,434 |
+| `status <one id>` | 9 / 751 / 188 / 150 | 9 / 752 / 188 / 185 | 9 / 753 / 188 / 291 | 9 / 754 / 189 / 1,655 |
+
+### Mix B — five open, the rest ended (the steady state)
+
+| surface | N=1 | N=10 | N=100 | N=1,000 |
+|---|---|---|---|---|
+| instruction-block sync (wall) | 160 ms | 182 ms | 277 ms | 1,260 ms |
+| instruction block in AGENTS.md | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 |
+| `.box/bounties/OPEN` | 1 / 125 / 31 | 1 / 405 / 101 | 1 / 405 / 101 | 1 / 405 / 101 |
+| `hook start` | 1 / 155 / 39 / 159 | 1 / 253 / 63 / 177 | 1 / 253 / 63 / 283 | 1 / 253 / 63 / 1,284 |
+| `box bounty` | 10 / 859 / 215 / 154 | 38 / 3,866 / 967 / 181 | 38 / 3,932 / 983 / 288 | 38 / 3,940 / 985 / 1,313 |
+| `status` | 9 / 763 / 191 / 343 | 37 / 3,770 / 943 / 181 | 37 / 3,836 / 959 / 289 | 37 / 3,844 / 961 / 1,471 |
+| `status --json` | 1 / 1,261 / 315 / 296 | 1 / 13,300 / 3,325 / 233 | 1 / 137,905 / 34,476 / 330 | 1 / 1,384,855 / 346,214 / 1,342 |
+| `status <one id>` | 9 / 763 / 191 / 162 | 9 / 764 / 191 / 177 | 9 / 765 / 191 / 297 | 9 / 766 / 192 / 1,282 |
+
+### What changed, before → after
+
+- **`hook start`, all-open N=1,000:** 24,136 → 389 characters — flat from N=100 (387) to N=1,000 (389), under the brief's 600-character bar. `OPEN` likewise: 71,945 → 754 characters at N=1,000, flat at N≥10.
+- **The overview in the steady state:** `box bounty` 79,513 → 3,940 and `status` 79,417 → 3,844 characters at N=1,000 — flat from N=100 (3,932 / 3,836) to N=1,000, under the 4,500-character bar.
+- **Small N is unchanged:** every surface's size at N=1 and N=10 matches the before table within measurement noise — the caps only engage past their limits.
+- **What stays unbounded by design:** the all-open `box bounty`/`status` views (every open record still needs attention — the brief bounded ended records and the unasked tier, not the open list) and `status --json` (the caller asked for every record; `find` is the bounded recall path that landed with it).
+- Wall time is unchanged in shape — ~1.3–1.7 s at N=1,000, the same file-read cost as before.

@@ -50,7 +50,8 @@ const LABELS: Record<string, Record<string, string | null>> = {
     'current code': '/bounties/0/solutions/0/conflicts',
     'flags': '/bounties/0/solutions/0/report',
     'current code now': '/bounties/0/mergeNow',
-    'pay': '/bounties/0/github/pay'
+    'pay': '/bounties/0/github/pay',
+    'records': '/records/tracked'
   },
   'look --full': {
     'pay-to': '/payTo',
@@ -70,7 +71,8 @@ const LABELS: Record<string, Record<string, string | null>> = {
     'instruction-file': '/instructions/file',
     'instruction files found': '/instructions/found',
     'waiting actions': '/waiting',
-    'owner/project': '/repositories/owner~1project'
+    'owner/project': '/repositories/owner~1project',
+    'records': '/records/tracked'
   }
 };
 const NOT_FACT: Record<string, Record<string, string>> = {

@@ -24,7 +24,7 @@ import { discoverInstructions,instructionNotices } from './instructions.js';
 import type { LookResult } from './look.js';
 import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
-import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord } from './record.js';
+import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
 import { endedNextStep,nextStep,notNext } from './render.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
@@ -183,7 +183,7 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
     // '(no commits yet)' display sentinel is not a commit.
     baseCommit: baseCommitOf(record),
     reward: boundAmount(record) ?? null,
-    job: record.job?.file ?? null,
+    job: record.partOf ?? record.job?.file ?? null,
     resume: resumeEntry(record),
     waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
     github: record.github === undefined ? null : githubEntry(record.github, attempts),
@@ -310,6 +310,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
 
   let repository: string | null = null;
   try { repository = repositoryIdentity(repoRoot); } catch { /* an unreadable remote set is null, not a refusal — the decision above already read what it could */ }
+  const trackedFiles = trackedRecordFiles(repoRoot).length;
   return {
     schema: 'box-bounty/status@1',
     repository,
@@ -325,6 +326,9 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
       // this checkout's open-bounty total, the same count the text prints.
       promised: promisedTotal(open)
     },
+    // The `records:` line as a fact (BT28): whether `.box/bounties/` is
+    // tracked in Git, and how many files — the warning's trigger.
+    records: { tracked: trackedFiles > 0, trackedFiles },
     bounties
   };
 }
@@ -410,6 +414,7 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
   let instructions: JsonObject | null = null;
   let lists: JsonObject | null = null;
   let promised: number | null = null;
+  let trackedFiles: number | null = null;
   const waiting: JsonObject[] = [];
   if (repoRoot !== null) {
     const choice = readInstructions(repoRoot);
@@ -420,6 +425,7 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
     };
     const publish = publishLists(repoRoot);
     lists = { safeToPublish: [...publish.safe], neverPublish: [...publish.never] };
+    trackedFiles = trackedRecordFiles(repoRoot).length;
     const listed = listRecords(repoRoot);
     promised = promisedTotal(listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
     for (const entry of listed) {
@@ -462,7 +468,9 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
     promised,
     instructions,
     publishLists: lists,
-    waiting
+    waiting,
+    // The `records:` line as a fact (BT28) — null outside a checkout.
+    records: trackedFiles === null ? null : { tracked: trackedFiles > 0, trackedFiles }
   };
 }
 

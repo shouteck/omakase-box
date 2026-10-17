@@ -16,10 +16,10 @@
 // the ref nor the `snapshot` field, and removing that name is a no-op delete.
 
 import { createHash } from 'node:crypto';
-import { existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,writeFileSync } from 'node:fs';
-import { basename,dirname,join } from 'node:path';
+import { existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,statSync,writeFileSync } from 'node:fs';
+import { basename,dirname,join,resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { gitRefsWrite } from './git.js';
+import { gitOutcome,gitRefsWrite } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
 import { payOutcomeShape,payToFactShape } from './pay.js';
 import type { PayToFact } from './pay.js';
@@ -234,6 +234,10 @@ export interface BountyRecord {
       nothing writes it, but an ended record that carries it still names it —
       the ended line falls back to the title when there is none. */
   readonly job?: { readonly file: string; readonly text: string } | null;
+  /** The job or bounty this bounty belongs to (BT28): `create --part-of`
+      writes it; it is one line of tool-printable text, never a verdict, and
+      status and `find` read it where the retired `job` field was read. */
+  readonly partOf?: string;
   /** sha256 of the exact bounty.json bytes `create` wrote: the answer's manifest
       must come back byte-identical, which is what binds it to this bounty. */
   readonly manifestSha256?: string;
@@ -308,6 +312,7 @@ export interface RecordSeed {
   readonly id: string;
   readonly title: string;
   readonly why?: string;
+  readonly partOf?: string;
   readonly content: { readonly task: { readonly file: string; readonly text: string }; readonly note: { readonly file: string; readonly text: string } | null; readonly tool: string };
   readonly createdAt: string;
   readonly scanFindings?: ScanFinding[];
@@ -364,6 +369,31 @@ export function dropDurabilityRefs(repoRoot: string, record: BountyRecord): void
 export const recordDir = (repoRoot: string): string => join(repoRoot, '.box', 'bounties');
 export const recordPath = (repoRoot: string, id: string): string => join(recordDir(repoRoot), `${id}.json`);
 
+// Whether `.box/bounties/` holds tracked files — asked on every compact
+// status and config render (BT28), so the untracked answer must cost no Git
+// process: the Git index file's bytes are read in Node first (resolve
+// `.git/index`, or — when `.git` is a file, a linked worktree — the `gitdir:`
+// target's `index`). An absent index or one whose bytes never name
+// `bounties/` means untracked with certainty; only then does the question go
+// to Git itself.
+export function trackedRecordFiles(repoRoot: string): string[] {
+  try {
+    const dotGit = join(repoRoot, '.git');
+    let indexPath = join(dotGit, 'index');
+    if (statSync(dotGit, { throwIfNoEntry: false })?.isFile()) {
+      const pointer = readFileSync(dotGit, 'utf8');
+      if (!pointer.startsWith('gitdir:')) return [];
+      indexPath = join(resolve(repoRoot, pointer.slice('gitdir:'.length).trim()), 'index');
+    }
+    if (!readFileSync(indexPath).includes('bounties/')) return [];
+  } catch {
+    return [];
+  }
+  const listed = gitOutcome(repoRoot, ['ls-files', '-z', '--', '.box/bounties']);
+  if (listed.status !== 0) return [];
+  return listed.stdout.split('\0').filter(entry => entry !== '');
+}
+
 export const persistRecord = (repoRoot: string, record: BountyRecord): void => {
   writeFileSync(recordPath(repoRoot, record.id), JSON.stringify(record, null, 2) + '\n');
   syncOpenSurfaces(repoRoot);
@@ -404,6 +434,9 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   const safeBranch = (branch: string) => branch === '(detached HEAD)' || printable.test(branch) && !branch.includes('..');
   if (!/^bt-[a-f\d]{12}$/.test(record.id)) return null;
   if (typeof record.createdAt !== 'string' || !stamp.test(record.createdAt)) return null;
+  // partOf is one printable line of tool-written text (BT28) — anything else
+  // is not a record this tool wrote.
+  if (record.partOf !== undefined && (typeof record.partOf !== 'string' || record.partOf.trim() === '' || record.partOf.includes('\n') || record.partOf.includes('\r'))) return null;
   // 'verified' was the check era's green: with checks gone it reads as
   // 'answered', on the record and in its history. The stage checks below then
   // decide — a word no design ever wrote fails to load as it always did
@@ -570,6 +603,7 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     resume: seed.resume ?? { kind: 'not-recorded' },
     noteSource: seed.noteSource ?? 'legacy',
     ...(seed.why !== undefined ? { why: seed.why } : {}),
+    ...(seed.partOf !== undefined ? { partOf: seed.partOf } : {}),
     stage: 'drafted',
     content: seed.content,
     createdAt: seed.createdAt,

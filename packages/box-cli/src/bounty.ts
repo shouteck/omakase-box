@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { lookBounty, quoteForeign, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
+import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
 
 export interface BountyHost {
   /** print the message plus usage lines and exit 2 — the entrypoint's usage(). */
@@ -57,8 +57,8 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
 
   // The line every ended bounty prints: which job was waiting on it — the
   // --job file when one was recorded, else the title.
-  const jobLine = (record: { job?: { file: string } | null; title: string }): string =>
-    `the job it came from: ${record.job?.file ?? record.title}`;
+  const jobLine = (record: { partOf?: string; job?: { file: string } | null; title: string }): string =>
+    `the job it came from: ${record.partOf ?? record.job?.file ?? record.title}`;
 
   // BT16 rule 8: when the checkout's remotes name several GitHub
   // repositories and the owner's list settled one, every acting command says
@@ -128,7 +128,8 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         repoPath: resolve(parsed.repo ?? process.cwd()), why: parsed.why ?? '',
         ...(parsed.title !== undefined ? { title: parsed.title } : {}),
         taskPath: parsed.task === '-' ? '-' : resolve(parsed.task),
-        ...(parsed.resume !== undefined ? { resumeNote: parsed.resume } : {})
+        ...(parsed.resume !== undefined ? { resumeNote: parsed.resume } : {}),
+        ...(parsed.partOf !== undefined ? { partOf: parsed.partOf } : {})
       });
       // The contract (BT17): one line says what happened, then only facts
       // needing attention now, then one next line. The draft preview is the
@@ -157,6 +158,19 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       }
       lines.push(`next: box bounty post ${result.id} (--preview shows what becomes public)`);
       console.log(lines.join('\n'));
+    } else if (subcommand === 'find') {
+      // Recall by purpose (BT28): one query over every readable record.
+      const parsed = parse('find');
+      const query = parsed.positionals.join(' ');
+      const root = resolveRepoRoot(repoPath(parsed), 'find');
+      if (parsed.switches.has('--json')) {
+        setInstructionNoticeListener(line => console.error(line));
+        setMergeNoticeListener(line => console.error(line));
+        console.log(JSON.stringify(findDocument(root, query)));
+      } else {
+        sayActingOn(root);
+        console.log(renderFind(root, query));
+      }
     } else if (subcommand === 'status') {
       const parsed = parse('status');
       const [id] = parsed.positionals;

@@ -24,6 +24,10 @@ export interface CreateOptions {
   readonly why: string;
   /** `--title`: absent or blank, the title is the task's first non-empty line. */
   readonly title?: string;
+  /** `--part-of "<job or bounty-id>"`: the larger job or parent bounty this
+      bounty belongs to — one recorded line, shown on status and matched by
+      `find` (BT28). */
+  readonly partOf?: string;
   readonly taskPath: string;
 }
 
@@ -39,6 +43,8 @@ export interface BountyPlan {
   readonly titleShortened: boolean;
   /** One line of why — record only, never shipped. */
   readonly why: string;
+  /** The job or bounty this bounty belongs to — record only (BT28). */
+  readonly partOf?: string;
   readonly task: { readonly file: string; readonly text: string };
   readonly snapshot: { readonly commit: string; readonly tree: string; readonly baseCommit: string | null };
   /** Canonical paths that exist as blobs in the snapshot tree — their emitted
@@ -122,6 +128,10 @@ export function planBounty(options: CreateOptions): BountyPlan {
   if (why === '') {
     throw new BountyRefused('missing-why', 'create needs one line of why — pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
   }
+  const partOf = options.partOf?.trim();
+  if (options.partOf !== undefined && partOf === '') {
+    throw new BountyRefused('missing-part-of', 'a blank --part-of names no job or bounty — pass --part-of "<job or bounty-id>" or leave it out');
+  }
   const repoRoot = resolveRepoRoot(options.repoPath, 'create');
   const rules = [...shipRules(repoRoot)];
   const task = options.taskPath === '-'
@@ -185,6 +195,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
     title,
     titleShortened: derived.shortened,
     why,
+    ...(partOf !== undefined ? { partOf } : {}),
     task,
     snapshot: { commit: snapshot.commit, tree: snapshot.tree, baseCommit: snapshot.baseCommit },
     snapshotBlobs: snapshot.blobs,
@@ -371,6 +382,7 @@ export function finalizeBounty(plan: BountyPlan): BountyResult {
   const id = `bt-${sha256(`${plan.snapshot.commit}\n${plan.title}\n${createdAt}`).slice(0, 12)}`;
   const written = writeNewRecord(plan.repoRoot, {
     id, title: plan.title, why: plan.why, createdAt,
+    ...(plan.partOf !== undefined ? { partOf: plan.partOf } : {}),
     resume: plan.resume,
     content: { task: plan.task, note, tool: TOOL_VERSION },
     noteSource: 'generated',

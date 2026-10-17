@@ -1,6 +1,6 @@
 import { BountyRefused } from './errors.js';
 import { postBounty } from './commands.js';
-import { isOpenStage, listRecords, loadRecord, persistRecord, retiredRoute } from './record.js';
+import { isOpenStage, listRecords, loadRecord, persistRecord, retiredRoute, trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
 import { DECISION_WORDS, ownerBlock } from './owner-text.js';
 import { attemptsOf } from './record.js';
@@ -259,6 +259,13 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     const found = discoverInstructions(repoRoot);
     lines.push(`instruction files found: ${found.length === 0 ? 'none; name an existing file with box bounty config set instruction-file <existing-path>' : found.map(file => `${file.path}${file.refusal === undefined ? '' : ` (refused: ${file.refusal})`}`).join(', ')}`);
     lines.push(...instructionNotices(repoRoot, false));
+    // Whether the records are committed is a fact needing attention (BT28):
+    // tracked records on a repository that posts to GitHub publish owner-only
+    // context — the warning prints on every form; untracked says so under
+    // --full only. trackedRecordFiles answers untracked with no Git process.
+    const tracked = trackedRecordFiles(repoRoot);
+    if (tracked.length > 0) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
+    else if (full) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
     const listed = listRecords(repoRoot);
     if (address === null || settings.repositories[address] === undefined) {
       lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so its bounties state $0`);

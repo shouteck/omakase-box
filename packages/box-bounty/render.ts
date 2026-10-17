@@ -10,12 +10,13 @@ import { quoteForeign,showPath } from './notice.js';
 import { boundAmount } from './format.js';
 import { dryMergeOnto,GIT_LEAST } from './git.js';
 import { GH_LEAST } from './gh.js';
+import { HOOK_START_OPEN_LIMIT } from './hook.js';
 import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect.js';
 import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { payToLine } from './pay.js';
-import { applicableAttempts,attemptsOf,isOpenStage,listRecords,loadRecord,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync } from './record.js';
+import { applicableAttempts,attemptsOf,isOpenStage,listRecords,loadRecord,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
@@ -39,6 +40,11 @@ const ATTEMPT_WORD: Record<AttemptOutcome, string> = {
 // followed then. Replayed inside status, that line is left out: the bounty's
 // own next step is stated once, from what is true now.
 export const notNext = (line: string): boolean => !line.trimStart().startsWith('next:');
+
+// The compact status's ended list names at most this many records (BT28):
+// past it, the five most recently ended are joined and the rest are one
+// `status --full` away — the overview stays constant at any record count.
+export const ENDED_OVERVIEW_LIMIT = 5;
 
 // The one `next:` command a bounty prints, shared by the text status and
 // the status --json document (BT19).
@@ -157,6 +163,16 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   if (askNotice !== null) lines.push(askNotice);
   const localMerge = localFirstMergeLine(repoRoot);
   if (localMerge !== null) lines.push(localMerge);
+  // Whether the records are committed is a fact needing attention (BT28):
+  // tracked records on a repository that posts to GitHub publish owner-only
+  // context, so tracking warns on every form; untracked is the quiet norm
+  // and prints only under --full. trackedRecordFiles answers untracked
+  // without starting a Git process.
+  if (options.id === undefined) {
+    const tracked = trackedRecordFiles(repoRoot);
+    if (tracked.length > 0) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
+    else if (options.full === true) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
+  }
   for (const [address, notice] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === notice.commit))) {
       lines.push(`first outside solution merged in ${address}: commit ${notice.commit} at ${notice.at}`);
@@ -170,7 +186,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
       const record = entry.record!;
-      lines.push(`  ${record.id}  ${record.stage}  "${record.title}"`);
+      lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       const pays = (boundAmount(record) ?? 0) > 0;
@@ -290,8 +306,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       if (options.full) for (const event of record.events) lines.push(`      history: ${historyJson(event)}`);
     }
   }
-  if (ended.length === 0) lines.push('ended: none');
-  else lines.push(`ended: ${ended.map(entry => {
+  const endedItem = (entry: ListedBounty): string => {
     const record = entry.record!;
     // A bounty that once flagged secret-shaped content keeps the fact on this
     // line, so the compact list still tells the owner to look — the finding
@@ -306,9 +321,18 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     const unasked = record.events.some(event => event.stage === 'applied' && event.unasked === true) ? ' — the owner was not asked before the merge' : '';
     // applied/rejected/undone name the job the bounty came from, so the record
     // alone says which piece of work is unblocked — falling back to the title.
-    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${unasked}${finding}${paid} (job: ${record.job?.file ?? record.title})`;
+    if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${unasked}${finding}${paid} (job: ${record.partOf ?? record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}${unasked}${finding}${paid}`;
-  }).join(', ')}`);
+  };
+  if (ended.length === 0) lines.push('ended: none');
+  // Past the limit the compact view joins only the most recently ended —
+  // `status --full` (and `status <id>`) keeps the whole list (BT28).
+  else if (!options.full && options.id === undefined && ended.length > ENDED_OVERVIEW_LIMIT) {
+    const endedAt = (entry: ListedBounty): string => entry.record!.events.at(-1)?.at ?? entry.record!.createdAt;
+    const recent = [...ended].sort((a, b) => endedAt(b).localeCompare(endedAt(a)) || b.record!.id.localeCompare(a.record!.id)).slice(0, ENDED_OVERVIEW_LIMIT);
+    lines.push(`ended (${ended.length} total, ${ENDED_OVERVIEW_LIMIT} most recent): ${recent.map(endedItem).join(', ')}; all ${ended.length}: box bounty status --full`);
+  }
+  else lines.push(`ended: ${ended.map(endedItem).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
   // was asked for by id, or else for the one that ended last.
   const lastEnded = [...ended].sort((a, b) => (a.record!.events.at(-1)?.at ?? '').localeCompare(b.record!.events.at(-1)?.at ?? '')).at(-1)?.record ?? null;
@@ -356,11 +380,12 @@ export function renderHelp(): string {
     '  look [id] <n>  collect pull request n (or show solution n already collected) — its change, written by the solver and marked as theirs; --full prints a large change',
     '  apply [id] [<n>]  merge a solution onto the current code — collects like look when n names a pull request — the recorded decision → applied',
     '  close [id]  end a bounty with nothing merged; --reason "<why>" stays on the record → rejected, without it → withdrawn',
+    '  find <words>  every record whose id, title, why, part-of or task text matches — open first, bounded',
     '  hook      owner-opt-in awareness at session moments: on --host <name> prints the full disclosure and changes nothing until run again with the flag it names; off removes it; start|pause|finish is the command a host entry runs',
     '  describe  what the tool does, when it is worth using and when not, plus the facts to choose — --rules prints the block for a project\'s rules file',
     '  help      this screen',
     '',
-    '  create --task <file|-> --why "<one line>" [--title "<text>"] [--resume "<context>"] [--repo <path>]',
+    '  create --task <file|-> --why "<one line>" [--title "<text>"] [--resume "<context>"] [--part-of "<name>"] [--repo <path>]',
     '  The task is a file describing what needs doing, written for the solver; code is included automatically. "-" reads standard input.',
     '  Put what you tried in the task. --resume saves private context for unfinished work and the larger job. With one open bounty, commands accept no id.',
     '  status [id] shows the next action; --full adds history and the full reports.',
@@ -383,11 +408,12 @@ export function renderHelp(): string {
 export function renderOpenLine(repoRoot: string): string {
   const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
   if (open.length === 0) return 'open bounties: none';
-  return `open bounties: ${open.map(entry => {
+  const shown = open.length > HOOK_START_OPEN_LIMIT ? open.slice(0, HOOK_START_OPEN_LIMIT) : open;
+  return `open bounties: ${shown.map(entry => {
     const record = entry.record!;
     const github = record.github;
     return `${record.id} "${record.title}" (${record.stage})${github !== undefined ? ` ${github.issue?.url ?? 'github issue pending'} ${github.branch}${github.outside !== undefined ? `; ${github.outside.answers.replaceAll('\n', ' ')}` : ''}` : ''}`;
-  }).join(', ')}`;
+  }).join(', ')}${open.length > HOOK_START_OPEN_LIMIT ? `, and ${open.length - HOOK_START_OPEN_LIMIT} more (see: box bounty status)` : ''}`;
 }
 
 // Keep the detailed local listing separate from the fixed instruction block.
