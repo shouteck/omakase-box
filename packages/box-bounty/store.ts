@@ -440,7 +440,7 @@ export function dropStored(repoRoot: string, id: string): void {
 // drop the fingerprint so the next read reimports it through asRecord.
 export function forgetFileSha(repoRoot: string, entry: string): void {
   if (!existsSync(storeDbPath(repoRoot))) return;
-  withDb(repoRoot, false, db => db?.prepare("DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'corrupt_file:' || ?)").run(entry, entry));
+  withDb(repoRoot, false, db => db?.prepare("DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(entry, entry, entry));
 }
 
 // FTS5 trigram match for needles of three characters or more — substring
