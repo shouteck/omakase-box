@@ -1,13 +1,13 @@
 # Status
 
-Updated by the CTO on 17 October 2026 at the BT30 close.
+Updated by the CTO on 17 October 2026 at the BT31 close.
 
 ## Now
 
-- **BT30 merged** (`41d8f28`; independent PASS `2bb5c24` on `d548dbc`, test-verified; 56 bounty files / 658 tests, 142 package tests + 6 skips, 83 kitchen tests green). All 135 direct record-file lines across 34 files under `tests/box/bounty/` now go through `tests/box/bounty/support.ts` helpers (`readRecord`, `readRecordRaw`, `writeRecord`, `writeRecordRaw`, `rewriteRecordRaw`, `recordIds`, `recordExists`, `removeRecord`, `openLine`, `boxFile`, `recordsDir`, `recordFilePath`, `RECORDS_DIR_REL`), guarded by `tests/box/bounty/record-access.test.ts` with unchanged assertions and zero `packages/` diff.
-- **K27 merged** (`e189876`; independent PASS `ad19521` on `e964687`, test-verified) and **K26 merged** (`3ba4efe`; independent PASS `01c589e` on `ed095c2`, test-verified).
+- **BT31 merged** (`d877a37`; independent PASS `b06c7ac` on `74086ab`, test-verified; 57 bounty files / 668 tests, 142 package tests + 6 skips, 83 kitchen tests green, zero import cycles). Bounty records now live in `.box/local/box.db` (`node:sqlite` WAL + FTS5, `.box/local/.gitignore` with `*`), with existing/planted `.box/bounties/*.json` files imported and re-imported on change through `asRecord`; Node floor raised to `22.13.0` (`node-check.ts`, `pack.mjs`, `verify.yml` `install-node22`, `FIRST-FIVE-MINUTES.md`) with the SQLite `ExperimentalWarning` filtered; every benchmark operation at N = 10,000 lands inside K27's ×2 bars (0.06–0.53 ms reads/writes, 25/25+25/25 concurrent writers, crash `integrity_check` ok), K14 start budgets are unchanged, and N = 1,000 wall times dropped ~3–4×.
+- **BT30 merged** (`41d8f28`; independent PASS `2bb5c24` on `d548dbc`, test-verified): all test record accesses moved behind `tests/box/bounty/support.ts` helpers, guarded by `record-access.test.ts`.
 - **BT12 Part A remains merged. Part B, npm publishing, remains deferred by the owner.**
 
 ## Next
 
-**BT31** (records move into a local `node:sqlite` database `.box/local/box.db`; Node floor `22.13.0`) is starting now, followed by **BT32** (shared/local split, committed `shared.jsonl` with `merge=union`). This run stops after BT32. **BT12 Part B** stays deferred.
+No wave is in flight. **BT32** was placed **on hold** by the owner during this run (`e472875`, `waves/BT32.md`: "Do not dispatch as written") while **K28** (`waves/K28.md`: the delegation record, researched against Beads and git-bug) is briefed and waiting for the owner to name it. **BT33** (Turso private sync) is parked. **BT12 Part B** stays deferred.
