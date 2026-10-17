@@ -1,0 +1,12 @@
+PASS direct CLI append
+PASS direct CLI ids — 0 bt-check
+PASS import does not consume argv — status 0 stderr 
+PASS measure.mjs --out own scratch — status 0 
+PASS worlds.mjs --out own scratch — status 0 
+PASS measure.mjs foreign dir refused by marker check — status 1 msg refusing: C:\Users\shout\AppData\Local\Temp\kitchen-K28-check-9wZAz0\foreign-measure.mjs is nonempty and was not created by this script (no .kitchen-K28-owned m
+PASS worlds.mjs foreign dir refused by marker check — status 1 msg refusing: C:\Users\shout\AppData\Local\Temp\kitchen-K28-check-9wZAz0\foreign-worlds.mjs is nonempty and was not created by this script
+PASS committed evidence files present — all present
+PASS post-fix raw record complete — entries 20
+
+ALL PASS — scratch left at C:\Users\shout\AppData\Local\Temp\kitchen-K28-check-9wZAz0 (kitchen-K28 owned)
+exit=0
