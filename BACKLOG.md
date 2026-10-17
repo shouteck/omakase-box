@@ -4,6 +4,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- BT31-ci follow-ups: `find` scans every record's `search_text`, which sits after the large `json` column (about 0.4 s at 100,000 records; the cook measured 147 ms with a separate two-column search table); a Node build refusing both the FTS table drop and the schema-entry delete would keep the old FTS tables unused (untested; no such build found); `kitchen/memory/storage/benchmark.mjs` is K27's study script and still benchmarks FTS5 by design. See [BT31-ci](waves/BT31-ci.md).
+
 - BT12 pass follow-ups: the Node floor says 22.0.0 but the hosted job runs the newest 22.x and vitest needs 22.12 — pin the job to 22.12.0 and declare `>=22.12.0` so the floor is exactly what runs; the install test's `npm i -g`/`uninstall -g` run with the full environment (the `box` calls are scrubbed); a `'C:Windows'` fallback literal in `bt12-install.test.ts` lacks its backslash (unreachable while `SystemRoot` is set). See [BT12](waves/BT12.md).
 - **BT12 Part B deferred by the owner on 17 October 2026** (publish later, when the tool is more ready): the name `box-bounty` is free on npm but unreserved. The instruction-file install line is held until the owner publishes; `FIRST-FIVE-MINUTES.md` (the package README) already names it on public master, a lower-reach version of the same squatting risk. Publishing is one owner command, shown in the BT12 Result.
 
