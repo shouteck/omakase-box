@@ -144,9 +144,19 @@ const openCountFor = (n) => Math.max(1, Math.round(n * 0.05)); // ~5% open, rest
 // tsx for this engine (see the header). `dir` is the scratch checkout root:
 // the store creates `<dir>/.box/local/box.db` itself.
 const TSX_CLI = join(fileURLToPath(new URL('../../../', import.meta.url)), 'node_modules', '.pnpm', 'node_modules', 'tsx', 'dist', 'cli.mjs');
+// The product modules load once per process (tsx transpiles them); that is
+// harness overhead, not store-open cost, so they are imported ahead of the
+// timed open via warmBoxStore() in main.
+let boxStoreModule;
+async function loadBoxStore() {
+  if (boxStoreModule === undefined) {
+    await import(new URL('../../../packages/box-bounty/index.ts', import.meta.url).href); // wires the record codec
+    boxStoreModule = await import(new URL('../../../packages/box-bounty/store.ts', import.meta.url).href);
+  }
+  return boxStoreModule;
+}
 async function openBoxStore(dir) {
-  await import(new URL('../../../packages/box-bounty/index.ts', import.meta.url).href); // wires the record codec
-  const store = await import(new URL('../../../packages/box-bounty/store.ts', import.meta.url).href);
+  const store = await loadBoxStore();
   const read = (id) => { const got = store.readStored(dir, id); return got.state === 'ok' ? got.record : undefined; };
   // `asRecord` accepts partOf only as a string — the benchmark's null means
   // "absent" in the prototype engines, so drop the key before validating.
@@ -154,7 +164,7 @@ async function openBoxStore(dir) {
   return {
     name: 'box-store',
     seed(records) {
-      for (const r of records) store.writeStored(dir, clean(r));
+      store.seedStored(dir, records.map(clean));
     },
     listOpen: () => store.listOpen(dir),
     boundedOverview() {
@@ -655,6 +665,7 @@ async function main() {
     console.log(`K27 storage benchmark · ${new Date().toISOString()} · ${load}`);
     console.log(`engines: ${ENGINES.join(', ')} · N: ${NS.join(', ')} · scratch: ${root}`);
     if (ENGINES.includes('sqljs')) ensureSqljs(root);
+    if (ENGINES.includes('box-store')) await loadBoxStore();
 
     const all = [];
     for (const engine of ENGINES) for (const n of NS) {

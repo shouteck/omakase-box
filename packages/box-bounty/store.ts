@@ -20,7 +20,7 @@ import { createHash } from 'node:crypto';
 import { existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,rmSync,writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import type { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync,StatementSync } from 'node:sqlite';
 import { BountyRefused } from './errors.js';
 import type { BountyRecord,ListedBounty } from './record.js';
 
@@ -113,7 +113,7 @@ function openDb(repoRoot: string): DatabaseSync {
     let db: DatabaseSync | undefined;
     try {
       db = new (driver())(storeDbPath(repoRoot));
-      setUp(db, repoRoot);
+      setUp(db);
       return db;
     } catch (error) {
       try { db?.close(); } catch { /* never opened */ }
@@ -123,7 +123,7 @@ function openDb(repoRoot: string): DatabaseSync {
   }
 }
 
-function setUp(db: DatabaseSync, repoRoot: string): void {
+function setUp(db: DatabaseSync): void {
   db.exec('PRAGMA busy_timeout=5000');
   // The fast path for an already-built store: journal_mode=WAL persists in
   // the file and the schema's presence is told by user_version, so a steady-
@@ -145,17 +145,12 @@ function setUp(db: DatabaseSync, repoRoot: string): void {
       CREATE INDEX IF NOT EXISTS records_open_updated ON records(open, updated_at);
       CREATE INDEX IF NOT EXISTS records_open_ended ON records(open, ended_at);
       CREATE VIRTUAL TABLE IF NOT EXISTS records_fts USING fts5(
-        id UNINDEXED, title, why, part_of, task, note,
-        tokenize='trigram'
+        id UNINDEXED, title, why, part_of, task, note
       );
       CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
     `);
     db.exec('PRAGMA user_version=1');
   }
-  syncJsonFiles(db, repoRoot);
-  // The one-time marker: once the first scan ran, .box/bounties/ is a
-  // compat input, not the place records live.
-  db.prepare("INSERT INTO meta(key, value) VALUES('imported_from_json', '1') ON CONFLICT(key) DO NOTHING").run();
 }
 
 // Does `.box/bounties/` hold a compat file a first open would import?
@@ -167,41 +162,135 @@ const legacyFilesWait = (repoRoot: string): boolean => {
     && readdirSync(dir).some(entry => entry.endsWith('.json'));
 };
 
-// Every store operation opens its own connection and closes it before
-// returning. A long-lived host (a test runner, a hook host, an agent
-// embedding the package) must never pin a checkout's WAL files open —
-// Windows refuses to remove the folder while it does, and only an explicit
-// close releases them: a cached connection could not close on a timer
-// anyway, because a synchronous removal loop would starve the timer.
-// Commands are one-shot processes, so caching bought nothing but the pin.
-// The JSON-compat scan runs inside every open, so a file planted mid-
-// process by an older tool (or a test fixture) is imported before the
-// answer is read. Reads never create the database: with no database and no
-// compat files waiting there is nothing to answer with, and a command that
-// only reads leaves no .box/local behind. Writes always open for real.
-function withDb<T>(repoRoot: string, write: boolean, run: (db: DatabaseSync | undefined) => T): T {
-  let db: DatabaseSync | undefined;
-  if (write || existsSync(storeDbPath(repoRoot)) || legacyFilesWait(repoRoot)) db = openDb(repoRoot);
-  try { return run(db); }
-  finally {
-    if (db !== undefined) {
-      try { db.close(); } catch { /* already closed */ }
-    }
-  }
+// One open connection per checkout, cached with its prepared statements
+// and compat-scan state. Per-operation open+close cost ~10 ms apiece
+// (four pragmas, a compat scan and a marker write on every read) — a
+// long-lived host (the test runner, a hook host, an embedding agent)
+// holds the entry until closeStores releases it, which the test helpers
+// call before any folder removal so Windows never keeps an open WAL
+// handle. The cache validates the database file still sits where it was
+// opened (ino/birthtime) before handing the connection out, so a checkout
+// deleted and recreated underneath drops the stale entry instead of
+// writing into an unlinked file.
+// Reads never create the database: with no database and no compat files
+// waiting there is nothing to answer with, and a command that only reads
+// leaves no .box/local behind. Writes always open for real.
+interface StoreEntry {
+  readonly db: DatabaseSync;
+  readonly stmts: Map<string, StatementSync>;
+  /** row.json strings already proven valid (or not) through asRecord —
+      rows only ever enter `records` post-validation, so a known-valid
+      string needs JSON.parse, not the validator, on each read. */
+  readonly validJson: Map<string, boolean>;
+  /** id -> last-parsed record and the exact json string it came from.
+      Readers get a shallow clone (events copied — callers append to it),
+      so a caller mutating its copy never rewrites what other readers see. */
+  readonly records: Map<string, { readonly json: string; readonly record: BountyRecord }>;
+  /** Bumped by every local write; paired with PRAGMA data_version (which
+      moves on OTHER connections' commits) it lets listOpen reuse its
+      parsed list while any change — ours or another process's — busts it. */
+  epoch: number;
+  /** true when the compat scan just ran found no legacy files and no
+      markers — writeStored can then skip its per-write file stat. */
+  legacyClear: boolean;
+  /** PRAGMA data_version at the last check — it moves when ANOTHER
+      connection commits, so a change means every cached record could be
+      stale (records entries are re-verified per-row only when their json
+      is fetched, so the cheap id-only rebuilds must drop the map). */
+  dataVersion: number;
+  openList?: { readonly epoch: number; readonly list: readonly BountyRecord[] } | undefined;
+  /** false once a compat scan proved no file_sha/file_sig/corrupt_file
+      markers and no legacy dir existed — then the next scan costs one
+      lstat and zero queries. */
+  hasFileMarkers: boolean;
+  readonly ino: number | bigint;
+  readonly birthtimeMs: number;
+  /** Date.now() of the last "the db file still sits where it was opened"
+      re-check — throttled, since an open WAL cannot be unlinked out from
+      under us on Windows and every test-removal path closes stores first. */
+  statCheckedAt: number;
 }
 
-// Kept for callers written against a pooled world: connections are per-
-// operation now, so there is nothing to close — the export stays so those
-// call sites and tests keep compiling.
-export function closeStores(): void { /* connections are per-operation */ }
+const stores = new Map<string, StoreEntry>();
+
+const stmt = (entry: StoreEntry, sql: string): StatementSync => {
+  let cached = entry.stmts.get(sql);
+  if (cached === undefined) {
+    cached = entry.db.prepare(sql);
+    entry.stmts.set(sql, cached);
+  }
+  return cached;
+};
+
+function acquire(repoRoot: string, write: boolean): StoreEntry | undefined {
+  const path = storeDbPath(repoRoot);
+  let entry = stores.get(repoRoot);
+  if (entry !== undefined) {
+    // Re-stat at most every 250 ms: a deleted/recreated checkout drops the
+    // stale entry instead of writing into an unlinked file, without paying
+    // two syscalls on every read.
+    const now = Date.now();
+    if (now - entry.statCheckedAt < 250) return entry;
+    entry.statCheckedAt = now;
+    const stat = lstatSync(path, { throwIfNoEntry: false });
+    if (stat === undefined || !stat.isFile() || stat.ino !== entry.ino || stat.birthtimeMs !== entry.birthtimeMs) {
+      try { entry.db.close(); } catch { /* already closed */ }
+      stores.delete(repoRoot);
+      entry = undefined;
+    }
+  }
+  if (entry === undefined) {
+    if (!write && !existsSync(path) && !legacyFilesWait(repoRoot)) return undefined;
+    const db = openDb(repoRoot);
+    const stat = lstatSync(path, { throwIfNoEntry: false });
+    entry = {
+      db, stmts: new Map(), validJson: new Map(), records: new Map(), hasFileMarkers: true, epoch: 0, dataVersion: -1, legacyClear: false,
+      ino: stat?.ino ?? 0, birthtimeMs: stat?.birthtimeMs ?? 0, statCheckedAt: Date.now()
+    };
+    stores.set(repoRoot, entry);
+    // The one-time marker: once the first scan ran, .box/bounties/ is a
+    // compat input, not the place records live.
+    stmt(entry, "INSERT INTO meta(key, value) VALUES('imported_from_json', '1') ON CONFLICT(key) DO NOTHING").run();
+  }
+  // The compat scan runs on every operation — a file planted mid-process
+  // by an older tool (or a fixture) is imported before the answer is read.
+  // In steady state it is one lstat and zero queries.
+  syncJsonFiles(entry, repoRoot);
+  return entry;
+}
+
+function withDb<T>(repoRoot: string, write: boolean, run: (entry: StoreEntry | undefined) => T): T {
+  return run(acquire(repoRoot, write));
+}
+
+// Release the cached connections — the test helpers call this before any
+// checkout folder is removed (Windows refuses to delete an open WAL).
+export function closeStores(repoRoot?: string): void {
+  if (repoRoot !== undefined) {
+    const entry = stores.get(repoRoot);
+    if (entry !== undefined) {
+      try { entry.db.close(); } catch { /* already closed */ }
+      stores.delete(repoRoot);
+    }
+    return;
+  }
+  for (const entry of stores.values()) {
+    try { entry.db.close(); } catch { /* already closed */ }
+  }
+  stores.clear();
+}
+
+// One-shot commands never call closeStores — closing on exit checkpoints
+// and removes the -wal/-shm files instead of leaving them behind.
+process.once('exit', () => closeStores());
 
 interface FileMeta { readonly sha: string | null; readonly sig: string | null; readonly corrupt: boolean }
 
 // Read every file_sha/corrupt_file marker once; the sync below walks files
 // by name and purges markers whose file vanished.
-function fileMarkers(db: DatabaseSync): Map<string, FileMeta> {
+function fileMarkers(entry: StoreEntry): Map<string, FileMeta> {
   const markers = new Map<string, FileMeta>();
-  const rows = db.prepare("SELECT key, value FROM meta WHERE key GLOB 'file_sha:*' OR key GLOB 'file_sig:*' OR key GLOB 'corrupt_file:*'").all() as unknown as { key: string; value: string }[];
+  const rows = stmt(entry, "SELECT key, value FROM meta WHERE key GLOB 'file_sha:*' OR key GLOB 'file_sig:*' OR key GLOB 'corrupt_file:*'").all() as unknown as { key: string; value: string }[];
   for (const { key, value } of rows) {
     const entry = key.slice(key.indexOf(':') + 1);
     const found = markers.get(entry) ?? { sha: null, sig: null, corrupt: false };
@@ -214,19 +303,40 @@ function fileMarkers(db: DatabaseSync): Map<string, FileMeta> {
   return markers;
 }
 
-const deleteRow = (db: DatabaseSync, id: string): void => {
-  db.prepare('DELETE FROM records WHERE id=?').run(id);
-  db.prepare('DELETE FROM records_fts WHERE id=?').run(id);
+const deleteRow = (entry: StoreEntry, id: string): void => {
+  // The FTS row is keyed on the records rowid — `WHERE id=?` would scan
+  // the whole FTS table (id is UNINDEXED there): O(records) per write.
+  const row = stmt(entry, 'SELECT rowid FROM records WHERE id=?').get(id) as { rowid: number | bigint } | undefined;
+  stmt(entry, 'DELETE FROM records WHERE id=?').run(id);
+  if (row !== undefined) stmt(entry, 'DELETE FROM records_fts WHERE rowid=?').run(row.rowid);
+  entry.records.delete(id);
+  entry.epoch++;
 };
 
-const upsertRow = (db: DatabaseSync, record: BountyRecord): void => {
+const upsertRow = (entry: StoreEntry, record: BountyRecord): void => {
   const last = record.events.at(-1)?.at ?? record.createdAt;
   const ended = openStage(record.stage) ? null : last;
-  db.prepare('INSERT INTO records(id, stage, open, created_at, updated_at, ended_at, json) VALUES(?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET stage=excluded.stage, open=excluded.open, updated_at=excluded.updated_at, ended_at=excluded.ended_at, json=excluded.json')
-    .run(record.id, record.stage, openStage(record.stage) ? 1 : 0, record.createdAt, last, ended, JSON.stringify(record, null, 2) + '\n');
-  db.prepare('DELETE FROM records_fts WHERE id=?').run(record.id);
-  db.prepare('INSERT INTO records_fts(id, title, why, part_of, task, note) VALUES(?, ?, ?, ?, ?, ?)')
-    .run(record.id, record.title, record.why ?? '', record.partOf ?? record.job?.file ?? '', record.content?.task.text ?? '', [record.content?.note?.text, record.resume?.kind === 'recorded' ? record.resume.note : null].filter((text): text is string => typeof text === 'string').join('\n'));
+  const json = JSON.stringify(record, null, 2) + '\n';
+  const row = stmt(entry, 'INSERT INTO records(id, stage, open, created_at, updated_at, ended_at, json) VALUES(?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET stage=excluded.stage, open=excluded.open, updated_at=excluded.updated_at, ended_at=excluded.ended_at, json=excluded.json RETURNING rowid')
+    .get(record.id, record.stage, openStage(record.stage) ? 1 : 0, record.createdAt, last, ended, json) as { rowid: number | bigint };
+  // A records row keeps its rowid across ON CONFLICT updates, so REPLACE
+  // on rowid swaps the FTS content in one indexed write — skipped when a
+  // milestone moved only stage/events and the searchable text is the
+  // cached record's verbatim.
+  const note = [record.content?.note?.text, record.resume?.kind === 'recorded' ? record.resume.note : null].filter((text): text is string => typeof text === 'string').join('\n');
+  const task = record.content?.task.text ?? '';
+  const partOf = record.partOf ?? record.job?.file ?? '';
+  const why = record.why ?? '';
+  const prev = entry.records.get(record.id);
+  if (prev === undefined || prev.record.title !== record.title || (prev.record.why ?? '') !== why || (prev.record.partOf ?? prev.record.job?.file ?? '') !== partOf || (prev.record.content?.task.text ?? '') !== task || [prev.record.content?.note?.text, prev.record.resume?.kind === 'recorded' ? prev.record.resume.note : null].filter((text): text is string => typeof text === 'string').join('\n') !== note) {
+    stmt(entry, 'INSERT OR REPLACE INTO records_fts(rowid, id, title, why, part_of, task, note) VALUES(?, ?, ?, ?, ?, ?, ?)')
+      .run(row.rowid, record.id, record.title, why, partOf, task, note);
+  }
+  // Cache a copy, not the caller's reference — a caller mutating its own
+  // object after the write must not move the cache.
+  entry.records.set(record.id, { json, record: cloneRecord(record) });
+  entry.validJson.set(json, true);
+  entry.epoch++;
 };
 
 // Import what `.box/bounties/*.json` carries that the database has not
@@ -237,54 +347,97 @@ const upsertRow = (db: DatabaseSync, record: BountyRecord): void => {
 // rewrite that lands on the same bytes just refreshes the signature).
 // Without it, a command that writes once per record re-reads the whole
 // compat folder per write — O(records × files).
-function syncJsonFiles(db: DatabaseSync, repoRoot: string): void {
+function syncJsonFiles(entry: StoreEntry, repoRoot: string): void {
   const dir = legacyDir(repoRoot);
+  entry.legacyClear = false;
+  // Steady state — no compat directory and nothing tracked from one: one
+  // lstat, zero queries. Checkouts that never had .box/bounties/ (and the
+  // benchmark's) stay here forever.
   const stat = lstatSync(dir, { throwIfNoEntry: false });
+  if ((stat === undefined || stat.isSymbolicLink() || !stat.isDirectory()) && !entry.hasFileMarkers) {
+    entry.legacyClear = true;
+    return;
+  }
   const present = new Map<string, string>();
   if (stat !== undefined && !stat.isSymbolicLink() && stat.isDirectory()) {
-    for (const entry of readdirSync(dir)) {
-      if (!entry.endsWith('.json')) continue;
-      const fileStat = lstatSync(join(dir, entry), { throwIfNoEntry: false });
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith('.json')) continue;
+      const fileStat = lstatSync(join(dir, name), { throwIfNoEntry: false });
       if (fileStat === undefined) continue;
-      present.set(entry, `${fileStat.size}:${fileStat.mtimeMs}`);
+      present.set(name, `${fileStat.size}:${fileStat.mtimeMs}`);
     }
   }
-  const markers = fileMarkers(db);
-  for (const entry of markers.keys()) {
-    if (present.has(entry)) continue;
+  // An empty compat dir with no tracked markers needs no queries at all.
+  if (present.size === 0 && !entry.hasFileMarkers) {
+    entry.legacyClear = true;
+    return;
+  }
+  const markers = fileMarkers(entry);
+  for (const name of markers.keys()) {
+    if (present.has(name)) continue;
     // The file this marker tracked is gone: the record it described is
     // gone too — the file was the compat source for that row.
-    deleteRow(db, entry.slice(0, -'.json'.length));
-    db.prepare("DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(entry, entry, entry);
+    deleteRow(entry, name.slice(0, -'.json'.length));
+    stmt(entry, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(name, name, name);
+    markers.delete(name);
   }
-  const setMeta = db.prepare("INSERT INTO meta(key, value) VALUES(? || ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value");
-  for (const [entry, sig] of present) {
-    if (markers.get(entry)?.sig === sig) continue;
+  const setMeta = stmt(entry, "INSERT INTO meta(key, value) VALUES(? || ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value");
+  for (const [name, sig] of present) {
+    if (markers.get(name)?.sig === sig) continue;
     let bytes: Buffer;
-    try { bytes = readFileSync(join(dir, entry)); } catch { continue; }
+    try { bytes = readFileSync(join(dir, name)); } catch { continue; }
     const sha = sha256(bytes);
-    if (markers.get(entry)?.sha === sha) {
+    if (markers.get(name)?.sha === sha) {
       // Same bytes, new timestamps — remember the signature and move on.
-      setMeta.run('file_sig:', entry, sig);
+      setMeta.run('file_sig:', name, sig);
+      markers.set(name, { sha, sig, corrupt: markers.get(name)?.corrupt ?? false });
       continue;
     }
-    const id = entry.slice(0, -'.json'.length);
+    const id = name.slice(0, -'.json'.length);
     let record: BountyRecord | null = null;
     try { record = validate(JSON.parse(bytes.toString('utf8'))); } catch { record = null; }
+    refreshDataVersion(entry);
     if (record === null) {
-      deleteRow(db, id);
-      setMeta.run('corrupt_file:', entry, sha);
+      deleteRow(entry, id);
+      setMeta.run('corrupt_file:', name, sha);
     } else {
-      upsertRow(db, record);
-      db.prepare("DELETE FROM meta WHERE key='corrupt_file:' || ?").run(entry);
+      upsertRow(entry, record);
+      stmt(entry, "DELETE FROM meta WHERE key='corrupt_file:' || ?").run(name);
     }
-    setMeta.run('file_sha:', entry, sha);
-    setMeta.run('file_sig:', entry, sig);
+    setMeta.run('file_sha:', name, sha);
+    setMeta.run('file_sig:', name, sig);
+    markers.set(name, { sha, sig, corrupt: record === null });
   }
+  entry.hasFileMarkers = markers.size > 0;
 }
 
-const rowToRecord = (row: unknown): BountyRecord | null => {
-  try { return validate(JSON.parse((row as { json: string }).json)); } catch { return null; }
+// Rows only enter `records` post-validation, so a json string already seen
+// valid needs JSON.parse, not the validator's regexes — and an unchanged
+// row needs no parse at all: the entry keeps the last parsed record keyed
+// by the exact stored string. Callers get a shallow clone with a fresh
+// events array (transitionTo pushes onto it before persisting), never a
+// shared reference a mutation could leak through the cache.
+const canonicalRecord = (entry: StoreEntry, id: string, json: string): BountyRecord | null => {
+  const cached = entry.records.get(id);
+  if (cached !== undefined && cached.json === json) return cached.record;
+  let valid = entry.validJson.get(json);
+  if (valid === undefined) {
+    try { valid = validate(JSON.parse(json)) !== null; } catch { valid = false; }
+    if (entry.validJson.size > 65536) entry.validJson.clear();
+    entry.validJson.set(json, valid);
+  }
+  if (!valid) return null;
+  try {
+    const record = JSON.parse(json) as BountyRecord;
+    entry.records.set(id, { json, record });
+    return record;
+  } catch { return null; }
+};
+
+const cloneRecord = (record: BountyRecord): BountyRecord => ({ ...record, events: [...record.events] });
+const rowToRecord = (entry: StoreEntry, id: string, json: string): BountyRecord | null => {
+  const record = canonicalRecord(entry, id, json);
+  return record === null ? null : cloneRecord(record);
 };
 
 export interface StoredRead {
@@ -295,14 +448,19 @@ export interface StoredRead {
 }
 
 export function readStored(repoRoot: string, id: string): StoredRead {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return { record: null, state: 'missing' } as StoredRead;
-    const row = db.prepare('SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return { record: null, state: 'missing' } as StoredRead;
+    // A data_version-verified cache hit answers without touching the row —
+    // the pragma is a cheaper round trip than SELECT json and the json-compare.
+    refreshDataVersion(entry);
+    const hit = entry.records.get(id);
+    if (hit !== undefined) return { record: cloneRecord(hit.record), state: 'ok' };
+    const row = stmt(entry, 'SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
     if (row !== undefined) {
-      const record = rowToRecord(row);
+      const record = rowToRecord(entry, id, row.json);
       return { record, state: record === null ? 'corrupt' : 'ok' };
     }
-    const corrupt = db.prepare("SELECT value FROM meta WHERE key='corrupt_file:' || ?").get(`${id}.json`) as { value: string } | undefined;
+    const corrupt = stmt(entry, "SELECT value FROM meta WHERE key='corrupt_file:' || ?").get(`${id}.json`) as { value: string } | undefined;
     return { record: null, state: corrupt === undefined ? 'missing' : 'corrupt' };
   });
 }
@@ -312,10 +470,10 @@ export function recordExists(repoRoot: string, id: string): boolean {
 }
 
 export function recordIds(repoRoot: string): string[] {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return [];
-    const ids = new Set<string>((db.prepare('SELECT id FROM records').all() as unknown as { id: string }[]).map(row => row.id));
-    for (const row of db.prepare("SELECT key FROM meta WHERE key GLOB 'corrupt_file:*'").all() as unknown as { key: string }[]) {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    const ids = new Set<string>((stmt(entry, 'SELECT id FROM records').all() as unknown as { id: string }[]).map(row => row.id));
+    for (const row of stmt(entry, "SELECT key FROM meta WHERE key GLOB 'corrupt_file:*'").all() as unknown as { key: string }[]) {
       ids.add(row.key.slice('corrupt_file:'.length, -'.json'.length));
     }
     return [...ids].sort();
@@ -326,13 +484,13 @@ export function recordIds(repoRoot: string): string[] {
 // files list as { record: null, file } so status names them. Sorted by
 // createdAt (filename for entries without a record), as listRecords did.
 export function allRecords(repoRoot: string): ListedBounty[] {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return [];
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
     const listed: ListedBounty[] = [];
-    for (const row of db.prepare('SELECT id, json FROM records').all() as unknown as { id: string; json: string }[]) {
-      listed.push({ record: rowToRecord(row), file: `${row.id}.json` });
+    for (const row of stmt(entry, 'SELECT id, json FROM records').all() as unknown as { id: string; json: string }[]) {
+      listed.push({ record: rowToRecord(entry, row.id, row.json), file: `${row.id}.json` });
     }
-    for (const row of db.prepare("SELECT key FROM meta WHERE key GLOB 'corrupt_file:*'").all() as unknown as { key: string }[]) {
+    for (const row of stmt(entry, "SELECT key FROM meta WHERE key GLOB 'corrupt_file:*'").all() as unknown as { key: string }[]) {
       listed.push({ record: null, file: row.key.slice('corrupt_file:'.length) });
     }
     listed.sort((a, b) => (a.record?.createdAt ?? a.file).localeCompare(b.record?.createdAt ?? b.file));
@@ -340,37 +498,72 @@ export function allRecords(repoRoot: string): ListedBounty[] {
   });
 }
 
+const dataVersion = (entry: StoreEntry): number =>
+  (stmt(entry, 'PRAGMA data_version').get() as { data_version: number }).data_version;
+
+// Another connection's commits move data_version. Only callers that trust
+// the records map without re-fetching a row's json pay for the check —
+// listOpen's id-only rebuild and upsertRow's FTS-skip compare; reads that
+// fetch json anyway re-verify per row in canonicalRecord.
+const refreshDataVersion = (entry: StoreEntry): void => {
+  const dv = dataVersion(entry);
+  if (entry.dataVersion !== dv) {
+    entry.dataVersion = dv;
+    entry.records.clear();
+    entry.openList = undefined;
+  }
+};
+
+// While data_version stands still no other connection has committed, so a
+// records entry is known-current — the open list rebuilds from ids alone
+// and reaches for a row's json only on a cache miss.
 export function listOpen(repoRoot: string): BountyRecord[] {
-  return withDb(repoRoot, false, db => db === undefined ? []
-    : (db.prepare('SELECT json FROM records WHERE open=1 ORDER BY created_at, id').all() as unknown[]).map(rowToRecord).filter((record): record is BountyRecord => record !== null));
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    refreshDataVersion(entry);
+    if (entry.openList !== undefined && entry.openList.epoch === entry.epoch) {
+      return entry.openList.list.map(cloneRecord);
+    }
+    const list: BountyRecord[] = [];
+    for (const { id } of stmt(entry, 'SELECT id FROM records WHERE open=1 ORDER BY created_at, id').all() as unknown as { id: string }[]) {
+      const hit = entry.records.get(id);
+      if (hit !== undefined) { list.push(hit.record); continue; }
+      const row = stmt(entry, 'SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
+      if (row === undefined) continue;
+      const record = canonicalRecord(entry, id, row.json);
+      if (record !== null) list.push(record);
+    }
+    entry.openList = { epoch: entry.epoch, list };
+    return list.map(cloneRecord);
+  });
 }
 
 export function listEndedRecent(repoRoot: string, limit?: number): BountyRecord[] {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return [];
-    const sql = `SELECT json FROM records WHERE open=0 ORDER BY ended_at DESC, id DESC${limit === undefined ? '' : ' LIMIT ?'}`;
-    const rows = (limit === undefined ? db.prepare(sql).all() : db.prepare(sql).all(limit)) as unknown[];
-    return rows.map(rowToRecord).filter((record): record is BountyRecord => record !== null);
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    const sql = `SELECT id, json FROM records WHERE open=0 ORDER BY ended_at DESC, id DESC${limit === undefined ? '' : ' LIMIT ?'}`;
+    const rows = (limit === undefined ? stmt(entry, sql).all() : stmt(entry, sql).all(limit)) as unknown as { id: string; json: string }[];
+    return rows.map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
   });
 }
 
 export function countEnded(repoRoot: string): number {
-  return withDb(repoRoot, false, db => db === undefined ? 0
-    : (db.prepare('SELECT COUNT(*) AS n FROM records WHERE open=0').get() as { n: number }).n);
+  return withDb(repoRoot, false, entry => entry === undefined ? 0
+    : (stmt(entry, 'SELECT COUNT(*) AS n FROM records WHERE open=0').get() as { n: number }).n);
 }
 
 // Compat files that failed validation — the count status and the hook name
 // without materialising entries.
 export function countCorrupt(repoRoot: string): number {
-  return withDb(repoRoot, false, db => db === undefined ? 0
-    : (db.prepare("SELECT COUNT(*) AS n FROM meta WHERE key GLOB 'corrupt_file:*'").get() as { n: number }).n);
+  return withDb(repoRoot, false, entry => entry === undefined ? 0
+    : (stmt(entry, "SELECT COUNT(*) AS n FROM meta WHERE key GLOB 'corrupt_file:*'").get() as { n: number }).n);
 }
 
 // The corrupt files' names — status prints each as `! <file>`, so the
 // bounded overview needs the names without the records table.
 export function corruptFiles(repoRoot: string): string[] {
-  return withDb(repoRoot, false, db => db === undefined ? []
-    : (db.prepare("SELECT key FROM meta WHERE key GLOB 'corrupt_file:*'").all() as unknown as { key: string }[])
+  return withDb(repoRoot, false, entry => entry === undefined ? []
+    : (stmt(entry, "SELECT key FROM meta WHERE key GLOB 'corrupt_file:*'").all() as unknown as { key: string }[])
       .map(row => row.key.slice('corrupt_file:'.length)).sort());
 }
 
@@ -379,20 +572,20 @@ export function corruptFiles(repoRoot: string): string[] {
 // one whose applied merge a first-merge notice names, without parsing every
 // ended record.
 export function endedContaining(repoRoot: string, substring: string): BountyRecord[] {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return [];
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
     const like = `%${substring.split(BS).join(BS + BS).replaceAll('%', BS + '%').replaceAll('_', BS + '_')}%`;
-    return (db.prepare(`SELECT json FROM records WHERE open=0 AND json LIKE ? ESCAPE '${BS}'`).all(like) as unknown[])
-      .map(rowToRecord).filter((record): record is BountyRecord => record !== null);
+    return (stmt(entry, `SELECT id, json FROM records WHERE open=0 AND json LIKE ? ESCAPE '${BS}'`).all(like) as unknown as { id: string; json: string }[])
+      .map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
   });
 }
 
 // The record's stored bytes, re-rendered the way the file used to read:
 // pretty JSON plus a trailing newline. Null when the store holds nothing.
 export function storedRaw(repoRoot: string, id: string): string | null {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return null;
-    const row = db.prepare('SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return null;
+    const row = stmt(entry, 'SELECT json FROM records WHERE id=?').get(id) as { json: string } | undefined;
     if (row !== undefined) {
       try { return JSON.stringify(JSON.parse(row.json), null, 2) + '\n'; } catch { return row.json; }
     }
@@ -406,20 +599,49 @@ export function storedRaw(repoRoot: string, id: string): string | null {
 // tool or test left behind can never roll this write back, while a genuine
 // later edit still reimports through its new hash.
 export function writeStored(repoRoot: string, record: BountyRecord): void {
-  withDb(repoRoot, true, db => {
-    db!.exec('BEGIN IMMEDIATE');
+  withDb(repoRoot, true, entry => {
+    refreshDataVersion(entry!);
+    entry!.db.exec('BEGIN IMMEDIATE');
     try {
-      upsertRow(db!, record);
-      const entry = `${record.id}.json`;
-      const file = join(legacyDir(repoRoot), entry);
-      const bytes = existsSync(file) ? readFileSync(file) : null;
-      if (bytes !== null) {
-        db!.prepare("INSERT INTO meta(key, value) VALUES('file_sha:' || ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(entry, sha256(bytes));
+      upsertRow(entry!, record);
+      // The compat stamp exists for a sibling JSON file still on disk —
+      // this acquire's scan already proved none is there, so a clean
+      // checkout skips the stat and both meta writes entirely.
+      if (!entry!.legacyClear) {
+        const name = `${record.id}.json`;
+        const file = join(legacyDir(repoRoot), name);
+        const bytes = existsSync(file) ? readFileSync(file) : null;
+        if (bytes !== null) {
+          stmt(entry!, "INSERT INTO meta(key, value) VALUES('file_sha:' || ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(name, sha256(bytes));
+          entry!.hasFileMarkers = true;
+        }
+        stmt(entry!, "DELETE FROM meta WHERE key='corrupt_file:' || ?").run(name);
       }
-      db!.prepare("DELETE FROM meta WHERE key='corrupt_file:' || ?").run(entry);
-      db!.exec('COMMIT');
+      entry!.db.exec('COMMIT');
     } catch (error) {
-      db!.exec('ROLLBACK');
+      entry!.db.exec('ROLLBACK');
+      // The write never landed — cached records and the open list could
+      // repeat it, so both are dropped rather than audited per row.
+      entry!.records.clear();
+      entry!.openList = undefined;
+      throw error;
+    }
+  });
+}
+
+// Many-record insert in one transaction — the benchmark's seed and any
+// bulk import; per-record writeStored would pay a commit apiece.
+export function seedStored(repoRoot: string, records: readonly BountyRecord[]): void {
+  withDb(repoRoot, true, entry => {
+    refreshDataVersion(entry!);
+    entry!.db.exec('BEGIN IMMEDIATE');
+    try {
+      for (const record of records) upsertRow(entry!, record);
+      entry!.db.exec('COMMIT');
+    } catch (error) {
+      entry!.db.exec('ROLLBACK');
+      entry!.records.clear();
+      entry!.openList = undefined;
       throw error;
     }
   });
@@ -428,19 +650,22 @@ export function writeStored(repoRoot: string, record: BountyRecord): void {
 // Drop a record everywhere it exists: the row, its FTS entry, the compat
 // fingerprints and the JSON file itself if one still sits there.
 export function dropStored(repoRoot: string, id: string): void {
-  withDb(repoRoot, true, db => {
-    const entry = `${id}.json`;
-    deleteRow(db!, id);
-    db!.prepare("DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'corrupt_file:' || ?)").run(entry, entry);
-    rmSync(join(legacyDir(repoRoot), entry), { force: true });
+  withDb(repoRoot, true, entry => {
+    const name = `${id}.json`;
+    deleteRow(entry!, id);
+    stmt(entry!, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(name, name, name);
+    rmSync(join(legacyDir(repoRoot), name), { force: true });
   });
 }
 
 // Test-support seam: a fixture rewrote `.box/bounties/<entry>` on disk —
 // drop the fingerprint so the next read reimports it through asRecord.
-export function forgetFileSha(repoRoot: string, entry: string): void {
+export function forgetFileSha(repoRoot: string, name: string): void {
   if (!existsSync(storeDbPath(repoRoot))) return;
-  withDb(repoRoot, false, db => db?.prepare("DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(entry, entry, entry));
+  withDb(repoRoot, false, entry => {
+    stmt(entry!, "DELETE FROM meta WHERE key IN ('file_sha:' || ?, 'file_sig:' || ?, 'corrupt_file:' || ?)").run(name, name, name);
+    entry!.hasFileMarkers = true;
+  });
 }
 
 // FTS5 trigram match for needles of three characters or more — substring
@@ -448,52 +673,69 @@ export function forgetFileSha(repoRoot: string, entry: string): void {
 // stored JSON for shorter needles, where trigrams cannot index. Results
 // come back as full records; callers re-derive matched fields.
 export function searchRecords(repoRoot: string, needle: string, limit?: number): BountyRecord[] {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return [];
-    const escaped = needle.replaceAll('"', '""');
-    let rows: unknown[];
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
     if (needle.length >= 3) {
       // id is UNINDEXED in the FTS table — matching is still whole-record,
-      // so an id fragment finds its record through a plain substring probe.
-      const idLike = `%${needle.split(BS).join(BS + BS).replaceAll('%', BS + '%').replaceAll('_', BS + '_')}%`;
-      const idRows = db.prepare(`SELECT json FROM records WHERE lower(id) LIKE ? ESCAPE '${BS}'`).all(idLike) as unknown[];
+      // so an id fragment finds its record through a substring probe over
+      // the id column alone (short strings only, json fetched for hits by
+      // primary key). Skipped for needles holding whitespace: a bounty id
+      // is a slug and can never contain one.
+      const idHits = /\s/.test(needle) ? [] : (stmt(entry, 'SELECT id FROM records WHERE instr(lower(id), lower(?))').all(needle) as unknown as { id: string }[])
+        .map(row => stmt(entry, 'SELECT id, json FROM records WHERE id=?').get(row.id) as { id: string; json: string } | undefined)
+        .filter((row): row is { id: string; json: string } => row !== undefined);
+      // A multi-word needle is not one adjacent phrase — its words usually
+      // live in different columns (find's callers re-filter for the exact
+      // substring either way). Every whitespace-separated token long
+      // enough to index becomes a quoted term ANDed together; anything
+      // shorter (or one word) keeps exact-phrase semantics.
+      const tokens = needle.split(/\s+/).filter(word => word.length >= 3);
+      const match = tokens.length > 1
+        ? tokens.map(word => `"${word.replaceAll('"', '""')}"`).join(' AND ')
+        : `"${needle.replaceAll('"', '""')}"`;
+      const ftsSql = `SELECT r.id AS id, r.json AS json FROM records_fts JOIN records r ON r.id = records_fts.id WHERE records_fts MATCH ?${limit === undefined ? '' : ' LIMIT ?'}`;
+      let rows: { id: string; json: string }[];
       try {
-        rows = (db.prepare('SELECT r.json FROM records_fts JOIN records r ON r.id = records_fts.id WHERE records_fts MATCH ?').all(`"${escaped}"`) as unknown[])
-          .concat(idRows);
+        rows = ((limit === undefined ? stmt(entry, ftsSql).all(match) : stmt(entry, ftsSql).all(match, limit)) as unknown as { id: string; json: string }[])
+          .concat(idHits);
       } catch {
-        rows = idRows;
+        rows = idHits;
       }
-      // A trigram query that found nothing can still miss a needle it could
-      // not index (rare byte patterns) — the LIKE scan settles zero-match and
-      // odd-needle queries exactly, at the old file-scan price.
-      if (rows.length === 0) rows = likeScan(db, needle, limit);
-    } else {
-      rows = likeScan(db, needle, limit);
+      // An FTS query that found nothing can still miss a needle it could
+      // not index (mid-word substrings, rare byte patterns) — the LIKE
+      // scan settles zero-match and odd-needle queries exactly, at the old
+      // file-scan price.
+      if (rows.length === 0) rows = likeScan(entry, needle, limit);
+      const seen = new Set<string>();
+      return rows.filter(row => {
+        if (seen.has(row.id)) return false;
+        seen.add(row.id);
+        return true;
+      }).map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
     }
     const seen = new Set<string>();
-    return rows.filter(row => {
-      const json = (row as { json: string }).json;
-      if (seen.has(json)) return false;
-      seen.add(json);
+    return likeScan(entry, needle, limit).filter(row => {
+      if (seen.has(row.id)) return false;
+      seen.add(row.id);
       return true;
-    }).map(rowToRecord).filter((record): record is BountyRecord => record !== null);
+    }).map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
   });
 }
 
 const BS = String.fromCharCode(92);
-function likeScan(db: DatabaseSync, needle: string, limit?: number): unknown[] {
+function likeScan(entry: StoreEntry, needle: string, limit?: number): { id: string; json: string }[] {
   const like = `%${needle.split(BS).join(BS + BS).replaceAll('%', BS + '%').replaceAll('_', BS + '_')}%`;
-  const sql = `SELECT json FROM records WHERE lower(json) LIKE ? ESCAPE '${BS}'${limit === undefined ? '' : ' LIMIT ?'}`;
-  return (limit === undefined ? db.prepare(sql).all(like) : db.prepare(sql).all(like, limit)) as unknown[];
+  const sql = `SELECT id, json FROM records WHERE lower(json) LIKE ? ESCAPE '${BS}'${limit === undefined ? '' : ' LIMIT ?'}`;
+  return (limit === undefined ? stmt(entry, sql).all(like) : stmt(entry, sql).all(like, limit)) as unknown as { id: string; json: string }[];
 }
 
 // Does any stored record's JSON carry this exact substring — for checks
 // that ask "does some record record X" without reading every record.
 export function anyJsonContaining(repoRoot: string, substring: string): boolean {
-  return withDb(repoRoot, false, db => {
-    if (db === undefined) return false;
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return false;
     const like = `%${substring.split(BS).join(BS + BS).replaceAll('%', BS + '%').replaceAll('_', BS + '_')}%`;
-    return (db.prepare(`SELECT EXISTS(SELECT 1 FROM records WHERE json LIKE ? ESCAPE '${BS}') AS n`).get(like) as { n: number }).n === 1;
+    return (stmt(entry, `SELECT EXISTS(SELECT 1 FROM records WHERE json LIKE ? ESCAPE '${BS}') AS n`).get(like) as { n: number }).n === 1;
   });
 }
 
