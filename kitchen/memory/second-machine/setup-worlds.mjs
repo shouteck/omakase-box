@@ -16,7 +16,7 @@
 // and a half-done session-store move with a clear next step.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -270,9 +270,10 @@ function sharedRecordB1() {
     content: { task: { file: 'task.md', text: TASK_TEXT }, note: { file: 'note.md', text: 'Tried a retry loop in refreshToken, a 5000ms expiry and freezing Date.now — all still flake. Suspect clock skew between the mock issuer and verifier.' }, tool: 'box-bounty' },
     reward: { amount: 0 },
     allowedBy: { decision: 'allowed', level: 'project', decisionAt: '2026-10-09T08:00:00.000Z', usedAt: '2026-10-10T09:30:00.000Z' },
+    // Shared events[] carries only posted-and-later milestones. The local
+    // pre-post `drafted`/`confirmed` transitions are omitted entirely — a
+    // draft is local until the owner allows posting (owner decision 4).
     events: [
-      { stage: 'drafted', at: '2026-10-10T09:12:00.000Z' },
-      { stage: 'confirmed', at: '2026-10-10T09:20:00.000Z' },
       { stage: 'posted', at: '2026-10-10T09:30:00.000Z', destination: 'github' }
     ],
     github: { ...GITHUB_SHARED }
@@ -287,7 +288,12 @@ function sharedRecordB2() {
     resume: { kind: 'recorded', branch: '(shared)', commit: '(shared)', changed: [], note: null },
     content: full.content, reward: full.reward, allowedBy: full.allowedBy,
     attempts: full.attempts.map(({ n, pullRequest, at, author, commit, changed, added, deleted, payTo }) => ({ n, pullRequest, at, author, commit, changed, added, deleted, outcome: 'answered', conflicts: null, report: [], payTo })),
-    events: full.events.map(({ stage, at, destination, merge, attempt }) => ({ stage, at, ...(destination !== undefined ? { destination } : {}), ...(merge !== undefined ? { merge } : {}), ...(attempt !== undefined ? { attempt } : {}) })),
+    // Shared events[] = posted-and-later milestones only (`posted`,
+    // `answered`, `applied`, `rejected`, `withdrawn` on a posted bounty);
+    // local pre-post `drafted`/`confirmed` events are dropped (decision 4).
+    events: full.events
+      .filter(({ stage }) => !['drafted', 'confirmed'].includes(stage))
+      .map(({ stage, at, destination, merge, attempt }) => ({ stage, at, ...(destination !== undefined ? { destination } : {}), ...(merge !== undefined ? { merge } : {}), ...(attempt !== undefined ? { attempt } : {}) })),
     github: full.github
   };
 }
@@ -389,8 +395,17 @@ console.error('gh stand-in: unhandled: ' + argv); process.exit(1);
 
 // ---------- main ----------
 
-rmSync(OUT, { recursive: true, force: true });
+// --out may name a directory this script did not create; refuse to delete a
+// non-empty directory that lacks the marker we write on first build.
+const OWNED = '.k26-worlds-owned';
+if (existsSync(OUT)) {
+  if (readdirSync(OUT).length > 0 && !existsSync(join(OUT, OWNED))) {
+    throw new Error(`refusing to overwrite non-empty directory not created by setup-worlds.mjs: ${OUT}`);
+  }
+  rmSync(OUT, { recursive: true, force: true });
+}
 mkdirSync(OUT, { recursive: true });
+writeFileSync(join(OUT, OWNED), 'created by kitchen/memory/second-machine/setup-worlds.mjs\n');
 const ghDir = buildGhStandin();
 
 const openLine = 'open bounties — run box bounty status before starting overlapping work: ' + B1 + ' "' + TASK_TEXT + '" (posted)\n';
