@@ -126,7 +126,7 @@ describe('BT31 — the record store', () => {
     });
   });
 
-  it('find matches words in why and task through FTS5', () => {
+  it('find matches words in why and task through the store search', () => {
     const repo = makeRepo({ 'src/app.py': 'x\n' });
     write(repo, 'BATCH.md', 'rewrite the telemetry batching window\n');
     created(repo, 'batching work', { why: 'the parser doubles latency under load', taskPath: join(repo, 'BATCH.md') });
