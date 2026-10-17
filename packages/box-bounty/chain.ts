@@ -345,12 +345,20 @@ export function refreshSharedMemory(root: string): void {
 function adoptAndImport(root: string): void {
   const remoteLines = gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_REMOTE_NS]).stdout
     .split('\n').filter(line => line !== '');
+  // Local tips in one listing: a chain already at the remote sha needs no
+  // mergeRemoteTip probe — on a large shared memory that is two git starts
+  // per unchanged bounty on every reading command, minutes at 1,000 chains.
+  const localTips = new Map(
+    gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_NS]).stdout
+      .split('\n').filter(line => line !== '')
+      .map(line => { const [ref, sha] = line.split(' '); return [ref!.slice(`${CHAIN_NS}/`.length), sha!] as const; })
+  );
   const rows: SharedRow[] = [];
   for (const line of remoteLines) {
     const [ref, sha] = line.split(' ');
     const id = ref!.slice(`${CHAIN_REMOTE_NS}/`.length);
     if (!CHAIN_ID.test(id) || !/^[a-f\d]{40}$/.test(sha ?? '')) continue;
-    mergeRemoteTip(root, id);
+    if (localTips.get(id) !== sha) mergeRemoteTip(root, id);
     if (metaGet(root, `chain_tip:${id}`) === sha) continue; // this tip was already imported
     const record = importChain(root, id, sha!);
     metaSet(root, `chain_tip:${id}`, sha!);
