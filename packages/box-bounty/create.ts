@@ -189,7 +189,7 @@ export function planBounty(options: CreateOptions): BountyPlan {
       changed: [...new Set([
         ...ownerGitOutcome(repoRoot, ['diff', '--name-only', '--no-renames', '-z', ...(snapshot.baseCommit === null ? [] : ['HEAD'])]).stdout.split('\0').filter(Boolean),
         ...ownerGitOutcome(repoRoot, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean)
-      ])].filter(path => !path.startsWith('.box/bounties/')).sort(),
+      ])].filter(path => !path.startsWith('.box/bounties/') && !path.startsWith('.box/local/')).sort(),
       note: options.resumeNote?.trim() || null
     },
     title,

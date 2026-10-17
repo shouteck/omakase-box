@@ -8,7 +8,8 @@ import { BountyRefused } from './errors.js';
 import { planGitHub,shownOfPlan } from './publish-plan.js';
 import { shipRules } from './never-ship.js';
 import { ownerWaitLines,waitingSummary } from './owner-text.js';
-import { listRecords,persistRecord,transitionTo } from './record.js';
+import { persistRecord,transitionTo } from './record.js';
+import { anyJsonContaining } from './store.js';
 import type { AllowedBy,BountyRecord,WaitingFor } from './record.js';
 import { readDecision,requireRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
@@ -54,7 +55,7 @@ export function ownerGate(repoRoot: string, record: BountyRecord, action: { for:
   waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}), ...(shown !== undefined ? { shown } : {}) });
   throw new BountyRefused(
     read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
-    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(listRecords(repoRoot).some(entry => entry.record?.allowedBy?.decision === 'once') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
+    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(anyJsonContaining(repoRoot, '"decision": "once"') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
   );
 }
 

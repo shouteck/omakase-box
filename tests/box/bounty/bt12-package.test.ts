@@ -159,7 +159,9 @@ describe('what it needs is stated and checked', () => {
       return am! > bm! || (am === bm && (an! > bn! || (an === bn && ap! >= bp!)));
     };
     const engines = (manifest()['engines'] as { node: string })['node'];
-    expect(engines).toBe('>=22.0.0');
+    // BT31 pins the floor at NODE_MINIMUM — node:sqlite needs no flag from
+    // 22.13 onward, so 22.13.0 is the oldest supported release.
+    expect(engines).toBe('>=22.13.0');
     expect(engines).toBe(`>=${NODE_MINIMUM}`);
     for (const [pattern, since] of FEATURES) {
       if (pattern.test(bundle())) expect(atLeast(NODE_MINIMUM, since), `${pattern} needs Node ${since}`).toBe(true);
@@ -178,7 +180,7 @@ describe('what it needs is stated and checked', () => {
       encoding: 'utf8',
       env: { ...process.env, NODE_OPTIONS: '', BT12_FAKE_NODE: fake ?? '' }
     });
-    for (const fake of ['21.99.99', '18.20.4', '16.7.0']) {
+    for (const fake of ['22.12.0', '21.99.99', '18.20.4', '16.7.0']) {
       const refused = run(fake);
       expect(refused.status, `${fake}: ${refused.stdout}${refused.stderr}`).toBe(3);
       expect(refused.stderr).toContain('box refused (node-too-old)');
@@ -187,7 +189,7 @@ describe('what it needs is stated and checked', () => {
       expect(refused.stdout).toBe('');
     }
     // At the floor exactly, and on the real runtime, it continues to the command.
-    for (const fake of ['22.0.0', undefined]) {
+    for (const fake of ['22.13.0', undefined]) {
       const ran = run(fake);
       expect(ran.status, `${fake ?? process.versions.node}: ${ran.stdout}${ran.stderr}`).toBe(0);
       expect(ran.stdout).toContain('the journey');

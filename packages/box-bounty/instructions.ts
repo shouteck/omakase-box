@@ -4,7 +4,7 @@ import type { Stats } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
-import { attemptsOf, isOpenStage, listRecords } from './record.js';
+import { attemptsOf, openRecords } from './record.js';
 import { readInstructionNotes, readInstructions, writeInstructionNotes } from './settings.js';
 import { renderRulesBlock, RULES_MARKERS } from './wording.js';
 
@@ -191,7 +191,7 @@ export function discoverInstructions(repoRoot: string): InstructionFile[] {
 }
 
 export function instructionState(repoRoot: string): 'idle' | 'open' | 'new' {
-  const open = listRecords(repoRoot).flatMap(entry => entry.record !== null && isOpenStage(entry.record.stage) ? [entry.record] : []);
+  const open = openRecords(repoRoot);
   if (open.length === 0) return 'idle';
   if (open.some(record => attemptsOf(record).some(attempt => attempt.seenAt === undefined) || record.github?.availablePullRequests?.some(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)))) return 'new';
   return 'open';

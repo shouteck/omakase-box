@@ -18,7 +18,7 @@ import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gitOutcome,gitProgram } from './git.js';
 import { shipRules } from './never-ship.js';
-import { attemptsOf,dropDurabilityRefs,isOpenStage,listRecords,setRecordReadScan,transitionTo } from './record.js';
+import { attemptsOf,dropDurabilityRefs,openRecords,setRecordReadScan,transitionTo } from './record.js';
 import type { Attempt,BountyRecord } from './record.js';
 import { syncGitHubDecision } from './close.js';
 import { emitMergeNotice as emit,showPath } from './notice.js';
@@ -74,9 +74,7 @@ export function checkMergedSolutions(repoRoot: string): void {
 }
 
 function scan(repoRoot: string): void {
-  const open = listRecords(repoRoot)
-    .map(entry => entry.record)
-    .filter((record): record is BountyRecord => record !== null && isOpenStage(record.stage))
+  const open = openRecords(repoRoot)
     .map(record => ({ record, candidates: candidatesOf(record) }))
     .filter(entry => entry.candidates.length > 0);
   if (open.length === 0) return;

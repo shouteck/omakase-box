@@ -169,9 +169,24 @@ write(stateFile, JSON.stringify(state));
 // new, once.
 // A standalone script cannot import support.ts — RECORDS_DIR mirrors its
 // RECORDS_DIR_REL ('.box' + '/' + 'bounties') and is the only spelling here.
+// BT31: the record lives in .box/local/box.db once the store exists; the
+// edit is written back as a compat .json, which the next command re-imports
+// — the same path a hand-edited file in an older checkout takes.
 const RECORDS_DIR = '.box/' + 'bounties';
 const recordFile = join(repo, RECORDS_DIR, `${id}.json`);
-const record = JSON.parse(readFileSync(recordFile, 'utf8'));
+const dbFile = join(repo, '.box', 'local', 'box.db');
+let record;
+if (existsSync(dbFile)) {
+  const { DatabaseSync } = await import('node:sqlite');
+  const db = new DatabaseSync(dbFile);
+  try {
+    record = JSON.parse(db.prepare('SELECT json FROM records WHERE id = ?').get(id).json);
+  } finally {
+    db.close();
+  }
+} else {
+  record = JSON.parse(readFileSync(recordFile, 'utf8'));
+}
 record.attempts = (record.attempts ?? []).map(({ seenAt, ...attempt }) => attempt);
 if (record.attempts.length === 0) delete record.attempts;
 if (record.github !== undefined) delete record.github.seenPullRequests;

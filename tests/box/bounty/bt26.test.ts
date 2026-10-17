@@ -10,7 +10,7 @@ import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, changeConfig, finalizeBounty, loadRecord, lookBounty, parseOptions, planBounty, settingsFile } from '../../../packages/box-bounty/index.js';
 import { postedFixture, refused } from './github-fixture.js';
-import { CLI_DIST, git, makeRepo, readRecordRaw, recordFilePath, runRoot, write, writeRecordRaw } from './support.js';
+import { CLI_DIST, git, makeRepo, readRecordRaw, rewriteRecordRaw, runRoot, write, writeRecordRaw } from './support.js';
 
 const bounty = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -87,16 +87,15 @@ it('a record with no commits diffs its attempts against the empty tree — never
   write(repo, 'app.txt', 'broken\n');
   const created = finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), title: 'Repair app', why: 'stuck' }));
   // The premise: a repository with no commits records the display sentinel.
-  const file = recordFilePath(repo, created.id);
   expect((JSON.parse(readRecordRaw(repo, created.id)) as { resume: { commit: string } }).resume.commit).toBe('(no commits yet)');
   // The solver's work lands as the repository's first commit, hand-recorded.
   write(repo, 'sol.txt', 'fixed\n');
   git(repo, ['add', 'sol.txt']);
   git(repo, ['commit', '-qm', 'solver work']);
   const sha = git(repo, ['rev-parse', 'HEAD']);
-  const record = JSON.parse(readFileSync(file, 'utf8')) as { attempts: unknown[]; createdAt: string };
-  record.attempts = [{ n: 1, at: record.createdAt, commit: sha, changed: [], added: ['sol.txt'], deleted: [], outcome: 'answered', conflicts: null, report: [] }];
-  writeFileSync(file, JSON.stringify(record));
+  rewriteRecordRaw(repo, created.id, record => {
+    record['attempts'] = [{ n: 1, at: record['createdAt'], commit: sha, changed: [], added: ['sol.txt'], deleted: [], outcome: 'answered', conflicts: null, report: [] }];
+  });
   const result = lookBounty(repo, created.id, 1);
   // The empty tree is the base: every file in the attempt's commit is added.
   expect(result.files).toEqual(['sol.txt']);

@@ -1,6 +1,6 @@
 import { BountyRefused } from './errors.js';
 import { postBounty } from './commands.js';
-import { isOpenStage, listRecords, loadRecord, persistRecord, retiredRoute, trackedRecordFiles } from './record.js';
+import { listRecords, loadRecord, openRecords, persistRecord, retiredRoute, trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
 import { DECISION_WORDS, ownerBlock } from './owner-text.js';
 import { attemptsOf } from './record.js';
@@ -99,8 +99,7 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
   // A named repository may be allowed from outside any checkout. Release
   // waits only when the current checkout has that same address.
   if (!ask && repoRoot !== null && currentAddress === address) {
-    for (const entry of listRecords(repoRoot)) {
-      const record = entry.record;
+    for (const record of openRecords(repoRoot)) {
       // A bounty held for a merge runs its merge on the next `apply` — the
       // new decision already covers it; the wait's binding still applies.
       if (record?.stage === 'waiting' && record.waiting?.for === 'merge') {
@@ -215,7 +214,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
   // The promise count lives in each repository's own records — readable only
   // for the checkout this command runs in.
   let promisedHere: number | null = null;
-  if (repoRoot !== null) promisedHere = promisedTotal(listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+  if (repoRoot !== null) promisedHere = promisedTotal(openRecords(repoRoot));
   const global = settings.default?.bounty === 'allowed' ? 'true' : settings.default?.bounty === 'ask' ? 'ask' : 'false (off by default)';
   const undecided: string[] = [];
   if (address === null) undecided.push('a GitHub address for this checkout');
@@ -266,11 +265,11 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     const tracked = trackedRecordFiles(repoRoot);
     if (tracked.length > 0) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
     else if (full) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
-    const listed = listRecords(repoRoot);
+    const listed = openRecords(repoRoot);
     if (address === null || settings.repositories[address] === undefined) {
       lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so its bounties state $0`);
     }
-    const waiting = listed.flatMap(entry => entry.record?.stage === 'waiting' ? [entry.record] : []);
+    const waiting = listed.flatMap(record => record.stage === 'waiting' ? [record] : []);
     for (const record of waiting) {
       const held = record!.waiting!;
       lines.push(held.for === 'merge'
@@ -385,9 +384,9 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     // open. Only this checkout's records can be counted; another repository's
     // promise lives in its own records.
     const open = repoRoot !== null && repositoryIdentity(repoRoot) === address
-      ? listRecords(repoRoot).filter(listed => listed.record !== null && isOpenStage(listed.record.stage))
+      ? openRecords(repoRoot)
       : [];
-    const posted = open.filter(listed => boundAmount(listed.record!) !== undefined).length;
+    const posted = open.filter(record => boundAmount(record) !== undefined).length;
     if (posted > 0) lines.push(`${posted} open ${posted === 1 ? 'bounty keeps' : 'bounties keep'} the amount each was posted with — this changes later bounties only.`);
     else lines.push('a bounty keeps the amount it was posted with — this changes later bounties only.');
     if (repoRoot !== null && repositoryIdentity(repoRoot) === address) {

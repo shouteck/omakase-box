@@ -239,8 +239,8 @@ export interface StatusDocumentOptions {
 export function statusDocument(repoRoot: string, options: StatusDocumentOptions, notice: (line: string) => void): JsonObject {
   const ownerRead = readDecision(repoRoot);
   const { amount, limit } = repoReward(repoRoot);
-  if (options.id !== undefined) loadRecord(repoRoot, options.id);
-  const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
+  const single = options.id !== undefined ? loadRecord(repoRoot, options.id) : undefined;
+  const listed = single !== undefined ? [{ record: single, file: `${single.id}.json` }] : listRecords(repoRoot);
   for (const entry of listed) {
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
     // The document always carries the --full fact set, so an ended record's
@@ -324,7 +324,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
       rewardLimit: limit,
       // The "open bounties here promise $N" half of the reward line —
       // this checkout's open-bounty total, the same count the text prints.
-      promised: promisedTotal(open)
+      promised: promisedTotal(open.map(entry => entry.record!))
     },
     // The `records:` line as a fact (BT28): whether `.box/bounties/` is
     // tracked in Git, and how many files — the warning's trigger.
@@ -427,7 +427,7 @@ export function configDocument(repoRoot: string | null, notice: (line: string) =
     lists = { safeToPublish: [...publish.safe], neverPublish: [...publish.never] };
     trackedFiles = trackedRecordFiles(repoRoot).length;
     const listed = listRecords(repoRoot);
-    promised = promisedTotal(listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+    promised = promisedTotal(listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)).map(entry => entry.record!));
     for (const entry of listed) {
       if (entry.record?.stage === 'waiting' && entry.record.waiting !== undefined) {
         waiting.push({ id: entry.record.id, ...waitingEntry(entry.record.waiting) });

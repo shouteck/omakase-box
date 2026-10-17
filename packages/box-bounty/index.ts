@@ -57,7 +57,8 @@ export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js'
 export { NOTHING_RUN } from './notice.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
-export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, trackedRecordFiles, transitionTo, writeNewRecord } from './record.js';
+export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, endedCount, endedRecords, isOpenStage, listRecords, loadRecord, noticeMergedOnce, openRecords, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, trackedRecordFiles, transitionTo, writeNewRecord } from './record.js';
+export { anyJsonContaining, closeStores, countCorrupt, corruptFiles, dropStored, endedContaining, forgetFileSha, listEndedRecent, listOpen, recordExists, recordIds, readStored, searchRecords, storeDbPath, storedIds, storedRaw } from './store.js';
 export { ownerGate, waitForOwner } from './gate.js';
 export { assertPromiseRoom, promisedTotal, rewardForPost, withPromiseLock } from './money.js';
 export { waitingSummary } from './owner-text.js';

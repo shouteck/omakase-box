@@ -2,6 +2,7 @@ import { realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { git, gitOutcome, ownerGit } from './git.js';
+import { storedIds } from './store.js';
 import type { NeverShipRule } from './never-ship.js';
 
 // The snapshot is the repository as it stands: tracked files with their uncommitted
@@ -118,6 +119,20 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
       'unreadable-path',
       `${unreadable.length} path(s) in the snapshot cannot be read (a broken link, a link to a directory, or a file that vanished mid-scan): ${unreadable.sort().join(', ')}`
     );
+  }
+  // BT31: records live in `.box/local/box.db` now — `add -A` no longer sees
+  // `.box/bounties/<id>.json` files, but the never-ship accounting must name
+  // them exactly as when they were files. Every id the store knows counts as
+  // a removed `.box/bounties/<id>.json` path (the database itself sits under
+  // `.box/local/`'s own ignore, never entering the tree at all). storedIds
+  // reads only an existing database — no database yet means no ids and
+  // nothing is created here.
+  for (const id of storedIds(repoRoot)) {
+    const offset = `.box/bounties/${id}.json`;
+    const key = offset.toLowerCase();
+    if (shipped.has(key) || removedPaths.has(key)) continue;
+    const rule = rules.find(entry => entry.match(key));
+    if (rule !== undefined) { removed.push({ path: offset, rule: rule.name }); removedPaths.add(key); }
   }
   const files = [...shipped.values()].sort((a, b) => a.path.localeCompare(b.path));
   return { files, removed: removed.sort((a, b) => a.path.localeCompare(b.path)), blobs: new Set(blobSize.keys()), links };

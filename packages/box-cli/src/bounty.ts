@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, listRecords, isOpenStage, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
+import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
 
 export interface BountyHost {
   /** print the message plus usage lines and exit 2 — the entrypoint's usage(). */
@@ -48,9 +48,12 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     if (positional[0]?.startsWith('bt-')) return positional;
     const root = resolveRepoRoot(repoPath(parsed), subcommand);
     // The bounties this command can act on: the open ones, plus for `close`
-    // an ended one whose outside work is still owed — close retries it.
-    const eligible = listRecords(root).flatMap(entry => entry.record !== null && (isOpenStage(entry.record.stage)
-      || subcommand === 'close' && entry.record.github?.pending !== null && entry.record.github?.pending !== undefined) ? [entry.record] : []);
+    // an ended one whose outside work is still owed — close retries it. The
+    // store answers both without reading every record (BT31).
+    const eligible = [
+      ...openRecords(root),
+      ...(subcommand === 'close' ? endedContaining(root, '"pending": "') : [])
+    ];
     if (eligible.length !== 1) throw new BountyRefused('bounty-ambiguous', `name a bounty: ${eligible.map(record => `${record.id} ${JSON.stringify(record.title)}`).join(', ') || 'none open'}; next: box bounty status`);
     return [eligible[0]!.id, ...positional];
   };

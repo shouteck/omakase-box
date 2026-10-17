@@ -1,7 +1,9 @@
-// The bounty record: a small JSON file per bounty at `.box/bounties/<id>.json`
-// inside the repository, so any later agent — in a later session, on any host —
-// can see where each bounty is in its journey and what to do next. The tool
-// writes the file; committing it is the agent's normal flow.
+// The bounty record: one row per bounty in the checkout's SQLite store at
+// `.box/local/box.db` (BT31), so any later agent — in a later session, on
+// any host — can see where each bounty is in its journey and what to do
+// next. Records written before BT31 sat one JSON file per bounty at
+// `.box/bounties/<id>.json`; the store still imports those bytes on every
+// read, so old checkouts and planted fixtures keep working unchanged.
 //
 // The record is a state machine over the journey's stages, not scattered
 // booleans: `stage` is the current state and `events` appends one entry per
@@ -15,10 +17,10 @@
 // snapshot commit at `refs/box-bounty/<id>` — drafts made now keep neither
 // the ref nor the `snapshot` field, and removing that name is a no-op delete.
 
-import { createHash } from 'node:crypto';
-import { existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,statSync,writeFileSync } from 'node:fs';
+import { existsSync,readFileSync,realpathSync,statSync } from 'node:fs';
 import { basename,dirname,join,resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
+import { allRecords,listOpen,listEndedRecent,countEnded,readStored,writeStored,setStoreCodec } from './store.js';
 import { gitOutcome,gitRefsWrite } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
 import { payOutcomeShape,payToFactShape } from './pay.js';
@@ -44,7 +46,10 @@ const syncOpenSurfaces = (repoRoot: string): void => {
   openSurfacesSync(repoRoot);
 };
 
-const sha256 = (buffer: Buffer | string): string => createHash('sha256').update(buffer).digest('hex');
+// The store validates record bytes through this module's own asRecord and
+// classifies stages through isOpenStage — registered here at load because
+// store.ts cannot import this module (this module imports it).
+setStoreCodec({ validate: parsed => asRecord(parsed), isOpen: stage => isOpenStage(stage as BountyStage) });
 
 // `undone` stays: nothing moves a record into it any more, but real records
 // carry it and status shows them as the old ended records they are. Every
@@ -395,7 +400,7 @@ export function trackedRecordFiles(repoRoot: string): string[] {
 }
 
 export const persistRecord = (repoRoot: string, record: BountyRecord): void => {
-  writeFileSync(recordPath(repoRoot, record.id), JSON.stringify(record, null, 2) + '\n');
+  writeStored(repoRoot, record);
   syncOpenSurfaces(repoRoot);
 };
 
@@ -574,20 +579,14 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
   // Reading a record is the moment a solution merged outside the tool can be
   // recognised: every open bounty is checked first, once per command.
   noticeMergedSolutions(repoRoot);
-  const path = recordPath(repoRoot, id);
-  if (!existsSync(path)) {
+  const stored = readStored(repoRoot, id);
+  if (stored.state === 'missing') {
     throw new BountyRefused('unknown-bounty', `no bounty ${id} — .box/bounties/${id}.json does not exist. Run box bounty status to list the bounties this project knows`);
   }
-  let record: BountyRecord | null = null;
-  try {
-    record = asRecord(JSON.parse(readFileSync(path, 'utf8')));
-  } catch {
-    record = null;
+  if (stored.record === null) {
+    throw new BountyRefused('record-corrupt', `${recordPath(repoRoot, id)} is not a readable bounty record — open it by hand, or remove it and run box bounty status again`);
   }
-  if (record === null) {
-    throw new BountyRefused('record-corrupt', `${path} is not a readable bounty record — open it by hand, or remove it and run box bounty status again`);
-  }
-  return record;
+  return stored.record;
 }
 
 // `bounty create` calls this to write the record at stage `drafted`. Nothing
@@ -610,9 +609,11 @@ export function writeNewRecord(repoRoot: string, seed: RecordSeed): { record: Bo
     ...(seed.scanFindings !== undefined && seed.scanFindings.length > 0 ? { scanFindings: seed.scanFindings } : {}),
     events: [{ stage: 'drafted', at: seed.createdAt }]
   };
+  // The record lands in the checkout's store; the returned path keeps the
+  // record's logical spelling (`.box/bounties/<id>.json`) for `--full`'s
+  // record line and for callers that name it — the bytes live in box.db.
   const path = recordPath(repoRoot, seed.id);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(record, null, 2) + '\n');
+  writeStored(repoRoot, record);
   syncOpenSurfaces(repoRoot);
   return { record, path };
 }
@@ -621,21 +622,34 @@ export function listRecords(repoRoot: string): ListedBounty[] {
   // Same check as loadRecord: whichever a command touches first runs the
   // merged-solution scan before the records are read.
   noticeMergedSolutions(repoRoot);
-  const dir = recordDir(repoRoot);
-  if (!existsSync(dir)) return [];
-  const listed: ListedBounty[] = [];
-  for (const entry of readdirSync(dir)) {
-    if (!entry.endsWith('.json')) continue;
-    let record: BountyRecord | null = null;
-    try {
-      record = asRecord(JSON.parse(readFileSync(join(dir, entry), 'utf8')));
-    } catch {
-      record = null;
-    }
-    listed.push({ record, file: entry });
-  }
-  listed.sort((a, b) => (a.record?.createdAt ?? a.file).localeCompare(b.record?.createdAt ?? b.file));
-  return listed;
+  return allRecords(repoRoot);
+}
+
+// `find` reads through the store's index, not this listing — but a record
+// read is still the moment an outside merge gets recognised. This is the
+// scan alone, for readers that never touch listRecords.
+export function noticeMergedOnce(repoRoot: string): void {
+  noticeMergedSolutions(repoRoot);
+}
+
+// The narrow reads BT31 added: callers that only ever wanted the open
+// bounties — the open-bounties line, the hook's summary, the promised
+// totals, the merged-solution scan — no longer read every ended record to
+// get them. Each still runs the merged-solution scan first, as listRecords
+// always did.
+export function openRecords(repoRoot: string): BountyRecord[] {
+  noticeMergedSolutions(repoRoot);
+  return listOpen(repoRoot);
+}
+
+export function endedRecords(repoRoot: string, limit?: number): BountyRecord[] {
+  noticeMergedSolutions(repoRoot);
+  return listEndedRecent(repoRoot, limit);
+}
+
+export function endedCount(repoRoot: string): number {
+  noticeMergedSolutions(repoRoot);
+  return countEnded(repoRoot);
 }
 
 

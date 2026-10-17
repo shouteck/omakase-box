@@ -26,7 +26,8 @@ import { dirname,join } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { refreshGitHubStatus } from './collect.js';
 import { walkProjectPath } from './instructions.js';
-import { attemptsOf,isOpenStage,listRecords } from './record.js';
+import { attemptsOf,openRecords } from './record.js';
+import { countCorrupt,endedContaining } from './store.js';
 import type { BountyRecord } from './record.js';
 import { readDecision } from './settings.js';
 import { boundAmount } from './format.js';
@@ -168,14 +169,18 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   // State is written only when it changed or already exists — a silent run
   // in a project that never opened a bounty leaves nothing behind.
   let dirty = existsSync(toldPath(repoRoot));
-  let listed;
+  let open;
+  let corrupt;
+  let ended: BountyRecord[] = [];
   try {
-    listed = listRecords(repoRoot);
+    open = openRecords(repoRoot);
+    corrupt = countCorrupt(repoRoot);
+    // Only ended bounties that recorded a pay fact can print a pay line —
+    // the store's substring query finds exactly those.
+    if (slot === 'finish') ended = endedContaining(repoRoot, '"pay":');
   } catch (error) {
     return envelope(slot, [...notices, `box bounty: the records could not be read (${error instanceof BountyRefused ? error.reason : 'read-failed'}) — see: box bounty status`]);
   }
-  const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage)).map(entry => entry.record!);
-  const corrupt = listed.filter(entry => entry.record === null).length;
   if (corrupt > 0) lines.push(`box bounty: ${corrupt} record file(s) under .box/bounties could not be read — see: box bounty status`);
 
   // GitHub is asked at most once per interval, only while an open bounty is
@@ -231,9 +236,8 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   // that closed on a merge tells whom to pay — a statement, never a waiting
   // state, and nothing carried to a later session beyond the told mark.
   if (slot === 'finish') {
-    for (const entry of listed) {
-      const record = entry.record;
-      if (record === null || isOpenStage(record.stage) || record.github?.pay === undefined) continue;
+    for (const record of ended) {
+      if (record.github?.pay === undefined) continue;
       const key = `pay:${record.id}`;
       if (told.told[key] !== undefined) continue;
       for (const line of payNotice(record, boundAmount(record)) ?? []) fresh.push({ key, line });
