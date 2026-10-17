@@ -1,0 +1,113 @@
+== push event1 ==
+16:50:16.952
+To https://github.com/shouteck/box-bounty-sandbox
+ * [new reference]   refs/box-bounty/bt-000000000000 -> refs/box-bounty/bt-000000000000
+
+real	0m2.619s
+user	0m0.000s
+sys	0m0.000s
+16:50:19.594
+== ls-remote shows ref ==
+fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+
+== fresh clone --no-local does NOT download it ==
+16:50:23.603
+Cloning into 'scratch-fresh'...
+16:50:24.810
+-- refs in fresh clone:
+fatal: not a git repository (or any of the parent directories): .git
+-- any box-bounty ref?
+fatal: not a git repository (or any of the parent directories): .git
+(empty=good)
+== ls-remote shows ref (retry) ==
+ffe63f8b5d929ada05608b87c617fe5fe353f404	refs/box-bounty/bt-000000000000
+
+-- refs in fresh clone:
+9b96fee7fe06b5a64e134d9e8119614a8de0c714 commit	refs/heads/main
+9b96fee7fe06b5a64e134d9e8119614a8de0c714 commit	refs/remotes/origin/HEAD
+0481199ef297f50dc87b72c95ae73ff2f6d20912 commit	refs/remotes/origin/fix/bt-212eb1764bf7-stale-fruit-count
+bd5f4ea0b834e38b1ea787bf403bbe5e7d973bb8 commit	refs/remotes/origin/fix/inventory-fruit-count
+9b96fee7fe06b5a64e134d9e8119614a8de0c714 commit	refs/remotes/origin/main
+-- box-bounty refs:
+(empty=good)
+== explicit fetch makes it visible in fresh clone ==
+16:50:34.859
+From https://github.com/shouteck/box-bounty-sandbox
+ * [new ref]         refs/box-bounty/bt-000000000000 -> origin/box-bounty/bt-000000000000
+
+real	0m1.371s
+user	0m0.015s
+sys	0m0.000s
+16:50:36.261
+ffe63f8b5d929ada05608b87c617fe5fe353f404 commit	refs/remotes/origin/box-bounty/bt-000000000000
+
+== push second event (fast-forward) ==
+16:50:37.007
+To https://github.com/shouteck/box-bounty-sandbox
+   ffe63f8..662a2d4  refs/box-bounty/bt-000000000000 -> refs/box-bounty/bt-000000000000
+
+real	0m3.295s
+user	0m0.015s
+sys	0m0.000s
+16:50:40.397
+== concurrent append scenario ==
+From https://github.com/shouteck/box-bounty-sandbox
+ * [new ref]         refs/box-bounty/bt-000000000000 -> origin/box-bounty/bt-000000000000
+b sees tip 662a2d45b7f0aeac216cec1710633836e939ed0f
+a appended fc1c54cca1c35359d9317e00265694c581bda47b
+To https://github.com/shouteck/box-bounty-sandbox
+   662a2d4..fc1c54c  refs/box-bounty/bt-000000000000 -> refs/box-bounty/bt-000000000000
+b appended 967fa17fc71cc1b4ed0aff47932e21471aea235a
+16:50:58.547
+To https://github.com/shouteck/box-bounty-sandbox
+ ! [rejected]        refs/box-bounty/bt-000000000000 -> refs/box-bounty/bt-000000000000 (fetch first)
+error: failed to push some refs to 'https://github.com/shouteck/box-bounty-sandbox'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+push-b-exit=1
+== b: fetch, empty merge commit, retry push ==
+From https://github.com/shouteck/box-bounty-sandbox
+   662a2d4..fc1c54c  refs/box-bounty/bt-000000000000 -> origin/box-bounty/bt-000000000000
+merge commit dddc9de1fbb2fb60e8f686e8a42c0e8c125042e0
+16:51:06.303
+To https://github.com/shouteck/box-bounty-sandbox
+   fc1c54c..dddc9de  refs/box-bounty/bt-000000000000 -> refs/box-bounty/bt-000000000000
+
+real	0m2.660s
+user	0m0.000s
+sys	0m0.015s
+-- remote tip and full ancestry:
+dddc9de1fbb2fb60e8f686e8a42c0e8c125042e0	refs/box-bounty/bt-000000000000
+dddc9de1fbb2fb60e8f686e8a42c0e8c125042e0
+fc1c54cca1c35359d9317e00265694c581bda47b
+967fa17fc71cc1b4ed0aff47932e21471aea235a
+662a2d45b7f0aeac216cec1710633836e939ed0f
+ffe63f8b5d929ada05608b87c617fe5fe353f404
+== default branch untouched / web surface shows nothing ==
+9b96fee7fe06b5a64e134d9e8119614a8de0c714	refs/heads/main
+main unchanged = 9b96fee7fe06b5a64e134d9e8119614a8de0c714
+-- gh api branches (no box-bounty entry):
+fix/bt-212eb1764bf7-stale-fruit-count
+fix/inventory-fruit-count
+main
+-- gh api issues/PRs count:
+27
+== delete remote ref, then restore from clone ==
+To https://github.com/shouteck/box-bounty-sandbox
+ - [deleted]         refs/box-bounty/bt-000000000000
+(empty=deleted)
+To https://github.com/shouteck/box-bounty-sandbox
+ * [new reference]   refs/box-bounty/bt-000000000000 -> refs/box-bounty/bt-000000000000
+fc1c54cca1c35359d9317e00265694c581bda47b	refs/box-bounty/bt-000000000000
+== final deletion and absence ==
+To https://github.com/shouteck/box-bounty-sandbox
+ - [deleted]         refs/box-bounty/bt-000000000000
+(empty=no refs/box-bounty left)
+DONE 2026-10-17T16:51:32Z

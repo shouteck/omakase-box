@@ -1,15 +1,16 @@
 # Status
 
-Updated by the CTO on 18 October 2026 at the K28 close.
+Updated by the CTO on 18 October 2026 at the BT32 parked close.
 
 ## Now
 
-- **K28 merged** (`ce20e1c`; independent PASS test-verified on `dfe1789`, verdict `a12d97d`). Research, scripts and evidence only; no product or test changes. Final reviewer invocation of `node scripts/verify.mjs test:kitchen` exited 0 on that exact candidate, reusing its recorded 83-test PASS.
-- **Recommendation, not approval:** per-bounty event chains under custom Git refs, with local SQLite as a rebuildable cache. Local prototype reproduced concurrent merge without lost events, deleted-ref recovery and a default clone without chains. Timings are local `file://`, not GitHub evidence.
-- **Validation partial:** chain-backed agent 6 right / 2 partly / 0 wrong; issues-only 3 / 2 / 3. The all-right bar was not met. Historical job state was missing from the fixture; the similarity question was ambiguous. No participant rerun.
-- Other-session roadmap and approved living memory specification preserved from `origin/master` (`df919de`), along with the later autonomy update and K32 brief (`b071c79`). K28 checked against the memory specification in its close record. K28 scratch and the explicitly approved `box-k6-lockfile-cache` removed; main checkout is master. The owner explicitly authorized publication to the existing origin.
-- BT31 and BT31-ci remain merged: local SQLite, Node >=22.13.0, plain substring search without FTS5. Latest completed hosted run read before merge was green (`39049373083`).
+- **BT32 parked, not merged.** Independent reviewer FAIL. Product and full review remain on local `wave/BT32` at `73fb4be`; no BT32 product changes reach master.
+- **Blocking measurement:** completed production run 9 imports 1,000 chains in **413,297 ms**, against the brief's roughly 12,000 ms ceiling. Per-chain `rev-list` and per-event `cat-file` subprocesses dominate. The performance gate is not relaxed.
+- **Tests passed, acceptance did not:** the reviewer completed `verify c547e5f PASS check=0 build=0 test:box-bounty=0 test:box-package=0 test:kitchen=0 db=none 887s` on a clean exact candidate. This does not override the failed scale gate or missing fresh-agent legs.
+- **Real GitHub preflight succeeded**, with limits recorded: default clone isolation, explicit fetch, concurrent push rejection/merge/retry and deletion/restoration. Restoration used an older clone tip, so that leg proves ref recovery, not latest-history preservation. The test ref is absent; all BT32 scratch and its recreated test cache were removed.
+- **Fresh-agent evidence partial:** why/tried, job, follow-up and outcome were recalled. Cached answers survived offline, but no attempted refresh/staleness notice was observed within the 60-second throttle. M5/M11 journey legs remain untested. K14 budget changes also exceed the brief's literal five-fetching-command allowance, which conflicts with required milestone writes.
+- Other-session roadmap/K33 brief (`0c4af74`) preserved. Latest completed hosted result read was green (`39051230113`); no wait for hosted checks. Master retains the shipped BT31 store and K28 research. Rebuilt master artifacts successfully so the local CLI no longer runs the parked candidate; this build is not a new acceptance claim.
 
 ## Next
 
-**BT32 is starting**, from the rewritten event-chain brief approved in `ee9901f`, with the owner's pre-cook go recorded on 18 October 2026. The old hold is superseded, not permission to use the rejected issue-based design. Step 0 first proves the exact custom-ref operations in the sandbox; if that fails, stop before implementing. Then one worker, a fresh-agent second-clone journey, and the independent pass. The latest hosted run read at kickoff (`39050736631`) is still in progress, not a PASS or a failure. This run stops after BT32; no other wave starts. **BT33** stays parked; **BT12 Part B** stays deferred.
+This run stops here. Recommended next BT32 attempt: a fresh worker batches chain object reads and tip comparison, adds a process-count bound, then remeasures against the unchanged scale gate; completes the missing fresh-agent legs; reconciles the K14 wording without weakening checks; and obtains a new exact-candidate review. Read `waves/BT32.md` and the parked branch before resuming. No other wave starts automatically. **BT33** stays parked; **BT12 Part B** stays deferred.
