@@ -136,6 +136,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--why': { arg: '"<one line>"', help: 'one line on why the work is handed off' },
       '--title': { arg: '"<one line>"', help: 'the bounty title; derived from the task when omitted' },
       '--resume': { arg: '"<context>"', help: 'private context for unfinished work and the larger job' },
+      '--part-of': { arg: '"<job or bounty-id>"', help: 'the job or parent bounty this bounty belongs to — kept on the record and matched by find' },
       '--repo': REPO
     },
     switches: { '--full': { help: 'print the draft preview' } },
@@ -244,6 +245,16 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     switches: {
       '--full': { help: 'print every setting and where it came from' },
       '--json': { help: 'print one JSON document (schema box-bounty/config@1) instead of text' }
+    }
+  },
+  find: {
+    label: 'box bounty find', usage: 'box bounty find <query> [--json] [--repo <path>]',
+    blurb: 'search every record\'s id, title, why, part-of and task text — open matches first, bounded',
+    example: 'box bounty find parser',
+    positionals: 24,
+    values: { '--repo': REPO },
+    switches: {
+      '--json': { help: 'print one JSON document (schema box-bounty/find@1) instead of text' }
     }
   },
   hook: {
@@ -404,6 +415,7 @@ export interface CreateArgs {
   readonly title?: string;
   readonly task?: string;
   readonly resume?: string;
+  readonly partOf?: string;
   readonly repo?: string;
   /** `--full` prints the draft preview — the normal form is the
       three-line contract (BT17). */
@@ -418,6 +430,7 @@ export function parseCreateArgs(argv: readonly string[]): CreateArgs {
     ...(parsed.values['--title'] !== undefined ? { title: parsed.values['--title'] } : {}),
     ...(parsed.values['--task'] !== undefined ? { task: parsed.values['--task'] } : {}),
     ...(parsed.values['--resume'] !== undefined ? { resume: parsed.values['--resume'] } : {}),
+    ...(parsed.values['--part-of'] !== undefined ? { partOf: parsed.values['--part-of'] } : {}),
     ...(parsed.values['--repo'] !== undefined ? { repo: parsed.values['--repo'] } : {}),
     ...(parsed.switches.has('--full') ? { full: true } : {})
   };

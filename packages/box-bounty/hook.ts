@@ -62,6 +62,10 @@ export const HOOK_GH_CALL_LIMIT_MS = 8000;
 // host entry's own timeout.
 export const HOOK_GH_CALL_COUNT = 8;
 export const HOOK_GITHUB_BUDGET_MS = 20000;
+// The start slot names at most this many open bounties before summarising
+// the rest — unasked context stays constant in characters at any N (BT28).
+// renderOpenLine caps its listing at the same number.
+export const HOOK_START_OPEN_LIMIT = 10;
 const HOOK_ENTRY_TIMEOUT_SECONDS = 30;
 
 const toldPath = (repoRoot: string): string => join(repoRoot, '.box', 'hook-told.json');
@@ -197,7 +201,8 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
   if (slot === 'start') {
     if (open.length === 0 && lines.length === 0 && notices.length === 0) { if (dirty) writeTold(repoRoot, told); return { output: null, lines: [] }; }
     if (open.length > 0) {
-      const summary = open.map(record => {
+      const shown = open.length > HOOK_START_OPEN_LIMIT ? open.slice(0, HOOK_START_OPEN_LIMIT) : open;
+      const summary = shown.map(record => {
         const suffixes: string[] = [];
         const waiting = arrivalKeys(record).length;
         if (waiting > 0) suffixes.push(`${waiting} solution(s) waiting`);
@@ -207,7 +212,7 @@ export function runHook(repoRoot: string, slot: HookSlot, notices: readonly stri
         else if (record.github?.state === 'posted' && record.github.unavailableAt !== null && record.github.unavailableAt !== undefined) suffixes.push(`GitHub unreachable at ${record.github.unavailableAt}`);
         return `${record.id} ${record.stage}${suffixes.length > 0 ? ` (${suffixes.join(', ')})` : ''}`;
       }).join('; ');
-      lines.push(`box bounty: ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} — ${summary} — see: box bounty status`);
+      lines.push(`box bounty: ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} — ${summary}${open.length > HOOK_START_OPEN_LIMIT ? `; and ${open.length - HOOK_START_OPEN_LIMIT} more` : ''} — see: box bounty status`);
     }
     // Whatever the start already shows counts as told: a mid-session line is
     // only for what arrives while the session runs.

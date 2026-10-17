@@ -37,7 +37,7 @@ agent's or the owner's.
 
 ```
 node packages/box-cli/dist/cli.js bounty create --task <file|-> --why "<one line>" \
-    [--title "<text>"] [--resume "<context>"] [--full] [--repo <path>]
+    [--title "<text>"] [--resume "<context>"] [--part-of "<job or bounty-id>"] [--full] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty [--repo <path>]
 node packages/box-cli/dist/cli.js bounty help
 node packages/box-cli/dist/cli.js bounty describe [--rules] [--repo <path>]
@@ -46,6 +46,7 @@ node packages/box-cli/dist/cli.js bounty post <id> [--with-changes] [--include <
 node packages/box-cli/dist/cli.js bounty look [id] <n> [--full] [--json] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty apply [id] [<n>] [--repo <path>]
 node packages/box-cli/dist/cli.js bounty close [id] [--reason "<text>"] [--repo <path>]
+node packages/box-cli/dist/cli.js bounty find <query> [--json] [--repo <path>]
 ```
 
 Every command's normal output follows the same shape (BT17): one line
@@ -114,8 +115,8 @@ rules would remove is refused (`never-ship-input`).
 Every command reads options the same way: `--help` (or `-h`) prints that
 command's own usage on standard output and exits 0, `--name=value` is the
 same as `--name value`, and an option the command does not take is a usage
-error naming it — nothing is silently ignored. `status`, `look` and
-`config` take `--json` — one complete document, described below; on every
+error naming it — nothing is silently ignored. `status`, `look`, `config`
+and `find` take `--json` — one complete document, described below; on every
 other command it is refused by name (`json-not-supported`). `box --version`
 and `box bounty --version` print the tool's version.
 
@@ -125,9 +126,23 @@ so you can choose. `status <id>` shows what needs doing first. `--full` adds
 the history and reports. A listing marks a solution as new the first time the
 tool shows it, then as seen since that time. Seen means only that it was shown.
 
+The compact `status`/`box bounty` views stay bounded as the record count
+grows: past five ended bounties only the five most recent are joined on the
+`ended` line with the rest one `status --full` away, and past ten open
+bounties the hook's start line and the `.box/bounties/OPEN` index name the
+first ten plus the count of the rest. `find <query>` recalls a bounty by
+purpose — a case-insensitive match over each readable record's id, title,
+why, part-of and task text, open matches first, bounded at twenty lines.
+`--part-of` records which job or parent bounty a new bounty belongs to and
+shows it on the record's status line. A `records:` line in `status --full`
+and `config --full` says whether `.box/bounties/` is tracked in Git, and
+every form of `status` and `config` warns when it is — committed records
+publish owner-only context (the why, the saved job, the local path) to any
+public remote the repository pushes to.
+
 ## Reading as JSON
 
-`status`, `look` and `config` take `--json`: one JSON object on standard
+`status`, `look`, `config` and `find` take `--json`: one JSON object on standard
 output — a newline after it and nothing else — printed instead of the text
 view, built from the same facts, never by parsing the text. `"schema"` is
 always the first key, `box-bounty/<command>@1`; a change to a field's
