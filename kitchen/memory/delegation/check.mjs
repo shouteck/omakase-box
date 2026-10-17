@@ -60,5 +60,16 @@ for (const [name, script] of [['measure.mjs', measure], ['worlds.mjs', worlds]])
   ok(`${name} foreign dir refused by marker check`, r.status === 1 && /marker|not created by this script/.test(msg) && sentinelOk, `status ${r.status} msg ${msg.trim().slice(0, 160)}`);
 }
 
+// 5. Committed evidence sanity: the files the report cites exist, and the
+// post-fix raw record carries every measurement (guards the run-pairing bug —
+// a regenerated JSON once overwrote run 2 while its log stayed).
+const evDir = join(HERE, 'evidence');
+const cited = ['measure-report-run3-postfix.json', 'measure-console-run2-prefixed.log', 'truth-key.json', 'README.md'];
+ok('committed evidence files present', cited.every(f => existsSync(join(evDir, f))), cited.filter(f => !existsSync(join(evDir, f))).join(',') || 'all present');
+try {
+  const r3 = JSON.parse(readFileSync(join(evDir, 'measure-report-run3-postfix.json'), 'utf8'));
+  ok('post-fix raw record complete', Array.isArray(r3.report) && r3.report.length === 20 && r3.report.every(e => e.value !== '' && e.value != null), `entries ${r3.report?.length}`);
+} catch (e) { ok('post-fix raw record complete', false, e.message); }
+
 console.log(`\n${failures === 0 ? 'ALL PASS' : `${failures} FAILURE(S)`} — scratch left at ${root} (kitchen-K28 owned)`);
 process.exit(failures === 0 ? 0 : 1);
