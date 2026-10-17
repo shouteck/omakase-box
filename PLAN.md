@@ -127,7 +127,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | Review | → `taken` / `answered` | nothing a solver wrote is run; facts, never verdicts | `look.ts`, `collect.ts`, `answer.ts` | 100 solutions per bounty |
 | Decide | → `applied` / `rejected` / `withdrawn` | one ordinary merge commit; a clash stops; any merge recognised; ask-me-each-time holds merges | `answer.ts`, `merged.ts`, `close.ts`, `commands.ts` | cheap at 1,000 records |
 | Pay | names whom to pay | money is the owner's, per repository; the agent never sets an amount; the tool never moves money | `pay.ts`, `money.ts`, `settings.ts` | — |
-| Memory | every stage writes | the record outlives the session; machine detail stays local | `record.ts`, `store.ts` | 100,000 records (met locally) |
+| Memory | every stage writes | defined by [docs/box-v4/MEMORY-SPEC.md](docs/box-v4/MEMORY-SPEC.md) (owner-approved 18 October 2026, a living document): 13 moments, the questions asked at each, the facts and requirements derived from them; machine detail stays local | `record.ts`, `store.ts` | 100,000 records (met locally) |
 | Owner | gates post and merge | involved once; `allow`, `deny`, `config`; settings hold only choices | `owner.ts`, `owner-text.ts`, `settings.ts`, `gate.ts` | — |
 | Platform | — | Git and `gh` checked; one bundled file, no dependencies; Node 22.13 or later; every refusal named | `git.ts`, `gh.ts`, `args.ts`, `wording.ts`, `packages/box-cli` | — |
 

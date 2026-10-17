@@ -1,6 +1,6 @@
 # The memory specification: what the bounty tool must remember, derived from who reads it
 
-Draft by the CTO, 18 October 2026, for the owner's review; part of the engineering roadmap (PLAN.md, "The roadmap", the memory foundation). The owner, that day: "since our product is well defined… it's not difficult to specify the full memory context… let's fully drill down what's required." **Not yet approved.** K28 (cooking) is checked against it when it reports; BT32 builds it; K30 audits it.
+Draft by the CTO, 18 October 2026, for the owner's review; part of the engineering roadmap (PLAN.md, "The roadmap", the memory foundation). The owner, that day: "since our product is well defined… it's not difficult to specify the full memory context… let's fully drill down what's required." **Approved by the owner on 18 October 2026 as the memory foundation's definition, and a living document:** "a great start, but we may adapt it as we continue development." A wave that changes what is remembered updates this file in the same commit, with the moment and question that justify the change. K28 is checked against it when it reports; BT32 builds it; K30 audits it.
 
 ## How this is derived
 
@@ -122,8 +122,6 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | M11 aggregates (how many, how long, cost) | M11, M12 | no | rarely now | small | one `status --since` summary already exists; extend only if real use (K31) asks |
 | M12 owner's audit view | M12 | no | rarely | small | `config` and `status --since`; extend only if asked |
 
-## 6. What the owner is asked
+## 6. Changing this specification
 
-1. Are the moments (section 1) complete?
-2. Are the questions (section 2) the right ones, and is any missing?
-3. Approve this as the memory foundation's definition in the engineering roadmap.
+Add a moment, question or fact only with the actor's question it answers; remove a fact only when no question in section 2 needs it. Record each change in the wave that makes it.
