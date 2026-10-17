@@ -62,10 +62,18 @@ The tool works on every supported Node, with or without FTS5: it uses FTS5 for `
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Node 22.13.0 run of the two bt12 files:
+- Worker: cook (Claude Opus 5.5, fresh agent) · Reviewer:
+- Commit: `ae99ff8` (code, test, BOUNTY.md line)
+- Verify: `verify ae99ff8 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 test:kitchen=0 db=none 832s` (Node 24.11.0, one full run)
+- Node 22.13.0 run of the two bt12 files: reproduced first on `fba66e5` (`bt12-install` "runs the whole $0 bounty journey" failed with `bounty create failed: no such module: fts5`; `bt12-package` passed on this host, 1 failed | 11 passed). After the fix, scratch Node `v22.13.0`, `node scripts/suite.mjs box --suite bounty tests/box/bounty/bt12-install.test.ts tests/box/bounty/bt12-package.test.ts`:
+  ```
+  scoped run: 2 file(s) under tests\box\bounty — this is an inner loop, never suite acceptance
+   RUN  v5.0.1 C:/Users/shout/Desktop/Projects/private-task-mvp
+   Test Files  2 passed (2)
+        Tests  12 passed (12)
+  ```
+  Also under Node 22.13.0: `bt31.test.ts` and `bt28.test.ts` green; `bt31-ci.test.ts` 2 passed, 2 skipped (the two tests that open a store *with* FTS5 skip by a capability probe where SQLite lacks it). Cross-Node CLI by hand: create on 24, `find` on 22, create on 22, `find` on 24 — each found its record.
+- Fix: FTS5 detected per open (`sqlite_compileoption_used('ENABLE_FTS5')`, test-only `BOX_BOUNTY_TEST_NO_FTS5=1`). Every row keeps a lower-cased `search_text` (id + the FTS fields); without FTS5 `records_fts` is never touched and `searchRecords` ANDs each word with `instr(search_text, ?)`, bound parameters, rowid order (FTS's order; `find` does the open-first ordering and the bound). Schema `user_version` 1 → 2 adds and backfills the column. A no-FTS5 write sets meta `fts_stale`; an FTS5 open with `records_fts` missing or stale rebuilds it in one transaction. Not done: the search is a column scan, not an index (no index can serve a substring); no `status --full` search line (optional; left out to keep the change small). An FTS5 connection already open does not see `fts_stale` until it reopens.
 - Verdict: · Level:
 - Merged: · Resources removed:
 - Reflect:
