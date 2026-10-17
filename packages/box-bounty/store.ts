@@ -740,8 +740,8 @@ export function forgetFileSha(repoRoot: string, name: string): void {
 // whole-word matching disagreed with find). Words are bound parameters
 // only. Rows come in rowid order; find then re-checks the exact needle per
 // field and lists open work first, ended most recent first. A column scan:
-// no index can serve a substring (measured ~25 ms at 10,000 records and
-// ~250 ms at 100,000 on this host).
+// no index can serve a substring. BT31-ci measured a query that matches
+// nothing at about 40 ms over 10,000 records and 380 ms over 100,000.
 export function searchRecords(repoRoot: string, needle: string, limit?: number): BountyRecord[] {
   return withDb(repoRoot, false, entry => {
     if (entry === undefined) return [];
