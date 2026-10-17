@@ -2,7 +2,8 @@
 // checkout at `.box/local/box.db`, not one JSON file per bounty. Every
 // command used to read every record file (`listRecords` scanned
 // `.box/bounties/*.json`); the store answers the same questions from
-// indexed columns and a trigram FTS table instead. The `json` column holds
+// indexed columns and an FTS5 table instead — or, on a Node whose SQLite
+// lacks FTS5, a lower-cased search_text column (BT31-ci). The `json` column holds
 // the record exactly as persistRecord writes it — pretty JSON plus a
 // trailing newline — so the record shape and `asRecord` validation are
 // unchanged: the database is where records are kept, never a new shape.
@@ -102,7 +103,7 @@ const checkInside = (repoRoot: string): void => {
 // same five seconds busy_timeout gives every later statement.
 const sleep = (ms: number): void => { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); };
 const isLocked = (error: unknown): boolean => error instanceof Error && /locked|busy/i.test(error.message);
-function openDb(repoRoot: string): DatabaseSync {
+function openDb(repoRoot: string): { readonly db: DatabaseSync; readonly fts: boolean } {
   checkInside(repoRoot);
   const dir = localStoreDir(repoRoot);
   mkdirSync(dir, { recursive: true });
@@ -113,8 +114,8 @@ function openDb(repoRoot: string): DatabaseSync {
     let db: DatabaseSync | undefined;
     try {
       db = new (driver())(storeDbPath(repoRoot));
-      setUp(db);
-      return db;
+      const fts = setUp(db);
+      return { db, fts };
     } catch (error) {
       try { db?.close(); } catch { /* never opened */ }
       if (!isLocked(error) || Date.now() >= deadline) throw error;
@@ -123,7 +124,45 @@ function openDb(repoRoot: string): DatabaseSync {
   }
 }
 
-function setUp(db: DatabaseSync): void {
+// Whether the running SQLite has FTS5 depends on how this Node was built —
+// Node 22.13.0's bundled SQLite lacks it, Node 24's has it, and distribution
+// builds against a system SQLite vary (BT31-ci). Asked once per open; a
+// failing query reads as no. BOX_BOUNTY_TEST_NO_FTS5=1 is TEST-ONLY: the
+// bt31-ci tests set it to drive the plain-search path on a Node that has
+// FTS5. Nothing else sets or documents it.
+const fts5Available = (db: DatabaseSync): boolean => {
+  if (process.env.BOX_BOUNTY_TEST_NO_FTS5 === '1') return false;
+  try {
+    return (db.prepare("SELECT sqlite_compileoption_used('ENABLE_FTS5') AS fts5").get() as { fts5: number }).fts5 === 1;
+  } catch {
+    return false;
+  }
+};
+
+const FTS_DDL = 'CREATE VIRTUAL TABLE IF NOT EXISTS records_fts USING fts5(id UNINDEXED, title, why, part_of, task, note)';
+
+// The searchable fields, one place for the FTS row and the plain column.
+interface SearchFields { readonly title: string; readonly why: string; readonly partOf: string; readonly task: string; readonly note: string }
+const searchFields = (record: BountyRecord): SearchFields => ({
+  title: typeof record.title === 'string' ? record.title : '',
+  why: record.why ?? '',
+  partOf: record.partOf ?? record.job?.file ?? '',
+  task: record.content?.task?.text ?? '',
+  note: [record.content?.note?.text, record.resume?.kind === 'recorded' ? record.resume.note : null].filter((text): text is string => typeof text === 'string').join('\n')
+});
+// The plain-search column: the same fields FTS indexes plus the id,
+// lower-cased once at write so a search never parses JSON per row.
+const searchText = (id: string, fields: SearchFields): string =>
+  [id, fields.title, fields.why, fields.partOf, fields.task, fields.note].join('\n').toLowerCase();
+
+// Rows written before the search_text column, or while records_fts could
+// not be written: re-derive from the stored JSON (the same bytes upsertRow
+// wrote, so the fields are the record's own).
+const storedFields = (json: string): SearchFields | null => {
+  try { return searchFields(JSON.parse(json) as BountyRecord); } catch { return null; }
+};
+
+function setUp(db: DatabaseSync): boolean {
   db.exec('PRAGMA busy_timeout=5000');
   // The fast path for an already-built store: journal_mode=WAL persists in
   // the file and the schema's presence is told by user_version, so a steady-
@@ -131,25 +170,78 @@ function setUp(db: DatabaseSync): void {
   // compat scan — no DDL round-trips on every command.
   if ((db.prepare('PRAGMA journal_mode').get() as { journal_mode: string }).journal_mode !== 'wal') db.exec('PRAGMA journal_mode=WAL');
   db.exec('PRAGMA synchronous=NORMAL');
-  if ((db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version !== 1) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS records(
-        id TEXT PRIMARY KEY,
-        stage TEXT NOT NULL,
-        open INTEGER NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        ended_at TEXT,
-        json TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS records_open_updated ON records(open, updated_at);
-      CREATE INDEX IF NOT EXISTS records_open_ended ON records(open, ended_at);
-      CREATE VIRTUAL TABLE IF NOT EXISTS records_fts USING fts5(
-        id UNINDEXED, title, why, part_of, task, note
-      );
-      CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
-    `);
-    db.exec('PRAGMA user_version=1');
+  const fts = fts5Available(db);
+  const version = (): number => (db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version;
+  if (version() !== 2) {
+    // Version 1 (BT31) had no search_text column and always created
+    // records_fts; version 2 keeps search_text on every row and creates
+    // records_fts only where FTS5 exists. Locked and re-checked so two
+    // first opens never both migrate.
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      if (version() !== 2) {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS records(
+            id TEXT PRIMARY KEY,
+            stage TEXT NOT NULL,
+            open INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            ended_at TEXT,
+            json TEXT NOT NULL,
+            search_text TEXT NOT NULL DEFAULT ''
+          );
+          CREATE INDEX IF NOT EXISTS records_open_updated ON records(open, updated_at);
+          CREATE INDEX IF NOT EXISTS records_open_ended ON records(open, ended_at);
+          CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+        `);
+        const columns = (db.prepare('PRAGMA table_info(records)').all() as unknown as { name: string }[]).map(column => column.name);
+        if (!columns.includes('search_text')) {
+          db.exec("ALTER TABLE records ADD COLUMN search_text TEXT NOT NULL DEFAULT ''");
+          const fill = db.prepare('UPDATE records SET search_text=? WHERE id=?');
+          for (const row of db.prepare('SELECT id, json FROM records').all() as unknown as { id: string; json: string }[]) {
+            const fields = storedFields(row.json);
+            if (fields !== null) fill.run(searchText(row.id, fields), row.id);
+          }
+        }
+        db.exec('PRAGMA user_version=2');
+      }
+      db.exec('COMMIT');
+    } catch (error) {
+      try { db.exec('ROLLBACK'); } catch { /* nothing open */ }
+      throw error;
+    }
+  }
+  if (fts) ensureFts(db);
+  return fts;
+}
+
+// With FTS5: records_fts must exist and hold every row. A store built on a
+// Node without FTS5 has no records_fts, and one written by such a Node
+// carries the `fts_stale` marker (it could not keep records_fts in step) —
+// either way the table is (re)built from the records here, once.
+function ensureFts(db: DatabaseSync): void {
+  const need = (): boolean => {
+    const state = db.prepare("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='records_fts') AS has, (SELECT COUNT(*) FROM meta WHERE key='fts_stale') AS stale").get() as { has: number; stale: number };
+    return state.has === 0 || state.stale > 0;
+  };
+  if (!need()) return;
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    if (need()) {
+      db.exec(FTS_DDL);
+      db.exec('DELETE FROM records_fts');
+      const insert = db.prepare('INSERT INTO records_fts(rowid, id, title, why, part_of, task, note) VALUES(?, ?, ?, ?, ?, ?, ?)');
+      for (const row of db.prepare('SELECT rowid, id, json FROM records').all() as unknown as { rowid: number | bigint; id: string; json: string }[]) {
+        const fields = storedFields(row.json);
+        if (fields !== null) insert.run(row.rowid, row.id, fields.title, fields.why, fields.partOf, fields.task, fields.note);
+      }
+      db.exec("DELETE FROM meta WHERE key='fts_stale'");
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    try { db.exec('ROLLBACK'); } catch { /* nothing open */ }
+    throw error;
   }
 }
 
@@ -177,6 +269,11 @@ const legacyFilesWait = (repoRoot: string): boolean => {
 // leaves no .box/local behind. Writes always open for real.
 interface StoreEntry {
   readonly db: DatabaseSync;
+  /** This connection's SQLite has FTS5 (fts5Available at open). Without it
+      records_fts is never touched — search runs over search_text. */
+  readonly fts: boolean;
+  /** A no-FTS connection marked `fts_stale` once already this open. */
+  staleMarked: boolean;
   readonly stmts: Map<string, StatementSync>;
   /** row.json strings already proven valid (or not) through asRecord —
       rows only ever enter `records` post-validation, so a known-valid
@@ -249,10 +346,10 @@ function acquire(repoRoot: string, write: boolean): StoreEntry | undefined {
   }
   if (entry === undefined) {
     if (!write && !existsSync(path) && !legacyFilesWait(repoRoot)) return undefined;
-    const db = openDb(repoRoot);
+    const { db, fts } = openDb(repoRoot);
     const stat = lstatSync(path, { throwIfNoEntry: false });
     entry = {
-      db, stmts: new Map(), validJson: new Map(), records: new Map(), hasFileMarkers: true, epoch: 0, dataVersion: -1, legacyClear: false,
+      db, fts, staleMarked: false, stmts: new Map(), validJson: new Map(), records: new Map(), hasFileMarkers: true, epoch: 0, dataVersion: -1, legacyClear: false,
       ino: stat?.ino ?? 0, birthtimeMs: stat?.birthtimeMs ?? 0, statCheckedAt: Date.now()
     };
     stores.set(repoRoot, entry);
@@ -316,29 +413,41 @@ const deleteRow = (entry: StoreEntry, id: string): void => {
   // the whole FTS table (id is UNINDEXED there): O(records) per write.
   const row = stmt(entry, 'SELECT rowid FROM records WHERE id=?').get(id) as { rowid: number | bigint } | undefined;
   stmt(entry, 'DELETE FROM records WHERE id=?').run(id);
-  if (row !== undefined) stmt(entry, 'DELETE FROM records_fts WHERE rowid=?').run(row.rowid);
+  if (row !== undefined) {
+    if (entry.fts) stmt(entry, 'DELETE FROM records_fts WHERE rowid=?').run(row.rowid);
+    else markFtsStale(entry);
+  }
   entry.records.delete(id);
   entry.epoch++;
+};
+
+// A connection without FTS5 never writes records_fts (it cannot), so a row
+// it changes leaves that table behind; the marker tells the next FTS5 open
+// to rebuild it (ensureFts). Once per connection.
+const markFtsStale = (entry: StoreEntry): void => {
+  if (entry.staleMarked) return;
+  stmt(entry, "INSERT INTO meta(key, value) VALUES('fts_stale', '1') ON CONFLICT(key) DO NOTHING").run();
+  entry.staleMarked = true;
 };
 
 const upsertRow = (entry: StoreEntry, record: BountyRecord): void => {
   const last = record.events.at(-1)?.at ?? record.createdAt;
   const ended = openStage(record.stage) ? null : last;
   const json = JSON.stringify(record, null, 2) + '\n';
-  const row = stmt(entry, 'INSERT INTO records(id, stage, open, created_at, updated_at, ended_at, json) VALUES(?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET stage=excluded.stage, open=excluded.open, updated_at=excluded.updated_at, ended_at=excluded.ended_at, json=excluded.json RETURNING rowid')
-    .get(record.id, record.stage, openStage(record.stage) ? 1 : 0, record.createdAt, last, ended, json) as { rowid: number | bigint };
+  const fields = searchFields(record);
+  const row = stmt(entry, 'INSERT INTO records(id, stage, open, created_at, updated_at, ended_at, json, search_text) VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET stage=excluded.stage, open=excluded.open, updated_at=excluded.updated_at, ended_at=excluded.ended_at, json=excluded.json, search_text=excluded.search_text RETURNING rowid')
+    .get(record.id, record.stage, openStage(record.stage) ? 1 : 0, record.createdAt, last, ended, json, searchText(record.id, fields)) as { rowid: number | bigint };
   // A records row keeps its rowid across ON CONFLICT updates, so REPLACE
   // on rowid swaps the FTS content in one indexed write — skipped when a
   // milestone moved only stage/events and the searchable text is the
   // cached record's verbatim.
-  const note = [record.content?.note?.text, record.resume?.kind === 'recorded' ? record.resume.note : null].filter((text): text is string => typeof text === 'string').join('\n');
-  const task = record.content?.task.text ?? '';
-  const partOf = record.partOf ?? record.job?.file ?? '';
-  const why = record.why ?? '';
   const prev = entry.records.get(record.id);
-  if (prev === undefined || prev.record.title !== record.title || (prev.record.why ?? '') !== why || (prev.record.partOf ?? prev.record.job?.file ?? '') !== partOf || (prev.record.content?.task.text ?? '') !== task || [prev.record.content?.note?.text, prev.record.resume?.kind === 'recorded' ? prev.record.resume.note : null].filter((text): text is string => typeof text === 'string').join('\n') !== note) {
+  const before = prev === undefined ? undefined : searchFields(prev.record);
+  if (!entry.fts) {
+    markFtsStale(entry);
+  } else if (before === undefined || before.title !== fields.title || before.why !== fields.why || before.partOf !== fields.partOf || before.task !== fields.task || before.note !== fields.note) {
     stmt(entry, 'INSERT OR REPLACE INTO records_fts(rowid, id, title, why, part_of, task, note) VALUES(?, ?, ?, ?, ?, ?, ?)')
-      .run(row.rowid, record.id, record.title, why, partOf, task, note);
+      .run(row.rowid, record.id, fields.title, fields.why, fields.partOf, fields.task, fields.note);
   }
   // Cache what a fresh read would return: asRecord's in-place migrations
   // (retired command names in stored text) all live under `github`, so a
@@ -675,13 +784,15 @@ export function forgetFileSha(repoRoot: string, name: string): void {
   });
 }
 
-// FTS5 trigram match for needles of three characters or more — substring
+// Without FTS5 on this connection: plainSearch, for every needle. With it:
+// FTS5 match for needles of three characters or more — substring
 // semantics, case-folded — and a plain case-folded substring scan over the
 // stored JSON for shorter needles, where trigrams cannot index. Results
 // come back as full records; callers re-derive matched fields.
 export function searchRecords(repoRoot: string, needle: string, limit?: number): BountyRecord[] {
   return withDb(repoRoot, false, entry => {
     if (entry === undefined) return [];
+    if (!entry.fts) return plainSearch(entry, needle, limit).map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
     if (needle.length >= 3) {
       // id is UNINDEXED in the FTS table — matching is still whole-record,
       // so an id fragment finds its record through a substring probe over
@@ -727,6 +838,19 @@ export function searchRecords(repoRoot: string, needle: string, limit?: number):
       return true;
     }).map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
   });
+}
+
+// Search without FTS5 (BT31-ci): every whitespace-separated word of the
+// needle must occur, case-folded, in the row's search_text — the id and the
+// fields FTS indexes, never the JSON. Words are bound parameters only. Rows
+// come in rowid order, the order an FTS5 MATCH returns them; find then
+// re-filters by the exact needle per field and puts open work first, ended
+// most recent first — so find answers the same on both paths.
+function plainSearch(entry: StoreEntry, needle: string, limit?: number): { id: string; json: string }[] {
+  const words = needle.toLowerCase().split(/\s+/).filter(word => word !== '');
+  if (words.length === 0) return [];
+  const sql = `SELECT id, json FROM records WHERE ${words.map(() => 'instr(search_text, ?) > 0').join(' AND ')} ORDER BY rowid${limit === undefined ? '' : ' LIMIT ?'}`;
+  return (limit === undefined ? stmt(entry, sql).all(...words) : stmt(entry, sql).all(...words, limit)) as unknown as { id: string; json: string }[];
 }
 
 const BS = String.fromCharCode(92);
