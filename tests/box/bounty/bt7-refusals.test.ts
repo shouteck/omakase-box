@@ -1,11 +1,10 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { answerGitHub, applyBounty, finalizeBounty, loadRecord, persistRecord, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
 import { fixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
-import { CLI_DIST, fingerprint, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, fingerprint, git, makeRepo, readRecordRaw, runRoot, write, writeRecordRaw } from './support.js';
 
 // "Done when" cases of BT7 that had no test of their own: a record from
 // before the wave, master's clashing-apply behaviour, and a reply
@@ -27,10 +26,9 @@ it('a record written before this wave loads and says the job context was not rec
   const current = renderStatus(repo, { id: made.id });
   expect(current).toContain('CURRENT_NOTE_73c5');
   expect(current).not.toContain('not recorded');
-  const file = join(repo, '.box', 'bounties', `${made.id}.json`);
-  const older = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
+  const older = JSON.parse(readRecordRaw(repo, made.id)) as Record<string, unknown>;
   for (const key of ['resume', 'noteSource']) delete older[key];
-  writeFileSync(file, JSON.stringify(older));
+  writeRecordRaw(repo, made.id, JSON.stringify(older));
   const loaded = loadRecord(repo, made.id);
   expect(loaded.resume).toEqual({ kind: 'not-recorded' });
   const status = renderStatus(repo, { id: made.id });

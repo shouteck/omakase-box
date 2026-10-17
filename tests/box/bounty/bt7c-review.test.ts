@@ -1,18 +1,17 @@
 import { postToGitHub, collectPullRequest, applyGitHub, closeGitHub, statusGitHub } from './github-solver.js';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, BountyRefused, closeBounty, finalizeBounty, loadRecord, lookBounty, persistRecord, planBounty, postBounty, renderDescribe, renderHelp, renderOpenLine, renderRules, renderRulesBlock, renderStatus, resolveRepoRoot } from '../../../packages/box-bounty/index.js';
-import type { BountyRecord } from '../../../packages/box-bounty/index.js';
 import { postedFixture, sharedPostedFixture } from './github-fixture.js';
-import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, git, makeRepo, openLine, readRecord, runRoot, write, writeRecord, writeRecordRaw } from './support.js';
 
 // BT7c pass review — reproduced on 1ed01f9 by hand: a record written while
 // `answer` was a command stores the answers text it printed (outside.answers)
 // verbatim on disk. While GitHub cannot refresh, renderStatus replays the
 // stored lines and renderOpenLine folds them into the open-bounties line —
-// describe, .box/bounties/OPEN and the owner's rules-file block — so a
+// describe, the OPEN index and the owner's rules-file block — so a
 // removed command is named by output the tool prints today. asRecord
 // migrates github.pending for this reason; outside.answers got none.
 it('a stored outside-answers text written before BT7c names no removed command', () => postedFixture(context => {
@@ -87,14 +86,13 @@ describe('no output names a removed command', () => {
     // A corrupt record exercises the not-a-readable-record line, and ended
     // records in stages only removed commands could leave cover the ended
     // renderings and their next steps.
-    writeFileSync(join(repo, '.box', 'bounties', 'bt-corrupt.json'), 'not json {');
+    writeRecordRaw(repo, 'bt-corrupt', 'not json {');
     for (const [index, stage] of (['rejected', 'withdrawn', 'undone'] as const).entries()) {
       const made = finalizeBounty(planBounty({ repoPath: repo, title: `legacy ${stage}`, taskPath: join(repo, 'TASK.md'), why: 'older record', }));
-      const file = join(repo, '.box', 'bounties', `${made.id}.json`);
-      const record = JSON.parse(readFileSync(file, 'utf8')) as BountyRecord;
+      const record = readRecord(repo, made.id);
       record.stage = stage;
       record.events = [...record.events, { stage, at: `2026-10-12T00:00:0${index}Z` }];
-      writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+      writeRecord(repo, record);
     }
 
     scan('help', renderHelp());
@@ -108,7 +106,7 @@ describe('no output names a removed command', () => {
     scan('status-id', statusGitHub(repo, { id }));
     scan('status-full', statusGitHub(repo, { id, full: true }));
     try { scan('status-comments-stale', statusGitHub(repo, { id, comments: true })); } catch (error) { if (error instanceof BountyRefused) scan('status-comments-stale', `refused (${error.reason}): ${error.message}`); else throw error; }
-    scan('open-file', readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8'));
+    scan('open-file', openLine(repo));
   }));
 
   it('scans every refusal a command path can raise', () => world.run(() => {

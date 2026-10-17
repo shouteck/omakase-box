@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeEach } from 'vitest';
 import { readDecision, writeDecision } from '../../../packages/box-bounty/index.js';
-import type { OwnerDecision } from '../../../packages/box-bounty/index.js';
+import type { BountyRecord, OwnerDecision } from '../../../packages/box-bounty/index.js';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const CLI_DIST = join(ROOT, 'packages', 'box-cli', 'dist', 'cli.js');
@@ -158,6 +158,42 @@ export function listTree(dir: string): string[] {
   walk(dir);
   return files.sort();
 }
+
+// ─── Record access (BT30) ────────────────────────────────────────────────
+// Tests reach a bounty record only through these helpers — this file is the
+// one place under tests/box/bounty/ that names the records folder or a
+// record's path (record-access.test.ts guards it). Each body does exactly
+// what the call sites did; BT31 reimplements them when records leave JSON
+// files, and the tests keep passing unchanged.
+
+// The records folder's repository-relative spelling — for the few places a
+// test must compare text that names it (CLI output, Git paths).
+export const RECORDS_DIR_REL = '.box/bounties';
+export const recordsDir = (repo: string): string => join(repo, '.box', 'bounties');
+export const recordFilePath = (repo: string, id: string): string => join(recordsDir(repo), `${id}.json`);
+// A tool file that lives beside the records (OPEN, FIRST_MERGE, hook-told.json, …).
+export const boxFile = (repo: string, name: string): string => join(recordsDir(repo), name);
+
+export const readRecordRaw = (repo: string, id: string): string => readFileSync(recordFilePath(repo, id), 'utf8');
+export const readRecord = (repo: string, id: string): BountyRecord => JSON.parse(readRecordRaw(repo, id)) as BountyRecord;
+// The exact bytes persistRecord writes — without its open-surfaces sync.
+export const writeRecord = (repo: string, record: BountyRecord): void => writeRecordRaw(repo, record.id, JSON.stringify(record, null, 2) + '\n');
+export const writeRecordRaw = (repo: string, id: string, text: string): void => {
+  mkdirSync(recordsDir(repo), { recursive: true });
+  writeFileSync(recordFilePath(repo, id), text);
+};
+export const recordIds = (repo: string): string[] =>
+  existsSync(recordsDir(repo)) ? readdirSync(recordsDir(repo)).filter(name => name.endsWith('.json')).map(name => name.slice(0, -'.json'.length)).sort() : [];
+export const recordExists = (repo: string, id: string): boolean => existsSync(recordFilePath(repo, id));
+export const removeRecord = (repo: string, id: string): void => rmSync(recordFilePath(repo, id), { force: true });
+export const openLine = (repo: string): string => readFileSync(boxFile(repo, 'OPEN'), 'utf8');
+// Read → mutate → rewrite in place, the way every "older shape" case sits on
+// disk: the write is the same pretty JSON persistRecord emits.
+export const rewriteRecordRaw = (repo: string, id: string, change: (raw: Record<string, unknown>) => void): void => {
+  const raw = JSON.parse(readRecordRaw(repo, id)) as Record<string, unknown>;
+  change(raw);
+  writeFileSync(recordFilePath(repo, id), JSON.stringify(raw, null, 2) + '\n');
+};
 
 // Recreates the snapshot exactly as a later wave would, using only the repository
 // and the recorded identifier: a temporary index (never the real one) + checkout-index.

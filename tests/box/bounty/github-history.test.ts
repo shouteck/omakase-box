@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, closeBounty, loadRecord, lookBounty, allowBounty, postBounty, previewGitHub, renderStatus } from '../../../packages/box-bounty/index.js';
 import { approveGitHub } from '../../../packages/box-bounty/github.js';
-import { fingerprint, git, runRoot, write } from './support.js';
+import { fingerprint, git, readRecordRaw, runRoot, write, writeRecord, writeRecordRaw } from './support.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
@@ -25,8 +25,7 @@ function legacyConfirmed(repo: string, id: string, githubChoice: { withChanges: 
   record.stage = 'confirmed';
   record.events.push({ stage: 'confirmed', at: '2026-10-11T00:00:00.000Z', command: 'confirm' });
   record.githubApproval = approveGitHub(repo, record, githubChoice);
-  const file = join(repo, '.box/bounties', `${id}.json`);
-  writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+  writeRecord(repo, record);
 }
 
 // Whether this host can make file symlinks — Windows needs developer mode or
@@ -175,10 +174,9 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     legacyConfirmed(repo, id, choice(false));
     // Delete one plan field — some-but-not-all is a corrupt record, not a
     // pre-wave approval; falling back would post a snapshot never approved.
-    const file = join(repo, '.box/bounties', `${id}.json`);
-    const parsed = JSON.parse(readFileSync(file, 'utf8')) as { githubApproval: Record<string, unknown> };
+    const parsed = JSON.parse(readRecordRaw(repo, id)) as { githubApproval: Record<string, unknown> };
     delete parsed.githubApproval['tip'];
-    writeFileSync(file, JSON.stringify(parsed));
+    writeRecordRaw(repo, id, JSON.stringify(parsed));
     refused(() => postBounty(repo, id, 'github'), 'record-corrupt');
     expect(loadRecord(repo, id).github).toBeUndefined();
   }));
@@ -213,10 +211,10 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
   ])('refuses a post that would disagree with the approved preview when %s', (_label, reason, drift) => fixture(context => {
     const { repo, id } = context;
     legacyConfirmed(repo, id, choice(false));
-    const approved = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+    const approved = readRecordRaw(repo, id);
     drift(context);
     refused(() => postBounty(repo, id, 'github'), reason);
-    expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(approved);
+    expect(readRecordRaw(repo, id)).toEqual(approved);
   }));
 
   it('refuses when the remote gained the approved tip between preview and post', () => fixture(({ repo, id }) => {

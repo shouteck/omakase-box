@@ -6,7 +6,8 @@
 // remote stand in, the same shape bt17-measure drives). On the hosted
 // runner the same file runs on Linux — the off-machine leg of the wave.
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { recordIds } from './support.js';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -204,7 +205,7 @@ ${closed.stderr}`).toBe(0);
     const remove = npm(['uninstall', '-g', '--prefix', prefix, 'box-bounty']);
     expect(remove.status).toBe(0);
     expect(existsSync(join(prefix, 'node_modules', 'box-bounty'))).toBe(false);
-    expect(readdirSync(join(repo, '.box', 'bounties')).length).toBeGreaterThan(0);
+    expect(recordIds(repo).length).toBeGreaterThan(0);
     expect(existsSync(join(env['BOX_BOUNTY_SETTINGS_DIR']!, 'settings.json'))).toBe(true);
   }, 280000);
 });

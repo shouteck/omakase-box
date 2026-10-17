@@ -4,10 +4,8 @@
 // purpose search (find). Every test names its behaviour and pins the
 // small-N-preservation guarantee where the wave demands it.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CLI_DIST, git, makeRepo, write } from './support.js';
+import { CLI_DIST, RECORDS_DIR_REL, git, makeRepo, openLine, readRecord, readRecordRaw, recordIds, rewriteRecordRaw, write, writeRecord, writeRecordRaw } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -17,9 +15,7 @@ const box = (cwd: string, args: string[]) =>
 const seed = (repo: string, n: number, stage: string, fields: Record<string, unknown> = {}) => {
   const id = `bt-${String(n).padStart(12, '0')}`;
   const at = `2025-06-${String(1 + n).padStart(2, '0')}T00:00:00.000Z`;
-  const dir = join(repo, '.box', 'bounties');
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${id}.json`), JSON.stringify({
+  writeRecordRaw(repo, id, JSON.stringify({
     kind: 'box-bounty-record',
     id,
     stage,
@@ -89,7 +85,7 @@ describe('2. hook start and OPEN cap at ten open records', () => {
     for (let i = 1; i <= 11; i++) seed(repo, i, 'drafted');
     const run = create(repo);
     expect(run.status).toBe(0);
-    const open = readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8');
+    const open = openLine(repo);
     expect(open).toContain('and 2 more (see: box bounty status)');
     expect(open).not.toContain('seed 11');
   });
@@ -99,7 +95,7 @@ describe('2. hook start and OPEN cap at ten open records', () => {
     for (let i = 1; i <= 9; i++) seed(repo, i, 'drafted');
     const run = create(repo);
     expect(run.status).toBe(0);
-    const open = readFileSync(join(repo, '.box', 'bounties', 'OPEN'), 'utf8');
+    const open = openLine(repo);
     expect(open).not.toContain('more (see: box bounty status)');
     expect(open).toContain('seed 9');
   });
@@ -110,7 +106,7 @@ describe('3. --part-of records the bounty relation', () => {
     const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
     const run = create(repo, ['--part-of', 'parser-epic']);
     expect(run.status).toBe(0);
-    const record = JSON.parse(readFileSync(join(repo, '.box', 'bounties', readdirSync(join(repo, '.box', 'bounties')).find(f => f.endsWith('.json'))!), 'utf8'));
+    const record = readRecord(repo, recordIds(repo)[0]!);
     expect(record.partOf).toBe('parser-epic');
     const status = box(repo, ['status']);
     expect(status.stdout).toContain('(part of: parser-epic)');
@@ -123,18 +119,15 @@ describe('3. --part-of records the bounty relation', () => {
     const run = create(repo, ['--part-of', '']);
     expect(run.status).toBe(3);
     expect(run.stderr + run.stdout).toContain('missing-part-of');
-    const dir = join(repo, '.box', 'bounties');
-    expect(existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.json')) : []).toEqual([]);
+    expect(recordIds(repo)).toEqual([]);
   });
 
   it('a tampered partOf fails the record boundary', () => {
     const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
     const run = create(repo, ['--part-of', 'epic']);
     expect(run.status).toBe(0);
-    const file = join(repo, '.box', 'bounties', readdirSync(join(repo, '.box', 'bounties')).find(f => f.endsWith('.json'))!);
-    const record = JSON.parse(readFileSync(file, 'utf8'));
-    record.partOf = 'first line\nsecond line';
-    writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+    const rid = recordIds(repo)[0]!;
+    rewriteRecordRaw(repo, rid, raw => { raw['partOf'] = 'first line\nsecond line'; });
     const status = box(repo, ['status']);
     expect(status.stdout).toContain('not a readable record');
   });
@@ -159,15 +152,15 @@ describe('4. the tracked-records notice', () => {
   it('untracked records say so under --full', () => {
     const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
     seed(repo, 1, 'drafted');
-    expect(box(repo, ['status', '--full']).stdout).toContain('records: .box/bounties/ is not tracked in Git (local to this checkout)');
-    expect(box(repo, ['config', '--full']).stdout).toContain('records: .box/bounties/ is not tracked in Git (local to this checkout)');
+    expect(box(repo, ['status', '--full']).stdout).toContain(`records: ${RECORDS_DIR_REL}/ is not tracked in Git (local to this checkout)`);
+    expect(box(repo, ['config', '--full']).stdout).toContain(`records: ${RECORDS_DIR_REL}/ is not tracked in Git (local to this checkout)`);
   });
 
   it('tracked records warn on every form and in --json', () => {
     const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
     seed(repo, 1, 'drafted');
-    git(repo, ['add', '.box/bounties']);
-    const warning = 'records: 1 file(s) in .box/bounties/ are tracked in Git';
+    git(repo, ['add', RECORDS_DIR_REL]);
+    const warning = `records: 1 file(s) in ${RECORDS_DIR_REL}/ are tracked in Git`;
     expect(box(repo, ['status']).stdout).toContain(warning);
     expect(box(repo, ['status', '--full']).stdout).toContain(warning);
     expect(box(repo, ['config']).stdout).toContain(warning);

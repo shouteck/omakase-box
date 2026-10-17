@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { applyBounty, lookBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
-import { fingerprint, git, runRoot, write } from './support.js';
+import { fingerprint, git, readRecordRaw, runRoot, write } from './support.js';
 
 it('the GitHub publication refuses newly committed never-ship content without changing owner bytes', () => fixture(({ repo, id, state }) => {
   write(repo, '.env.local', 'private fixture content\n');
@@ -18,9 +18,9 @@ it('the GitHub publication refuses newly committed never-ship content without ch
 
 it('private GitHub publication refuses by name and preserves the draft', () => fixture(({ repo, id, update, state }) => {
   update({ visibility: 'private', private: true });
-  const before = readFileSync(join(repo, '.box/bounties', `${id}.json`));
+  const before = readRecordRaw(repo, id);
   refused(() => postBounty(repo, id, 'github'), 'github-private-repository');
-  expect(readFileSync(join(repo, '.box/bounties', `${id}.json`))).toEqual(before);
+  expect(readRecordRaw(repo, id)).toEqual(before);
   expect(state().issues).toEqual([]);
 }));
 

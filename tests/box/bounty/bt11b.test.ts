@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import './support.js';
 import { applyBounty, answerGitHub, checkMergedSolutions, closeBounty, loadRecord, lookBounty, parsePayTo, payToLine, postBounty, renderStatus, runHook, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
-import { git } from './support.js';
+import { git, readRecordRaw, writeRecordRaw } from './support.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import type { GhState } from './github-fixture.js';
 
@@ -246,10 +246,9 @@ it('closing a rewarded bounty without a merge produces no pay message', () => fi
 
 it('records from before the wave load and carry no pay fields', () => fixture(({ repo, id }) => {
   postBounty(repo, id, 'github');
-  const recordPath = join(repo, '.box', 'bounties', `${id}.json`);
-  const record = JSON.parse(readFileSync(recordPath, 'utf8'));
+  const record = JSON.parse(readRecordRaw(repo, id));
   delete record.github.seenPullRequests?.[0]?.payTo;
-  writeFileSync(recordPath, JSON.stringify(record));
+  writeRecordRaw(repo, id, JSON.stringify(record));
   expect(() => loadRecord(repo, id)).not.toThrow();
 }, 'Repair app'));
 

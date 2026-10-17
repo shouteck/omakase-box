@@ -1,9 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applicableAttempts, applyBounty, attemptsOf, BountyRefused, finalizeBounty, loadRecord, planBounty, postBounty, renderStatus } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
-import { git, makeRepo } from './support.js';
+import { git, makeRepo, recordFilePath, rewriteRecordRaw } from './support.js';
 import { withoutGh } from './github-fixture.js';
 
 // The pass's own probes for BT23's security lens, written at review time:
@@ -14,15 +14,10 @@ import { withoutGh } from './github-fixture.js';
 
 const created = (repo: string) => finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'a reason' }));
 
-// Rewrite a created record on disk in an older shape — the way the files in
-// `.box/bounties/` actually sit. `rewrite` then reads it through the load
+// Rewrite a created record on disk in an older shape — the way the record
+// files actually sit. `rewrite` then reads it through the load
 // gate; `writeRaw` is for shapes the gate must refuse.
-const writeRaw = (repo: string, id: string, change: (record: Record<string, unknown>) => void): void => {
-  const file = join(repo, '.box', 'bounties', `${id}.json`);
-  const raw = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
-  change(raw);
-  writeFileSync(file, JSON.stringify(raw, null, 2) + '\n');
-};
+const writeRaw = rewriteRecordRaw;
 const rewrite = (repo: string, id: string, change: (record: Record<string, unknown>) => void): BountyRecord => {
   writeRaw(repo, id, change);
   return loadRecord(repo, id);
@@ -50,7 +45,7 @@ describe('pass probes — old shapes live', () => {
   it('check-unrunnable/check-not-run attempts load set-aside; apply without a number refuses and changes nothing, a number still names one', () => {
     const repo = makeRepo({ 'TASK.md': 'x\n' });
     const made = created(repo);
-    const file = join(repo, '.box', 'bounties', `${made.id}.json`);
+    const file = recordFilePath(repo, made.id);
     const record = rewrite(repo, made.id, raw => {
       raw['stage'] = 'answered';
       raw['github'] = githubHistory(made.id);

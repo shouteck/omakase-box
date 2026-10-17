@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allowBounty, allowRepository, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, loadState, planBounty, postBounty, readDecision, renderConfig, renderStatus, renderSummary, repositoryIdentity, settingsFile } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, git, makeRepo, readRecordRaw, runRoot, write, writeRecordRaw } from './support.js';
 import { fixture, postedFixture, refused, withoutGh } from './github-fixture.js';
 
 function repo(address = 'owner/project'): string {
@@ -325,13 +325,12 @@ it('GitHub account and API calls pin github.com despite a different GH_HOST', ()
 }));
 
 it('legacy tool-written owner spellings are scrubbed on every replay field and history', () => postedFixture(({ repo: root, id }) => {
-  const path = join(root, '.box', 'bounties', id + '.json');
-  const record = JSON.parse(readFileSync(path, 'utf8'));
+  const record = JSON.parse(readRecordRaw(root, id));
   record.github.pending = `waiting-owner: box bounty owner answer ${id}; box bounty owner setup`;
   record.github.outside = { at: '2026-10-13T00:00:00.000Z', issueState: 'open', answers: 'box bounty owner setup; box bounty owner allow; box bounty owner ask; box bounty owner off; box bounty owner on; box bounty owner summary; box bounty owner answer ' + id };
   for (const verb of ['setup', 'allow', 'ask', 'off', 'on', 'answer', 'summary']) record.events.push({ stage: 'posted', at: '2026-10-13T00:00:00.000Z', command: 'owner ' + verb });
   record.events.push({ stage: 'confirmed', at: '2026-10-13T00:00:00.000Z', command: 'confirm' });
-  writeFileSync(path, JSON.stringify(record));
+  writeRecordRaw(root, id, JSON.stringify(record));
   withoutGh(() => {
     const status = statusGitHub(root, { full: true });
     expect(status).not.toContain('box bounty owner ');

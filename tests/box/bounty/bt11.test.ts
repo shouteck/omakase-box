@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { allowRepository, BountyRefused, changeConfig, closeBounty, denyRepository, finalizeBounty, loadRecord, loadSettings, planBounty, postBounty, readReward, repoReward, renderConfig, renderDescribe, renderStatus, settingsFile, stateFile } from '../../../packages/box-bounty/index.js';
 import { readFormat } from '../../../packages/box-bounty/format.js';
 import { fixture, refused } from './github-fixture.js';
-import { CLI_DIST, git, makeRepo, ownerSays, runRoot, write } from './support.js';
+import { CLI_DIST, git, makeRepo, ownerSays, readRecordRaw, rewriteRecordRaw, runRoot, write } from './support.js';
 
 const cli = (cwd: string, args: string[]) => spawnSync(process.execPath, [CLI_DIST, ...args], { cwd, encoding: 'utf8', timeout: 60000 });
 const draft = (repo: string, title?: string): { id: string } =>
@@ -231,7 +231,7 @@ describe('BT11a — posting binds the amount in force', () => {
     changeConfig(repo, 'set', 'reward', '10');
     postToGitHub(repo, first.id);
     expect(loadRecord(repo, first.id).reward?.amount).toBe(10);
-    const before = readFileSync(join(repo, '.box', 'bounties', `${second.id}.json`), 'utf8');
+    const before = readRecordRaw(repo, second.id);
     try {
       postToGitHub(repo, second.id);
       expect.unreachable('expected a refusal');
@@ -241,7 +241,7 @@ describe('BT11a — posting binds the amount in force', () => {
       expect((error as Error).message).toContain('20'); // promised 10 + this 10
       expect((error as Error).message).toContain('15'); // the owner's limit
     }
-    expect(readFileSync(join(repo, '.box', 'bounties', `${second.id}.json`), 'utf8')).toBe(before);
+    expect(readRecordRaw(repo, second.id)).toBe(before);
     expect(loadRecord(repo, second.id).stage).toBe('drafted');
     // A closed bounty stops counting — merged or not.
     closeGitHub(repo, first.id);
@@ -253,8 +253,7 @@ describe('BT11a — posting binds the amount in force', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     const { id } = draft(repo);
-    const path = join(repo, '.box', 'bounties', `${id}.json`);
-    const record = JSON.parse(readFileSync(path, 'utf8'));
+    const record = JSON.parse(readRecordRaw(repo, id));
     expect(record.reward).toBeUndefined(); // create binds nothing
     const { destination } = postToGitHub(repo, id);
     expect(loadRecord(repo, id).reward).toEqual({ amount: 0 });
@@ -312,8 +311,7 @@ describe('BT11a — the agent is asked nothing about money', () => {
     ownerSays(repo, 'allowed');
     const { id } = draft(repo);
     postToGitHub(repo, id);
-    const path = join(repo, '.box', 'bounties', `${id}.json`);
-    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 0.5 } }, null, 2) + '\n');
+    rewriteRecordRaw(repo, id, raw => { raw['reward'] = { amount: 0.5 }; });
     refused(() => loadRecord(repo, id), 'record-corrupt');
   });
 });
@@ -406,10 +404,9 @@ describe('BT11a fix round — the record file is never a render source', () => {
     changeConfig(repo, 'set', 'reward-limit', '200');
     changeConfig(repo, 'set', 'reward', '50');
     postBounty(repo, id, 'github');
-    // The pass's attack, replayed: `.box/bounties/<id>.json` is agent-editable
+    // The pass's attack, replayed: the record file is agent-editable
     // — the bound summary is rewritten between post and close.
-    const path = join(repo, '.box', 'bounties', `${id}.json`);
-    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 99999 } }, null, 2) + '\n');
+    rewriteRecordRaw(repo, id, raw => { raw['reward'] = { amount: 99999 }; });
     closeGitHub(repo, id);
     const body = state().issues[0]!.body;
     // Listing text and block state the one bound amount — the forged field
@@ -429,8 +426,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
     changeConfig(repo, 'set', 'reward-limit', '60');
     changeConfig(repo, 'set', 'reward', '50');
     postBounty(repo, id, 'github'); // $50 promised of the $60 limit — $10 left
-    const path = join(repo, '.box', 'bounties', `${id}.json`);
-    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 0 } }, null, 2) + '\n');
+    rewriteRecordRaw(repo, id, raw => { raw['reward'] = { amount: 0 }; });
     // The count reads the posted body's block — the bound $50 still fills the limit.
     const second = draft(repo, 'another');
     refused(() => postBounty(repo, second.id, 'github'), 'promise-limit-exceeded');
@@ -440,8 +436,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     ownerSays(repo, 'allowed');
     const { id } = draft(repo);
-    const path = join(repo, '.box', 'bounties', `${id}.json`);
-    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path, 'utf8')), reward: { amount: 50 } }, null, 2) + '\n');
+    rewriteRecordRaw(repo, id, raw => { raw['reward'] = { amount: 50 }; });
     refused(() => loadRecord(repo, id), 'record-corrupt');
   });
 
@@ -453,7 +448,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
   describe('the promise lock makes the limit check and the bind one span', () => {
     const repo = makeRepo({ 'TASK.md': 'task\n' });
     const { id } = draft(repo);
-    const before = readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8');
+    const before = readRecordRaw(repo, id);
     const arm = (): void => {
       ownerSays(repo, 'allowed');
       changeConfig(repo, 'set', 'reward-limit', '50');
@@ -466,7 +461,7 @@ describe('BT11a fix round — the record file is never a render source', () => {
       // waits it out, then refuses by name rather than guessing.
       mkdirSync(join(repo, '.box', 'promise.lock'));
       refused(() => postToGitHub(repo, id), 'promise-limit-busy');
-      expect(readFileSync(join(repo, '.box/bounties', `${id}.json`), 'utf8')).toBe(before); // a refused post changed nothing
+      expect(readRecordRaw(repo, id)).toBe(before); // a refused post changed nothing
       expect(loadRecord(repo, id).stage).toBe('drafted');
       rmSync(join(repo, '.box', 'promise.lock'), { recursive: true });
     }, 15000);

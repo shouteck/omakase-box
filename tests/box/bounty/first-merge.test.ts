@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import { changeConfig, loadRecord, loadSettings, loadState, postBounty, renderConfig } from '../../../packages/box-bounty/index.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import { recordFirstMerge } from '../../../packages/box-bounty/settings.js';
-import { CLI_DIST, git, makeRepo, runRoot, write } from './support.js';
+import { CLI_DIST, RECORDS_DIR_REL, boxFile, git, makeRepo, recordsDir, runRoot, write } from './support.js';
 
 const cli = (root: string, ...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: root, encoding: 'utf8', env: process.env, timeout: 30000 });
 
@@ -104,7 +104,7 @@ it('recognition without one receiving address saves a local notice and does not 
 
 it.each([false, true])('a foreign or malformed local marker is preserved after apply with readable address %s', readable => postedFixture(({ repo, id }) => {
   if (!readable) git(repo, ['remote', 'remove', 'origin']);
-  const marker = join(repo, '.box', 'bounties', 'FIRST_MERGE');
+  const marker = boxFile(repo, 'FIRST_MERGE');
   writeFileSync(marker, 'foreign bytes\n');
   const applied = cli(repo, 'apply', id, '1');
   expect(applied.status).toBe(0);
@@ -125,10 +125,10 @@ it('local notice persistence does not follow a linked marker or parent', () => {
     if (linked === 'box') symlinkSync(outside, join(repo, '.box'), 'junction');
     else {
       mkdirSync(join(repo, '.box'));
-      if (linked === 'bounties') symlinkSync(outside, join(repo, '.box', 'bounties'), 'junction');
+      if (linked === 'bounties') symlinkSync(outside, recordsDir(repo), 'junction');
       else {
-        mkdirSync(join(repo, '.box', 'bounties'));
-        symlinkSync(sentinel, join(repo, '.box', 'bounties', 'FIRST_MERGE'), 'file');
+        mkdirSync(recordsDir(repo));
+        symlinkSync(sentinel, boxFile(repo, 'FIRST_MERGE'), 'file');
       }
     }
     expect(recordFirstMerge(repo, commit)?.line).toContain('first-merge-notice-unsafe-path');
@@ -154,7 +154,7 @@ it('a local first-merge fact is excluded from the next public work-in-progress c
   const wip = publication.wip;
   if (wip === undefined || wip === null) throw new Error('post did not record its work in progress');
   expect(wip.changed).toContain('app.txt');
-  expect([...wip.changed, ...wip.added, ...wip.deleted].some(path => path.startsWith('.box/bounties/'))).toBe(false);
+  expect([...wip.changed, ...wip.added, ...wip.deleted].some(path => path.startsWith(`${RECORDS_DIR_REL}/`))).toBe(false);
   expect(git(repo, ['ls-tree', '-r', '--name-only', publication.commit])).not.toContain('FIRST_MERGE');
   expect(state().issues).toHaveLength(1);
   expect(state().issues[0]?.body).not.toContain('FIRST_MERGE');

@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allowBounty, applyBounty, changePublishList, closeBounty, loadRecord, lookBounty, postBounty } from '../../../packages/box-bounty/index.js';
-import { CLI_DIST, git, write } from './support.js';
+import { CLI_DIST, git, readRecordRaw, write, writeRecordRaw } from './support.js';
 import { fixture, postedFixture, refused } from './github-fixture.js';
 
 const cli = (root: string, ...args: string[]) => spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd: root, encoding: 'utf8', env: process.env, timeout: 60000 });
@@ -83,10 +83,9 @@ describe('ask me each time covers merges', () => {
     allowBounty(repo, id);
     pr('solver');
     refused(() => applyBounty(repo, id, 1), 'merge-held');
-    const recordPath = join(repo, '.box', 'bounties', `${id}.json`);
-    const record = JSON.parse(readFileSync(recordPath, 'utf8'));
+    const record = JSON.parse(readRecordRaw(repo, id));
     record.waiting.merge.commit = 'f'.repeat(40);
-    writeFileSync(recordPath, JSON.stringify(record));
+    writeRecordRaw(repo, id, JSON.stringify(record));
     refused(() => allowBounty(repo, id), 'merge-approval-stale');
     expect(loadRecord(repo, id).stage).toBe('waiting');
   }));
@@ -100,10 +99,9 @@ describe('ask me each time covers merges', () => {
     refused(() => applyBounty(repo, id, 1), 'merge-held');
     // Forge everything a record could carry: an answered marker on the
     // wait, an applied stage, whatever the file shape allows.
-    const recordPath = join(repo, '.box', 'bounties', `${id}.json`);
-    const record = JSON.parse(readFileSync(recordPath, 'utf8'));
+    const record = JSON.parse(readRecordRaw(repo, id));
     record.waiting.answered = { at: new Date().toISOString(), merge: { n: 1, commit: prSha, head: headBefore } };
-    writeFileSync(recordPath, JSON.stringify(record));
+    writeRecordRaw(repo, id, JSON.stringify(record));
     try { applyBounty(repo, id, 1); expect.unreachable('expected a refusal'); }
     catch (error) { expect(String((error as Error).message)).toContain('waiting for the owner'); }
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(headBefore);
