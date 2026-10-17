@@ -25,6 +25,7 @@ import { emitMergeNotice as emit,showPath } from './notice.js';
 import { readDecision,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
+import { shareMerged,syncChains } from './chain.js';
 
 // One line per recognised merge or un-checkable record, printed by whichever
 // command noticed. The CLI registers a printer; library callers see the same
@@ -53,6 +54,10 @@ export function noticeMergedSolutions(repoRoot: string): void {
   try { key = resolve(realpathSync(repoRoot)); } catch { key = resolve(repoRoot); }
   if (noticed.has(key)) return;
   noticed.add(key);
+  // BT32: every record-reading command refreshes the shared bounty memory
+  // first — fetch throttled at once a minute, import and pending retries
+  // inside; a failure leaves the cache answering and says so once.
+  try { syncChains(repoRoot); } catch { /* shared memory is a read cache — never a reason a read fails */ }
   noticing = true;
   try { scan(repoRoot); } finally { noticing = false; }
 }
@@ -200,6 +205,7 @@ function closeOne(repoRoot: string, record: BountyRecord, branch: string, candid
   });
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record, { decision });
+  shareMerged(repoRoot, record, candidate.attempt?.n, merge, unasked);
   emit(`${record.id} — ${label} is merged on ${branch} at ${merge.slice(0, 12)} — the bounty is closed (recorded applied)`);
   if (unasked) emit(`${record.id} — fact: the owner was not asked before this merge`);
   if (partial.length > 0) emit(`${record.id} — fact: of the files the solution changed, the merge left these as they were: ${partial.map(showPath).join(', ')}`);

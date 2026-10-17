@@ -170,7 +170,7 @@ export function commandConfig(repo: string): readonly ConfigEntry[] {
 // These read or write objects and refs only — never working-tree content, never
 // the index — so no filter or merge driver can run in them and the foreign pins
 // need no configuration read. A saving only: anything not listed is pinned.
-const OBJECT_AND_REF_ONLY = new Set(['rev-parse', 'cat-file', 'ls-tree', 'merge-base', 'rev-list', 'for-each-ref', 'show-ref', 'symbolic-ref', 'update-ref', 'ls-remote', 'remote', 'commit-tree', 'hash-object', 'branch', 'log']);
+const OBJECT_AND_REF_ONLY = new Set(['rev-parse', 'cat-file', 'ls-tree', 'merge-base', 'rev-list', 'for-each-ref', 'show-ref', 'symbolic-ref', 'update-ref', 'ls-remote', 'remote', 'commit-tree', 'hash-object', 'branch', 'log', 'mktree', 'fetch']);
 
 function safeArgs(repo: string, args: readonly string[], content: GitContent): string[] {
   const prefix = ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo];
@@ -420,6 +420,22 @@ export function gitIndexWrite(repo: string, index: string, changes: readonly Ind
 // batch form of per-ref `update-ref` / `update-ref -d` calls. A delete of a
 // missing ref is a no-op, matching `update-ref -d` on an absent name.
 export type RefWrite = { readonly delete: string } | { readonly update: string; readonly sha: string };
+
+// A git call that reads its input from stdin — mktree's table and any other
+// plumbing whose operand is a stream. Same pin layer as every call above.
+export function gitStdin(repo: string, args: readonly string[], input: string | Buffer, env: GitEnv = {}): string {
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, args, 'foreign'), ...args], {
+    input,
+    encoding: 'utf8',
+    env: gitEnvironment(env),
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) {
+    const detail = ((result.stderr ?? '') || result.error?.message || `exit ${result.status}`).trim();
+    throw new GitFailed(`git ${args.join(' ')} failed in ${repo}: ${detail}`);
+  }
+  return result.stdout.trim();
+}
 
 export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
   if (writes.length === 0) return;

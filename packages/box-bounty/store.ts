@@ -175,7 +175,7 @@ function dropFts(db: DatabaseSync): void {
   }
 }
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 function setUp(db: DatabaseSync): void {
   db.exec('PRAGMA busy_timeout=5000');
@@ -206,6 +206,19 @@ function setUp(db: DatabaseSync): void {
         CREATE INDEX IF NOT EXISTS records_open_updated ON records(open, updated_at);
         CREATE INDEX IF NOT EXISTS records_open_ended ON records(open, ended_at);
         CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+        -- BT32: facts learned from shared chain refs, keyed like records but
+        -- never writable by commands; a shared row only mirrors the chain.
+        CREATE TABLE IF NOT EXISTS shared(
+          id TEXT PRIMARY KEY,
+          stage TEXT NOT NULL,
+          open INTEGER NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          ended_at TEXT,
+          json TEXT NOT NULL,
+          search_text TEXT NOT NULL DEFAULT ''
+        );
+        CREATE INDEX IF NOT EXISTS shared_open_updated ON shared(open, updated_at);
       `);
       const columns = (db.prepare('PRAGMA table_info(records)').all() as unknown as { name: string }[]).map(column => column.name);
       if (!columns.includes('search_text')) db.exec("ALTER TABLE records ADD COLUMN search_text TEXT NOT NULL DEFAULT ''");
@@ -750,6 +763,144 @@ export function searchRecords(repoRoot: string, needle: string, limit?: number):
     const sql = `SELECT id, json FROM records WHERE ${words.map(() => 'instr(search_text, ?) > 0').join(' AND ')} ORDER BY rowid${limit === undefined ? '' : ' LIMIT ?'}`;
     const rows = (limit === undefined ? stmt(entry, sql).all(...words) : stmt(entry, sql).all(...words, limit)) as unknown as { id: string; json: string }[];
     return rows.map(row => rowToRecord(entry, row.id, row.json)).filter((record): record is BountyRecord => record !== null);
+  });
+}
+
+// ---- shared rows (BT32) -----------------------------------------------------
+// Bounty facts learned from chain refs fetched off the configured remote.
+// They are external data — each row's json was built by this machine from
+// events that passed chain.ts's allow-list, type and size validation, so it
+// is trusted-shaped but never a local record: writes go only through
+// importShared, and a row whose id a local record also has is ignored by
+// every reader (the local record governs).
+
+export interface SharedRow {
+  readonly id: string;
+  readonly stage: string;
+  readonly open: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly endedAt: string | null;
+  readonly record: Record<string, unknown>;
+  readonly searchText: string;
+}
+
+// Store bookkeeping keys the chain sync uses — small string values under
+// the same meta table the compat markers use.
+export function metaGet(repoRoot: string, key: string): string | null {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return null;
+    const row = stmt(entry!, 'SELECT value FROM meta WHERE key=?').get(key) as { value: string } | undefined;
+    return row?.value ?? null;
+  });
+}
+export function metaKeys(repoRoot: string, prefix: string): string[] {
+  return withDb(repoRoot, false, entry =>
+    entry === undefined ? [] : (stmt(entry!, 'SELECT key FROM meta WHERE key LIKE ? ORDER BY key').all(`${prefix}%`) as unknown as { key: string }[]).map(row => row.key));
+}
+export function metaSet(repoRoot: string, key: string, value: string | null): void {
+  withDb(repoRoot, true, entry => {
+    if (value === null) stmt(entry!, 'DELETE FROM meta WHERE key=?').run(key);
+    else stmt(entry!, 'INSERT INTO meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key, value);
+  });
+}
+
+const sharedRowToRecord = (row: { json: string }): BountyRecord | null => {
+  try {
+    const record = JSON.parse(row.json) as BountyRecord;
+    return record !== null && typeof record === 'object' && record.kind === 'box-bounty-record' ? record : null;
+  } catch { return null; }
+};
+
+// Replace one shared row (or all listed) inside one transaction — the import
+// of a chain produces the whole row at once, never field by field.
+export function importShared(repoRoot: string, rows: readonly SharedRow[]): void {
+  if (rows.length === 0) return;
+  withDb(repoRoot, true, entry => {
+    refreshDataVersion(entry!);
+    entry!.db.exec('BEGIN IMMEDIATE');
+    try {
+      const up = stmt(entry!, 'INSERT INTO shared(id, stage, open, created_at, updated_at, ended_at, json, search_text) VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET stage=excluded.stage, open=excluded.open, updated_at=excluded.updated_at, ended_at=excluded.ended_at, json=excluded.json, search_text=excluded.search_text');
+      for (const row of rows) {
+        up.run(row.id, row.stage, row.open ? 1 : 0, row.createdAt, row.updatedAt, row.endedAt, JSON.stringify(row.record, null, 2) + '\n', row.searchText);
+      }
+      entry!.db.exec('COMMIT');
+    } catch (error) {
+      entry!.db.exec('ROLLBACK');
+      throw error;
+    }
+  });
+}
+
+const localIds = (entry: StoreEntry): Set<string> =>
+  new Set((stmt(entry, 'SELECT id FROM records').all() as unknown as { id: string }[]).map(row => row.id));
+
+// Shared rows minus any id a local record claims — the merged read set the
+// brief calls for: local wins, shared fills in what this machine never saw.
+export function sharedOpen(repoRoot: string): BountyRecord[] {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    const local = localIds(entry!);
+    const out: BountyRecord[] = [];
+    for (const row of stmt(entry!, 'SELECT id, json FROM shared WHERE open=1 ORDER BY created_at, id').all() as unknown as { id: string; json: string }[]) {
+      if (local.has(row.id)) continue;
+      const record = sharedRowToRecord(row);
+      if (record !== null) out.push(record);
+    }
+    return out;
+  });
+}
+
+export function sharedEnded(repoRoot: string, limit?: number): BountyRecord[] {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    const local = localIds(entry!);
+    const sql = `SELECT id, json FROM shared WHERE open=0 ORDER BY ended_at DESC, id DESC${limit === undefined ? '' : ' LIMIT ?'}`;
+    const rows = (limit === undefined ? stmt(entry!, sql).all() : stmt(entry!, sql).all(limit)) as unknown as { id: string; json: string }[];
+    return rows.flatMap(row => {
+      if (local.has(row.id)) return [];
+      const record = sharedRowToRecord(row);
+      return record === null ? [] : [record];
+    });
+  });
+}
+
+export function sharedEndedCount(repoRoot: string): number {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return 0;
+    const local = localIds(entry!);
+    let n = 0;
+    for (const row of stmt(entry!, 'SELECT id FROM shared WHERE open=0').all() as unknown as { id: string }[]) if (!local.has(row.id)) n += 1;
+    return n;
+  });
+}
+
+// The shared row behind one id — for the shared-only refusal and for a
+// status/<id> that names a bounty this machine never posted. Its issue URL
+// rides in record.github.issue.url.
+export function sharedRead(repoRoot: string, id: string): BountyRecord | null {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return null;
+    if ((stmt(entry!, 'SELECT id FROM records WHERE id=?').get(id) as { id: string } | undefined) !== undefined) return null;
+    const row = stmt(entry!, 'SELECT json FROM shared WHERE id=?').get(id) as { json: string } | undefined;
+    return row === undefined ? null : sharedRowToRecord(row);
+  });
+}
+
+// find over shared rows: same all-words substring rule as searchRecords.
+export function sharedSearch(repoRoot: string, needle: string): BountyRecord[] {
+  return withDb(repoRoot, false, entry => {
+    if (entry === undefined) return [];
+    const words = needle.toLowerCase().split(/\s+/).filter(word => word !== '');
+    if (words.length === 0) return [];
+    const local = localIds(entry!);
+    const sql = `SELECT id, json FROM shared WHERE ${words.map(() => 'instr(search_text, ?) > 0').join(' AND ')} ORDER BY rowid`;
+    return (stmt(entry!, sql).all(...words) as unknown as { id: string; json: string }[])
+      .flatMap(row => {
+        if (local.has(row.id)) return [];
+        const record = sharedRowToRecord(row);
+        return record === null ? [] : [record];
+      });
   });
 }
 

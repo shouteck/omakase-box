@@ -20,7 +20,7 @@
 import { existsSync,readFileSync,realpathSync,statSync } from 'node:fs';
 import { basename,dirname,join,resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { allRecords,listOpen,listEndedRecent,countEnded,readStored,writeStored,setStoreCodec } from './store.js';
+import { allRecords,listOpen,listEndedRecent,countEnded,readStored,sharedRead,writeStored,setStoreCodec } from './store.js';
 import { gitOutcome,gitRefsWrite } from './git.js';
 import { publishListed,publishLists } from './never-ship.js';
 import { payOutcomeShape,payToFactShape } from './pay.js';
@@ -302,6 +302,10 @@ export interface BountyRecord {
     readonly leftHome?: number;
     readonly untracked?: number;
   };
+  /** True only on the synthetic record chain.ts folds out of shared events
+      (BT32) — a read-model marker: never stored in `records`, never
+      writable, and readers skip its GitHub refresh. */
+  readonly shared?: true;
 }
 
 export interface ListedBounty {
@@ -362,8 +366,13 @@ export function dropDurabilityRefs(repoRoot: string, record: BountyRecord): void
   // every attempt ref — a delete of a missing ref is a no-op, so this is as
   // best-effort as the per-ref calls were.
   try {
+    // BT32: refs/box-bounty/<id> is the shared chain ref now — a record made
+    // since chains shipped never pins a snapshot under it. Drop it only when
+    // the commit it names is a legacy snapshot (no event.json in its tree).
+    const tip = gitOutcome(repoRoot, ['rev-parse', '-q', '--verify', refName(record.id)]);
+    const chain = tip.status === 0 && gitOutcome(repoRoot, ['cat-file', '-e', `${tip.stdout.trim()}:event.json`]).status === 0;
     gitRefsWrite(repoRoot, [
-      { delete: refName(record.id) },
+      ...(chain ? [] : [{ delete: refName(record.id) }]),
       { delete: `${refName(record.id)}-answer` },
       ...attemptsOf(record).map(attempt => ({ delete: attemptRefName(record.id, attempt.n) }))
     ]);
@@ -581,6 +590,13 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
   noticeMergedSolutions(repoRoot);
   const stored = readStored(repoRoot, id);
   if (stored.state === 'missing') {
+    // BT32: a chain another machine posted lands in the shared table — the
+    // id is known here but not a local record; acting on it is refused by name.
+    const shared = sharedRead(repoRoot, id);
+    if (shared !== null) {
+      const url = shared.github?.issue?.url;
+      throw new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; act on it from that machine, or on GitHub`);
+    }
     throw new BountyRefused('unknown-bounty', `no bounty ${id} — .box/bounties/${id}.json does not exist. Run box bounty status to list the bounties this project knows`);
   }
   if (stored.record === null) {

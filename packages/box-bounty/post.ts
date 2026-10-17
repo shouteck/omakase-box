@@ -6,6 +6,7 @@ import { TOOL_VERSION } from './create.js';
 import { git } from './git.js';
 import { checkProjectClaims,shipRules } from './never-ship.js';
 import { allowedByFor,ownerGate,sameShown,waitForOwner } from './gate.js';
+import { sharePosted } from './chain.js';
 import { loadRecord,persistRecord,recordScanFinding,retiredRoute,settleScanFindings,transitionTo } from './record.js';
 import { assertPromiseRoom,rewardForPost,withPromiseLock } from './money.js';
 import type { BountyRecord } from './record.js';
@@ -369,6 +370,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     return invalid('github-branch-changed', `${record.github.branch} on the remote is ${branchTip}, not the ${record.github.commit} this tool approved — it was changed outside the tool; nothing was posted`);
   }
   const publication = record.github;
+  let destination: string;
   try {
     remoteGit(root, repository, ['push', `${publication.commit}:refs/heads/${publication.branch}`]);
     publication.state = 'branch-pushed';
@@ -386,10 +388,15 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     settleScanFindings(root, record, 'went-out');
     if (record.stage !== 'posted') transitionTo(root, record, 'posted', { destination: publication.issue.url });
     else persistRecord(root, record);
-    return { record, destination: publication.issue.url };
+    destination = publication.issue.url;
   } catch {
     publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} or remove with box bounty close ${id}`;
     persistRecord(root, record);
     return invalid('github-post-incomplete', publication.pending);
   }
+  // BT32: the posted milestone is a shared chain event — scanned, appended,
+  // pushed; a push that cannot land is held locally and retried, never a
+  // reason the post itself fails.
+  sharePosted(root, record, record.content?.task.text ?? record.title);
+  return { record, destination };
 }

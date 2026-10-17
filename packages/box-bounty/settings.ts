@@ -116,6 +116,10 @@ export interface ToolState {
       key shape as the owner's `instructions` map, which keeps only the
       owner's own `enabled`/`file` fields. */
   readonly instructionNotes: Readonly<Record<string, InstructionNotes>>;
+  /** Per-checkout shared-memory state (BT32), keyed by the repository's
+      real folder path: when the chain fetch last ran, and the last failure
+      (kept so "not refreshed" is said once per spell, not per command). */
+  readonly chains?: Readonly<Record<string, { readonly fetchedAt?: string; readonly error?: { readonly at: string; readonly reason: string } }>>;
 }
 /** One recorded owner answer to a held merge (BT13). */
 export interface MergeAnswer {
@@ -257,7 +261,7 @@ export function saveState(state: ToolState): void {
 
 /** The keys a settings file once carried for the tool — still accepted there
     so the first load can move them out; never written back (BT22). */
-const STATE_KEYS = ['said', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'firstMerges', 'migrations', 'retiredReward'] as const;
+const STATE_KEYS = ['said', 'rewardPromiseSaid', 'rewardNoticeAt', 'askMergeNoticeAt', 'firstMerges', 'migrations', 'retiredReward', 'chains'] as const;
 
 // The moved fields read the same in either file — `refuse` and `unknownName`
 // are the file's own verdicts: settings-malformed/-unknown-name for the
@@ -306,6 +310,20 @@ function movedState(parsed: Record<string, unknown>, refuse: (detail: string) =>
       ...(typeof rawRetired['toldAt'] === 'string' ? { toldAt: rawRetired['toldAt'] } : {})
     };
   }
+  const chains: Record<string, { readonly fetchedAt?: string; readonly error?: { readonly at: string; readonly reason: string } }> = {};
+  const rawChains = parsed['chains'];
+  if (rawChains !== undefined) {
+    if (!isObject(rawChains)) return refuse('chains must hold an object keyed by repository folder');
+    for (const [key, entry] of Object.entries(rawChains)) {
+      if (!isObject(entry)
+        || !(entry['fetchedAt'] === undefined || typeof entry['fetchedAt'] === 'string')
+        || !(entry['error'] === undefined || isObject(entry['error']) && typeof entry['error']['at'] === 'string' && typeof entry['error']['reason'] === 'string')) return refuse('a chains entry is unreadable');
+      chains[key] = {
+        ...(typeof entry['fetchedAt'] === 'string' ? { fetchedAt: entry['fetchedAt'] } : {}),
+        ...(isObject(entry['error']) ? { error: { at: entry['error']['at'] as string, reason: entry['error']['reason'] as string } } : {})
+      };
+    }
+  }
   return {
     ...(parsed['said'] === undefined ? {} : { said: saidMap(parsed['said'], refuse) }),
     ...(retiredReward === undefined ? {} : { retiredReward }),
@@ -314,7 +332,8 @@ function movedState(parsed: Record<string, unknown>, refuse: (detail: string) =>
     ...(typeof parsed['askMergeNoticeAt'] === 'string' ? { askMergeNoticeAt: parsed['askMergeNoticeAt'] } : {}),
     firstMerges,
     migrations,
-    instructionNotes
+    instructionNotes,
+    ...(Object.keys(chains).length > 0 ? { chains } : {})
   };
 }
 
@@ -334,7 +353,8 @@ function mergeState(state: ToolState, moved: ToolState): ToolState {
     ...scalar('askMergeNoticeAt'),
     firstMerges: { ...moved.firstMerges, ...state.firstMerges },
     migrations: [...moved.migrations, ...state.migrations],
-    instructionNotes: { ...moved.instructionNotes, ...state.instructionNotes }
+    instructionNotes: { ...moved.instructionNotes, ...state.instructionNotes },
+    ...(moved.chains !== undefined || state.chains !== undefined ? { chains: { ...moved.chains, ...state.chains } } : {})
   };
 }
 

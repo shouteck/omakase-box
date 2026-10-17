@@ -9,6 +9,7 @@ import { attemptRefName,attemptsOf,isOpenStage,loadRecord,persistRecord,requireC
 import type { Attempt,BountyRecord } from './record.js';
 import { boundAmount,formatFact,formatFor } from './format.js';
 import { parsePayTo,payToLine,type PayToFact } from './pay.js';
+import { shareSolution } from './chain.js';
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
   if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; post it with box bounty post ${id}, or end it with box bounty close ${id}`);
@@ -326,5 +327,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   };
   record.attempts = [...attemptsOf(record), attempt];
   persistRecord(root, record);
+  // BT32: collecting a pull request is a shared chain milestone.
+  shareSolution(root, record, attempt);
   return { record, outcome: 'answered' as const, attempt: n, report, ...(merge.kind === 'conflict' ? { conflicts: merge.paths } : {}) };
 }

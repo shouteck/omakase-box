@@ -1,0 +1,9 @@
+Second-clone fixture (run by the CTO on the wave branch):
+  1. node tests/support/world.mjs --help   # reuse bounty world fixture: clone
+     the fixture remote into a fresh --no-local clone as "machine B"
+  2. In machine A's clone: post a bounty, run collect/answer once so the chain
+     has >=2 events (fixture test tests/box/bounty/bt32.test.ts case 2 shows
+     the exact sequence).
+  3. Hand the participant only the machine-B clone path + prompt.md.
+Built CLI: packages/box-cli/dist/cli.js (node scripts/workspace.mjs build).
+Score the verbatim response against truth-key.md.

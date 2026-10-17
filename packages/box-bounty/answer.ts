@@ -14,6 +14,7 @@ import { syncGitHubDecision } from './close.js';
 import { dropMergeAnswer,readDecision,readMergeAnswer,recordFirstMerge } from './settings.js';
 import { boundAmount } from './format.js';
 import { payNotice } from './pay.js';
+import { shareMerged } from './chain.js';
 const TAIL = 2000;
 
 const tail = (text: string): string => text.slice(-TAIL);
@@ -298,6 +299,8 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
     // and all the other attempts'.
     dropDurabilityRefs(repoRoot, record);
     syncGitHubDecision(repoRoot, record, { decision: mergeRead });
+    // BT32: the merge milestone is a shared chain event.
+    shareMerged(repoRoot, record, attempt.n, mergeCommit, false);
     const notice = attempt.author !== undefined && attempt.author === record.github?.account ? null : recordFirstMerge(repoRoot, mergeCommit);
     // A recorded first merge fuses into the payment block (BT14) — one
     // block, one 'for the owner'. With no payment to make, or when the

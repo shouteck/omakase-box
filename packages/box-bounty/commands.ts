@@ -13,6 +13,7 @@ import { postGitHub } from './post.js';
 import { syncGitHubDecision } from './close.js';
 import { payNotice } from './pay.js';
 import { dropDurabilityRefs,isOpenStage,loadRecord,settleScanFindings,transitionTo } from './record.js';
+import { shareClosed } from './chain.js';
 import type { BountyRecord } from './record.js';
 
 export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./gh.js').GitHubChoice }): { record: BountyRecord; destination: string } {
@@ -53,6 +54,11 @@ export function closeBounty(repoRoot: string, id: string, reason?: string): Clos
   }
   dropDurabilityRefs(repoRoot, record);
   syncGitHubDecision(repoRoot, record);
+  // BT32: a posted bounty ending is a shared chain event (a draft's close
+  // is not — the draft never left the machine, so its ending does not either).
+  if (record.github?.issue !== undefined && record.github?.issue !== null) {
+    shareClosed(repoRoot, record, text !== '' ? 'rejected' : 'withdrawn', text !== '' ? text : undefined, false);
+  }
   const payMessage = payNotice(record, boundAmount(record));
   return { record, outcome: text !== '' ? 'rejected' : 'withdrawn', ...(payMessage === null ? {} : { payMessage }) };
 }
