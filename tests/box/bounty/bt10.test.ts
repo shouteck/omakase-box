@@ -2,7 +2,7 @@ import { readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { expect, it } from 'vitest';
-import { closeBounty, applyBounty, loadRecord, postBounty, previewGitHub, renderStatus, settingsFile } from '../../../packages/box-bounty/index.js';
+import { closeBounty, applyBounty, loadRecord, postBounty, previewGitHub, renderHelp, renderStatus, settingsFile } from '../../../packages/box-bounty/index.js';
 import { FORMAT_MARKER, formatFor, readFormat, renderFormat } from '../../../packages/box-bounty/format.js';
 import { fixture, postedFixture } from './github-fixture.js';
 import { CLI_DIST, ROOT, git, write } from './support.js';
@@ -162,14 +162,17 @@ it('a failed block write still closes and reports the stale block truthfully', (
   expect(read.kind === 'present' && read.value.state.kind).toBe('closed-merged');
 }));
 
-it('ended full status rereads edited metadata; compact status names its cached observation', () => postedFixture(({ repo, id, state, update }) => {
+it('ended full status rereads edited metadata; compact status omits the per-record cached-observation line', () => postedFixture(({ repo, id, state, update }) => {
   closeBounty(repo, id);
   const body = state().issues[0]!.body;
   const before = state().calls.length;
   update({ issues: [{ ...state().issues[0]!, body: body.replace('"withChanges":false', '"withChanges":true') }] });
   const compact = renderStatus(repo, { id });
   expect(state().calls).toHaveLength(before);
-  expect(compact).toContain('cached last observation');
+  // BT29 removed the per-record compact pointer line: the cached-versus-fresh
+  // fact is said once in help, not once per ended bounty.
+  expect(compact).not.toContain('cached last observation');
+  expect(renderHelp()).toContain('cached GitHub observation');
   expect(compact).toContain(`box bounty status ${id} --full`);
   expect(renderStatus(repo, { id, full: true })).toContain('differs-from-record');
   expect(loadRecord(repo, id).stage).toBe('withdrawn');

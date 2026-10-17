@@ -148,7 +148,6 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
       else if (publication.formatRead !== undefined) lines.push(`${record.id} GitHub format block: ${publication.formatRead} (last issue-body observation ${publication.formatReadAt ?? 'time not recorded'}; local record governs)`);
       if (publication.formatRepair !== undefined) lines.push(`${record.id} GitHub format update: ${publication.formatRepair}`);
     }
-    if (!isOpenStage(record.stage) && !options.full) lines.push(`${record.id} compact status uses the cached last observation; current comparison: box bounty status ${record.id} --full`);
   }
   // The standing state lines: each prints only when it has something that
   // needs attention — a flat "allowed" and a $0 reward are silent in the
@@ -388,7 +387,7 @@ export function renderHelp(): string {
     '  create --task <file|-> --why "<one line>" [--title "<text>"] [--resume "<context>"] [--part-of "<name>"] [--repo <path>]',
     '  The task is a file describing what needs doing, written for the solver; code is included automatically. "-" reads standard input.',
     '  Put what you tried in the task. --resume saves private context for unfinished work and the larger job. With one open bounty, commands accept no id.',
-    '  status [id] shows the next action; --full adds history and the full reports.',
+    '  status [id] shows the next action (ended bounties use the cached GitHub observation); --full reads it fresh and adds history and reports.',
     '  status, look and config take --json: one complete document on standard output, nothing else.',
     '',
     'nothing a solver wrote is ever run — checks were removed on 11 October 2026: a solution arrives as a',

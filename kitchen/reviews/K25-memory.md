@@ -218,3 +218,62 @@ Playbook followed: `investigation` — map and measure before judging; Steps 1�
 - **Small N is unchanged:** every surface's size at N=1 and N=10 matches the before table within measurement noise — the caps only engage past their limits.
 - **What stays unbounded by design:** the all-open `box bounty`/`status` views (every open record still needs attention — the brief bounded ended records and the unasked tier, not the open list) and `status --json` (the caller asked for every record; `find` is the bounded recall path that landed with it).
 - Wall time is unchanged in shape — ~1.3–1.7 s at N=1,000, the same file-read cost as before.
+
+---
+
+## BT29 appendix — Mix C: five open, the rest ended, every record posted (17 October 2026)
+
+BT28's measurement seeded ended records without a `github` block, so it missed a
+per-ended-record line in the compact overview: `<id> compact status uses the
+cached last observation; …`. Mix C repeats the steady state with every record
+genuinely posted — the `github` block `post` writes plus one collected attempt —
+on the same scratch repos, with a first-on-PATH `gh` shim that fails instantly so
+no measurement ever reaches real GitHub.
+
+### Before (master render, `fe908ac` behaviour)
+
+| surface | N=1 | N=10 | N=100 | N=1,000 |
+|---|---|---|---|---|
+| instruction-block sync (wall) | 191 ms | 420 ms | 433 ms | 1,518 ms |
+| instruction block in AGENTS.md | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 |
+| `.box/bounties/OPEN` | 1 / 313 / 78 | 1 / 1,350 / 338 | 1 / 1,351 / 338 | 1 / 1,352 / 338 |
+| `hook start` | 1 / 221 / 55 / 196 | 1 / 587 / 147 / 487 | 1 / 587 / 147 / 1,073 | 1 / 587 / 147 / 6,994 |
+| `box bounty` | 14 / 1,275 / 319 / 211 | 63 / 6,544 / 1,636 / 653 | 153 / 17,950 / 4,488 / 2,289 | 1,053 / 131,359 / 32,840 / 18,091 |
+| `status` | 13 / 1,179 / 295 / 217 | 62 / 6,448 / 1,612 / 605 | 152 / 17,854 / 4,464 / 2,315 | 1,052 / 131,263 / 32,816 / 18,600 |
+| `status --json` | 1 / 2,695 / 674 / 282 | 1 / 24,956 / 6,239 / 913 | 1 / 242,490 / 60,623 / 15,034 | 1 / 2,422,294 / 605,574 / 1,096,313 |
+| `status <one id>` | 13 / 1,179 / 295 / 218 | 13 / 1,180 / 295 / 401 | 13 / 1,181 / 295 / 839 | 13 / 1,183 / 296 / 4,394 |
+
+### After (BT29 render)
+
+| surface | N=1 | N=10 | N=100 | N=1,000 |
+|---|---|---|---|---|
+| instruction-block sync (wall) | 216 ms | 327 ms | 726 ms | 1,452 ms |
+| instruction block in AGENTS.md | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 | 7 / 327 / 82 |
+| `.box/bounties/OPEN` | 1 / 313 / 78 | 1 / 1,350 / 338 | 1 / 1,351 / 338 | 1 / 1,352 / 338 |
+| `hook start` | 1 / 221 / 55 / 204 | 1 / 587 / 147 / 417 | 1 / 587 / 147 / 3,665 | 1 / 587 / 147 / 6,685 |
+| `box bounty` | 14 / 1,275 / 319 / 233 | 58 / 5,914 / 1,479 / 561 | 58 / 5,980 / 1,495 / 8,647 | 58 / 5,989 / 1,497 / 16,643 |
+| `status` | 13 / 1,179 / 295 / 303 | 57 / 5,818 / 1,455 / 631 | 57 / 5,884 / 1,471 / 6,842 | 57 / 5,893 / 1,473 / 16,413 |
+| `status --json` | (skipped — unchanged code path; the before cell stands and a bare rerun measures it) |
+| `status <one id>` | 13 / 1,179 / 295 / 331 | 13 / 1,180 / 295 / 460 | 13 / 1,181 / 295 / 1,115 | 13 / 1,183 / 296 / 4,273 |
+
+### What the numbers say
+
+- **The bug, reproduced:** compact `status` grew ~95 characters per ended posted
+  record — 17,854 at N=100, 131,263 (~33,000 tokens) at N=1,000 — because one
+  standing explanation printed once per record outside the capped list.
+- **After:** 5,893 characters at N=1,000, flat from N=10 to N=1,000. Mix C sits
+  above mix B's ~3,900 because each *open* posted record carries its recorded
+  outside listing and refresh state — per-open output, bounded by open count.
+- **A second finding, not this wave's fix:** `status --json` refreshes the
+  issue-format cache once per ended posted record (`statusDocument` runs the
+  `--full` fact set), and each refresh persists the record — a write that
+  re-syncs OPEN and the instruction block over every record. That is O(N)
+  `gh` spawns plus O(N²) record reads: 1,096,313 ms (~18 min) of wall at
+  N=1,000 against an instant-fail `gh` shim, versus ~1.2 s for the same surface
+  with unposted records. Its size is by design (the caller asked for every
+  record); the refresh-per-record cost is not. The same refresh path makes the
+  compact `status`/`hook start` cells take ~16 s/~7 s wall at N=1,000 posted
+  (five open-record refreshes, each an O(N) write) — real, but bounded by the
+  open count. Flagged for a later wave.
+- The unasked tier is untouched: the block stays 327 characters, `OPEN` tracks
+  open records only.
