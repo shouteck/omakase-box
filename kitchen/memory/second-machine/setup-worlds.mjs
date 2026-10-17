@@ -16,16 +16,17 @@
 // and a half-done session-store move with a clear next step.
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 const outFlag = args.indexOf('--out');
 const OUT = outFlag === -1 ? join(tmpdir(), 'kitchen-K26-worlds') : args[outFlag + 1];
-const REPO = join(fileURLToPath(import.meta.url), '..', '..', '..');
+const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const CLI = join(REPO, 'packages', 'box-cli', 'dist', 'cli.js');
+if (!existsSync(CLI)) throw new Error(`the built box CLI is missing at ${CLI} — build packages/box-cli first`);
 
 const B1 = 'bt-a11ce0000001'; // open posted bounty (the flaky test)
 const B2 = 'bt-b22ce0000002'; // ended applied bounty (PKCE headers)
@@ -38,7 +39,6 @@ const PACKAGE_JSON = JSON.stringify({
 }, null, 2) + '\n';
 
 const LOGIN_JS = `// Login: issues legacy session tokens today; migrating to OAuth.
-// The token endpoint is done; the session store below is mid-migration.
 const { issueToken } = require('./session');
 
 function login(user, password) {
@@ -49,12 +49,7 @@ function login(user, password) {
 module.exports = { login };
 `;
 
-const SESSION_JS = `// Session store — halfway through moving from legacy memoryMap tokens to
-// oauthSessionStore (the OAuth migration's remaining work).
-//
-// NEXT: point revokeSession and cleanupExpired at oauthSessionStore and drop
-// memoryMap — migrateSession is already written and tested by hand. See the
-// project's open bounty before touching the flaky token-refresh test.
+const SESSION_JS = `const TOKEN_TTL_MS = 3000; // access-token lifetime the issuer stamps
 const memoryMap = new Map();
 const oauthSessionStore = new Map(); // OAuth-shaped entries: { accessToken, refreshToken, expiresAt }
 
@@ -74,47 +69,45 @@ function migrateSession(token) {
 }
 
 function revokeSession(token) {
-  // still calls memoryMap — part of the half-done move
   memoryMap.delete(token);
 }
 
 function cleanupExpired(now) {
-  // still calls memoryMap — part of the half-done move
   for (const [token, session] of memoryMap) if (session.expiresAt <= now) memoryMap.delete(token);
 }
 
 function refreshToken(refresh) {
-  // OAuth path — the mock issuer and verifier disagree about clock skew,
-  // which is why test_token_refresh flakes under concurrent calls.
   for (const session of oauthSessionStore.values()) {
     if (session.refreshToken === refresh) {
       session.accessToken = 'oauth-refreshed-' + Math.floor(Math.random() * 1e6);
-      session.expiresAt = Date.now() + 3000;
+      session.expiresAt = Date.now() + TOKEN_TTL_MS;
       return session.accessToken;
     }
   }
   return null;
 }
 
-module.exports = { issueToken, migrateSession, revokeSession, cleanupExpired, refreshToken, memoryMap, oauthSessionStore };
+module.exports = { issueToken, migrateSession, revokeSession, cleanupExpired, refreshToken, memoryMap, oauthSessionStore, TOKEN_TTL_MS };
 `;
 
-const TEST_JS = `// Flaky: test_token_refresh fails intermittently under concurrent refresh
-// calls — suspected clock skew between the mock issuer and the verifier.
-const { test } = require('node:test');
+const TEST_JS = `const { test } = require('node:test');
 const assert = require('node:assert');
-const { refreshToken, oauthSessionStore } = require('../src/auth/session');
+const { refreshToken, oauthSessionStore, TOKEN_TTL_MS } = require('../src/auth/session');
+
+// Mock verifier: the issuing service keeps its own clock, skewed ahead of
+// this machine by the issued token lifetime.
+const verifierNow = () => Date.now() + TOKEN_TTL_MS;
 
 test('test_token_refresh passes under concurrent refresh calls', async () => {
-  oauthSessionStore.set('oauth-seed', { accessToken: 'oauth-seed', refreshToken: 'rt-seed', expiresAt: Date.now() + 3000 });
+  oauthSessionStore.set('oauth-seed', { accessToken: 'oauth-seed', refreshToken: 'rt-seed', expiresAt: Date.now() + 1000 });
   const results = await Promise.all([
     Promise.resolve().then(() => refreshToken('rt-seed')),
     Promise.resolve().then(() => refreshToken('rt-seed')),
     Promise.resolve().then(() => refreshToken('rt-seed'))
   ]);
-  // Known flaky: occasionally one call reads the store mid-refresh and the
-  // mock verifier rejects the skewed expiry.
   assert.ok(results.every(token => typeof token === 'string' && token.startsWith('oauth-refreshed-')));
+  const session = oauthSessionStore.get('oauth-seed');
+  assert.ok(session.expiresAt > verifierNow(), 'refreshed token must verify against the issuer clock');
 });
 `;
 
@@ -135,11 +128,7 @@ The bounty CLI here is the \`box\` wrapper in this folder (or
 BOX_BOUNTY_SETTINGS_DIR set as the wrapper does).
 `;
 
-const AGENTS_C = `# OAuth migration demo
-
-Small Node project: an auth module being migrated from legacy session tokens
-to OAuth. \`npm test\` runs the suite.
-
+const AGENTS_C = agentsShared('') + `
 GitHub issues for this project are listed in GITHUB-ISSUES.md and through
 \`gh issue list\` (the \`gh\` on PATH is a stand-in for this exercise).
 `;
@@ -157,9 +146,10 @@ const ISSUE_BODY = `${TASK_TEXT}
 The token-refresh test in test/token-refresh.test.js flakes when several
 refresh calls race. The repository's own code is on the bounty branch.
 
-<!-- box-bounty:${B1.slice(3)} -->
-{"schema":"box-bounty/issue@1","id":"${B1}","stage":"posted","reward":0}
-<!-- /box-bounty -->`;
+<!-- box-bounty:${B1} -->
+<!-- box-bounty-format
+{"schemaVersion":2,"kind":"box-bounty","id":"${B1}","repository":"alice/oauth-migration-demo","workCommit":"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2","branch":"box-bounty/${B1}","withChanges":true,"createdAt":"2026-10-10T09:12:00.000Z","state":{"kind":"open"},"reward":{"amount":0,"currency":"USD"},"terms":"merged-solution-earns-whole"}
+-->`;
 
 const GITHUB_SHARED = {
   repository: 'alice/oauth-migration-demo',
@@ -261,7 +251,7 @@ function fullRecordB() {
     github: {
       repository: 'alice/oauth-migration-demo', account: 'alice',
       branch: `box-bounty/${B2}`, commit: '5555555555555555555555555555555555555555',
-      title: 'Parse OAuth PKCE code_challenge headers', body: 'Parse OAuth PKCE code_challenge headers\n\n<!-- box-bounty:' + B2.slice(3) + ' -->\n<!-- /box-bounty -->',
+      title: 'Parse OAuth PKCE code_challenge headers', body: 'Parse OAuth PKCE code_challenge headers\n\n<!-- box-bounty:' + B2 + ' -->\n<!-- /box-bounty -->',
       state: 'closed', issue: { number: 2, url: 'https://github.com/alice/oauth-migration-demo/issues/2' }, kind: 'history',
       pending: null
     }
@@ -276,7 +266,7 @@ function sharedRecordB1() {
     schemaVersion: 1, kind: 'box-bounty-record', id: B1, title: TASK_TEXT,
     stage: 'posted', createdAt: '2026-10-10T09:12:00.000Z',
     why: WHY_TEXT, partOf: 'OAuth migration', noteSource: 'authored',
-    resume: { kind: 'recorded', note: RESUME_NOTE_SHARED },
+    resume: { kind: 'recorded', branch: '(shared)', commit: '(shared)', changed: [], note: RESUME_NOTE_SHARED },
     content: { task: { file: 'task.md', text: TASK_TEXT }, note: { file: 'note.md', text: 'Tried a retry loop in refreshToken, a 5000ms expiry and freezing Date.now — all still flake. Suspect clock skew between the mock issuer and verifier.' }, tool: 'box-bounty' },
     reward: { amount: 0 },
     allowedBy: { decision: 'allowed', level: 'project', decisionAt: '2026-10-09T08:00:00.000Z', usedAt: '2026-10-10T09:30:00.000Z' },
@@ -294,9 +284,9 @@ function sharedRecordB2() {
   return {
     schemaVersion: 1, kind: 'box-bounty-record', id: B2, title: full.title,
     stage: 'applied', createdAt: full.createdAt, why: full.why, partOf: full.partOf,
-    resume: { kind: 'recorded', note: null },
+    resume: { kind: 'recorded', branch: '(shared)', commit: '(shared)', changed: [], note: null },
     content: full.content, reward: full.reward, allowedBy: full.allowedBy,
-    attempts: full.attempts.map(({ n, pullRequest, author, commit, changed, added, deleted, payTo }) => ({ n, pullRequest, author, commit, changed, added, deleted, payTo })),
+    attempts: full.attempts.map(({ n, pullRequest, at, author, commit, changed, added, deleted, payTo }) => ({ n, pullRequest, at, author, commit, changed, added, deleted, outcome: 'answered', conflicts: null, report: [], payTo })),
     events: full.events.map(({ stage, at, destination, merge, attempt }) => ({ stage, at, ...(destination !== undefined ? { destination } : {}), ...(merge !== undefined ? { merge } : {}), ...(attempt !== undefined ? { attempt } : {}) })),
     github: full.github
   };
@@ -359,11 +349,22 @@ const issues = [{
 }, {
   number: 2, title: 'Parse OAuth PKCE code_challenge headers', state: 'closed',
   url: 'https://github.com/alice/oauth-migration-demo/issues/2',
-  body: 'Parse OAuth PKCE code_challenge headers\\n\\n<!-- box-bounty:${B2.slice(3)} -->\\n<!-- /box-bounty -->'
+  body: 'Parse OAuth PKCE code_challenge headers\\n\\n<!-- box-bounty:${B2} -->\\n<!-- /box-bounty -->'
 }];
 const argv = process.argv.slice(2).join(' ');
-if (argv.startsWith('version')) { console.log('gh version 2.40.0 (2024-01-01)'); process.exit(0); }
-if (argv.startsWith('auth status')) { console.log('github.com'); process.exit(0); }
+if (argv === '--version' || argv.startsWith('version')) { console.log('gh version 2.40.0 (2024-01-01)'); process.exit(0); }
+if (argv.startsWith('auth status')) { console.log('github.com\\n  ✓ Logged in to github.com account alice'); process.exit(0); }
+if (argv.startsWith('api ')) {
+  // box-bounty calls: gh api --hostname github.com <endpoint>[?query]
+  const endpoint = argv.split(' ').at(-1).split('?')[0];
+  const found = issues.find(i => endpoint === 'repos/alice/oauth-migration-demo/issues/' + i.number);
+  if (found !== undefined) {
+    console.log(JSON.stringify({ number: found.number, state: found.state, title: found.title, html_url: found.url, body: found.body, user: { login: 'alice' } }));
+    process.exit(0);
+  }
+  if (endpoint.includes('/comments') || endpoint.startsWith('repos/alice/oauth-migration-demo/pulls')) { console.log('[]'); process.exit(0); }
+  console.error('gh stand-in: unhandled api endpoint: ' + endpoint); process.exit(1);
+}
 if (argv.startsWith('issue list')) {
   for (const i of issues) console.log(i.number + '\\t' + i.state.toUpperCase() + '\\t' + i.title);
   process.exit(0);
@@ -378,8 +379,11 @@ if (view !== null) {
 console.error('gh stand-in: unhandled: ' + argv); process.exit(1);
 `;
   write(dir, 'gh.js', script);
-  write(dir, 'gh', `#!/bin/sh\nexec node "$(dirname "$0")/gh.js" "$@"\n`);
-  write(dir, 'gh.cmd', `@echo off\r\nnode "%~dp0gh.js" %*\r\n`);
+  // On Windows an extensionless `gh` resolves ahead of gh.cmd on PATH and the
+  // tool probes it as an executable (spawn fails), so the stand-in ships only
+  // the launch form the host can run.
+  if (process.platform === 'win32') write(dir, 'gh.cmd', `@echo off\r\nnode "%~dp0gh.js" %*\r\n`);
+  else write(dir, 'gh', `#!/bin/sh\nexec node "$(dirname "$0")/gh.js" "$@"\n`);
   return dir;
 }
 
@@ -410,7 +414,7 @@ wb['.box/bounties/OPEN'] = `open bounties: ${B1} "${TASK_TEXT}" (posted) https:/
 const sharedB1 = sharedRecordB1(), sharedB2 = sharedRecordB2();
 wb[`.box/bounties/${B1}.json`] = JSON.stringify(sharedB1, null, 2) + '\n';
 wb[`.box/bounties/${B2}.json`] = JSON.stringify(sharedB2, null, 2) + '\n';
-wb['.box/bounties/shared.json'] = JSON.stringify({
+wb['.box/shared-bounties.json'] = JSON.stringify({
   schema: 'box-bounty-shared@1',
   note: 'the shared tiers of every bounty record — committed with the code; local machine state lives outside Git',
   bounties: [sharedB1, sharedB2]
@@ -468,6 +472,30 @@ ${promptFor('world-c', join(OUT, 'settings-c'))}
 
 Save each transcript to kitchen/memory/second-machine/transcript-{a,b,c}.md.
 `);
+
+// ---------- smoke check: the tool must run in every world ----------
+// `./box status` and `./box find` are what the fresh agents run first; a
+// record the reader rejects or a GitHub refresh that fails here means the
+// world is broken before the experiment starts.
+const settingsFor = { 'world-a': settingsA, 'world-b': settingsB, 'world-c': join(OUT, 'settings-c') };
+for (const name of ['world-a', 'world-b', 'world-c']) {
+  const dir = join(OUT, name);
+  const env = { ...process.env, BOX_BOUNTY_SETTINGS_DIR: settingsFor[name] };
+  const pathKey = Object.keys(env).find(key => key.toLowerCase() === 'path') ?? 'PATH';
+  env[pathKey] = ghDir + delimiter + (env[pathKey] ?? '');
+  for (const boxArgs of [['status'], ['find', 'OAuth']]) {
+    let output = '';
+    try {
+      output = String(execFileSync('node', [CLI, 'bounty', ...boxArgs], { cwd: dir, env, encoding: 'utf8' }));
+    } catch (error) {
+      throw new Error(`${name}: box bounty ${boxArgs.join(' ')} exited non-zero\n${error.stdout ?? ''}${error.stderr ?? ''}${error.message}`);
+    }
+    if (/not a readable record|could not be refreshed/.test(output)) {
+      throw new Error(`${name}: box bounty ${boxArgs.join(' ')} printed a broken line:\n${output}`);
+    }
+  }
+  console.log(`  ${name}: box status / box find OAuth OK`);
+}
 
 console.log(`built ${OUT}`);
 console.log(`  world-a ${join(OUT, 'world-a')}  (full records)`);
