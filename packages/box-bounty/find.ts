@@ -7,7 +7,8 @@
 // bounded at FIND_RESULT_LIMIT and says the total either way.
 
 import { BountyRefused } from './errors.js';
-import { isOpenStage,listRecords } from './record.js';
+import { isOpenStage,noticeMergedOnce } from './record.js';
+import { searchRecords } from './store.js';
 import type { BountyRecord } from './record.js';
 
 export const FIND_RESULT_LIMIT = 20;
@@ -33,10 +34,15 @@ const haystacks = (record: BountyRecord): readonly (readonly [string, string | u
 export function findBounties(repoRoot: string, query: string): { readonly total: number; readonly matches: readonly FindMatch[] } {
   const needle = query.trim().toLowerCase();
   if (needle === '') throw new BountyRefused('missing-query', 'find needs words to look for — box bounty find "<words>"');
+  // The merged-solution scan still runs first — a record read is the moment
+  // an outside merge is recognised, and find is a record read. The matching
+  // itself is the store's: FTS5 for a needle of three letters or more, the
+  // substring listing below that — then the same per-field check names what
+  // matched, so `matched:` reads as it always has.
+  noticeMergedOnce(repoRoot);
+  const candidates = searchRecords(repoRoot, needle);
   const matches: FindMatch[] = [];
-  for (const entry of listRecords(repoRoot)) {
-    const record = entry.record;
-    if (record === null) continue;
+  for (const record of candidates) {
     const fields = haystacks(record).filter(([, text]) => text?.toLowerCase().includes(needle)).map(([field]) => field);
     if (fields.length > 0) matches.push({ record, fields });
   }

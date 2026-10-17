@@ -38,6 +38,11 @@
 // Rerun examples (from a clean checkout):
 //   node kitchen/memory/storage/benchmark.mjs --engine node-sqlite --n 10000
 //   node kitchen/memory/storage/benchmark.mjs --engine sqljs --n 10000
+//
+// BT31 added a fourth engine, `box-store`: not a prototype but the shipped
+// `packages/box-bounty/store.ts`, imported straight from TypeScript source.
+// It therefore needs a TS loader — run it through the workspace's tsx:
+//   node node_modules/.pnpm/node_modules/tsx/dist/cli.mjs kitchen/memory/storage/benchmark.mjs --engine box-store --n 10000
 
 import { spawnSync, spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -72,7 +77,7 @@ const NSEL = arg('--n') ?? 'all';
 const OUT = arg('--out');
 const ENGINES = ENGINE === 'all' ? ['node-sqlite', 'sqljs', 'json-indexed'] : [ENGINE];
 const NS = NSEL === 'all' ? [1000, 10000, 100000] : [Number(NSEL)];
-for (const e of ENGINES) if (!['node-sqlite', 'sqljs', 'json-indexed'].includes(e)) throw new Error(`no such engine: ${e}`);
+for (const e of ENGINES) if (!['node-sqlite', 'sqljs', 'json-indexed', 'box-store'].includes(e)) throw new Error(`no such engine: ${e}`);
 for (const n of NS) if (!Number.isInteger(n) || n < 1) throw new Error(`bad --n: ${NSEL}`);
 
 // ---------- scratch root with ownership-marker guard ----------
@@ -133,6 +138,54 @@ function makeRecord(i, openCount) {
 const openCountFor = (n) => Math.max(1, Math.round(n * 0.05)); // ~5% open, rest ended
 
 // ---------- engine implementations ----------
+
+// box-store: the product's own `packages/box-bounty/store.ts` (BT31). The
+// TypeScript source is imported in place — the benchmark must be run under
+// tsx for this engine (see the header). `dir` is the scratch checkout root:
+// the store creates `<dir>/.box/local/box.db` itself.
+const TSX_CLI = join(fileURLToPath(new URL('../../../', import.meta.url)), 'node_modules', '.pnpm', 'node_modules', 'tsx', 'dist', 'cli.mjs');
+// The product modules load once per process (tsx transpiles them); that is
+// harness overhead, not store-open cost, so they are imported ahead of the
+// timed open via warmBoxStore() in main.
+let boxStoreModule;
+async function loadBoxStore() {
+  if (boxStoreModule === undefined) {
+    await import(new URL('../../../packages/box-bounty/index.ts', import.meta.url).href); // wires the record codec
+    boxStoreModule = await import(new URL('../../../packages/box-bounty/store.ts', import.meta.url).href);
+  }
+  return boxStoreModule;
+}
+async function openBoxStore(dir) {
+  const store = await loadBoxStore();
+  const read = (id) => { const got = store.readStored(dir, id); return got.state === 'ok' ? got.record : undefined; };
+  // `asRecord` accepts partOf only as a string — the benchmark's null means
+  // "absent" in the prototype engines, so drop the key before validating.
+  const clean = (r) => r.partOf === null ? { ...r, partOf: undefined } : r;
+  return {
+    name: 'box-store',
+    seed(records) {
+      store.seedStored(dir, records.map(clean));
+    },
+    listOpen: () => store.listOpen(dir),
+    boundedOverview() {
+      return { open: store.listOpen(dir), endedCount: store.countEnded(dir), recentEnded: store.listEndedRecent(dir, 5) };
+    },
+    find: (query) => store.searchRecords(dir, query, 20),
+    readOne: read,
+    writeAtMilestone(id, stage, at) {
+      const r = read(id);
+      if (r === undefined) throw new Error(`no such record ${id}`);
+      r.stage = stage;
+      r.endedAt = isOpen(stage) ? null : at;
+      r.events = [...r.events, { stage, at, command: 'benchmark' }];
+      store.writeStored(dir, r);
+    },
+    upsert(r) { store.writeStored(dir, clean(r)); },
+    checkpoint() { /* WAL is the store's own business */ },
+    close() { store.closeStores(); },
+    dbFile: () => join(dir, '.box', 'local', 'box.db')
+  };
+}
 
 const SQLITE_SCHEMA = `
 CREATE TABLE IF NOT EXISTS bounties(
@@ -378,10 +431,22 @@ function openJsonIndexed(dir) {
 
 // ---------- shared op harness ----------
 
+// Sub-millisecond ops are noise-dominated as single shots on this host
+// (readOne measured 0.16–0.55 ms run-to-run). Every runOps op is
+// idempotent — reads repeat cleanly and the one writeAtMilestone writes
+// the same payload — so run each op MEDIAN_OF times and report the
+// median; out comes from the last call.
+const MEDIAN_OF = 7;
 function timeIt(fn) {
-  const t = performance.now();
-  const out = fn();
-  return { ms: Math.round((performance.now() - t) * 100) / 100, out };
+  const ms = [];
+  let out;
+  for (let i = 0; i < MEDIAN_OF; i++) {
+    const t = performance.now();
+    out = fn();
+    ms.push(performance.now() - t);
+  }
+  ms.sort((a, b) => a - b);
+  return { ms: Math.round(ms[Math.floor(ms.length / 2)] * 100) / 100, out };
 }
 
 function dirSize(dir) {
@@ -420,8 +485,15 @@ async function openEngine(engine, dir, root) {
   if (engine === 'sqljs') return openSqljs(dir, join(root, SQLJS_PREFIX_DIR));
   if (engine === 'node-sqlite') return openNodeSqlite(dir);
   if (engine === 'json-indexed') return openJsonIndexed(dir);
+  if (engine === 'box-store') return openBoxStore(dir);
   throw new Error(`no engine ${engine}`);
 }
+
+// box-store children (concurrency writers, the crash victim) run the same
+// benchmark file through tsx so the TypeScript import resolves; every other
+// engine is plain node.
+const childArgv = (engine, modeArgs) =>
+  engine === 'box-store' ? [TSX_CLI, SELF, ...modeArgs] : [SELF, ...modeArgs];
 
 function concurrencyTest(engine, dir, root, n, openCount) {
   // Two processes write at once. First to different bounties, then to the
@@ -431,7 +503,7 @@ function concurrencyTest(engine, dir, root, n, openCount) {
   const targets = { a: recordId(openCount), b: recordId(openCount + 1) };
   const run = (kind) => {
     const ids = kind === 'different' ? [targets.a, targets.b] : [targets.a, targets.a];
-    const procs = ids.map(id => spawn(process.execPath, [SELF, '--child-writer', engine, dir, kind, '25', '--shared-id', id, '--root', root], { stdio: ['ignore', 'pipe', 'pipe'] }));
+    const procs = ids.map(id => spawn(process.execPath, childArgv(engine, ['--child-writer', engine, dir, kind, '25', '--shared-id', id, '--root', root]), { stdio: ['ignore', 'pipe', 'pipe'] }));
     const t = performance.now();
     return new Promise((resolve) => {
       let done = 0, outs = [];
@@ -488,7 +560,7 @@ async function childVictimRun(engine, dir, root) {
 // Parent side of the crash test: spawn the victim, kill it ~150 ms after it
 // reports ready, then reopen the store and check integrity.
 async function crashTest(engine, dir, root, n, openCount) {
-  const victim = spawn(process.execPath, [SELF, '--child-victim', engine, dir, '--root', root], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const victim = spawn(process.execPath, childArgv(engine, ['--child-victim', engine, dir, '--root', root]), { stdio: ['ignore', 'pipe', 'pipe'] });
   let ready = false;
   const done = new Promise((resolve) => {
     victim.stdout.on('data', (d) => {
@@ -511,9 +583,10 @@ async function crashTest(engine, dir, root, n, openCount) {
   let integrity = 'n/a';
   if (engine !== 'json-indexed') {
     try {
-      if (engine === 'node-sqlite') {
+      if (engine === 'node-sqlite' || engine === 'box-store') {
         const { DatabaseSync } = await import('node:sqlite');
-        const ic = new DatabaseSync(join(dir, 'bounties.sqlite'));
+        const file = engine === 'box-store' ? join(dir, '.box', 'local', 'box.db') : join(dir, 'bounties.sqlite');
+        const ic = new DatabaseSync(file);
         integrity = ic.prepare('PRAGMA integrity_check').get().integrity_check;
         ic.close();
       } else {
@@ -604,6 +677,7 @@ async function main() {
     console.log(`K27 storage benchmark · ${new Date().toISOString()} · ${load}`);
     console.log(`engines: ${ENGINES.join(', ')} · N: ${NS.join(', ')} · scratch: ${root}`);
     if (ENGINES.includes('sqljs')) ensureSqljs(root);
+    if (ENGINES.includes('box-store')) await loadBoxStore();
 
     const all = [];
     for (const engine of ENGINES) for (const n of NS) {

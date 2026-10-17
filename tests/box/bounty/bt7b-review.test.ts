@@ -6,7 +6,7 @@ import { delimiter, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { answerGitHub, checkMergedSolutions, loadRecord, setMergeNoticeListener } from '../../../packages/box-bounty/index.js';
 import { postedFixture } from './github-fixture.js';
-import { CLI_DIST, boxFile, git, recordFilePath, runRoot, write } from './support.js';
+import { CLI_DIST, boxFile, git, readRecordRaw, rewriteRecordRaw, runRoot, write } from './support.js';
 
 const noticedLines: string[] = [];
 setMergeNoticeListener(line => noticedLines.push(line));
@@ -98,10 +98,10 @@ it('a record edited to name the branch the merge went to closes on that branch',
   git(repo, ['checkout', '-qb', 'side']);
   git(repo, ['merge', '--no-ff', '-m', 'merged elsewhere', waitingPr]);
   git(repo, ['checkout', '-q', 'main']);
-  const path = recordFilePath(repo, id);
-  const record = JSON.parse(readFileSync(path, 'utf8'));
-  record.resume.branch = 'side'; // hand edit — the record is the tool's own state
-  writeFileSync(path, JSON.stringify(record, null, 2));
+  rewriteRecordRaw(repo, id, raw => {
+    // hand edit — the record is the tool's own state
+    (raw['resume'] as { branch: string }).branch = 'side';
+  });
   noticedLines.length = 0;
   checkMergedSolutions(repo);
   expect(loadRecord(repo, id).stage).toBe('applied');
@@ -138,13 +138,13 @@ it('commands refuse git-missing before writing anything', () => postedFixture(({
   mkdirSync(bin, { recursive: true });
   const env = { ...process.env, PATH: bin };
   for (const args of [['status'], ['look', id, '1'], ['apply', id, '1']]) {
-    const recBefore = readFileSync(recordFilePath(repo, id));
+    const recBefore = readRecordRaw(repo, id);
     const openBefore = readFileSync(openPath(repo));
     const run = cli(repo, env, ...args);
     expect(run.status, `bounty ${args[0]} with no git`).toBe(3);
     expect(run.stderr).toMatch(/refused \(git-missing\)/);
     expect(run.stderr).toMatch(/https:\/\/git-scm\.com/);
-    expect(readFileSync(recordFilePath(repo, id))).toEqual(recBefore);
+    expect(readRecordRaw(repo, id)).toEqual(recBefore);
     expect(readFileSync(openPath(repo))).toEqual(openBefore);
   }
 }, { collected: false }), 60000);

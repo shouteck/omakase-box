@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeEach } from 'vitest';
-import { readDecision, writeDecision } from '../../../packages/box-bounty/index.js';
+import { closeStores, dropStored, forgetFileSha, readDecision, recordExists as storeRecordExists, recordIds as storeRecordIds, storeDbPath, storedRaw, writeDecision } from '../../../packages/box-bounty/index.js';
 import type { BountyRecord, OwnerDecision } from '../../../packages/box-bounty/index.js';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -20,6 +20,9 @@ export function runRoot(label: string): string {
   return dir;
 }
 function cleanupOwned(): void {
+  // SQLite connections are cached per checkout: they must close before the
+  // folders go, or Windows refuses to delete the still-open WAL files.
+  closeStores();
   for (const dir of runDirectories.splice(0)) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 }
 afterAll(cleanupOwned);
@@ -174,25 +177,59 @@ export const recordFilePath = (repo: string, id: string): string => join(records
 // A tool file that lives beside the records (OPEN, FIRST_MERGE, hook-told.json, …).
 export const boxFile = (repo: string, name: string): string => join(recordsDir(repo), name);
 
-export const readRecordRaw = (repo: string, id: string): string => readFileSync(recordFilePath(repo, id), 'utf8');
+// BT31: the store at .box/local/box.db is authoritative once it exists.
+// These helpers keep their old signatures: reads answer through the store
+// (which imports any compat .json the test planted), writes land as the
+// compat file AND drop the store's fingerprint so the next read reimports
+// the new bytes through asRecord — the same path a real older checkout's
+// files take.
+// Store connections are cached per checkout inside this process. A helper
+// that opens the store closes it again before returning, or a test that
+// removes its repository folder inside its own body hits EPERM on the
+// still-open WAL files (Windows). afterAll's cleanupOwned is too late for
+// those.
+export const readRecordRaw = (repo: string, id: string): string => {
+  if (existsSync(storeDbPath(repo))) {
+    try {
+      const raw = storedRaw(repo, id);
+      if (raw !== null) return raw;
+    } finally { closeStores(); }
+  }
+  return readFileSync(recordFilePath(repo, id), 'utf8');
+};
 export const readRecord = (repo: string, id: string): BountyRecord => JSON.parse(readRecordRaw(repo, id)) as BountyRecord;
 // The exact bytes persistRecord writes — without its open-surfaces sync.
 export const writeRecord = (repo: string, record: BountyRecord): void => writeRecordRaw(repo, record.id, JSON.stringify(record, null, 2) + '\n');
 export const writeRecordRaw = (repo: string, id: string, text: string): void => {
   mkdirSync(recordsDir(repo), { recursive: true });
   writeFileSync(recordFilePath(repo, id), text);
+  try { forgetFileSha(repo, `${id}.json`); } finally { closeStores(); }
 };
-export const recordIds = (repo: string): string[] =>
-  existsSync(recordsDir(repo)) ? readdirSync(recordsDir(repo)).filter(name => name.endsWith('.json')).map(name => name.slice(0, -'.json'.length)).sort() : [];
-export const recordExists = (repo: string, id: string): boolean => existsSync(recordFilePath(repo, id));
-export const removeRecord = (repo: string, id: string): void => rmSync(recordFilePath(repo, id), { force: true });
+export const recordIds = (repo: string): string[] => {
+  if (existsSync(storeDbPath(repo))) {
+    try { return storeRecordIds(repo); } finally { closeStores(); }
+  }
+  return existsSync(recordsDir(repo)) ? readdirSync(recordsDir(repo)).filter(name => name.endsWith('.json')).map(name => name.slice(0, -'.json'.length)).sort() : [];
+};
+export const recordExists = (repo: string, id: string): boolean => {
+  if (existsSync(storeDbPath(repo))) {
+    try { return storeRecordExists(repo, id); } finally { closeStores(); }
+  }
+  return existsSync(recordFilePath(repo, id));
+};
+export const removeRecord = (repo: string, id: string): void => {
+  rmSync(recordFilePath(repo, id), { force: true });
+  if (existsSync(storeDbPath(repo))) {
+    try { dropStored(repo, id); } finally { closeStores(); }
+  }
+};
 export const openLine = (repo: string): string => readFileSync(boxFile(repo, 'OPEN'), 'utf8');
 // Read → mutate → rewrite in place, the way every "older shape" case sits on
 // disk: the write is the same pretty JSON persistRecord emits.
 export const rewriteRecordRaw = (repo: string, id: string, change: (raw: Record<string, unknown>) => void): void => {
   const raw = JSON.parse(readRecordRaw(repo, id)) as Record<string, unknown>;
   change(raw);
-  writeFileSync(recordFilePath(repo, id), JSON.stringify(raw, null, 2) + '\n');
+  writeRecordRaw(repo, id, JSON.stringify(raw, null, 2) + '\n');
 };
 
 // Recreates the snapshot exactly as a later wave would, using only the repository

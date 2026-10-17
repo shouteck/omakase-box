@@ -12,7 +12,7 @@ project, and the owner's answers in a settings folder outside it (see
 
 ## Install
 
-Node 22 or later, Git 2.40 or later, and the GitHub command line `gh` 2.0 or
+Node 22.13 or later, Git 2.40 or later, and the GitHub command line `gh` 2.0 or
 later are required; the tool checks all three at start and says what is missing
 and where to get it.
 

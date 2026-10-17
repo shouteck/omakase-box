@@ -887,10 +887,12 @@ in the owner's settings outside the repository.
 
 ## The record — the bounty outlives the agent
 
-`create` also writes `.box/bounties/<id>.json` inside the repository and prints
-its path. The tool writes the file; committing it is the agent's normal flow.
-The record holds the id, title, the public task and generated note facts, and
-the stage
+`create` also writes the record inside the repository — since BT31, one row
+per bounty in the checkout's SQLite store at `.box/local/box.db` (a folder
+the tool keeps ignored; nothing under it is ever shipped or committed).
+Records written before that wave sat at `.box/bounties/<id>.json`; those
+files are still imported and honoured. The record holds the id, title, the
+public task and generated note facts, and the stage
 history — one event appended per transition, never rewritten. Records written
 before 15 October 2026 also carry the snapshot identifier
 (commit + tree + base); drafts made now keep none — the capture is used while

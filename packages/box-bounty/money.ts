@@ -9,8 +9,8 @@ import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { boundAmount } from './format.js';
-import { isOpenStage, listRecords } from './record.js';
-import type { ListedBounty } from './record.js';
+import { openRecords } from './record.js';
+import type { BountyRecord } from './record.js';
 import { repoReward } from './settings.js';
 
 // What open bounties here promise: the sum of the reward bound into each
@@ -18,11 +18,11 @@ import { repoReward } from './settings.js';
 // count as $0 — closing a bounty, merged or not, ends its count because the
 // record is no longer open. This repository is what the tool can see; the
 // owner keeps the limit with that horizon in mind.
-export function promisedTotal(open: readonly ListedBounty[]): number {
+export function promisedTotal(open: readonly BountyRecord[]): number {
   // The bound amount, not the editable `reward` summary: for a GitHub-posted
   // bounty that is the amount inside the body the tool posted, so an edited
   // record cannot shrink what open bounties promise (BT11a fix round).
-  return open.reduce((sum, entry) => sum + (entry.record === null ? 0 : boundAmount(entry.record) ?? 0), 0);
+  return open.reduce((sum, record) => sum + (boundAmount(record) ?? 0), 0);
 }
 
 // The money gate every fresh post passes (BT11a, scoped per repository in
@@ -47,7 +47,7 @@ export function assertPromiseRoom(repoRoot: string, amount: number): void {
   const { limit } = repoReward(repoRoot);
   if (amount <= 0) return;
   if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`} — the owner sets the most that may be promised with box bounty config set reward-limit <whole dollars>; nothing was posted`);
-  const promised = promisedTotal(listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage)));
+  const promised = promisedTotal(openRecords(repoRoot));
   if (promised + amount > limit) throw new BountyRefused('promise-limit-exceeded', `posting would bring promised rewards to $${promised + amount} across this repository's open bounties — the owner's limit is $${limit}; nothing was posted`);
 }
 

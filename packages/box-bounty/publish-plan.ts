@@ -201,7 +201,7 @@ function validateIncludes(root: string, names: readonly string[], rules: readonl
           ? `--include ${name} does not exist — untracked files are published only when named, and only files that exist can be named`
           : `--include ${name} resolves to ${offset}, which is not a plain untracked file — name each file itself`);
     }
-    if (offset.startsWith('.box/bounties/')) {
+    if (offset.startsWith('.box/bounties/') || offset.startsWith('.box/local/')) {
       return invalid('github-include-invalid', `--include ${name} resolves to ${offset} — the tool's own bounty records carry owner-only context and are never published`);
     }
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
@@ -400,8 +400,8 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     // they carry owner-only context (`job`, `why`) documented as never
     // shipped, so they can no more land on the bounty branch than a
     // never-ship file can.
-    const tracked = trackedChanges(root, staged.unmerged).filter(change => !change.path.startsWith('.box/bounties/'));
-    const untracked = untrackedEntries(root).filter(entry => !entry.startsWith('.box/bounties/'));
+    const tracked = trackedChanges(root, staged.unmerged).filter(change => !change.path.startsWith('.box/bounties/') && !change.path.startsWith('.box/local/'));
+    const untracked = untrackedEntries(root).filter(entry => !entry.startsWith('.box/bounties/') && !entry.startsWith('.box/local/'));
     const include = validateIncludes(root, choice.include, rules);
     const needsWip = (choice.withChanges && tracked.length > 0) || include.length > 0;
     const wip = needsWip ? buildWip(root, record, choice.withChanges ? tracked : [], include, staged.modes, headTree) : null;

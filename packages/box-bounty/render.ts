@@ -4,7 +4,7 @@
 // it reads records — none of it is read BY the record store. Moved out of
 // record.ts unchanged (BT25).
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync,writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { quoteForeign,showPath } from './notice.js';
 import { boundAmount } from './format.js';
@@ -16,7 +16,8 @@ import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { payToLine } from './pay.js';
-import { applicableAttempts,attemptsOf,isOpenStage,listRecords,loadRecord,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
+import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
+import { corruptFiles,endedContaining } from './store.js';
 import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
@@ -94,7 +95,7 @@ const historyJson = (event: StageEvent): string =>
 // is said once per repository, recorded in the owner's settings, and lives in
 // help and describe (BT17). With no amount, nothing promised and no limit
 // there is nothing to say and the compact form stays silent.
-function rewardStatusLine(repoRoot: string, open: readonly ListedBounty[], full: boolean): string | null {
+function rewardStatusLine(repoRoot: string, open: readonly BountyRecord[], full: boolean): string | null {
   const { amount, limit } = repoReward(repoRoot);
   const promised = promisedTotal(open);
   if (!full && amount === 0 && promised === 0 && limit === null) return null;
@@ -127,14 +128,46 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 // empty project says so and says what to do. `--comments` prints the issue's
 // comments marked as written by others. Never prints nothing.
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
-  if (options.id !== undefined) loadRecord(repoRoot, options.id);
-  const listed = listRecords(repoRoot).filter(entry => options.id === undefined || entry.record?.id === options.id);
+  const single = options.id !== undefined ? loadRecord(repoRoot, options.id) : undefined;
+  // BT31: the compact overview never parses every record — it asks the
+  // store for the open ones, the five most recently ended (the cap this
+  // view ever joins), any ended record still carrying `pending` work, any
+  // ended record a first-merge notice names, and the corrupt files' names.
+  // `status --full` and `status <id>` keep the complete listing.
+  const bounded = options.id === undefined && options.full !== true;
+  const merges = Object.entries(loadState().firstMerges);
+  const asEntry = (record: BountyRecord | null, file?: string): ListedBounty => ({ record, file: file ?? `${record!.id}.json` });
+  let listed: ListedBounty[];
+  let recent: ListedBounty[] = [];
+  let endedShown: ListedBounty[] = [];
+  let endedTotal: number;
+  if (bounded) {
+    const seen = new Set<string>();
+    const keep = (records: readonly BountyRecord[]): ListedBounty[] => records.flatMap(record => seen.has(record.id) ? [] : (seen.add(record.id), [asEntry(record)]));
+    const opens = keep(openRecords(repoRoot));
+    recent = keep(endedRecords(repoRoot, ENDED_OVERVIEW_LIMIT));
+    endedShown = [...recent, ...keep(endedContaining(repoRoot, '"pending": "')), ...keep(merges.flatMap(([, notice]) => endedContaining(repoRoot, notice.commit)))];
+    listed = [...opens, ...endedShown, ...corruptFiles(repoRoot).map(file => asEntry(null, file))];
+    endedTotal = endedCount(repoRoot);
+  } else if (single !== undefined) {
+    listed = [asEntry(single)];
+    const allEnded = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
+    recent = allEnded;
+    endedShown = allEnded;
+    endedTotal = allEnded.length;
+  } else {
+    listed = listRecords(repoRoot);
+    const allEnded = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
+    recent = allEnded;
+    endedShown = allEnded;
+    endedTotal = allEnded.length;
+  }
   for (const entry of listed) {
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
     else if (entry.record !== null && options.full) refreshGitHubFormat(repoRoot, entry.record);
   }
   const open = listed.filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
-  const ended = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
+  const ended = endedShown;
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
   for (const entry of listed) {
@@ -154,7 +187,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   // compact view and both print in the full one (BT17).
   const owner = ownerStatusLine(repoRoot, options.full === true);
   if (owner !== null) lines.push(owner);
-  const reward = rewardStatusLine(repoRoot, open, options.full === true);
+  const reward = rewardStatusLine(repoRoot, open.map(entry => entry.record!), options.full === true);
   if (reward !== null) lines.push(reward);
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
@@ -180,7 +213,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   lines.push(...instructionNotices(repoRoot));
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
-    if (options.id === undefined && ended.length === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
+    if (options.id === undefined && endedTotal === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
   } else {
     lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
@@ -323,15 +356,13 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     if (record.stage === 'applied' || record.stage === 'rejected' || record.stage === 'undone') return `${record.id} ${record.stage}${unasked}${finding}${paid} (job: ${record.partOf ?? record.job?.file ?? record.title})`;
     return `${record.id} ${record.stage}${unasked}${finding}${paid}`;
   };
-  if (ended.length === 0) lines.push('ended: none');
+  if (endedTotal === 0) lines.push('ended: none');
   // Past the limit the compact view joins only the most recently ended —
   // `status --full` (and `status <id>`) keeps the whole list (BT28).
-  else if (!options.full && options.id === undefined && ended.length > ENDED_OVERVIEW_LIMIT) {
-    const endedAt = (entry: ListedBounty): string => entry.record!.events.at(-1)?.at ?? entry.record!.createdAt;
-    const recent = [...ended].sort((a, b) => endedAt(b).localeCompare(endedAt(a)) || b.record!.id.localeCompare(a.record!.id)).slice(0, ENDED_OVERVIEW_LIMIT);
-    lines.push(`ended (${ended.length} total, ${ENDED_OVERVIEW_LIMIT} most recent): ${recent.map(endedItem).join(', ')}; all ${ended.length}: box bounty status --full`);
+  else if (!options.full && options.id === undefined && endedTotal > ENDED_OVERVIEW_LIMIT) {
+    lines.push(`ended (${endedTotal} total, ${ENDED_OVERVIEW_LIMIT} most recent): ${recent.map(endedItem).join(', ')}; all ${endedTotal}: box bounty status --full`);
   }
-  else lines.push(`ended: ${ended.map(endedItem).join(', ')}`);
+  else lines.push(`ended: ${[...ended].sort((a, b) => (a.record!.createdAt).localeCompare(b.record!.createdAt) || a.record!.id.localeCompare(b.record!.id)).map(endedItem).join(', ')}`);
   // The job to go back to stays on show after a bounty ends: for the bounty that
   // was asked for by id, or else for the one that ended last.
   const lastEnded = [...ended].sort((a, b) => (a.record!.events.at(-1)?.at ?? '').localeCompare(b.record!.events.at(-1)?.at ?? '')).at(-1)?.record ?? null;
@@ -400,16 +431,15 @@ export function renderHelp(): string {
     '',
     `needs: git ${GIT_LEAST} or later; GitHub bounties also need GitHub CLI gh ${GH_LEAST} or later, signed in.`,
     'run inside a git checkout or pass --repo <path>; every refusal names itself and exits 3, usage errors exit 2.',
-    'the record lives at .box/bounties/<id>.json inside the repository — it outlives the session that made it.'
+    'the record lives in .box/local/box.db inside the repository — it outlives the session that made it.'
   ].join('\n');
 }
 
 export function renderOpenLine(repoRoot: string): string {
-  const open = listRecords(repoRoot).filter(entry => entry.record !== null && isOpenStage(entry.record.stage));
+  const open = openRecords(repoRoot);
   if (open.length === 0) return 'open bounties: none';
   const shown = open.length > HOOK_START_OPEN_LIMIT ? open.slice(0, HOOK_START_OPEN_LIMIT) : open;
-  return `open bounties: ${shown.map(entry => {
-    const record = entry.record!;
+  return `open bounties: ${shown.map(record => {
     const github = record.github;
     return `${record.id} "${record.title}" (${record.stage})${github !== undefined ? ` ${github.issue?.url ?? 'github issue pending'} ${github.branch}${github.outside !== undefined ? `; ${github.outside.answers.replaceAll('\n', ' ')}` : ''}` : ''}`;
   }).join(', ')}${open.length > HOOK_START_OPEN_LIMIT ? `, and ${open.length - HOOK_START_OPEN_LIMIT} more (see: box bounty status)` : ''}`;
@@ -417,6 +447,9 @@ export function renderOpenLine(repoRoot: string): string {
 
 // Keep the detailed local listing separate from the fixed instruction block.
 function syncOpenSurfaces(repoRoot: string): void {
+  // OPEN still lives beside the records' old spelling; the store keeps the
+  // records themselves, so the folder may not exist yet.
+  mkdirSync(recordDir(repoRoot), { recursive: true });
   writeFileSync(join(recordDir(repoRoot), 'OPEN'), `${renderOpenLine(repoRoot)}\n`);
   // Every instruction-file message that reports a refusal or an edit is
   // emitted — the file is named and the edit is stated as not committed

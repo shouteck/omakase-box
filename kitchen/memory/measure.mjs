@@ -34,8 +34,13 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
+// BT31: the posted-record edit below reads the created record out of the
+// checkout's SQLite store (the compat-file path is the write surface, not
+// the read one).
+const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite');
 const CLI = join(REPO, 'packages', 'box-cli', 'dist', 'cli.js');
 if (!existsSync(CLI)) throw new Error('build first: node scripts/workspace.mjs build');
 
@@ -212,10 +217,16 @@ const buildWorld = (mix, n) => {
   if (oneId === undefined) throw new Error(`create did not print an id: ${created.out}`);
   if (postedMix(mix)) {
     // Mix C's Nth record is genuinely posted too: the CLI wrote it as a
-    // draft, so give it the same github block and attempt on disk, then let
-    // a record write re-sync OPEN through the tool's own write path.
+    // draft — into the store since BT31 — so read its bytes from box.db,
+    // plant the posted edit as a compat file in .box/bounties/, and let the
+    // tool's own import + record-write path persist it and re-sync OPEN.
+    const db = new DatabaseSync(join(repo, '.box', 'local', 'box.db'));
+    const row = db.prepare('SELECT json FROM records WHERE id = ?').get(oneId);
+    db.close();
+    if (row === undefined) throw new Error(`created record ${oneId} is not in the store`);
+    const record = JSON.parse(row.json);
     const file = join(repo, '.box', 'bounties', `${oneId}.json`);
-    const record = JSON.parse(readFileSync(file, 'utf8'));
+    mkdirSync(join(repo, '.box', 'bounties'), { recursive: true });
     record.stage = 'posted';
     record.events = [...record.events, { stage: 'posted', at: new Date().toISOString(), command: 'post', destination: `https://github.com/measure/example/issues/${n}` }];
     record.github = githubFor(record, n - 1, true);
