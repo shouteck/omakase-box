@@ -1,15 +1,15 @@
 # Status
 
-Updated by the CTO on 17 October 2026 at the BT31-ci close.
+Updated by the CTO on 18 October 2026 at the K28 local close.
 
 ## Now
 
-- **BT31-ci merged** (`9319547`; PASS test-verified on `ee36757` after one FAIL-and-correction round). The hosted Node 22 job was red after BT31: Node 22.13's SQLite has no FTS5. The fix removed FTS5 entirely: `find` is now one plain substring search, the same on every Node, which also fixes a BT31 defect the pass found (whole-word FTS missed substring matches `find` promises). Cost: `find` scans every record (about 0.4 s at 100,000, milliseconds at realistic sizes). **Both hosted jobs green** (run 39044982524).
-
-- **BT31 merged** (`d877a37`; independent PASS `b06c7ac` on `74086ab`, test-verified; 57 bounty files / 668 tests, 142 package tests + 6 skips, 83 kitchen tests green, zero import cycles). Bounty records now live in `.box/local/box.db` (`node:sqlite` WAL, `.box/local/.gitignore` with `*`), with existing/planted `.box/bounties/*.json` files imported and re-imported on change through `asRecord`; Node floor raised to `22.13.0` (`node-check.ts`, `pack.mjs`, `verify.yml` `install-node22`, `FIRST-FIVE-MINUTES.md`) with the SQLite `ExperimentalWarning` filtered; every benchmark operation at N = 10,000 lands inside K27's ×2 bars (0.06–0.53 ms reads/writes, 25/25+25/25 concurrent writers, crash `integrity_check` ok), K14 start budgets are unchanged, and N = 1,000 wall times dropped ~3–4×.
-- **BT30 merged** (`41d8f28`; independent PASS `2bb5c24` on `d548dbc`, test-verified): all test record accesses moved behind `tests/box/bounty/support.ts` helpers, guarded by `record-access.test.ts`.
-- **BT12 Part A remains merged. Part B, npm publishing, remains deferred by the owner.**
+- **K28 merged locally** (`ce20e1c`; independent PASS test-verified on `dfe1789`, verdict `a12d97d`). Research, scripts and evidence only; no product or test changes. Final reviewer invocation of `node scripts/verify.mjs test:kitchen` exited 0 on that exact candidate, reusing its recorded 83-test PASS.
+- **Recommendation, not approval:** per-bounty event chains under custom Git refs, with local SQLite as a rebuildable cache. Local prototype reproduced concurrent merge without lost events, deleted-ref recovery and a default clone without chains. Timings are local `file://`, not GitHub evidence.
+- **Validation partial:** chain-backed agent 6 right / 2 partly / 0 wrong; issues-only 3 / 2 / 3. The all-right bar was not met. Historical job state was missing from the fixture; the similarity question was ambiguous. No participant rerun.
+- Other-session roadmap and approved living memory specification preserved from `origin/master` (`df919de`). K28 checked against that specification in its close record. K28 scratch removed; main checkout is master. Publication awaits explicit network-write confirmation.
+- BT31 and BT31-ci remain merged: local SQLite, Node >=22.13.0, plain substring search without FTS5. Latest completed hosted run read before merge was green (`39049373083`).
 
 ## Next
 
-No wave is in flight. **BT32** was placed **on hold** by the owner during this run (`e472875`, `waves/BT32.md`: "Do not dispatch as written") while **K28** (`waves/K28.md`: the delegation record, researched against Beads and git-bug) is briefed and waiting for the owner to name it. **BT33** (Turso private sync) is parked. **BT12 Part B** stays deferred.
+No wave is in flight, and this run stops after K28. **BT32 remains on hold**. Its proposed replacement outline is in `kitchen/reviews/K28-delegation-record.md`, not permission to dispatch the old issue-based brief. Before implementation, reconcile the outline with `docs/box-v4/MEMORY-SPEC.md`, repair the experiment gaps and prove the required GitHub behavior under an approved live brief. The roadmap's other briefs remain available but none starts in this run. **BT33** stays parked; **BT12 Part B** stays deferred.

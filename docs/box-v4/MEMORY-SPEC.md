@@ -83,7 +83,7 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | F-outcome | merged which solution, or closed without | tool, decide | project | forever | `events` (applied, rejected, withdrawn), `stage` |
 | F-closereason | why it was ended without a merge | agent, close | project | forever | `events[].reason` |
 | F-outcome-at | when it ended | tool, decide | project | forever | `events[].at` |
-| F-mergecommit | the commit that carries the outcome in the code | tool, apply or merge recognition | public (in Git) | forever | `events[].merge`; **MISSING: the link from the commit back to the bounty** (its message carries no bounty id and why today, check K28) |
+| F-mergecommit | the commit that carries the outcome in the code | tool, apply or merge recognition | public (in Git) | forever | `events[].merge`; K28 confirmed `answer.ts` already writes `box bounty <id>: <title>` plus attempt/solution in the merge message. **MISSING: the short delegation why in that message and cross-machine resolution of the id to the full record.** |
 | F-author | who solved it | GitHub | public | forever | `attempts[].author` |
 | F-payee | whom to pay and through what | solver's `pay-to:` line, read at collection | project | forever | `attempts[].payTo`, `github.pay` |
 | F-paid | the owner says it is paid | owner | project | forever | **MISSING** (BT36) |
@@ -114,7 +114,7 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | Gap | Questions it leaves unanswered | L | F | C | Plan |
 |---|---|---|---|---|---|
 | R4: project facts do not reach other machines | M2, M5, M9, M11 for any second machine | no | often | medium | K28 → BT32 |
-| F-mergecommit link missing | M10 | no | often | small | in BT32 or its own small wave, after K28 |
+| F-mergecommit link incomplete | M10 | no | often | small | K28 confirmed the id link exists; retain it and complete the short why and cross-machine record lookup in BT32 |
 | F-done not asked for | M6, M7, M13 (judging solutions) | no | always | small | the `create` prompt and help ask for it, in the task (no new option) |
 | F-tried not its own fact | M2, M6, M13 | no | always | small | the same prompt; whether it becomes its own field is a design question for BT32 |
 | F-paid missing | M8, M11, M12 | no | per merge | small | BT36 |
