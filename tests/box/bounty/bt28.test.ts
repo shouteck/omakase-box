@@ -246,3 +246,51 @@ describe('5. find searches purpose across readable records', () => {
     expect(run.stdout.split('\n').filter(l => l.trimStart().startsWith('bt-')).length).toBe(20);
   });
 });
+
+// BT29 — posted records stay bounded too. Mix C in kitchen/memory/measure.mjs
+// measured compact status at ~100,000 characters for 995 ended posted records:
+// one `compact status uses the cached last observation` line per ended record.
+// The line is deleted; the fact is said once in help.
+describe('6. ended posted records keep the overview under the bar', () => {
+  const sha = (n: number) => n.toString(16).padStart(8, '0').repeat(5).slice(0, 40);
+  // The github block `post` writes for a history post, plus one collected
+  // attempt — the shape Mix C measures.
+  const posted = (id: string, n: number, open: boolean) => ({
+    github: {
+      repository: 'owner/project', account: 'owner', branch: `box-bounty/${id}`,
+      commit: sha(n + 1), title: `[box bounty ${id}] seed ${n}`, body: `# Bounty\n\n<!-- box-bounty:${id} -->\n`,
+      issue: { number: n, url: `https://github.com/owner/project/issues/${n}` },
+      state: open ? 'posted' : 'closed', kind: 'history', base: sha(n + 0x10000),
+      pushed: [{ sha: sha(n + 1), subject: `box bounty ${id}: work in progress` }],
+      wipCommit: null, wip: null,
+      outside: { at: `2025-07-01T00:00:00.000Z`, issueState: open ? 'open' : 'closed', answers: `GitHub answers for ${id} against box-bounty/${id}:\n  none open; wait for one or close the bounty` },
+      formatRead: 'matches-record', formatReadAt: '2025-07-01T00:00:00.000Z', pending: null
+    },
+    attempts: [{ n: 1, pullRequest: n, at: `2025-07-01T00:00:00.000Z`, seenAt: `2025-07-01T00:00:00.000Z`, author: 'solver-a', commit: sha(n + 0x20000), changed: ['app.txt'], added: [], deleted: [], outcome: 'answered', conflicts: null, report: [`report — attempt 1 for ${id}`] }]
+  });
+
+  it('62 posted records: compact status and the overview stay under 4,500 characters and help says the cached-vs-fresh fact once', () => {
+    const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
+    // 60 ended posted + 2 open posted — past BT28's five-ended cap.
+    for (let i = 1; i <= 60; i++) seed(repo, i, i % 2 === 0 ? 'applied' : 'rejected', posted(`bt-${String(i).padStart(12, '0')}`, i, false));
+    for (let i = 61; i <= 62; i++) seed(repo, i, 'posted', posted(`bt-${String(i).padStart(12, '0')}`, i, true));
+    // The bar: K25 measured ~4,000 characters for compact status in the
+    // ended steady state; 4,500 gives headroom for the refresh-failure
+    // lines the two open records add when gh is unreachable in tests.
+    const BAR = 4500;
+    const status = box(repo, ['status']);
+    expect(status.status, status.stderr).toBe(0);
+    expect(status.stdout.length).toBeLessThan(BAR);
+    const overview = box(repo, []);
+    expect(overview.status, overview.stderr).toBe(0);
+    expect(overview.stdout.length).toBeLessThan(BAR);
+    for (const output of [status.stdout, overview.stdout]) {
+      expect(output).not.toContain('compact status uses the cached last observation');
+      expect(output).toContain('ended (60 total, 5 most recent):');
+    }
+    const help = box(repo, ['help']);
+    expect(help.status, help.stderr).toBe(0);
+    expect(help.stdout.split('cached GitHub observation')).toHaveLength(2);
+    expect(help.stdout).toContain('--full reads it fresh');
+  });
+});
