@@ -1,6 +1,6 @@
 # Plan: the bounty tool for coding agents
 
-Updated by the CTO on 11 October 2026, after BT6's first run, from the owner's decisions in discussion that day. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
+Updated by the CTO on 18 October 2026: the roadmap (one loop, six stages, two foundations) was approved by the owner that day. First written 11 October 2026. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
 
 ## The product in one line
 
@@ -88,6 +88,59 @@ The only things the tool refuses on its own account. Each protects the owner; no
 - **Every agent on the project shares the bounty mental model; machine-local detail stays on one machine** (owner, 17 October 2026). A bounty's record splits in two: a shared part published on the bounty's GitHub issue (what exists, its purpose, its larger job, the why and what was tried, its state and outcome) and a local part kept out of Git by default (branch, uncommitted files, paths, pending owner questions, scan findings, rejected solutions). The why and what was tried are shared, so public in a public repository, written like a commit message; the agent is told so once at `create`, and the secret scan covers them. Drafts stay local until posted. Designed in K26 and K27, built in BT30 to BT32. **The shared part lives on the bounty's GitHub issue, fetched when needed and cached locally; nothing is committed to the repository** (owner, 17 October 2026, replacing the committed file). A private online store (Turso) was briefed as BT33 and then parked by the owner the same day ("I just don't see it being important"); the shared part's destination stays pluggable, so it can be added if a real need appears.
 - One real use before many.
 
+## The roadmap: one loop, six stages, two foundations
+
+Approved by the owner on 18 October 2026 ("I don't think I missed out anything"). Every wave from here names the stage or foundation it serves and the actor's question it answers; anything that serves none is a removal candidate (the lean rule). Draft and method: Git history of `kitchen/roadmap-draft.md`.
+
+```
+create → post → track → review → decide (merge or close) → pay
+   └──────── memory: the delegation record ────────┘
+   └──────── the owner's permission and money ─────┘
+              on the platform: Git, gh, the command line, the package
+```
+
+**Actors:** the posting agent, the owner, the solver, a later agent (another machine or session), the outside reader. **Deliberate limits inside the model:** answering a solver's question is the agent's own `gh` (track reads comments); undoing a merge is ordinary `git revert`; a posted issue's text is fixed (clarifications are comments); telling agents the tool exists belongs to memory.
+
+**Outside the MVP (owner, 18 October 2026), to revisit only when the owner says:** **finding solvers** (the MVP assumes solvers come to public GitHub issues as they do today; "the bet" below); **private repositories** (the hard stop stays: public projects only).
+
+### Product roadmap: gaps in the main use case, scored
+
+Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). Order: L, then F, then cheaper C.
+
+| # | Gap | L | F | C | Plan |
+|---|---|---|---|---|---|
+| G8 | Memory does not reach other machines or later agents | no | often | medium | K28 (cooking), then BT32 |
+| G9 | Unknown how often agents hand work off, or whether solvers answer | no, but every priority rests on it | always | small | a real-use wave in the sandbox |
+| G3 | Open bounties never age or prompt anyone | no | often | small | one age fact in `status`, said once |
+| G5 | Nothing records that a solver was paid | no | per merge | small | an owner-recorded "paid" fact; the tool never verifies money |
+| G4 | No triage when many solutions arrive | no | rarely | medium | only if real use shows it |
+| G7 | Nobody outside can install it | yes, for outside use | always | small | publishing, deferred by the owner |
+| G1, G2 | Finding solvers; private repositories | — | — | — | outside the MVP (above) |
+
+### Engineering roadmap: each stage defined
+
+| Stage | States moved | Guarantees it must never break | Code | Scale target |
+|---|---|---|---|---|
+| Create | none → `drafted` | never-ship files never enter; secret scan; no network; drafts stay local | `create.ts`, `snapshot.ts`, `never-ship.ts`, `scan.ts`, `args.ts` | under 1 s on a 10,000-file repository |
+| Post | → `waiting` / `posted` | public repositories only; only what is named becomes public; the owner's yes; the issue states what was published | `post.ts`, `publish-plan.ts`, `gate.ts`, `format.ts`, `repository.ts`, `gh.ts` | one post under 30 s |
+| Track | reads | unasked text constant; overview bounded; others' text marked as theirs; reads change nothing shared | `render.ts`, `json.ts`, `find.ts`, `hook.ts`, `instructions.ts`, `collect.ts` | flat from 100 to 1,000 bounties (met) |
+| Review | → `taken` / `answered` | nothing a solver wrote is run; facts, never verdicts | `look.ts`, `collect.ts`, `answer.ts` | 100 solutions per bounty |
+| Decide | → `applied` / `rejected` / `withdrawn` | one ordinary merge commit; a clash stops; any merge recognised; ask-me-each-time holds merges | `answer.ts`, `merged.ts`, `close.ts`, `commands.ts` | cheap at 1,000 records |
+| Pay | names whom to pay | money is the owner's, per repository; the agent never sets an amount; the tool never moves money | `pay.ts`, `money.ts`, `settings.ts` | — |
+| Memory | every stage writes | the record outlives the session; machine detail stays local | `record.ts`, `store.ts` | 100,000 records (met locally) |
+| Owner | gates post and merge | involved once; `allow`, `deny`, `config`; settings hold only choices | `owner.ts`, `owner-text.ts`, `settings.ts`, `gate.ts` | — |
+| Platform | — | Git and `gh` checked; one bundled file, no dependencies; Node 22.13 or later; every refusal named | `git.ts`, `gh.ts`, `args.ts`, `wording.ts`, `packages/box-cli` | — |
+
+**Lean, approved by the owner on 18 October 2026: retire the older Box platform from master.** About 21,000 lines (`services/`, `apps/`, `packages/` analyzer, evaluation, planner, compiler, contracts, runner-protocol, box-contracts, box-trace, box-package; `box export`, `submit`, `verify`, `trace`; their test suites in every hosted check; about half of BACKLOG.md) serve no stage. The bounty tool uses one function from it. Kept on an archive branch and in history. **BT34** makes the bounty tool stand alone; **K29** removes the rest.
+
+### Order (dependencies, no dates)
+
+1. K28 (cooking) → BT32 rewritten and built (G8).
+2. BT34 → K29 (the lean retirement), so every later wave is cheaper.
+3. A real-use wave in the sandbox repository (G9).
+4. G3 and G5 (small).
+5. G7, publishing, when the owner says.
+
 ## Built
 
 | Wave | What exists | State |
@@ -152,6 +205,8 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **K28** | **The delegation record: what the project must remember about handed-off work, and how leading agent tools store it.** The lifecycle as events and the questions anyone must be able to answer ("why does this code look like this?", "what is outstanding?", "have we done this before?"); Beads' and git-bug's storage read from source (local database, sync through the Git remote outside the project's files, compaction); our design (event chains under hidden refs, local SQLite cache, the merge-commit link to code) prototyped and measured; fresh agents answer the questions. Changes no code; rewrites BT32's outline. | Brief: [waves/K28.md](waves/K28.md). Owner, 17 October 2026. |
 | **BT32** (on hold for K28) | **Every agent on the project shares the bounty memory, through the bounty's own GitHub issue.** At post, the shared part (why, what was tried, the larger job and where it stood) goes into a separate memory block on the issue (the published format block untouched), scanned first; any machine fetches the project's bounty issues incrementally (at most once a minute, only for commands that show bounties), trusts only the project's own accounts, and caches them in its local database. Nothing committed to the repository. | Brief: [waves/BT32.md](waves/BT32.md). Owner, 17 October 2026: an online system of record, fetched when needed, not a file in the project. |
 | **BT33** (parked) | **Private sync of the shared memory through a free online database (Turso).** Briefed and approved, then parked by the owner on 17 October 2026: not important now. Revive only on a real need. | Brief kept: [waves/BT33.md](waves/BT33.md). |
+| **BT34** | **The bounty tool stands alone.** Copies the one function it uses from the older platform (`resolveProgram`) into `box-bounty`; a guard test keeps any older package from being imported again. No behaviour change. | Brief: [waves/BT34.md](waves/BT34.md). Lean, owner-approved 18 October 2026. |
+| **K29** | **Retire the older Box platform from master.** Archive branch first; inventory of who uses what; removal in green chunks (older `box` subcommands refuse by name; packages, apps, services; root wiring and lockfile; kitchen tooling without a database; the hosted check reduced to the product's suites; docs and backlog). `.execution/` and `docs/legacy/` untouched. | Brief: [waves/K29.md](waves/K29.md). Owner-approved 18 October 2026. |
 | **BT12** (Part A merged `155f3da`; Part B waits for the owner) | **Someone else can install it.** One artifact holding only the bounty tool, a `box` command, proven from a clean machine on Linux and Windows, with a first-five-minutes page, and shown in a live demo: a fresh agent, driving a terminal and a browser the way a person would, installs it into a fresh clone of this repository and goes through the whole workflow with a real test bounty, the kitchen as solver and the owner's test payment link. Then, separately, whether to publish it. | Brief: [waves/BT12.md](waves/BT12.md). **Not approved.** Making it installable is product work; publishing it under a name is the owner's decision alone, after seeing exactly what would be published, and the owner holds the registry account. **Direction, owner 14 October 2026: agents are the users, so an npm package runnable with `npx`, everything bundled into one file, a stated minimum Node with a named refusal, the install line in the instruction-file notice, proven in an empty sandbox; a `gh` extension later; no single-file executable for now.** |
 
 Every remaining wave has its brief, written ahead on 11 October 2026. The head chef checks each against the Result of the wave before it and corrects names only; a change of substance comes back to the owner.
