@@ -16,12 +16,12 @@
 // the ref nor the `snapshot` field, and removing that name is a no-op delete.
 
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,writeFileSync } from 'node:fs';
+import { basename,dirname,join } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { gitRefsWrite } from './git.js';
-import { publishListed, publishLists } from './never-ship.js';
-import { payOutcomeShape, payToFactShape } from './pay.js';
+import { publishListed,publishLists } from './never-ship.js';
+import { payOutcomeShape,payToFactShape } from './pay.js';
 import type { PayToFact } from './pay.js';
 
 // Every record read first runs the merged-solution scan, and every write
@@ -269,7 +269,7 @@ export interface BountyRecord {
   scanFindings?: ScanFinding[];
   /** Recorded on the posted event: which answer of the owner's allowed it. */
   allowedBy?: AllowedBy;
-  github?: import('./github.js').GitHubPublication;
+  github?: import('./gh.js').GitHubPublication;
   /** The GitHub preview the owner confirmed. Approvals written since BT6a also
       carry the approved plan — the base/tip commits, the commits published
       for the first time, the work-in-progress lists and the choices — so

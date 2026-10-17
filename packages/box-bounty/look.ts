@@ -1,8 +1,8 @@
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
-import { resolveAttempt } from './github.js';
-import { attemptsOf, baseCommitOf, loadRecord, persistRecord, requireCurrentDelivery } from './record.js';
-import type { Attempt, BountyRecord } from './record.js';
+import { resolveAttempt } from './collect.js';
+import { attemptsOf,baseCommitOf,loadRecord,persistRecord,requireCurrentDelivery } from './record.js';
+import type { Attempt,BountyRecord } from './record.js';
 
 // `look` is a print path: the change the solver's pull request makes against
 // the commit the bounty named, computed on objects the tool already fetched.

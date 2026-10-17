@@ -1,11 +1,12 @@
 import { asOneCommand } from './git.js';
 import { applyBounty as applyBountyCommand } from './answer.js';
-import { answerGitHub as answerGitHubCommand, listGitHubAnswers as listGitHubAnswersCommand, previewGitHub as previewGitHubCommand } from './github.js';
-import { createBounty as createBountyCommand, finalizeBounty as finalizeBountyCommand, planBounty as planBountyCommand } from './create.js';
-import { closeBounty as closeBountyCommand, postBounty as postBountyCommand } from './commands.js';
+import { answerGitHub as answerGitHubCommand,listGitHubAnswers as listGitHubAnswersCommand } from './collect.js';
+import { previewGitHub as previewGitHubCommand } from './post.js';
+import { createBounty as createBountyCommand,finalizeBounty as finalizeBountyCommand,planBounty as planBountyCommand } from './create.js';
+import { closeBounty as closeBountyCommand,postBounty as postBountyCommand } from './commands.js';
 import { renderStatus as renderStatusCommand } from './render.js';
 import { lookBounty as lookBountyCommand } from './look.js';
-import { statusDocument as statusDocumentCommand, configDocument as configDocumentCommand } from './json.js';
+import { statusDocument as statusDocumentCommand,configDocument as configDocumentCommand } from './json.js';
 
 // Each command the package offers is one command to Git's pins: the names of
 // configured filters and merge drivers are read once per repository path for
@@ -36,8 +37,10 @@ export { lookDocument } from './json.js';
 export type { StatusDocumentOptions } from './json.js';
 export type { LookResult, LookTarget } from './look.js';
 export { LOOK_DIFF_LIMIT } from './look.js';
-export { quoteForeign, showPath } from './answer.js';
-export type { GitHubChoice, GitHubPlan, GitHubPublication, IssueComment } from './github.js';
+export { quoteForeign, showPath } from './notice.js';
+export type { GitHubChoice, GitHubPublication } from './gh.js';
+export type { GitHubPlan } from './publish-plan.js';
+export type { IssueComment } from './collect.js';
 export type { ApplyResult, ApplyTarget } from './answer.js';
 export { BountyUsage, parseCreateArgs, parseOptions, commandHelp, BOUNTY_COMMANDS, OPTIONS_NOTE } from './args.js';
 export type { CreateArgs, ParsedOptions } from './args.js';
@@ -45,7 +48,7 @@ export { deriveTitle, renderPreview, resolveRepoRoot, TITLE_LIMIT, TOOL_VERSION 
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';
-export { NOTHING_RUN } from './answer.js';
+export { NOTHING_RUN } from './notice.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';
 export { applicableAttempts, attemptRefName, attemptsOf, canonicalForNew, isOpenStage, listRecords, loadRecord, persistRecord, recordDir, recordPath, refName, requireCurrentDelivery, retiredRoute, transitionTo, writeNewRecord } from './record.js';
@@ -62,7 +65,7 @@ export { actingOn, askMergeNoticeLine, loadSettings, loadState, projectKey, read
 export type { DecisionRead, OwnerDecision, OwnerSettings, ToolState } from './settings.js';
 export { chooseRepository, githubRemotes, repositoryAddress, repositoryChoiceLines } from './repository.js';
 export type { RemoteCandidate, RepositoryChoice } from './repository.js';
-export { shownOfPlan } from './github.js';
+export { shownOfPlan } from './publish-plan.js';
 export { binaryPatchPaths, looksBinary, SECRET_RULES, scanPatch, scanText } from './scan.js';
 export type { ScanHit, SecretRule } from './scan.js';
 export { recordScanFinding, settleScanFindings } from './record.js';
@@ -72,11 +75,12 @@ export { readGitPinsOncePerProcess } from './git.js';
 export { DESCRIBE_LINES, INSTALL_PACKAGE, renderRulesBlock, RULES_LINES, RULES_MARKERS, rulesBlockInterior } from './wording.js';
 export { classifySnapshot, createSnapshot, createSnapshotCommit } from './snapshot.js';
 export type { Snapshot, SnapshotFile, SnapshotRemoval } from './snapshot.js';
-export { checkMergedSolutions, noticeMergedSolutions, setMergeNoticeListener } from './merged.js';
+export { checkMergedSolutions, noticeMergedSolutions } from './merged.js';
+export { setMergeNoticeListener } from './notice.js';
 export { parsePayTo, payToLine, payMessageLines, payNotice } from './pay.js';
 export type { PayOutcome, PayToFact } from './pay.js';
 export { GIT_LEAST } from './git.js';
-export { GH_LEAST } from './github.js';
+export { GH_LEAST } from './gh.js';
 export { HOOK_COMMAND, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, HOOK_GITHUB_INTERVAL_MS, HOOK_HOSTS, HOOK_SLOTS, hookDisclosure, hookGroups, hookHost, hookOff, hookOn, hookStatus, runHook } from './hook.js';
 export type { HookHost, HookRun, HookSlot } from './hook.js';
-export { limitGitHubCalls } from './github.js';
+export { limitGitHubCalls } from './gh.js';
