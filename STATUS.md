@@ -14,4 +14,4 @@ Updated by the CTO on 17 October 2026 at the BT28 close.
 
 ## Next
 
-No wave is in flight. All planned K and BT waves except the owner-deferred **BT12 Part B** (npm publishing) are merged and green. This run stops after BT28.
+Nothing is in flight. The CTO reviewed K25 and BT28 on 17 October 2026: sound, measured, and independently reproduced, with one gap: a per-record line in compact `status` escapes the bound for bounties posted to GitHub, which the measurement (unposted synthetic records) could not see. **BT29** is briefed to fix and measure it. **Owner decision open:** whether bounty records should be kept out of Git by default (they hold owner-only context, and every repository that posts is public). **BT12 Part B** (npm publishing) stays deferred.
