@@ -14,4 +14,4 @@ Updated by the CTO on 17 October 2026 at the K27 close (completing `START.md: BT
 
 ## Next
 
-No wave is in flight; this run stops after `BT29, K26, K27`. **BT30** (building K26's split memory model on K27's `node:sqlite` local store + committed `shared.jsonl` shared store) is outlined and ready to brief once the owner confirms the shared-store choice. **BT12 Part B** stays deferred.
+Nothing is in flight. The owner chose on 17 October 2026: the shared memory is **public for now** (committed with the code); a **private online store** (Turso) is the intended next step afterwards. K27's outline is briefed as three waves, in order: **BT30** (tests reach records only through helpers; no product change), **BT31** (records move into a local `node:sqlite` database; Node floor 22.13), **BT32** (the shared/local split, a committed `shared.jsonl` with `merge=union`). Each cooks only when named. **BT12 Part B** stays deferred.
