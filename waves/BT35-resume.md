@@ -27,12 +27,12 @@ The full memory matrix already ran in the first attempt. Preserve the actual num
 
 ## Result
 
-- Worker and reviewer:
-- Dispatch base and merge:
-- Candidate and report commits:
-- Verify:
-- Verdict and lenses:
-- Timestamp policy and behavioral proof:
-- Preserved bounds and limits:
-- Saved and resources:
-- Method and Reflect:
+- Worker and reviewer: fresh correction cook on Devin Desktop for Windows; the installed session does not expose the exact model name, so none is claimed. Reviewer still pending; this run does not declare acceptance.
+- Dispatch base and merge: branch `wave/BT35-resume` started at clean master `39cf37861fbcfa3cf74835095b78f0187524e53e`; `wave/BT35` merged without rewriting history in `e2f2b08`. The only conflict was `waves/BT35.md`; it now keeps the complete worker/reviewer reports and master's parked-close summary in one record. No product conflict appeared.
+- Candidate and report commits: verified candidate `dd7006de0367e48208f54e615a35a80bf3b49e82`; implementation commits `d099963` (red regressions) and `ae1dece` (boundary fix), then `dd7006d` compacts the merged wave record so the existing K15 kitchen guard can read its Git diff within Node's 1 MiB buffer. This Result is committed separately after verification; report tip is the next commit.
+- Verify: `node scripts/verify.mjs --full test:box-bounty test:kitchen` on clean `dd7006d`: `verify dd7006d PASS check=0 build=0 test:box-bounty=0 test:kitchen=0 db=none 695s`, `.kitchen/runs/2026-10-18T15-33-44-167Z-dd7006d/summary.json`. Box bounty: 63 files, 715 passed, 1 skipped; `bt35.test.ts` 23/23. Kitchen: 13 files, 89 passed. Earlier clean candidate `ae1dece` failed only in `k15-sandbox-guard` with `spawnSync git ENOBUFS`; the merged wave text had pushed its cutoff diff to 1,053,128 bytes, over the test's fixed buffer, so the combined report was compacted without dropping the required reports/summary.
+- Verdict and lenses: worker evidence only; no PASS verdict claimed. UX coverage remains the independent pass's original findings plus the retained shared-only wording, once-only reminders, ended-null ages and clear manual close choice.
+- Timestamp policy and behavioral proof: strict record ISO date-time shape plus real calendar/clock validation is enforced once in `bountyAge`'s `validAt` boundary. `2026/10/01`, `1`, `junk`, `2026-02-30T00:00:00.000Z` and `2026-10-01T24:00:00.000Z` on posted events produce `age unavailable` and JSON nulls; the same invalid classes on the latest attempt produce `last activity time unavailable`/null rather than presenting an older post as latest. Valid ISO `openedAt`/`lastActivityAt`, the 13/14-day boundary, future-date `open today`, ended-null ages and unchanged record bytes are covered by the real built CLI tests.
+- Preserved bounds and limits: no stage, hook, instruction, dependency, timeout, worker or expectation changes. Shared-only reminders still update only machine-local said state; tests pin no local record/chain write and byte-identical shared row. Original measured bounds and the equal-fixture comparison remain in `waves/BT35.md`: 12,146 versus 13,767 characters for the same 50-open fixture, and no universal 4,500-character claim for the larger fixture.
+- Saved and resources: parked `wave/BT35`, previous FAIL reports and verify records are preserved. The merge branch is clean after the passing run; no shared writes, external calls, pushes, process kills or new dependencies were used. Tool-created test scratch is owned by tests; no extra scratch remains from this worker.
+- Method and Reflect: bug-fix playbook; Boundary Discipline kept validation at the record-to-age boundary; Fix Root Causes changed format/calendar validation and the latest-activity assumption rather than output symptoms; Prove It Works used rebuilt `dist` plus real CLI regressions; TypeScript best practices kept the source typed without casts; Sequence Verifiable Units staged red coverage before the fix; Subtract Before You Add kept the change to `render.ts`, docs and `bt35.test.ts`; unslop guided the report wording. Remaining issue: independent PASS is still required on `dd7006d` before acceptance.
