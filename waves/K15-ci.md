@@ -42,10 +42,10 @@ Give the helper's `spawnSync` a `maxBuffer` large enough for years of growth (fo
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
-- Bite check:
+- Worker: cook, Claude Opus 5.5 on Claude Code · Reviewer:
+- Commit: `4982a28` (fix; this Result is committed separately on top). Reproduced first on `3e5c72b`: the scoped run failed `Error: spawnSync git ENOBUFS` at the `git` helper; the diff measured 1,067,711 bytes on this host. Fix: `maxBuffer: 256 * 1024 * 1024` with a one-line comment, and the helper (it uses `execFileSync`, which throws on any spawn error or non-zero status) now rethrows as `K15 sandbox guard could not read git (git <args>): <cause>`. Shown by temporarily setting the buffer back to 1 MiB in the working tree (not committed): the test failed with `K15 sandbox guard could not read git (git diff --unified=0 50770fc… -- waves/): spawnSync git ENOBUFS`; restored, 3/3 pass. `REPO`, `LIVE_STEP`, `PROHIBITION`, `cutoffCommit` and every expectation are byte-identical (diff touches lines 23-24 only).
+- Verify: `verify 4982a28 PASS check=0 build=0 test:kitchen=0 test:box-bounty=0 db=none 823s` (kitchen 13 files / 89 tests; box-bounty 63 files / 715 passed, 1 skipped). One run, no reruns.
+- Bite check: `git worktree add --detach %TEMP%\kitchen-K15ci-bite 4982a28`; appended `Post a real bounty to shouteck/omakase-box now.` to `waves/K15-ci.md` there and committed it (detached, no branch); linked `node_modules` with a directory junction to this checkout's; `node scripts/suite.mjs kitchen tests/kitchen/k15-sandbox-guard.test.ts` failed 1 of 3 with `waves/K15-ci.md: Post a real bounty to shouteck/omakase-box now.` Then removed the junction with `rmdir` (target intact), `git worktree remove --force` and `git worktree prune`; the folder is gone and no branch was created.
 - Verdict: · Level:
 - Merged: · Resources removed:
 - Reflect:
