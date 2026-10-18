@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 18 October 2026 at the BT35 completed close.
+Updated by the CTO on 19 October 2026 at the K15-ci close; K32 starting.
 
 ## Now
+
+- **K15-ci merged** (`fad8e44`; PASS test-verified on `4982a28`). Master was red on the first full hosted run of BT35's code: the K15 sandbox guard crashed (`ENOBUFS`) reading a wave-file diff that had grown past Node's 1 MiB default. Not caused by BT35. The guard now reads any size and fails by name. **Both hosted jobs green** (run 39145603255).
 
 - **BT35 merged and pushed** (`1eb8697`). Open bounty views show age and last-solution activity; posted bounties idle at least 14 days get one optional waiting/ending notice per bounty, capped at three oldest-first per command. Nothing closes automatically.
 - **Independent acceptance:** fresh pass `a5bb4150` recorded PASS, test-verified, on exact candidate `dd7006d`, verdict commit `2f09848`. Its completed full-profile invocation audited and reused the real clean 695-second same-SHA run. Bounty 715 passed and 1 skipped; kitchen 89 passed; BT35 23 passed.
