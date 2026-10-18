@@ -155,6 +155,40 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
     }); }
   });
 
+  it('a tool-authored pending push retries on the next sync; a swapped-in tip on a trusted id is never published', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      // Positive: an event the tool committed but never pushed (a crash or
+      // a dead remote would leave the same state) is persisted as a pending
+      // tip bound to its exact sha — the next sync publishes it.
+      appendEvent(world.repo, world.id, { v: 1, type: 'closed', at: new Date().toISOString(), kind: 'withdrawn', reason: 'retried after a crash' });
+      expect(bareTip(world, world.id)).not.toBeNull();
+      const postedTip = bareTip(world, world.id)!;
+      syncChains(world.repo, true);
+      const retried = bareTip(world, world.id)!;
+      expect(retried).not.toBe(postedTip);
+      expect(eventsOf(world.repo, retried).map(e => e['type'])).toContain('closed');
+
+      // Negative: the SAME trusted id's local ref is replaced with a
+      // well-formed DESCENDANT of the pushed tip carrying a planted posted
+      // event — the exact "replace an existing ref" attack. It matches no
+      // recorded authored/pending/pushed provenance, so it must never be
+      // pushed, adopted into output or merged onto the remote graph.
+      const gitIn = (args: string[], input: string) =>
+        execFileSync('git', ['-c', `safe.directory=${world.repo}`, '-c', 'user.name=x', '-c', 'user.email=x@x', '-C', world.repo, ...args], { input, encoding: 'utf8' }).trim();
+      const blob = gitIn(['hash-object', '-w', '--stdin'], JSON.stringify({ v: 1, type: 'posted', at: '2026-10-18T02:00:00.000Z', actor: 'x', id: world.id, title: 'PLANTED-NEVER-SHOWN', task: 't', base: 'a'.repeat(40), branch: 'main', issue: { number: 1, url: 'https://github.com/owner/project/issues/1' }, published: { pushed: [] } }) + '\n');
+      const tree = gitIn(['mktree'], `100644 blob ${blob}\tevent.json\n`);
+      const forged = gitIn(['commit-tree', tree, '-m', 'forged', '-p', retried]);
+      git(world.repo, ['update-ref', `refs/box-bounty/${world.id}`, forged]);
+      syncChains(world.repo, true);
+      syncChains(world.repo, true);
+      expect(bareTip(world, world.id), 'the swapped-in descendant was pushed over the trusted tip').toBe(retried);
+      const other = secondMachine(world);
+      syncChains(other, true);
+      expect(sharedRead(other, world.id)?.stage).toBe('withdrawn');
+      expect(renderStatus(other)).not.toContain('PLANTED-NEVER-SHOWN');
+    }); }
+  });
+
   it('an invalid event on the remote is skipped and the rest of its chain imports', () => {
     { const world = sharedPostedFixture(); world.run(() => {
       const other = secondMachine(world);

@@ -127,13 +127,20 @@ rec('append+push one event ms (5 runs)', pushes.join(','), '~300', Math.max(...p
 rec('fetch+import one event ms (5 runs)', fetches.join(','), '~500', Math.max(...fetches) <= 1000);
 
 // --- scale: CHAINS chains x 5 events -------------------------------------------
-// Seeded with ONE git fast-import: the product's per-event appendEvent costs
-// ~6 process spawns an event and on this host each spawn can take seconds
-// under AV scanning, so 5,000 appendEvent calls take tens of minutes. The
-// commits fast-import writes are byte-identical to commitEvent's (same tree,
-// same message, same identity), so what the remote holds and what
-// syncChains then fetches and imports is exactly what real appends produce.
-// The real appendEvent path is still measured above (append+push legs).
+// Seeded with ONE git fast-import into a writer clone, then pushed with the
+// fixture's own authority. Since the provenance correction, the product
+// pushes only tips it authored itself — so this fixture deliberately does
+// NOT go through product code: the writer clone plays the authorized
+// remote writer (the same authority a real teammate's machine or the
+// suite's `writerOf` exercises; its refs are its own to push by transport),
+// and the BARE REMOTE is what every measured clone then fetches and
+// imports through the real syncChains path. The commits fast-import writes
+// are byte-identical to commitEvent's (same tree, same message, same
+// identity), so what the remote holds is exactly what real appends
+// produce; the product's per-event appendEvent costs ~6 process spawns an
+// event and on this host each spawn can take seconds under AV scanning, so
+// 5,000 appendEvent calls take tens of minutes. The real appendEvent path
+// is still measured above (append+push legs).
 const seedT = ms(() => {
   let mark = 0;
   const chunks = [];
@@ -158,7 +165,8 @@ const seedT = ms(() => {
 });
 rec(`seed ${CHAINS}x5 events s (one fast-import)`, (seedT.ms / 1000).toFixed(1));
 // push by URL, not 'origin': gitc bypasses the spawn patch and 'origin'
-// would resolve to real github.com.
+// would resolve to real github.com. This is the fixture writer's own
+// transport push of its own authored refs — never the product's push path.
 const bulkPush = ms(() => gitc(cloneA, ['push', remote, '+refs/box-bounty/*:refs/box-bounty/*']));
 rec(`push ${CHAINS} chains ms`, bulkPush.ms);
 const sizeLine = gitc(remote, ['count-objects', '-vH']).split('\n').find(l => /size-pack/.test(l)) ?? '';

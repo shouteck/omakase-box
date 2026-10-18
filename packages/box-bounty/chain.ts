@@ -10,7 +10,14 @@
 // count — a local ref under refs/box-bounty/ that never came from it is
 // ignored, and every event off the remote is validated against the
 // allow-list, its field types and the 8,000-character bound before it is
-// imported. Writing never touches the working tree, the index or a branch:
+// imported. The same boundary gates WRITES: a local chain ref may be
+// pushed only when its tip carries persisted per-id provenance — the exact
+// sha the tool itself authored (`chain_authored:`/`chain_pending:`), the
+// tip it previously pushed (`chain_pushed:`), or the remote tip it
+// imported (`chain_tip:`). Namespace membership alone is never upload
+// authorization: a planted ref, or one replaced with an unscanned
+// descendant of a trusted tip, is ignored and its objects never leave.
+// Writing never touches the working tree, the index or a branch:
 // blob, tree and commit are objects only; the ref moves by update-ref.
 //
 // Events are built by allow-list projection — only the fields the event
@@ -119,8 +126,23 @@ const isChainCommit = (root: string, sha: string): boolean =>
 
 const IDENTITY = ['-c', 'user.name=box-bounty', '-c', 'user.email=box-bounty@localhost'];
 
+// Persisted per-id provenance (decision 2, write side). `chain_authored:` /
+// `chain_pending:` record the exact tip this tool committed (pending also
+// marks a push still owed); `chain_pushed:` the last tip this machine put
+// on the remote; `chain_tip:` the remote tip it imported. A local tip is
+// pushable only when it equals one of these — a planted ref, or a trusted
+// ref swapped for an unscanned descendant, matches none.
+const toolTip = (root: string, id: string, tip: string): boolean =>
+  metaGet(root, `chain_authored:${id}`) === tip || metaGet(root, `chain_pending:${id}`) === tip;
+const provenTip = (root: string, id: string, tip: string): boolean =>
+  toolTip(root, id, tip) ||
+  metaGet(root, `chain_pushed:${id}`) === tip ||
+  metaGet(root, `chain_tip:${id}`) === tip;
+
 // Write one event commit: tree = {event.json: <blob>}, parents given; the
 // local chain ref moves to it. Working tree, index and branches untouched.
+// The commit is recorded as this machine's authored tip — the provenance
+// that later authorizes pushing it.
 function commitEvent(root: string, id: string, eventJson: string, parents: readonly string[]): string {
   const blob = gitWriteBlob(root, Buffer.from(eventJson, 'utf8'));
   const tree = gitStdin(root, ['mktree'], `100644 blob ${blob}\tevent.json\n`);
@@ -128,17 +150,23 @@ function commitEvent(root: string, id: string, eventJson: string, parents: reado
   for (const parent of parents) args.push('-p', parent);
   const commit = git(root, args);
   gitRefsWrite(root, [{ update: chainRef(id), sha: commit }]);
+  metaSet(root, `chain_authored:${id}`, commit);
   return commit;
 }
 
 // Append a built event onto the local chain. The parent is the current tip
-// only when it is itself a chain commit — an old `refs/box-bounty/<id>`
-// snapshot pin (pre-BT24 records) is not chain history and never parents
-// the first event.
+// only when it is itself a chain commit AND carries proven provenance — an
+// old `refs/box-bounty/<id>` snapshot pin (pre-BT24 records) is not chain
+// history, and a planted or swapped local ref is never a parent either: a
+// forged tip would otherwise launder its graph under a tool-authored event.
 export function appendEvent(root: string, id: string, event: ChainEvent): string {
   const tip = tipOf(root, chainRef(id));
-  const parent = tip !== null && isChainCommit(root, tip) ? [tip] : [];
-  return commitEvent(root, id, JSON.stringify(event) + '\n', parent);
+  const parent = tip !== null && provenTip(root, id, tip) && isChainCommit(root, tip) ? [tip] : [];
+  const commit = commitEvent(root, id, JSON.stringify(event) + '\n', parent);
+  // From this moment the authored tip is a pending push — a crash before
+  // pushChain still retries it, bound to exactly this tip.
+  metaSet(root, `chain_pending:${id}`, commit);
+  return commit;
 }
 
 // git-bug's merge of the remote-tracking tip into the local chain:
@@ -158,7 +186,15 @@ function mergeRemoteTip(root: string, id: string): 'new' | 'identical' | 'ahead'
     gitRefsWrite(root, [{ update: chainRef(id), sha: remote }]);
     return 'ff';
   }
-  commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
+  if (!provenTip(root, id, local)) {
+    // A diverged local tip with no provenance is foreign: never graft its
+    // graph onto the remote chain under an authorized merge commit. Adopt
+    // the remote tip and leave the planted objects unreferenced.
+    gitRefsWrite(root, [{ update: chainRef(id), sha: remote }]);
+    return 'ff';
+  }
+  const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
+  metaSet(root, `chain_pending:${id}`, merge);
   return 'merged';
 }
 
@@ -186,14 +222,30 @@ export interface PushResult { readonly pushed: boolean; readonly reason?: string
 // Push one chain. On a non-fast-forward answer: fetch the remote tip, fold
 // it into the local chain (ff or an empty merge commit) and push again —
 // at most PUSH_TRIES attempts before the push waits for the next command.
-export function pushChain(root: string, id: string): PushResult {
+// `knownTip` lets the caller that just authored the tip skip one re-read.
+export function pushChain(root: string, id: string, knownTip?: string): PushResult {
   const url = remoteUrl(root);
-  if (url === null) { metaSet(root, `chain_pending:${id}`, '1'); return { pushed: false, reason: 'the repository remote is not settled' }; }
+  const proven = (known?: string): string | null => {
+    const tip = known ?? tipOf(root, chainRef(id));
+    return tip !== null && provenTip(root, id, tip) ? tip : null;
+  };
+  const firstTip = proven(knownTip);
+  if (firstTip === null) return { pushed: false, reason: 'the local chain tip has no tool-authored or remote provenance' };
+  if (url === null) { metaSet(root, `chain_pending:${id}`, firstTip); return { pushed: false, reason: 'the repository remote is not settled' }; }
   const pushedBefore = metaGet(root, `chain_pushed:${id}`) !== null;
   let restored = false;
   for (let attempt = 1; attempt <= PUSH_TRIES; attempt += 1) {
+    // Re-check provenance on every retry — the ref must still point at the
+    // tip this machine is entitled to publish, never at a swapped-in one.
+    // (Attempt 1 was just verified at entry.)
+    if (attempt > 1 && proven() === null) {
+      metaSet(root, `chain_pending:${id}`, null);
+      return { pushed: false, reason: 'the local chain tip changed to a ref with no tool-authored or remote provenance' };
+    }
     if (pushOnce(root, url, id)) {
-      const now = tipOf(root, remoteRef(id)) ?? tipOf(root, chainRef(id));
+      // Record exactly the tip this push put on the remote — the local
+      // remote-tracking ref can lag, and recovery is bound to this sha.
+      const now = tipOf(root, chainRef(id));
       if (now !== null) metaSet(root, `chain_pushed:${id}`, now);
       metaSet(root, `chain_pending:${id}`, null);
       return { pushed: true, restored };
@@ -208,7 +260,8 @@ export function pushChain(root: string, id: string): PushResult {
     }
     mergeRemoteTip(root, id);
   }
-  metaSet(root, `chain_pending:${id}`, '1');
+  const owed = proven();
+  if (owed !== null) metaSet(root, `chain_pending:${id}`, owed);
   return { pushed: false, reason: 'the remote chain moved each time (non-fast-forward)' };
 }
 
@@ -222,8 +275,8 @@ function share(root: string, record: BountyRecord, scanned: Record<string, strin
   // The scan runs before anything is built into an object or written: a hit
   // holds the whole event exactly as a publish hit holds a post.
   scanHold(scanned);
-  appendEvent(root, record.id, event);
-  const result = pushChain(root, record.id);
+  const tip = appendEvent(root, record.id, event);
+  const result = pushChain(root, record.id, tip);
   if (!result.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${result.reason}); it will be retried`);
   else if (result.restored === true) emitMergeNotice(`shared bounty memory for ${record.id} was gone from the remote — restored from this machine`);
   return result;
@@ -500,11 +553,20 @@ function adoptAndImport(root: string): ChainView {
     if (local === undefined || !chainCommits.has(local)) {
       writes.push({ update: chainRef(id), sha: remote });
     } else if (ancestorsOf(local).has(remote)) {
-      // local strictly ahead — pushChain's pending/retry side handles it
+      // local strictly ahead — pushChain's pending/retry side handles it,
+      // and only when the tip has provenance; a planted descendant is
+      // never uploaded.
     } else if (ancestorsOf(remote).has(local)) {
       writes.push({ update: chainRef(id), sha: remote }); // fast-forward
+    } else if (provenTip(root, id, local)) {
+      // A genuinely diverged chain this machine is entitled to publish:
+      // join the tips under an empty merge event and owe the push.
+      const merge = commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
+      metaSet(root, `chain_pending:${id}`, merge);
     } else {
-      commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
+      // A foreign diverged tip is never grafted onto the remote graph —
+      // adopt the remote tip and leave its objects unreferenced.
+      writes.push({ update: chainRef(id), sha: remote });
     }
   }
   gitRefsWrite(root, writes);
@@ -529,34 +591,60 @@ function adoptAndImport(root: string): ChainView {
   return view;
 }
 
-// A chain this machine has that the remote does not reflect: a pending push
-// retries here, and a remote-deleted chain restores from the local copy.
-// With the post-fetch view, ref comparisons and ancestor checks are in
-// memory; inside the throttle window (no view) only recorded pending pushes
-// retry, since the remote-tracking refs cannot have moved.
+// A chain this machine has that the remote does not reflect — but only two
+// provenance classes may ever drive a push: a persisted tool-authored
+// pending tip (`chain_pending:` bound to the exact sha the tool committed,
+// still the local tip) and validated deletion recovery (`chain_pushed:` —
+// this machine pushed this tip before, the remote-tracking ref is now gone
+// and the local tip is still exactly that pushed sha). Enumerating the
+// local namespace is NOT authorization: a planted ref, or a trusted ref
+// swapped for an unscanned descendant, matches neither record and its
+// objects are never uploaded.
 function retryPending(root: string, url?: string, view?: ChainView): void {
-  const ids = new Set(
-    metaKeys(root, 'chain_pending:')
-      .map(key => key.slice('chain_pending:'.length))
-      .filter(id => CHAIN_ID.test(id))
-  );
-  if (view !== undefined) {
-    for (const [id, local] of view.localTips) {
-      if (!view.chainCommits.has(local)) continue; // a legacy snapshot pin, not a chain
-      const remote = view.remoteTips.get(id);
-      if (remote === local) continue;
-      if (remote !== undefined && view.ancestorsOf(remote).has(local)) {
-        continue; // the remote is strictly ahead — adoptAndImport already folded it
-      }
-      ids.add(id);
+  // The view's listings are the post-fetch snapshot; where adoption may
+  // have just moved a ref (a pending merge commit) the check falls back to
+  // one fresh rev-parse for that id only — reads stay at a fixed handful of
+  // Git starts on machines with no pending work.
+  const localTip = (id: string): string | null =>
+    view !== undefined ? view.localTips.get(id) ?? null : tipOf(root, chainRef(id));
+  const remoteTip = (id: string): string | null =>
+    view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(id));
+  const ids = new Set<string>();
+  for (const key of metaKeys(root, 'chain_pending:')) {
+    const id = key.slice('chain_pending:'.length);
+    if (!CHAIN_ID.test(id)) continue;
+    const expected = metaGet(root, key);
+    if (expected === null) continue;
+    // A replaced or foreign ref never matches the recorded tip. Where the
+    // view's snapshot predates an adoption-time merge of this very chain,
+    // one fresh read settles it — a rev-parse only for ids that actually
+    // owe a push.
+    const seen = localTip(id);
+    const local = seen === expected ? seen : tipOf(root, chainRef(id));
+    if (local !== expected) continue; // swapped-in tip: never pushed
+    const remote = remoteTip(id);
+    if (remote !== null && remote !== expected &&
+        (view !== undefined ? view.ancestorsOf(remote).has(expected)
+                            : gitOutcome(root, ['merge-base', '--is-ancestor', expected, remote]).status === 0)) {
+      continue; // the remote already holds this tip — nothing is owed
     }
+    ids.add(id);
+  }
+  // Deletion recovery is only visible after a fetch pruned the tracking
+  // ref, so it is a post-fetch (view) check — inside the throttle window
+  // the remote-tracking refs cannot have moved.
+  if (view !== undefined) for (const key of metaKeys(root, 'chain_pushed:')) {
+    const id = key.slice('chain_pushed:'.length);
+    if (!CHAIN_ID.test(id) || ids.has(id)) continue;
+    const pushed = metaGet(root, key);
+    if (pushed !== null && remoteTip(id) === null && localTip(id) === pushed) ids.add(id);
   }
   if (ids.size === 0) return;
   url ??= remoteUrl(root) ?? undefined;
   if (url === undefined) return;
   for (const id of ids) {
     const wasPushed = metaGet(root, `chain_pushed:${id}`) !== null;
-    const remote = view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(id));
+    const remote = remoteTip(id);
     const result = pushChain(root, id);
     if (!result.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${result.reason}); it will be retried`);
     else if (remote === null && wasPushed) emitMergeNotice(`shared bounty memory for ${id} was gone from the remote — restored from this machine`);
