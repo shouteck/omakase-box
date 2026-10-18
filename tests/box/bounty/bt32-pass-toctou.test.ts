@@ -16,7 +16,6 @@ import { syncBuiltinESMExports } from 'node:module';
 import { describe, expect, it } from 'vitest';
 import { loadRecord, renderStatus, shareClosed, sharedRead, syncChains } from '../../../packages/box-bounty/index.js';
 import { sharedPostedFixture } from './github-fixture.js';
-import type { GithubFixture } from './github-fixture.js';
 import { join } from 'node:path';
 import { runRoot } from './support.js';
 
