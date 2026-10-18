@@ -148,7 +148,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | 8 | **K30** stage contracts audited | every stage | K29 and BT32 (so it audits only the product, with its memory) | no |
 | 9 | hardening waves, one per stage that needs one | the stages K30 names | K30 (briefed from its list) | no |
 | 9b | **K32** agent payments researched (done) | pay (autonomy) | — | done |
-| 9b2 | **BT36** the owner records that a solver was paid | pay (G5) | the owner confirms `config set paid` | **yes**: any time |
+| 9b2 | **BT36** the owner records that a solver was paid | pay (G5) | — (`config set paid` confirmed 19 October 2026) | **yes**: ready now |
 | 9c | **K33** the kitchen reviewed on its own record | the kitchen | — (cooked and reviewed by fresh agents, not the head chef) | **yes**: any time |
 | 10 | publishing (BT12 Part B) | getting the tool (G7) | the owner's decision | owner's |
 
