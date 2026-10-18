@@ -1,5 +1,4 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,8 +8,6 @@ import { removeFixtureLink } from './fixture-link.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const suiteScript = join(root, 'scripts', 'suite.mjs');
-const shimScript = join(root, 'tests', 'box', 'package', 'pnpm-shim.mjs');
-const pnpmCjs = join(root, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin', 'pnpm.cjs');
 const temps: string[] = [];
 const temp = () => { const dir = mkdtempSync(join(tmpdir(), 'kitchen-k6-fix-')); temps.push(dir); return dir; };
 const junction = join(root, 'tests', 'kitchen', 'kitchen-k6-fix-link');
@@ -106,37 +103,7 @@ describe('suite.mjs scoped containment is canonical', () => {
   });
 });
 
-describe('pnpm-shim never trusts preexisting global cache bytes', () => {
-  it('a planted global lockfile cannot make a nonexistent dependency resolve', () => {
-    const project = temp();
-    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
-    writeFileSync(join(project, 'package.json'), manifest);
-    const globalCache = join(tmpdir(), 'box-k6-lockfile-cache');
-    mkdirSync(globalCache, { recursive: true });
-    const planted = join(globalCache, createHash('sha256').update(manifest).digest('hex') + '.yaml');
-    writeFileSync(planted, 'lockfileVersion: 9.0\nimporters: {}\n');
-    const env = { ...process.env };
-    delete env.BOX_K6_LOCKFILE_CACHE;
-    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env });
-    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
-    rmSync(planted, { force: true });
-  });
-  it('a caller-supplied BOX_K6_LOCKFILE_CACHE is never consulted', () => {
-    const project = temp();
-    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
-    writeFileSync(join(project, 'package.json'), manifest);
-    const callerCache = temp();
-    writeFileSync(join(callerCache, createHash('sha256').update(manifest).digest('hex') + '.yaml'), 'lockfileVersion: 9.0\nimporters: {}\n');
-    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env: { ...process.env, BOX_K6_LOCKFILE_CACHE: callerCache } });
-    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
-  });
-  it('K6_LOCKFILE_MODE=uncached resolves for real even when a cache env is supplied', () => {
-    const project = temp();
-    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
-    writeFileSync(join(project, 'package.json'), manifest);
-    const callerCache = temp();
-    writeFileSync(join(callerCache, createHash('sha256').update(manifest).digest('hex') + '.yaml'), 'lockfileVersion: 9.0\nimporters: {}\n');
-    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env: { ...process.env, BOX_K6_LOCKFILE_CACHE: callerCache, K6_LOCKFILE_MODE: 'uncached' } });
-    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
-  });
-});
+// K29: the "pnpm-shim never trusts preexisting global cache bytes" block is
+// gone with its subject — tests/box/package/pnpm-shim.mjs existed only to
+// serve the removed package suite's installs; nothing kept calls the shim.
+// (Deleted rather than weakened: the property it pinned has no subject left.)

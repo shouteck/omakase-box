@@ -48,7 +48,7 @@ describe('suite.mjs file-scoped inner loop', () => {
   it('rejects a missing file, an out-of-suite file and a non-test file', () => {
     for (const file of [
       'tests/kitchen/does-not-exist.test.ts',
-      'tests/box/package/export.test.ts',
+      'tests/box/bounty/answer.test.ts',
       join(root, 'scripts', 'verify.mjs'),
       '../outside.test.ts'
     ]) {
