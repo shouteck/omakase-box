@@ -1,0 +1,562 @@
+{
+ "base": "2b3eace72f30dd911f59f2a4672e96b7191f5c5c",
+ "generated": "2026-10-19",
+ "categories": {
+  "A": "explicit reviewer FAIL verdict followed by cook correction round(s)",
+  "B": "explicit reviewer FAIL verdict; correction outside the wave (park/-ci/split)",
+  "C": "verify/CI/environment/test failure recorded; no reviewer FAIL verdict",
+  "E": "FAIL wording only (requirements, test design, narrative); no review failure event",
+  "F": "prior review rounds implied; no explicit FAIL verdict retained",
+  "G": "post-review correction without a FAIL verdict",
+  "D": "no FAIL in Result section"
+ },
+ "rows": {
+  "A0": {
+   "cat": "E",
+   "excerpt": "L86: - A missing sibling package never failed a locked install on either tool (exit 0, dangling link): **stands**. Setup succeeding proves nothing; only the checks do."
+  },
+  "A1": {
+   "cat": "F",
+   "note": "Result says \"reviewed by the pass, third round\" and lists prior blockers fixed, but no explicit FAIL verdict is retained in the pinned text",
+   "excerpt": "L50: - **F5 (preflight narrowed per-context): FIXED.** Export now emits the staging tree (product-owned file writes + `nodejs` lockfile resolution — no declared commands) and then "
+  },
+  "A2": {
+   "cat": "A",
+   "fails": 2,
+   "cls": "correctness",
+   "host": "unstated",
+   "excerpt": "L61: - Verdict: **FAIL, test-verified** on `6f0341f3ee7e0710e5c5ba92b264f6b8abfcb91e` (product commit; `a185d8c` is worker docs-only). An earlier PASS line was superseded after the"
+  },
+  "A3": {
+   "cat": "E",
+   "excerpt": "L39: R1 neutral replay (permanent, fast): `research/box-delegation/a3/r1-check.mjs` is a plain-Node owner/recipient declaration that fails on the pre-fix kitchen-stats (Usage outpu"
+  },
+  "A4": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "scope/budget",
+   "host": "devin",
+   "excerpt": "L38: UNCOMMITTED — reviewer FAIL, review round 1 of 3."
+  },
+  "BT1": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "claude",
+   "excerpt": "L58: - Commit: `e473b07910c955c09962574af08c49240838060e` (re-review; first pass on `24a2822` returned FAIL, all blockers fixed and re-probed)"
+  },
+  "BT10": {
+   "cat": "C",
+   "excerpt": "L101: - Actual probes covered title/note delimiter injection, never-ship disclosure, local-record authority, actual published branch tip and bytes for both work flags, post-close e"
+  },
+  "BT11": {
+   "cat": "D"
+  },
+  "BT11a": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "devin",
+   "excerpt": "L79: - Verdict: **FAIL** · Level: live-verified (real CLI at `c173a8d` code against a sandbox clone plus the project's own gh fixture; one lens attack succeeds on a reachable path)"
+  },
+  "BT11b": {
+   "cat": "E",
+   "excerpt": "L108: - Verify: `verify 6215240 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 77s` — the pass's own run `env HOME=$HOME/kitchen-home node scripts/verify.mjs tes"
+  },
+  "BT11c": {
+   "cat": "D"
+  },
+  "BT12": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L98: - Verdict: **PASS on `742ce0f`** (correction round; Part A only; Part B not in scope) · Level: test-verified on Windows; the Linux leg and the Node 22 hosted job run after mer"
+  },
+  "BT13": {
+   "cat": "E",
+   "excerpt": "L78: - Findings and limits: (1) **Minor —** the merge gate trusts the owner settings file: an agent that edits `mergeAnswers` directly with a correctly bound entry releases the mer"
+  },
+  "BT14": {
+   "cat": "E",
+   "excerpt": "L53: - Items done (of 8): all 8, in harm order. (1) instruction-sync output names the edited file and says the edit is uncommitted (`instructions.ts`). (2) `create` preview/output "
+  },
+  "BT15": {
+   "cat": "C",
+   "excerpt": "L162: - Recovery candidate `41248e556ea35467b8cc231c659687fff87f5578` completed acceptance with `verify 41248e5 FAIL check=0 build=0 test:box-bounty=1 not-run=test:box-package db=n"
+  },
+  "BT15-ci": {
+   "cat": "E",
+   "excerpt": "L51: - Pass verify: on `50f33fb` itself: `verify 50f33fb PASS check=reused@2026-10-15T02-14-37-909Z-50f33fb build=reused@2026-10-15T02-14-37-909Z-50f33fb test:box-bounty=reused@202"
+  },
+  "BT16": {
+   "cat": "E",
+   "excerpt": "L123: - Verify: `verify cd99825 PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 741s` — foreground run on the clean committed tip (run record `.kitchen/runs/2026-"
+  },
+  "BT17": {
+   "cat": "C",
+   "excerpt": "L127: - Verify: `verify 736d09c PASS check=0 build=0 test:box-bounty=0 test:box-package=0 db=none 974s` — box-bounty 40 files/496 tests, box-package 17 files +1 skipped/142 tests +"
+  },
+  "BT18": {
+   "cat": "D"
+  },
+  "BT19": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L126: - Verdict: **PASS** (re-review of rework `7d6151e`; first review FAILed `8c40ffb`, record kept below) · Level: test-verified"
+  },
+  "BT2": {
+   "cat": "E",
+   "excerpt": "L57: - **Test quality checked:** every new test would fail if the code under test did nothing — `expectRefusal` asserts a thrown `BountyRefused` with the exact reason (`expect.unre"
+  },
+  "BT20": {
+   "cat": "E",
+   "excerpt": "L86: - Reflect: the planned order held — the pure move went green on the suite first, then the removal touched only `create.ts`/`cli.ts`/tests, so every failure during the second s"
+  },
+  "BT21": {
+   "cat": "E",
+   "excerpt": "L82: - Q3 checks: seven of the eight cases are real checks — 1–3 assert outside state plus the line's presence/absence and wording; 4 fails on an unconditional emit; 5/6 use `refus"
+  },
+  "BT22": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L110: - Verdict (first round, on `27c3b57`; verdict commit `f9eb83f` — superseded by the correction-round PASS above): **FAIL** · Level: test-verified (suites green; the failure is"
+  },
+  "BT23": {
+   "cat": "E",
+   "excerpt": "L77: - Reviewer verify (own invocation, foreground, this commit): `verify 36dce4b PASS check=0 build=0 test:box-bounty=0 test:box-package=0 test:kitchen=0 db=none 760s` — run dir `"
+  },
+  "BT24": {
+   "cat": "D"
+  },
+  "BT25": {
+   "cat": "D"
+  },
+  "BT26": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "devin",
+   "excerpt": "L70: - Verdict: **PASS** (round 2) · Level: **test-verified**. Round 1 FAILed on the 8.3-alias bypass; correction `213872f` closes it — verified by re-driving the live attack set, "
+  },
+  "BT27": {
+   "cat": "D"
+  },
+  "BT28": {
+   "cat": "D"
+  },
+  "BT29": {
+   "cat": "E",
+   "excerpt": "L61: - **Checks would catch a wrong implementation (Q3):** the new scale test would fail on empty output — it asserts `ended (60 total, 5 most recent):` is present in both surfaces"
+  },
+  "BT3": {
+   "cat": "A",
+   "fails": 2,
+   "cls": "security",
+   "host": "devin",
+   "excerpt": "L43: Round 1 (`f398f92`): FAIL — `.boxignore` bypass, verify ran on never-ship file set, autocrlf apply broken, ignored-file clobber."
+  },
+  "BT30": {
+   "cat": "E",
+   "excerpt": "L77: - Verify: `node scripts/verify.mjs test:box-bounty test:box-package test:kitchen` on 45c53e4 → **PASS** (check 0, build 0, test:box-bounty 0 — 56 files / 658 tests; test:box-p"
+  },
+  "BT31": {
+   "cat": "D"
+  },
+  "BT31-ci": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L77: - Verdict: **FAIL** on `ae99ff8` · Level: test-verified (the Node 22.13 fix works; the brief's outcome \"the same results for the same query\" does not hold, see finding 1)"
+  },
+  "BT32": {
+   "cat": "A",
+   "fails": 3,
+   "cls": "scope/budget",
+   "host": "devin",
+   "note": "three FAIL verdicts across the park/resume arc",
+   "excerpt": "L152: - Verdict: **FAIL**, test-verified. The scale gate failed despite green tests. Security review was static inspection plus the suite's existing attack tests, not a new exhaust"
+  },
+  "BT32-ci": {
+   "cat": "D"
+  },
+  "BT33": {
+   "cat": "D"
+  },
+  "BT34": {
+   "cat": "E",
+   "excerpt": "L58: - Pass attacks, all run on ae4d840: (a) byte-diff — the copy differs from `commands.ts`/`paths.ts` only in `extends Error` (×2, sanctioned) and `export` on `ResolvedProgram` ("
+  },
+  "BT35": {
+   "cat": "A",
+   "fails": 3,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L68: - **Verdict: FAIL — test-verified** on exact candidate `181b58242d65297d2be1604e563aaa7ef812549f` vs master `a05ec7d985ead8d12d5e424859c8543fe0f9c7f2`. The wave report commit "
+  },
+  "BT35-resume": {
+   "cat": "E",
+   "excerpt": "L37: - Other required review: clean candidate `ae1dece` first failed `k15-sandbox-guard` because the merged wave history pushed its diff capture past Node's 1 MiB buffer. `dd7006d`"
+  },
+  "BT35-review": {
+   "cat": "E",
+   "excerpt": "L20: - Original obligations: no stage, hook, instruction, dependency, timeout, worker-count or budget relaxation. The pass checked meaningful CLI negatives, unchanged-record/shared"
+  },
+  "BT36": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L74: - Verdict: **PASS** on `dce463f` · Level: test-verified (recorded full verify PASS on the exact SHA; earlier candidate 84cde07 FAILED at test:box-bounty — history kept above)"
+  },
+  "BT3a": {
+   "cat": "E",
+   "excerpt": "L64: - User experience: PASS — cold read of `status`/`answer` output on a scratch repo: a fresh agent can say what ran (check argv, exits at create and on the answer, guard, change"
+  },
+  "BT3b": {
+   "cat": "A",
+   "fails": 4,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L66: ### Round 4 (superseded — commit `35b6203`, FAIL)"
+  },
+  "BT4": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "untrue claim",
+   "host": "unstated",
+   "excerpt": "L81: - Commit: `45ac0ea` — fix round on top of the FAILed `9474b1e`; `git diff 9474b1e..45ac0ea --name-only` → `kitchen/scenarios/bt4.md` + `packages/box-bounty/wording.ts` only, b"
+  },
+  "BT5": {
+   "cat": "E",
+   "excerpt": "L179: provisioned PHP and solved. No overuse, no underuse failure; the fixture's"
+  },
+  "BT5-ci": {
+   "cat": "C",
+   "excerpt": "L41: - Findings and limits: BT6 deferred under START.md's red-master rule. No public bounty posted. Attacks ran on Windows only; native-executable setup avoids Linux dependence on "
+  },
+  "BT6": {
+   "cat": "C",
+   "excerpt": "L86: - **Security (three attacks, own probes through the real CLI):** (1) Hostile solution — built a scratch owner repo with owner-armed `filter.pwn.smudge/clean`, `merge.pwn.drive"
+  },
+  "BT6a": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "devin",
+   "excerpt": "L114: ### Round 1 — review of `00a009b` (FAIL; kept as history)"
+  },
+  "BT6a-ci": {
+   "cat": "C",
+   "excerpt": "L40: - Findings and limits: Windows needs Git's core binary and DLLs plus cmd for the runnable parent stand-in. Initial regression exposed shell lookup; verification then exposed t"
+  },
+  "BT6b": {
+   "cat": "A",
+   "fails": 3,
+   "cls": "security",
+   "host": "devin",
+   "excerpt": "L62: - Verdict: **FAIL** — the security lens defeated the fix; three independent ways exist for a solver's program to run via the tool's own commands · Level: attack-verified (ever"
+  },
+  "BT6b-ci": {
+   "cat": "D"
+  },
+  "BT7": {
+   "cat": "A",
+   "fails": 3,
+   "cls": "correctness",
+   "host": "claude",
+   "note": "three FAIL rounds with in-wave cook rework; wave then split by owner decision and landed via BT7a/BT7b/BT7c",
+   "excerpt": "L121: - Verdict: **FAIL** · Level: test-verified (suites green; every finding below was reproduced through the built CLI of this commit on disposable fixtures, and compared with a "
+  },
+  "BT7a": {
+   "cat": "C",
+   "excerpt": "L51: - Verify: the pass ran `node scripts/verify.mjs test:box-bounty test:box-package` itself, in the foreground, on the clean tree at `85e6612`. First invocation: `verify 85e6612 "
+  },
+  "BT7b": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L80: - Commit: `4524abcb44dd8fcffed9017dddf4dbdf6377ba57` (fix for BT7b-1; first review was `a0c895c145a3a1d47e07496e4d4220fb7969aa99`, FAILED as below)"
+  },
+  "BT7b-ci": {
+   "cat": "D"
+  },
+  "BT7b-ci2": {
+   "cat": "D"
+  },
+  "BT7c": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L62: - Commit: `1ed01f9` reviewed first (FAIL below), re-reviewed at correction `54eaf5b`; `9dc6752`, `28314d1` verified to touch only waves/BT7c.md (`git show --stat`)"
+  },
+  "BT8": {
+   "cat": "E",
+   "excerpt": "L94: - Rebuild equivalence (this review, on `37aa33d`): `git diff 88937f1 37aa33d` is confined to the cook's listed test files — `tests/box/bounty/{bt8.test.ts,github.test.ts,githu"
+  },
+  "BT8a": {
+   "cat": "C",
+   "excerpt": "L111: - `aa0ad4ba722ca48a6de16ca03f902abc626e6e85`: full acceptance failed in 411s. Typecheck/build passed, bounty had 314 passes, eight failures and one skip; package did not run."
+  },
+  "BT8b": {
+   "cat": "D"
+  },
+  "BT8c": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L82: - Verdict: **PASS** on `d03165f` · Level: test-verified plus live-CLI exercise — first round FAILED `fc90d84` on two demonstrated record/status defects (below); the fix commit"
+  },
+  "BT9": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "excerpt": "L104: - **Verdict (first review): FAIL — test-verified.** The diff does what the brief says in shape, the suites are green on the exact commit, and the pass exercised the built CLI"
+  },
+  "C1": {
+   "cat": "E",
+   "excerpt": "L77: - Must-fail check: adding the setter's def line to the expected set failed the suite as required; reverted."
+  },
+  "D1.2": {
+   "cat": "E",
+   "excerpt": "L77: - `verifyGitBaseline` reads loose objects only; a packed fixture `.git` would fail closed (acceptable for a per-run fixture baseline)."
+  },
+  "D2.1": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "devin",
+   "excerpt": "L58: - Verdict: **PASS** — test-verified. The round-1 FAIL mechanism is closed at every check site, and eight new attack vectors all fail closed as named `PreparationGap`s (or `Agr"
+  },
+  "D2.1-proto": {
+   "cat": "E",
+   "excerpt": "L118: - Verify (clean-directory checks): reviewer re-ran B end-to-end on `proto/D2.1-b` — `node proto/select.mjs` (rederived 2 runnable + 1 editable = 3 owner files), `node proto/c"
+  },
+  "D2.2": {
+   "cat": "D"
+  },
+  "D3.1": {
+   "cat": "E",
+   "excerpt": "L47: - Measurement fairness — every failure emitted its class in the JSON consumers parse; the reviewer produced all three classes on the real path: `preparation-defect` (malformed"
+  },
+  "K1": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "claude",
+   "excerpt": "L39: - Verdict: PASS on the second review. The first review (`ec93a5e`) failed: a `?host=` query parameter bypassed the loopback check. Fixed by rejecting any query or fragment and"
+  },
+  "K10": {
+   "cat": "E",
+   "excerpt": "L51: - **Measurement fairness: answered — the green counts are real.** I read run 38016413100's own log, not the report: `tests/box/trace/trace.test.ts` 8/8; box-bounty files 36 pa"
+  },
+  "K11": {
+   "cat": "E",
+   "excerpt": "L57: - Flag #3 (ambiguous-sha edge) fails safe: `resolveSha` returns null on ambiguous prefixes, and `cat-file --batch-check` reports `ambiguous`/`missing` lines that map to null —"
+  },
+  "K12": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L131: ### Correction round — `113feec` (cook, on the pass's FAIL)"
+  },
+  "K13": {
+   "cat": "D"
+  },
+  "K14": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L76: - Verdict: **PASS** · Level: **test-verified** — the counting guard now works as the brief requires on this host, the written budgets are verified (independently recomputed by"
+  },
+  "K15": {
+   "cat": "E",
+   "excerpt": "L98: - `tests/kitchen/k15-sandbox-guard.test.ts` fails as designed when a wave file asks for a real post on `shouteck/omakase-box`: a fabricated `waves/K99-guard-probe.md` (\"Run a "
+  },
+  "K15-ci": {
+   "cat": "C",
+   "note": "correction wave for K15 ENOBUFS crash; K15 record shows no reviewer FAIL verdict",
+   "excerpt": "L46: - Commit: `4982a28` (fix; this Result is committed separately on top). Reproduced first on `3e5c72b`: the scoped run failed `Error: spawnSync git ENOBUFS` at the `git` helper;"
+  },
+  "K16": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "untrue claim",
+   "host": "devin",
+   "excerpt": "L78: - Commit: `306a25e` (`306a25e2e84b8f65280885361830d2c4759f2b8c`) — cook's verified tip after the FAIL fix (implementation `a4fab40`; the fix commit carries the recorder's PAGE"
+  },
+  "K17": {
+   "cat": "D"
+  },
+  "K18": {
+   "cat": "E",
+   "excerpt": "L129: - **Measurement fairness:** recounted from the raw records. 13 participant agents (Codex 5: J1 poster, O1, money poster, O2, abandoned ask poster; Claude 8: ask poster, O3, s"
+  },
+  "K19": {
+   "cat": "D"
+  },
+  "K20": {
+   "cat": "E",
+   "excerpt": "L77: - **CTO:** went right — the designed mid-wave scope amendment repaired a real master regression inside the investigation wave instead of parking it for a separate fix wave; th"
+  },
+  "K21": {
+   "cat": "E",
+   "excerpt": "L151: - Verify: `verify 8b06799 PASS check=0 build=0 test:kitchen=0 db=none 82s` — the pass's own foreground run, `.kitchen/runs/2026-10-15T09-58-42-393Z-8b06799`. Cook's run: `ver"
+  },
+  "K22": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L56: - Verdict: PASS on `debc581` · Level: test-verified (first pass: FAIL on `8abca8f`, recorded in its notes below; correction round notes at the end)"
+  },
+  "K23": {
+   "cat": "E",
+   "excerpt": "L67: - Pass notes: diff `master...c74e042` touches BACKLOG.md, scripts/verify.mjs, 3 test-side files, verify-reuse.test.ts, waves/K23.md — no product code. tests/ diff read line by"
+  },
+  "K24": {
+   "cat": "E",
+   "excerpt": "L65: - Verify: `node scripts/verify.mjs test:box-bounty test:box-package test:kitchen` on `15eb0ef` — **`verify 15eb0ef PASS check=reused@2026-10-16T14-25-45-317Z-7ceeab2(ancestor "
+  },
+  "K25": {
+   "cat": "E",
+   "excerpt": "L118: - Would checks catch a wrong implementation: yes for the deliverable — a wrong `measure.mjs` produces different deterministic cells and my rerun would diverge; a mis-shaped r"
+  },
+  "K26": {
+   "cat": "C",
+   "excerpt": "L88: - Verify: `verify 36090d7 PASS check=reused@2026-10-17T05-58-48-149Z-4191ac4(ancestor 4191ac4, only inert paths changed) build=reused@2026-10-17T05-58-48-149Z-4191ac4(ancestor"
+  },
+  "K27": {
+   "cat": "E",
+   "excerpt": "L96: - **Q3 — would the checks catch a wrong implementation:** `node kitchen/memory/storage/prototype.mjs` ran green, all 10 assertions — each is a real check (a2 greps the pushed "
+  },
+  "K28": {
+   "cat": "D"
+  },
+  "K29": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "note": "one explicit FAIL verdict line; earlier \"~4\" was a count of FAIL-mention lines, not verdicts",
+   "excerpt": "L80: - Verdict: **FAIL** — two defects, each a small fix, see below. Level: test-verified (reviewer's own completed invocation `node scripts/verify.mjs test:box-bounty test:kitchen"
+  },
+  "K29-notes": {
+   "cat": "E",
+   "note": "companion notes file; the \"independent FAIL on 5a9f752\" it names is K29's verdict, already counted on K29"
+  },
+  "K2a": {
+   "cat": "C",
+   "excerpt": "L51: - Verify (reviewer's own foreground runs on the candidate): full acceptance `node scripts/verify.mjs test:auth test:contracts test:acceptance test:compiler test:portal test:ru"
+  },
+  "K2b": {
+   "cat": "E",
+   "excerpt": "L56: - Findings and limits: no leftovers — only Docker Desktop's backend (PID 98996, disclosed) holds 127.0.0.1:4000/4001; no mirror/service/postgres listeners, no `k2a-host-runtim"
+  },
+  "K3": {
+   "cat": "E",
+   "excerpt": "L52: - Sentinel-rename call (the adjudicated judgment call): legitimate mechanical rename, not scope creep — the done-when grep itself forbids `private-task-mvp-synthetic` outside "
+  },
+  "K30": {
+   "cat": "D"
+  },
+  "K31": {
+   "cat": "D"
+  },
+  "K32": {
+   "cat": "E",
+   "excerpt": "L122: 3. **The agent can reach the owner's own surface, not only the signer.** The failure table (`K32-agent-payments.md:171`) names only \"an agent that can ask the signer directly"
+  },
+  "K33": {
+   "cat": "D"
+  },
+  "K4": {
+   "cat": "E",
+   "excerpt": "L52: - STALL verified on real history both sides: streak 2 at `--stall-runs=3` → silent; streak 3 at limit 3 → fires; `--stall-minutes=1` fires the elapsed trigger; dirty-tree run "
+  },
+  "K5": {
+   "cat": "E",
+   "excerpt": "L51: - **Security** — attacked `reusableStep` directly (fabricated run dirs) and end-to-end (planted record + real `verify`). REJECTED as intended: renamed copy of a real PASS dir;"
+  },
+  "K6": {
+   "cat": "A",
+   "fails": 2,
+   "cls": "correctness",
+   "host": "unstated",
+   "note": "two explicit FAIL verdicts plus a park; later accepted through the K6 correction brief",
+   "excerpt": "L86: - Verdict: **FAIL** — two gate defects reproduced with targeted attacks; no full verify run (brief: targeted reproductions, no wasted full run)."
+  },
+  "K7": {
+   "cat": "B",
+   "fails": 1,
+   "cls": "scope/budget",
+   "host": "devin",
+   "note": "reviewer FAIL blocker -> parked; corrections were the separate K7-ci and K7-ci2 waves",
+   "excerpt": "L52: ### Independent reviewer verdict — FAIL, test-verified blocker"
+  },
+  "K7-ci": {
+   "cat": "C",
+   "excerpt": "L36: Accepted candidate `3300fed813a66c256813a735bca19b02fe5d614a`, cook `7604c4ac`, fresh pass `790ec0b1` PASS test-verified. Merged with --no-ff as `692ab73` and pushed master. E"
+  },
+  "K7-ci2": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "security",
+   "host": "devin",
+   "hostNote": "host field detected as missing by measure.mjs; Result names Devin pass agent 86e1c431 -> counted devin",
+   "excerpt": "L43: Superseded first candidate `e58dbeeab027475aa327dea56e7cccba5cdc259d` (same acceptance profile PASS, 341s, record `.kitchen/runs/2026-10-06T19-56-07-257Z-e58dbee`): first revi"
+  },
+  "K7a": {
+   "cat": "D"
+  },
+  "K8": {
+   "cat": "C",
+   "excerpt": "L102: on a pre-verify failure no `.kitchen/runs` artifact exists to upload (seen live,"
+  },
+  "K9": {
+   "cat": "D"
+  },
+  "R1": {
+   "cat": "G",
+   "note": "post-review CTO finding: driver.mjs deleted nonempty --out before clean-tree check; no reviewer FAIL verdict",
+   "excerpt": "L43: - Post-review correction (CTO finding): `driver.mjs` recursively deleted any nonempty `--out` before the clean-tree check and overwrote the pinned agreement unconditionally. W"
+  },
+  "R2": {
+   "cat": "E",
+   "excerpt": "L56: - Findings: command mode needs no registered evaluator and legacy `evaluator`/`checks` paths keep behavior — regression tests pass unchanged (no assertion weakened; the only p"
+  },
+  "R3": {
+   "cat": "A",
+   "fails": 3,
+   "cls": "correctness",
+   "host": "claude",
+   "excerpt": "L71: - **Verdict: FAIL (targeted reproduction; not a product acceptance).** Scope stayed inside the correction paths, but the required safety/recorder gates are not met, so the exa"
+  },
+  "R3b-1": {
+   "cat": "D"
+  },
+  "R3b-2": {
+   "cat": "E",
+   "excerpt": "L90: - The four conditions (worker's reading; **replay** of a closed issue, one case): real issue from someone else's repository, partly met (replay); Box prepared in minutes with "
+  },
+  "fix-paired-check": {
+   "cat": "A",
+   "fails": 1,
+   "cls": "correctness",
+   "host": "devin",
+   "hostNote": "host field detected as missing by measure.mjs; Result tail states \"Devin Desktop, SWE-2\" -> counted devin",
+   "excerpt": "L30: **FAIL (test-verified)** — reviewed commit `3e1fb5b89ad4563c314aa460848c2f91b87cc54f` on `wave/fix-paired-check` (cook's `70c5e0b` plus a reviewer-added test; the product code"
+  }
+ }
+}
