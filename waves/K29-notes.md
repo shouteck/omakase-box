@@ -48,3 +48,10 @@ After the removal no named suite reads `BOX_TEST_DATABASE_URL`/`BOX_DELEGATION_D
 - BT17 re-measure (`tests/box/bounty/bt17-measure.mjs`, candidate dist at `5a9f752`): every `box bounty` step byte-identical to the baseline taken at `d418ee3`; the single differing step is `box --help` (1181→707 characters, 14→10 lines), which is exactly the removed `export`/`submit`/`verify`/`trace` help lines.
 - Negative checks on the final dist: `box export`, `box submit`, `box verify`, `box trace` each print `<cmd>: command-removed — this command belonged to the older Box platform, retired on 18 October 2026; box bounty is the product`.
 - Lockfile: `node scripts/pnpm.mjs install` reported "Lockfile is up to date"; the regeneration happened inside chunk 3 (86 packages dropped from the lockfile, none added).
+
+## Correction round 1 (after independent FAIL on 5a9f752)
+
+- F1 root cause: the acceptance-profile string was repointed at `verify --full test:box-bounty test:kitchen` while `ACCEPTANCE_BUDGET_SECONDS = 330` stayed — a budget travels with its calibrated workload, not the profile label. Fix: `RETIRED_EXPORTER_BUDGET_SECONDS = 330` is named only inside the "none calibrated" limit text; no default enforcement. Page enforcement survives via explicit `--budget=<seconds>` (malformed → exit 2); `budgetCheck(runs, { budgetSeconds })` unchanged in semantics. In-flight/missing-summary runs still report `missing`, never zero/PASS.
+- F2 root cause: the suite-arg filter treated every `--*` arg as inert, so removed `--db` modes silently produced `db=none` green runs. Fix: explicit `--db` validation right after arg parsing, before any side effect; message names K29 and the `none` escape.
+- First correction verify (`941ca1c`, 766 s) failed once in `k6-scope-budget.test.ts` — the page test still expected the retired default; it now asserts both flagless uncalibrated reporting and `--budget=330` `LIMIT FAIL` naming the profile on the same fabricated root. Follow-up commit `0f39d60`.
+- Completed verify `0f39d60`: PASS 772 s, all steps exit 0, `db=none`, clean tree — `.kitchen/runs/2026-10-18T10-40-21-768Z-0f39d60/`.
