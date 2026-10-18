@@ -22,8 +22,8 @@ A station is a cuisine: an area of the product with its own knowledge, traps and
 | Station | Covers | Card |
 |---|---|---|
 | Packaging | Selecting source for a Box, export, clean-directory proof, submit, verify | [stations/packaging.md](stations/packaging.md) |
-| Service and data | The API, the Box store, migrations, auth | [stations/service-data.md](stations/service-data.md) |
-| Console | The screens, and whether a person understands them | [stations/console.md](stations/console.md) |
+| Service and data | Retired platform reference; current bounty memory uses Packaging | [stations/service-data.md](stations/service-data.md) |
+| Console | Retired web apps; current CLI and terminal demo use Packaging | [stations/console.md](stations/console.md) |
 | Evidence | Measurements, comparisons, what may be claimed | [stations/evidence.md](stations/evidence.md) |
 
 A card is knowledge, not a manager. At wave close, the Reflect step adds to the card whatever the next cook on that station would want to have known. Keep each card to one page; replace stale lines instead of appending.

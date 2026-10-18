@@ -4,7 +4,7 @@ Measurements, comparisons and what the kitchen is allowed to claim. Runs through
 
 ## What this station knows
 
-- The plan is `docs/box-v4/delegation/VALIDATION-PLAN.md`. The question is whether a Box costs the owner less total effort than ordinary delegation, or discloses far less source for similar effort, and whether anyone chooses it again.
+- Current outcomes and contracts are in `PLAN.md` and `docs/box-v4/MEMORY-SPEC.md`. The former delegation validation plan is archived with the retired platform; do not use it as the current product's acceptance contract.
 - Record for every attempt: owner preparation, recipient onboarding, implementation, owner acceptance, elapsed time, and quality. From D2 on also record the share of owner source disclosed, and for agent recipients the same agent with the Box and with the full repository: success, tokens, time, owner interventions.
 - Four conclusions are always reported separately: software capability, measured effort, actual repeat use, commercial commitment. A good result in one says nothing about the next.
 - The kitchen's own waves delivered as Boxes are real repeat use by one team. Label them internal; they are not customer evidence.

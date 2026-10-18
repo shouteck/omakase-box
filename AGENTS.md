@@ -70,7 +70,7 @@ How much the kitchen cooks is set by the START message, not by what happens to b
 
 - Windows host, 16 GB. Run heavy builds, browsers and test suites one at a time.
 - Node and pnpm are pinned in `.node-version` and `scripts/toolchain.json`; use `node scripts/pnpm.mjs <arguments>`.
-- This repository's own code runs directly on the host. Tests get a disposable Postgres created and destroyed by `scripts/verify.mjs`. Containers and VMs are for untrusted third-party code only, which no current milestone runs.
+- This repository's own code runs directly on the host. Verification runs the bounty and kitchen suites without a database. Containers and VMs are for untrusted third-party code only, which no current milestone runs.
 - Git: `.git` is owned by the CEO's Windows account and agents may run as another account. Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` on every call. Do not add a global entry or change ownership.
 
 ## Talking to the CEO

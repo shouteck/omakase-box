@@ -1,18 +1,16 @@
 # Status
 
-Updated by the CTO on 18 October 2026 at the BT34 + BT32-ci completed close.
+Updated by the CTO on 18 October 2026 at the K29 completed close.
 
 ## Now
 
-- **BT34 merged** (`e780ee7`) — the named wave of this run. The bounty tool carries its own `resolveProgram` (`packages/box-bounty/program.ts`, byte-identical copy re-based onto `Error`); nothing under `packages/box-bounty/`, `tests/box/bounty/` or the CLI bounty path imports `box-package`, guarded by `standalone.test.ts`. PASS test-verified on `ae4d840`; the seam is cut so K29 can remove the platform. Master green on the BT32-ci close run (`39112932792`); the post-push BT34 run is not awaited.
-- **BT32-ci merged** (`f23125a`) — forced first wave: the red hosted run's cause was `bt32.test.ts:360`'s `commit-tree` seed lacking git identity on the runner; fixed, sweep found no second omission.
-- **BT32 merged** (`6cd2559`). Independent PASS, test-verified, on exact candidate `63d3e60`; final fresh reviewer verdict `0fa1fc8`. Earlier parked FAILs and superseded approvals remain in `waves/BT32.md`, not the current state.
-- **Shared memory built:** posted-bounty milestone events use per-bounty custom Git refs, fetched into the local SQLite shared cache. Drafts and machine detail stay local; ordinary clones and branch files do not receive the chains. Shared-only bounties are read-only.
-- **Trust fixes proven:** per-id authored/imported provenance and exact tips gate pushes, parents and merges. Push source is the proven commit SHA, never the mutable ref name. Planted/swapped refs and the push-boundary race are blocked; legitimate retry, concurrent merge and import-only-clone deletion recovery pass.
-- **Scale gate passed:** final independent production measurement imports 1,000 chains in **5,157 ms**, versus unchanged **12,000 ms** ceiling. Five append samples 300-329 ms and fetch samples 367-408 ms pass this run; earlier 893/899 ms outliers remain recorded. Counted subprocess regression protects batching.
-- **Checks passed on the accepted SHA:** all three named suites executed clean in the worker's 1,001-second run. Final reviewer's own completed invocation reused that same-SHA record and independently ran the hostile probes and production measurement. Fresh-agent second-machine recall/refusals/offline journey and mechanical corrected-artifact recheck are preserved.
-- Main checkout is master; merged branch deleted. No BT32 test/measurement processes, scratch roots or embedded test databases found at close; recreated test cache removed. No new sandbox writes during corrections. Latest hosted run read before merge was green (`39103835337`); the post-push run is not awaited.
+- **K29 merged and pushed** (`1543dd3`). The named wave is complete. Master holds the bounty CLI, bounty tests and kitchen; older platform apps, services, packages, suites and wiring are retired.
+- **Preserved:** `origin/archive/box-platform-2026-10` at dispatch base `d418ee3`; frozen `.execution/` and `docs/legacy/` unchanged. The living `docs/box-v4/MEMORY-SPEC.md` is retained byte-identically after the close-time caller audit.
+- **Acceptance:** independent PASS, test-verified, on exact final candidate `c51a71b`. The reviewer completed full-profile verify with audited reuse: check/build/bounty from the unchanged-code ancestor's real 772-second PASS, kitchen from the final candidate's real 71-second suite run. No suite is missing; no database is needed.
+- **Behavior:** all four retired subcommands refuse by name. The independent baseline/candidate journey comparison preserved bounty output; root help intentionally loses the four old lines. Obsolete database modes now refuse before work.
+- **Measurement limit:** the retired exporter's 330-second ratchet is not a bounty-suite budget. The surviving full profile reports actual seconds without a calibrated limit; explicit configured budgets still fail over-budget. No hosted speedup is claimed.
+- Main checkout is master; merged wave branch deleted. Worker/reviewer scratch removed; no kitchen test or embedded database process or covered temp directory found at close. Latest hosted result before merge was green (`39115084938`, 6m25s); the post-push result and after-duration are not awaited.
 
 ## Next
 
-This run stops after BT34. No wave is in flight and none starts automatically. Remaining roadmap briefs are available when named; **BT33** stays parked and **BT12 Part B** stays deferred. Payment event schema exists, but owner-recorded payment remains BT36's work. **K29** (remove the older platform) is now unblocked by BT34.
+This run stops after K29. No wave is in flight and none starts automatically. BT35 and BT36 remain available when named; K30's retirement dependency is satisfied. BT33 stays parked and BT12 Part B stays deferred. BT32 shared bounty memory remains in place; owner-recorded payment is still BT36's work.

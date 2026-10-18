@@ -23,21 +23,20 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 
 ## Verification
 
-- **One executed full run per candidate.** The cook fixes against the file-scoped inner loop and runs the full verify once on the commit it hands over. The pass relies on that recorded run and spends its time on the diff and its own attacks; it uses `--fresh` only when it can say what it doubts about the record, and says so in the verdict. Two executed full runs of the same commit is waste: on A1 and A2 verification was about half of each wave.
+- **One executed full run per candidate.** The cook fixes with file-scoped checks, then runs full verify on its committed candidate. The pass relies on that record and runs its own attacks; it uses `--fresh` only for a stated doubt about the record.
 - **Off-machine verify.** Code pushes to master run `verify --full` on GitHub Actions (free tier). It is a safety net, never a step to wait for: the local verify on the same commit is what gates a merge. Read the latest result with `gh run list -R shouteck/omakase-box --limit 3` at kickoff and before the next merge. If it is red, the next wave is the fix.
 
-`node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, boundary checks, build and the named suites on the host, gives them a disposable Postgres, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
+`node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, build and the named suites on the host without a database, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
 - The candidate's identity is its commit SHA. Verify refuses to call a run with uncommitted changes acceptable.
 - A step already PASS on this exact commit with a clean tree is `reused` instead of re-run; the recorded `summary.json` (commit, clean flag, step verdict) is the trust anchor, and `--fresh` forces a real run when the record is doubted.
-- `check` runs typecheck, the boundary check and only the suites the branch's diff since master can reach; touching shared tooling or passing `--full` runs them all. A suite named in the invocation never runs twice. `tests/box/` and the milestone-BT packages reach no check suite; `box-contracts` and anything unmapped run all four.
-- The disposable Postgres starts only when a suite about to run needs it — named suites in `DB_SUITES` (derived and pinned by `tests/kitchen/k12-db-suites.test.ts`) or selected check suites in `DB_CHECK_SUITES`; the summary line says `db=embedded` or `db=none`.
+- `check` runs typecheck; no check-only suites remain after K29. Full acceptance names both surviving suites: `node scripts/verify.mjs --full test:box-bounty test:kitchen`. A suite named in the invocation never runs twice.
+- All runs report `db=none`. Removed database modes refuse before work; `--db=none` remains accepted for existing callers.
 - The bounty test files run three workers in parallel, pinned in `tests/kitchen/k12-bounty-parallel.test.ts`; other suites keep one.
-- Measured on this host (K12, 12 October 2026): bounty suite ~350 s, `verify --full` ~120 s, a product-only `check` ~18 s; under saturated load 30 s test timeouts still occur.
+- K29's completed full-profile observation on this host took 772 s, including 690 s for bounty tests and 70 s for kitchen tests. One observation is not a speedup claim. The retired exporter's 330 s budget does not apply to this workload; no surviving-profile budget is calibrated.
 - Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
 - A brief that changes what a command does or prints names `test:kitchen` in Done when; verify adds it anyway.
-- Tests named `*-live.test.ts` shell into the old container stack; not part of ordinary verification until ported to the disposable database.
-- A lost or unclear result is fixed by running it again. Databases are created and destroyed per run, so a rerun costs nothing.
+- A lost or unclear result is fixed by running it again. Do not start a duplicate while a finite command is still running.
 - The reviewer's run is the one that counts. The worker's run is a self-check.
 
 A wave that needs a real GitHub journey runs it in the sandbox `shouteck/box-bounty-sandbox` — the tool is allowed standing there; `kitchen/sandbox.md` has the rules. No live step touches the working repository or needs the owner as a test subject.

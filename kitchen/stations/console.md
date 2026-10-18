@@ -1,6 +1,8 @@
 # Station: Console
 
-The screens an owner or requester uses, and whether a person understands them. The browser half of D1.2, and D3.2 later.
+This station's web applications were retired by K29 on 18 October 2026. The instructions below describe the archived platform, not runnable current apps. The full original card and implementation are preserved on `archive/box-platform-2026-10`.
+
+The current product is the bounty CLI. Its terminal demo remains under `kitchen/demo/`; browser tooling there is demo tooling, not a restored console. Use the packaging card and tick the user-experience lens for current command work.
 
 ## What this station knows
 

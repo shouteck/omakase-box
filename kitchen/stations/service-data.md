@@ -1,6 +1,8 @@
 # Station: Service and data
 
-The private API, the Box store, migrations and auth. Home of B1.1 (accepted) and the server half of D1.2.
+This station's older platform was retired by K29 on 18 October 2026. Its instructions below are historical, not commands for the current checkout. The full original card and implementation are preserved on `archive/box-platform-2026-10`.
+
+Current bounty memory lives in `packages/box-bounty`, with its living definition in `docs/box-v4/MEMORY-SPEC.md`. Use the packaging and evidence station cards for current work. No Postgres, service deployment or migration harness remains in ordinary verification.
 
 ## What this station knows
 

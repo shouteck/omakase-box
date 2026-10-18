@@ -132,7 +132,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | Owner | gates post and merge | involved once; `allow`, `deny`, `config`; settings hold only choices | `owner.ts`, `owner-text.ts`, `settings.ts`, `gate.ts` | — |
 | Platform | — | Git and `gh` checked; one bundled file, no dependencies; Node 22.13 or later; every refusal named | `git.ts`, `gh.ts`, `args.ts`, `wording.ts`, `packages/box-cli` | — |
 
-**Lean, approved by the owner on 18 October 2026: retire the older Box platform from master.** About 21,000 lines (`services/`, `apps/`, `packages/` analyzer, evaluation, planner, compiler, contracts, runner-protocol, box-contracts, box-trace, box-package; `box export`, `submit`, `verify`, `trace`; their test suites in every hosted check; about half of BACKLOG.md) serve no stage. The bounty tool uses one function from it. Kept on an archive branch and in history. **BT34** makes the bounty tool stand alone; **K29** removes the rest.
+**Lean, approved by the owner on 18 October 2026, completed by BT34 and K29.** The bounty tool stands alone. The older platform, its commands and suites are retired from master and preserved on `origin/archive/box-platform-2026-10` at `d418ee3`. The living bounty memory specification stays on master; full verification runs only bounty and kitchen suites without a database.
 
 ### Order (dependencies, no dates)
 
@@ -141,7 +141,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | 1 | **K28** the delegation record, researched (done) | memory (G8) | — | — |
 | 2 | **BT34** the bounty tool stands alone | lean | — | **yes**: any time |
 | 3 | **BT32** shared memory, event chains (merged) | memory (G8) | K28 (done) | done; merged `6cd2559` |
-| 4 | **K29** retire the older Box platform | lean | BT34 | no |
+| 4 | **K29** retire the older Box platform (merged) | lean | BT34 (merged) | done |
 | 5 | **BT35** open bounties show their age | track (G3) | — | **yes**: any time |
 | 6 | **BT36** the owner records that a solver was paid | pay (G5) | the owner confirms its decision 1; its shared-memory test needs BT32 | mostly: all but one test any time |
 | 7 | **K31** the tool in real use, in the sandbox | all stages (G9) | BT32; the owner's "go" for real $0 public posts; best after BT35 and BT36 so it tests them too | no |
@@ -165,7 +165,7 @@ The kitchen has one stove, so waves cook one at a time; "independent" means it c
 | BT5 | The kitchen used it for real, end to end, through a local folder; the tool stays installed in this repository | Merged |
 | BT6, first run | The GitHub adapter: post as issue and branch, public-only refusal, solutions from pull requests, `status` reading GitHub, recovery of half-done steps | Reviewed, parked on `wave/BT6`, nothing posted |
 | K10 | The off-machine run tests these suites | Merged |
-| C1 | `box trace`. Not used here | Merged |
+| C1 | Former `box trace`, preserved on `archive/box-platform-2026-10` | Retired by K29 |
 
 ## Remaining waves
 
@@ -218,7 +218,7 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **BT32** (merged 18 October 2026) | **Every agent on the project shares the bounty memory, as event chains in the project's own Git.** One ref per bounty, allow-listed/scanned events, throttled fetch and SQLite shared cache, read-only shared-only records, safe retries/concurrent merges and validated recovery. Provenance and exact-SHA pushes block planted/replaced refs and push-boundary races. Independent 1,000-chain import 5.157 s against the unchanged 12 s ceiling; second-machine journey verified. `paid` schema is defined here; writing owner-recorded payment is BT36. | Brief: [waves/BT32.md](waves/BT32.md). Merged `6cd2559`, independent PASS on `63d3e60`. |
 | **BT33** (parked) | **Private sync of the shared memory through a free online database (Turso).** Briefed and approved, then parked by the owner on 17 October 2026: not important now. Revive only on a real need. | Brief kept: [waves/BT33.md](waves/BT33.md). |
 | **BT34** | **The bounty tool stands alone.** Copies the one function it uses from the older platform (`resolveProgram`) into `box-bounty`; a guard test keeps any older package from being imported again. No behaviour change. | Brief: [waves/BT34.md](waves/BT34.md). Lean, owner-approved 18 October 2026. |
-| **K29** | **Retire the older Box platform from master.** Archive branch first; inventory of who uses what; removal in green chunks (older `box` subcommands refuse by name; packages, apps, services; root wiring and lockfile; kitchen tooling without a database; the hosted check reduced to the product's suites; docs and backlog). `.execution/` and `docs/legacy/` untouched. | Brief: [waves/K29.md](waves/K29.md). Owner-approved 18 October 2026. |
+| **K29** (merged 18 October 2026) | **Older Box platform retired from master.** Archive preserved; old subcommands refuse by name; bounty and kitchen suites run without a database; living memory specification retained; frozen history unchanged. | Record: [waves/K29.md](waves/K29.md). Merged `1543dd3`, final independent PASS on `c51a71b`. |
 | **BT35** | **Open bounties show their age, and a long wait is said once.** Open and last-activity age in `status`, `box bounty` and `--json`; after 14 days with no new solution, one line per bounty, said once, naming keep waiting or close. Nothing automatic. | Brief: [waves/BT35.md](waves/BT35.md). Roadmap G3. |
 | **BT36** | **The owner can record that a solver was paid.** `config set paid <id>` (owner to confirm), amount copied from the bound reward, shown as owed or paid, shared with the memory; never verified, moved or posted. | Brief: [waves/BT36.md](waves/BT36.md). Roadmap G5. |
 | **K31** | **The tool in real use, measured against the roadmap's questions.** Five genuine $0 tasks in the sandbox: fresh posting, solver and later agents on two machines; every actor question scored from transcripts; real timings; only fixes real use shows. Needs the owner's go. | Brief: [waves/K31.md](waves/K31.md). Roadmap G9. |
