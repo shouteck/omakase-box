@@ -173,7 +173,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       // event — the exact "replace an existing ref" attack. It matches no
       // recorded authored/pending/pushed provenance, so it must never be
       // pushed, adopted into output or merged onto the remote graph.
-      const gitIn = (args: string[], input: string) =>
+      const gitIn = (args: string[], input = '') =>
         execFileSync('git', ['-c', `safe.directory=${world.repo}`, '-c', 'user.name=x', '-c', 'user.email=x@x', '-C', world.repo, ...args], { input, encoding: 'utf8' }).trim();
       const blob = gitIn(['hash-object', '-w', '--stdin'], JSON.stringify({ v: 1, type: 'posted', at: '2026-10-18T02:00:00.000Z', actor: 'x', id: world.id, title: 'PLANTED-NEVER-SHOWN', task: 't', base: 'a'.repeat(40), branch: 'main', issue: { number: 1, url: 'https://github.com/owner/project/issues/1' }, published: { pushed: [] } }) + '\n');
       const tree = gitIn(['mktree'], `100644 blob ${blob}\tevent.json\n`);
