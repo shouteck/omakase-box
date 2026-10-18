@@ -1,16 +1,16 @@
 # Status
 
-Updated by the CTO on 18 October 2026 at the K29 completed close.
+Updated by the CTO on 18 October 2026 at the BT35 parked close.
 
 ## Now
 
-- **K29 merged and pushed** (`1543dd3`). The named wave is complete. Master holds the bounty CLI, bounty tests and kitchen; older platform apps, services, packages, suites and wiring are retired.
-- **Preserved:** `origin/archive/box-platform-2026-10` at dispatch base `d418ee3`; frozen `.execution/` and `docs/legacy/` unchanged. The living `docs/box-v4/MEMORY-SPEC.md` is retained byte-identically after the close-time caller audit.
-- **Acceptance:** independent PASS, test-verified, on exact final candidate `c51a71b`. The reviewer completed full-profile verify with audited reuse: check/build/bounty from the unchanged-code ancestor's real 772-second PASS, kitchen from the final candidate's real 71-second suite run. No suite is missing; no database is needed.
-- **Behavior:** all four retired subcommands refuse by name. The independent baseline/candidate journey comparison preserved bounty output; root help intentionally loses the four old lines. Obsolete database modes now refuse before work.
-- **Measurement limit:** the retired exporter's 330-second ratchet is not a bounty-suite budget. The surviving full profile reports actual seconds without a calibrated limit; explicit configured budgets still fail over-budget. No hosted speedup is claimed.
-- Main checkout is master; merged wave branch deleted. Worker/reviewer scratch removed; no kitchen test or embedded database process or covered temp directory found at close. Latest hosted result before merge was green (`39115084938`, 6m25s); the post-push result and after-duration are not awaited.
+- **BT35 parked, not merged.** Candidate `2232cb8` is preserved on local and origin `wave/BT35`, report tip `cc97892`. Independent FAIL on the first candidate and FAIL/blocked on the correction are recorded on that branch.
+- **Remaining defect:** finite `Date.parse` accepts non-ISO strings such as `2026/10/01`, which still leak into the JSON fields promised as ISO timestamps. The age boundary needs strict validation or normalization and a regression for this input class.
+- **Acceptance missing:** the correction's only full run was `2232cb8+dirty FAIL`, 1,023 seconds. A worker-created `nul` file invalidated the clean-tree requirement; two other tests timed out. Scoped reruns are not acceptance, and the previous candidate's green run cannot accept this code. The original 90-minute timebox does not fit another full run.
+- **Saved work:** age display, bounded once-said reminders, shared-only notice handling, documentation and 15 BT35 tests are on the parked branch. The reviewer reproduced the remaining defect with the built CLI. No product change from BT35 reaches master.
+- **Master remains K29's bounty-only product.** The archive and living memory specification remain intact. Latest completed hosted master run at close: green `39121839273`, 2m47s. Close-document pushes are not awaited.
+- Main checkout is master. Worker/reviewer scratch and polling artefacts are cleaned; no matching test/Postgres process or covered temp item was found. The unmerged BT35 branch is retained deliberately.
 
 ## Next
 
-This run stops after K29. No wave is in flight and none starts automatically. BT35 and BT36 remain available when named; K30's retirement dependency is satisfied. BT33 stays parked and BT12 Part B stays deferred. BT32 shared bounty memory remains in place; owner-recorded payment is still BT36's work.
+This run stops after parked BT35. Recommendation: resume BT35 in a separately authorized timebox with a fresh cook, fix the timestamp contract, complete a clean full verify, then obtain independent PASS. No work starts automatically. BT33 stays parked; BT12 Part B stays deferred; BT36 has not started.
