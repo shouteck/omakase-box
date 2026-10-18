@@ -323,8 +323,10 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       const rewardLimit = parsed.values['--reward-limit'];
       const money = reward === undefined && rewardLimit === undefined ? undefined
         : { ...(reward !== undefined ? { reward } : {}), ...(rewardLimit !== undefined ? { rewardLimit } : {}) };
-      const namedMoney = values[0] === 'set' && (values[1] === 'reward' || values[1] === 'reward-limit');
-      if (subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && namedMoney)) throw new BountyRefused('authority-arguments', 'unexpected arguments; use allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], deny [owner/name], or config [set|add|remove <setting> <value>]. Nothing changed');
+      // `config set <name> <value>` is three words; four is allowed only for
+      // `reward`/`reward-limit`'s repository target and for `paid`'s `no`.
+      const withTarget = values[0] === 'set' && (values[1] === 'reward' || values[1] === 'reward-limit' || values[1] === 'paid');
+      if (subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && withTarget)) throw new BountyRefused('authority-arguments', 'unexpected arguments; use allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], deny [owner/name], or config [set|add|remove <setting> <value>]. Nothing changed');
       let root: string | null = null;
       try { root = resolveRepoRoot(repoPath(parsed), subcommand); }
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error; }

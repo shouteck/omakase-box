@@ -349,6 +349,19 @@ export function shareClosed(root: string, record: BountyRecord, kind: 'rejected'
   return share(root, record, { reason }, event);
 }
 
+// `paid` — when the owner records a merged bounty's solver was paid, and
+// again when a mistaken record is withdrawn (BT36). The event carries only
+// the amount, whose word it is and the withdrawal mark — never the solver,
+// never the payment link: payment stays private between owner and solver.
+export function sharePaid(root: string, record: BountyRecord, amount: number, withdrawn: boolean): PushResult | 'held' {
+  const event: ChainEvent = {
+    v: 1, type: 'paid', at: new Date().toISOString(), actor: actorOf(record),
+    amount, by: 'owner',
+    ...(withdrawn ? { withdrawn: true } : {})
+  };
+  return share(root, record, {}, event);
+}
+
 // ---------------------------------------------------------------------------
 // Reading: throttled fetch, per-chain import into the shared table.
 // ---------------------------------------------------------------------------
@@ -672,7 +685,7 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
   const issueNumber = typeof issue['number'] === 'number' ? issue['number'] : 0;
   const repository = /^https:\/\/github\.com\/([A-Za-z\d_.-]+\/[A-Za-z\d_.-]+)\//.exec(issueUrl)?.[1] ?? 'unknown/unknown';
   const attempts: unknown[] = [];
-  const history: { stage: string; at: string; destination?: string; reason?: string; attempt?: number; merge?: string; unasked?: true; command?: string }[] = [];
+  const history: { stage: string; at: string; destination?: string; reason?: string; attempt?: number; merge?: string; unasked?: true; command?: string; amount?: number; by?: string; withdrawn?: true }[] = [];
   let stage = 'posted';
   let endedAt: string | null = null;
   for (const event of events) {
@@ -709,6 +722,15 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
       const kind = event['kind'] === 'rejected' ? 'rejected' : 'withdrawn';
       history.push({ stage: kind, at, command: 'close', ...(typeof event['reason'] === 'string' ? { reason: event['reason'] } : {}), ...(event['unasked'] === true ? { unasked: true as const } : {}) });
       stage = kind; endedAt = at;
+    } else if (event['type'] === 'paid') {
+      // BT36: the paid fact is part of the outcome, so it rides the chain —
+      // a fact on the record, never a stage: `stage`/`endedAt` do not move.
+      history.push({
+        stage: 'paid', at, command: 'config',
+        ...(typeof event['amount'] === 'number' ? { amount: event['amount'] } : {}),
+        ...(typeof event['by'] === 'string' ? { by: event['by'] } : {}),
+        ...(event['withdrawn'] === true ? { withdrawn: true as const } : {})
+      });
     }
   }
   const createdAt = typeof posted['at'] === 'string' ? posted['at'] : new Date(0).toISOString();

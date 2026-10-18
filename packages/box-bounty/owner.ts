@@ -15,6 +15,8 @@ import { checkInstructionSettingsWrite, readInstructions, writeInstructions } fr
 import { changePublishList, publishLists } from './never-ship.js';
 import { githubRemotes, repositoryAddress } from './repository.js';
 import { boundAmount } from './format.js';
+import { paymentOf } from './pay.js';
+import { sharePaid } from './chain.js';
 
 // What `allow` prints before it writes: the owner block first — the plain
 // sentences that say what a bounty is, that it is public under the owner's
@@ -343,6 +345,15 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
     const target = verb === 'remove' ? `box bounty deny ${value ?? '<owner/name>'}` : `box bounty allow ${value ?? '<owner/name>'}`;
     throw new BountyRefused('config-command-removed', `box bounty config ${verb} repositories ${verb === 'add' || verb === 'remove' ? 'was removed' : 'is not how a repository is listed'} — ${verb === 'remove' ? 'denying' : 'allowing'} a repository is its own command: ${target}; nothing changed`);
   }
+  // `config set paid <bounty-id>` is the owner's word that a merged bounty's
+  // solver was paid (BT36); `... no` withdraws a mistaken record. The amount
+  // is the bound reward — never typed — and the fact stays private: the
+  // record and the shared memory carry it, the issue never hears of it.
+  if (name === 'paid') {
+    if (repoRoot === null) throw new BountyRefused('config-value-invalid', 'paid records on a bounty in this checkout — run it inside the checkout; nothing changed');
+    if (verb !== 'set' || (target !== undefined && target !== 'no')) throw new BountyRefused('config-value-invalid', `use box bounty config set paid <bounty-id> to record the solver was paid, or box bounty config set paid <bounty-id> no to withdraw a mistaken record; nothing changed`);
+    return recordPaid(repoRoot, value, target === 'no');
+  }
   if (name === 'reward' || name === 'reward-limit') {
     if (verb !== 'set') throw new BountyRefused('config-value-invalid', `use box bounty config set ${name} <whole dollars> [owner/name]; nothing changed`);
     if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new BountyRefused('reward-amount-invalid', `"${value}" is not a whole dollar amount at or above 0; nothing changed`);
@@ -402,6 +413,31 @@ export function changeConfig(repoRoot: string | null, verb: string, name: string
   const written = writeDecision(repoRoot ?? '.', 'default', bounty);
   const merge = bounty === 'allowed' ? 'Merging is not gated — the owner is not asked before a merge.' : 'The owner is asked before each merge too — ask me each time covers posts and merges.';
   return `all-projects: ${value}, written ${written.at}. ${value === 'true' ? 'Bounties may be public under your GitHub account across all projects; solutions the agent chooses are merged into your code.' : 'Each post needs a repository permission or one-bounty answer.'} Dated deny exceptions stay not allowed. ${merge}`;
+}
+
+// `config set paid <id>`: a `paid` event on the record — stage untouched —
+// then the same fact on the shared memory's chain. Only a merged bounty
+// whose bound reward is above $0 can be paid on; anything else refuses by
+// name and changes nothing.
+function recordPaid(repoRoot: string, id: string, withdraw: boolean): string {
+  const record = loadRecord(repoRoot, id);
+  const amount = boundAmount(record) ?? 0;
+  if (record.stage !== 'applied') throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: it was not merged — box bounty status ${id} shows its state; nothing changed`);
+  if (amount <= 0) throw new BountyRefused('paid-nothing-owed', `${id} owes nothing: its reward is $0; nothing changed`);
+  const payment = paymentOf(record)!;
+  if (!withdraw && payment.paidAt !== null) throw new BountyRefused('paid-already-recorded', `${id} was already recorded paid $${amount} at ${payment.paidAt} — to withdraw a mistaken record: box bounty config set paid ${id} no; nothing changed`);
+  if (withdraw && payment.paidAt === null) throw new BountyRefused('paid-not-recorded', `${id} has no paid record to withdraw — it reads owed $${amount}; nothing changed`);
+  const at = new Date().toISOString();
+  record.events.push({ stage: 'paid', at, amount, by: 'owner', ...(withdraw ? { withdrawn: true } : {}) });
+  persistRecord(repoRoot, record);
+  // The paid fact travels with the shared bounty memory (decision 4): a
+  // `paid` chain event carrying only amount, whose word and the withdrawal
+  // mark — never the solver, never the link, nothing to the issue.
+  sharePaid(repoRoot, record, amount, withdraw);
+  const solver = payment.solver ?? 'the solver';
+  return withdraw
+    ? `${id}: the paid record is withdrawn — $${amount} owed to ${solver} reads as owed again; the record keeps both events.`
+    : `${id}: paid $${amount} to ${solver}, recorded ${at} — the owner's word on the record; the tool never checked and never moved money.`;
 }
 
 export function renderSummary(repoRoot: string, since?: string): string {

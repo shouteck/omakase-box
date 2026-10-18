@@ -192,7 +192,7 @@ const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', '
 export function unknownSetting(name: string): never {
   const folded = name.toLowerCase().replace(/[-_]/g, '');
   const hard = HARD_STOP_WORDS.some(word => folded.includes(word));
-  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit'}. Nothing changed`);
+  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid'}. Nothing changed`);
 }
 const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; fix the settings file or remove it`); };
 function change(value: unknown, where: string): Change {
