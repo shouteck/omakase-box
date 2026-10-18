@@ -23,6 +23,7 @@ The station's work is now the bounty tool: creating a bounty (the whole reposito
 - **The answer is verified against the version the bounty was made for, then brought forward.** Code moves on while a bounty is open.
 
 - **Facts, never verdicts.** The tool says "the check you set now passes", never "this answer is correct". A wrong fact is a bug that can be found; a wrong verdict misleads and cannot be traced. Reports always say what was not checked.
+- **Changing a printed line means sweeping the suite for the old wording.** BT36's only FAIL was one stale bt11b assertion still expecting `pay $5 to` where status now prints `payment: owed` — grep the tests for the old literal before hand-back, not just the render code.
 - **Mechanical work is the tool's; judgement is the agent's.** Three decisions belong to the agent: hand off or not, what the task is, accept or not. Anything else a command asks the agent to supply is a defect to remove.
 - **Discretion, not enforcement.** Nothing requires an agent to use the tool. How it is described decides whether it is used: published work found wording alone changes use tenfold, that more detail is not better, and that agents both overuse and ignore tools. Say what it does, when it is worth using, and when it is not.
 
