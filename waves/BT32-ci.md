@@ -41,11 +41,11 @@ Add `'-c', 'user.name=x', '-c', 'user.email=x@x'` to that call's argument list (
 
 ## Result
 
-- Worker: · Reviewer:
-- Commit:
-- Verify:
+- Worker: cook on `wave/BT32-ci` (Windows host) · Reviewer:
+- Commit: `a9c4729` — "BT32-ci: scale-gate malformed-ref seed carries its own git identity" (one line in `tests/box/bounty/bt32.test.ts:360`; this Result committed on top)
+- Verify: `verify a9c4729 PASS check=0 build=0 test:box-bounty=0 db=none 938s` — run dir `.kitchen/runs/2026-10-18T08-25-16-294Z-a9c4729`, 61 files / 690 passed / 1 skipped
 - Verdict: · Level:
-- Identity-stripped before/after:
-- Sweep of raw git calls (what was checked, what was found):
-- Merged: · Resources removed:
-- Reflect:
+- Identity-stripped before/after: temp bare repo, `GIT_CONFIG_NOSYSTEM=1` + `GIT_CONFIG_GLOBAL`/`GIT_CONFIG_SYSTEM` → empty file. Before (unfixed shape): `git -C r.git commit-tree 4b825dc… -m empty` → `Author identity unknown` / `fatal: unable to auto-detect email address`, exit 128. After (fixed shape): same call with `-c user.name=x -c user.email=x@x` → commit `79c6a5f`, exit 0. Stronger end-to-end proof: `node scripts/suite.mjs box --suite bounty tests/box/bounty/bt32.test.ts` under the same stripped env — all 14 tests pass (72.5s).
+- Sweep of raw git calls (what was checked, what was found): enumerated all 66 `execFileSync`/`spawnSync('git', …)` sites in `tests/box/bounty/` plus every `git()`/`objectGit()`/fixture-runner call that can create a commit (`commit`, `commit-tree`, `cherry-pick`, `merge`, `rebase`, `am`, `fast-import`). Found: `bt32.test.ts` L142/L177 `gitIn` and L205 `commitEvent` already carried the flags — the L360 `commit-tree` was the lone omission (fixed). `bt32-pass-toctou.test.ts:42` `commit-tree` carries them; `bt32-pass-probes.test.ts:38,148` runners carry them; `bt21.test.ts:124` `merge --no-commit` carries them anyway; `github.test.ts:221` and all `github-history.test.ts`/`objectGit` commit-tree call sites carry them; `measure-post.mjs:63,76` carry `user.name=box-bounty`. `fast-import` calls (`bt32.test.ts:342`, `github-history.test.ts:316`) embed `committer`/`author` lines in the stream. Every `git(repo, …)` `commit`/`merge`/`cherry-pick`/`commit-tree` call routes through `support.ts:94`, which injects `-c user.name=bt-test -c user.email=bt-test@test.invalid`. `update-ref`, `push`, `fetch`, `clone`, `ls-remote`, `hash-object`, `mktree`, `read-tree`, `checkout-index`, `diff`, `show-ref`, `rev-parse`, `cat-file`, `check-ignore`, `ls-files` create no commit objects — no identity needed. Non-issues worth noting: `ordinary-tree.ts` `plainGit` injects nothing by design ("Git as an agent types it") and currently only runs `diff` — a future commit-creating call through it would reintroduce this flake; product-side commit creation carries its own `box-bounty` identity (`chain.ts:127`, `snapshot.ts:60`, `answer.ts:276`, `publish-plan.ts:301`).
+- Merged: · Resources removed: repro bare repo + empty gitconfig (`/tmp/tmp.UITjnY96QE`), scratch logs (`/tmp/bt32-scoped.log`, `/tmp/verify-bt32ci.log`), suite temp dirs (`$TEMP/box-bt1-*`)
+- Reflect: the file's own convention made the fix one line; the brief's mechanical sweep was the real work — `plainGit` and the fast-import committer-lines are the two places a future wave could reintroduce this class.
