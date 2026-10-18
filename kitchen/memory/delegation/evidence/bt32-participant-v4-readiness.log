@@ -1,0 +1,21 @@
+Cloning into 'C:\Users\shout\AppData\Local\Temp\kitchen-BT32-participant-tscz5R\run\machine-a'...
+warning: You appear to have cloned an empty repository.
+done.
+warning: in the working copy of 'TASK.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app.txt', LF will be replaced by CRLF the next time Git touches it
+To C:\Users\shout\AppData\Local\Temp\kitchen-BT32-participant-tscz5R\run\remote.git
+ * [new branch]      HEAD -> main
+Cloning into 'C:\Users\shout\AppData\Local\Temp\kitchen-BT32-participant-tscz5R\run\machine-b'...
+Cloning into 'C:\Users\shout\AppData\Local\Temp\kitchen-BT32-participant-tscz5R\run\machine-check'...
+bounty close refused (shared-only): this bounty was posted from another machine; its issue is https://github.com/owner/project/issues/7; act on it from that machine, or on GitHub
+readiness wrapper answers and the shared bounty is shown: status lists the seeded bounty, ended withdrawn
+readiness shared-only action is refused on the check clone: close refused shared-only
+readiness offline refresh attempt reports the notice after the throttle window: dead remote -> "shared bounty memory not refreshed" + cached row
+{
+  "world": "C:\\Users\\shout\\AppData\\Local\\Temp\\kitchen-BT32-participant-tscz5R\\run",
+  "machineB": "C:\\Users\\shout\\AppData\\Local\\Temp\\kitchen-BT32-participant-tscz5R\\run\\machine-b",
+  "bountyId": "bt-aa11bb22cc33",
+  "wrapper": "C:\\Users\\shout\\AppData\\Local\\Temp\\kitchen-BT32-participant-tscz5R\\run\\box.cmd"
+}
+(node:169932) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)

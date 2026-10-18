@@ -5,6 +5,7 @@
 // record.ts unchanged (BT25).
 
 import { mkdirSync,writeFileSync } from 'node:fs';
+import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
 import { quoteForeign,showPath } from './notice.js';
 import { boundAmount } from './format.js';
@@ -17,7 +18,8 @@ import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
 import { payToLine } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
-import { corruptFiles,endedContaining } from './store.js';
+import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
+import { refreshSharedMemory } from './chain.js';
 import { askMergeNoticeLine,loadState,localFirstMergeLine,repoReward,rewardNoticeLine,saidOnce } from './settings.js';
 import type { AttemptOutcome,BountyRecord,ListedBounty,StageEvent } from './record.js';
 
@@ -128,7 +130,19 @@ const scanFindingLines = (record: BountyRecord, indent: string): string[] => {
 // empty project says so and says what to do. `--comments` prints the issue's
 // comments marked as written by others. Never prints nothing.
 export function renderStatus(repoRoot: string, options: { readonly id?: string; readonly full?: boolean; readonly comments?: boolean } = {}): string {
-  const single = options.id !== undefined ? loadRecord(repoRoot, options.id) : undefined;
+  // BT32: `status` is one of the five commands that refresh shared memory.
+  refreshSharedMemory(repoRoot);
+  let single: BountyRecord | undefined;
+  if (options.id !== undefined) {
+    try {
+      single = loadRecord(repoRoot, options.id);
+    } catch (error) {
+      // BT32: an id the chain knows is shown, not refused — status reads.
+      if (!(error instanceof BountyRefused) || error.reason !== 'shared-only') throw error;
+      single = sharedRead(repoRoot, options.id) ?? undefined;
+      if (single === undefined) throw error;
+    }
+  }
   // BT31: the compact overview never parses every record — it asks the
   // store for the open ones, the five most recently ended (the cap this
   // view ever joins), any ended record still carrying `pending` work, any
@@ -144,11 +158,11 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   if (bounded) {
     const seen = new Set<string>();
     const keep = (records: readonly BountyRecord[]): ListedBounty[] => records.flatMap(record => seen.has(record.id) ? [] : (seen.add(record.id), [asEntry(record)]));
-    const opens = keep(openRecords(repoRoot));
-    recent = keep(endedRecords(repoRoot, ENDED_OVERVIEW_LIMIT));
+    const opens = keep([...openRecords(repoRoot), ...sharedOpen(repoRoot)]);
+    recent = keep([...endedRecords(repoRoot, ENDED_OVERVIEW_LIMIT), ...sharedEnded(repoRoot, ENDED_OVERVIEW_LIMIT)]);
     endedShown = [...recent, ...keep(endedContaining(repoRoot, '"pending": "')), ...keep(merges.flatMap(([, notice]) => endedContaining(repoRoot, notice.commit)))];
     listed = [...opens, ...endedShown, ...corruptFiles(repoRoot).map(file => asEntry(null, file))];
-    endedTotal = endedCount(repoRoot);
+    endedTotal = endedCount(repoRoot) + sharedEndedCount(repoRoot);
   } else if (single !== undefined) {
     listed = [asEntry(single)];
     const allEnded = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
@@ -156,13 +170,16 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     endedShown = allEnded;
     endedTotal = allEnded.length;
   } else {
-    listed = listRecords(repoRoot);
+    listed = [...listRecords(repoRoot), ...sharedOpen(repoRoot).map(record => asEntry(record)), ...sharedEnded(repoRoot).map(record => asEntry(record))];
     const allEnded = listed.filter(entry => entry.record !== null && !isOpenStage(entry.record.stage));
     recent = allEnded;
     endedShown = allEnded;
     endedTotal = allEnded.length;
   }
   for (const entry of listed) {
+    // A shared record's GitHub block is the chain's facts — refreshing it
+    // would spend this machine's calls on another machine's bounty.
+    if (entry.record?.shared === true) continue;
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
     else if (entry.record !== null && options.full) refreshGitHubFormat(repoRoot, entry.record);
   }
@@ -170,6 +187,14 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   const ended = endedShown;
   const corrupt = listed.filter(entry => entry.record === null);
   const lines: string[] = [];
+  // Pending shared-memory pushes are named in the overview (BT32).
+  for (const key of metaKeys(repoRoot, 'chain_pending:')) {
+    lines.push(`${key.slice('chain_pending:'.length)} — shared bounty memory not pushed yet; it will be retried`);
+  }
+  // A shared-only bounty names its origin — the chain, not this machine.
+  for (const entry of listed) {
+    if (entry.record?.shared === true) lines.push(`${entry.record.id} — posted from another machine (shared bounty memory)`);
+  }
   for (const entry of listed) {
     const record = entry.record;
     if (record?.github === undefined) continue;

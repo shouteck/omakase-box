@@ -1116,3 +1116,29 @@ ordinary-looking file name still ships. The pre-publish scan (above) catches
 secret-shaped content only in what a GitHub post publishes for the first
 time. `.boxignore` is the catch-all for paths, plus the owner's `never publish` settings list,
 which joins this same table from outside the repository.
+
+## The shared memory — one bounty chain, every machine
+
+Project facts have to reach every machine the tool runs on, so each posted
+bounty carries a second, quiet history beside the issue: a Git ref
+`refs/box-bounty/<id>` on the project's own remote, where every milestone is
+one commit holding one small JSON event (`posted`, `solution`, `merged`,
+`closed`; `paid` is reserved). An event is written when the milestone happens
+and pushed right away; two machines racing get an empty merge event joining
+both tips, and nothing is lost.
+
+What is shared is exactly the event table — the title, task, why, the issue,
+which commits were published, which pull requests came back and what became
+of them. What is **not** shared stays home: drafts, the working tree, the
+local settings and every machine-only fact, and each event's text passes the
+same secret scan a post does before it is written.
+
+On a **public** repository these refs are public like the code is: anyone
+who can fetch can read them, and anyone with push access can write them —
+the tool validates every event it imports and treats `actor` as display
+text, never authority. An **ordinary clone never downloads them**: the refs
+live outside branches and tags, so `git clone`, the working tree and
+`git grep` see nothing; only the tool's explicit fetch brings them down, and
+only to be folded into the local store as shared rows — a bounty another
+machine posted shows in `status` and `find`, but acting on it is refused by
+name: it belongs to the machine that posted it.

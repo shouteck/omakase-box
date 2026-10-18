@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { resolveProgram } from '../box-package/commands.js';
@@ -14,7 +14,10 @@ export const GIT_LEAST = '2.40';
 
 let pinnedGit: string | undefined;
 export function gitProgram(): string {
-  if (pinnedGit !== undefined) return pinnedGit;
+  // The pin saves one probe spawn per call; a path that vanished (a stripped
+  // PATH in a test, a Git upgrade mid-session) falls back to resolving again.
+  if (pinnedGit !== undefined && existsSync(pinnedGit)) return pinnedGit;
+  pinnedGit = undefined;
   let program: string;
   try { program = resolve(resolveProgram('git').path); }
   catch { throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — none was found on PATH. Get it at https://git-scm.com`); }
@@ -170,7 +173,7 @@ export function commandConfig(repo: string): readonly ConfigEntry[] {
 // These read or write objects and refs only — never working-tree content, never
 // the index — so no filter or merge driver can run in them and the foreign pins
 // need no configuration read. A saving only: anything not listed is pinned.
-const OBJECT_AND_REF_ONLY = new Set(['rev-parse', 'cat-file', 'ls-tree', 'merge-base', 'rev-list', 'for-each-ref', 'show-ref', 'symbolic-ref', 'update-ref', 'ls-remote', 'remote', 'commit-tree', 'hash-object', 'branch', 'log']);
+const OBJECT_AND_REF_ONLY = new Set(['rev-parse', 'cat-file', 'ls-tree', 'merge-base', 'rev-list', 'for-each-ref', 'show-ref', 'symbolic-ref', 'update-ref', 'ls-remote', 'remote', 'commit-tree', 'hash-object', 'branch', 'log', 'mktree', 'fetch']);
 
 function safeArgs(repo: string, args: readonly string[], content: GitContent): string[] {
   const prefix = ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo];
@@ -338,13 +341,13 @@ export function gitBlob(repo: string, commit: string, path: string, env: GitEnv 
   return result.stdout;
 }
 
-// One `cat-file --batch` reads every commit:path blob asked for; a path that is
-// not a blob in the tree maps to null, exactly as one `cat-file blob` would.
-export function gitBlobs(repo: string, commit: string, paths: readonly string[]): Map<string, Buffer | null> {
+// One `cat-file --batch` reads every object expression asked for; a name that
+// is not a blob maps to null, exactly as one `cat-file blob` would.
+function gitBatchBlobs(repo: string, names: readonly string[]): Map<string, Buffer | null> {
   const found = new Map<string, Buffer | null>();
-  if (paths.length === 0) return found;
+  if (names.length === 0) return found;
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', '--batch'], {
-    input: paths.map(path => `${commit}:${path}`).join('\n') + '\n',
+    input: names.join('\n') + '\n',
     env: gitEnvironment(),
     maxBuffer: 512 * 1024 * 1024,
     windowsHide: true
@@ -352,21 +355,36 @@ export function gitBlobs(repo: string, commit: string, paths: readonly string[])
   if (result.error !== undefined) throw result.error;
   const stdout = Buffer.isBuffer(result.stdout) ? result.stdout : Buffer.from(result.stdout ?? '');
   let at = 0;
-  for (const path of paths) {
+  for (const name of names) {
     const headerEnd = stdout.indexOf(10, at);
     const header = headerEnd === -1 ? '' : stdout.toString('utf8', at, headerEnd);
     if (headerEnd === -1 || header.endsWith(' missing')) {
-      found.set(path, null);
+      found.set(name, null);
       at = headerEnd + 1;
       continue;
     }
     const fields = header.trim().split(' ');
     const size = Number(fields[2]);
     const start = headerEnd + 1;
-    found.set(path, fields[1] === 'blob' ? stdout.subarray(start, start + size) : null);
+    found.set(name, fields[1] === 'blob' ? stdout.subarray(start, start + size) : null);
     at = start + size + 1; // the content block is followed by one line feed
   }
   return found;
+}
+
+// One `cat-file --batch` reads every commit:path blob asked for; a path that is
+// not a blob in the tree maps to null, exactly as one `cat-file blob` would.
+export function gitBlobs(repo: string, commit: string, paths: readonly string[]): Map<string, Buffer | null> {
+  const asked = paths.map(path => `${commit}:${path}`);
+  const found = gitBatchBlobs(repo, asked);
+  return new Map(paths.map((path, index) => [path, found.get(asked[index]!) ?? null] as const));
+}
+
+// The same batch read for arbitrary object expressions (`<sha>:<path>`,
+// `<rev>`): the shared-memory import reads thousands of event blobs in one
+// process this way instead of one cat-file per event.
+export function gitNamedBlobs(repo: string, names: readonly string[]): Map<string, Buffer | null> {
+  return gitBatchBlobs(repo, names);
 }
 
 // One `cat-file --batch-check` resolves every name — like one `cat-file -e` or
@@ -420,6 +438,22 @@ export function gitIndexWrite(repo: string, index: string, changes: readonly Ind
 // batch form of per-ref `update-ref` / `update-ref -d` calls. A delete of a
 // missing ref is a no-op, matching `update-ref -d` on an absent name.
 export type RefWrite = { readonly delete: string } | { readonly update: string; readonly sha: string };
+
+// A git call that reads its input from stdin — mktree's table and any other
+// plumbing whose operand is a stream. Same pin layer as every call above.
+export function gitStdin(repo: string, args: readonly string[], input: string | Buffer, env: GitEnv = {}): string {
+  const result = spawnSync(gitProgram(), [...safeArgs(repo, args, 'foreign'), ...args], {
+    input,
+    encoding: 'utf8',
+    env: gitEnvironment(env),
+    windowsHide: true
+  });
+  if (result.status !== 0 || result.error !== undefined) {
+    const detail = ((result.stderr ?? '') || result.error?.message || `exit ${result.status}`).trim();
+    throw new GitFailed(`git ${args.join(' ')} failed in ${repo}: ${detail}`);
+  }
+  return result.stdout.trim();
+}
 
 export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
   if (writes.length === 0) return;

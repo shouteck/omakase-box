@@ -3,7 +3,8 @@
 // SQLite lacks it, and FTS5's whole-word matching disagreed with find's
 // substring rule ("parser" missed "subparser" on Node 24 only). Stores made
 // by the earlier versions (1: BT31, FTS5 table and no search_text; 2: both)
-// open, migrate to version 3 (records_fts and its shadow tables dropped) and
+// open, migrate to the current schema (4: records_fts and its shadow
+// tables dropped, the BT32 shared table added) and
 // answer find. Each case runs unchanged on Node 24 and Node 22.13.0; the
 // earlier-version stores are built here with raw SQL, and the FTS5 table only
 // where the running SQLite has FTS5.
@@ -81,7 +82,7 @@ describe('BT31-ci — one plain search on every Node', () => {
     expect(renderStatus(repo)).toContain('batching');
     expectSeedAnswers(repo);
     expect(ftsNames(repo)).toEqual([]);
-    expect(userVersion(repo)).toBe(3);
+    expect(userVersion(repo)).toBe(4);
   });
 
   it('find parser returns a record with "parser" and one with "subparser"', () => {
@@ -103,7 +104,7 @@ describe('BT31-ci — one plain search on every Node', () => {
       expect(found(repo, 'parser')).toEqual(['batching drafted why', 'cache drafted task', 'inner drafted task']);
       expect(found(repo, 'guide')).toEqual(['docs drafted why']);
       expect(ftsNames(repo)).toEqual([]);
-      expect(userVersion(repo)).toBe(3);
+      expect(userVersion(repo)).toBe(4);
       expect(inspect(repo, db => db.prepare("SELECT value FROM meta WHERE key='fts_stale'").get())).toBeUndefined();
       expect(inspect(repo, db => (db.prepare("SELECT COUNT(*) AS n FROM records WHERE search_text=''").get() as { n: number }).n)).toBe(0);
       expect(inspect(repo, db => (db.prepare('PRAGMA integrity_check').get() as { integrity_check: string }).integrity_check)).toBe('ok');
@@ -111,7 +112,7 @@ describe('BT31-ci — one plain search on every Node', () => {
       create(repo, 'later', 'the parser again', 'tidy up');
       expect(found(repo, 'parser')).toHaveLength(4);
       expect(found(repo, 'tidy')).toEqual(['later drafted task']);
-      expect(userVersion(repo)).toBe(3);
+      expect(userVersion(repo)).toBe(4);
     });
   }
 
@@ -136,7 +137,7 @@ describe('BT31-ci — one plain search on every Node', () => {
     expect(ftsNames(repo)).toContain('records_fts');
     expectSeedAnswers(repo);
     expect(ftsNames(repo)).toEqual([]);
-    expect(userVersion(repo)).toBe(3);
+    expect(userVersion(repo)).toBe(4);
     expect(inspect(repo, db => (db.prepare('PRAGMA integrity_check').get() as { integrity_check: string }).integrity_check)).toBe('ok');
   });
 });

@@ -99,13 +99,13 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | R1 Unasked reads stay constant in size | M1, every session | K25's bars (met) |
 | R2 The overview stays bounded | M2, M5 | open in full; ended as count plus five (met) |
 | R3 Search by purpose across all history | M2, M3, M11 | `find` over F-title, F-task, F-why, F-tried, F-partof (F-tried missing) |
-| R4 Every project fact reaches every machine | M2, M5, M9, M11 | **the open requirement**: K28 then BT32 |
-| R5 Survives deletion of any one copy | M10, M11 | at least two independent copies of project facts |
-| R6 Only the project's own accounts can write project facts; strangers' text never shown as the tool's | M5, M6, M13 | trust rule (K28) |
-| R7 Two machines changing one bounty never lose a fact | M5 to M8 on teams | merge rule (K28) |
-| R8 Machine facts never leave the machine; drafts never shared | all | K26 |
-| R9 Works offline from the last copy, and says so | M1 to M9 | BT31 local store |
-| R10 The code links back to the bounty without the tool | M10 | F-mergecommit link |
+| R4 Every project fact reaches every machine | M2, M5, M9, M11 | **built (BT32)**: one ref `refs/box-bounty/<id>` per bounty on the project's remote, one JSON event per commit; reads fetch and import it into the local store's `shared` table |
+| R5 Survives deletion of any one copy | M10, M11 | at least two independent copies of project facts — a deleted remote chain ref is restored from a local copy on the next push (BT32) |
+| R6 Only the project's own accounts can write project facts; strangers' text never shown as the tool's | M5, M6, M13 | trust rule (K28): only push access writes a chain; imported events are validated against the allow-list and size bound, and `actor` is informational |
+| R7 Two machines changing one bounty never lose a fact | M5 to M8 on teams | **built (BT32)**: fast-forward-only pushes; a diverged push fetches, writes an empty `merge` event with both tips as parents and retries (the git-bug rule K28 proved locally, and Step 0 on real GitHub) |
+| R8 Machine facts never leave the machine; drafts never shared | all | K26; chain events carry only the allow-listed fields — resume branch, saved paths, owner state and drafts never leave the machine (BT32) |
+| R9 Works offline from the last copy, and says so | M1 to M9 | BT31 local store; chain sync answers from the `shared` table on a failed fetch and says so once per spell (BT32) |
+| R10 The code links back to the bounty without the tool | M10 | F-mergecommit link; the shared row supplies the cross-machine record lookup — a second machine's `status` and `find` name the bounty and its issue (BT32) |
 | R11 Facts written only at milestones, never on reads | all | K25, K26 |
 | R12 Kept forever for project facts; machine facts compacted after the bounty ends | M11 | compaction rule |
 
@@ -113,8 +113,8 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 
 | Gap | Questions it leaves unanswered | L | F | C | Plan |
 |---|---|---|---|---|---|
-| R4: project facts do not reach other machines | M2, M5, M9, M11 for any second machine | no | often | medium | K28 → BT32 |
-| F-mergecommit link incomplete | M10 | no | often | small | K28 confirmed the id link exists; retain it and complete the short why and cross-machine record lookup in BT32 |
+| R4: project facts do not reach other machines | M2, M5, M9, M11 for any second machine | yes (BT32) | — | — | chain refs shared through the project's remote; K28's limits below are honest bounds |
+| F-mergecommit link incomplete | M10 | yes (BT32) | — | — | merge commits keep the id link; the shared row carries the record across machines |
 | F-done not asked for | M6, M7, M13 (judging solutions) | no | always | small | the `create` prompt and help ask for it, in the task (no new option) |
 | F-tried not its own fact | M2, M6, M13 | no | always | small | the same prompt; whether it becomes its own field is a design question for BT32 |
 | F-paid missing | M8, M11, M12 | no | per merge | small | BT36 |
@@ -122,6 +122,36 @@ A fact no question needs is not memory (a removal candidate). A question no fact
 | M11 aggregates (how many, how long, cost) | M11, M12 | no | rarely now | small | one `status --since` summary already exists; extend only if real use (K31) asks |
 | M12 owner's audit view | M12 | no | rarely | small | `config` and `status --since`; extend only if asked |
 
-## 6. Changing this specification
+## 6. The shared event chain (built in BT32)
+
+One Git ref per bounty, `refs/box-bounty/<id>`, each commit's tree a single
+`event.json` blob — the git-bug DAG shape K28 designed and Step 0 proved on
+real GitHub (`kitchen/memory/delegation/evidence/bt32-step0.txt`). Pushed
+and fetched through the project's own remote; ordinary clones, working
+trees and `git grep` never see it. Fetched events are validated against the
+schema and merged into the local store's `shared` table — a rebuildable
+cache, never local authority: a local record for the same id always wins,
+and a shared-only bounty refuses actions by name.
+
+| Event | Milestone | Fields (v: 1, beyond `v`/`type`/`at`/`actor`) |
+|---|---|---|
+| `posted` | `post` lands | id, title, task (text as published), why, partOf, followup, base, branch, issue{number,url}, published{pushed[{sha,subject}],wip}, reward{amount,currency}, allowedBy{decision,level} |
+| `solution` | a pull request is collected | n, pullRequest, author, commit, changed, added, deleted, payTo{state} |
+| `merged` | `apply` or outside-merge recognition | n, mergeCommit, unasked |
+| `closed` | `close` ends a bounty | kind (rejected/withdrawn), reason, unasked |
+| `paid` | reserved for BT36 | amount, by, withdrawn |
+| `merge` | concurrency resolution | — empty event joining two tips as parents |
+
+Fields not in the table never leave the machine; every listed text field is
+secret-scanned before the event object is written, and an event that fails
+validation on import is skipped while the rest of its chain still shows.
+
+Honest limits: fetch runs at most once a minute per command; a push that
+loses the race retries at most three times then waits for the next command;
+K28's checks were local (~0.3 s push, ~0.5 s fetch on this host) and its
+participant sample was small — real-network cost is proven only by Step 0
+and BT32's own measurements, not claimed beyond them.
+
+## 7. Changing this specification
 
 Add a moment, question or fact only with the actor's question it answers; remove a fact only when no question in section 2 needs it. Record each change in the wave that makes it.

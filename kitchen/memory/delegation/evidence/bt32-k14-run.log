@@ -1,0 +1,15 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+[90mstdout[2m | tests/box/bounty/k14-start-budget.test.ts[2m > [22m[2mevery bounty command stays within its Git and gh start budget
+[22m[39mK14 measured starts: [{"label":"help","git":0,"gh":0},{"label":"describe","git":3,"gh":0},{"label":"describe-rules","git":2,"gh":0},{"label":"create","git":14,"gh":0},{"label":"status-drafted","git":5,"gh":0},{"label":"close-draft","git":4,"gh":0},{"label":"post-preview","git":16,"gh":3},{"label":"post-github","git":27,"gh":8},{"label":"status-posted","git":3,"gh":5},{"label":"status-comments","git":4,"gh":7},{"label":"look-pr","git":28,"gh":2},{"label":"look","git":6,"gh":0},{"label":"look-full","git":6,"gh":0},{"label":"apply","git":26,"gh":5},{"label":"status-applied","git":3,"gh":0},{"label":"close-ended","git":4,"gh":4},{"label":"close-reason","git":4,"gh":0},{"label":"status-end","git":3,"gh":0},{"label":"hook-start","git":3,"gh":0}]
+
+ [32m✓[39m tests/box/bounty/k14-start-budget.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 18314[2mms[22m[39m
+   [33m[2m✓[22m[39m every bounty command stays within its Git and gh start budget[33m 18264[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:54:17
+[2m   Duration [22m 19.42s[2m (tests 95%, transform 4%, import 1%)[22m
+
+EXIT=0

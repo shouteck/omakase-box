@@ -73,7 +73,9 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     expect(result.record.github!.commit).toBe(head);
     expect(result.record.github!.wipCommit).toBeUndefined();
     // The branch is the public commit only; the worktree keeps its change.
-    expect(git(bare, ['show', `${result.record.github!.branch}:app.txt`])).toBe('broken');
+    // refs/heads/ is spelled out: BT32's chain ref `refs/box-bounty/<id>`
+    // makes the bare `box-bounty/<id>` shorthand ambiguous to rev-parse.
+    expect(git(bare, ['show', `refs/heads/${result.record.github!.branch}:app.txt`])).toBe('broken');
     expect(readFileSync(join(repo, 'app.txt'), 'utf8')).toBe('uncommitted\n');
   }));
 
@@ -100,8 +102,8 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     git(repo, ['clone', '--single-branch', '--branch', pub.branch, bare, clone]);
     // The blob bytes are the real invariant — the clone's checkout may fold
     // line endings under its own autocrlf.
-    expect(git(bare, ['show', `${pub.branch}:app.txt`])).toBe('work in progress');
-    expect(git(bare, ['show', `${pub.branch}:new.txt`])).toBe('added but tracked');
+    expect(git(bare, ['show', `refs/heads/${pub.branch}:app.txt`])).toBe('work in progress');
+    expect(git(bare, ['show', `refs/heads/${pub.branch}:new.txt`])).toBe('added but tracked');
     // The owner's worktree, index and HEAD never moved.
     expect(git(repo, ['rev-parse', 'HEAD'])).toBe(head);
     expect(fingerprint(repo)).toEqual(before);
@@ -128,10 +130,10 @@ describe('the GitHub bounty as an issue on the code that is already there', () =
     allowBounty(repo, id);
     const pub = loadRecord(repo, id).github!;
     expect(pub.wip!.added).toEqual(['notes/hint.txt']);
-    expect(git(bare, ['show', `${pub.branch}:notes/hint.txt`])).toBe('look here');
-    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.branch])).not.toContain('stay.txt');
-    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.branch])).not.toContain('stray.log');
-    expect(git(bare, ['ls-tree', '-r', '--name-only', pub.branch])).not.toContain('.env.local');
+    expect(git(bare, ['show', `refs/heads/${pub.branch}:notes/hint.txt`])).toBe('look here');
+    expect(git(bare, ['ls-tree', '-r', '--name-only', `refs/heads/${pub.branch}`])).not.toContain('stay.txt');
+    expect(git(bare, ['ls-tree', '-r', '--name-only', `refs/heads/${pub.branch}`])).not.toContain('stray.log');
+    expect(git(bare, ['ls-tree', '-r', '--name-only', `refs/heads/${pub.branch}`])).not.toContain('.env.local');
   }), 120000);
 
   it('refuses work the task needs when it touches a never-ship path — worktree or staged, it publishes nothing', () => fixture(({ repo, id }) => {

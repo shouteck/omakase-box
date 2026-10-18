@@ -1,0 +1,28 @@
+BT32 provenance correction — independent pass TOCTOU probe, raw failure
+Run: 18 October 2026 ~15:35 +08, scoped vitest on wave/BT32 @ 0cacd52
+Command: node scripts/pnpm.mjs exec vitest run tests/box/bounty/bt32-pass-toctou.test.ts
+Result: 1 failed (5.3-6.1s, two consecutive runs identical)
+
+AssertionError: forged commit reached the remote through the check/use gap:
+73e2fad383f495586532f7af29f1ef25ba17d236: expected
+'73e2fad383f495586532f7af29f1ef25ba17d236' not to be
+'73e2fad383f495586532f7af29f1ef25ba17d236' // Object.is equality
+(first run: db5dabdafe5abfe40bdad8e7cc829d6014c6c5e8 — same failure)
+
+Path demonstrated deterministically, at the suite's own spawn boundary:
+1. Tool authors a legitimate `closed` event; chain_pending:<id>=<authored sha>.
+2. pushChain verifies proven(knownTip)=<authored sha> — check PASSES.
+3. `git push <url> refs/box-bounty/<id>:refs/box-bounty/<id>` resolves the
+   ref NAME inside the push — the hook swaps the local ref to a forged,
+   never-scanned commit (a fast-forward child of the remote tip) at the
+   instant push is spawned.
+4. The forged sha is what reaches the bare remote. chain_pushed:<id> then
+   records the forged sha — the laundering becomes permanent provenance.
+5. retryPending uses the same pushOnce refspec — the gap exists on every
+   push, not only the first.
+
+Why it matters: the whole correction binds publication to "the exact tip
+this machine is entitled to publish". The refspec source is the mutable
+ref, not the verified sha — check and use are different reads. The fix is
+atomic and cheap: push `<provenSha>:refs/box-bounty/<id>` so the verified
+commit itself is the push source.

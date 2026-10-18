@@ -27,6 +27,8 @@ import { BountyRefused } from './errors.js';
 import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
 import { endedNextStep,nextStep,notNext } from './render.js';
+import { sharedEnded,sharedOpen,sharedRead } from './store.js';
+import { refreshSharedMemory } from './chain.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
 import { actingOn,askMergeNoticeLine,loadSettings,loadState,localFirstMergeLine,readDecision,readInstructions,repoReward,repositoryIdentity,rewardNoticeLine,saidOnce,settingsFile } from './settings.js';
 
@@ -237,11 +239,31 @@ export interface StatusDocumentOptions {
 // which runs the merged-solution scan — the GitHub refresh per open record,
 // then the seen-marking writes the text view performs while rendering.
 export function statusDocument(repoRoot: string, options: StatusDocumentOptions, notice: (line: string) => void): JsonObject {
+  // BT32: `status --json` is one of the five commands that refresh shared memory.
+  refreshSharedMemory(repoRoot);
   const ownerRead = readDecision(repoRoot);
   const { amount, limit } = repoReward(repoRoot);
-  const single = options.id !== undefined ? loadRecord(repoRoot, options.id) : undefined;
-  const listed = single !== undefined ? [{ record: single, file: `${single.id}.json` }] : listRecords(repoRoot);
+  // BT32: a shared-only id is answered from the imported chain row exactly
+  // as the text view does — the record the fold built, marked shared.
+  let single: BountyRecord | undefined;
+  if (options.id !== undefined) {
+    try { single = loadRecord(repoRoot, options.id); }
+    catch (error) {
+      if (!(error instanceof BountyRefused) || error.reason !== 'shared-only') throw error;
+      single = sharedRead(repoRoot, options.id) ?? undefined;
+      if (single === undefined) throw error;
+    }
+  }
+  // Shared rows join the read the same way the text view merges them: local
+  // records govern an id they know; chain-only bounties show read-only.
+  const sharedEntries = single === undefined
+    ? [...sharedOpen(repoRoot), ...sharedEnded(repoRoot)].map(record => ({ record, file: `${record.id}.json` }))
+    : [];
+  const listed = [...(single !== undefined ? [{ record: single, file: `${single.id}.json` }] : listRecords(repoRoot)), ...sharedEntries];
   for (const entry of listed) {
+    // A shared record's facts are the chain's — never GitHub-refreshed and
+    // never persisted back: the shared table is the only writable copy.
+    if (entry.record !== null && entry.record.shared === true) continue;
     if (entry.record !== null && isOpenStage(entry.record.stage)) refreshGitHubStatus(repoRoot, entry.record);
     // The document always carries the --full fact set, so an ended record's
     // issue-format comparison is refreshed here exactly as --full does.
@@ -272,6 +294,7 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
       data['fromOthers'] = null;
     }
     bounties.push(data);
+    if (record.shared === true) continue; // a shared row carries no seen state — the chain is the fact
     if (record.github?.outside !== undefined) {
       record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], ...record.github.availablePullRequests?.filter(pr => !record.github?.seenPullRequests?.some(seen => seen.n === pr.n && seen.commit === pr.commit)) ?? []];
       persistRecord(repoRoot, record);

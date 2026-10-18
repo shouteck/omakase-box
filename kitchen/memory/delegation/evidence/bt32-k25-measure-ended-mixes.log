@@ -1,0 +1,409 @@
+
+=== mix: five-open-rest-ended ===
+surface                                    |                                N=1 |                               N=10 |                              N=100 |                             N=1000
+instruction-block sync (command ms)        |                         (  171 ms) |                         (  167 ms) |                         (  181 ms) |                         (  288 ms)
+instruction block (bytes in AGENTS.md)     |    7 ln /     327 ch /     82 tk /     0 ms |    7 ln /     327 ch /     82 tk /     0 ms |    7 ln /     327 ch /     82 tk /     0 ms |    7 ln /     327 ch /     82 tk /     0 ms
+.box/bounties/OPEN                         |    1 ln /     125 ch /     31 tk /     0 ms |    1 ln /     405 ch /    101 tk /     0 ms |    1 ln /     405 ch /    101 tk /     0 ms |    1 ln /     405 ch /    101 tk /     0 ms
+hook start                                 |    1 ln /     155 ch /     39 tk /   200 ms |    1 ln /     253 ch /     63 tk /   198 ms |    1 ln /     253 ch /     63 tk /   218 ms |    1 ln /     253 ch /     63 tk /   349 ms
+box bounty (overview)                      |   10 ln /     859 ch /    215 tk /   210 ms |   38 ln /    3866 ch /    967 tk /   227 ms |   38 ln /    3932 ch /    983 tk /   290 ms |   38 ln /    3940 ch /    985 tk /   682 ms
+status                                     |    9 ln /     763 ch /    191 tk /   212 ms |   37 ln /    3770 ch /    943 tk /   235 ms |   37 ln /    3836 ch /    959 tk /   299 ms |   37 ln /    3844 ch /    961 tk /   687 ms
+status --json                              |    1 ln /    1261 ch /    315 tk /   209 ms |    1 ln /   13300 ch /   3325 tk /   236 ms |    1 ln /  137905 ch /  34476 tk /   286 ms |    1 ln / 1384855 ch / 346214 tk /   446 ms
+status <one open id>                       |    9 ln /     763 ch /    191 tk /   212 ms |    9 ln /     764 ch /    191 tk /   210 ms |    9 ln /     765 ch /    191 tk /   291 ms |    9 ln /     766 ch /    192 tk /   361 ms
+
+=== mix: five-open-rest-ended-posted ===
+surface                                    |                                N=1 |                               N=10 |                              N=100 |                             N=1000
+instruction-block sync (command ms)        |                         (  223 ms) |                         (  371 ms) |                         (  398 ms) |                         (  536 ms)
+instruction block (bytes in AGENTS.md)     |    7 ln /     327 ch /     82 tk /     0 ms |    7 ln /     327 ch /     82 tk /     0 ms |    7 ln /     327 ch /     82 tk /     0 ms |    7 ln /     327 ch /     82 tk /     0 ms
+.box/bounties/OPEN                         |    1 ln /     313 ch /     78 tk /     0 ms |    1 ln /    1350 ch /    338 tk /     0 ms |    1 ln /    1351 ch /    338 tk /     0 ms |    1 ln /    1352 ch /    338 tk /     0 ms
+hook start                                 |    1 ln /     221 ch /     55 tk /   279 ms |    1 ln /     587 ch /    147 tk /   467 ms |    1 ln /     587 ch /    147 tk /   535 ms |    1 ln /     587 ch /    147 tk /  1481 ms
+box bounty (overview)                      |   14 ln /    1275 ch /    319 tk /   292 ms |   58 ln /    5914 ch /   1479 tk /   590 ms |   58 ln /    5980 ch /   1495 tk /   817 ms |   58 ln /    5989 ch /   1497 tk /  3519 ms
+status                                     |   13 ln /    1179 ch /    295 tk /   308 ms |   57 ln /    5818 ch /   1455 tk /   599 ms |   57 ln /    5884 ch /   1471 tk /   792 ms |   57 ln /    5893 ch /   1473 tk /  3437 ms
+status --json                              |    1 ln /    2695 ch /    674 tk /   325 ms |    1 ln /   24956 ch /   6239 tk /   824 ms |    1 ln /  242490 ch /  60623 tk /  3071 ms |    1 ln / 2422294 ch / 605574 tk / 153752 ms
+status <one open id>                       |   13 ln /    1179 ch /    295 tk /   285 ms |   13 ln /    1180 ch /    295 tk /   446 ms |   13 ln /    1181 ch /    295 tk /   550 ms |   13 ln /    1183 ch /    296 tk /  1211 ms
+
+=== json ===
+{
+  "five-open-rest-ended": {
+    "1": {
+      "instruction-block sync (command ms)": {
+        "ms": 171
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 125,
+        "tokens": 31,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 155,
+        "tokens": 39,
+        "ms": 200
+      },
+      "box bounty (overview)": {
+        "lines": 10,
+        "characters": 859,
+        "tokens": 215,
+        "ms": 210
+      },
+      "status": {
+        "lines": 9,
+        "characters": 763,
+        "tokens": 191,
+        "ms": 212
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 1261,
+        "tokens": 315,
+        "ms": 209
+      },
+      "status <one open id>": {
+        "lines": 9,
+        "characters": 763,
+        "tokens": 191,
+        "ms": 212
+      }
+    },
+    "10": {
+      "instruction-block sync (command ms)": {
+        "ms": 167
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 405,
+        "tokens": 101,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 253,
+        "tokens": 63,
+        "ms": 198
+      },
+      "box bounty (overview)": {
+        "lines": 38,
+        "characters": 3866,
+        "tokens": 967,
+        "ms": 227
+      },
+      "status": {
+        "lines": 37,
+        "characters": 3770,
+        "tokens": 943,
+        "ms": 235
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 13300,
+        "tokens": 3325,
+        "ms": 236
+      },
+      "status <one open id>": {
+        "lines": 9,
+        "characters": 764,
+        "tokens": 191,
+        "ms": 210
+      }
+    },
+    "100": {
+      "instruction-block sync (command ms)": {
+        "ms": 181
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 405,
+        "tokens": 101,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 253,
+        "tokens": 63,
+        "ms": 218
+      },
+      "box bounty (overview)": {
+        "lines": 38,
+        "characters": 3932,
+        "tokens": 983,
+        "ms": 290
+      },
+      "status": {
+        "lines": 37,
+        "characters": 3836,
+        "tokens": 959,
+        "ms": 299
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 137905,
+        "tokens": 34476,
+        "ms": 286
+      },
+      "status <one open id>": {
+        "lines": 9,
+        "characters": 765,
+        "tokens": 191,
+        "ms": 291
+      }
+    },
+    "1000": {
+      "instruction-block sync (command ms)": {
+        "ms": 288
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 405,
+        "tokens": 101,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 253,
+        "tokens": 63,
+        "ms": 349
+      },
+      "box bounty (overview)": {
+        "lines": 38,
+        "characters": 3940,
+        "tokens": 985,
+        "ms": 682
+      },
+      "status": {
+        "lines": 37,
+        "characters": 3844,
+        "tokens": 961,
+        "ms": 687
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 1384855,
+        "tokens": 346214,
+        "ms": 446
+      },
+      "status <one open id>": {
+        "lines": 9,
+        "characters": 766,
+        "tokens": 192,
+        "ms": 361
+      }
+    }
+  },
+  "five-open-rest-ended-posted": {
+    "1": {
+      "instruction-block sync (command ms)": {
+        "ms": 223
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 313,
+        "tokens": 78,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 221,
+        "tokens": 55,
+        "ms": 279
+      },
+      "box bounty (overview)": {
+        "lines": 14,
+        "characters": 1275,
+        "tokens": 319,
+        "ms": 292
+      },
+      "status": {
+        "lines": 13,
+        "characters": 1179,
+        "tokens": 295,
+        "ms": 308
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 2695,
+        "tokens": 674,
+        "ms": 325
+      },
+      "status <one open id>": {
+        "lines": 13,
+        "characters": 1179,
+        "tokens": 295,
+        "ms": 285
+      }
+    },
+    "10": {
+      "instruction-block sync (command ms)": {
+        "ms": 371
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 1350,
+        "tokens": 338,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 587,
+        "tokens": 147,
+        "ms": 467
+      },
+      "box bounty (overview)": {
+        "lines": 58,
+        "characters": 5914,
+        "tokens": 1479,
+        "ms": 590
+      },
+      "status": {
+        "lines": 57,
+        "characters": 5818,
+        "tokens": 1455,
+        "ms": 599
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 24956,
+        "tokens": 6239,
+        "ms": 824
+      },
+      "status <one open id>": {
+        "lines": 13,
+        "characters": 1180,
+        "tokens": 295,
+        "ms": 446
+      }
+    },
+    "100": {
+      "instruction-block sync (command ms)": {
+        "ms": 398
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 1351,
+        "tokens": 338,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 587,
+        "tokens": 147,
+        "ms": 535
+      },
+      "box bounty (overview)": {
+        "lines": 58,
+        "characters": 5980,
+        "tokens": 1495,
+        "ms": 817
+      },
+      "status": {
+        "lines": 57,
+        "characters": 5884,
+        "tokens": 1471,
+        "ms": 792
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 242490,
+        "tokens": 60623,
+        "ms": 3071
+      },
+      "status <one open id>": {
+        "lines": 13,
+        "characters": 1181,
+        "tokens": 295,
+        "ms": 550
+      }
+    },
+    "1000": {
+      "instruction-block sync (command ms)": {
+        "ms": 536
+      },
+      "instruction block (bytes in AGENTS.md)": {
+        "lines": 7,
+        "characters": 327,
+        "tokens": 82,
+        "ms": null
+      },
+      ".box/bounties/OPEN": {
+        "lines": 1,
+        "characters": 1352,
+        "tokens": 338,
+        "ms": null
+      },
+      "hook start": {
+        "lines": 1,
+        "characters": 587,
+        "tokens": 147,
+        "ms": 1481
+      },
+      "box bounty (overview)": {
+        "lines": 58,
+        "characters": 5989,
+        "tokens": 1497,
+        "ms": 3519
+      },
+      "status": {
+        "lines": 57,
+        "characters": 5893,
+        "tokens": 1473,
+        "ms": 3437
+      },
+      "status --json": {
+        "lines": 1,
+        "characters": 2422294,
+        "tokens": 605574,
+        "ms": 153752
+      },
+      "status <one open id>": {
+        "lines": 13,
+        "characters": 1183,
+        "tokens": 296,
+        "ms": 1211
+      }
+    }
+  }
+}
+(node:170128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+EXIT=0

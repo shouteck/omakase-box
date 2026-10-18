@@ -162,7 +162,10 @@ describe('defect 2 — a work-in-progress commit holds the filtered bytes create
     write(context.repo, 'secret.dat', 'edited plaintext\n');
     expect(cli(context.repo, 'post', context.id, '--to', 'github', '--with-changes').status).toBe(0);
     const remote = 'https://github.com/owner/project.git';
-    const tip = git(context.repo, ['ls-remote', remote, `box-bounty/${context.id}`]).split(/\s/)[0];
+    // refs/heads/ spelled out: ls-remote's `box-bounty/<id>` pattern also
+    // matches BT32's chain ref `refs/box-bounty/<id>` — the branch tip is
+    // what this test reads the wip blob from.
+    const tip = git(context.repo, ['ls-remote', remote, `refs/heads/box-bounty/${context.id}`]).split(/\s/)[0];
     expect(tip).toMatch(/^[a-f0-9]{40}$/);
     // The pushed work-in-progress commit carries the filtered bytes — the
     // same form `create` ships — never the plaintext working-tree form.

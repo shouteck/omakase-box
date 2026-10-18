@@ -82,21 +82,36 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   // is gone, so gh is 0 and Git drops to the measured count.
   // BT24: the snapshot pin went with the record field — one `update-ref`
   // start fewer than BT20's 15.
-  'create': { git: 14, gh: 0 },
-  'status-drafted': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
-  'close-draft': { git: 3, gh: 0 },
+  'create': { git: 14, gh: 0 }, // BT32: create is not a fetching surface and writes no chain — count unchanged.
+  // BT32: `status` refreshes shared memory once a minute — one config read
+  // and one `fetch +refs/box-bounty/*`; an empty shared memory skips the
+  // ref listings entirely (measured +2 over BT16's count).
+  'status-drafted': { git: 6, gh: 0 },
+  'close-draft': { git: 4, gh: 0 }, // BT32: +1 — the withdrawn milestone appends a chain event (object write); nothing is pushed while unposted.
   'post-preview': { git: 18, gh: 3 },
-  'post-github': { git: 21, gh: 8 },
-  'status-posted': { git: 3, gh: 5 }, // +1: BT16's all-projects remote read (see above)
-  'status-comments': { git: 4, gh: 7 }, // +1: BT16's all-projects remote read (see above)
-  'look-pr': { git: 19, gh: 2 },
-  'look': { git: 6, gh: 0 },
+  // BT32: +6 — posting appends the `posted` event (hash-object, mktree,
+  // commit-tree, update-ref) and pushes the chain ref.
+  'post-github': { git: 27, gh: 8 },
+  // BT32: +6 — refresh (fetch + for-each-ref) plus adopting/importing the
+  // returned chain tips for the posted bounty.
+  'status-posted': { git: 9, gh: 5 },
+  'status-comments': { git: 10, gh: 7 },
+  // BT32: +9 — `look` is a fetching surface; collecting the answer also
+  // appends the `solution` chain event and pushes it.
+  'look-pr': { git: 28, gh: 2 },
+  'look': { git: 6, gh: 0 }, // second read inside the minute: the throttle serves the cache — count unchanged
   'look-full': { git: 6, gh: 0 },
-  'apply': { git: 15, gh: 5 },
-  'status-applied': { git: 3, gh: 0 }, // +1: BT16's all-projects remote read (see above)
+  // BT32: +11 — the merge appends `solution`/`merged` events and pushes the
+  // chain on top of the refresh the command already pays.
+  'apply': { git: 26, gh: 5 },
+  'status-applied': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 5 },
   'close-reason': { git: 4, gh: 0 },
-  'status-end': { git: 3, gh: 0 } // +1: BT16's all-projects remote read (see above)
+  'status-end': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
+  // BT32: `hook start` is a fetching surface — the shared-memory refresh
+  // pays one `fetch +refs/box-bounty/*` plus the batched ref listings and
+  // adoption work, on top of resolving the checkout. No record writes.
+  'hook-start': { git: 4, gh: 0 }
 };
 
 it('every bounty command stays within its Git and gh start budget', () => fixture(context => {
@@ -156,6 +171,9 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   const third = /bt-[a-f0-9]{12}/.exec(thirdCreate.stdout)![0];
   run('close-reason', 'close', third, '--reason', 'not landing');
   run('status-end', 'status');
+  // The hook's session-start slot is a reading surface too: it refreshes
+  // shared memory, then finds every bounty ended — nothing to say, exit 0.
+  run('hook-start', 'hook', 'start');
 
   const overs: string[] = [];
   console.log('K14 measured starts: ' + JSON.stringify(runs.map(({ label, git, gh }) => ({ label, git, gh }))));
