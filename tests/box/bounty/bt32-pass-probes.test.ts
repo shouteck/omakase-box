@@ -140,29 +140,39 @@ describe('BT32 pass probes', { timeout: 120000 }, () => {
     }); }
   });
 
-  it('a forged LOCAL chain ref with a well-formed event is never adopted or shown', () => {
+  it('a forged LOCAL chain ref is never pushed, adopted or shown (brief decision 2)', () => {
     { const world = sharedPostedFixture(); world.run(() => {
       const other = secondMachine(world);
       const fake = 'bt-' + 'ee'.repeat(6);
       const run = (args: string[], input?: string) =>
         execFileSync('git', ['-c', `safe.directory=${other}`, '-c', 'user.name=x', '-c', 'user.email=x@x', '-C', other, ...args], { input, encoding: 'utf8' }).trim();
-      // A perfectly valid posted event — but written directly under
-      // refs/box-bounty/ on this machine, never fetched from the remote.
+      // A perfectly valid posted event — planted directly under
+      // refs/box-bounty/ on this machine, never fetched from the remote and
+      // never tool-authored. Decision 2: it must be ignored entirely.
       const blob = run(['hash-object', '-w', '--stdin'], postedEvent(fake, { title: MARKER }));
       const tree = run(['mktree'], `100644 blob ${blob}\tevent.json\n`);
       const commit = run(['commit-tree', tree, '-m', 'forged']);
       run(['update-ref', `refs/box-bounty/${fake}`, commit]);
+      // Observations before assertions — demonstrate the laundering path:
+      // first sync, remote state, a SECOND forced sync, then reads again.
       syncChains(other, true);
-      expect(sharedRead(other, fake)).toBeNull();
+      const afterFirst = bareTip(world, fake);
+      const rowAfterFirst = sharedRead(other, fake);
+      syncChains(other, true);
+      const afterSecond = bareTip(world, fake);
+      const rowAfterSecond = sharedRead(other, fake);
       const status = renderStatus(other);
+      // Contract: the remote never receives the forged ref, this machine
+      // never imports it, and nothing renders it. retryPending currently
+      // enumerates local refs without per-id tool-authored provenance —
+      // these assertions are EXPECTED TO FAIL on the unfixed product; that
+      // failure is the regression evidence.
+      expect(afterFirst, `forged local ref reached the remote on first sync: ${afterFirst}`).toBeNull();
+      expect(rowAfterFirst, 'forged ref was imported into the shared table').toBeNull();
+      expect(afterSecond, `forged local ref reached the remote on second sync: ${afterSecond}`).toBeNull();
+      expect(rowAfterSecond, 'forged ref was imported after the second fetch').toBeNull();
       expect(status).not.toContain(MARKER);
       expect(status).not.toContain(fake);
-      // Trust boundary named exactly: refs/box-bounty/* is the tool's own
-      // namespace, so a local ref IS pushed on the next sync — the design's
-      // write authority is push access to the remote, not local ref
-      // provenance. Assert it went out verbatim (the same commit), which
-      // pins that the boundary is authentication, not local inspection.
-      expect(bareTip(world, fake)).toBe(commit);
     }); }
   });
 });

@@ -1,0 +1,59 @@
+Output from command in shell 48f2bf:
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90mC:/Users/shout/Desktop/Projects/private-task-mvp[39m
+
+Cloning into 'C:\Users\shout\AppData\Local\Temp\box-bt1-bt32-probe-writer-kUJLA8\w'...
+done.
+To C:\Users\shout\AppData\Local\Temp\box-bt1-bt6a-scc5eP\remote.git
+ * [new reference]   refs/box-bounty/bt-010101010101 -> refs/box-bounty/bt-010101010101
+To C:\Users\shout\AppData\Local\Temp\box-bt1-bt6a-scc5eP\remote.git
+ * [new reference]   refs/box-bounty/bt-020202020202 -> refs/box-bounty/bt-020202020202
+To C:\Users\shout\AppData\Local\Temp\box-bt1-bt6a-scc5eP\remote.git
+ * [new reference]   refs/box-bounty/bt-030303030303 -> refs/box-bounty/bt-030303030303
+To C:\Users\shout\AppData\Local\Temp\box-bt1-bt6a-scc5eP\remote.git
+ * [new reference]   refs/box-bounty/bt-040404040404 -> refs/box-bounty/bt-040404040404
+Cloning into 'C:\Users\shout\AppData\Local\Temp\box-bt1-bt32-probe-machine-b-nMvPGF\repo'...
+warning: remote HEAD refers to nonexistent ref, unable to checkout
+Cloning into 'C:\Users\shout\AppData\Local\Temp\box-bt1-bt32-probe-machine-b-z7iWHr\repo'...
+warning: remote HEAD refers to nonexistent ref, unable to checkout
+ [31m❯[39m tests/box/bounty/bt32-pass-probes.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 15294[2mms[22m[39m
+   [31m❯[39m BT32 pass probes [2m(3)[22m
+     [33m[2m✓[22m[39m a secret in ANY scanned field holds the event before a single object is written[33m 4320[2mms[22m[39m
+     [33m[2m✓[22m[39m hostile remote events — oversized, never-field, malformed — are skipped, never shown[33m 5537[2mms[22m[39m
+[31m     [31m×[31m a forged LOCAL chain ref is never pushed, adopted or shown (brief decision 2)[39m[33m 5334[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/box/bounty/bt32-pass-probes.test.ts[2m > [22mBT32 pass probes[2m > [22ma forged LOCAL chain ref is never pushed, adopted or shown (brief decision 2)
+[31m[1mAssertionError[22m: forged local ref reached the remote on first sync: f8eb68a9870240fed35dc62bbc1b0809cb5bf201: expected 'f8eb68a9870240fed35dc62bbc1b0809cb5bf…' to be null[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+"f8eb68a9870240fed35dc62bbc1b0809cb5bf201"
+
+[36m [2m❯[22m tests/box/bounty/bt32-pass-probes.test.ts:[2m170:94[22m[39m
+    [90m168|[39m       // these assertions are EXPECTED TO FAIL on the unfixed product;…
+    [90m169|[39m       // failure is the regression evidence.
+    [90m170|[39m       expect(afterFirst, `forged local ref reached the remote on first…
+    [90m   |[39m                                                                                              [31m^[39m
+    [90m171|[39m       expect(rowAfterFirst, 'forged ref was imported into the shared t…
+    [90m172|[39m       expect(afterSecond, `forged local ref reached the remote on seco…
+[90m [2m❯[22m withGhEnv tests/box/bounty/github-fixture.ts:[2m373:16[22m[39m
+[90m [2m❯[22m Object.run tests/box/bounty/github-fixture.ts:[2m530:90[22m[39m
+[90m [2m❯[22m tests/box/bounty/bt32-pass-probes.test.ts:[2m144:50[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 14:19:40
+[2m   Duration [22m 16.34s[2m (tests 95%, transform 4%, import 1%)[22m
+
+
+
+Exit code: 1
+
+`| tail -45` was parsed out (45 of 53 total lines shown).
