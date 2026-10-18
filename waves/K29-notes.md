@@ -41,3 +41,10 @@ Kept areas searched for each removal name: `packages/box-bounty`, `packages/box-
 ## Embedded Postgres
 
 After the removal no named suite reads `BOX_TEST_DATABASE_URL`/`BOX_DELEGATION_DATABASE_URL` and no `check` suite exists that reached `acquireHostRuntime`; `verify` therefore no longer provisions a database and the `--db` modes, docker.mjs and the `embedded-postgres` dependency go with it (`db=none` in summaries).
+
+## Late findings (during verification)
+
+- `tests/box/bounty/bt8b.test.ts` ("the tool scanner finds no secret-shaped literal in the added candidate diff") spawns `git diff master...HEAD` with spawnSync's default 1 MB `maxBuffer`. This wave's diff is far larger, so `result.status` was `null` (ENOBUFS) — the run on `8c4196d` failed only here. Fix: `maxBuffer: 64 * 1024 * 1024` on that one spawn; the scanned content and the assertion are unchanged. Protected-file change driven by wave size, not by removed code.
+- BT17 re-measure (`tests/box/bounty/bt17-measure.mjs`, candidate dist at `5a9f752`): every `box bounty` step byte-identical to the baseline taken at `d418ee3`; the single differing step is `box --help` (1181→707 characters, 14→10 lines), which is exactly the removed `export`/`submit`/`verify`/`trace` help lines.
+- Negative checks on the final dist: `box export`, `box submit`, `box verify`, `box trace` each print `<cmd>: command-removed — this command belonged to the older Box platform, retired on 18 October 2026; box bounty is the product`.
+- Lockfile: `node scripts/pnpm.mjs install` reported "Lockfile is up to date"; the regeneration happened inside chunk 3 (86 packages dropped from the lockfile, none added).
