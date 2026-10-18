@@ -113,7 +113,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | G8 | Memory does not reach other machines or later agents | no | often | medium | Built in BT32; K28 research and independent second-machine evidence retained |
 | G9 | Unknown how often agents hand work off, or whether solvers answer | no, but every priority rests on it | always | small | a real-use wave in the sandbox |
 | G3 | Open bounties never age or prompt anyone | no | often | small | one age fact in `status`, said once |
-| G5 | Nothing records that a solver was paid | no | per merge | small | an owner-recorded "paid" fact; the tool never verifies money |
+| G5 | Nothing records that a solver was paid | no | per merge | small | in K32's build: recorded by the tool when the agent pays, or by the owner for a payment made by hand |
 | G4 | No triage when many solutions arrive | no | rarely | medium | only if real use shows it |
 | G7 | Nobody outside can install it | yes, for outside use | always | small | publishing, deferred by the owner |
 | G1, G2 | Finding solvers; private repositories | — | — | — | outside the MVP (above) |
@@ -143,7 +143,6 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | 3 | **BT32** shared memory, event chains (merged) | memory (G8) | K28 (done) | done; merged `6cd2559` |
 | 4 | **K29** retire the older Box platform (merged) | lean | BT34 (merged) | done |
 | 5 | **BT35** open bounties show their age (merged) | track (G3) | - | done |
-| 6 | **BT36** the owner records that a solver was paid | pay (G5) | the owner confirms its decision 1; its shared-memory test needs BT32 | mostly: all but one test any time |
 | 7 | **K31** the tool in real use, in the sandbox | all stages (G9) | BT32; the owner's "go" for real $0 public posts; best after BT35 and BT36 so it tests them too | no |
 | 8 | **K30** stage contracts audited | every stage | K29 and BT32 (so it audits only the product, with its memory) | no |
 | 9 | hardening waves, one per stage that needs one | the stages K30 names | K30 (briefed from its list) | no |
@@ -220,7 +219,7 @@ Each cooks only when named; the kitchen stops after each. The order is the depen
 | **BT34** | **The bounty tool stands alone.** Copies the one function it uses from the older platform (`resolveProgram`) into `box-bounty`; a guard test keeps any older package from being imported again. No behaviour change. | Brief: [waves/BT34.md](waves/BT34.md). Lean, owner-approved 18 October 2026. |
 | **K29** (merged 18 October 2026) | **Older Box platform retired from master.** Archive preserved; old subcommands refuse by name; bounty and kitchen suites run without a database; living memory specification retained; frozen history unchanged. | Record: [waves/K29.md](waves/K29.md). Merged `1543dd3`, final independent PASS on `c51a71b`. |
 | **BT35** (merged 18 October 2026) | **Open bounties show their age, and a long wait is said once.** Open and last-activity age in `status`, `box bounty` and `--json`; a bounded once-only notice after 14 days without a new solution. Invalid age timestamps are unavailable facts. Nothing automatic. | Record: [waves/BT35-review.md](waves/BT35-review.md). Merged `1eb8697`, final independent PASS on `dd7006d`. |
-| **BT36** | **The owner can record that a solver was paid.** `config set paid <id>` (owner to confirm), amount copied from the bound reward, shown as owed or paid, shared with the memory; never verified, moved or posted. | Brief: [waves/BT36.md](waves/BT36.md). Roadmap G5. |
+| **BT36** (folded into K32's build) | **The owner can record that a solver was paid.** `config set paid <id>` (owner to confirm), amount copied from the bound reward, shown as owed or paid, shared with the memory; never verified, moved or posted. | Brief: [waves/BT36.md](waves/BT36.md). Roadmap G5. |
 | **K31** | **The tool in real use, measured against the roadmap's questions.** Five genuine $0 tasks in the sandbox: fresh posting, solver and later agents on two machines; every actor question scored from transcripts; real timings; only fixes real use shows. Needs the owner's go. | Brief: [waves/K31.md](waves/K31.md). Roadmap G9. |
 | **K30** | **Every stage's contract written down, and every guarantee proven or named as unproven.** `docs/box-v4/CONTRACTS.md`; each guarantee mapped to the test that would fail; the most important shown to bite; scale targets mapped to measurements; gaps ranked; hardening waves proposed. | Brief: [waves/K30.md](waves/K30.md). The engineering roadmap made provable. |
 | **K32** | **Agents paying solvers, within the owner's mandate.** x402, AP2, ACP, card-network agent tokens and today's Stripe link compared from primary sources; the pay stage's autonomy designed (the owner's mandate in `config`, ask me each time by default, no custody, no credential seen by an agent, idempotent); a prototype against a local stand-in only. | Brief: [waves/K32.md](waves/K32.md). Owner, 18 October 2026. |
