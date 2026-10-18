@@ -25,11 +25,13 @@ const sha = (char: string) => char.repeat(40);
 const dirName = (ms: number, full: string) => new Date(ms).toISOString().replace(/[:.]/g, '-') + '-' + full.slice(0, 7);
 const iso = (ms: number) => new Date(ms).toISOString();
 const NOW = Date.parse('2026-02-01T12:00:00.000Z');
-const PROFILE = 'verify --full test:box-package test:kitchen';
+// K29: profile/step names moved to the surviving suites — the fixture must
+// keep matching scripts/kitchen-stats.mjs ACCEPTANCE_PROFILE verbatim.
+const PROFILE = 'verify --full test:box-bounty test:kitchen';
 const STEPS = (seconds: number) => [
   { name: 'check', exit: 0, seconds },
   { name: 'build', exit: 0, seconds: 20 },
-  { name: 'test:box-package', exit: 0, seconds: 120 },
+  { name: 'test:box-bounty', exit: 0, seconds: 120 },
   { name: 'test:kitchen', exit: 0, seconds: 10 }
 ];
 

@@ -24,11 +24,14 @@ const sha = (char: string) => char.repeat(40);
 const dirName = (ms: number, full: string) => new Date(ms).toISOString().replace(/[:.]/g, '-') + '-' + full.slice(0, 7);
 const iso = (ms: number) => new Date(ms).toISOString();
 const NOW = Date.parse('2026-02-01T12:00:00.000Z');
-const PROFILE = 'verify --full test:box-package test:kitchen';
+// K29: the acceptance profile's suite names moved to the surviving suites
+// (test:box-package is gone with the older platform); the fixture records
+// must still match scripts/kitchen-stats.mjs ACCEPTANCE_PROFILE verbatim.
+const PROFILE = 'verify --full test:box-bounty test:kitchen';
 const STEPS = (seconds: number) => [
   { name: 'check', exit: 0, seconds },
   { name: 'build', exit: 0, seconds: 20 },
-  { name: 'test:box-package', exit: 0, seconds: 120 },
+  { name: 'test:box-bounty', exit: 0, seconds: 120 },
   { name: 'test:kitchen', exit: 0, seconds: 10 }
 ];
 
@@ -46,7 +49,7 @@ const readRuns = (rootDir: string) =>
 describe('budgetCheck fails closed on the latest profile observation', () => {
   it('a dirty FAIL run with a failed step is not a budget pass', () => {
     const dir = temp();
-    run(dir, NOW, sha('a'), STEPS(160), { dirty: true, verdict: 'FAIL', failure: 'test:box-package' });
+    run(dir, NOW, sha('a'), STEPS(160), { dirty: true, verdict: 'FAIL', failure: 'test:box-bounty' });
     const hit = budget(dir, { budgetSeconds: 330 });
     expect(hit.ok).not.toBe(true);
   });

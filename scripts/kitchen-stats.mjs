@@ -104,8 +104,8 @@ export function checkLimits(root) {
   return checks;
 }
 
-export const ACCEPTANCE_PROFILE = 'verify --full test:box-package test:kitchen';
-export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-package', 'test:kitchen'];
+export const ACCEPTANCE_PROFILE = 'verify --full test:box-bounty test:kitchen';
+export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-bounty', 'test:kitchen'];
 export const ACCEPTANCE_BUDGET_SECONDS = 330;
 export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPTANCE_STEPS, budgetSeconds = ACCEPTANCE_BUDGET_SECONDS } = {}) {
   const label = `acceptance profile "${profile}" executed seconds`;

@@ -1,8 +1,8 @@
 // Fast unit tests for the K4 kitchen numbers page and the verify stall guard.
 // Everything runs on fabricated run dirs under the OS temp dir; nothing touches
 // the real .kitchen/runs or spawns verify inside verify. The module under test
-// is plain .mjs, so it is exercised through node -e probes (same pattern as
-// tests/contracts/boundaries.test.ts) — no type declarations needed.
+// is plain .mjs, so it is exercised through node -e probes — no type
+// declarations needed.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
