@@ -25,6 +25,15 @@ const only = args.includes('--only');
 const fresh = args.includes('--fresh');
 const full = args.includes('--full');
 const suites = args.filter(arg => !arg.startsWith('--'));
+// K29: the disposable-Postgres modes went with the older platform. `--db=none`
+// stays as the kept callers' no-database spelling; every other --db form must
+// refuse here, before any check/build/suite or run-directory work — a green
+// run that silently never provided a database is the failure this guards.
+const dbArg = args.find(arg => (arg === '--db' || arg.startsWith('--db=')) && arg !== '--db=none');
+if (dbArg !== undefined) {
+  console.error(`verify: ${dbArg} refused — the database modes were removed with the older platform (K29); no remaining suite needs one. Drop the flag or pass --db=none.`);
+  process.exit(2);
+}
 const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const unknown = suites.filter(name => !Object.hasOwn(scripts, name));
 if (unknown.length) {
