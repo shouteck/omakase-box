@@ -1,1 +1,0 @@
-tracked total: 3513 | excluded by declared inventoryExcludePrefixes: 2796 files / 19,338,735 B (.execution/ 2759, docs/legacy/ 37) | ELIGIBLE tracked: 717 files / 4,678,854 B | shipped 20 / 135,643 B -> 2.789% files, 2.899% bytes (all tracked: 0.569%/0.565%; live-FS inventory 1801-1857: ~1.08%)

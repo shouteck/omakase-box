@@ -1,4 +1,0 @@
-py-tamper start 13:08:44Z
-submit refused: read-only file checks/outcome.py was modified; only the editable paths in box.json may change
-submit exit=1
-py-tamper end 13:08:44Z

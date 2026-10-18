@@ -205,7 +205,7 @@ it('host names occur in one product registry only', () => {
 
 it('the tool scanner finds no secret-shaped literal in the added candidate diff', () => {
   for (const mode of [['master...HEAD'], [], ['--cached']]) {
-    const result = spawnSync('git', ['-c', `safe.directory=${ROOT.replaceAll('\\', '/').replace(/\/+$/, '')}`, 'diff', ...mode, '--no-ext-diff', '--no-textconv', '--unified=0'], { cwd: ROOT, encoding: 'utf8' });
+    const result = spawnSync('git', ['-c', `safe.directory=${ROOT.replaceAll('\\', '/').replace(/\/+$/, '')}`, 'diff', ...mode, '--no-ext-diff', '--no-textconv', '--unified=0'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     expect(result.status, result.stderr).toBe(0);
     const added = result.stdout.split('\n').filter(line => line.startsWith('+') && !line.startsWith('+++')).map(line => line.slice(1)).join('\n');
     expect(scanText('BT8b-added-diff', added).map(hit => `${hit.line}: ${hit.rule}`)).toEqual([]);

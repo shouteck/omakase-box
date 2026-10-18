@@ -1,5 +1,4 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,8 +8,6 @@ import { removeFixtureLink } from './fixture-link.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const suiteScript = join(root, 'scripts', 'suite.mjs');
-const shimScript = join(root, 'tests', 'box', 'package', 'pnpm-shim.mjs');
-const pnpmCjs = join(root, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin', 'pnpm.cjs');
 const temps: string[] = [];
 const temp = () => { const dir = mkdtempSync(join(tmpdir(), 'kitchen-k6-fix-')); temps.push(dir); return dir; };
 const junction = join(root, 'tests', 'kitchen', 'kitchen-k6-fix-link');
@@ -27,11 +24,14 @@ const sha = (char: string) => char.repeat(40);
 const dirName = (ms: number, full: string) => new Date(ms).toISOString().replace(/[:.]/g, '-') + '-' + full.slice(0, 7);
 const iso = (ms: number) => new Date(ms).toISOString();
 const NOW = Date.parse('2026-02-01T12:00:00.000Z');
-const PROFILE = 'verify --full test:box-package test:kitchen';
+// K29: the acceptance profile's suite names moved to the surviving suites
+// (test:box-package is gone with the older platform); the fixture records
+// must still match scripts/kitchen-stats.mjs ACCEPTANCE_PROFILE verbatim.
+const PROFILE = 'verify --full test:box-bounty test:kitchen';
 const STEPS = (seconds: number) => [
   { name: 'check', exit: 0, seconds },
   { name: 'build', exit: 0, seconds: 20 },
-  { name: 'test:box-package', exit: 0, seconds: 120 },
+  { name: 'test:box-bounty', exit: 0, seconds: 120 },
   { name: 'test:kitchen', exit: 0, seconds: 10 }
 ];
 
@@ -49,7 +49,7 @@ const readRuns = (rootDir: string) =>
 describe('budgetCheck fails closed on the latest profile observation', () => {
   it('a dirty FAIL run with a failed step is not a budget pass', () => {
     const dir = temp();
-    run(dir, NOW, sha('a'), STEPS(160), { dirty: true, verdict: 'FAIL', failure: 'test:box-package' });
+    run(dir, NOW, sha('a'), STEPS(160), { dirty: true, verdict: 'FAIL', failure: 'test:box-bounty' });
     const hit = budget(dir, { budgetSeconds: 330 });
     expect(hit.ok).not.toBe(true);
   });
@@ -106,37 +106,7 @@ describe('suite.mjs scoped containment is canonical', () => {
   });
 });
 
-describe('pnpm-shim never trusts preexisting global cache bytes', () => {
-  it('a planted global lockfile cannot make a nonexistent dependency resolve', () => {
-    const project = temp();
-    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
-    writeFileSync(join(project, 'package.json'), manifest);
-    const globalCache = join(tmpdir(), 'box-k6-lockfile-cache');
-    mkdirSync(globalCache, { recursive: true });
-    const planted = join(globalCache, createHash('sha256').update(manifest).digest('hex') + '.yaml');
-    writeFileSync(planted, 'lockfileVersion: 9.0\nimporters: {}\n');
-    const env = { ...process.env };
-    delete env.BOX_K6_LOCKFILE_CACHE;
-    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env });
-    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
-    rmSync(planted, { force: true });
-  });
-  it('a caller-supplied BOX_K6_LOCKFILE_CACHE is never consulted', () => {
-    const project = temp();
-    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
-    writeFileSync(join(project, 'package.json'), manifest);
-    const callerCache = temp();
-    writeFileSync(join(callerCache, createHash('sha256').update(manifest).digest('hex') + '.yaml'), 'lockfileVersion: 9.0\nimporters: {}\n');
-    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env: { ...process.env, BOX_K6_LOCKFILE_CACHE: callerCache } });
-    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
-  });
-  it('K6_LOCKFILE_MODE=uncached resolves for real even when a cache env is supplied', () => {
-    const project = temp();
-    const manifest = JSON.stringify({ name: 'k6-poison-probe', version: '0.0.0', private: true, dependencies: { 'k6-package-that-does-not-exist-zzz': '9.9.9' } }) + '\n';
-    writeFileSync(join(project, 'package.json'), manifest);
-    const callerCache = temp();
-    writeFileSync(join(callerCache, createHash('sha256').update(manifest).digest('hex') + '.yaml'), 'lockfileVersion: 9.0\nimporters: {}\n');
-    const run = spawnSync(process.execPath, [shimScript, pnpmCjs, 'install', '--lockfile-only'], { cwd: project, encoding: 'utf8', timeout: 120000, env: { ...process.env, BOX_K6_LOCKFILE_CACHE: callerCache, K6_LOCKFILE_MODE: 'uncached' } });
-    expect(run.status, `${run.stdout}${run.stderr}`).not.toBe(0);
-  });
-});
+// K29: the "pnpm-shim never trusts preexisting global cache bytes" block is
+// gone with its subject — tests/box/package/pnpm-shim.mjs existed only to
+// serve the removed package suite's installs; nothing kept calls the shim.
+// (Deleted rather than weakened: the property it pinned has no subject left.)

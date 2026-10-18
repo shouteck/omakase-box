@@ -1,7 +1,0 @@
-{
-  "verdict": "fail",
-  "failureClass": "preparation-defect",
-  "reason": "base-commit-mismatch",
-  "detail": "submission pins base 0000000000000000000000000000000000000000 but the expected base is 41fdf38df149adc12bcb4922ebee07eacabb89d3 (flag)",
-  "checks": []
-}

@@ -1,8 +1,8 @@
 // Fast unit tests for the K4 kitchen numbers page and the verify stall guard.
 // Everything runs on fabricated run dirs under the OS temp dir; nothing touches
 // the real .kitchen/runs or spawns verify inside verify. The module under test
-// is plain .mjs, so it is exercised through node -e probes (same pattern as
-// tests/contracts/boundaries.test.ts) — no type declarations needed.
+// is plain .mjs, so it is exercised through node -e probes — no type
+// declarations needed.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -149,6 +149,69 @@ describe('checkLimits — the kitchen-size guards the page enforces', () => {
     writeFileSync(join(dir, 'kitchen', 'INBOX.md'), Array.from({ length: 10 }, (_, i) => `- entry ${i}`).join('\n') + '\n');
     writeFileSync(join(dir, 'STATUS.md'), Array(60).fill('x').join('\n') + '\n');
     expect(limits(dir).every((c: Json) => c.ok === true)).toBe(true);
+  });
+});
+
+describe('budgetCheck — K29: the exporter ratchet is retired, not transplanted', () => {
+  // The 330-second K6 ratchet was calibrated for `verify --full test:box-package`,
+  // which no longer exists. The surviving profile carries no calibrated budget:
+  // the check reports the executed seconds and says so; it may never FAIL on a
+  // number that was never calibrated for this workload, and missing stays missing.
+  const profile = 'verify --full test:box-bounty test:kitchen';
+  const profileSteps = ['check', 'build', 'test:box-bounty', 'test:kitchen'];
+  const budget = (rootDir: string, opts?: Record<string, unknown>): Json =>
+    probe(`k.budgetCheck(k.readRuns(${JSON.stringify(join(rootDir, '.kitchen', 'runs'))})${opts ? ', ' + JSON.stringify(opts) : ''})`);
+  const profileRun = (rootDir: string, ms: number, seconds: number[], extra: Record<string, unknown> = {}) =>
+    fakeRun(rootDir, dirName(ms, sha('e')), {
+      sha: sha('e'), dirty: false, verdict: 'PASS', startedAt: iso(ms), seconds: seconds.reduce((a, b) => a + b, 0),
+      profile, steps: profileSteps.map((name, i) => ({ name, exit: 0, seconds: seconds[i] })),
+      ...extra,
+    });
+
+  it('a completed PASS of the surviving profile reports real seconds and no enforced budget — the 330s exporter limit must not fire', () => {
+    const dir = temp();
+    // 755 executed seconds would have tripped the transplanted 330s limit; with
+    // the retirement it is reported, not failed.
+    profileRun(dir, NOW, [5, 5, 700, 45]);
+    const result = budget(dir);
+    expect(result.ok).toBe(true);
+    expect(result.actual).toBe('755s');
+    expect(result.limit).toContain('none calibrated');
+    expect(result.limit).toContain('330');
+    expect(result.limit).toContain('test:box-package');
+  });
+
+  it('an explicitly configured budget still enforces under, at and over', () => {
+    const dir = temp();
+    profileRun(dir, NOW, [5, 5, 80, 10]); // executed 100
+    const opts = { budgetSeconds: 100 };
+    expect(budget(dir, opts).ok).toBe(true); // at the limit passes
+    const under = temp();
+    profileRun(under, NOW, [5, 5, 80, 9]);
+    expect(budget(under, opts).ok).toBe(true);
+    const over = temp();
+    profileRun(over, NOW, [5, 5, 81, 10]);
+    const failed = budget(over, opts);
+    expect(failed.ok).toBe(false);
+    expect(failed.limit).toBe('100s');
+  });
+
+  it('missing and untrustworthy observations still never pass', () => {
+    const empty = temp();
+    expect(budget(empty).ok).toBe('missing');
+    const malformed = temp();
+    fakeRun(malformed, dirName(NOW, sha('e')), 'malformed');
+    expect(budget(malformed).ok).toBe('missing');
+    const reused = temp();
+    profileRun(reused, NOW, [5, 5, 700, 45], { steps: profileSteps.map(name => ({ name, exit: 0, seconds: 5, reused: 'earlier' })) });
+    expect(budget(reused).ok).toBe('missing');
+    const failed = temp();
+    profileRun(failed, NOW, [5, 5, 700, 45], { verdict: 'FAIL' });
+    expect(budget(failed).ok).toBe('missing');
+    // A completed run of a different profile is not evidence for this one.
+    const foreign = temp();
+    profileRun(foreign, NOW, [5, 5, 700, 45], { profile: 'verify --full test:box-package' });
+    expect(budget(foreign).ok).toBe('missing');
   });
 });
 

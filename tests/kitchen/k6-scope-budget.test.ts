@@ -25,11 +25,13 @@ const sha = (char: string) => char.repeat(40);
 const dirName = (ms: number, full: string) => new Date(ms).toISOString().replace(/[:.]/g, '-') + '-' + full.slice(0, 7);
 const iso = (ms: number) => new Date(ms).toISOString();
 const NOW = Date.parse('2026-02-01T12:00:00.000Z');
-const PROFILE = 'verify --full test:box-package test:kitchen';
+// K29: profile/step names moved to the surviving suites — the fixture must
+// keep matching scripts/kitchen-stats.mjs ACCEPTANCE_PROFILE verbatim.
+const PROFILE = 'verify --full test:box-bounty test:kitchen';
 const STEPS = (seconds: number) => [
   { name: 'check', exit: 0, seconds },
   { name: 'build', exit: 0, seconds: 20 },
-  { name: 'test:box-package', exit: 0, seconds: 120 },
+  { name: 'test:box-bounty', exit: 0, seconds: 120 },
   { name: 'test:kitchen', exit: 0, seconds: 10 }
 ];
 
@@ -48,7 +50,7 @@ describe('suite.mjs file-scoped inner loop', () => {
   it('rejects a missing file, an out-of-suite file and a non-test file', () => {
     for (const file of [
       'tests/kitchen/does-not-exist.test.ts',
-      'tests/box/package/export.test.ts',
+      'tests/box/bounty/answer.test.ts',
       join(root, 'scripts', 'verify.mjs'),
       '../outside.test.ts'
     ]) {
@@ -102,7 +104,10 @@ describe('budgetCheck — the executed-time ratchet on the acceptance profile', 
     expect(budget(foreign, { budgetSeconds: 160 }).ok).toBe('missing');
   });
 
-  it('the page enforces the budget: over-budget fabricated root exits 1 naming the profile', () => {
+  it('the page enforces an explicitly configured budget: over-budget fabricated root exits 1 naming the profile', () => {
+    // K29: the inherited 330s exporter default is retired, so page enforcement
+    // now runs through the explicit --budget=<seconds> flag. The same flagless
+    // root reports the seconds without failing — the profile is uncalibrated.
     const dir = temp();
     mkdirSync(join(dir, 'docs', 'box-v4'), { recursive: true });
     mkdirSync(join(dir, 'kitchen'), { recursive: true });
@@ -111,9 +116,14 @@ describe('budgetCheck — the executed-time ratchet on the acceptance profile', 
     writeFileSync(join(dir, 'kitchen', 'INBOX.md'), '- one\n');
     writeFileSync(join(dir, 'STATUS.md'), 'status\n');
     acceptanceRun(dir, NOW, sha('a'), STEPS(9999));
-    const run = spawnSync(process.execPath, [statsScript, '--root=' + dir], { encoding: 'utf8', timeout: 60000 });
+    const unbudgeted = spawnSync(process.execPath, [statsScript, '--root=' + dir], { encoding: 'utf8', timeout: 60000 });
+    expect(unbudgeted.status).toBe(0);
+    expect(unbudgeted.stderr + unbudgeted.stdout).toContain('none calibrated');
+    const run = spawnSync(process.execPath, [statsScript, '--root=' + dir, '--budget=330'], { encoding: 'utf8', timeout: 60000 });
     expect(run.status).toBe(1);
     expect(run.stderr + run.stdout).toContain('LIMIT FAIL');
     expect(run.stderr + run.stdout).toContain(PROFILE);
+    const malformed = spawnSync(process.execPath, [statsScript, '--root=' + dir, '--budget=bogus'], { encoding: 'utf8', timeout: 60000 });
+    expect(malformed.status).toBe(2);
   });
 });

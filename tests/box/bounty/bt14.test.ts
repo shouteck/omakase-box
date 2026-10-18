@@ -158,10 +158,14 @@ describe('the first merge and the payment are one block', () => {
 });
 
 describe('box --help exits 0 and lists box bounty first', () => {
-  it('--help on stdout, bounty before the older commands, exit 0', () => {
+  it('--help on stdout, bounty commands only, exit 0', () => {
     const run = cli('.', ['--help']);
     expect(run.status).toBe(0);
     expect(run.stdout.indexOf('box bounty create')).toBeGreaterThan(-1);
-    expect(run.stdout.indexOf('box bounty create')).toBeLessThan(run.stdout.indexOf('box export'));
+    // K29: the older-platform commands' help lines are gone with the commands
+    // themselves — the ordering assertion they anchored is replaced by their
+    // absence, which is the same "bounty is the product" pin post-removal.
+    for (const removed of ['box export', 'box submit', 'box verify', 'box trace'])
+      expect(run.stdout.includes(removed), removed).toBe(false);
   });
 });

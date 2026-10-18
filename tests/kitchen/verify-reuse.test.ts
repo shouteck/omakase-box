@@ -45,41 +45,36 @@ const reusable = (dir: string, commit: string, step: string, opts?: Record<strin
 describe('checkSuitesForPaths — the path->suite table', () => {
   const pick = (paths: string[]): Json => probe(`s.checkSuitesForPaths(${JSON.stringify(paths)})`);
 
-  it('maps each suite area to the suites whose tests can reach it', () => {
-    expect(pick(['services/private-api/src/x.ts']).suites).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
-    expect(pick(['services/external-api/src/x.ts']).suites).toEqual(['bootstrap', 'auth']);
-    expect(pick(['packages/planner/partition/x.ts']).suites).toEqual(['contracts', 'planner']);
-    expect(pick(['tests/auth/routes.test.ts']).suites).toEqual(['auth']);
-    expect(pick(['docs/box-v4/KITCHEN.md', 'waves/K5.md', 'AGENTS.md']).suites).toEqual([]);
-  });
-
-  it('fails safe: shared tooling and unmapped paths run every check suite', () => {
-    for (const path of ['scripts/verify.mjs', 'package.json', 'pnpm-lock.yaml', 'vitest.config.mjs', 'unknown-dir/file.ts', 'tests/kitchen/x.test.ts'])
-      expect(pick([path]).suites, path).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
-  });
-
-  it('K12: milestone-BT product paths reach no check suite — except box-contracts, which private-api imports', () => {
-    for (const path of ['tests/box/bounty/x.test.ts', 'tests/box/package/support.ts', 'packages/box-bounty/index.ts', 'packages/box-cli/src/cli.ts', 'packages/box-package/index.ts', 'packages/box-trace/index.ts'])
+  // K29: the check suites belonged to the older platform. CHECK_SUITES is
+  // empty, so every verdict below is `[]` — the machinery stays pinned: a
+  // suite added back must re-enter this table deliberately, not silently.
+  it('no path owes a check suite — the set is empty after the platform removal', () => {
+    expect(probe('[...s.CHECK_SUITES]')).toEqual([]);
+    for (const path of ['packages/box-bounty/index.ts', 'packages/box-cli/src/cli.ts', 'tests/box/bounty/x.test.ts', 'tests/kitchen/x.test.ts', 'docs/box-v4/KITCHEN.md', 'waves/K5.md', 'AGENTS.md'])
       expect(pick([path]).suites, path).toEqual([]);
-    expect(pick(['packages/box-contracts/index.ts']).suites).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
   });
 
-  it('K12: the check suites whose *-live tests need the disposable database are named exactly', () => {
-    // auth/persistence, contracts intent+publication and planner evidence run
-    // *-live tests that exec scripts/verify-*.mjs into acquireHostRuntime;
-    // bootstrap has none. A `check` reduced to bootstrap or nothing must stay
-    // db=none — every other selection must trigger a database.
-    expect(probe('[...s.DB_CHECK_SUITES].sort()')).toEqual(['auth', 'contracts', 'planner']);
+  it('fails safe: shared tooling and unmapped paths run every check suite — still none', () => {
+    for (const path of ['scripts/verify.mjs', 'package.json', 'pnpm-lock.yaml', 'vitest.config.mjs', 'unknown-dir/file.ts'])
+      expect(pick([path]).suites, path).toEqual([]);
+  });
+
+  it('no check suite needs the disposable database — there is no database', () => {
+    // K29: the *-live suites that reached acquireHostRuntime are all gone.
+    // The set stays pinned so a reintroduced DB consumer must be named.
+    expect(probe('[...s.DB_CHECK_SUITES].sort()')).toEqual([]);
+    expect(probe('[...s.DB_SUITES].sort()')).toEqual([]);
   });
 });
 
 describe('selectCheckSuites — what check runs this invocation', () => {
-  it('runs every suite under --full even when the diff touched nothing it can see', () => {
-    expect(probe(`s.selectCheckSuites('.', { full: true })`).suites).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
+  it('runs every suite under --full even when the diff touched nothing it can see — zero today', () => {
+    expect(probe(`s.selectCheckSuites('.', { full: true })`).suites).toEqual([]);
   });
 
   it('runs every suite when git cannot answer — a broken diff never narrows the gate', () => {
-    expect(probe(`s.selectCheckSuites(${JSON.stringify(join(temp(), 'not-a-repo'))}, {})`).suites).toEqual(['bootstrap', 'auth', 'contracts', 'planner']);
+    // K29: "every check suite" is currently the empty set — same rule, no suites.
+    expect(probe(`s.selectCheckSuites(${JSON.stringify(join(temp(), 'not-a-repo'))}, {})`).suites).toEqual([]);
   });
 });
 
@@ -175,10 +170,14 @@ describe('reusableStep — when a recorded PASS may stand in', () => {
     fakePass(dir, NOW, sha('a'), { checkSuites: ['auth'] });
     expect(reusable(dir, sha('a'), 'check', { suites: ['auth'] })).not.toBeNull();
     expect(reusable(dir, sha('a'), 'check', { suites: ['auth', 'planner'] })).toBeNull();
-    // a summary from before checkSuites existed ran every check suite
+    // A summary from before checkSuites existed is trusted to have covered
+    // the check suites OF ITS DAY — read as the current CHECK_SUITES, which
+    // K29 emptied. It still stands in for an empty need and never for a
+    // named suite that no longer exists.
     const old = temp();
     fakePass(old, NOW, sha('a'));
-    expect(reusable(old, sha('a'), 'check', { suites: ['bootstrap', 'auth', 'contracts', 'planner'] })).not.toBeNull();
+    expect(reusable(old, sha('a'), 'check', { suites: [] })).not.toBeNull();
+    expect(reusable(old, sha('a'), 'check', { suites: ['auth'] })).toBeNull();
   });
 
   it('picks the newest qualifying run when several PASS on the commit', () => {
@@ -201,7 +200,7 @@ describe('kitchenSuiteReason — when a diff owes test:kitchen (K22)', () => {
   it('a docs-only diff owes nothing', () => {
     expect(reason(['docs/box-v4/PLAN.md'])).toBeNull();
     expect(reason(['kitchen/roles/worker.md'])).toBeNull();
-    expect(reason(['packages/box-package/index.ts'])).toBeNull(); // no demo drives that package
+    expect(reason(['packages/other-lib/index.ts'])).toBeNull(); // no demo drives that package
     expect(reason([])).toBeNull();
   });
 
@@ -385,7 +384,7 @@ describe('verify reuses an ancestor PASS when the commits between read nothing t
     expect(waveSummary.steps.find((step: Json) => step.name === 'test:kitchen').log).toBeDefined();
 
     // C3 — packages/ is inert to nobody: nothing reuses anything.
-    const productSha = commit('packages/box-package/index.ts', 'export {};\n');
+    const productSha = commit('packages/other-lib/index.ts', 'export {};\n');
     before = names();
     const product = verify();
     expect(product.status).toBe(0);
@@ -493,11 +492,11 @@ describe('verify counts a dirty run for the steps that read none of it (K24, end
     // recorded, but nothing in it counts — reusable:false across the board,
     // and once committed the suites run for real.
     before = names();
-    const productDirty = verify(['--fresh'], { DIRTY_STEP: 'packages/box-package/index.ts' });
+    const productDirty = verify(['--fresh'], { DIRTY_STEP: 'packages/other-lib/index.ts' });
     expect(productDirty.status).toBe(3);
     const productSummary = summary(latestRun(before));
     expect(productSummary.steps.every((step: Json) => step.reusable === false)).toBe(true);
-    commit('packages/box-package/index.ts', 'export {};\n');
+    commit('packages/other-lib/index.ts', 'export {};\n');
     before = names();
     const product = verify();
     expect(product.status).toBe(0);

@@ -1,1 +1,0 @@
-export failed: git clone --local --quiet /src/repo /tmp/box-base-hEMtK0/owner failed in /src/repo: fatal: failed to create link '/tmp/box-base-hEMtK0/owner/.git/objects/3b/25bc97b46f11ce511ac1f1defc26749ac191a3': Invalid cross-device link

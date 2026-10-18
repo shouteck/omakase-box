@@ -1,9 +1,0 @@
-{
-  "name": "a4-npm-cli",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "check": "node checks/outcome.mjs"
-  }
-}

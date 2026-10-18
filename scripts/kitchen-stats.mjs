@@ -3,7 +3,10 @@
 // outside stdout. scripts/verify.mjs reuses readRuns/stallCheck for its STALL
 // line, and tests/kitchen drives the same functions on fabricated run dirs.
 //
-//   node scripts/kitchen-stats.mjs [--root=<dir>]
+//   node scripts/kitchen-stats.mjs [--root=<dir>] [--budget=<seconds>]
+//
+// --budget configures an explicit executed-seconds limit on the acceptance
+// profile. With no flag the profile is reported unbudgeted (see budgetCheck).
 //
 // Fairness rules (kitchen/stations/evidence.md): every run dir counts, including
 // ones with no summary.json; a missing observation is printed as missing, never
@@ -104,19 +107,26 @@ export function checkLimits(root) {
   return checks;
 }
 
-export const ACCEPTANCE_PROFILE = 'verify --full test:box-package test:kitchen';
-export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-package', 'test:kitchen'];
-export const ACCEPTANCE_BUDGET_SECONDS = 330;
-export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPTANCE_STEPS, budgetSeconds = ACCEPTANCE_BUDGET_SECONDS } = {}) {
+export const ACCEPTANCE_PROFILE = 'verify --full test:box-bounty test:kitchen';
+export const ACCEPTANCE_STEPS = ['check', 'build', 'test:box-bounty', 'test:kitchen'];
+// K29 correction: the 330-second K6 ratchet was calibrated for the retired
+// exporter profile `verify --full test:box-package`; it never described the
+// bounty workload, so its enforcement retired with its subject — not raised,
+// not transplanted (K6's no-auto-rise rule). The surviving profile has no
+// calibrated budget: the check reports the executed seconds and says so.
+// budgetSeconds is a real limit only when a caller configures one.
+export const RETIRED_EXPORTER_BUDGET_SECONDS = 330;
+export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPTANCE_STEPS, budgetSeconds = null } = {}) {
   const label = `acceptance profile "${profile}" executed seconds`;
+  const limit = typeof budgetSeconds === 'number' ? `${budgetSeconds}s` : `none calibrated — K29 retired the ${RETIRED_EXPORTER_BUDGET_SECONDS}s exporter ratchet with test:box-package`;
   // The latest run dir that could be a profile observation is the only thing
   // judged: a valid run of this profile, or one whose summary is missing or
   // unparseable and so cannot be scoped to any profile. Uncertainty is judged
   // invalid — never skipped toward an older pass.
   const candidates = runs.filter(run => run.summary !== 'ok' || run.profile === profile);
-  if (!candidates.length) return { label, actual: 'missing', limit: `${budgetSeconds}s`, ok: 'missing' };
+  if (!candidates.length) return { label, actual: 'missing', limit, ok: 'missing' };
   const latest = candidates[candidates.length - 1];
-  const invalid = reason => ({ label, actual: `invalid latest run ${latest.name}: ${reason}`, limit: `${budgetSeconds}s`, ok: 'missing' });
+  const invalid = reason => ({ label, actual: `invalid latest run ${latest.name}: ${reason}`, limit, ok: 'missing' });
   if (latest.summary !== 'ok') return invalid(`summary ${latest.summary}`);
   if (latest.verdict !== 'PASS' || latest.dirty !== false) return invalid(`verdict ${latest.verdict ?? 'missing'}${latest.dirty !== false ? ', dirty tree' : ''}`);
   const bad = latest.steps.find(step => step.reused || step.exit !== 0 || typeof step.seconds !== 'number' || !Number.isFinite(step.seconds) || step.seconds < 0);
@@ -125,7 +135,10 @@ export function budgetCheck(runs, { profile = ACCEPTANCE_PROFILE, steps = ACCEPT
   if (missingStep) return invalid(`profile step ${missingStep} missing`);
   const executed = latest.steps.reduce((sum, step) => sum + step.seconds, 0);
   if (!(executed > 0)) return invalid('zero executed seconds');
-  return { label, actual: `${executed}s`, limit: `${budgetSeconds}s`, ok: executed <= budgetSeconds };
+  // With no configured budget there is nothing to exceed: the seconds are
+  // reported and named as unbudgeted, never silently passed nor failed.
+  if (typeof budgetSeconds !== 'number') return { label, actual: `${executed}s`, limit, ok: true };
+  return { label, actual: `${executed}s`, limit, ok: executed <= budgetSeconds };
 }
 
 // --- git helpers (read-only) --------------------------------------------------
@@ -315,7 +328,7 @@ const fmtMin = seconds => (seconds / 60).toFixed(1);
 const sha7 = sha => (sha || '???????').slice(0, 7);
 const has = (list, sha) => typeof sha === 'string' && (list.includes(sha) || (sha.length < 40 && list.some(full => full.startsWith(sha))));
 
-function page(root) {
+function page(root, { budgetSeconds = null } = {}) {
   const out = [];
   const runsDir = join(root, '.kitchen', 'runs');
   const runs = readRuns(runsDir);
@@ -408,7 +421,7 @@ function page(root) {
   out.push('');
 
   const checks = checkLimits(root);
-  checks.push(budgetCheck(runs));
+  checks.push(budgetCheck(runs, { budgetSeconds }));
   const failures = [];
   out.push('Kitchen limits');
   for (const check of checks) {
@@ -425,5 +438,14 @@ function page(root) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const rootArg = process.argv.slice(2).find(arg => arg.startsWith('--root='));
   const root = (rootArg ? rootArg.slice(7) : repoRoot).replace(/[/\x5c]+$/, '');
-  try { page(root); } catch (error) { console.error('kitchen-stats failed: ' + (error instanceof Error ? error.message : String(error))); process.exit(2); }
+  const budgetArg = process.argv.slice(2).find(arg => arg.startsWith('--budget'));
+  let budgetSeconds = null;
+  if (budgetArg !== undefined) {
+    budgetSeconds = Number(budgetArg.startsWith('--budget=') ? budgetArg.slice(9) : NaN);
+    if (!Number.isFinite(budgetSeconds) || budgetSeconds <= 0) {
+      console.error('kitchen-stats: --budget=<seconds> needs a positive number of seconds');
+      process.exit(2);
+    }
+  }
+  try { page(root, { budgetSeconds }); } catch (error) { console.error('kitchen-stats failed: ' + (error instanceof Error ? error.message : String(error))); process.exit(2); }
 }

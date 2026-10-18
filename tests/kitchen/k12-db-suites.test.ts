@@ -1,12 +1,17 @@
-// K12 pin: every *named* suite whose tests reach the disposable Postgres must
-// be in DB_SUITES, or `verify --only test:<name>` reports db=none and the
-// suite dies on "BOX_TEST_DATABASE_URL is not configured" — the defect the
-// pass reproduced on b3d73a9. The need is derived, not restated: a suite
-// needs the database when one of its files reads process.env.BOX_TEST_ /
+// K12 pin: every *named* suite whose tests reach a database must be in
+// DB_SUITES, or `verify --only test:<name>` reports db=none and the suite
+// dies on "BOX_TEST_DATABASE_URL is not configured" — the defect the pass
+// reproduced on b3d73a9. The need is derived, not restated: a suite needs the
+// database when one of its files reads process.env.BOX_TEST_ /
 // BOX_DELEGATION_DATABASE_URL or imports the host test runtime module
 // directly, or execs a scripts/verify-*.mjs that reaches acquireHostRuntime
 // (the *-live pattern). A restated list here would pass while the real list
 // drifted.
+//
+// K29: every database consumer went with the older platform and verify no
+// longer provisions one at all. The derivation stays — it now proves the
+// surviving suites genuinely have no database need, so a reintroduced
+// consumer fails here before it fails a run.
 import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -42,14 +47,15 @@ function suiteNeedsDatabase(directory: string): boolean {
   return false;
 }
 
-describe('DB_SUITES — every named suite that needs the disposable database is listed', () => {
-  it('the derivation is not vacuous: it finds the *-live suites and their scripts', () => {
-    expect(dbScripts.size).toBeGreaterThan(0);
-    expect(suiteNeedsDatabase(join(root, 'tests', 'planner'))).toBe(true);
-    expect(suiteNeedsDatabase(join(root, 'tests', 'auth'))).toBe(true);
-    expect(suiteNeedsDatabase(join(root, 'tests', 'acceptance'))).toBe(true);
+describe('DB_SUITES — every named suite that needs a database is listed', () => {
+  it('K29: no surviving suite reaches a database and the sets are empty', () => {
+    // The older platform's *-live suites and their scripts/verify-*.mjs
+    // helpers are gone; the derivation now verifies the empty set is honest.
+    expect(dbScripts.size).toBe(0);
     expect(suiteNeedsDatabase(join(root, 'tests', 'box', 'bounty'))).toBe(false); // bounty genuinely has no database
-    expect(suiteNeedsDatabase(join(root, 'tests', 'box', 'package'))).toBe(false);
+    expect(suiteNeedsDatabase(join(root, 'tests', 'kitchen'))).toBe(false);
+    expect(probe('[...s.DB_SUITES]')).toEqual([]);
+    expect(probe('[...s.DB_CHECK_SUITES]')).toEqual([]);
   });
 
   it('no test:* suite whose files reach a database is missing (the b3d73a9 defect)', () => {

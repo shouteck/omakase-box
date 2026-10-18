@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // The published `box` command (BT12): the bounty tool alone, bundled into
-// one file. The kitchen build (src/cli.ts) carries the same dispatch plus
-// the older platform commands this package deliberately does not carry.
+// one file. The kitchen build (src/cli.ts) carries the same dispatch.
 import './node-check.js';
 import { BOUNTY_COMMANDS } from '../../box-bounty/index.js';
 import { runBounty } from './bounty.js';
@@ -36,7 +35,10 @@ if (command === 'bounty') {
   // itself or returns and the process ends with the event loop.
   void runBounty(rest, { usage, version });
 } else if (command === 'export' || command === 'submit' || command === 'verify' || command === 'trace') {
-  usage(`box ${command} is not part of this package — the published box carries the bounty tool only; run box bounty help`);
+  // Removed with the older Box platform, not silently: the refusal names
+  // `command-removed` like every other retired command.
+  console.error(`box ${command}: command-removed — this command belonged to the older Box platform, retired on 18 October 2026; box bounty is the product`);
+  process.exit(2);
 } else {
   usage(command === undefined ? undefined : `box ${command} is not a command — run box bounty help for the journey`);
 }
