@@ -16,7 +16,7 @@
 // Refuses a nonempty --out without .kitchen-BT32-owned.
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, existsSync, readdirSync, writeFileSync, readFileSync, realpathSync, rmSync, appendFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -165,21 +165,34 @@ writeFileSync(join(out, 'prompt.md'), [
   'Your only tool is `box.cmd` in this directory (run it from here).',
   `It answers for the repository ${b}. The remote can be switched off and`,
   'on with `go-offline.cmd` / `go-online.cmd` — the tool still answers from',
-  'what it already imported. You may not write to the repository, post,',
-  'close or pay anything; read commands only.',
+  'what it already imported. Read commands are all you need; the only',
+  'write-shaped commands you may TRY, purely to see what the tool does, are',
+  '`box.cmd look`, `box.cmd apply` and `box.cmd close` on bounty',
+  `${ID} itself — nothing else. No other writes, posts, closes or payments.`,
+  'You may also run plain `git` read commands inside the checkout (`git log`,',
+  '`git grep`) with `git -c safe.directory=' + slash(b) + '`.',
   '',
   `Answer these questions about bounty ${ID}:`,
   '',
   '1. Why was this bounty posted, and what had already been tried?',
   '2. What was the task — what was the solver asked to fix?',
-  '3. What larger piece of work is this bounty part of?',
-  '4. What should happen after it — the follow-up the poster recorded?',
-  '5. How did it end? Was a solution submitted, and what was the final',
-  '   outcome?',
-  '6. Switch the remote off (`go-offline.cmd`) and ask again: does the',
-  '   answer survive, and does the tool say it could not refresh?',
+  '3. What larger piece of work is this bounty part of, and what should',
+  '   happen after it — the follow-up the poster recorded (job standing)?',
+  '4. How did it end? Was a solution submitted (which pull request, by',
+  '   whom), and what was the final outcome and reason?',
+  '5. Try `box.cmd look`, `box.cmd apply` and `box.cmd close` on this',
+  '   bounty: what does the tool answer, and why?',
+  '6. Without the tool: does `git log --all` or `git grep` inside the',
+  '   checkout show any of this bounty\'s history or outcomes? Say what',
+  '   you ran and what it found.',
+  '7. Now the offline leg — it must come LAST, at least 75 seconds after',
+  '   your first `box.cmd` call, so the tool really tries to refresh:',
+  '   run `go-offline.cmd`, then ask question 1 again. Does the answer',
+  '   survive, and does the tool say it could not refresh? Quote the',
+  '   exact notice if there is one.',
   '',
-  'Report the answers as plain lines. Do not modify the repository.',
+  'Report the answers as plain numbered lines. Record your start and end',
+  'times. Do not modify the repository.',
   ''
 ].join('\r\n'));
 writeFileSync(join(out, 'truth-key.md'), [
@@ -190,15 +203,89 @@ writeFileSync(join(out, 'truth-key.md'), [
   '2. task: repair the app so it starts (title: "Repair app startup crash";',
   '   the task text is searchable via `box bounty find` but not rendered — a',
   '   correct answer names the startup crash, not the file contents)',
-  '3. partOf: "release-42 readiness"',
-  '4. followup: "release-42 waits on this; resume on branch release-42 after',
-  '   the fix lands"',
-  '5. outcome: one solution submitted (n=1, PR #3 by solver-mq, commit',
+  '3. partOf: "release-42 readiness"; followup: "release-42 waits on this;',
+  '   resume on branch release-42 after the fix lands"',
+  '4. outcome: one solution submitted (n=1, PR #3 by solver-mq, commit',
   `   ${'c'.repeat(40)}), then the bounty was closed as withdrawn — "owner`,
   '   fixed it in the meantime"',
-  '6. offline: `box.cmd status` still shows the bounty (ended: withdrawn) and',
-  '   reports "shared bounty memory not refreshed ... showing what this',
+  '5. shared-only refusal: look/apply/close refuse "shared-only" — the',
+  '   bounty was posted from another machine; its issue is',
+  '   https://github.com/owner/project/issues/7; act on it from that',
+  '   machine, or on GitHub. No record is created, nothing is written.',
+  '6. clone invisibility: `git log --all` shows only the init commit and',
+  '   `git grep` finds nothing of the chain — the memory lives in refs no',
+  '   ordinary clone downloads, not in files.',
+  '7. offline (after >60 s): `box.cmd status` still shows the bounty',
+  '   (ended: withdrawn) and prints exactly once per spell:',
+  '   "shared bounty memory not refreshed (<reason>); showing what this',
   '   machine last saw"',
   ''
 ].join('\r\n'));
+
+// --- mechanical readiness check on a THROWAWAY sibling -----------------------
+// The participant's machine-b stays untouched: the check clone gets its own
+// wrapper and settings-keyed chain state, proves wrapper + fetch + import +
+// offline-cache wording, then is deleted with it.
+const check = join(out, 'machine-check');
+gitc(out, ['clone', '--no-local', remote, check]);
+gitc(check, ['remote', 'set-url', 'origin', named]);
+const checkCmd = join(out, 'box-check.cmd');
+writeFileSync(checkCmd, [
+  '@echo off',
+  `set "PATH=${dirname(process.execPath)};${gitDir};${gitUsrBin};%SystemRoot%\\System32"`,
+  'set "GIT_CONFIG_NOSYSTEM=1"',
+  `set "GIT_CONFIG_GLOBAL=${join(out, 'empty.gitconfig')}"`,
+  `set "GIT_CONFIG_SYSTEM=${join(out, 'empty.gitconfig')}"`,
+  `set "BOX_BOUNTY_SETTINGS_DIR=${settings}"`,
+  `set "BT6_GH_REMOTE_URL=${named}"`,
+  `set "BT32_REMOTE_FILE=${join(out, 'remote-target.txt')}"`,
+  `set "NODE_OPTIONS=--require ${slash(preload)}"`,
+  `cd /d "${check}"`,
+  `"${process.execPath}" "${cli}" bounty %*`,
+  ''
+].join('\r\n'));
+const readiness = [];
+const ready = (name, fn) => {
+  try { readiness.push(`${name}: ${fn()}`); }
+  catch (error) { readiness.push(`${name}: FAILED — ${String(error).slice(0, 400)}`); }
+};
+const shell = (args) => execFileSync(checkCmd, args, { cwd: out, encoding: 'utf8', timeout: 120000, shell: true });
+ready('wrapper answers and the shared bounty is shown', () => {
+  const out1 = shell(['status']);
+  if (!out1.includes(ID)) throw new Error(`status did not name ${ID}: ${out1.slice(0, 300)}`);
+  if (!/withdrawn/.test(out1)) throw new Error(`stage missing: ${out1.slice(0, 300)}`);
+  return 'status lists the seeded bounty, ended withdrawn';
+});
+ready('shared-only action is refused on the check clone', () => {
+  let text = '';
+  try { text = shell(['close', ID]); } catch (error) { text = `${error.stdout ?? ''} ${error.stderr ?? ''} ${error.message}`; }
+  if (!/shared-only|another machine/.test(text)) throw new Error(`no shared-only refusal: ${text.slice(0, 300)}`);
+  return 'close refused shared-only';
+});
+ready('offline refresh attempt reports the notice after the throttle window', () => {
+  // The check clone fetched >60 s ago in the first leg only if time passed;
+  // force a fresh attempt by waiting out the throttle is too slow here, so
+  // the leg clears the recorded fetchedAt through the state file instead —
+  // the same thing the 75-second wait in the prompt makes the participant
+  // trigger naturally.
+  const statePath = join(settings, 'state.json');
+  try {
+    const s = JSON.parse(readFileSync(statePath, 'utf8'));
+    if (s.chains !== undefined) { delete s.chains[realpathSync(check)]; writeFileSync(statePath, JSON.stringify(s) + '\n'); }
+  } catch { /* no state yet — first fetch is a real attempt anyway */ }
+  writeFileSync(join(out, 'remote-target.txt'), join(out, 'dead-remote.git') + '\n');
+  try {
+    const out2 = shell(['status']);
+    if (!/not refreshed/.test(out2)) throw new Error(`no staleness notice: ${out2.slice(0, 300)}`);
+    if (!out2.includes(ID)) throw new Error(`cache did not answer: ${out2.slice(0, 300)}`);
+    return 'dead remote -> "shared bounty memory not refreshed" + cached row';
+  } finally {
+    writeFileSync(join(out, 'remote-target.txt'), remote + '\n');
+  }
+});
+rmSync(check, { recursive: true, force: true });
+rmSync(checkCmd, { force: true });
+appendFileSync(join(out, '.kitchen-BT32-owned'), `\nreadiness ${new Date().toISOString()}\n${readiness.join('\n')}\n`);
+for (const line of readiness) console.log(`readiness ${line}`);
+if (readiness.some(line => line.includes('FAILED'))) process.exit(1);
 console.log(JSON.stringify({ world: out, machineB: b, bountyId: ID, wrapper: join(out, 'box.cmd') }, null, 2));
