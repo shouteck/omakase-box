@@ -1,8 +1,10 @@
 # Status
 
-Updated by the CTO on 19 October 2026 at the K15-ci close; K32 starting.
+Updated by the CTO on 19 October 2026 at the K32 close.
 
 ## Now
+
+- **K32 merged** (`28d7a7f`; PASS test-verified on `30ca1c7`). Agent payments researched from primary sources: every agent-payment protocol pays merchants with endpoints; the only route that pays a person with no custody and no per-payment approval is USDC sent from the owner's wallet to the solver's (x402 `exact`). Prototype against a local stand-in, 24/24; no account, key or money. **Owner decision open:** keep USDC for rewards (then a build adds the wallet route after one approved test-network payment) or not (the build records owed and paid, paying by hand). Pass findings carried to the build in BACKLOG.md. Hosted checks green.
 
 - **K15-ci merged** (`fad8e44`; PASS test-verified on `4982a28`). Master was red on the first full hosted run of BT35's code: the K15 sandbox guard crashed (`ENOBUFS`) reading a wave-file diff that had grown past Node's 1 MiB default. Not caused by BT35. The guard now reads any size and fails by name. **Both hosted jobs green** (run 39145603255).
 
