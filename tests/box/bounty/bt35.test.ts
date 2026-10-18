@@ -195,10 +195,10 @@ describe('nothing changes the records', () => {
   });
 });
 
-describe('times that do not parse are absent facts, never NaN or invented dates', () => {
-  it('a posted event whose at is junk: the age is named unavailable, JSON fields are null, no reminder', () => {
+describe('times outside the ISO timestamp contract are absent facts, never NaN or invented dates', () => {
+  it.each(['junk', '2026/10/01', '1', '2026-02-30T00:00:00.000Z', '2026-10-01T24:00:00.000Z'])('a posted event at %s: the age is named unavailable, JSON fields are null, no reminder', (at) => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
-    const rid = seedOpen(repo, 1, 'posted', [{ stage: 'drafted', at: iso(30) }, { stage: 'posted', at: 'junk' }]);
+    const rid = seedOpen(repo, 1, 'posted', [{ stage: 'drafted', at: iso(30) }, { stage: 'posted', at }]);
     const run = box(repo, ['status']);
     expect(run.status).toBe(0);
     expect(run.stdout).toContain('age unavailable; no solution yet');
@@ -212,9 +212,9 @@ describe('times that do not parse are absent facts, never NaN or invented dates'
     expect(entry.lastActivityAt).toBeNull();
   });
 
-  it('a createdAt that passes the record shape but never parses: draft age unavailable, JSON nulls', () => {
+  it.each(['9999-99-99T99:99', '2026-02-30T00:00:00.000Z'])('a draft createdAt %s passes the broad record shape but is outside the contract: age unavailable, JSON nulls', (at) => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
-    const rid = seedOpen(repo, 1, 'drafted', [{ stage: 'drafted', at: '9999-99-99T99:99' }]);
+    const rid = seedOpen(repo, 1, 'drafted', [{ stage: 'drafted', at }]);
     const run = box(repo, ['status']);
     expect(run.stdout).toContain('age unavailable; no solution yet');
     expect(run.stdout).not.toContain('NaN');
@@ -224,15 +224,20 @@ describe('times that do not parse are absent facts, never NaN or invented dates'
     expect(entry.lastActivityAt).toBeNull();
   });
 
-  it('an attempt at that never parses: last activity falls to real times only — the post itself', () => {
+  it.each(['junk', '2026/10/01', '1', '2026-02-30T00:00:00.000Z'])('an invalid attempt at %s makes latest activity unavailable, never a false older fact', (at) => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
     const rid = seedOpen(repo, 1, 'posted', [{ stage: 'drafted', at: iso(30) }, { stage: 'posted', at: iso(30) }],
-      { attempts: [{ ...attempt(1, 20), at: 'junk' }] });
+      { attempts: [{ ...attempt(1, 20), at }] });
     const run = box(repo, ['status']);
+    expect(run.stdout).toContain('open 30 days; last activity time unavailable');
     expect(run.stdout).not.toContain('NaN');
-    const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; lastActivityAt: unknown }[] };
-    expect(doc.bounties.find(row => row.id === rid)!.lastActivityAt).toBe(iso(30));
-    // The broken attempt is no new-solution fact — the 30-day wait is said once.
+    expect(run.stdout).not.toMatch(REMINDER);
+    const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; openedAt: unknown; lastActivityAt: unknown }[] };
+    const entry = doc.bounties.find(row => row.id === rid)!;
+    expect(entry.openedAt).toBe(iso(30));
+    expect(entry.lastActivityAt).toBeNull();
+    // Unknown latest activity cannot be called stale — the older post is not
+    // republished as the latest thing that happened.
     expect(box(repo, ['status']).stdout).not.toMatch(REMINDER);
   });
 
