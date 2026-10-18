@@ -1,11 +1,11 @@
 # Status
 
-Updated by the CTO on 18 October 2026 at the BT32 completed close.
+Updated by the CTO on 18 October 2026 at the BT34 + BT32-ci completed close.
 
 ## Now
 
-- **BT32-ci merged** (`f23125a`) — the red hosted run's cause fixed: `bt32.test.ts:360`'s `commit-tree` seed now carries `-c` identity like every other call; PASS test-verified on `a9c4729`, sweep found no second omission. Post-push hosted run not awaited; read it before BT34's merge.
-- **BT34 in flight** on `wave/BT34` — the named wave of this run; bounty tool cut free of `box-package` so K29 can remove the platform.
+- **BT34 merged** (`e780ee7`) — the named wave of this run. The bounty tool carries its own `resolveProgram` (`packages/box-bounty/program.ts`, byte-identical copy re-based onto `Error`); nothing under `packages/box-bounty/`, `tests/box/bounty/` or the CLI bounty path imports `box-package`, guarded by `standalone.test.ts`. PASS test-verified on `ae4d840`; the seam is cut so K29 can remove the platform. Master green on the BT32-ci close run (`39112932792`); the post-push BT34 run is not awaited.
+- **BT32-ci merged** (`f23125a`) — forced first wave: the red hosted run's cause was `bt32.test.ts:360`'s `commit-tree` seed lacking git identity on the runner; fixed, sweep found no second omission.
 - **BT32 merged** (`6cd2559`). Independent PASS, test-verified, on exact candidate `63d3e60`; final fresh reviewer verdict `0fa1fc8`. Earlier parked FAILs and superseded approvals remain in `waves/BT32.md`, not the current state.
 - **Shared memory built:** posted-bounty milestone events use per-bounty custom Git refs, fetched into the local SQLite shared cache. Drafts and machine detail stay local; ordinary clones and branch files do not receive the chains. Shared-only bounties are read-only.
 - **Trust fixes proven:** per-id authored/imported provenance and exact tips gate pushes, parents and merges. Push source is the proven commit SHA, never the mutable ref name. Planted/swapped refs and the push-boundary race are blocked; legitimate retry, concurrent merge and import-only-clone deletion recovery pass.
@@ -15,4 +15,4 @@ Updated by the CTO on 18 October 2026 at the BT32 completed close.
 
 ## Next
 
-This run stops after BT32. No wave is in flight and none starts automatically. Remaining roadmap briefs are available when named; **BT33** stays parked and **BT12 Part B** stays deferred. Payment event schema exists, but owner-recorded payment remains BT36's work.
+This run stops after BT34. No wave is in flight and none starts automatically. Remaining roadmap briefs are available when named; **BT33** stays parked and **BT12 Part B** stays deferred. Payment event schema exists, but owner-recorded payment remains BT36's work. **K29** (remove the older platform) is now unblocked by BT34.
