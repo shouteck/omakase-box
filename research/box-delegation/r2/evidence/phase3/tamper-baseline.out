@@ -1,7 +1,0 @@
-{
-  "verdict": "fail",
-  "failureClass": "preparation-defect",
-  "reason": "baseline-mismatch",
-  "detail": "src/tests/box/package/r1-kitchen-stats.test.ts declares baseline 0000000000000000000000000000000000000000000000000000000000000000 but the owner baseline is 91c8946ef9e0319893ff06fb50207f8c360d190ae38817698419e7f6056a6d30",
-  "checks": []
-}

@@ -1,8 +1,0 @@
- WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
- WARN  This project is configured to use nub
-Lockfile is up to date, resolution step is skipped
- ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY  Broken lockfile: no entry for 'zod@4.6.5' in pnpm-lock.yaml
-
-This issue is probably caused by a badly resolved merge conflict.
-To fix the lockfile, run 'pnpm install --no-frozen-lockfile'.
-EXIT=0

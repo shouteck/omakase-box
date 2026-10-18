@@ -7,15 +7,26 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true,
-    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "rootDir": ".",
     "outDir": ".runtime/build",
     "sourceMap": false,
     "declaration": true,
-    "types": ["node", "react", "react-dom"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["apps/**/*.ts", "apps/**/*.tsx", "services/**/*.ts", "packages/**/*.ts", "examples/**/*.ts", "examples/**/*.tsx", "tests/**/*.ts"],
-  "exclude": ["node_modules", "**/dist", ".runtime", "templates/workspaces"]
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "tests/**/*.ts",
+    "kitchen/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist",
+    ".runtime",
+    "templates/workspaces"
+  ]
 }

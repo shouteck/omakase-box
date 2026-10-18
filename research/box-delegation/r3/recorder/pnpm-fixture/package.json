@@ -1,8 +1,0 @@
-{
-  "name": "r3-lifecycle-sentinel",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "postinstall": "node -e \"require('fs').writeFileSync('/out/postinstall-ran','lifecycle ran')\""
-  }
-}

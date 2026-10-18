@@ -1,4 +1,0 @@
-npm-tamper start 13:08:06Z
-submit refused: read-only file checks/outcome.mjs was modified; only the editable paths in box.json may change
-submit exit=1
-npm-tamper end 13:08:06Z
