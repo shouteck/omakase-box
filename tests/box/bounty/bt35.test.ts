@@ -5,7 +5,10 @@
 // ever — and never again, and never acts on it.
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { CLI_DIST, makeRepo, readRecordRaw, writeRecordRaw } from './support.js';
+import { importShared } from '../../../packages/box-bounty/store.js';
+import { sharedRead } from '../../../packages/box-bounty/index.js';
+import { CLI_DIST, git, makeRepo, readRecordRaw, recordExists, writeRecordRaw } from './support.js';
+import type { SharedRow } from '../../../packages/box-bounty/store.js';
 
 // The pinned "now" — read by the built CLI through the test-only
 // BOX_BOUNTY_NOW the wave documents. Everything below computes days from it.
@@ -71,13 +74,17 @@ describe('the age facts on every open bounty', () => {
     expect(run.stdout).not.toMatch(REMINDER);
   });
 
-  it('an ended bounty shows no age and earns no line', () => {
+  it('an ended bounty shows no age and earns no line — its JSON age facts are null', () => {
     const repo = makeRepo({ 'app.txt': 'seed\n' });
-    seedOpen(repo, 1, 'rejected', [{ stage: 'drafted', at: iso(40) }, { stage: 'posted', at: iso(30) }, { stage: 'rejected', at: iso(5) }]);
+    const rid = seedOpen(repo, 1, 'rejected', [{ stage: 'drafted', at: iso(40) }, { stage: 'posted', at: iso(30) }, { stage: 'rejected', at: iso(5) }]);
     const run = box(repo, ['status']);
     expect(run.status).toBe(0);
     expect(run.stdout).not.toContain('open 30 days');
     expect(run.stdout).not.toMatch(REMINDER);
+    const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; openedAt: unknown; lastActivityAt: unknown }[] };
+    const ended = doc.bounties.find(entry => entry.id === rid)!;
+    expect(ended.openedAt).toBeNull();
+    expect(ended.lastActivityAt).toBeNull();
   });
 });
 
@@ -185,5 +192,103 @@ describe('nothing changes the records', () => {
     box(repo, []);
     box(repo, ['status', '--json']);
     expect(bytes(repo, ids)).toEqual(before);
+  });
+});
+
+describe('times that do not parse are absent facts, never NaN or invented dates', () => {
+  it('a posted event whose at is junk: the age is named unavailable, JSON fields are null, no reminder', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    const rid = seedOpen(repo, 1, 'posted', [{ stage: 'drafted', at: iso(30) }, { stage: 'posted', at: 'junk' }]);
+    const run = box(repo, ['status']);
+    expect(run.status).toBe(0);
+    expect(run.stdout).toContain('age unavailable; no solution yet');
+    expect(run.stdout).not.toContain('NaN');
+    expect(run.stdout).not.toMatch(REMINDER);
+    const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; openedAt: unknown; lastActivityAt: unknown }[] };
+    const entry = doc.bounties.find(row => row.id === rid)!;
+    // A posted event's broken time is not republished, and the draft's
+    // createdAt is never stood in as a posting date the record does not carry.
+    expect(entry.openedAt).toBeNull();
+    expect(entry.lastActivityAt).toBeNull();
+  });
+
+  it('a createdAt that passes the record shape but never parses: draft age unavailable, JSON nulls', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    const rid = seedOpen(repo, 1, 'drafted', [{ stage: 'drafted', at: '9999-99-99T99:99' }]);
+    const run = box(repo, ['status']);
+    expect(run.stdout).toContain('age unavailable; no solution yet');
+    expect(run.stdout).not.toContain('NaN');
+    const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; openedAt: unknown; lastActivityAt: unknown }[] };
+    const entry = doc.bounties.find(row => row.id === rid)!;
+    expect(entry.openedAt).toBeNull();
+    expect(entry.lastActivityAt).toBeNull();
+  });
+
+  it('an attempt at that never parses: last activity falls to real times only — the post itself', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    const rid = seedOpen(repo, 1, 'posted', [{ stage: 'drafted', at: iso(30) }, { stage: 'posted', at: iso(30) }],
+      { attempts: [{ ...attempt(1, 20), at: 'junk' }] });
+    const run = box(repo, ['status']);
+    expect(run.stdout).not.toContain('NaN');
+    const doc = JSON.parse(box(repo, ['status', '--json']).stdout) as { bounties: { id: string; lastActivityAt: unknown }[] };
+    expect(doc.bounties.find(row => row.id === rid)!.lastActivityAt).toBe(iso(30));
+    // The broken attempt is no new-solution fact — the 30-day wait is said once.
+    expect(box(repo, ['status']).stdout).not.toMatch(REMINDER);
+  });
+
+  it('a post dated in the future clamps to open today, never a negative or NaN', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    posted(repo, 1, -5);
+    const run = box(repo, ['status']);
+    expect(run.stdout).toContain('open today; no solution yet');
+    expect(run.stdout).not.toContain('NaN');
+  });
+});
+
+describe('a shared-only stale bounty', () => {
+  // One shared row written the way the chain import writes it — record and
+  // chain never touched by the notice, only the machine-local said state.
+  const sharedPosted = (repo: string, n: number, postedDaysAgo: number): string => {
+    const rid = id(n);
+    importShared(repo, [{
+      id: rid, stage: 'posted', open: true,
+      createdAt: iso(postedDaysAgo), updatedAt: iso(postedDaysAgo), endedAt: null,
+      record: {
+        schemaVersion: 1, kind: 'box-bounty-record', id: rid,
+        title: `shared seed ${n}`, noteSource: 'legacy', stage: 'posted',
+        content: { task: { file: '(shared)', text: 'task text' }, note: null, tool: 'box-bounty@0.1.0' },
+        createdAt: iso(postedDaysAgo),
+        resume: { kind: 'not-recorded' },
+        events: [{ stage: 'posted', at: iso(postedDaysAgo), destination: `https://github.com/owner/project/issues/${n}` }],
+        attempts: [],
+        github: {
+          repository: 'owner/project', account: 'poster', kind: 'history',
+          branch: `box-bounty/${rid}`, commit: 'a'.repeat(40), title: `shared seed ${n}`,
+          body: '', state: 'posted', issue: { number: n, url: `https://github.com/owner/project/issues/${n}` }, pending: null
+        },
+        shared: true
+      } as SharedRow['record'],
+      searchText: `${rid}\nshared seed ${n}`
+    }]);
+    return rid;
+  };
+
+  it('is noticed once across entrypoints; the line names where it can end, and the chain and row are untouched', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    const rid = sharedPosted(repo, 1, 20);
+    const rowBefore = JSON.stringify(sharedRead(repo, rid));
+    const first = box(repo, ['status']);
+    expect(first.status).toBe(0);
+    expect(first.stdout).toContain(`${rid} has had no new solution for 20 days`);
+    // `box bounty close` on this clone would refuse 'shared-only' — the line
+    // names the fact and where ending happens instead of quoting it.
+    expect(first.stdout).toContain('posted from another machine');
+    expect(box(repo, ['status']).stdout).not.toMatch(REMINDER);
+    expect(box(repo, []).stdout).not.toMatch(REMINDER);
+    // Nothing written back: no local record, no chain ref, the shared row
+    // itself byte-identical.
+    expect(recordExists(repo, rid)).toBe(false);
+    expect(git(repo, ['for-each-ref', 'refs/box-bounty'])).toBe('');
+    expect(JSON.stringify(sharedRead(repo, rid))).toBe(rowBefore);
   });
 });

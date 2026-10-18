@@ -72,24 +72,44 @@ const nowMs = (): number => {
 const daysSince = (at: string, now: number): number => Math.max(0, Math.floor((now - Date.parse(at)) / 86_400_000));
 const dayWord = (n: number): string => `${n} ${n === 1 ? 'day' : 'days'}`;
 
-/** The two age facts (BT35): when the bounty opened — its `posted` event,
-    a draft's create — and when anything last happened: the posted event or
-    the newest attempt's collection time. Both ISO times, both read-only. */
-export const bountyAge = (record: BountyRecord): { readonly openedAt: string; readonly lastActivityAt: string } => {
-  const postedAt = record.events.find(event => event.stage === 'posted')?.at ?? null;
-  const openedAt = postedAt ?? record.createdAt;
-  const times = [postedAt, ...attemptsOf(record).map(attempt => attempt.at)].filter((at): at is string => at !== null);
-  return { openedAt, lastActivityAt: times.sort().at(-1) ?? openedAt };
+// A timestamp the age facts may trust (BT35): `asRecord` shape-checks the
+// fields it knows but not every `at`, and a record file can arrive through a
+// merged solution or a tampered checkout (BT9). Only finite-parsing times
+// ever reach a rendered duration or the promised-ISO JSON fields — an
+// unparseable value makes the fact absent (null/unavailable), never NaN, a
+// non-ISO echo, or an invented substitute date.
+const validAt = (at: string | null | undefined): string | null =>
+  typeof at === 'string' && Number.isFinite(Date.parse(at)) ? at : null;
+
+/** The two age facts (BT35): when the bounty opened — its `posted` event, a
+    draft's create — and when anything last happened: the posted event or the
+    newest attempt's collection time. Both ISO times or null, both read-only.
+    A posted event whose time does not parse leaves `openedAt` unknown: the
+    draft's `createdAt` is never shown in its place, because that would state
+    a posting date the record does not carry. */
+export const bountyAge = (record: BountyRecord): { readonly openedAt: string | null; readonly lastActivityAt: string | null } => {
+  const postedEvent = record.events.find(event => event.stage === 'posted');
+  const openedAt = postedEvent === undefined ? validAt(record.createdAt) : validAt(postedEvent.at);
+  const times = [postedEvent === undefined ? null : validAt(postedEvent.at), ...attemptsOf(record).map(attempt => validAt(attempt.at))].filter((at): at is string => at !== null);
+  // A draft has no posted/attempt activity — its own creation is the last
+  // thing that happened, so `openedAt` (the draft's createdAt) stands in.
+  // For a posted bounty this fallback is null too: a broken posted `at`
+  // stays unknown rather than borrowing createdAt as a fake posting date.
+  return { openedAt, lastActivityAt: times.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1) ?? openedAt };
 };
 
 // The open line's age clause: `open 12 days; last solution 3 days ago` —
 // `today` under one day, `no solution yet` until an attempt lands (BT35).
+// A time the record carries but does not parse is named unavailable, never
+// rendered as a duration off bad data.
 const ageClause = (record: BountyRecord): string => {
   const now = nowMs();
   const { openedAt, lastActivityAt } = bountyAge(record);
-  const openDays = daysSince(openedAt, now);
-  const open = openDays === 0 ? 'open today' : `open ${dayWord(openDays)}`;
-  const last = attemptsOf(record).length === 0 ? 'no solution yet' : daysSince(lastActivityAt, now) === 0 ? 'last solution today' : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
+  const open = openedAt === null ? 'age unavailable' : daysSince(openedAt, now) === 0 ? 'open today' : `open ${dayWord(daysSince(openedAt, now))}`;
+  const last = attemptsOf(record).length === 0 ? 'no solution yet'
+    : lastActivityAt === null ? 'last activity time unavailable'
+    : daysSince(lastActivityAt, now) === 0 ? 'last solution today'
+    : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
   return `${open}; ${last}`;
 };
 
@@ -100,20 +120,28 @@ const staleTopic = (id: string): string => `stale-posted-${id}`;
     read sees it — said once per bounty, ever, in the tool's machine-local
     state; a new solution does not reset it. At most STALE_LINES_LIMIT print
     in one command, the oldest wait first; the rest stay unsaid for a later
-    run. Shared-only rows are the chain's facts — the posting machine owns
-    that reminder, and this read writes nothing for them. */
+    run. A shared-only bounty is noticed the same way — the machine-local
+    said state is this clone's own bookkeeping, not a shared write — but its
+    line names where ending can happen: this clone cannot `close` it (the
+    shared-only refusal says so itself), so the line states the fact and the
+    places it can be ended rather than quoting a command that would refuse.
+    A bounty whose last-activity time does not parse cannot be shown stale —
+    its age clause already says the fact is unavailable. */
 export function staleReminderLines(repoRoot: string, open: readonly BountyRecord[]): string[] {
   const now = nowMs();
   const stale = open
-    .filter(record => record.shared !== true && record.events.some(event => event.stage === 'posted'))
-    .map(record => ({ record, age: bountyAge(record) }))
-    .filter(entry => daysSince(entry.age.lastActivityAt, now) >= STALE_SOLUTION_DAYS)
-    .sort((a, b) => a.age.lastActivityAt.localeCompare(b.age.lastActivityAt) || a.record.id.localeCompare(b.record.id));
+    .filter(record => record.events.some(event => event.stage === 'posted'))
+    .map(record => ({ record, lastActivityAt: bountyAge(record).lastActivityAt }))
+    .filter((entry): entry is { record: BountyRecord; lastActivityAt: string } => entry.lastActivityAt !== null && daysSince(entry.lastActivityAt, now) >= STALE_SOLUTION_DAYS)
+    .sort((a, b) => Date.parse(a.lastActivityAt) - Date.parse(b.lastActivityAt) || a.record.id.localeCompare(b.record.id));
   const lines: string[] = [];
-  for (const { record, age } of stale) {
+  for (const { record, lastActivityAt } of stale) {
     if (lines.length >= STALE_LINES_LIMIT) break;
     if (saidOnce(repoRoot, staleTopic(record.id))) {
-      lines.push(`${record.id} has had no new solution for ${dayWord(daysSince(age.lastActivityAt, now))} — keep waiting, or end it: box bounty close ${record.id} --reason "<why>"`);
+      const days = dayWord(daysSince(lastActivityAt, now));
+      lines.push(record.shared === true
+        ? `${record.id} has had no new solution for ${days} — posted from another machine; keep waiting, or end it on that machine or on GitHub`
+        : `${record.id} has had no new solution for ${days} — keep waiting, or end it: box bounty close ${record.id} --reason "<why>"`);
     }
   }
   return lines;

@@ -128,11 +128,16 @@ tool shows it, then as seen since that time. Seen means only that it was shown.
 
 Every open bounty also shows its age: `open N days; last solution N days ago`
 (or `open today`, `no solution yet`), from the posted event and the newest
-collected solution. When a posted bounty has had nothing new for 14 days the
-first `status` or `box bounty` to see it adds one line — that it has had no new
-solution, and that you can keep waiting or end it with `box bounty close <id>
---reason "<why>"` — said once for that bounty and never repeated (at most three
-such lines per command, the oldest first). Nothing happens automatically: the
+collected solution; a timestamp that does not parse is named `age
+unavailable` (`null` in JSON) rather than turned into a duration. When a
+posted bounty has had nothing new for 14 days the first `status` or `box
+bounty` to see it adds one line — that it has had no new solution, and that
+you can keep waiting or end it with `box bounty close <id> --reason
+"<why>"` — said once for that bounty and never repeated (at most three such
+lines per command, the oldest first). A bounty posted from another machine
+(shared bounty memory) gets the same once-said notice, but the line names
+where it can be ended — on the posting machine or on GitHub — because
+`close` here is refused `shared-only`. Nothing happens automatically: the
 tool never closes, expires or changes a bounty on its own.
 
 The compact `status`/`box bounty` views stay bounded as the record count

@@ -173,15 +173,16 @@ const mergeNowEntry = (repoRoot: string, record: BountyRecord, attempts: readonl
 // takes the saved-job line when nothing is open — the text view's own rule.
 const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null): JsonObject => {
   const attempts = attemptsOf(record);
-  const age = bountyAge(record);
+  // The two age facts (BT35) belong to open bounties — an ended record's
+  // wait is over, so both stay null there; on an open record a source time
+  // that does not parse also reads null, never a non-ISO echo.
+  const age = isOpenStage(record.stage) ? bountyAge(record) : { openedAt: null, lastActivityAt: null };
   return {
     id: record.id,
     title: record.title,
     why: record.why ?? null,
     stage: record.stage,
     createdAt: record.createdAt,
-    // The two age facts (BT35): when the bounty opened and when anything
-    // last happened — ISO times; durations are the reader's to compute.
     openedAt: age.openedAt,
     lastActivityAt: age.lastActivityAt,
     // Old records carry the snapshot's base commit; records made now keep no
