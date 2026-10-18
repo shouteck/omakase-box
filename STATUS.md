@@ -1,16 +1,16 @@
 # Status
 
-Updated by the CTO on 18 October 2026 at the BT32 parked close.
+Updated by the CTO on 18 October 2026 at the BT32 resumed parked close.
 
 ## Now
 
-- **BT32 parked, not merged.** Independent reviewer FAIL. Product and full review remain on local `wave/BT32` at `73fb4be`; no BT32 product changes reach master.
-- **Blocking measurement:** completed production run 9 imports 1,000 chains in **413,297 ms**, against the brief's roughly 12,000 ms ceiling. Per-chain `rev-list` and per-event `cat-file` subprocesses dominate. The performance gate is not relaxed.
-- **Tests passed, acceptance did not:** the reviewer completed `verify c547e5f PASS check=0 build=0 test:box-bounty=0 test:box-package=0 test:kitchen=0 db=none 887s` on a clean exact candidate. This does not override the failed scale gate or missing fresh-agent legs.
-- **Real GitHub preflight succeeded**, with limits recorded: default clone isolation, explicit fetch, concurrent push rejection/merge/retry and deletion/restoration. Restoration used an older clone tip, so that leg proves ref recovery, not latest-history preservation. The test ref is absent; all BT32 scratch and its recreated test cache were removed.
-- **Fresh-agent evidence partial:** why/tried, job, follow-up and outcome were recalled. Cached answers survived offline, but no attempted refresh/staleness notice was observed within the 60-second throttle. M5/M11 journey legs remain untested. K14 budget changes also exceed the brief's literal five-fetching-command allowance, which conflicts with required milestone writes.
-- Other-session roadmap/K33 brief (`0c4af74`) preserved. Latest completed hosted result read was green (`39051230113`); no wait for hosted checks. Master retains the shipped BT31 store and K28 research. Rebuilt master artifacts successfully so the local CLI no longer runs the parked candidate; this build is not a new acceptance claim.
+- **BT32 still parked, not merged.** Final reviewer verdict is FAIL at local `wave/BT32` commit `c9eeca3`. No BT32 product code or tests reach master.
+- **Scale blocker fixed:** batched object reads/ref adoption reduced first import at 1,000 chains from 413,297 ms to 5,479 ms; independent rerun 5,347 ms, below unchanged 12,000 ms gate. A fixed Git-process-count regression now covers the fanout.
+- **New security blocker:** `retryPending` auto-pushes an attacker-planted local chain ref; the next fetch imports it as remote-trusted. That bypasses the required local-ref provenance boundary and can publish secret-bearing text without the event-write scan. Corrected regression fails on the unfixed implementation.
+- **Prior green suites are not acceptance:** exact candidate `07d3777` passed all three named suites in the reviewer's 1,732-second run, but its original forged-ref probe incorrectly asserted that upload was acceptable. CTO blocked merge; corrected probe failed, and the reviewer superseded the preliminary PASS verdicts.
+- **Second-machine journey completed:** reasons, task, larger job/follow-up and outcome recovered; look/apply/close refused shared-only; after 76 seconds offline cache survived and the refresh notice appeared once. Plain branch log/grep stay clean. `git log --all` correctly exposes explicitly fetched custom refs; the old fixture key's contrary expectation is recorded, not hidden.
+- Recorded GitHub preflight and its older-tip-restoration caveat remain valid; no new sandbox writes this run. All resumed scratch and recreated test cache removed. Master retains shipped BT31 and K28; only close documents and immutable evidence are published.
 
 ## Next
 
-**BT32 resume approved** by the owner on 18 October 2026. A fresh worker starts from the parked branch, batches imports with a process-count bound, proves the unchanged 12-second scale gate first, completes the real participant journey and gets independent review. Timebox 12:31-14:31 +08; no new sandbox writes. The latest hosted result is green (`39067077125`). This run stops after BT32. **BT33** stays parked; **BT12 Part B** stays deferred.
+This run stops here. Recommended next correction: require tool-authored pending or validated recovery provenance and tip integrity before any push; never publish arbitrary existing local refs. Preserve legitimate pending retries/deletion recovery, test both first-push prevention and second-fetch non-adoption, then obtain a clean exact-SHA verification and independent review. Keep the scale gate and process bound. No other wave starts. **BT33** stays parked; **BT12 Part B** stays deferred.
