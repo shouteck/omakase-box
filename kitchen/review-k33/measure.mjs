@@ -30,10 +30,17 @@ const fpLog = git('log', '--first-parent', '--format=%H\t%cI\t%s', BASE).trim().
 }).filter(c => c.t <= CUTOFF);
 const shaTime = new Map(fpLog.map(c => [c.sha, c.t]));
 
-// per wave file: all commits touching it (any branch, up to BASE), oldest first
-const wavesDir = path.join(REPO, 'waves');
-const waveIds = fs.readdirSync(wavesDir).filter(f => f.endsWith('.md')).map(f => f.replace(/\.md$/, ''))
+// Wave file inventory and contents come from the PINNED BASE tree, not the working copy:
+// the report's numbers must not drift when wave files (including this one) are edited after BASE.
+const waveIds = git('ls-tree', '--name-only', BASE, 'waves/')
+  .trim().split('\n').map(l => l.replace(/^waves\//, ''))
+  .filter(f => f.endsWith('.md')).map(f => f.replace(/\.md$/, ''))
   .filter(id => !/^night-/.test(id));
+const waveText = new Map();
+for (const id of waveIds) {
+  try { waveText.set(id, git('show', BASE + ':waves/' + id + '.md')); }
+  catch { waveText.set(id, ''); }
+}
 
 function commitsTouching(file) {
   const out = git('log', '--format=%H\t%cI\t%s', BASE, '--', file).trim();
@@ -91,7 +98,7 @@ for (const r of ghRuns) if (!ghBySha.has(r.headSha)) ghBySha.set(r.headSha, r);
 const rows = [];
 for (const id of waveIds.sort()) {
   const file = 'waves/' + id + '.md';
-  const text = fs.readFileSync(path.join(REPO, file), 'utf8');
+  const text = waveText.get(id) ?? '';
   const touches = commitsTouching(file);
   const merge = mergeCommit(id);
   const close = merge ? closeCommit(id, merge.t) : undefined;
@@ -115,6 +122,15 @@ for (const id of waveIds.sort()) {
 
   // corrections: FAIL verify lines quoted in the wave file + non-PASS attributed runs (dedup)
   const quotedFails = (text.match(/verify [0-9a-f]{7,}\s+FAIL/gi) || []).length;
+  // review FAIL-verdict markers: a Verdict/Round/reviewer line that records a FAIL.
+  // Mechanical detector; deliberately excludes 'verify <sha> FAIL' run-result lines.
+  const failVerdictLines = text.split('\n').filter(l =>
+    (/verdict[^\n]{0,40}\bfail/i.test(l)
+      || /round\s*\d+[^\n]{0,50}\bfail\b/i.test(l)
+      || /first\s+(pass|review|round)[^\n]{0,50}\bfail/i.test(l)
+      || /reviewer\s+FAIL|review\s+FAIL(ed)?\b/i.test(l))
+    && !/verify [0-9a-f]{7,}\s+FAIL|Master: FAIL|would fail|must fail|fail-safe|failsafe|fail under|fail on master/i.test(l));
+  const failVerdicts = failVerdictLines.length;
   const workerM = text.match(/Worker:\s*([^\n·|]+)/);
   const reviewerM = text.match(/Reviewer:\s*([^\n]+)/);
   const hostText = ((workerM?.[1] || '') + ' ' + (reviewerM?.[1] || '')).toLowerCase();
@@ -141,13 +157,14 @@ for (const id of waveIds.sort()) {
     timeoutOnlyFails: runsPresent ? timeoutOnly.length : 'missing',
     incompleteRunDirs: runsPresent ? incomplete.length : 'missing',
     quotedFailLines: quotedFails,
+    failVerdicts,
     host, verdict, briefDate, rewrites,
     hostedAfterMerge: merge ? (gh ? gh.conclusion : 'no-run-found') : 'missing',
   });
 }
 
 // ---- Output ----
-const cols = ['id', 'kind', 'briefFirstCommit', 'merge', 'elapsedMin', 'mergeToCloseMin', 'verifyRuns', 'verifySec', 'verifyFails', 'timeoutOnlyFails', 'incompleteRunDirs', 'quotedFailLines', 'host', 'verdict', 'rewrites', 'hostedAfterMerge', 'fileTouches'];
+const cols = ['id', 'kind', 'briefFirstCommit', 'merge', 'elapsedMin', 'mergeToCloseMin', 'verifyRuns', 'verifySec', 'verifyFails', 'timeoutOnlyFails', 'incompleteRunDirs', 'quotedFailLines', 'failVerdicts', 'host', 'verdict', 'rewrites', 'hostedAfterMerge', 'fileTouches'];
 const w = cols.map(c => Math.max(c.length, ...rows.map(r => String(r[c]).length)));
 console.log(cols.map((c, i) => c.padEnd(w[i])).join('  '));
 for (const r of rows) console.log(cols.map((c, i) => String(r[c]).padEnd(w[i])).join('  '));
@@ -172,3 +189,6 @@ for (const h of [...new Set(rows.map(r => r.host))]) {
 console.log('\nhosted runs not success after merge:', rows.filter(r => !['missing', 'no-run-found', 'success'].includes(r.hostedAfterMerge)).map(r => `${r.id}:${r.hostedAfterMerge}`).join(', ') || 'none');
 console.log('\ntop verify-second waves:', rows.filter(r => typeof r.verifySec === 'number').sort((a, b) => b.verifySec - a.verifySec).slice(0, 10).map(r => `${r.id}:${r.verifySec}s/${r.verifyRuns}runs`).join(', '));
 console.log('\nrewrites>0:', rows.filter(r => r.rewrites > 0).map(r => `${r.id}:${r.rewrites}`).join(', ') || 'none');
+const fv = rows.filter(r => r.failVerdicts > 0);
+console.log('\nwaves with >=1 review FAIL-verdict marker (mechanical regex on pinned wave text):', fv.length);
+console.log(fv.map(r => `${r.id}:${r.failVerdicts}`).join(', '));
