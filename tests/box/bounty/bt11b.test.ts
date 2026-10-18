@@ -173,10 +173,11 @@ it('applying a solution with a recognised link tells the owner whom to pay, twic
   expect(closing).toContain('Applied as commit');
   expect(closing).not.toContain(STRIPE_LIVE);
   expect(closing).not.toContain('pay');
-  // status keeps the record line.
+  // status keeps the payment fact (BT36): owed, whom, and the owner's command.
   const status = renderStatus(repo, { id });
-  expect(status).toContain(`pay $5 to solver1`);
-  expect(status).toContain('a record, not a reminder');
+  expect(status).toContain(`payment owed $5 to solver1`);
+  expect(status).toContain('payment: owed $5 to solver1 (at the link they supplied)');
+  expect(status).toContain(`the owner records it: box bounty config set paid ${id}`);
   // The finish hook repeats it once.
   const hook = runHook(repo, 'finish', []).output!;
   expect(hook).toContain('Pay solver1 at');
