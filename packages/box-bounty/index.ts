@@ -54,6 +54,8 @@ export { deriveTitle, renderPreview, resolveRepoRoot, TITLE_LIMIT, TOOL_VERSION 
 export type { BountyPlan, BountyResult, CreateOptions, PlanFile, RuleRemoval } from './create.js';
 export { BountyRefused } from './errors.js';
 export { GitFailed, git, gitOutcome, ownerGit, ownerGitOutcome } from './git.js';
+export { ProgramLaunchUnsupported, ProgramUnavailable, resolveProgram } from './program.js';
+export type { ResolvedProgram } from './program.js';
 export { NOTHING_RUN } from './notice.js';
 export { BUILTIN_RULES, changePublishList, loadOwnerList, OWNER_LIST_FILE, publishListed, publishLists, shipRules } from './never-ship.js';
 export type { NeverShipRule, PublishLists } from './never-ship.js';

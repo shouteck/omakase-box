@@ -8,7 +8,7 @@ import { fixture, postedFixture } from './github-fixture.js';
 import type { GithubFixture } from './github-fixture.js';
 import { CLI_DIST, fingerprint, git, write, makeRepo } from './support.js';
 import { ordinaryTree } from './ordinary-tree.js';
-import { resolveProgram } from '../../../packages/box-package/commands.js';
+import { resolveProgram } from '../../../packages/box-bounty/program.js';
 
 const files = { 'app.txt': 'broken\n', 'untouched.txt': 'owner bytes\n' };
 

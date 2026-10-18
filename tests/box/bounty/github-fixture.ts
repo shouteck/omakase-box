@@ -7,7 +7,7 @@ import { expect, vi } from 'vitest';
 import { BountyRefused, finalizeBounty, lookBounty, planBounty, postBounty } from '../../../packages/box-bounty/index.js';
 import { git, makeRepo, readRecordRaw, recordFilePath, runRoot, write, writeRecordRaw } from './support.js';
 import { requireRepository } from '../../../packages/box-bounty/settings.js';
-import { resolveProgram } from '../../../packages/box-package/commands.js';
+import { resolveProgram } from '../../../packages/box-bounty/program.js';
 
 export function withoutGh(run: () => void): void {
   const parentPath = process.env.PATH;

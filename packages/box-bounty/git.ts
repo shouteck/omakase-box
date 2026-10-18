@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { resolveProgram } from '../box-package/commands.js';
+import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 
 // The least Git the tool runs on: merges and dry merges pin GIT_ATTR_SOURCE
