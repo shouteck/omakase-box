@@ -49,6 +49,127 @@ export const notNext = (line: string): boolean => !line.trimStart().startsWith('
 // `status --full` away — the overview stays constant at any record count.
 export const ENDED_OVERVIEW_LIMIT = 5;
 
+// ---- BT35: how long an open bounty has waited -----------------------------
+
+// A posted bounty with nothing new for this many days earns one once-said
+// line (BT35) — a fact and the two ways forward, never an automatic action.
+// One constant in one place; not an owner setting.
+export const STALE_SOLUTION_DAYS = 14;
+// The most once-said lines one command prints (BT35), the oldest wait first;
+// the rest stay unsaid for a later command — the overview budget holds.
+export const STALE_LINES_LIMIT = 3;
+
+// Test-only clock (BT35): tests pin "now" through BOX_BOUNTY_NOW so the
+// durations and the 14-day line are exact; a real run never sets it and the
+// machine's clock is used.
+const NOW_ENV = 'BOX_BOUNTY_NOW';
+const nowMs = (): number => {
+  const pinned = process.env[NOW_ENV];
+  const ms = pinned === undefined ? Number.NaN : Date.parse(pinned);
+  return Number.isFinite(ms) ? ms : Date.now();
+};
+
+const daysSince = (at: string, now: number): number => Math.max(0, Math.floor((now - Date.parse(at)) / 86_400_000));
+const dayWord = (n: number): string => `${n} ${n === 1 ? 'day' : 'days'}`;
+
+// A timestamp the age facts may trust (BT35): `asRecord` shape-checks the
+// fields it knows but not every `at`, and a record file can arrive through a
+// merged solution or a tampered checkout (BT9). The age contract is the same
+// ISO date-time shape the record reader documents, with real calendar and
+// clock values; Date.parse's convenience forms (`2026/10/01`, `1`) and its
+// rollover dates (`2026-02-30`) never reach a rendered duration or the
+// promised-ISO JSON fields. An invalid value makes the fact absent
+// (null/unavailable), never NaN, a non-ISO echo, or an invented substitute.
+const ISO_AT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+const validAt = (at: string | null | undefined): string | null => {
+  if (typeof at !== 'string') return null;
+  const match = ISO_AT.exec(at);
+  if (match === null) return null;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, zone] = match;
+  const year = Number(yearText), month = Number(monthText), day = Number(dayText);
+  const hour = Number(hourText), minute = Number(minuteText), second = Number(secondText ?? '0');
+  if (month < 1 || month > 12 || day < 1 || hour > 23 || minute > 59 || second > 59) return null;
+  if (zone !== undefined && zone !== 'Z') {
+    const offset = zone.slice(1).replace(':', '');
+    if (Number(offset.slice(0, 2)) > 14 || Number(offset.slice(2)) > 59) return null;
+  }
+  const calendar = new Date(0);
+  calendar.setUTCHours(0, 0, 0, 0);
+  calendar.setUTCFullYear(year, month - 1, day);
+  if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day) return null;
+  return Number.isFinite(Date.parse(at)) ? at : null;
+};
+
+/** The two age facts (BT35): when the bounty opened — its `posted` event, a
+    draft's create — and when anything last happened: the posted event or the
+    newest attempt's collection time. Both ISO times or null, both read-only.
+    A posted event whose time does not parse leaves `openedAt` unknown: the
+    draft's `createdAt` is never shown in its place, because that would state
+    a posting date the record does not carry. */
+export const bountyAge = (record: BountyRecord): { readonly openedAt: string | null; readonly lastActivityAt: string | null } => {
+  const postedEvent = record.events.find(event => event.stage === 'posted');
+  const openedAt = postedEvent === undefined ? validAt(record.createdAt) : validAt(postedEvent.at);
+  const attemptTimes = attemptsOf(record).map(attempt => validAt(attempt.at));
+  const times = [postedEvent === undefined ? null : validAt(postedEvent.at), ...attemptTimes].filter((at): at is string => at !== null);
+  // A draft has no posted/attempt activity — its own creation is the last
+  // thing that happened, so `openedAt` (the draft's createdAt) stands in.
+  // For a posted bounty this fallback is null too: a broken posted `at`
+  // stays unknown rather than borrowing createdAt as a fake posting date.
+  // An unreadable attempt time means the newest activity is unknown; showing
+  // an older post or solution as the latest would state a false fact.
+  const latest = attemptTimes.some(at => at === null) ? null : times.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1) ?? openedAt;
+  return { openedAt, lastActivityAt: latest };
+};
+
+// The open line's age clause: `open 12 days; last solution 3 days ago` —
+// `today` under one day, `no solution yet` until an attempt lands (BT35).
+// A time the record carries but does not parse is named unavailable, never
+// rendered as a duration off bad data.
+const ageClause = (record: BountyRecord): string => {
+  const now = nowMs();
+  const { openedAt, lastActivityAt } = bountyAge(record);
+  const open = openedAt === null ? 'age unavailable' : daysSince(openedAt, now) === 0 ? 'open today' : `open ${dayWord(daysSince(openedAt, now))}`;
+  const last = attemptsOf(record).length === 0 ? 'no solution yet'
+    : lastActivityAt === null ? 'last activity time unavailable'
+    : daysSince(lastActivityAt, now) === 0 ? 'last solution today'
+    : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
+  return `${open}; ${last}`;
+};
+
+const staleTopic = (id: string): string => `stale-posted-${id}`;
+
+/** The once-said "long wait" lines (BT35): a posted bounty whose last
+    activity is STALE_SOLUTION_DAYS or older gets one line the first time a
+    read sees it — said once per bounty, ever, in the tool's machine-local
+    state; a new solution does not reset it. At most STALE_LINES_LIMIT print
+    in one command, the oldest wait first; the rest stay unsaid for a later
+    run. A shared-only bounty is noticed the same way — the machine-local
+    said state is this clone's own bookkeeping, not a shared write — but its
+    line names where ending can happen: this clone cannot `close` it (the
+    shared-only refusal says so itself), so the line states the fact and the
+    places it can be ended rather than quoting a command that would refuse.
+    A bounty whose last-activity time does not parse cannot be shown stale —
+    its age clause already says the fact is unavailable. */
+export function staleReminderLines(repoRoot: string, open: readonly BountyRecord[]): string[] {
+  const now = nowMs();
+  const stale = open
+    .filter(record => record.events.some(event => event.stage === 'posted'))
+    .map(record => ({ record, lastActivityAt: bountyAge(record).lastActivityAt }))
+    .filter((entry): entry is { record: BountyRecord; lastActivityAt: string } => entry.lastActivityAt !== null && daysSince(entry.lastActivityAt, now) >= STALE_SOLUTION_DAYS)
+    .sort((a, b) => Date.parse(a.lastActivityAt) - Date.parse(b.lastActivityAt) || a.record.id.localeCompare(b.record.id));
+  const lines: string[] = [];
+  for (const { record, lastActivityAt } of stale) {
+    if (lines.length >= STALE_LINES_LIMIT) break;
+    if (saidOnce(repoRoot, staleTopic(record.id))) {
+      const days = dayWord(daysSince(lastActivityAt, now));
+      lines.push(record.shared === true
+        ? `${record.id} has had no new solution for ${days} — posted from another machine; keep waiting, or end it on that machine or on GitHub`
+        : `${record.id} has had no new solution for ${days} — keep waiting, or end it: box bounty close ${record.id} --reason "<why>"`);
+    }
+  }
+  return lines;
+}
+
 // The one `next:` command a bounty prints, shared by the text status and
 // the status --json document (BT19).
 export const nextStep = (record: BountyRecord): string => {
@@ -236,6 +357,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     }
   }
   lines.push(...instructionNotices(repoRoot));
+  lines.push(...staleReminderLines(repoRoot, open.map(entry => entry.record!)));
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
     if (options.id === undefined && endedTotal === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
@@ -243,7 +365,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
       const record = entry.record!;
-      lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}`);
+      lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}  — ${ageClause(record)}`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       const pays = (boundAmount(record) ?? 0) > 0;
