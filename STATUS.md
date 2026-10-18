@@ -1,15 +1,16 @@
 # Status
 
-Updated by the CTO on 19 October 2026 at the BT36 close.
+Updated by the CTO on 19 October 2026 at the K33 close.
 
 ## Now
 
-- **BT36 merged and pushed** (`7c4874f`; PASS test-verified on `dce463f`, verdict commit `0ff9ab6`). `box bounty config set paid <id>` records the owner's word that a merged bounty's solver was paid; `no` withdraws and keeps the history. `status`, `status --json`, the overview (`<k> payment(s) owed`) and the shared memory show owed/paid. The amount comes only from the bound reward; nothing is verified, moved or posted to GitHub.
-- **One FAIL loop, resolved:** the first candidate left a stale bt11b assertion expecting the old `pay $5` line; the fix commit updated the three expectations to the `payment: owed` wording and the pass confirmed they fail under the reverted implementation. `verify dce463f PASS check=0 build=0 test:box-bounty=0 test:kitchen=0 db=none 1052s`.
-- **Brief artefact corrected:** `test:box-package` does not exist; acceptance ran `test:box-bounty` + `test:kitchen`. Pass limits recorded in waves/BT36.md (F3 shared-only refusal code-read only).
-- The cook's first full verify died mid-run with its session (no summary.json); the pass's own run was the first complete one. Two inbox lines carry the lessons (verify-vs-timebox checkpoint; real suite names in briefs). Station card gained the old-wording sweep.
-- Main checkout is master, clean. Merged `wave/BT36` deleted. No `box-d21-*`/`box-k6-*`/`kitchen-verify-pg*` or `bt36-*` temp items remained at close. Latest hosted run before merge was green `39149271317`; the post-push run is not awaited.
+- **K33 merged** (`085961e`; independent PASS test-verified on `3e3944b`, verdict `3a0dfc3`). Report: `kitchen/reviews/K33-kitchen.md`; rerunnable measurement and classified review inventory: `kitchen/review-k33/`. Recommendations only: no product, test or process changes implemented.
+- **Measured record:** 115 pinned wave files; 93 subject-matched merges; 575 completed verify records totaling 159,236 seconds of invocation wall duration, not CPU or agent time; 20 incomplete directories. Audited inventory: 34 wave files contain explicit reviewer FAIL verdicts, 50 verdicts total. This is not a correction rate or a causal measure of review value.
+- **Acceptance:** cook completed clean candidate `test:kitchen` in 100s. Pass completed its own invocation on the exact candidate in 5s, reusing that suite PASS and permitted inert-path ancestor check/build results. Both scripts rerun independently; three raw-record figures checked. Historical inputs pinned to `2b3eace`; verify-history figures require this host's ignored run records. Hosted coverage limited to the saved 200-run snapshot; class labels remain agent judgement.
+- **Two FAIL rounds retained:** incorrect owner-page proposal ID, then an incomplete claimed audit of FAIL cases. A fresh correction cook replaced the detector-as-population assumption with a full classified inventory and excerpt checks. No host/model superiority or quantified waiting-time claim.
+- **Recommendation:** implement P1 (run-start/incomplete evidence) first in a separately named wave; P2 reduces station-card reading and P3 checks brief facts. P4/P8 need owner attention before scope-changing implementation. None starts automatically.
+- Main checkout is master. K33 agents removed their own scratch after the initial cleanup claim proved incomplete; covered temp patterns are absent, no test/Postgres process was found. Foreign temp files remain untouched. Latest hosted result before merge was green `39157945837`; post-push checks are not awaited.
 
 ## Next
 
-This run stops after BT36. No wave is in flight or starts automatically. K30's K29/BT32 dependencies are satisfied; K31 still needs the owner's "go" for real $0 public posts; K33 is ready any time. BT33 stays parked and BT12 Part B stays deferred.
+This run stops after K33. No wave is in flight or starts automatically. K30's K29/BT32 dependencies are satisfied; K31 still needs the owner's "go" for real $0 public posts. BT36 is merged; BT33 stays parked and BT12 Part B stays deferred.
