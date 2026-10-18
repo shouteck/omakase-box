@@ -104,7 +104,10 @@ describe('budgetCheck — the executed-time ratchet on the acceptance profile', 
     expect(budget(foreign, { budgetSeconds: 160 }).ok).toBe('missing');
   });
 
-  it('the page enforces the budget: over-budget fabricated root exits 1 naming the profile', () => {
+  it('the page enforces an explicitly configured budget: over-budget fabricated root exits 1 naming the profile', () => {
+    // K29: the inherited 330s exporter default is retired, so page enforcement
+    // now runs through the explicit --budget=<seconds> flag. The same flagless
+    // root reports the seconds without failing — the profile is uncalibrated.
     const dir = temp();
     mkdirSync(join(dir, 'docs', 'box-v4'), { recursive: true });
     mkdirSync(join(dir, 'kitchen'), { recursive: true });
@@ -113,9 +116,14 @@ describe('budgetCheck — the executed-time ratchet on the acceptance profile', 
     writeFileSync(join(dir, 'kitchen', 'INBOX.md'), '- one\n');
     writeFileSync(join(dir, 'STATUS.md'), 'status\n');
     acceptanceRun(dir, NOW, sha('a'), STEPS(9999));
-    const run = spawnSync(process.execPath, [statsScript, '--root=' + dir], { encoding: 'utf8', timeout: 60000 });
+    const unbudgeted = spawnSync(process.execPath, [statsScript, '--root=' + dir], { encoding: 'utf8', timeout: 60000 });
+    expect(unbudgeted.status).toBe(0);
+    expect(unbudgeted.stderr + unbudgeted.stdout).toContain('none calibrated');
+    const run = spawnSync(process.execPath, [statsScript, '--root=' + dir, '--budget=330'], { encoding: 'utf8', timeout: 60000 });
     expect(run.status).toBe(1);
     expect(run.stderr + run.stdout).toContain('LIMIT FAIL');
     expect(run.stderr + run.stdout).toContain(PROFILE);
+    const malformed = spawnSync(process.execPath, [statsScript, '--root=' + dir, '--budget=bogus'], { encoding: 'utf8', timeout: 60000 });
+    expect(malformed.status).toBe(2);
   });
 });

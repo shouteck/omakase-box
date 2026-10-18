@@ -3,7 +3,10 @@
 // outside stdout. scripts/verify.mjs reuses readRuns/stallCheck for its STALL
 // line, and tests/kitchen drives the same functions on fabricated run dirs.
 //
-//   node scripts/kitchen-stats.mjs [--root=<dir>]
+//   node scripts/kitchen-stats.mjs [--root=<dir>] [--budget=<seconds>]
+//
+// --budget configures an explicit executed-seconds limit on the acceptance
+// profile. With no flag the profile is reported unbudgeted (see budgetCheck).
 //
 // Fairness rules (kitchen/stations/evidence.md): every run dir counts, including
 // ones with no summary.json; a missing observation is printed as missing, never
@@ -325,7 +328,7 @@ const fmtMin = seconds => (seconds / 60).toFixed(1);
 const sha7 = sha => (sha || '???????').slice(0, 7);
 const has = (list, sha) => typeof sha === 'string' && (list.includes(sha) || (sha.length < 40 && list.some(full => full.startsWith(sha))));
 
-function page(root) {
+function page(root, { budgetSeconds = null } = {}) {
   const out = [];
   const runsDir = join(root, '.kitchen', 'runs');
   const runs = readRuns(runsDir);
@@ -418,7 +421,7 @@ function page(root) {
   out.push('');
 
   const checks = checkLimits(root);
-  checks.push(budgetCheck(runs));
+  checks.push(budgetCheck(runs, { budgetSeconds }));
   const failures = [];
   out.push('Kitchen limits');
   for (const check of checks) {
@@ -435,5 +438,14 @@ function page(root) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const rootArg = process.argv.slice(2).find(arg => arg.startsWith('--root='));
   const root = (rootArg ? rootArg.slice(7) : repoRoot).replace(/[/\x5c]+$/, '');
-  try { page(root); } catch (error) { console.error('kitchen-stats failed: ' + (error instanceof Error ? error.message : String(error))); process.exit(2); }
+  const budgetArg = process.argv.slice(2).find(arg => arg.startsWith('--budget'));
+  let budgetSeconds = null;
+  if (budgetArg !== undefined) {
+    budgetSeconds = Number(budgetArg.startsWith('--budget=') ? budgetArg.slice(9) : NaN);
+    if (!Number.isFinite(budgetSeconds) || budgetSeconds <= 0) {
+      console.error('kitchen-stats: --budget=<seconds> needs a positive number of seconds');
+      process.exit(2);
+    }
+  }
+  try { page(root, { budgetSeconds }); } catch (error) { console.error('kitchen-stats failed: ' + (error instanceof Error ? error.message : String(error))); process.exit(2); }
 }
