@@ -1,0 +1,114 @@
+{
+  "at": "2026-10-18T08:08:25.755Z",
+  "node": "v24.11.0",
+  "chains": 1000,
+  "report": [
+    {
+      "name": "append+push one event ms (5 runs)",
+      "value": "329,310,305,321,300",
+      "k28bar": "~300",
+      "withinTwice": true
+    },
+    {
+      "name": "fetch+import one event ms (5 runs)",
+      "value": "386,367,367,377,408",
+      "k28bar": "~500",
+      "withinTwice": true
+    },
+    {
+      "name": "seed 1000x5 events s (one fast-import)",
+      "value": "1.6"
+    },
+    {
+      "name": "push 1000 chains ms",
+      "value": 2219
+    },
+    {
+      "name": "remote size-pack after 1000x5",
+      "value": "size-pack: 1.03 MiB",
+      "k28bar": "1.54 MiB",
+      "withinTwice": true
+    },
+    {
+      "name": "first fetch+import 1000 chains ms",
+      "value": 5157,
+      "k28bar": "3000-6000",
+      "withinTwice": true
+    },
+    {
+      "name": "imported shared row readable (bt-000000000007)",
+      "value": "answered",
+      "k28bar": "posted",
+      "withinTwice": true
+    },
+    {
+      "name": "concurrent push merged+retried ok",
+      "value": true,
+      "k28bar": "true",
+      "withinTwice": true
+    },
+    {
+      "name": "merge+retry push ms",
+      "value": 1839
+    },
+    {
+      "name": "concurrent: both events kept, merge present",
+      "value": "2 closed + 1 merge",
+      "k28bar": "2 closed + >=1 merge",
+      "withinTwice": true
+    },
+    {
+      "name": "remote-deleted ref restored, content identical",
+      "value": true,
+      "k28bar": "true",
+      "withinTwice": true
+    },
+    {
+      "name": "default clone: no box-bounty refs anywhere",
+      "value": true,
+      "k28bar": "true",
+      "withinTwice": true
+    },
+    {
+      "name": "grep/log -p on default clone clean",
+      "value": true,
+      "k28bar": "true",
+      "withinTwice": true
+    },
+    {
+      "name": "K14 status: fetch/push per call",
+      "value": "1/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    },
+    {
+      "name": "K14 status --json: fetch/push per call",
+      "value": "1/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    },
+    {
+      "name": "K14 find: fetch/push per call",
+      "value": "1/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    },
+    {
+      "name": "K14 box bounty (overview): fetch/push per call",
+      "value": "1/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    },
+    {
+      "name": "K14 help: fetch/push per call",
+      "value": "0/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    },
+    {
+      "name": "K14 describe: fetch/push per call",
+      "value": "0/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    },
+    {
+      "name": "K14 config: fetch/push per call",
+      "value": "0/0",
+      "k28bar": "fetching <=1 / others 0,0"
+    }
+  ]
+}
