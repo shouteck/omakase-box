@@ -1,0 +1,56 @@
+# K32 prototype run, 19 October 2026, `node kitchen/payments/run.mjs` on base 0f2af02
+# Host: Windows 10, Node v24.11.0. Exit code 0. Stand-in only: 127.0.0.1, no network, wallet, key or money.
+# Transaction ids are random per run; every other line reproduces exactly.
+PASS 1 a $5 reward under a $20 mandate is paid
+     paid $5 to octo at 0x2222222222222222222222222222222222222222 — transaction 0x84ee5552f00453a681a872bb32d29c890b81686ac8ab2e742b42b20bbbf27fd9 on eip155:84532, under the owner's mandate of 2026-10-19T09:00:00Z
+PASS 2 a second payment for the same bounty is refused as a duplicate
+     b1 was already paid: $5 to octo, transaction 0x84ee5552f00453a681a872bb32d29c890b81686ac8ab2e742b42b20bbbf27fd9; nothing was sent
+PASS 2a a second machine with no record of the payment pays nothing
+     b1 was already paid on the chain, transaction 0x84ee5552f00453a681a872bb32d29c890b81686ac8ab2e742b42b20bbbf27fd9; nothing was sent
+PASS 2b with the tool's own checks bypassed, the reused nonce still moves nothing
+     the chain refused a second payment for b1; it was paid earlier, transaction 0x84ee5552f00453a681a872bb32d29c890b81686ac8ab2e742b42b20bbbf27fd9
+PASS 3 a $25 reward above the $20 mandate is held for the owner
+     $25 is above the $20 the agent may pay for one bounty
+PASS 4 a revoked mandate refuses
+     the tool does not pay for this repository — $5 is owed to hubot, paid by hand
+PASS 4a a mandate past its time limit holds for the owner
+     the owner's mandate ended on 2026-10-01T00:00:00Z
+PASS 5 the proof is recorded
+     paid 5 by agent to octo 0x2222222222222222222222222222222222222222, eip155:84532 transaction 0x84ee5552f00453a681a872bb32d29c890b81686ac8ab2e742b42b20bbbf27fd9, nonce 0x385eea50394cd203..., mandate of 2026-10-19T09:00:00Z
+PASS 6 ask me each time holds the payment for the owner
+     the owner is asked before every payment: $5 to hubot at 0x3333333333333333333333333333333333333333
+PASS 6a an answer bound to a different address does not pay
+     the owner is asked before every payment: $5 to hubot at 0x3333333333333333333333333333333333333333
+PASS 6b the owner's answer bound to this payment pays it, recorded as the owner's
+     paid $5 to hubot at 0x3333333333333333333333333333333333333333 — transaction 0xcb676220da16419f45fba3bc7fad31096fc0d64e978e6bbef8980ee920a8df81 on eip155:84532, on the owner's answer
+PASS 7 a crash after settling leaves a named state, not silence
+     the payment for b5 may or may not have gone through (UND_ERR_SOCKET) — run it again: the tool checks the chain before sending anything
+PASS 7a the rerun converges: recorded as paid, money moved exactly once
+     b5 was already paid on the chain, transaction 0x696af96b12996a43de2c3a35d39a2ed8cf76839c9a1a096468c8d1c87927e977; nothing was sent
+PASS 8 an address edited by someone other than the solver is held
+     the address was last edited by mallory, not the solver octo
+PASS 8a an address already paid for a different account is held
+     the address was paid before for a different account, octo
+PASS 8b the address line is an allow-list
+     valid:ok short:ok twoSpaces:ok trailing:ok bidi:ok otherNetwork:ok stripeLink:ok
+PASS 9 a period limit, once spent, holds the next payment
+     paying would bring this repository to $25 in 30 days — the limit is $20
+PASS 9a a per-solver limit counts that solver's earlier payments
+     paying would bring octo to $25 in 30 days — the limit is $20
+PASS 9b the period rolls: 31 days later the same payment goes through
+     paid $5 to mona at 0x4444444444444444444444444444444444444444 — transaction 0x36edc2b5a4a7e844227f7109240ef26f1095ee602c4914be6e31af7775ed403d on eip155:84532, under the owner's mandate of 2026-10-19T09:00:00Z
+PASS 10 the owner records a payment made by hand; the amount is the bound reward
+     recorded on the owner's word: d1 paid $5 to octo by hand — the tool did not check it
+PASS 10a recording it twice is refused; withdrawing makes it owed again
+     d1 is already recorded as paid / the record that d1 was paid is withdrawn; $5 is owed again
+PASS 10b nothing owed refuses by name: $0, or not merged
+     d2 owes nothing: its reward is $0 / d3 owes nothing: it was not merged
+PASS 10c the default mandate (ask, by hand) pays nothing itself
+PASS 11 the stand-in moved exactly what the ledgers say was paid by the rail
+     6 transfers, 40 USDC; calls: {"sign":7,"verify":7,"settle":6}
+K32 prototype: 24/24 outcomes as expected
+
+# Mutation check, same day, in a scratch copy outside the checkout (removed):
+# 1. payNonce replaced by a random nonce per call   -> FAIL 2a, 2b, 5, 7a, 11; "19/24 outcomes as expected — 5 differ"; exit 1
+# 2. additionally, the per-bounty limit rule removed -> FAIL 2a, 2b, 3, 5, 7a, 11; "18/24 outcomes as expected — 6 differ"
+# The run can fail: the duplicate and limit outcomes depend on the design's rules, not on the stand-in alone.
