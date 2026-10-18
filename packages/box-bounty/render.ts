@@ -49,6 +49,76 @@ export const notNext = (line: string): boolean => !line.trimStart().startsWith('
 // `status --full` away — the overview stays constant at any record count.
 export const ENDED_OVERVIEW_LIMIT = 5;
 
+// ---- BT35: how long an open bounty has waited -----------------------------
+
+// A posted bounty with nothing new for this many days earns one once-said
+// line (BT35) — a fact and the two ways forward, never an automatic action.
+// One constant in one place; not an owner setting.
+export const STALE_SOLUTION_DAYS = 14;
+// The most once-said lines one command prints (BT35), the oldest wait first;
+// the rest stay unsaid for a later command — the overview budget holds.
+export const STALE_LINES_LIMIT = 3;
+
+// Test-only clock (BT35): tests pin "now" through BOX_BOUNTY_NOW so the
+// durations and the 14-day line are exact; a real run never sets it and the
+// machine's clock is used.
+const NOW_ENV = 'BOX_BOUNTY_NOW';
+const nowMs = (): number => {
+  const pinned = process.env[NOW_ENV];
+  const ms = pinned === undefined ? Number.NaN : Date.parse(pinned);
+  return Number.isFinite(ms) ? ms : Date.now();
+};
+
+const daysSince = (at: string, now: number): number => Math.max(0, Math.floor((now - Date.parse(at)) / 86_400_000));
+const dayWord = (n: number): string => `${n} ${n === 1 ? 'day' : 'days'}`;
+
+/** The two age facts (BT35): when the bounty opened — its `posted` event,
+    a draft's create — and when anything last happened: the posted event or
+    the newest attempt's collection time. Both ISO times, both read-only. */
+export const bountyAge = (record: BountyRecord): { readonly openedAt: string; readonly lastActivityAt: string } => {
+  const postedAt = record.events.find(event => event.stage === 'posted')?.at ?? null;
+  const openedAt = postedAt ?? record.createdAt;
+  const times = [postedAt, ...attemptsOf(record).map(attempt => attempt.at)].filter((at): at is string => at !== null);
+  return { openedAt, lastActivityAt: times.sort().at(-1) ?? openedAt };
+};
+
+// The open line's age clause: `open 12 days; last solution 3 days ago` —
+// `today` under one day, `no solution yet` until an attempt lands (BT35).
+const ageClause = (record: BountyRecord): string => {
+  const now = nowMs();
+  const { openedAt, lastActivityAt } = bountyAge(record);
+  const openDays = daysSince(openedAt, now);
+  const open = openDays === 0 ? 'open today' : `open ${dayWord(openDays)}`;
+  const last = attemptsOf(record).length === 0 ? 'no solution yet' : daysSince(lastActivityAt, now) === 0 ? 'last solution today' : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
+  return `${open}; ${last}`;
+};
+
+const staleTopic = (id: string): string => `stale-posted-${id}`;
+
+/** The once-said "long wait" lines (BT35): a posted bounty whose last
+    activity is STALE_SOLUTION_DAYS or older gets one line the first time a
+    read sees it — said once per bounty, ever, in the tool's machine-local
+    state; a new solution does not reset it. At most STALE_LINES_LIMIT print
+    in one command, the oldest wait first; the rest stay unsaid for a later
+    run. Shared-only rows are the chain's facts — the posting machine owns
+    that reminder, and this read writes nothing for them. */
+export function staleReminderLines(repoRoot: string, open: readonly BountyRecord[]): string[] {
+  const now = nowMs();
+  const stale = open
+    .filter(record => record.shared !== true && record.events.some(event => event.stage === 'posted'))
+    .map(record => ({ record, age: bountyAge(record) }))
+    .filter(entry => daysSince(entry.age.lastActivityAt, now) >= STALE_SOLUTION_DAYS)
+    .sort((a, b) => a.age.lastActivityAt.localeCompare(b.age.lastActivityAt) || a.record.id.localeCompare(b.record.id));
+  const lines: string[] = [];
+  for (const { record, age } of stale) {
+    if (lines.length >= STALE_LINES_LIMIT) break;
+    if (saidOnce(repoRoot, staleTopic(record.id))) {
+      lines.push(`${record.id} has had no new solution for ${dayWord(daysSince(age.lastActivityAt, now))} — keep waiting, or end it: box bounty close ${record.id} --reason "<why>"`);
+    }
+  }
+  return lines;
+}
+
 // The one `next:` command a bounty prints, shared by the text status and
 // the status --json document (BT19).
 export const nextStep = (record: BountyRecord): string => {
@@ -236,6 +306,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     }
   }
   lines.push(...instructionNotices(repoRoot));
+  lines.push(...staleReminderLines(repoRoot, open.map(entry => entry.record!)));
   if (open.length === 0) {
     lines.push(`box bounty status — no open bounties in ${repoRoot}`);
     if (options.id === undefined && endedTotal === 0) lines.push('next: create one with box bounty create --task <file> --why "<one line>"');
@@ -243,7 +314,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     lines.push(`box bounty status — ${open.length} open ${open.length === 1 ? 'bounty' : 'bounties'} in ${repoRoot}`);
     for (const entry of open) {
       const record = entry.record!;
-      lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}`);
+      lines.push(`  ${record.id}  ${record.stage}  "${record.title}"${record.partOf !== undefined ? `  (part of: ${record.partOf})` : ''}  — ${ageClause(record)}`);
       const attempts = attemptsOf(record);
       const unseen = attempts.filter(attempt => attempt.seenAt === undefined).length;
       const pays = (boundAmount(record) ?? 0) > 0;

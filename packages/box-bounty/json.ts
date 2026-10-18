@@ -26,7 +26,7 @@ import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
 import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
-import { endedNextStep,nextStep,notNext } from './render.js';
+import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
@@ -173,12 +173,17 @@ const mergeNowEntry = (repoRoot: string, record: BountyRecord, attempts: readonl
 // takes the saved-job line when nothing is open — the text view's own rule.
 const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null): JsonObject => {
   const attempts = attemptsOf(record);
+  const age = bountyAge(record);
   return {
     id: record.id,
     title: record.title,
     why: record.why ?? null,
     stage: record.stage,
     createdAt: record.createdAt,
+    // The two age facts (BT35): when the bounty opened and when anything
+    // last happened — ISO times; durations are the reader's to compute.
+    openedAt: age.openedAt,
+    lastActivityAt: age.lastActivityAt,
     // Old records carry the snapshot's base commit; records made now keep no
     // snapshot, so the resume context's recorded commit stands in — it is the
     // same HEAD `create` captured. baseCommitOf is the one read: the
@@ -212,6 +217,8 @@ const corruptEntry = (file: string): JsonObject => ({
   why: null,
   stage: null,
   createdAt: null,
+  openedAt: null,
+  lastActivityAt: null,
   baseCommit: null,
   reward: null,
   job: null,
@@ -330,6 +337,9 @@ export function statusDocument(repoRoot: string, options: StatusDocumentOptions,
   const askNotice = askMergeNoticeLine();
   if (askNotice !== null) notice(askNotice);
   for (const line of instructionNotices(repoRoot)) notice(line);
+  // The once-said long-wait lines ride stderr exactly as the text view
+  // prints them — said once per bounty whichever form sees it first (BT35).
+  for (const line of staleReminderLines(repoRoot, open.map(entry => entry.record!))) notice(line);
 
   let repository: string | null = null;
   try { repository = repositoryIdentity(repoRoot); } catch { /* an unreadable remote set is null, not a refusal — the decision above already read what it could */ }

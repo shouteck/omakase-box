@@ -126,6 +126,15 @@ so you can choose. `status <id>` shows what needs doing first. `--full` adds
 the history and reports. A listing marks a solution as new the first time the
 tool shows it, then as seen since that time. Seen means only that it was shown.
 
+Every open bounty also shows its age: `open N days; last solution N days ago`
+(or `open today`, `no solution yet`), from the posted event and the newest
+collected solution. When a posted bounty has had nothing new for 14 days the
+first `status` or `box bounty` to see it adds one line — that it has had no new
+solution, and that you can keep waiting or end it with `box bounty close <id>
+--reason "<why>"` — said once for that bounty and never repeated (at most three
+such lines per command, the oldest first). Nothing happens automatically: the
+tool never closes, expires or changes a bounty on its own.
+
 The compact `status`/`box bounty` views stay bounded as the record count
 grows: past five ended bounties only the five most recent are joined on the
 `ended` line with the rest one `status --full` away, and past ten open
@@ -170,7 +179,7 @@ is `null`.
 `status --json` prints `{schema, repository, acting, owner, bounties}` —
 `owner` is this checkout's read (`{decision, denied, decisionAt,
 decisionLevel, reward, rewardLimit, promised}`) and each bounty carries
-`id, title, why, stage, createdAt, baseCommit, reward, job, resume,
+`id, title, why, stage, createdAt, openedAt, lastActivityAt, baseCommit, reward, job, resume,
 waiting, github, allowedBy, scanFindings, solutions, mergeNow, events,
 next, corrupt`. `resume` is the saved job context (`{branch, commit,
 changed, note}`) or `null` on records from before contexts were kept.
