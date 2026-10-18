@@ -13,4 +13,4 @@ Updated by the CTO on 18 October 2026 at the BT32 parked close.
 
 ## Next
 
-This run stops here. Recommended next BT32 attempt: a fresh worker batches chain object reads and tip comparison, adds a process-count bound, then remeasures against the unchanged scale gate; completes the missing fresh-agent legs; reconciles the K14 wording without weakening checks; and obtains a new exact-candidate review. Read `waves/BT32.md` and the parked branch before resuming. No other wave starts automatically. **BT33** stays parked; **BT12 Part B** stays deferred.
+**BT32 resume approved** by the owner on 18 October 2026. A fresh worker starts from the parked branch, batches imports with a process-count bound, proves the unchanged 12-second scale gate first, completes the real participant journey and gets independent review. Timebox 12:31-14:31 +08; no new sandbox writes. The latest hosted result is green (`39067077125`). This run stops after BT32. **BT33** stays parked; **BT12 Part B** stays deferred.
