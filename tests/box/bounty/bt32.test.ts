@@ -253,6 +253,22 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
     }); }
   });
 
+  it('an import-only clone restores a deleted remote ref from its validated copy', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      // Machine B only ever fetched the chain — it authored nothing and
+      // pushed nothing, so its only provenance is the validated chain_tip
+      // anchor. Brief recovery: any clone holding the validated copy may
+      // restore the deleted remote ref, to exactly the imported tip.
+      const other = secondMachine(world);
+      syncChains(other, true);
+      const imported = bareTip(world, world.id)!;
+      execFileSync('git', ['-c', `safe.directory=${other}`, 'push', world.bare, `:refs/box-bounty/${world.id}`], { cwd: other, encoding: 'utf8' });
+      expect(bareTip(world, world.id)).toBeNull();
+      syncChains(other, true);
+      expect(bareTip(world, world.id)).toBe(imported);
+    }); }
+  });
+
   it('five refreshes inside a minute fetch once', () => {
     { const world = sharedPostedFixture(); world.run(() => {
       const other = secondMachine(world);

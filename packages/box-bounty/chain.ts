@@ -210,8 +210,10 @@ const remoteUrl = (root: string): string | null => {
   try { return `https://github.com/${requireRepository(root)}.git`; } catch { return null; }
 };
 
-const pushOnce = (root: string, url: string, id: string): boolean =>
-  gitOutcome(root, ['push', url, `${chainRef(id)}:${chainRef(id)}`]).status === 0;
+// The pushed object is always the EXACT sha that was just proven — never the
+// ref name, which git would re-resolve inside the push after a swap.
+const pushOnce = (root: string, url: string, id: string, sha: string): boolean =>
+  gitOutcome(root, ['push', url, `${sha}:${chainRef(id)}`]).status === 0;
 
 const fetchOne = (root: string, url: string, id: string): void => {
   gitOutcome(root, ['fetch', '--no-tags', '--prune', url, `+${chainRef(id)}:${remoteRef(id)}`]);
@@ -235,18 +237,21 @@ export function pushChain(root: string, id: string, knownTip?: string): PushResu
   const pushedBefore = metaGet(root, `chain_pushed:${id}`) !== null;
   let restored = false;
   for (let attempt = 1; attempt <= PUSH_TRIES; attempt += 1) {
-    // Re-check provenance on every retry — the ref must still point at the
-    // tip this machine is entitled to publish, never at a swapped-in one.
+    // Re-check provenance on every retry — and push the sha that check just
+    // proved, never the mutable ref name. A swapped-in ref can therefore
+    // neither be published nor laundered into `chain_pushed:`.
     // (Attempt 1 was just verified at entry.)
-    if (attempt > 1 && proven() === null) {
-      metaSet(root, `chain_pending:${id}`, null);
+    const attemptTip = attempt === 1 ? firstTip : proven();
+    if (attemptTip === null) {
+      // The authored tip is still owed — keep the LAST PROVEN sha as pending
+      // rather than blessing (or forgetting under) the replacement.
+      metaSet(root, `chain_pending:${id}`, firstTip);
       return { pushed: false, reason: 'the local chain tip changed to a ref with no tool-authored or remote provenance' };
     }
-    if (pushOnce(root, url, id)) {
-      // Record exactly the tip this push put on the remote — the local
-      // remote-tracking ref can lag, and recovery is bound to this sha.
-      const now = tipOf(root, chainRef(id));
-      if (now !== null) metaSet(root, `chain_pushed:${id}`, now);
+    if (pushOnce(root, url, id, attemptTip)) {
+      // Record exactly the sha this push put on the remote — reading the
+      // local ref here would bless whatever a swap installed.
+      metaSet(root, `chain_pushed:${id}`, attemptTip);
       metaSet(root, `chain_pending:${id}`, null);
       return { pushed: true, restored };
     }
@@ -632,22 +637,28 @@ function retryPending(root: string, url?: string, view?: ChainView): void {
   }
   // Deletion recovery is only visible after a fetch pruned the tracking
   // ref, so it is a post-fetch (view) check — inside the throttle window
-  // the remote-tracking refs cannot have moved.
-  if (view !== undefined) for (const key of metaKeys(root, 'chain_pushed:')) {
-    const id = key.slice('chain_pushed:'.length);
-    if (!CHAIN_ID.test(id) || ids.has(id)) continue;
-    const pushed = metaGet(root, key);
-    if (pushed !== null && remoteTip(id) === null && localTip(id) === pushed) ids.add(id);
+  // the remote-tracking refs cannot have moved. Two anchors, both bound to
+  // an exact sha: `chain_pushed:` (this machine published this tip before)
+  // and `chain_tip:` (this machine imported this exact remote tip — an
+  // import-only clone holds a validated copy and may restore it). A tip
+  // that diverged from its anchor is never a recovery source.
+  if (view !== undefined) for (const prefix of ['chain_pushed:', 'chain_tip:'] as const) {
+    for (const key of metaKeys(root, prefix)) {
+      const id = key.slice(prefix.length);
+      if (!CHAIN_ID.test(id) || ids.has(id)) continue;
+      const anchor = metaGet(root, key);
+      if (anchor !== null && remoteTip(id) === null && localTip(id) === anchor) ids.add(id);
+    }
   }
   if (ids.size === 0) return;
   url ??= remoteUrl(root) ?? undefined;
   if (url === undefined) return;
   for (const id of ids) {
-    const wasPushed = metaGet(root, `chain_pushed:${id}`) !== null;
+    const hadCopy = metaGet(root, `chain_pushed:${id}`) !== null || metaGet(root, `chain_tip:${id}`) !== null;
     const remote = remoteTip(id);
     const result = pushChain(root, id);
     if (!result.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${result.reason}); it will be retried`);
-    else if (remote === null && wasPushed) emitMergeNotice(`shared bounty memory for ${id} was gone from the remote — restored from this machine`);
+    else if (remote === null && hadCopy) emitMergeNotice(`shared bounty memory for ${id} was gone from the remote — restored from this machine`);
   }
 }
 

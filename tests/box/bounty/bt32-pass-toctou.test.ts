@@ -14,7 +14,7 @@
 import childProcess, { execFileSync } from 'node:child_process';
 import { syncBuiltinESMExports } from 'node:module';
 import { describe, expect, it } from 'vitest';
-import { loadRecord, renderStatus, shareClosed, sharedRead, syncChains } from '../../../packages/box-bounty/index.js';
+import { loadRecord, metaGet, renderStatus, shareClosed, sharedRead, syncChains } from '../../../packages/box-bounty/index.js';
 import { sharedPostedFixture } from './github-fixture.js';
 import { join } from 'node:path';
 import { runRoot } from './support.js';
@@ -41,15 +41,17 @@ describe('BT32 pass TOCTOU probe', { timeout: 120000 }, () => {
       const tree = execFileSync('git', ['-C', world.repo, 'mktree'], { input: `100644 blob ${blobSha}\tevent.json\n`, encoding: 'utf8' }).trim();
       const forged = execFileSync('git', ['-C', world.repo, '-c', 'user.name=x', '-c', 'user.email=x@x', 'commit-tree', tree, '-m', 'forged', '-p', remoteTip!], { encoding: 'utf8' }).trim();
 
-      // Race hook: at the instant the tool spawns `git push <url> <ref>:<ref>`,
+      // Race hook: at the instant the tool spawns the chain push for this id,
       // the local ref is moved to the forged tip — the check already passed on
-      // the authored sha. execFileSync bypasses the patched spawnSync.
+      // the authored sha. The seam fires on the push DESTINATION (`:<ref>`),
+      // not on a `<ref>:<ref>` spelling, so it still races the corrected
+      // `<sha>:<ref>` refspec. execFileSync bypasses the patched spawnSync.
       const inner = childProcess.spawnSync;
       let swapped = 0;
       const hooked = new Proxy(inner, {
         apply(target, receiver, args) {
           const argv = Array.isArray(args[1]) ? (args[1] as string[]) : [];
-          const isPush = argv.includes('push') && argv.some(a => String(a).trim() === `${refname}:${refname}`);
+          const isPush = argv.includes('push') && argv.some(a => String(a).trim().endsWith(`:${refname}`));
           if (isPush) {
             execFileSync('git', ['-C', world.repo, 'update-ref', refname, forged], { encoding: 'utf8' });
             swapped += 1;
@@ -72,6 +74,11 @@ describe('BT32 pass TOCTOU probe', { timeout: 120000 }, () => {
       // forged sha. On the unfixed refname-push this is F itself.
       expect(after, `forged commit reached the remote through the check/use gap: ${after}`).not.toBe(forged);
       expect(after, 'the authored event was not published either').not.toBeNull();
+      // The swap must not be laundered into provenance either: no metadata
+      // record may name the forged sha authored, pending, pushed or imported.
+      for (const prefix of ['chain_authored:', 'chain_pending:', 'chain_pushed:', 'chain_tip:']) {
+        expect(metaGet(world.repo, `${prefix}${id}`), `forged sha recorded under ${prefix}`).not.toBe(forged);
+      }
       // The laundering completes on the next fetch: a second machine adopts
       // the forged tip as remote-trusted and the unscanned text renders.
       const other = join(runRoot('bt32-toctou-machine-b'), 'repo');
