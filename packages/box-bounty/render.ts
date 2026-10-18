@@ -74,12 +74,31 @@ const dayWord = (n: number): string => `${n} ${n === 1 ? 'day' : 'days'}`;
 
 // A timestamp the age facts may trust (BT35): `asRecord` shape-checks the
 // fields it knows but not every `at`, and a record file can arrive through a
-// merged solution or a tampered checkout (BT9). Only finite-parsing times
-// ever reach a rendered duration or the promised-ISO JSON fields — an
-// unparseable value makes the fact absent (null/unavailable), never NaN, a
-// non-ISO echo, or an invented substitute date.
-const validAt = (at: string | null | undefined): string | null =>
-  typeof at === 'string' && Number.isFinite(Date.parse(at)) ? at : null;
+// merged solution or a tampered checkout (BT9). The age contract is the same
+// ISO date-time shape the record reader documents, with real calendar and
+// clock values; Date.parse's convenience forms (`2026/10/01`, `1`) and its
+// rollover dates (`2026-02-30`) never reach a rendered duration or the
+// promised-ISO JSON fields. An invalid value makes the fact absent
+// (null/unavailable), never NaN, a non-ISO echo, or an invented substitute.
+const ISO_AT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+const validAt = (at: string | null | undefined): string | null => {
+  if (typeof at !== 'string') return null;
+  const match = ISO_AT.exec(at);
+  if (match === null) return null;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, zone] = match;
+  const year = Number(yearText), month = Number(monthText), day = Number(dayText);
+  const hour = Number(hourText), minute = Number(minuteText), second = Number(secondText ?? '0');
+  if (month < 1 || month > 12 || day < 1 || hour > 23 || minute > 59 || second > 59) return null;
+  if (zone !== undefined && zone !== 'Z') {
+    const offset = zone.slice(1).replace(':', '');
+    if (Number(offset.slice(0, 2)) > 14 || Number(offset.slice(2)) > 59) return null;
+  }
+  const calendar = new Date(0);
+  calendar.setUTCHours(0, 0, 0, 0);
+  calendar.setUTCFullYear(year, month - 1, day);
+  if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day) return null;
+  return Number.isFinite(Date.parse(at)) ? at : null;
+};
 
 /** The two age facts (BT35): when the bounty opened — its `posted` event, a
     draft's create — and when anything last happened: the posted event or the
@@ -90,12 +109,16 @@ const validAt = (at: string | null | undefined): string | null =>
 export const bountyAge = (record: BountyRecord): { readonly openedAt: string | null; readonly lastActivityAt: string | null } => {
   const postedEvent = record.events.find(event => event.stage === 'posted');
   const openedAt = postedEvent === undefined ? validAt(record.createdAt) : validAt(postedEvent.at);
-  const times = [postedEvent === undefined ? null : validAt(postedEvent.at), ...attemptsOf(record).map(attempt => validAt(attempt.at))].filter((at): at is string => at !== null);
+  const attemptTimes = attemptsOf(record).map(attempt => validAt(attempt.at));
+  const times = [postedEvent === undefined ? null : validAt(postedEvent.at), ...attemptTimes].filter((at): at is string => at !== null);
   // A draft has no posted/attempt activity — its own creation is the last
   // thing that happened, so `openedAt` (the draft's createdAt) stands in.
   // For a posted bounty this fallback is null too: a broken posted `at`
   // stays unknown rather than borrowing createdAt as a fake posting date.
-  return { openedAt, lastActivityAt: times.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1) ?? openedAt };
+  // An unreadable attempt time means the newest activity is unknown; showing
+  // an older post or solution as the latest would state a false fact.
+  const latest = attemptTimes.some(at => at === null) ? null : times.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1) ?? openedAt;
+  return { openedAt, lastActivityAt: latest };
 };
 
 // The open line's age clause: `open 12 days; last solution 3 days ago` —

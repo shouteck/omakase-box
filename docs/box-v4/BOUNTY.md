@@ -128,9 +128,12 @@ tool shows it, then as seen since that time. Seen means only that it was shown.
 
 Every open bounty also shows its age: `open N days; last solution N days ago`
 (or `open today`, `no solution yet`), from the posted event and the newest
-collected solution; a timestamp that does not parse is named `age
-unavailable` (`null` in JSON) rather than turned into a duration. When a
-posted bounty has had nothing new for 14 days the first `status` or `box
+collected solution. Age timestamps must have the record's ISO date-time shape
+and name a real calendar date and clock time; anything else is named `age
+unavailable` (`null` in JSON), never turned into a duration or republished as
+an ISO fact. When an attempt's collection time is invalid, latest activity is
+explicitly unavailable rather than an older timestamp shown as the newest.
+When a posted bounty has had nothing new for 14 days the first `status` or `box
 bounty` to see it adds one line — that it has had no new solution, and that
 you can keep waiting or end it with `box bounty close <id> --reason
 "<why>"` — said once for that bounty and never repeated (at most three such
