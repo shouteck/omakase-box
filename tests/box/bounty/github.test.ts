@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { applyBounty, closeBounty, finalizeBounty, listGitHubAnswers, loadRecord, lookBounty, planBounty, postBounty, previewGitHub, renderDescribe, renderHelp, renderOpenLine, renderStatus } from '../../../packages/box-bounty/index.js';
 import { CLI_DIST, fingerprint, git, readRecordRaw, runRoot, write } from './support.js';
-import { resolveProgram, runDeclaredCheck } from '../../../packages/box-package/commands.js';
+import { resolveProgram } from '../../../packages/box-bounty/program.js';
 import { git as objectGit, gitWriteBlob } from '../../../packages/box-bounty/git.js';
 import { fixture, leakCanary, postedFixture, refused, withoutGh } from './github-fixture.js';
 import type { GhState } from './github-fixture.js';
@@ -20,8 +20,8 @@ describe('GitHub bounty destination, entirely offline', () => {
       try {
         expect(dirname(resolveProgram('gh').path)).toBe(dirname(resolveProgram('git').path));
         expect(dirname(resolveProgram('node').path)).toBe(dirname(resolveProgram('git').path));
-        const probe = runDeclaredCheck({ name: 'parent gh', program: 'gh', args: ['auth', 'status'], cwd: '.', context: 'owner', timeoutMs: 5000 }, repo);
-        expect(probe.result, probe.log).toBe('pass');
+        const probe = spawnSync(resolveProgram('gh').path, ['auth', 'status'], { cwd: repo, encoding: 'utf8', timeout: 5000, windowsHide: true });
+        expect(probe.status, probe.stderr).toBe(0);
         expect(state().calls).toEqual([['auth', 'status']]);
         const parentPath = process.env.PATH;
         const parentExecPath = process.env.GIT_EXEC_PATH;

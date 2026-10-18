@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync,rmSync,writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { resolveProgram } from '../box-package/commands.js';
+import { resolveProgram } from './program.js';
 import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { requireRepository } from './settings.js';
