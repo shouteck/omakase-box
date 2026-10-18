@@ -357,7 +357,7 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
       const firstSeeded = seed(40, 3, 100);
       execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'update-ref',
         'refs/box-bounty/bt-ffffffffffff',
-        execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'commit-tree', '4b825dc642cb6eb9a060e54bf8d69288fbee4904', '-m', 'empty'], { encoding: 'utf8' }).trim()], { encoding: 'utf8' });
+        execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-c', 'user.name=x', '-c', 'user.email=x@x', '-C', world.bare, 'commit-tree', '4b825dc642cb6eb9a060e54bf8d69288fbee4904', '-m', 'empty'], { encoding: 'utf8' }).trim()], { encoding: 'utf8' });
       const large = secondMachine(world);
       const largeTrace = traceGit('bt32-scale-large', () => syncChains(large, true));
       // Nonempty known data: a seeded chain really imported — a do-nothing
