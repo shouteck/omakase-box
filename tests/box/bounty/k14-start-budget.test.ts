@@ -107,7 +107,11 @@ const BUDGET: Record<string, { git: number; gh: number }> = {
   'status-applied': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
   'close-ended': { git: 4, gh: 5 },
   'close-reason': { git: 4, gh: 0 },
-  'status-end': { git: 9, gh: 0 } // BT32: +6 — same refresh + import as status-posted
+  'status-end': { git: 9, gh: 0 }, // BT32: +6 — same refresh + import as status-posted
+  // BT32: `hook start` is a fetching surface — the shared-memory refresh
+  // pays one `fetch +refs/box-bounty/*` plus the batched ref listings and
+  // adoption work, on top of resolving the checkout. No record writes.
+  'hook-start': { git: 4, gh: 0 }
 };
 
 it('every bounty command stays within its Git and gh start budget', () => fixture(context => {
@@ -167,6 +171,9 @@ it('every bounty command stays within its Git and gh start budget', () => fixtur
   const third = /bt-[a-f0-9]{12}/.exec(thirdCreate.stdout)![0];
   run('close-reason', 'close', third, '--reason', 'not landing');
   run('status-end', 'status');
+  // The hook's session-start slot is a reading surface too: it refreshes
+  // shared memory, then finds every bounty ended — nothing to say, exit 0.
+  run('hook-start', 'hook', 'start');
 
   const overs: string[] = [];
   console.log('K14 measured starts: ' + JSON.stringify(runs.map(({ label, git, gh }) => ({ label, git, gh }))));

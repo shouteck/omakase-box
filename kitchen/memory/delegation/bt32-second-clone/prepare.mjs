@@ -182,9 +182,10 @@ writeFileSync(join(out, 'prompt.md'), [
   '   whom), and what was the final outcome and reason?',
   '5. Try `box.cmd look`, `box.cmd apply` and `box.cmd close` on this',
   '   bounty: what does the tool answer, and why?',
-  '6. Without the tool: does `git log --all` or `git grep` inside the',
-  '   checkout show any of this bounty\'s history or outcomes? Say what',
-  '   you ran and what it found.',
+  '6. Without the tool: inside the checkout, run plain `git log` and',
+  '   `git grep`, and also `git log --all`. Does the ordinary branch',
+  '   history or tracked text show any of this bounty\'s history or',
+  '   outcomes? Say what each command found.',
   '7. Now the offline leg — it must come LAST, at least 75 seconds after',
   '   your first `box.cmd` call, so the tool really tries to refresh:',
   '   run `go-offline.cmd`, then ask question 1 again. Does the answer',
@@ -212,9 +213,15 @@ writeFileSync(join(out, 'truth-key.md'), [
   '   bounty was posted from another machine; its issue is',
   '   https://github.com/owner/project/issues/7; act on it from that',
   '   machine, or on GitHub. No record is created, nothing is written.',
-  '6. clone invisibility: `git log --all` shows only the init commit and',
-  '   `git grep` finds nothing of the chain — the memory lives in refs no',
-  '   ordinary clone downloads, not in files.',
+  // v3-run correction (18 October): the earlier wording expected
+  // `git log --all` to stay empty AFTER the tool fetched the chain —
+  // wrong: `--all` legitimately includes the explicitly fetched custom
+  // refs. The requirement is that ordinary branch history and tracked
+  // text stay clean.
+  '6. clone invisibility: plain `git log` shows only the init commit and',
+  '   `git grep` finds nothing of the chain — the memory lives in custom',
+  '   refs, not in branch history or files. `git log --all` MAY show the',
+  '   fetched chain refs; that is expected, not pollution.',
   '7. offline (after >60 s): `box.cmd status` still shows the bounty',
   '   (ended: withdrawn) and prints exactly once per spell:',
   '   "shared bounty memory not refreshed (<reason>); showing what this',
