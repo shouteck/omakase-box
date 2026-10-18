@@ -20,8 +20,14 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const posixRoot = root.replace(/[\\/]+$/, '').replaceAll(String.fromCharCode(92), '/');
 const TEST_FILE = 'tests/kitchen/k15-sandbox-guard.test.ts';
 
-const git = (args: string[]): string =>
-  execFileSync('git', ['-c', `safe.directory=${posixRoot}`, ...args], { cwd: root, encoding: 'utf8', timeout: 30000 });
+const git = (args: string[]): string => {
+  try {
+    // The wave-file diff since K15 passed Node's 1 MiB default on 19 October 2026.
+    return execFileSync('git', ['-c', `safe.directory=${posixRoot}`, ...args], { cwd: root, encoding: 'utf8', timeout: 30000, maxBuffer: 256 * 1024 * 1024 });
+  } catch (error) {
+    throw new Error(`K15 sandbox guard could not read git (git ${args.join(' ')}): ${(error as Error).message}`);
+  }
+};
 
 // The commit that introduced this test — every wave content present then is
 // pre-K15. Last line, not first: log lists newest first and a file's own
