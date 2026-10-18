@@ -124,6 +124,9 @@ for (const id of waveIds.sort()) {
   const quotedFails = (text.match(/verify [0-9a-f]{7,}\s+FAIL/gi) || []).length;
   // review FAIL-verdict markers: a Verdict/Round/reviewer line that records a FAIL.
   // Mechanical detector; deliberately excludes 'verify <sha> FAIL' run-result lines.
+  // WARNING: this flag set is NOT the population of review FAILs — it over- and
+  // under-counts. The audited per-wave classification is fail-inventory.json,
+  // verified by fail-audit.mjs; derive FAIL figures from that, not from this column.
   const failVerdictLines = text.split('\n').filter(l =>
     (/verdict[^\n]{0,40}\bfail/i.test(l)
       || /round\s*\d+[^\n]{0,50}\bfail\b/i.test(l)

@@ -11,7 +11,7 @@ All numbers below come from `kitchen/review-k33/measure.mjs` (committed; rerunna
 - **115 wave files, 93 merged waves** since 5 October 2026 (14 days) — about 6.6 merges/day.
 - **575 completed verify runs totalling 159,236 s ≈ 44.2 h of recorded verify wall-clock duration.** Median ~3 runs and ~1,000 s per merged wave.
 - **Median brief-first-commit → merge calendar span: 210 min** (merged waves). The long spans contain documented waits (owner approvals, dependencies, parks) — e.g. BT12 8,075 min and K15 7,374 min — but the records do not measure how much of any span was waiting vs. working; treat elapsed as an upper bound on effort, not a measurement of it.
-- **~27 of 93 merged waves record at least one review FAIL verdict or correction round** (mechanical detector in `measure.mjs`, list in §3 — the regex is a counting rule, not proof each was a true defect; each listed wave's FAIL was confirmed against its Result text). Plus 11 separate `-ci` correction waves.
+- **34 of the 115 pinned wave files record at least one explicit reviewer FAIL verdict — 50 verdicts in total.** 29 match their own `Merge`-subject commit; the rest did not merge under their own name — K7 parked then was corrected through K7-ci/-ci2, BT7 was superseded by the owner's BT7a–c split, and BT7c/K6/D2.1 landed without a distinguishable `Merge`-subject commit. Every wave file was audited, not only detector-flagged ones; the per-wave classification with verbatim excerpts is `kitchen/review-k33/fail-inventory.json`, re-verified by `fail-audit.mjs` (list in §3). Plus 11 separate `-ci` correction waves.
 - **6 red hosted runs** followed a merge push since October (A4, BT16, BT17, BT7b-ci, BT8, K7-ci), each fixed by a follow-up wave; the 8 `cancelled` rows are pushes superseded by the next push — normal cadence, not failures.
 
 **What the kitchen does well, with evidence:**
@@ -57,41 +57,52 @@ Script output (per-wave table) is reproduced by `node kitchen/review-k33/measure
 
 ## 3. Step 2 — what the reviews caught
 
-**Method and limits.** `measure.mjs` flags waves whose pinned Result records a review FAIL (regex on `Verdict:`/`Round N`/`first review|pass|round`/`reviewer FAIL` lines, excluding `verify <sha> FAIL` run-result lines and attack "Master: FAIL" probes). The detector is approximate: it flagged 32 waves and both over-counts (e.g. BT1, BT9, K1 flag on findings text, not verdicts) and misses (BT26 "Round 1 FAILed", BT36's "84cde07 FAILED" sit outside the patterns). **Hand-checking every flagged wave plus the misses against its Result gives 27 waves with at least one real review FAIL or correction round**, listed below. Class is assigned by the cook from the quoted finding; multi-finding waves take the dominant one — this is judgement, not a mechanical property.
+**Method and limits.** The first version of this section used the `measure.mjs` regex flags (32 waves) as the candidate set and hand-checked only those, calling the result a "hand-checked 27". Review round 2 proved that wrong: the flagged set was mistaken for the population, and BT9, K1 and K7-ci2 — flagged but wrongly excluded — plus BT1, BT7c, BT22 and `fix-paired-check` — never flagged — all record explicit FAIL→fix rounds. **The shared design assumption behind both errors: a pattern detector was treated as a complete human-labelled denominator.** It is neither.
 
-| Wave | FAILs | Dominant class | Finding (from its Result) |
+The corrected inventory audits **all 115 pinned wave files**: every `FAIL`-bearing line in every Result section was extracted and classified by hand into `kitchen/review-k33/fail-inventory.json`, and `kitchen/review-k33/fail-audit.mjs` re-verifies the inventory on rerun — each stored excerpt must occur verbatim in the pinned wave text, every "no-FAIL" row is re-checked, and every A/B row must still contain a review-FAIL-shaped line. Categories: **A** = explicit reviewer FAIL verdict followed by cook correction round(s); **B** = FAIL verdict, correction handled outside the wave (park/`-ci`/split); **C** = verify/CI/environment/test failures only (13 waves — a `verify <sha> FAIL` run or a failing suite is not a review round); **E** = FAIL wording only (41 waves); **F** = prior review rounds implied but no explicit FAIL verdict retained (A1 — evidence missing, reported as such); **G** = post-review correction without a FAIL verdict (R1 — the CTO found `driver.mjs`'s `--out` deletion *after* review); **D** = no FAIL in Result (25 waves).
+
+**The count is 34 waves with at least one explicit reviewer FAIL verdict (50 verdicts summed), not 27.** Of the 34, 29 match their own `Merge`-subject commit; K7 parked then corrected via K7-ci/-ci2, BT7 was superseded by the owner's BT7a–c split, and BT7c/K6/D2.1 landed without a distinguishable merge-commit subject (merge attribution by subject line is approximate where a wave lands as a plain commit). FAIL *verdicts* (50) must not be conflated with FAIL *waves* (34) or correction *rounds* — the denominators differ by construction. Classes below are cook judgement from the quoted findings; multi-finding waves take the dominant one.
+
+| Wave | FAILs | Dominant class | Finding (from its Result, excerpt verified in `fail-inventory.json`) |
 |---|---|---|---|
 | A2 | 2 | correctness | stream-partition forgery; output-hash tail truncation |
 | A4 | 1 | scope/budget | acceptance 364 s > 330 s gate |
+| BT1 | 1 | security | round-1 breaks: `prod.env`/`id_rsa_backup`/`.yarnrc` shipped past the never-ship list |
 | BT3 | 2 | security | `.boxignore` bypass; never-ship set in verify; then EISDIR crash |
 | BT3b | 4 | correctness | submodule/symlink/junction apply defects, found live |
 | BT4 | 1 | untrue claim | scenario premise presumed a fact never shown |
-| BT6a | ~3 | correctness | review findings per Result (rounds; count approximate in text) |
-| BT6b | 1+ | correctness | FAIL verdict recorded |
-| BT7 | 1+ | correctness | FAIL verdict recorded |
+| BT6a | 1 | security | two never-ship leaks proven live; a post could publish what the preview never approved |
+| BT6b | 3 | security | three live escapes let a solver's program run via the tool's own commands |
+| BT7 | 3 | correctness | three FAIL rounds with in-wave rework; wave then split by owner decision (landed via BT7a–c) |
 | BT7b | 1 | correctness | wrong-merge attribution (`--ancestry-path` empty on second-parent entry) |
+| BT7c | 1 | correctness | removed command name still printed; stored `outside.answers` replayed verbatim |
 | BT8c | 1 | correctness | two record/status defects suites missed |
+| BT9 | 1 | correctness | F1–F5 defects (headline hook feature silently dead) fixed in `ecf2479` |
 | BT11a | 1 | security | forged `record.reward` reached the public issue block |
 | BT12 | 1 | correctness | F1/F2 round-1 findings |
 | BT19 | 1 | correctness | five `--json` facts missing vs. text view |
+| BT22 | 1 | correctness | "a read never writes settings" invariant unmet, caught by live trace |
 | BT26 | 1 | security | 8.3-alias bypass of `.git`/`.box` tool-owned check |
 | BT31-ci | 1 | correctness | "same results for same query" did not hold on Node 22.13 fix |
-| BT32 | 1+ | correctness/scope | scale gate failed despite green tests (prove-it-works FAIL) |
-| BT35 | 3 | correctness | timestamp contract unmet; two FAILs then park |
+| BT32 | 3 | scope/budget | scale gate failed despite green tests, twice, across the park/resume arc |
+| BT35 | 3 | correctness | timestamp contract unmet; three FAILs across the park/resume arc |
 | BT36 | 1 | correctness | stale bt11b wording assertions FAILed a candidate |
 | D2.1 | 1 | security | excluded `src/private/*` bytes shipped via case alias + in-root junction |
-| K6 | ~6 | correctness | multiple FAIL rounds (count approximate in text) |
-| K7 | 7-run allowance | scope/budget | parked: 12 runs vs allowed 10; two impl bugs found by measurement |
-| K12 | ~2 | correctness | FAIL rounds recorded |
+| K1 | 1 | security | `?host=` query parameter bypassed the loopback check (first review `ec93a5e`) |
+| K6 | 2 | correctness | two gate-defect FAIL verdicts plus a park; later accepted via correction brief |
+| K7 | 1 | scope/budget | FAIL blocker → parked; correction was the separate K7-ci/-ci2 waves (cat B) |
+| K7-ci2 | 1 | security | `rmSync(junction…)` silently deleted a populated foreign directory |
+| K12 | 1 | correctness | `DB_SUITES` silently skipped the database four named suites needed |
 | K14 | 1 | correctness | `NODE_OPTIONS` clobbered gh stand-in preload; outcome target missed |
-| K16 | 1 | untrue artifact | recording ran a stale pre-BT11b `dist` |
+| K16 | 1 | untrue claim | recording ran a stale pre-BT11b `dist` |
 | K22 | 1 | correctness | stand-in leaked comments across issues |
-| K29 | ~4 | correctness | multiple FAIL verdicts during removal wave |
-| R3 | ~7 | correctness | multiple FAIL rounds (count approximate in text) |
+| K29 | 1 | correctness | merged tree seeded red `test:kitchen`; removed `--db` mode silently ignored |
+| R3 | 3 | correctness | safety/recorder gates unmet; incomplete install verb list; property did not hold |
+| fix-paired-check | 1 | correctness | normalisation masked real output differences; `check` diff-map never ran the suite |
 
-Counts by assigned class (overlapping waves counted once): **correctness 18, security 4 (BT3, BT11a, BT26, D2.1), untrue claim/artifact 3 (BT4, K16, plus BT35's unmet contract if classed there), scope/budget 3 (A4, K7, K14-partial).** These are counting-rule outputs with judgement in classification — re-verifiable against the named wave files, not exact.
+Counts by assigned class (34 waves, one dominant class each): **correctness 20, security 9 (BT1, BT3, BT6a, BT6b, BT11a, BT26, D2.1, K1, K7-ci2), scope/budget 3 (A4, K7, BT32), untrue claim/artifact 2 (BT4, K16).** Derived by `fail-audit.mjs` from the inventory — re-verifiable, not exact (class is judgement).
 
-**By host** (Result's stated host only): of the 27, devin-stated 13 (A4, BT3b, BT6a, BT6b, BT7b, BT8c, BT11a, BT19, BT36, D2.1, K7, K16, K29), claude-stated 6 (BT7, BT12, K12, K14, K22, R3), unstated/missing 8 (A2, BT3, BT4, BT26, BT31-ci, BT32, BT35, K6). **This is not a defect rate** — denominators differ (devin cooked 42 waves, claude 37) and era/difficulty are uncontrolled, so no host or brief-style conclusion is drawn. The brief asked for a host/style breakdown; the record supports the count but not a comparison, and that gap is stated rather than filled.
+**By host** (Result's stated host only; K7-ci2 and fix-paired-check state their host in body text the field-detector misses — footnoted in the inventory): of the 34, devin-stated 21, claude-stated 10, unstated 3 (A2, BT4, K6). **This is not a defect rate** — denominators differ (devin cooked 42 waves, claude 37, unstated 27) and era/difficulty are uncontrolled, so no host or brief-style conclusion is drawn. The brief asked for a host/style breakdown; the record supports the count but not a comparison, and that gap is stated rather than filled.
 
 What this supports and what it does not: the listed FAILs are documented catches by the second agent — evidence the review *finds real defects* (adversarial ones like BT11a/D2.1/BT26 no suite covered). It does **not** measure what self-review would have caught, so "independent review pays" is a judgement supported by the catch list, not a measured counterfactual.
 
