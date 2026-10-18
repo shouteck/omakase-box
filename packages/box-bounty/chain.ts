@@ -21,7 +21,8 @@
 import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { BountyRefused } from './errors.js';
-import { git, gitOutcome, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
+import { git, gitNamedBlobs, gitOutcome, gitRefsWrite, gitStdin, gitWriteBlob } from './git.js';
+import type { RefWrite } from './git.js';
 import { isObject } from './gh.js';
 import { emitMergeNotice } from './notice.js';
 import type { Attempt, BountyRecord } from './record.js';
@@ -315,6 +316,8 @@ export function syncChains(root: string, force = false): void {
   if (url === null) return;
   const prior = loadChainState(root);
   if (!force && prior.fetchedAt !== undefined && Date.now() - Date.parse(prior.fetchedAt) < FETCH_INTERVAL_MS) {
+    // Inside the throttle window the remote-tracking refs cannot have moved
+    // since the fetch that set it — only pending pushes can still need work.
     retryPending(root, url);
     return;
   }
@@ -328,8 +331,8 @@ export function syncChains(root: string, force = false): void {
     return;
   }
   writeChainState(root, { fetchedAt: new Date().toISOString() });
-  adoptAndImport(root);
-  retryPending(root, url);
+  const view = adoptAndImport(root);
+  retryPending(root, url, view);
 }
 
 // The only commands allowed to touch the remote for memory (brief, reading):
@@ -340,80 +343,224 @@ export function refreshSharedMemory(root: string): void {
   try { syncChains(root); } catch { /* shared memory is a read cache — never a reason a read fails */ }
 }
 
+// ---------------------------------------------------------------------------
+// The batched read view (scale gate): every fact the import needs comes from
+// a fixed handful of Git processes — two ref listings, chunked `rev-list
+// --parents` history walks, one `cat-file --batch` for the event blobs and
+// one `update-ref --stdin` for adoptions — no matter how many chains exist.
+// The previous shape (a rev-list plus one cat-file per event, plus per-chain
+// merge probes) cost ~9 spawns a chain: ~7 minutes at 1,000 chains here.
+// ---------------------------------------------------------------------------
+
+interface ChainView {
+  readonly remoteTips: ReadonlyMap<string, string>; // bounty id -> remote-tracking sha
+  readonly localTips: ReadonlyMap<string, string>;  // bounty id -> local sha
+  readonly parents: ReadonlyMap<string, readonly string[]>; // commit -> parents
+  readonly chainCommits: ReadonlySet<string>;       // commits whose tree carries event.json
+  readonly events: ReadonlyMap<string, string>;     // commit -> raw event.json text
+  readonly ancestorsOf: (tip: string) => ReadonlySet<string>;
+}
+
+const refTips = (root: string, ns: string): ReadonlyMap<string, string> =>
+  new Map(
+    gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', ns]).stdout
+      .split('\n').filter(line => line !== '')
+      .map(line => { const [ref, sha] = line.split(' '); return [ref!.slice(`${ns}/`.length), sha!] as const; })
+      .filter(([id, sha]) => CHAIN_ID.test(id) && /^[a-f\d]{40}$/.test(sha))
+  );
+
+// Parent edges for the union of the given tips' histories — chunked so the
+// argument list stays short, one process per chunk (never one per chain).
+function revListParents(root: string, tips: ReadonlySet<string>): Map<string, readonly string[]> {
+  const parents = new Map<string, readonly string[]>();
+  const parse = (stdout: string): void => {
+    for (const line of stdout.split('\n')) {
+      const cols = line.trim().split(' ');
+      if (!/^[a-f\d]{40}$/.test(cols[0] ?? '')) continue;
+      parents.set(cols[0]!, cols.slice(1).filter(col => /^[a-f\d]{40}$/.test(col)));
+    }
+  };
+  const all = [...tips];
+  const CHUNK = 200;
+  for (let i = 0; i < all.length; i += CHUNK) {
+    const listed = gitOutcome(root, ['rev-list', '--parents', ...all.slice(i, i + CHUNK)]);
+    if (listed.status === 0) { parse(listed.stdout); continue; }
+    // A chunk fails whole when one tip will not walk (a ref moved mid-sync);
+    // fall back to per-tip walks so the rest of the chunk still imports.
+    for (const tip of all.slice(i, i + CHUNK)) {
+      const single = gitOutcome(root, ['rev-list', '--parents', tip]);
+      if (single.status === 0) parse(single.stdout);
+    }
+  }
+  return parents;
+}
+
+// Parents before children, ties by commit id — git-bug's chain ordering,
+// computed on the fetched parent edges (cycles, which the tool never
+// writes, drop the cyclic remainder rather than loop).
+function chainOrder(view: ChainView, tip: string): string[] {
+  const member = view.ancestorsOf(tip);
+  const unmet = new Map<string, number>();
+  const children = new Map<string, string[]>();
+  for (const commit of member) {
+    const within = (view.parents.get(commit) ?? []).filter(parent => member.has(parent));
+    unmet.set(commit, within.length);
+    for (const parent of within) {
+      const list = children.get(parent) ?? [];
+      list.push(commit);
+      children.set(parent, list);
+    }
+  }
+  const ready = [...member].filter(commit => unmet.get(commit) === 0).sort();
+  const order: string[] = [];
+  while (ready.length > 0) {
+    const commit = ready.shift()!;
+    order.push(commit);
+    for (const child of children.get(commit) ?? []) {
+      unmet.set(child, unmet.get(child)! - 1);
+      if (unmet.get(child) === 0) {
+        let at = ready.length;
+        while (at > 0 && ready[at - 1]! > child) at -= 1;
+        ready.splice(at, 0, child);
+      }
+    }
+  }
+  return order;
+}
+
 // Remote-tracking chains: adopt into local refs (merging diverged ones) and
 // import the events of every chain whose tip moved since the last import.
-function adoptAndImport(root: string): void {
-  const remoteLines = gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_REMOTE_NS]).stdout
-    .split('\n').filter(line => line !== '');
-  // Local tips in one listing: a chain already at the remote sha needs no
-  // mergeRemoteTip probe — on a large shared memory that is two git starts
-  // per unchanged bounty on every reading command, minutes at 1,000 chains.
-  const localTips = new Map(
-    // No remote-tracking refs means nothing to compare: skip the listing so
-    // a plain read on an empty shared memory costs no extra git start (K14).
-    (remoteLines.length === 0 ? { stdout: '' } :
-    gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_NS])).stdout
-      .split('\n').filter(line => line !== '')
-      .map(line => { const [ref, sha] = line.split(' '); return [ref!.slice(`${CHAIN_NS}/`.length), sha!] as const; })
-  );
+// Returns the collected view for retryPending — the post-fetch push pass
+// reads the same listings instead of listing refs and probing tips again.
+function adoptAndImport(root: string): ChainView {
+  const remoteTips = refTips(root, CHAIN_REMOTE_NS);
+  // A local listing is skipped only when nothing could be there to compare
+  // or retry: no remote chains and no chain meta keys at all (K14: a plain
+  // read on an empty shared memory costs no extra git start).
+  const localTips = remoteTips.size === 0 && metaKeys(root, 'chain_').length === 0
+    ? new Map<string, string>()
+    : refTips(root, CHAIN_NS);
+
+  // History walks only where a decision needs them: tips that differ, tips
+  // not yet imported, and local-only chains (isChainCommit for the retry).
+  const walk = new Set<string>();
+  for (const [id, remote] of remoteTips) {
+    const local = localTips.get(id);
+    if (local !== remote || metaGet(root, `chain_tip:${id}`) !== remote) {
+      walk.add(remote);
+      if (local !== undefined && local !== remote) walk.add(local);
+    }
+  }
+  for (const [id, local] of localTips) if (!remoteTips.has(id)) walk.add(local);
+  const parents = revListParents(root, walk);
+
+  const ancestorCache = new Map<string, Set<string>>();
+  const ancestorsOf = (tip: string): ReadonlySet<string> => {
+    const known = ancestorCache.get(tip);
+    if (known !== undefined) return known;
+    const seen = new Set<string>();
+    const stack = [tip];
+    while (stack.length > 0) {
+      const commit = stack.pop()!;
+      if (seen.has(commit)) continue;
+      seen.add(commit);
+      for (const parent of parents.get(commit) ?? []) stack.push(parent);
+    }
+    ancestorCache.set(tip, seen);
+    return seen;
+  };
+  // One batch read for every event blob the decisions below can touch:
+  // all commits of chains needing (re)import, plus each differing local tip
+  // (the isChainCommit check — a legacy snapshot pin is not chain history).
+  const need = new Set<string>();
+  for (const [id, remote] of remoteTips) {
+    if (metaGet(root, `chain_tip:${id}`) !== remote) for (const commit of ancestorsOf(remote)) need.add(commit);
+  }
+  // Every walked tip also gets probed — the isChainCommit check on local
+  // tips reads the same event.json the import would.
+  for (const sha of walk) need.add(sha);
+  const blobs = gitNamedBlobs(root, [...need].map(sha => `${sha}:event.json`));
+  const chainCommits = new Set<string>();
+  const events = new Map<string, string>();
+  for (const [name, blob] of blobs) {
+    const sha = name.slice(0, name.indexOf(':'));
+    if (blob === null) continue;
+    chainCommits.add(sha);
+    events.set(sha, blob.toString('utf8'));
+  }
+  const view: ChainView = { remoteTips, localTips, parents, chainCommits, events, ancestorsOf };
+
+  // Merge decisions on the in-memory graph — one update-ref --stdin for
+  // every 'new'/'ff' adoption; a genuinely diverged chain still merges by
+  // its own commitEvent (rare: it takes two writers racing).
+  const writes: RefWrite[] = [];
+  for (const [id, remote] of remoteTips) {
+    const local = localTips.get(id);
+    if (local === remote) continue;
+    if (local === undefined || !chainCommits.has(local)) {
+      writes.push({ update: chainRef(id), sha: remote });
+    } else if (ancestorsOf(local).has(remote)) {
+      // local strictly ahead — pushChain's pending/retry side handles it
+    } else if (ancestorsOf(remote).has(local)) {
+      writes.push({ update: chainRef(id), sha: remote }); // fast-forward
+    } else {
+      commitEvent(root, id, JSON.stringify({ v: 1, type: 'merge' }) + '\n', [local, remote]);
+    }
+  }
+  gitRefsWrite(root, writes);
+
   const rows: SharedRow[] = [];
-  for (const line of remoteLines) {
-    const [ref, sha] = line.split(' ');
-    const id = ref!.slice(`${CHAIN_REMOTE_NS}/`.length);
-    if (!CHAIN_ID.test(id) || !/^[a-f\d]{40}$/.test(sha ?? '')) continue;
-    if (localTips.get(id) !== sha) mergeRemoteTip(root, id);
-    if (metaGet(root, `chain_tip:${id}`) === sha) continue; // this tip was already imported
-    const record = importChain(root, id, sha!);
-    metaSet(root, `chain_tip:${id}`, sha!);
+  for (const [id, remote] of remoteTips) {
+    if (metaGet(root, `chain_tip:${id}`) === remote) continue; // this tip was already imported
+    const valid: ChainEvent[] = [];
+    for (const commit of chainOrder(view, remote)) {
+      const raw = events.get(commit);
+      if (raw === undefined) continue;
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        if (validEvent(parsed) && parsed['type'] !== 'merge') valid.push(parsed);
+      } catch { /* an unreadable event is skipped, never fatal */ }
+    }
+    const record = foldEvents(id, valid);
+    metaSet(root, `chain_tip:${id}`, remote);
     if (record !== null) rows.push(record);
   }
   if (rows.length > 0) importShared(root, rows);
+  return view;
 }
 
 // A chain this machine has that the remote does not reflect: a pending push
 // retries here, and a remote-deleted chain restores from the local copy.
-function retryPending(root: string, url?: string): void {
-  // Every chain this machine knows leaves a chain_* meta key (pending,
-  // pushed or imported tip) — without one the ref listing below can only
-  // be empty, so skip its git start on reads with no shared memory (K14).
-  if (metaKeys(root, 'chain_').length === 0) return;
+// With the post-fetch view, ref comparisons and ancestor checks are in
+// memory; inside the throttle window (no view) only recorded pending pushes
+// retry, since the remote-tracking refs cannot have moved.
+function retryPending(root: string, url?: string, view?: ChainView): void {
+  const ids = new Set(
+    metaKeys(root, 'chain_pending:')
+      .map(key => key.slice('chain_pending:'.length))
+      .filter(id => CHAIN_ID.test(id))
+  );
+  if (view !== undefined) {
+    for (const [id, local] of view.localTips) {
+      if (!view.chainCommits.has(local)) continue; // a legacy snapshot pin, not a chain
+      const remote = view.remoteTips.get(id);
+      if (remote === local) continue;
+      if (remote !== undefined && view.ancestorsOf(remote).has(local)) {
+        continue; // the remote is strictly ahead — adoptAndImport already folded it
+      }
+      ids.add(id);
+    }
+  }
+  if (ids.size === 0) return;
   url ??= remoteUrl(root) ?? undefined;
   if (url === undefined) return;
-  const localLines = gitOutcome(root, ['for-each-ref', '--format=%(refname) %(objectname)', CHAIN_NS]).stdout
-    .split('\n').filter(line => line !== '');
-  for (const line of localLines) {
-    const [ref, local] = line.split(' ');
-    const id = ref!.slice(`${CHAIN_NS}/`.length);
-    if (!CHAIN_ID.test(id) || !/^[a-f\d]{40}$/.test(local ?? '')) continue;
-    if (!isChainCommit(root, local!)) continue; // a legacy snapshot pin, not a chain
-    const remote = tipOf(root, remoteRef(id));
-    if (remote === local) continue;
-    if (remote !== null && gitOutcome(root, ['merge-base', '--is-ancestor', local!, remote]).status === 0) {
-      continue; // the remote is strictly ahead — adoptAndImport already folded it
-    }
+  for (const id of ids) {
     const wasPushed = metaGet(root, `chain_pushed:${id}`) !== null;
+    const remote = view !== undefined ? view.remoteTips.get(id) ?? null : tipOf(root, remoteRef(id));
     const result = pushChain(root, id);
     if (!result.pushed) emitMergeNotice(`shared bounty memory not pushed yet (${result.reason}); it will be retried`);
     else if (remote === null && wasPushed) emitMergeNotice(`shared bounty memory for ${id} was gone from the remote — restored from this machine`);
   }
-}
-
-// Walk one chain's commits parents-first and fold the valid events into a
-// record-shaped shared row. An event that fails validation is skipped — the
-// rest of its chain still shows. Returns null when nothing valid remains.
-function importChain(root: string, id: string, tip: string): SharedRow | null {
-  const listed = gitOutcome(root, ['rev-list', '--topo-order', '--reverse', tip]);
-  if (listed.status !== 0) return null;
-  const events: ChainEvent[] = [];
-  for (const commit of listed.stdout.split('\n').map(line => line.trim()).filter(line => /^[a-f\d]{40}$/.test(line))) {
-    const raw = gitOutcome(root, ['cat-file', 'blob', `${commit}:event.json`]);
-    if (raw.status !== 0) continue;
-    try {
-      const parsed: unknown = JSON.parse(raw.stdout);
-      if (validEvent(parsed) && parsed['type'] !== 'merge') events.push(parsed);
-    } catch { /* an unreadable event is skipped, never fatal */ }
-  }
-  return foldEvents(id, events);
 }
 
 // Fold a chain's valid events into the record-shaped row the shared table

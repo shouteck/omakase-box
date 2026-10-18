@@ -267,6 +267,59 @@ describe('BT32 shared bounty memory', { timeout: 180000 }, () => {
     }); }
   });
 
+  it('chain import costs a fixed handful of Git processes at any scale (scale-gate regression)', () => {
+    { const world = sharedPostedFixture(); world.run(() => {
+      // Seed chains straight onto the bare remote with one fast-import —
+      // byte-identical commit shape to commitEvent (tree {event.json}).
+      const seed = (n: number, events: number, offset = 0): string => {
+        let mark = 0;
+        const chunks: string[] = [];
+        for (let c = 0; c < n; c += 1) {
+          const id = `bt-${String(offset + c).padStart(12, '0')}`;
+          let prev: number | null = null;
+          for (let e = 0; e < events; e += 1) {
+            const body = JSON.stringify(e === 0
+              ? { v: 1, type: 'posted', at: '2026-10-18T00:00:00.000Z', actor: 'm', id, title: `seeded ${offset + c}`, task: 't', base: 'a'.repeat(40), branch: 'main', issue: { number: offset + c, url: `https://github.com/owner/project/issues/${offset + c}` }, published: { pushed: [] } }
+              : { v: 1, type: 'solution', at: '2026-10-18T00:00:00.000Z', n: e, commit: 'b'.repeat(40), changed: [], added: [], deleted: [] }) + '\n';
+            const msg = `box-bounty ${id} chain event\n`;
+            mark += 1;
+            chunks.push(`commit refs/box-bounty/${id}\nmark :${mark}\ncommitter box-bounty <box-bounty@localhost> 1770672000 +0000\ndata ${Buffer.byteLength(msg)}\n${msg}`);
+            if (prev !== null) chunks.push(`from :${prev}\n`);
+            chunks.push(`M 644 inline event.json\ndata ${Buffer.byteLength(body)}\n${body}\n`);
+            prev = mark;
+          }
+        }
+        execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'fast-import', '--quiet'], { input: chunks.join(''), encoding: 'utf8' });
+        return `bt-${String(offset).padStart(12, '0')}`;
+      };
+      const gitStarts = (trace: string): number =>
+        trace.split('\n').filter(line => /trace: (built-in|run_command):/.test(line)).length;
+
+      // Small history first: the fixture's one posted chain only.
+      const small = secondMachine(world);
+      const smallTrace = traceGit('bt32-scale-small', () => syncChains(small, true));
+      expect(sharedRead(small, world.id)?.id).toBe(world.id);
+      const BOUND = 24;
+      expect(gitStarts(smallTrace), 'small import started more Git processes than the fixed bound').toBeLessThanOrEqual(BOUND);
+
+      // Large history: 40 more chains x 3 events, plus a malformed ref whose
+      // tip carries no event.json — the negative leg must not break the rest.
+      const firstSeeded = seed(40, 3, 100);
+      execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'update-ref',
+        'refs/box-bounty/bt-ffffffffffff',
+        execFileSync('git', ['-c', `safe.directory=${world.bare}`, '-C', world.bare, 'commit-tree', '4b825dc642cb6eb9a060e54bf8d69288fbee4904', '-m', 'empty'], { encoding: 'utf8' }).trim()], { encoding: 'utf8' });
+      const large = secondMachine(world);
+      const largeTrace = traceGit('bt32-scale-large', () => syncChains(large, true));
+      // Nonempty known data: a seeded chain really imported — a do-nothing
+      // importer fails here.
+      expect(sharedRead(large, firstSeeded)?.title).toBe('seeded 100');
+      expect(sharedRead(large, world.id)?.id).toBe(world.id);
+      // Malformed/missing-object chain imports nothing and breaks nothing.
+      expect(sharedRead(large, 'bt-ffffffffffff')).toBeNull();
+      expect(gitStarts(largeTrace), 'large import started more Git processes than the fixed bound — per-chain/per-event subprocesses are back').toBeLessThanOrEqual(BOUND);
+    }); }
+  });
+
   it('the worktree, index and branches never move when the chain is written', () => {
     { const world = sharedFixture(); world.run(() => {
       const statusBefore = git(world.repo, ['status', '--porcelain']);

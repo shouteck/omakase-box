@@ -341,13 +341,13 @@ export function gitBlob(repo: string, commit: string, path: string, env: GitEnv 
   return result.stdout;
 }
 
-// One `cat-file --batch` reads every commit:path blob asked for; a path that is
-// not a blob in the tree maps to null, exactly as one `cat-file blob` would.
-export function gitBlobs(repo: string, commit: string, paths: readonly string[]): Map<string, Buffer | null> {
+// One `cat-file --batch` reads every object expression asked for; a name that
+// is not a blob maps to null, exactly as one `cat-file blob` would.
+function gitBatchBlobs(repo: string, names: readonly string[]): Map<string, Buffer | null> {
   const found = new Map<string, Buffer | null>();
-  if (paths.length === 0) return found;
+  if (names.length === 0) return found;
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', '--batch'], {
-    input: paths.map(path => `${commit}:${path}`).join('\n') + '\n',
+    input: names.join('\n') + '\n',
     env: gitEnvironment(),
     maxBuffer: 512 * 1024 * 1024,
     windowsHide: true
@@ -355,21 +355,36 @@ export function gitBlobs(repo: string, commit: string, paths: readonly string[])
   if (result.error !== undefined) throw result.error;
   const stdout = Buffer.isBuffer(result.stdout) ? result.stdout : Buffer.from(result.stdout ?? '');
   let at = 0;
-  for (const path of paths) {
+  for (const name of names) {
     const headerEnd = stdout.indexOf(10, at);
     const header = headerEnd === -1 ? '' : stdout.toString('utf8', at, headerEnd);
     if (headerEnd === -1 || header.endsWith(' missing')) {
-      found.set(path, null);
+      found.set(name, null);
       at = headerEnd + 1;
       continue;
     }
     const fields = header.trim().split(' ');
     const size = Number(fields[2]);
     const start = headerEnd + 1;
-    found.set(path, fields[1] === 'blob' ? stdout.subarray(start, start + size) : null);
+    found.set(name, fields[1] === 'blob' ? stdout.subarray(start, start + size) : null);
     at = start + size + 1; // the content block is followed by one line feed
   }
   return found;
+}
+
+// One `cat-file --batch` reads every commit:path blob asked for; a path that is
+// not a blob in the tree maps to null, exactly as one `cat-file blob` would.
+export function gitBlobs(repo: string, commit: string, paths: readonly string[]): Map<string, Buffer | null> {
+  const asked = paths.map(path => `${commit}:${path}`);
+  const found = gitBatchBlobs(repo, asked);
+  return new Map(paths.map((path, index) => [path, found.get(asked[index]!) ?? null] as const));
+}
+
+// The same batch read for arbitrary object expressions (`<sha>:<path>`,
+// `<rev>`): the shared-memory import reads thousands of event blobs in one
+// process this way instead of one cat-file per event.
+export function gitNamedBlobs(repo: string, names: readonly string[]): Map<string, Buffer | null> {
+  return gitBatchBlobs(repo, names);
 }
 
 // One `cat-file --batch-check` resolves every name — like one `cat-file -e` or
