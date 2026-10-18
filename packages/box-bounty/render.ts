@@ -16,7 +16,7 @@ import { issueComments,refreshGitHubFormat,refreshGitHubStatus } from './collect
 import { instructionNotices,syncInstructions } from './instructions.js';
 import { promisedTotal } from './money.js';
 import { ownerStatusLine,waitingSummary } from './owner-text.js';
-import { payToLine } from './pay.js';
+import { paymentOf,payToLine } from './pay.js';
 import { applicableAttempts,attemptsOf,endedCount,endedRecords,isOpenStage,listRecords,loadRecord,openRecords,persistRecord,recordDir,retiredRoute,setOpenSurfacesSync,trackedRecordFiles } from './record.js';
 import { corruptFiles,endedContaining,metaKeys,sharedEnded,sharedEndedCount,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
@@ -81,7 +81,8 @@ const dayWord = (n: number): string => `${n} ${n === 1 ? 'day' : 'days'}`;
 // promised-ISO JSON fields. An invalid value makes the fact absent
 // (null/unavailable), never NaN, a non-ISO echo, or an invented substitute.
 const ISO_AT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
-const validAt = (at: string | null | undefined): string | null => {
+// Exported for status --json's paidAt, which answers under the same contract.
+export const validAt = (at: string | null | undefined): string | null => {
   if (typeof at !== 'string') return null;
   const match = ISO_AT.exec(at);
   if (match === null) return null;
@@ -335,6 +336,15 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   if (owner !== null) lines.push(owner);
   const reward = rewardStatusLine(repoRoot, open.map(entry => entry.record!), options.full === true);
   if (reward !== null) lines.push(reward);
+  // Owed payments are a fact needing attention (BT36): merged bounties
+  // whose bound reward no `paid` event settles, counted across the local
+  // records and the shared memory — one line, only while something is owed.
+  // The bounded view never materialises every ended record, so the count
+  // asks the store for ended rows carrying a reward, the same scan shape
+  // the `pending` sweep above runs.
+  const owed = [...endedContaining(repoRoot, '"reward"'), ...sharedEnded(repoRoot)]
+    .filter(candidate => { const payment = paymentOf(candidate); return payment !== null && payment.paidAt === null; });
+  if (owed.length > 0) lines.push(`${owed.length} payment(s) owed — box bounty status shows whom`);
   const rewardNotice = rewardNoticeLine();
   if (rewardNotice !== null) lines.push(rewardNotice);
   const askNotice = askMergeNoticeLine();
@@ -491,10 +501,15 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     // line, so the compact list still tells the owner to look — the finding
     // itself prints on the detail below (or under status <id> / --full).
     const finding = (record.scanFindings ?? []).length > 0 ? ' — scan finding recorded' : '';
-    // A bounty with a reward that ended on a merge keeps whom to pay on the
-    // line — a record the owner can read whenever they wish, not a reminder.
+    // A merged bounty whose reward still stands owed — or was recorded
+    // paid — says so on the line (BT36); the detail below names whom.
     const pay = record.github?.pay;
-    const paid = pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${pay.solver ?? 'the solver'}` : '';
+    const payment = paymentOf(record);
+    const paid = payment !== null
+      ? payment.paidAt === null
+        ? `; payment owed $${payment.amount} to ${payment.solver ?? 'the solver'}`
+        : `; paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'}`
+      : pay !== undefined ? `; pay $${boundAmount(record) ?? '?'} to ${pay.solver ?? 'the solver'}` : '';
     // A hand merge the owner's decision would have held (ask/off) is marked
     // where it is read back: the owner was not asked before that merge (BT13).
     const unasked = record.events.some(event => event.stage === 'applied' && event.unasked === true) ? ' — the owner was not asked before the merge' : '';
@@ -519,7 +534,20 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     if (detailed) {
       lines.push(renderResume(entry.record, '  ', options.full === true));
       const pay = entry.record.github?.pay;
-      if (pay !== undefined) {
+      const payment = paymentOf(entry.record);
+      // The payment line is the fact now: owed names whom and the link
+      // state; paid names the date the owner recorded it (BT36). A bounty
+      // posted from another machine is recorded on that machine — the
+      // shared row is read-only here, so no `config set paid` is quoted.
+      if (payment !== null) {
+        const solver = payment.solver ?? 'the solver';
+        const link = payment.link === 'recorded' ? 'at the link they supplied'
+          : payment.link === 'none' ? 'no recognised payment link was given'
+          : 'no payment link recorded';
+        lines.push(payment.paidAt === null
+          ? `  payment: owed $${payment.amount} to ${solver} (${link})${entry.record.shared === true ? ' — recording happens on the machine that posted this bounty' : ` — the owner records it: box bounty config set paid ${entry.record.id}`}`
+          : `  payment: paid $${payment.amount} on ${validAt(payment.paidAt)?.slice(0, 10) ?? 'an unrecorded date'} — the owner's word, recorded`);
+      } else if (pay !== undefined) {
         lines.push(`  pay: ${pay.pr !== null ? `pull request ${pay.pr}` : 'the returned folder'}${pay.solver !== null ? ` by ${pay.solver}` : ''} was merged — pay $${boundAmount(entry.record) ?? '?'} to ${pay.solver ?? 'the solver'}${pay.link !== null ? ' at the link they supplied' : ' — no recognised payment link was given'} — a record, not a reminder`);
       }
       // The finding stays visible after the bounty ends — the owner learns a

@@ -64,13 +64,26 @@ const ENDED_STAGES: ReadonlySet<BountyStage> = new Set(['applied', 'rejected', '
 export const isOpenStage = (stage: BountyStage): stage is OpenStage => OPEN_STAGES.has(stage);
 
 export interface StageEvent {
-  readonly stage: BountyStage;
+  /** 'paid' is a fact on the record, never a stage: it sits on a merged
+      bounty whose reward the owner says was paid (BT36). It ends nothing
+      and changes no stage — `record.stage` stays `applied`. */
+  readonly stage: BountyStage | 'paid';
   readonly at: string;
   readonly destination?: string; // recorded on the `posted` event
   readonly reason?: string; // recorded on `rejected` and, on older records, on a `posted` return: the named failure class
   readonly attempt?: number; // which attempt this transition was about
   readonly command?: string; // the command that drove it — apply, look, close, merged — so history says what ended the bounty. Records written before BT7c can still name removed commands; status prints them remapped to what replaced them.
   readonly merge?: string; // the commit the command made (the apply or merged land; on older records the reversal)
+  /** Recorded on `paid` only: the amount the owner said was paid — copied
+      from the bound reward at write, never typed (BT36). */
+  readonly amount?: number;
+  /** Recorded on `paid` only: whose word the event is — 'owner', the only
+      writer `config set paid` accepts. */
+  readonly by?: 'owner';
+  /** Recorded on `paid` only: a second `paid` event marked true withdraws a
+      mistaken record; history keeps both events and the bounty reads owed
+      again (BT36). */
+  readonly withdrawn?: boolean;
   /** Recorded on `applied` when the merge landed outside the tool and the
       owner's decision asked to be asked (BT13): the owner was not asked
       before that merge — stated in the closing output, status and the pay
@@ -460,6 +473,18 @@ const asRecord = (parsed: unknown): BountyRecord | null => {
   record.events = record.events.map(event => event !== null && typeof event === 'object' && (event.stage as string) === 'verified' ? { ...event, stage: 'answered' } : event);
   for (const event of record.events) {
     if (event === null || typeof event !== 'object') return null;
+    // A `paid` event is not a stage transition: the tool writes it on an
+    // applied record, the amount is a whole dollar count above zero, `by`
+    // is 'owner' (the only writer), and `withdrawn` is the true mark of a
+    // withdrawal. Any other shape is not an event this tool wrote (BT36).
+    if (event.stage === 'paid') {
+      if (typeof event.amount !== 'number' || !Number.isSafeInteger(event.amount) || event.amount <= 0) return null;
+      if (event.by !== 'owner') return null;
+      if (event.withdrawn !== undefined && event.withdrawn !== true) return null;
+      continue;
+    }
+    // A paid-only field on a transition event is foreign to this tool.
+    if (event.amount !== undefined || event.by !== undefined || event.withdrawn !== undefined) return null;
     if (!OPEN_STAGES.has(event.stage) && !ENDED_STAGES.has(event.stage)) return null;
     if (event.merge !== undefined && (typeof event.merge !== 'string' || !sha.test(event.merge))) return null;
     if (event.attempt !== undefined && (!Number.isSafeInteger(event.attempt) || event.attempt < 1)) return null;

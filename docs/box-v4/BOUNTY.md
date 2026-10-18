@@ -187,9 +187,12 @@ is `null`.
 `status --json` prints `{schema, repository, acting, owner, bounties}` —
 `owner` is this checkout's read (`{decision, denied, decisionAt,
 decisionLevel, reward, rewardLimit, promised}`) and each bounty carries
-`id, title, why, stage, createdAt, openedAt, lastActivityAt, baseCommit, reward, job, resume,
+`id, title, why, stage, createdAt, openedAt, lastActivityAt, baseCommit, reward, payment, job, resume,
 waiting, github, allowedBy, scanFindings, solutions, mergeNow, events,
-next, corrupt`. `resume` is the saved job context (`{branch, commit,
+next, corrupt`. `payment` is `{owed, solver, paidAt}` on a merged bounty
+whose bound reward is above $0 — `owed` the amount still unpaid, `paidAt`
+the time the owner recorded payment or `null` — or `null` when nothing is
+owed. `resume` is the saved job context (`{branch, commit,
 changed, note}`) or `null` on records from before contexts were kept.
 A record file that no longer reads is listed with `corrupt: true` and
 every fact `null`. `solutions` entries name `n, pullRequest, collected,
@@ -431,6 +434,21 @@ The tool does not pay, does not know whether payment was made, holds no money
 and does not protect the solver: posting a solution does not guarantee the
 reward, and payment — if any — is the owner's to make by hand.
 
+**Recording that a solver was paid.** A merged bounty whose bound reward is
+above $0 reads as owed until the owner says otherwise: `status` shows
+`payment: owed $N to <solver>` and the `box bounty` overview counts owed
+payments while any stand. Once the owner has paid by hand,
+`box bounty config set paid <id>` records it — the owner's word, kept on the
+record with the time and the bound amount (the amount is copied from the
+record, never typed). `box bounty config set paid <id> no` withdraws a
+mistaken record: a second event marks the withdrawal, the history keeps
+both, and the bounty reads owed again. `status` then shows `paid $N on
+<date>` and `status --json` carries `payment: {owed, solver, paidAt}`. The
+fact travels with the shared bounty memory to other clones, and payment
+stays private between owner and solver — nothing about it is ever posted to
+the issue. The tool records the owner's word and never checks, moves or
+enforces money.
+
 The solver forks the repository (or pushes a branch inside it), works from the
 bounty branch and opens a pull request against it in the same repository.
 Collect from the project's record:
@@ -609,6 +627,11 @@ The owner has three words:
   before rewards were per repository applied to nothing once this wave
   landed — the tool says once what they were, and every repository states
   $0 until the owner sets its own.
+- `config set paid <bounty-id>` records on the record that a merged bounty's
+  solver was paid; `... no` withdraws a mistaken record (history keeps both
+  events). Only a merged bounty whose bound reward is above $0 answers it —
+  anything else is `paid-nothing-owed`. It is the owner's word, recorded:
+  nothing is checked, moved or enforced, and nothing is posted to the issue.
 
 The agent is asked nothing about money. `create` and `post` take no amount
 flag — each money spelling is a named refusal (`reward-agent-set`) — and a

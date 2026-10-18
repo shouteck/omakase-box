@@ -51,6 +51,7 @@ const LABELS: Record<string, Record<string, string | null>> = {
     'flags': '/bounties/0/solutions/0/report',
     'current code now': '/bounties/0/mergeNow',
     'pay': '/bounties/0/github/pay',
+    'payment': '/bounties/0/payment',
     'records': '/records/tracked'
   },
   'look --full': {

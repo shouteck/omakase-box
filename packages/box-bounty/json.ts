@@ -26,7 +26,8 @@ import { publishLists } from './never-ship.js';
 import { BountyRefused } from './errors.js';
 import { applicableAttempts,attemptsOf,baseCommitOf,isOpenStage,listRecords,loadRecord,persistRecord,trackedRecordFiles } from './record.js';
 import { promisedTotal } from './money.js';
-import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines } from './render.js';
+import { paymentOf } from './pay.js';
+import { bountyAge,endedNextStep,nextStep,notNext,staleReminderLines,validAt } from './render.js';
 import { sharedEnded,sharedOpen,sharedRead } from './store.js';
 import { refreshSharedMemory } from './chain.js';
 import type { Attempt,BountyRecord,ScanFinding,StageEvent,WaitingFor } from './record.js';
@@ -70,7 +71,11 @@ const eventEntry = (event: StageEvent): JsonObject => ({
   reason: event.reason ?? null,
   merge: event.merge ?? null,
   unasked: event.unasked === true,
-  partial: event.partial ?? null
+  partial: event.partial ?? null,
+  // `paid` facts only — null on every transition event.
+  amount: event.amount ?? null,
+  by: event.by ?? null,
+  withdrawn: event.withdrawn === true
 });
 
 const solutionEntry = (record: BountyRecord, attempt: Attempt): JsonObject => ({
@@ -173,6 +178,7 @@ const mergeNowEntry = (repoRoot: string, record: BountyRecord, attempts: readonl
 // takes the saved-job line when nothing is open — the text view's own rule.
 const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null): JsonObject => {
   const attempts = attemptsOf(record);
+  const payment = paymentOf(record);
   // The two age facts (BT35) belong to open bounties — an ended record's
   // wait is over, so both stay null there; on an open record a source time
   // that does not parse also reads null, never a non-ISO echo.
@@ -191,6 +197,14 @@ const bountyEntry = (repoRoot: string, record: BountyRecord, next: string | null
     // '(no commits yet)' display sentinel is not a commit.
     baseCommit: baseCommitOf(record),
     reward: boundAmount(record) ?? null,
+    // The payment fact (BT36): null when nothing is owed — `owed` is what
+    // stands unpaid (0 once the owner's paid record lands), `solver` whom
+    // the record names to pay, `paidAt` the recorded time or null.
+    payment: payment === null ? null : {
+      owed: payment.paidAt === null ? payment.amount : 0,
+      solver: payment.solver,
+      paidAt: payment.paidAt === null ? null : validAt(payment.paidAt)
+    },
     job: record.partOf ?? record.job?.file ?? null,
     resume: resumeEntry(record),
     waiting: record.waiting === undefined ? null : waitingEntry(record.waiting),
@@ -222,6 +236,7 @@ const corruptEntry = (file: string): JsonObject => ({
   lastActivityAt: null,
   baseCommit: null,
   reward: null,
+  payment: null,
   job: null,
   resume: null,
   waiting: null,

@@ -6,6 +6,9 @@
 // message the tool builds for the owner when a bounty with a reward closes
 // on a merge.
 
+import { boundAmount } from './format.js';
+import type { BountyRecord } from './record.js';
+
 // What a recognised payment link looks like today, per Stripe's own
 // documentation (payment links are `https://buy.stripe.com/<id>`; test-mode
 // links prefix the id with `test_` — ids are alphanumeric):
@@ -145,4 +148,43 @@ export function payNotice(record: { id: string; title: string; events: readonly 
   if (pay === undefined || amount === undefined || amount <= 0) return null;
   const merged = [...record.events].reverse().find(event => event.merge !== undefined && ['apply', 'merged'].includes(event.command ?? ''));
   return payMessageLines(record, pay, { repository: record.github!.repository, issueUrl: record.github!.issue?.url ?? null, merge: merged?.merge, amount, ...(merged?.unasked === true ? { unasked: true } : {}), ...(merged?.partial !== undefined ? { partial: merged.partial } : {}), ...(opts?.firstMerge === true ? { firstMerge: true } : {}) });
+}
+
+// ---- BT36: whether a merged bounty's reward stands owed or is recorded paid
+//
+// The fact is a `paid` event on the record — the owner's word, written by
+// `box bounty config set paid <id>`; a second `paid` event marked
+// `withdrawn` takes a mistaken record back. The amount is always the bound
+// reward read fresh — never a number typed anywhere — and the tool never
+// checks, moves or enforces the money.
+
+export interface PaymentState {
+  /** The bound reward the merge earned — what stands (or stood) owed. */
+  readonly amount: number;
+  /** Whom the record says to pay: the pay outcome's account, else the
+      merged attempt's author; null when the record names neither. */
+  readonly solver: string | null;
+  /** The payment-link fact the record carries: 'recorded' a recognised
+      link was given, 'none' it was not, 'unknown' when this record keeps
+      no pay outcome (a shared record's link lives on the posting machine). */
+  readonly link: 'recorded' | 'none' | 'unknown';
+  /** When the owner recorded the payment, or null while it stands owed. */
+  readonly paidAt: string | null;
+}
+
+// The payment fact of one record, or null when nothing is owed: only a
+// merged (`applied`) bounty whose bound reward is above $0 owes anything.
+// The newest `paid` event wins — a withdrawn one leaves the bounty owed.
+export function paymentOf(record: BountyRecord): PaymentState | null {
+  const amount = boundAmount(record);
+  if (amount === undefined || amount <= 0 || record.stage !== 'applied') return null;
+  const paid = record.events.filter(event => event.stage === 'paid').at(-1);
+  const applied = record.events.filter(event => event.stage === 'applied').at(-1);
+  const attempt = applied?.attempt === undefined ? undefined : (record.attempts ?? []).find(entry => entry.n === applied.attempt);
+  return {
+    amount,
+    solver: record.github?.pay?.solver ?? attempt?.author ?? null,
+    link: record.github?.pay === undefined ? 'unknown' : record.github.pay.link !== null ? 'recorded' : 'none',
+    paidAt: paid === undefined || paid.withdrawn === true ? null : paid.at
+  };
 }
