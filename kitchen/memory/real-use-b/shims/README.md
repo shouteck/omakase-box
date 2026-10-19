@@ -1,0 +1,1 @@
+# K31b wrappers as deployed under %TEMP%\box-k31b. shim-gh.cmd was the only file in shim/ (a bare gh there would shadow it and fail CreateProcess); machine/ holds machine-a's six root wrappers (machine-b's differ only in settings dir + log name); solver/ holds each solver dir's three (log name differs per solver).

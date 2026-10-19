@@ -1,0 +1,112 @@
+Box bounty solver report — machine-b
+=====================================
+
+Bounty:  bt-ce3a99040849 — "shared/banner.txt: fix the platfrom typo"
+Issue:   https://github.com/shouteck/box-bounty-sandbox/issues/36
+Result:  pull request https://github.com/shouteck/box-bounty-sandbox/pull/38
+         head solve/bt-ce3a99040849-banner (commit 9ec8f49)
+         -> base box-bounty/bt-ce3a99040849
+
+Started:  Mon Oct 19 12:21:06 UTC 2026 (date -u, first command)
+Finished: Mon Oct 19 12:25:33 UTC 2026 (date -u)
+
+Working folder: C:\Users\shout\AppData\Local\Temp\box-k31b\machine-b
+(the machine-b clone of shouteck/box-bounty-sandbox — solved in place,
+no separate solver workspace; "work only inside machine-b" applied)
+
+How I understood the task
+-------------------------
+"Continue the work in this project." Reading the repo, the shared gh
+logs and machine-a's reports showed the open item: machine-a had posted
+bounty bt-ce3a99040849 for the one-word typo in shared/banner.txt and
+waited ~1h47m with no answer — its own agents may not edit shared/, so
+the fix must come from outside. I acted as that outside solver, the same
+role solver-a1/-a2a/-a2b/-a3 played for earlier bounties.
+
+Not done deliberately:
+- PRs #35 and #37 (machine-a's fix/* branches -> main) left open:
+  machine-a's reports say the merge is the owner's review step.
+- No `box bounty look`/`apply`: those are poster-side steps; collecting
+  is machine-a's next move.
+- main never pushed; solved on a solve/* branch via PR, per the rules.
+
+Commands run, in order
+----------------------
+ 1. date -u && ls -la                       — start time; orient
+ 2. cat README.md AGENTS.md; find . -type f — read rules and layout
+ 3. cat .box/bounties/* .box/hook-on.json .devin/hooks.v1.json
+                                           — prior bounty records
+ 4. git status / log / branch -a; cat box  — clean main at d9725d1;
+                                             wrapper uses scratch settings
+ 5. cat data/fruit.txt docs/inventory.md src/count.js src/fruit.js
+    test/inventory.test.js                 — read the project
+ 6. ls ../; node src/count.js --list       — saw machine-a, solver-*,
+                                             settings dirs; count = 8
+ 7. cat ../machine-a-task.md ../machine-a-report.txt
+                                           — machine-a had posted
+                                             bt-48ec2a94776d and waited
+ 8. cat gh; ./gh auth status               — logging shim; authed shouteck
+ 9. ./gh issue list; ./gh pr list; git fetch; git log origin/main
+                                           — issue #36 open (the banner
+                                             bounty); PRs #35/#37 open
+10. ./box bounty status                    — 1 open bounty:
+                                             bt-ce3a99040849, no solution
+11. ls ../machine-a; git log there         — machine-a local main 6 ahead
+                                             of origin (unpushed bounty
+                                             merges); its reports
+12. wc/cat ../gh-logs/*.jsonl              — reconstructed who did what;
+                                             solvers answer via PRs to
+                                             box-bounty/<id> branches
+13. ./gh issue view 36; ./gh pr view 35; ./gh pr view 37
+                                           — bounty spec in full; the
+                                             two PRs are machine-a's own
+14. cat ../solver-a1/REPORT.txt ../solver-a2b/report.txt
+    ../solver-a2a/REPORT.txt (tails)       — the solver pattern
+15. cat ../machine-a/report-*.txt (tails)  — confirmed: merge of fix PRs
+                                             is owner's step; bounty awaits
+                                             an outside solver
+16. git show/ls-tree/ls-remote on refs     — refs/heads/box-bounty/<id>
+                                             is the code branch (12cce2d,
+                                             poster WIP); refs/box-bounty/
+                                             <id> is the event chain
+17. git checkout -b solve/bt-ce3a99040849-banner
+    origin/box-bounty/bt-ce3a99040849      — branched from the bounty
+                                             code branch (12cce2d)
+18. edited shared/banner.txt               — "platfrom" -> "platform"
+19. git diff; node --test                  — exactly one word changed;
+                                             1 test, pass
+20. git add; git -c user.name=box-solver -c user.email=box-solver@localhost
+    commit; git push -u origin solve/bt-ce3a99040849-banner
+21. ./gh pr create --base box-bounty/bt-ce3a99040849
+    --head solve/bt-ce3a99040849-banner    — opened PR #38
+22. ./gh pr view 38; ./gh pr diff 38       — verified base/head/files
+23. git checkout main; git status -sb;
+    ./box bounty status bt-ce3a99040849    — back to clean main; tool
+                                             still shows "no solution yet"
+                                             (its own poll cadence)
+24. date -u                                — finish time
+
+What was unclear / surprises
+----------------------------
+- `origin/box-bounty/bt-ce3a99040849` first resolved to an orphan
+  event.json commit (2f06124); a later fetch force-updated it to the
+  code commit 12cce2d. Two server-side refs exist per bounty:
+  refs/box-bounty/<id> (event chain) and refs/heads/box-bounty/<id>
+  (PR target carrying the poster's WIP). First fetch raced a remote
+  update — second fetch was consistent.
+- `box bounty status` after opening PR #38 still reported "no solution
+  yet" — the tool refreshes GitHub state on its own cadence; the PR is
+  visible to gh immediately. Poster should run
+  `box bounty look bt-ce3a99040849 38` next.
+- data/fruit.txt has 8 fruit while docs/inventory.md still says "seven"
+  on ORIGIN/main — but on the bounty branch the a4fcb8f10668 merge
+  already removed the stated count, so node --test passes there. The
+  count drift on plain main is expected sandbox state (main on origin
+  lags machine-a's applied-but-unpushed merges).
+
+State left behind
+-----------------
+- PR #38 OPEN, awaiting the poster: box bounty look bt-ce3a99040849 38,
+  then apply if the one-word fix is what was wanted.
+- Local branches: main (clean, = origin/main), solve/bt-ce3a99040849-banner.
+- This report file, untracked, as prior drills did.

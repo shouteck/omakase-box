@@ -1,0 +1,75 @@
+Bounty report — solver a2a
+==========================
+
+Bounty: https://github.com/shouteck/box-bounty-sandbox/issues/30
+Bounty id: bt-930fd7566866
+Result: pull request https://github.com/shouteck/box-bounty-sandbox/pull/31
+        (head solver/bt-930fd7566866-names -> base box-bounty/bt-930fd7566866)
+
+Started:  Mon Oct 19 08:43:16 UTC 2026   (date -u)
+Finished: Mon Oct 19 08:46:08 UTC 2026   (date -u)
+
+Commands run, in order
+----------------------
+1.  date -u
+2.  ls -la "C:\Users\shout\AppData\Local\Temp\box-k31b\solver-a2a"
+3.  (read the three gh wrapper files: gh, gh.cmd, gh.ps1)
+4.  cd solver-a2a && ./gh issue view 30 --repo shouteck/box-bounty-sandbox
+5.  ./gh auth status
+6.  ./gh repo clone shouteck/box-bounty-sandbox repo
+7.  cd repo && git branch -a && git log --oneline -5 --all
+8.  ls -la && find . -type f -not -path "./.git/*" | sort
+9.  git checkout -b solver/bt-930fd7566866-names origin/box-bounty/bt-930fd7566866
+10. (read src/count.js, src/fruit.js, test/inventory.test.js,
+     data/fruit.txt, docs/inventory.md)
+11. node --version && node src/count.js && node src/count.js --list
+12. (edited src/count.js — see below)
+13. node src/count.js && node src/count.js --names &&
+    node src/count.js --list && node --test
+14. git add src/count.js && git status --short && git diff --cached
+15. git -c user.name="box-solver" -c user.email="box-solver@localhost" \
+      commit -m "count.js: add --names flag printing only fruit names"
+16. git push -u origin solver/bt-930fd7566866-names
+17. ../gh pr create --repo shouteck/box-bounty-sandbox \
+      --base box-bounty/bt-930fd7566866 \
+      --head solver/bt-930fd7566866-names \
+      --title "count.js: add --names flag printing only fruit names" --body "..."
+18. ./gh pr view 31 --repo shouteck/box-bounty-sandbox \
+      --json number,title,baseRefName,headRefName,state,url
+19. date -u
+
+How I understood the task
+-------------------------
+The issue asks for a new --names flag on src/count.js:
+- `node src/count.js --names` prints only the fruit names, one per line,
+  no count line.
+- No flag: output stays exactly `data/fruit.txt lists 8 fruit`.
+- `--list`: unchanged (count line, then each name).
+- `node --test` from the repository root must still pass.
+- Do not touch shared/; docs/inventory.md must keep matching the count
+  (the count does not change, so no doc edit needed).
+
+The change, in src/count.js: check for --names first; when present, print
+each name and nothing else. Otherwise run the original code path verbatim,
+so default and --list output are byte-for-byte identical to before.
+
+Verified on the branch before pushing:
+- node src/count.js          -> data/fruit.txt lists 8 fruit
+- node src/count.js --names  -> 8 lines, names only (apple..honeydew)
+- node src/count.js --list   -> count line + 8 names
+- node --test                -> 1 pass, 0 fail
+
+What was unclear
+----------------
+- Behaviour when --names and --list are passed together is unspecified.
+  I made --names take precedence (names only, no count line), which is the
+  reading most consistent with "--names prints only the fruit names".
+- Commit author identity was unspecified; I committed as
+  "box-solver <box-solver@localhost>" via -c flags, leaving global git
+  config untouched.
+
+Notes
+-----
+- main was never pushed to; work went to solver/bt-930fd7566866-names and
+  the PR targets the bounty branch as the issue instructs.
+- Nothing under shared/ was touched; no credentials were added.

@@ -1,0 +1,93 @@
+BOUNTY HANDOFF REPORT — bt-a4fcb8f10668
+Repository: C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a
+Task: remove the sentence in docs/inventory.md that states the fruit
+count ("The pantry list in `data/fruit.txt` holds eight fruit as of
+today.") — the owner calls it redundant.
+Constraint: hand off with `box bounty`; do not do the work myself.
+
+Started:  Mon Oct 19 08:50:00 UTC 2026  (date -u, run once)
+Finished: Mon Oct 19 10:24:09 UTC 2026  (date -u)
+
+EVERY COMMAND I RAN, IN ORDER
+1. date -u && ls -la — start timestamp; saw the prior drill's reports
+   and task file in the root.
+2. cat box box.cmd gh README.md bounty-task-names-flag.md — learned the
+   wrappers bake scratch settings and run a scratch-installed box; gh is
+   a logging shim over the real GitHub CLI.
+3. cat report-bt-930fd7566866.txt report-bt-930fd7566866-part-2.txt —
+   prior drill's journey: create → preview → post → poll → look → apply.
+4. cat docs/inventory.md test/inventory.test.js src/count.js
+   src/fruit.js data/fruit.txt — found the count sentence AND that the
+   only test asserts the note states a count matching the script.
+5. git status --short --branch && git log --oneline -8 — main ahead of
+   origin/main by 4 (prior drill merges); .box/bounties/OPEN modified;
+   prior task/report files untracked.
+6. node src/count.js / --list / --names && node --test — baseline: count
+   line "data/fruit.txt lists 8 fruit"; --names prints names only; suite
+   green (1 test).
+7. ./box bounty describe && ./box bounty status — tool allowed by owner,
+   reward $0, no open bounties, expected wait 0.1–1.4h.
+8. ./box bounty help — the journey and command syntax.
+9. Wrote bounty-task-inventory-count.md — the requirement, the observed
+   current file, solver notes (shared/ off-limits, no credentials) and
+   "What I tried: nothing — handed off before any attempt, on the
+   owner's instruction."
+10. ./box bounty create --task bounty-task-inventory-count.md --why
+    "inventory.md's count sentence is redundant; handed off on the
+    owner's instruction" --title "inventory.md: remove the redundant
+    fruit-count sentence" → drafted bt-a4fcb8f10668.
+11. ./box bounty post bt-a4fcb8f10668 --preview — checked what becomes
+    public: issue body = task text; only newly-published commit is the
+    prior drill's merge 872e8fc; my task file stays untracked; scan
+    clean. Pre-existing never-ship-named .box paths in public history
+    noted, not introduced by me.
+12. ./box bounty post bt-a4fcb8f10668 — posted. GitHub issue #33 on
+    shouteck/box-bounty-sandbox; branch box-bounty/bt-a4fcb8f10668.
+13. Polled ./box bounty status bt-a4fcb8f10668 (plain, --comments and
+    --full at times) plus ./gh pr list --json and ./gh issue view 33
+    --json at ~08:51, ~08:57, ~09:07, ~09:22, ~09:37, ~10:01, ~10:15
+    and ~10:24 UTC. Result every time: issue open, zero pull requests,
+    zero comments.
+14. date -u && git status --short --branch — finish timestamp; tree
+    unchanged except tool bookkeeping.
+
+DECISIONS AND WHY
+- Verified the baseline first so the task file states observed facts.
+- The owner's premise is wrong on one fact: the test does not merely
+  "check the note agrees with the script" — test/inventory.test.js
+  asserts the note STATES a count (regex `holds (\d+) ... fruit`) and
+  fails outright if it states none. Removing the sentence untouched
+  breaks `node --test`. Rather than silently posting a task whose
+  literal reading leaves a red suite — or fixing anything myself, which
+  the constraint forbids — I stated that fact in the task file: the
+  solver must update the test so it no longer requires a stated count
+  (e.g. check the note still points at `node src/count.js`) or drop the
+  dead check, keeping the suite green and honest. Requirements:
+  sentence removed, heading and pointer line kept, `node --test` passes,
+  data/fruit.txt and src/ untouched.
+- Ran post --preview before publishing because posting is public and
+  irreversible; the preview showed nothing unintended would go out.
+- Did NOT commit anything or push to main — forbidden here; the bounty
+  branch push was the tool's own mechanism.
+- Left the bounty open rather than closing it: the handoff's purpose is
+  an outside solution; none had arrived to judge. Same end-state as the
+  previous drill's first session, whose solutions arrived later.
+
+CONFUSIONS / TOOL QUIRKS
+- The stated expected wait (0.1–1.4h) elapsed with no solution: ~93
+  minutes after posting there was still no PR or comment. The bounty
+  stays posted and open; a solution may arrive later or never.
+- `sleep`-then-poll commands were backgrounded by the shell after 10s
+  each time; polling them with get_output worked fine. `./gh pr list
+  --json …` reliably prints `[]` for no PRs, unlike the plain
+  `gh issue view --comments` quirk noted in the prior report.
+
+STATE LEFT BEHIND
+- Bounty bt-a4fcb8f10668: posted/open — GitHub issue #33, branch
+  box-bounty/bt-a4fcb8f10668. Next step when a PR appears:
+  `box bounty look bt-a4fcb8f10668 <n>` then `apply` or `close`.
+- Working tree: .box/bounties/OPEN modified (tool bookkeeping),
+  untracked bounty-task-inventory-count.md, this report, plus the prior
+  drill's task/report files. No commits made by me; nothing pushed to
+  main. docs/inventory.md is unchanged — as required, the work itself
+  was handed off, not done.

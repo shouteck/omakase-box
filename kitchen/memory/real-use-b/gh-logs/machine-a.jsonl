@@ -1,0 +1,324 @@
+{"ts":"2026-10-19T06:23:04.941Z","cwd":"/tmp/box-k31b/machine-a","args":"auth status "}
+{"ts":"Mon 10/19/2026 14:23:15.12","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 14:23:15.29","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 14:23:15.76","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 14:23:20.71","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 14:23:21.00","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 14:23:21.59","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 14:23:22.26","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 14:23:29.32","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues?state=all
+{"ts":"Mon 10/19/2026 14:23:30.07","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/labels/box-bounty""}
+{"ts":"Mon 10/19/2026 14:23:30.65","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-1Iys2p\input.json""}
+{"ts":"Mon 10/19/2026 14:23:36.87","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 14:23:36.99","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 14:23:37.57","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 14:23:38.09","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"Mon 10/19/2026 14:25:42.99","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 14:25:43.11","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 14:25:43.66","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 14:25:44.20","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"Mon 10/19/2026 14:28:49.30","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 14:28:49.44","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 14:28:50.03","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 14:28:50.65","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"2026-10-19T06:28:54.191Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state all --limit 20 "}
+{"ts":"2026-10-19T06:28:55.059Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 28 --comments "}
+{"ts":"2026-10-19T06:32:00.479Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"Mon 10/19/2026 14:32:02.29","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 14:32:02.41","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 14:32:02.93","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 14:32:03.46","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"2026-10-19T06:34:48.167Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T06:37:53.056Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T06:37:53.731Z","cwd":"/tmp/box-k31b/machine-a","args":"api repos/shouteck/box-bounty-sandbox/issues/28/comments --jq .[].body "}
+{"ts":"2026-10-19T06:42:02.638Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T06:46:52.122Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T06:51:31.586Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T06:56:07.018Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"Mon 10/19/2026 15:00:42.41","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:00:42.53","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 15:00:43.08","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:00:43.63","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"2026-10-19T07:05:17.585Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T07:09:21.464Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T07:09:22.687Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 28 --json comments --jq .comments | length "}
+{"ts":"Mon 10/19/2026 15:11:35.27","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:11:35.40","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 15:11:35.95","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:11:36.55","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/29/files?per_page=100
+{"ts":"Mon 10/19/2026 15:11:37.32","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:11:45.70","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:11:45.81","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"Mon 10/19/2026 15:11:46.36","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:11:46.95","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/29/files?per_page=100
+{"ts":"Mon 10/19/2026 15:11:47.53","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:11:57.06","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:11:57.19","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/29""}
+{"ts":"Mon 10/19/2026 15:12:07.80","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:12:07.92","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 15:12:08.79","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "graphql" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-2JcDM8\input.json""}
+{"ts":"Mon 10/19/2026 15:12:09.47","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-3QSrBn\input.json""}
+{"ts":"Mon 10/19/2026 15:12:10.51","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28" "--method" "PATCH" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-082UsO\input.json""}
+{"ts":"Mon 10/19/2026 15:19:29.59","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:19:29.71","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/28""}
+{"ts":"2026-10-19T07:19:30.352Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 28 --repo shouteck/box-bounty-sandbox --json state,title "}
+{"ts":"2026-10-19T07:19:30.955Z","cwd":"/tmp/box-k31b/machine-a","args":"pr view 29 --repo shouteck/box-bounty-sandbox --json state,title,headRefName,baseRefName "}
+{"ts":"Mon 10/19/2026 15:21:25.73","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:21:25.89","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 15:21:26.42","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 15:21:32.04","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:21:32.15","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 15:21:32.62","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 15:21:33.15","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 15:21:38.23","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues?state=all
+{"ts":"Mon 10/19/2026 15:21:38.87","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/labels/box-bounty""}
+{"ts":"Mon 10/19/2026 15:21:39.44","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-jdxblI\input.json""}
+{"ts":"Mon 10/19/2026 15:21:46.17","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:21:46.28","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:21:46.82","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:21:47.32","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:24:51.84","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:24:51.96","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:24:52.51","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:24:53.39","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:31:59.90","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:32:00.01","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:32:00.55","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:32:01.08","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:40:05.83","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:40:06.01","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:40:06.73","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:40:07.42","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:40:08.01","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:40:08.68","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"2026-10-19T07:40:11.920Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state all --limit 10 "}
+{"ts":"Mon 10/19/2026 15:49:15.47","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:49:15.59","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:49:16.13","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:49:16.62","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 15:58:20.08","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 15:58:20.20","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 15:58:20.73","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 15:58:21.25","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 16:07:26.97","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:07:27.58","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 16:07:28.32","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 16:07:28.84","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 16:07:29.34","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 16:07:29.89","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"2026-10-19T08:07:33.433Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open "}
+{"ts":"2026-10-19T08:07:34.108Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 30 --comments "}
+{"ts":"2026-10-19T08:07:38.134Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 30 --comments "}
+{"ts":"2026-10-19T08:07:42.682Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 30 --json number,title,state,comments "}
+{"ts":"2026-10-19T08:07:43.531Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open --json number,title,headRefName "}
+{"ts":"Mon 10/19/2026 16:16:48.40","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:16:48.52","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 16:16:49.05","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 16:16:49.58","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 16:26:56.33","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:26:56.44","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 16:26:57.02","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 16:26:57.52","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 16:26:58.01","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 16:26:58.59","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"2026-10-19T08:26:59.369Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state open --json number,title,headRefName "}
+{"ts":"Mon 10/19/2026 16:47:57.80","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:47:57.94","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"Mon 10/19/2026 16:47:58.48","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 16:47:59.07","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/32/files?per_page=100
+{"ts":"Mon 10/19/2026 16:47:59.83","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/31/files?per_page=100
+{"ts":"Mon 10/19/2026 16:48:00.81","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments?per_page=100
+{"ts":"Mon 10/19/2026 16:48:05.74","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:48:05.86","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/31""}
+{"ts":"2026-10-19T08:48:13.134Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,author,headRefName,state "}
+{"ts":"Mon 10/19/2026 16:48:15.72","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:48:15.82","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/32""}
+{"ts":"Mon 10/19/2026 16:48:32.83","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:48:33.00","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 16:48:33.62","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "graphql" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-iOzmJG\input.json""}
+{"ts":"Mon 10/19/2026 16:48:34.42","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-rFkAWq\input.json""}
+{"ts":"Mon 10/19/2026 16:48:35.52","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-qvF0cA\input.json""}
+{"ts":"Mon 10/19/2026 16:48:36.55","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30" "--method" "PATCH" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-IeXNmP\input.json""}
+{"ts":"Mon 10/19/2026 16:48:56.10","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:48:56.25","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/30""}
+{"ts":"2026-10-19T08:49:05.145Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 30 --json number,state,title "}
+{"ts":"2026-10-19T08:49:05.785Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,state,title,headRefName "}
+{"ts":"2026-10-19T08:49:11.325Z","cwd":"/tmp/box-k31b/machine-a","args":"pr view 31 --json number,state,mergedAt "}
+{"ts":"2026-10-19T08:49:12.139Z","cwd":"/tmp/box-k31b/machine-a","args":"pr view 32 --json number,state,mergedAt "}
+{"ts":"Mon 10/19/2026 16:50:33.85","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:50:33.96","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 16:50:34.47","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 16:50:38.67","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:50:38.78","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 16:50:39.25","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 16:50:39.80","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 16:50:44.98","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues?state=all
+{"ts":"Mon 10/19/2026 16:50:46.10","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/labels/box-bounty""}
+{"ts":"Mon 10/19/2026 16:50:46.70","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-pk8HyF\input.json""}
+{"ts":"Mon 10/19/2026 16:50:52.54","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:50:52.68","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 16:50:53.49","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 16:50:54.19","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"Mon 10/19/2026 16:55:59.33","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 16:55:59.45","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 16:56:00.07","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 16:56:00.62","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"Mon 10/19/2026 17:06:04.99","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 17:06:05.11","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 17:06:05.82","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 17:06:06.38","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T09:06:06.975Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"Mon 10/19/2026 17:16:12.14","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 17:16:12.27","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 17:16:12.82","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 17:16:13.35","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"Mon 10/19/2026 17:16:13.87","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 17:16:14.80","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T09:16:15.798Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"Mon 10/19/2026 17:31:20.33","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 17:31:20.46","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 17:31:21.10","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 17:31:21.64","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T09:31:22.269Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"Mon 10/19/2026 17:46:27.25","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 17:46:27.39","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 17:46:27.97","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 17:46:28.48","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T09:46:29.075Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"2026-10-19T09:46:29.815Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 33 --json state,comments "}
+{"ts":"Mon 10/19/2026 18:01:34.85","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:01:34.99","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 18:01:35.64","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:01:36.23","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T10:01:36.858Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"Mon 10/19/2026 18:15:47.02","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:15:47.13","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 18:15:47.67","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:15:48.15","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T10:15:48.715Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"2026-10-19T10:15:49.402Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 33 --json state,comments "}
+{"ts":"Mon 10/19/2026 18:24:04.09","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:24:04.20","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 18:24:04.72","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:24:05.23","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T10:24:05.964Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"Mon 10/19/2026 18:26:23.50","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:26:23.66","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 18:26:24.29","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:26:24.95","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/34/files?per_page=100
+{"ts":"Mon 10/19/2026 18:26:25.74","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"Mon 10/19/2026 18:26:31.61","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:26:31.72","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33""}
+{"ts":"Mon 10/19/2026 18:26:32.33","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:26:33.02","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/34/files?per_page=100
+{"ts":"Mon 10/19/2026 18:26:33.69","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments?per_page=100
+{"ts":"2026-10-19T10:26:34.505Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,author,headRefName,state "}
+{"ts":"2026-10-19T10:26:35.570Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 33 --json title,state,comments "}
+{"ts":"Mon 10/19/2026 18:26:39.11","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:26:39.23","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/34""}
+{"ts":"Mon 10/19/2026 18:26:56.36","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:26:56.46","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 18:26:56.92","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "graphql" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-QjWmGn\input.json""}
+{"ts":"Mon 10/19/2026 18:26:57.64","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-AAEqBi\input.json""}
+{"ts":"Mon 10/19/2026 18:26:58.69","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-Drpb0c\input.json""}
+{"ts":"Mon 10/19/2026 18:26:59.65","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/33" "--method" "PATCH" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-pRN2Em\input.json""}
+{"ts":"2026-10-19T10:27:15.743Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,state "}
+{"ts":"2026-10-19T10:27:16.516Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 33 --json state,title "}
+{"ts":"2026-10-19T10:27:17.329Z","cwd":"/tmp/box-k31b/machine-a","args":"pr view 34 --json state,mergedAt "}
+{"ts":"2026-10-19T10:28:38.752Z","cwd":"/tmp/box-k31b/machine-a","args":"auth status "}
+{"ts":"2026-10-19T10:28:45.567Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --state all --json number,title,headRefName,state --limit 20 "}
+{"ts":"2026-10-19T10:30:17.595Z","cwd":"/tmp/box-k31b/machine-a","args":"pr create --base main --head fix/deploy-sh-restart-status --title tools/deploy.sh: report fruitd restart failure and print active state --body tools/deploy.sh prints \"fruitd restarted OK\" unconditionally, even when `systemctl restart fruitd` fails.
+
+This change checks the restart's exit status:
+- on failure it prints an error to stderr and exits 1;
+- on success it still prints the OK line, then prints the service's real active state via `systemctl is-active fruitd` (which also leaves the script non-zero if fruitd somehow is not active after a successful restart).
+
+Verified locally by stubbing `systemctl` on PATH: restart-success prints \"fruitd restarted OK\" + \"active\" with exit 0; restart-failure prints the error and exits 1 without the OK line. The real check can only happen on the pantry server (Debian/systemd). "}
+{"ts":"2026-10-19T10:30:24.761Z","cwd":"/tmp/box-k31b/machine-a","args":"pr view 35 --json number,title,state,baseRefName,headRefName,commits,files --jq {number,title,state,base:.baseRefName,head:.headRefName,commits:[.commits[].oid],files:[.files[].path]} "}
+{"ts":"Mon 10/19/2026 18:31:57.61","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:31:57.72","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 18:31:58.18","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 18:32:02.87","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:32:02.98","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""auth" "status" "--hostname" "github.com""}
+{"ts":"Mon 10/19/2026 18:32:03.49","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox""}
+{"ts":"Mon 10/19/2026 18:32:04.02","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 18:32:09.19","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues?state=all
+{"ts":"Mon 10/19/2026 18:32:10.07","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/labels/box-bounty""}
+{"ts":"Mon 10/19/2026 18:32:10.66","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-mORpfA\input.json""}
+{"ts":"Mon 10/19/2026 18:32:22.45","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:32:22.60","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36""}
+{"ts":"Mon 10/19/2026 18:32:23.13","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:32:23.66","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments?per_page=100
+{"ts":"2026-10-19T10:32:24.734Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,state "}
+{"ts":"Mon 10/19/2026 18:34:00.19","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 18:34:00.32","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36""}
+{"ts":"Mon 10/19/2026 18:34:00.86","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 18:34:01.76","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments?per_page=100
+{"ts":"2026-10-19T10:34:02.362Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:36:14.872Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:38:15.892Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:40:16.829Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:42:17.764Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:44:18.524Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:46:19.445Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,title,headRefName,baseRefName,state "}
+{"ts":"2026-10-19T10:48:52.740Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T10:51:23.614Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T10:53:54.331Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T10:56:25.085Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T10:58:55.907Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:01:26.729Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:03:57.560Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:06:28.362Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:08:59.193Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:11:30.213Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"Mon 10/19/2026 19:11:35.79","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 19:11:35.98","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36""}
+{"ts":"Mon 10/19/2026 19:11:36.79","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 19:11:37.98","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments?per_page=100
+{"ts":"2026-10-19T11:11:38.619Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 36 --json state,comments --jq {state, commentCount: (.comments|length)} "}
+{"ts":"2026-10-19T11:14:33.265Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:17:25.120Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:20:16.249Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:23:07.076Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:25:57.856Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:28:48.635Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:31:39.527Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:34:30.333Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:37:21.116Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:40:11.953Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:43:06.797Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:45:58.082Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:48:49.202Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:51:40.188Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:54:31.131Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T11:57:21.962Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:00:12.857Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:03:03.642Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:05:54.542Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:08:45.347Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:11:26.847Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:13:57.715Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:16:28.666Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:18:59.458Z","cwd":"/tmp/box-k31b/machine-a","args":"pr list --json number,headRefName,baseRefName "}
+{"ts":"2026-10-19T12:19:00.144Z","cwd":"/tmp/box-k31b/machine-a","args":"issue view 36 --json comments --jq .comments|length "}
+{"ts":"Mon 10/19/2026 20:19:05.38","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 20:19:05.49","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36""}
+{"ts":"Mon 10/19/2026 20:19:05.99","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 20:19:06.49","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments?per_page=100
+{"ts":"2026-10-19T12:20:09.140Z","cwd":"/tmp/box-k31b/machine-a","args":"auth status "}
+{"ts":"2026-10-19T12:20:13.649Z","cwd":"/tmp/box-k31b/machine-a","args":"auth status "}
+{"ts":"2026-10-19T12:20:29.337Z","cwd":"/tmp/box-k31b/machine-a","args":"pr create --base main --head fix/readme-repository-typo --title README: fix \"repositoriy's\" typo in first paragraph --body Fixes the spelling in the README's first paragraph: \"run by the repositoriy's owner\" -> \"run by the repository's owner\". One-word change, nothing else touched. "}
+{"ts":"2026-10-19T12:20:33.570Z","cwd":"/tmp/box-k31b/machine-a","args":"pr view 37 --json number,state,baseRefName,headRefName,commits,files "}
+{"ts":"Mon 10/19/2026 20:30:56.18","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 20:30:56.39","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36""}
+{"ts":"Mon 10/19/2026 20:30:57.07","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls?state=open
+{"ts":"Mon 10/19/2026 20:30:57.80","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/38/files?per_page=100
+{"ts":"Mon 10/19/2026 20:30:58.52","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments?per_page=100
+{"ts":"Mon 10/19/2026 20:31:09.09","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 20:31:09.25","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/pulls/38""}
+{"ts":"Mon 10/19/2026 20:31:21.33","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""version""}
+{"ts":"Mon 10/19/2026 20:31:21.45","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "user""}
+{"ts":"Mon 10/19/2026 20:31:21.95","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "graphql" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-XVZUzR\input.json""}
+{"ts":"Mon 10/19/2026 20:31:22.79","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-cb1uCO\input.json""}
+{"ts":"Mon 10/19/2026 20:31:24.26","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36/comments" "--method" "POST" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-ELh0rB\input.json""}
+{"ts":"Mon 10/19/2026 20:31:25.32","cwd":"C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a","args":""api" "--hostname" "github.com" "repos/shouteck/box-bounty-sandbox/issues/36" "--method" "PATCH" "--input" "C:\Users\shout\AppData\Local\Temp\box-bt6-gh-yaMdV6\input.json""}
