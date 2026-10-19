@@ -1,0 +1,8 @@
+#!/bin/sh
+# K31 gh-start counter. Logs every gh invocation as one JSON line to
+# $K31_GH_LOG (or the fallback path), then execs the real gh unchanged.
+# Counting model: one line written == one gh process started.
+LOG="${K31_GH_LOG:-/c/Users/shout/AppData/Local/Temp/box-k31/gh-logs/unknown.jsonl}"
+ARGS=$(printf '%s ' "$@" | sed 's/\\/\\\\/g; s/"/\\"/g')
+printf '{"ts":"%s","cwd":"%s","args":"%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" "$PWD" "$ARGS" >> "$LOG" 2>/dev/null
+exec "/c/Program Files/GitHub CLI/gh" "$@"
