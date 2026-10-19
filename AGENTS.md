@@ -33,11 +33,10 @@ The same brigade on every host; [kitchen/README.md](kitchen/README.md) has the f
 - **Cook (worker)** implements one brief on one branch.
 - **The pass (reviewer)** verifies the cook's exact commit. Never the agent that wrote it, and it reports to the head chef, never to a station. Usually the same model family as the cook; a fresh agent is what makes it independent.
 - **Blind taster (recipient)**, from D2.2, attempts a change using only an exported Box, with no access to this repository.
-- **Station chef (lead)** runs several cooks on one station. It exists only after the promotion rule in kitchen/README.md is met.
 
 Role instructions live in `kitchen/roles/` and station knowledge in `kitchen/stations/`. They are plain files, so nothing depends on one host's features: a host with named agent profiles uses them, and any other host starts a fresh agent and hands it the role file, the wave file and the station card.
 
-Today the kitchen has one stove: head chef, one cook, the pass. Every brief names a station, and the cook and the pass read that station's card. Three levels is the most the brigade ever has.
+Today the kitchen has one stove: head chef, one cook, the pass — two levels, the whole brigade. Every brief names a station, and the cook and the pass read that station's card.
 
 ## Who decides what
 

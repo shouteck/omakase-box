@@ -199,7 +199,7 @@ describe('kitchenSuiteReason — when a diff owes test:kitchen (K22)', () => {
 
   it('a docs-only diff owes nothing', () => {
     expect(reason(['docs/box-v4/PLAN.md'])).toBeNull();
-    expect(reason(['kitchen/roles/worker.md'])).toBeNull();
+    expect(reason(['kitchen/demo/RECORDING.md'])).toBeNull();
     expect(reason(['packages/other-lib/index.ts'])).toBeNull(); // no demo drives that package
     expect(reason([])).toBeNull();
   });
@@ -252,6 +252,9 @@ describe('the hosted workflow mirrors INERT (K22)', () => {
     'packages/box-bounty/index.ts', 'scripts/suite.mjs', 'package.json',
     'tests/kitchen/x.test.ts', '.github/workflows/verify.yml',
     'docs/box-v4/PLAN.md', 'README.md', 'kitchen/README.md', 'kitchen/roles/worker.md',
+    'kitchen/stations/packaging.md', 'kitchen/stations/evidence.md', 'templates/wave.md',
+    '.devin/rules/box-kitchen.md', '.claude/skills/kitchen/SKILL.md', '.cursor/rules/box-kitchen.mdc',
+    '.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md', '.devin/plugins/box-pstack/DEVIN-COMPATIBILITY.md',
     'kitchen/demo/RECORDING.md', 'templates/x.md', 'milestones/x.md', 'research/x.md',
     'tasks/x.md', '.devin/rules/x.md', '.cursor/x.mdc', '.gitignore', 'waves/x.txt', 'docs/legacy/x.md',
   ];

@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readRuns } from './kitchen-stats.mjs';
+import { readRuns, LIVE_RULE_FILES } from './kitchen-stats.mjs';
 import { root, runNode } from './process.mjs';
 
 // --- which suites `check` owes a diff ----------------------------------------
@@ -41,7 +41,12 @@ export const KITCHEN_TEST_READS = [
   'kitchen/demo/gh-standin.cjs',
   'kitchen/demo/record.mjs',
 ];
-const isKitchenRead = path => KITCHEN_TEST_READS.includes(path) || /^waves\/[^/]+\.md$/.test(path);
+// K35: the K35 rulebook guard (kitchen-stats checkLimits) reads every live
+// rule, role, station-card and host-adapter file — LIVE_RULE_FILES is the
+// same list it scans, and the role/station directories it enumerates are the
+// two prefixes here, so reach and coverage cannot drift apart.
+const isKitchenRead = path => KITCHEN_TEST_READS.includes(path) || LIVE_RULE_FILES.includes(path)
+  || /^waves\/[^/]+\.md$/.test(path) || /^kitchen\/(roles|stations)\/[^/]+\.md$/.test(path);
 // Prose and process only: no test reads these.
 export const isInert = path => !isKitchenRead(path) && (path.endsWith('.md') || /^(docs|waves|kitchen|templates|milestones|research|tasks|\.devin|\.cursor)\//.test(path) || path === '.gitignore');
 function checkSuitesForPath(path) {

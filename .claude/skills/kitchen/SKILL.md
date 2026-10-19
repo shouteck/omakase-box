@@ -9,5 +9,5 @@ Specific to Claude Code:
 
 - It has no pstack plugin, so read the mode file the role names instead of invoking a skill.
 - Dispatch the `box-worker` and `box-reviewer` subagents, one at a time, each with a complete standalone prompt naming the wave file, and the commit SHA for the reviewer. `box-recipient` is given only the Box folder path.
-- Subagents here cannot start their own subagents. If a station is ever promoted, its station chef must be a separate Claude session, not a subagent.
+- Subagents here cannot start their own subagents.
 - Use `git -c safe.directory=C:/Users/shout/Desktop/Projects/private-task-mvp <arguments>` for every Git call.

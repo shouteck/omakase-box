@@ -8,38 +8,26 @@ One structure for every host: Claude Code, Devin, Codex, OpenCode, Cursor or any
 |---|---|---|---|
 | Owner | CEO (the human) | Sets the menu, approves each milestone | none |
 | Head chef | CTO | Writes briefs, dispatches, merges, reports. Never cooks | [roles/cto.md](roles/cto.md) |
-| Station chef | Lead of one station | Runs several cooks on one station. Only after promotion, see below | [roles/station-chef.md](roles/station-chef.md) |
 | Cook | Worker | Implements one brief on one branch | [roles/worker.md](roles/worker.md) |
-| The pass | Reviewer | Checks the cook's exact commit. Reports to the head chef, never to a station | [roles/reviewer.md](roles/reviewer.md) |
+| The pass | Reviewer | Checks the cook's exact commit. Reports to the head chef | [roles/reviewer.md](roles/reviewer.md) |
 | Blind taster | Recipient | Attempts a change from an exported Box alone | [roles/recipient.md](roles/recipient.md) |
 
 The **research lab** (branch `lab`, its own worktree) is paused by the owner as of 10 October 2026. The kitchen does not read, answer or sync it. Its prototypes are reference reading only; anything the product needs is rebuilt as a reviewed wave.
 
 ## Stations
 
-A station is a cuisine: an area of the product with its own knowledge, traps and checks. Each has a one-page card. Every brief names one station, and the cook and the reviewer read that card with the brief.
+A station is a cuisine: an area of the product with its own knowledge, traps and checks. Each has a one-page card — bounded, today, at 12,288 UTF-8 bytes, enforced by `scripts/kitchen-stats.mjs`. Every brief names one station, and the cook and the reviewer read that card with the brief.
 
 | Station | Covers | Card |
 |---|---|---|
-| Packaging | Selecting source for a Box, export, clean-directory proof, submit, verify | [stations/packaging.md](stations/packaging.md) |
-| Service and data | Retired platform reference; current bounty memory uses Packaging | [stations/service-data.md](stations/service-data.md) |
-| Console | Retired web apps; current CLI and terminal demo use Packaging | [stations/console.md](stations/console.md) |
+| Packaging | Selecting source for a Box, export, clean-directory proof, submit, verify, and the bounty tool's journey | [stations/packaging.md](stations/packaging.md) |
 | Evidence | Measurements, comparisons, what may be claimed | [stations/evidence.md](stations/evidence.md) |
 
-A card is knowledge, not a manager. At wave close, the Reflect step adds to the card whatever the next cook on that station would want to have known. Keep each card to one page; replace stale lines instead of appending.
+A card is knowledge, not a manager. At wave close, the Reflect step adds to the card whatever the next cook on that station would want to have known. Replace stale lines instead of appending; a trap's story stays in the wave file that taught it.
 
-## The shape, and when it grows
+## The shape
 
-**Today: one stove.** Head chef, one cook, the pass. One wave at a time. Stations exist as cards only.
-
-**Promote a station to a station chef when either is true:**
-
-- two waves on different stations can really run at the same time, which needs more capacity than one machine running one heavy job (more capacity is the owner's decision); or
-- the head chef has more waves in flight than it can track, roughly more than ten.
-
-Then the shape is head chef, a station chef per busy station, and cooks under each. Three levels, never more. The station chef writes its cooks' briefs and reports one rollup per wave, not raw cook reports. The pass stays with the head chef so that no station checks its own plates. When the station goes quiet, the station chef goes away and the card remains.
-
-Do not add a station chef to manage a single cook. Each layer re-reads the whole context and loses detail in the relay.
+**One stove.** Head chef, one cook, the pass. One wave at a time on the main checkout; genuinely parallel writers get separate worktrees, one writer per branch. The retired lead layer and the archived station cards are history (K35): there is no lead role to dispatch and no third level — if parallel capacity is ever needed, that is a new owner decision, not a dormant rule to revive.
 
 ## How much gets cooked
 

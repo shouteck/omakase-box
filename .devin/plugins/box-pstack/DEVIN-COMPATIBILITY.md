@@ -11,7 +11,7 @@ Use only in the Box kitchen repository selected by START.md and `.execution/ACTI
 | Retained source assumption | Box Devin behavior |
 | --- | --- |
 | Cursor Task, subagent_type, generalPurpose or poteto-agent | Use actual Devin run_subagent/read_subagent schemas and registered Box profiles. No alias executable or fabricated Task arguments. |
-| Coordinator implements, synthesizes or grafts code | CTO and leads coordinate and write scoped governance. A bounded box-worker owns product implementation/synthesis; distinct box-reviewer verifies the final immutable candidate. |
+| Coordinator implements, synthesizes or grafts code | The CTO coordinates and writes scoped governance. A bounded box-worker owns product implementation/synthesis; distinct box-reviewer verifies the final immutable candidate. |
 | Readonly/agent/Ask mode or run_in_background flags | Registered profile tools plus actual foreground/background permissions determine behavior. First rehearsal is foreground/sequential; no permission auto-grants. |
 | Inline grok/claude/gpt model defaults or model arrays | Ignore upstream model defaults. Preserve existing configuration; custom profiles without model use router/admin default. Multi-model diversity is unverified unless actual profiles/models are approved and observed. |
 | Mandatory parallel arena or one agent per evidence category | Approved budget, available slots and work ownership determine count. Serialize/rotate on this host. A reduced panel is a documented adaptation; do not claim original diversity proof. |
