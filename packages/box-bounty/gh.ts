@@ -57,6 +57,10 @@ export interface GitHubPublication {
       say they were not scanned; never a hold. */
   scanBinary?: readonly string[];
   outside?: { readonly at: string; readonly issueState: 'open' | 'closed'; readonly answers: string };
+  /** The fact set the recorded `outside.answers` was listed from (BT39): a
+      matching key means the stored listing is still exact and the
+      per-request file reads do not have to run again. */
+  answersKey?: string;
   unavailableAt?: string | null;
   /** The last refresh failure's own reason name — 'github-command-failed',
       'github-issue-mismatch', ... — so status can say what failed (F6). */
