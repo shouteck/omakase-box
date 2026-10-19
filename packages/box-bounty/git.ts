@@ -134,6 +134,14 @@ export function asOneCommand<T>(run: () => T): T {
   }
 }
 
+// Git output that grows with the repository — a tree listing, a diff, a
+// config dump — gets the same explicit ceiling the cat-file paths set, never
+// Node's 1 MiB default. Anything past it is a named failure (checked() throws
+// GitFailed with the command), never a truncation or a fallback to partial
+// output. Buffer, not stream: spawnSync carries no streaming mode, so this is
+// the largest listing the tool will read in one call.
+export const GIT_OUTPUT_LIMIT = 512 * 1024 * 1024;
+
 // Never content, so never a question of whose: hooks, signing programs, the
 // file-system monitor, background maintenance, submodule recursion and an
 // external diff program are off for every call the tool makes. None of them
@@ -155,7 +163,7 @@ export function commandConfig(repo: string): readonly ConfigEntry[] {
   const remembered = pinsByRepo ?? commandPins;
   const known = remembered?.get(repo);
   if (known !== undefined) return known;
-  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo, 'config', '-z', '--show-origin', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true });
+  const config = spawnSync(gitProgram(), ['-c', `safe.directory=${repo.replaceAll(BACKSLASH, '/')}`, ...ALWAYS, '-C', repo, 'config', '-z', '--show-origin', '--get-regexp', CONFIG_KEYS], { encoding: 'utf8', env: gitEnvironment(), windowsHide: true, maxBuffer: GIT_OUTPUT_LIMIT });
   if (config.error !== undefined || config.status !== 0 && config.status !== 1) throw new GitFailed('Git configuration could not be read safely; nothing was run');
   // With -z each record is `origin\0 key\nvalue\0` — alternating fields.
   const entries: ConfigEntry[] = [];
@@ -204,7 +212,8 @@ function run(repo: string, args: readonly string[], env: GitEnv, content: GitCon
   const result = spawnSync(program, [...safeArgs(repo, args, content), ...safe], {
     encoding: 'utf8',
     env: gitEnvironment(env),
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', ...(result.error !== undefined ? { error: result.error } : {}) };
 }
@@ -245,7 +254,8 @@ export function gitFilteredBlob(repo: string, path: string, bytes: Buffer): stri
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['hash-object'], 'owner'), 'hash-object', '-w', '--stdin', `--path=${path}`], {
     input: bytes,
     env: gitEnvironment(),
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`)).trim();
@@ -262,7 +272,8 @@ export function gitWriteBlob(repo: string, bytes: Buffer): string {
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['hash-object'], 'foreign'), 'hash-object', '-t', 'blob', '-w', '--stdin'], {
     input: bytes,
     env: gitEnvironment(),
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() ?? result.error?.message ?? `exit ${result.status}`).trim();
@@ -334,7 +345,7 @@ export function dryMergeOnto(repo: string, theirs: string): DryMerge {
 export function gitBlob(repo: string, commit: string, path: string, env: GitEnv = {}): Buffer | null {
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', 'blob', `${commit}:${path}`], {
     env: gitEnvironment(env),
-    maxBuffer: 512 * 1024 * 1024,
+    maxBuffer: GIT_OUTPUT_LIMIT,
     windowsHide: true
   });
   if (result.status !== 0 || result.error !== undefined) return null;
@@ -349,7 +360,7 @@ function gitBatchBlobs(repo: string, names: readonly string[]): Map<string, Buff
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['cat-file'], 'foreign'), 'cat-file', '--batch'], {
     input: names.join('\n') + '\n',
     env: gitEnvironment(),
-    maxBuffer: 512 * 1024 * 1024,
+    maxBuffer: GIT_OUTPUT_LIMIT,
     windowsHide: true
   });
   if (result.error !== undefined) throw result.error;
@@ -397,7 +408,8 @@ export function gitObjectCheck(repo: string, names: readonly string[]): Map<stri
     input: names.join('\n') + '\n',
     env: gitEnvironment(),
     encoding: 'utf8',
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   const lines = (result.stdout ?? '').split('\n');
   names.forEach((name, index) => {
@@ -426,7 +438,8 @@ export function gitIndexWrite(repo: string, index: string, changes: readonly Ind
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['update-index'], 'foreign'), 'update-index', '-z', '--index-info'], {
     input,
     env: gitEnvironment({ GIT_INDEX_FILE: index }),
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();
@@ -446,7 +459,8 @@ export function gitStdin(repo: string, args: readonly string[], input: string | 
     input,
     encoding: 'utf8',
     env: gitEnvironment(env),
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr ?? '') || result.error?.message || `exit ${result.status}`).trim();
@@ -461,7 +475,8 @@ export function gitRefsWrite(repo: string, writes: readonly RefWrite[]): void {
   const result = spawnSync(gitProgram(), [...safeArgs(repo, ['update-ref'], 'foreign'), 'update-ref', '--stdin'], {
     input,
     env: gitEnvironment(),
-    windowsHide: true
+    windowsHide: true,
+    maxBuffer: GIT_OUTPUT_LIMIT
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = (result.stderr?.toString() || result.error?.message || `exit ${result.status}`).trim();

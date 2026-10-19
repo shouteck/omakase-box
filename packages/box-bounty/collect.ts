@@ -16,9 +16,41 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with box bounty close ${id}`;
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
+  // Every fact a listing line prints except the changed-file names — one
+  // pull-request listing read, no per-request file calls yet. A head sha
+  // pins a pull request's file list, so when this fact set is unchanged the
+  // recorded answers text is still exactly what GitHub would list: it is
+  // reused and the per-request `pulls/<n>/files` reads do not run. Any new,
+  // re-pushed or collected request changes the key and pays the full read.
+  const facts: { entry: unknown; n: number; commit: string; author: string; payTo: PayToFact }[] = [];
+  for (const entry of data) {
+    if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
+    const n = number(entry['number']);
+    if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit');
+    facts.push({ entry, n, commit: entry['head']['sha'], author: login(entry['user']['login']), payTo: parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '') });
+  }
+  const pays = boundAmount(record) !== undefined && boundAmount(record)! > 0;
+  const key = JSON.stringify([pays, facts.map(fact => [fact.n, fact.commit, fact.author, fact.payTo,
+    record.github!.seenPullRequests?.find(seen => seen.n === fact.n && seen.commit === fact.commit)?.at ?? 'new',
+    record.attempts?.find(attempt => attempt.commit === fact.commit)?.n ?? null])]);
+  const stamp = (fact: (typeof facts)[number]) =>
+    record.github!.seenPullRequests?.find(seen => seen.n === fact.n && seen.commit === fact.commit)?.at
+      ?? record.github!.availablePullRequests?.find(pr => pr.n === fact.n && pr.commit === fact.commit)?.at
+      ?? new Date().toISOString();
+  if (record.github.outside !== undefined && record.github.answersKey === key) {
+    record.github.availablePullRequests = facts.map(fact => ({ n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo }));
+    for (const fact of facts) {
+      if (shown && record.github.seenPullRequests?.find(seen => seen.n === fact.n && seen.commit === fact.commit) === undefined) {
+        record.github.seenPullRequests = [...record.github.seenPullRequests ?? [], { n: fact.n, commit: fact.commit, at: stamp(fact), author: fact.author, payTo: fact.payTo }];
+      }
+    }
+    persistRecord(root, record);
+    return record.github.outside.answers;
+  }
+  const answersKey = key;
   const lines = [`GitHub answers for ${id} against ${branch}:`];
   const available: NonNullable<GitHubPublication['availablePullRequests']> = [];
-  for (const entry of data) {
+  for (const { entry } of facts) {
     if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
     const n = number(entry['number']);
     if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit');
@@ -39,6 +71,7 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   }
   if (data.length === 0) lines.push('  none open; wait for one or close the bounty');
   record.github.availablePullRequests = available;
+  record.github.answersKey = answersKey;
   persistRecord(root, record);
   return lines.join('\n');
 }

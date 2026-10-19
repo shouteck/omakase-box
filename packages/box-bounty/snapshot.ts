@@ -1,4 +1,4 @@
-import { realpathSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 import { BountyRefused } from './errors.js';
 import { git, gitOutcome, ownerGit } from './git.js';
@@ -50,10 +50,22 @@ export function createSnapshotCommit(repoRoot: string, workDir: string): { commi
   const head = gitOutcome(repoRoot, ['rev-parse', '--verify', '-q', 'HEAD']);
   const baseCommit = head.status === 0 && /^[a-f0-9]{40}$/.test(head.stdout.trim()) ? head.stdout.trim() : null;
   const env = { GIT_INDEX_FILE: join(workDir, 'snapshot-index') };
+  // Seeding the temporary index from a bare `read-tree` leaves every stat
+  // field empty, so `add -A` re-hashes every file in the repository — the
+  // dominant cost of create at scale (BT39). A byte copy of the real index
+  // carries the stat cache instead: unchanged files are recognised by stat,
+  // exactly as they are in the owner's own `git add`, and only changed,
+  // staged and new files are hashed. The real index is read, never written —
+  // the copy is the one GIT_INDEX_FILE points at. A racily-clean file (same
+  // stat, different bytes) is missed by Git's own rule either way; this copy
+  // changes nothing about that rule.
+  const realIndex = join(repoRoot, '.git', 'index');
+  if (existsSync(realIndex)) copyFileSync(realIndex, env.GIT_INDEX_FILE);
+  else ownerGit(repoRoot, ['read-tree', ...(baseCommit !== null ? [baseCommit] : ['--empty'])], env);
   // The owner's working state and nothing else: the owner's clean filters run,
   // so what ships is what the owner's own commit would store (a git-lfs pointer,
   // a git-crypt ciphertext), never the working-tree form.
-  ownerGit(repoRoot, ['read-tree', ...(baseCommit !== null ? [baseCommit] : ['--empty'])], env);
+  //
   ownerGit(repoRoot, ['add', '-A'], env);
   const tree = ownerGit(repoRoot, ['write-tree'], env);
   const commit = git(repoRoot, [

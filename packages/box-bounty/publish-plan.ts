@@ -60,7 +60,10 @@ function gitStdin(repo: string, args: readonly string[], input: string): string 
     input,
     encoding: 'utf8',
     env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
-    windowsHide: true
+    windowsHide: true,
+    // rev-list output grows with history — the same named ceiling every
+    // other Git read carries (GitFailed via the check below).
+    maxBuffer: 512 * 1024 * 1024
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr ?? '') || (result.stdout ?? '') || result.error?.message || `exit ${result.status}`).trim();
