@@ -10,4 +10,4 @@ Updated by the CTO on 19 October 2026 at the K38 close.
 
 ## Next
 
-This run stops after K38. No wave in flight. Roadmap order next: K39 (scale-target measurements) and BT38 (direct proofs + dead-helper removal) both have briefs; BT33 parked; BT12 Part B deferred.
+This run was started with `START.md: K39` on 19 October 2026. Dispatching K39 only: measure the four scale targets (`create` 1k/10k/100k files, whole `post`, 100 solutions on one bounty, `apply` and `close` at 1,000 records vs 10) with five runs each via `kitchen/memory/scale/measure.mjs` and report in `kitchen/reviews/K39-scale.md`. No product or test edits, no deletions, no external actions. Stop after K39; BT38 has a brief; BT33 parked; BT12 Part B deferred.
