@@ -149,8 +149,8 @@ describe('verify writes started.json before any step work (end to end)', () => {
     const pnpmBin = join(dir, 'scripts', 'tooling', 'node_modules', 'pnpm', 'bin');
     mkdirSync(pnpmBin, { recursive: true });
     writeFileSync(join(pnpmBin, 'pnpm.cjs'), "const { spawnSync } = require('child_process');\nconst { readFileSync } = require('fs');\nconst { join } = require('path');\nconst scripts = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).scripts;\nconst name = process.argv[process.argv.indexOf('run') + 1];\nconst command = scripts[name];\nif (!command) process.exit(2);\nprocess.exit(spawnSync(command, { shell: true, stdio: 'inherit', cwd: process.cwd() }).status ?? 1);\n");
-    const gated = 'node -e "const fs=require(\'fs\');fs.writeFileSync(process.env.MARKER,\'ready\');const t=setInterval(()=>{if(fs.existsSync(process.env.RELEASE)){clearInterval(t);process.exit(0)}},25)"';
-    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { 'test:x': gated } }));
+    const gated = 'node -e "const fs=require(\'fs\');fs.writeFileSync(process.env.MARKER,\'ready\');const t=setInterval(()=>{if(fs.existsSync(process.env.RELEASE)){clearInterval(t);if(process.env.EXITED)fs.writeFileSync(process.env.EXITED,\'done\');process.exit(0)}},25)"';
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fake-repo', private: true, scripts: { 'test:x': gated, 'test:fail': 'node -e "process.exit(7)"' } }));
     writeFileSync(join(dir, '.gitignore'), '.kitchen/\n');
     writeFileSync(join(dir, 'tracked.txt'), 'base\n');
     const gitDir = dir.replace(/[\\/]+$/, '').replaceAll(String.fromCharCode(92), '/');
@@ -171,8 +171,9 @@ describe('verify writes started.json before any step work (end to end)', () => {
     const head = git(['rev-parse', 'HEAD']);
     const marker = join(dir, '.kitchen', 'marker.txt'); // under .kitchen/ — gitignored, never dirties the tree
     const release = join(dir, '.kitchen', 'release.txt');
+    const exited = join(dir, '.kitchen', 'exited.txt');
     const runsDir = join(dir, '.kitchen', 'runs');
-    const env = { ...process.env, MARKER: marker, RELEASE: release };
+    const env = { ...process.env, MARKER: marker, RELEASE: release, EXITED: exited };
 
     // 1 — kill the verifier mid-step: started.json survives, summary never appears.
     const killed = spawn(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--only', '--db=none', 'test:x'], { cwd: dir, env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -199,6 +200,7 @@ describe('verify writes started.json before any step work (end to end)', () => {
       writeFileSync(release, 'go'); // let the orphaned gated step exit on its own
       if (killed.exitCode === null && killed.signalCode === null) killed.kill('SIGKILL');
     }
+    await waitFor(exited); // the orphan really exited — not merely released
 
     const names = () => new Set(existsSync(runsDir) ? readdirSync(runsDir) : []);
     const newDir = (before: Set<string>) => join(runsDir, readdirSync(runsDir).find(name => !before.has(name))!);
@@ -221,5 +223,20 @@ describe('verify writes started.json before any step work (end to end)', () => {
     const refusedDir = newDir(before);
     expect(JSON.parse(readFileSync(join(refusedDir, 'started.json'), 'utf8')).dirty).toBe(true);
     expect(JSON.parse(readFileSync(join(refusedDir, 'summary.json'), 'utf8')).verdict).toBe('UNCOMMITTED');
+
+    // 4 — a genuinely failing step: the plan was already durable before the
+    // step ran, the final summary tells the truth (FAIL, exit recorded,
+    // second step never run) and exit code stays nonzero.
+    writeFileSync(join(dir, 'tracked.txt'), 'base\n'); // undo section 3's dirty state — a dirty tree would refuse instead
+    before = names();
+    const failing = spawnSync(process.execPath, [join(dir, 'scripts', 'verify.mjs'), '--only', '--db=none', 'test:fail', 'test:x'], { cwd: dir, env: { ...env, MARKER: join(dir, '.kitchen', 'm3') }, encoding: 'utf8', timeout: 120000 });
+    expect(failing.status).toBe(1);
+    const failDir = newDir(before);
+    expect(JSON.parse(readFileSync(join(failDir, 'started.json'), 'utf8')).steps).toEqual(['test:fail', 'test:x']);
+    const failSummary = JSON.parse(readFileSync(join(failDir, 'summary.json'), 'utf8'));
+    expect(failSummary.verdict).toBe('FAIL');
+    expect(failSummary.steps).toEqual([expect.objectContaining({ name: 'test:fail', exit: 7 })]);
+    expect(failSummary.notRun).toEqual(['test:x']);
+    expect(failing.stdout + failing.stderr).not.toContain(' PASS ');
   }, 240000);
 });
