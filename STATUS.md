@@ -15,4 +15,4 @@ Updated by the CTO on 19 October 2026 at the K39 close.
 
 ## Next
 
-This run stops after K39. No wave is in flight or starts automatically. BT38 (direct proofs + dead-helper removal) is briefed and ready when named; the T1 `create` `maxBuffer`/10k-scale finding is in `kitchen/INBOX.md` to brief; BT33 stays parked and BT12 Part B deferred.
+This run was started with `START.md: BT38` on 19 October 2026. Dispatching BT38 only: add direct tests for guarantees T1 (unasked text constant), T4 (reads change nothing shared), C5 (snapshot resolvable or report contract state), and PL3 (representative refusals per stage carry a next step), prove T1/T4/PL3 bite in a scratch copy, and remove the unused `refuse` helper in `packages/box-bounty/look.ts`. Stop after BT38; K39's `create` 10k/100k finding is recorded in `BACKLOG.md`; BT33 stays parked and BT12 Part B deferred.
