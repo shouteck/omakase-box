@@ -1,7 +1,7 @@
 // BT39: Git output is read through a 512 MiB buffer everywhere — no project
 // size can overflow it into ENOBUFS — and a status refresh does not re-ask
 // GitHub for a pull request file list it already recorded.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { git as bountyGit, gitStdin, GitFailed } from '../../../packages/box-bounty/git.js';
@@ -76,6 +76,43 @@ describe('the snapshot tree is the working state, index cache or not', () => {
     const plan = finalizeBounty(planBounty(options));
     expect(gitBlob(repo, plan.plan.snapshot.commit, 'a.txt')!.toString('utf8')).toBe('edited under assume-unchanged\n');
     expect(gitBlob(repo, plan.plan.snapshot.commit, 'b.txt')!.toString('utf8')).toBe('edited under skip-worktree\n');
+  });
+});
+
+describe('canonicalisation runs native realpath — the refusals and dedup still bite', () => {
+  // classifySnapshot resolves each shipped path with realpathSync.native: one
+  // system call instead of an lstat per component (the create profile's
+  // second-largest cost). The security surface is unchanged — an escape is
+  // still refused, a junction still lands on its target, and a spelling that
+  // differs only in case still folds onto the one real file.
+  it.skipIf(process.platform !== 'win32')('a junction whose target leaves the repository is still refused, not followed', () => {
+    const outside = join(runRoot('bt39-out'), 'outside');
+    write(outside, 'leak.txt', 'never\n');
+    const repo = makeRepo({ 'a.txt': 'a\n', 'TASK.md': 'the task\n' }, r => {
+      symlinkSync(outside, join(r, 'linked'), 'junction');
+      git(r, ['add', 'linked/leak.txt']);
+      git(r, ['commit', '-qm', 'track the junction spelling']);
+    });
+    const options: CreateOptions = { repoPath: repo, why: 'test', taskPath: join(repo, 'TASK.md') };
+    try {
+      planBounty(options);
+      expect.unreachable('the escape should be refused');
+    } catch (error) {
+      expect((error as { reason?: string }).reason).toBe('link-escape');
+    }
+  });
+
+  it.skipIf(process.platform !== 'win32')('a tracked file whose disk case differs still ships once, canonically', () => {
+    const repo = makeRepo({ 'MiXeD.TxT': 'x\n', 'TASK.md': 'the task\n' }, r => {
+      // The checkout's case-insensitive filesystem keeps one file; only its
+      // on-disk name's case changes. Git's tree keeps the committed spelling.
+      renameSync(join(r, 'MiXeD.TxT'), join(r, 'mixed.txt'));
+    });
+    const options: CreateOptions = { repoPath: repo, why: 'test', taskPath: join(repo, 'TASK.md') };
+    const plan = planBounty(options);
+    const shipped = plan.files.map(file => file.path.toLowerCase()).filter(path => path === 'mixed.txt');
+    expect(shipped).toHaveLength(1); // one real file, one canonical path — never a second spelling
+    expect(plan.scan.filesScanned).toBeGreaterThanOrEqual(1);
   });
 });
 

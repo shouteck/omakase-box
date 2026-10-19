@@ -54,6 +54,41 @@ fires. Streaming sites keep their existing stream bounds.
   (fetch + for-each-ref ×2 — pre-existing once-a-minute read, not a new
   per-refresh cost).
 
+## Final create speedup: native realpath in `classifySnapshot`
+
+The profile's second-largest parent-side cost after the scan's `open`/`read`
+was the JavaScript `realpathSync` — it lstats every path component
+(~18–20 % lstat + part of `open` at 10k files). `realpathSync.native`
+resolves links and junctions in one system call and returns the on-disk
+spelling. Equivalence: containment still runs through `relative` on two
+resolved paths (win32 `relative` compares case-folded), dedup and the
+never-ship rules already key on lowercase, and the escape/unreadable
+refusals are unchanged — only the *spelling* of `canonical`/`realPath` can
+now differ, and only when the on-disk case differs from the tree spelling
+(the JS form never corrected case or expanded 8.3 aliases — BT26's caveat;
+native is strictly the truer canonical). Regression tests in bt39.test.ts:
+junction escape still refused `link-escape`; a tracked file whose disk case
+differs from its tree spelling still ships exactly once.
+
+Measured (five unfiltered consecutive runs, kept world
+`kitchen-k39-izGNxL`, same fixtures as the baseline rows):
+
+| point | base d068844 | candidate (native) | note |
+|---|---|---|---|
+| create @1k | med 2313 (2279–2799) | 3114, 2086, 2028, 2068, 2091 → med **2086** | ≈10 % faster; runs above/below base min are spread, median clearly under |
+| create @10k | med 18276 (16899–18702) | 21165, 14282, 16732, 14399, 15910 → med **15910** | ≈13 % faster; min 14282 under base min 16899 |
+
+Raw: `post-1k-native.log`, `post-10k-native.log`,
+`result-t1-*-native.json`; profile `cpuprof/create-t1-10000-plain-
+1792442868144.cpuprof` (candidate, 15,664 ms / 7,966 samples): `open`
+45 % (scan reads — contract-bound), `spawnSync` ≈32 % (`add -A` hashing
+in the git child), native `realpath` 7.6 %, `stat` 2.5 % — `lstat` is no
+longer a named frame at all (was 18–20 %). Prior rows below keep their
+provenance — the index-copy candidate's numbers are not the final build's.
+Bite re-run after the path change (scratch `cand-src`, canonicalisation
+neutralised to `absolute`): bt39 junction-escape + 6 never-ship/create
+junction tests fail by name — log `bite-canonical.log`, source restored.
+
 ## The snapshot regression found and fixed before this report
 
 A first cut seeded the temp index by byte-copying `.git/index` (stat cache

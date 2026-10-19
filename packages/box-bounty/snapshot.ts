@@ -69,8 +69,18 @@ export function createSnapshotCommit(repoRoot: string, workDir: string): { commi
   return { commit, tree, baseCommit };
 }
 
+// BT39: the per-file canonicalisation runs the native realpath variant. The
+// JavaScript one walks every path component with an lstat of its own — the
+// second-largest cost in the create profile after the scan's reads — while the
+// native call resolves links and junctions in a single system call and returns
+// the on-disk spelling (the JS form never expands 8.3 aliases or corrects
+// case, BT26's own caveat). What the checks consume is unchanged: containment
+// is compared through `relative` on two canonically-resolved paths, dedup and
+// the never-ship rules already fold case, and `realPath` keeps naming the
+// file's real location — now spelled by the filesystem rather than by the
+// path the caller asked for.
 export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string>; links: Set<string> } {
-  const realRoot = realpathSync(repoRoot);
+  const realRoot = realpathSync.native(repoRoot);
   // -c core.quotepath=false: without it ls-tree C-quotes non-ASCII names even under -z.
   const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(objectsize) %(path)', commit]);
   const escapes: string[] = [];
@@ -93,7 +103,7 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
     let real: string;
     let sizeOnDisk = 0;
     try {
-      real = realpathSync(absolute);
+      real = realpathSync.native(absolute);
       const stat = statSync(real);
       if (!stat.isFile()) { unreadable.push(path); continue; }
       sizeOnDisk = stat.size;
