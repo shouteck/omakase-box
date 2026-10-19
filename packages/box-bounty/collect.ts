@@ -17,11 +17,12 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
   // Every fact a listing line prints except the changed-file names — one
-  // pull-request listing read, no per-request file calls yet. A head sha
-  // pins a pull request's file list, so when this fact set is unchanged the
-  // recorded answers text is still exactly what GitHub would list: it is
-  // reused and the per-request `pulls/<n>/files` reads do not run. Any new,
-  // re-pushed or collected request changes the key and pays the full read.
+  // pull-request listing read, no per-request file calls yet. When this fact
+  // set (plus the bounty branch tip below) is unchanged the recorded answers
+  // text is still exactly what GitHub would list: it is reused and the
+  // per-request `pulls/<n>/files` reads do not run. Any new, re-pushed or
+  // collected request — or a moved base — changes the key and pays the
+  // full read.
   const facts: { entry: unknown; n: number; commit: string; author: string; payTo: PayToFact }[] = [];
   for (const entry of data) {
     if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
@@ -30,7 +31,13 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
     facts.push({ entry, n, commit: entry['head']['sha'], author: login(entry['user']['login']), payTo: parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '') });
   }
   const pays = boundAmount(record) !== undefined && boundAmount(record)! > 0;
-  const key = JSON.stringify([pays, facts.map(fact => [fact.n, fact.commit, fact.author, fact.payTo,
+  // The listing's file names are GitHub's diff of each request against the
+  // bounty branch's CURRENT tip — a head sha pins the request but not the
+  // base it is diffed on. The remote tip goes into the key: a moved bounty
+  // branch makes the recorded listing stale even with identical request
+  // JSON, and pays the full read once like any other fact change.
+  const baseTip = remoteBranchSha(root, repository, branch);
+  const key = JSON.stringify([pays, baseTip, facts.map(fact => [fact.n, fact.commit, fact.author, fact.payTo,
     record.github!.seenPullRequests?.find(seen => seen.n === fact.n && seen.commit === fact.commit)?.at ?? 'new',
     record.attempts?.find(attempt => attempt.commit === fact.commit)?.n ?? null])]);
   const stamp = (fact: (typeof facts)[number]) =>

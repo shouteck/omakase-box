@@ -43,9 +43,11 @@ describe('Git reads carry a named large buffer, not the 1 MiB default', () => {
 });
 
 describe('the snapshot tree is the working state, index cache or not', () => {
-  // The snapshot seeds its temporary index from the repository's real index —
-  // unchanged files are not re-hashed. Staged entries must never leak: what
-  // ships is the working tree, exactly as before.
+  // The snapshot's temporary index is seeded from the commit, never copied
+  // from the real index: a copy would inherit assume-unchanged/skip-worktree
+  // bits and the stat cache, and `add -A` would ship stale bytes for files
+  // the owner edited under those flags (BT39 probe regression). What ships
+  // is the working tree, exactly as before.
   it('ships worktree bytes even where the index was staged differently', () => {
     const repo = makeRepo({ 'a.txt': 'base\n', 'b.txt': 'b\n' }, r => {
       write(r, 'a.txt', 'staged version\n');
@@ -60,6 +62,20 @@ describe('the snapshot tree is the working state, index cache or not', () => {
     expect(plan.plan.files.map(file => file.path)).toContain('c.txt');
     // The real index is untouched: the staged entry stays staged.
     expect(git(repo, ['diff', '--cached', '--name-only']).trim()).toBe('a.txt');
+  });
+
+  it('ships worktree bytes for files flagged assume-unchanged or skip-worktree', () => {
+    const repo = makeRepo({ 'a.txt': 'base-a\n', 'b.txt': 'base-b\n' }, r => {
+      git(r, ['update-index', '--assume-unchanged', 'a.txt']);
+      git(r, ['update-index', '--skip-worktree', 'b.txt']);
+      write(r, 'a.txt', 'edited under assume-unchanged\n');
+      write(r, 'b.txt', 'edited under skip-worktree\n');
+    });
+    write(repo, 'TASK.md', 'Ship the worktree.\n');
+    const options: CreateOptions = { repoPath: repo, why: 'test', taskPath: join(repo, 'TASK.md') };
+    const plan = finalizeBounty(planBounty(options));
+    expect(gitBlob(repo, plan.plan.snapshot.commit, 'a.txt')!.toString('utf8')).toBe('edited under assume-unchanged\n');
+    expect(gitBlob(repo, plan.plan.snapshot.commit, 'b.txt')!.toString('utf8')).toBe('edited under skip-worktree\n');
   });
 });
 
@@ -82,5 +98,25 @@ describe('status does not re-ask GitHub for a listing it already recorded', () =
     context.update({ prs: state.prs.map(pr => pr.number === 1 ? { ...pr, head: { sha: context.waitingPr.replace(/^../, 'ff') } } : pr) });
     renderStatus(repo);
     expect(fileCalls()).toBeGreaterThan(afterSecond);
+  }));
+
+  // GitHub's pull/<n>/files answers the diff against the bounty branch's
+  // CURRENT tip: identical pull-request JSON with a moved base is a
+  // different listing. The remote tip is part of the recorded key, so a
+  // moved branch pays the full read instead of serving stale file names.
+  it('a moved bounty branch tip invalidates the recorded listing', () => postedFixture(context => {
+    const { repo, bare, id } = context;
+    for (let i = 0; i < 4; i++) context.pr(`solver-${i}`);
+    const fileCalls = () => context.state().calls.filter(call => call.join(' ').includes('/files')).length;
+    renderStatus(repo);
+    renderStatus(repo);
+    renderStatus(repo); // cached listing — steady state reached
+    const cached = fileCalls();
+    // The bounty branch moves on the remote (another commit lands while the
+    // bounty is open); pull-request JSON is untouched.
+    git(repo, ['commit', '--allow-empty', '-qm', 'work continues']);
+    git(repo, ['push', '-q', bare, `HEAD:refs/heads/box-bounty/${id}`]);
+    renderStatus(repo);
+    expect(fileCalls()).toBeGreaterThan(cached);
   }));
 });
