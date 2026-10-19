@@ -1,0 +1,2 @@
+{"ts":"2026-10-19T05:49:16.710Z","cwd":"/c/Users/shout/AppData/Local/Temp/box-k31/machine-b","args":"issue list --repo shouteck/box-bounty-sandbox --state open --limit 10 "}
+{"ts":"2026-10-19T05:49:17.387Z","cwd":"/c/Users/shout/AppData/Local/Temp/box-k31/machine-b","args":"pr list --repo shouteck/box-bounty-sandbox --state open --limit 10 "}
