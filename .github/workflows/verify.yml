@@ -32,6 +32,7 @@ on:
       - 'kitchen/demo/gh-standin.cjs'
       - 'kitchen/demo/record.mjs'
       - 'docs/box-v4/KITCHEN.md'
+      - 'docs/box-v4/DECISIONS.md'
       - 'waves/*.md'
       # K35: the rulebook guard reads every live rule/role/card/adapter file.
       - 'kitchen/README.md'

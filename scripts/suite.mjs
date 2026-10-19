@@ -37,6 +37,7 @@ export const KITCHEN_TEST_READS = [
   'STATUS.md',
   'kitchen/INBOX.md',
   'docs/box-v4/KITCHEN.md',
+  'docs/box-v4/DECISIONS.md',
   'kitchen/demo/bt11b-replay.mjs',
   'kitchen/demo/gh-standin.cjs',
   'kitchen/demo/record.mjs',
