@@ -102,7 +102,7 @@ describe('canonicalisation runs native realpath — the refusals and dedup still
     }
   });
 
-  it.skipIf(process.platform !== 'win32')('a tracked file whose disk case differs still ships once, canonically', () => {
+  it.skipIf(process.platform !== 'win32')('a tracked file whose disk case differs still ships once — under the tree spelling output always carried', () => {
     const repo = makeRepo({ 'MiXeD.TxT': 'x\n', 'TASK.md': 'the task\n' }, r => {
       // The checkout's case-insensitive filesystem keeps one file; only its
       // on-disk name's case changes. Git's tree keeps the committed spelling.
@@ -110,9 +110,27 @@ describe('canonicalisation runs native realpath — the refusals and dedup still
     });
     const options: CreateOptions = { repoPath: repo, why: 'test', taskPath: join(repo, 'TASK.md') };
     const plan = planBounty(options);
-    const shipped = plan.files.map(file => file.path.toLowerCase()).filter(path => path === 'mixed.txt');
-    expect(shipped).toHaveLength(1); // one real file, one canonical path — never a second spelling
-    expect(plan.scan.filesScanned).toBeGreaterThanOrEqual(1);
+    // The spelling create has always printed and shipped is the tree's; the
+    // fast canonicalisation must not leak the disk's different case.
+    expect(plan.files.map(file => file.path)).toContain('MiXeD.TxT');
+    expect(plan.files.map(file => file.path.toLowerCase()).filter(path => path === 'mixed.txt')).toHaveLength(1);
+  });
+
+  // The reviewer's probe, made a fixture: a binary file committed 'low.bin'
+  // whose disk name became 'LOW.BIN'. Baseline names 'low.bin' in the file
+  // list AND in the scan's binary note; the disk spelling must not surface.
+  it.skipIf(process.platform !== 'win32')('a case-divergent binary still names the tree spelling in files and the scan note', () => {
+    const repo = makeRepo({ 'low.bin': '', 'TASK.md': 'the task\n' }, r => {
+      writeFileSync(join(r, 'low.bin'), Buffer.from([0x00, 0x01, 0x02, 0x00]));
+      git(r, ['add', 'low.bin']);
+      git(r, ['commit', '-qm', 'commit the binary']);
+      renameSync(join(r, 'low.bin'), join(r, 'LOW.BIN'));
+    });
+    const options: CreateOptions = { repoPath: repo, why: 'test', taskPath: join(repo, 'TASK.md') };
+    const plan = planBounty(options);
+    expect(plan.files.map(file => file.path)).toContain('low.bin');
+    expect(plan.scan.binary).toContain('low.bin');
+    expect(plan.scan.binary).not.toContain('LOW.BIN');
   });
 });
 

@@ -69,18 +69,20 @@ export function createSnapshotCommit(repoRoot: string, workDir: string): { commi
   return { commit, tree, baseCommit };
 }
 
-// BT39: the per-file canonicalisation runs the native realpath variant. The
-// JavaScript one walks every path component with an lstat of its own — the
-// second-largest cost in the create profile after the scan's reads — while the
-// native call resolves links and junctions in a single system call and returns
-// the on-disk spelling (the JS form never expands 8.3 aliases or corrects
-// case, BT26's own caveat). What the checks consume is unchanged: containment
-// is compared through `relative` on two canonically-resolved paths, dedup and
-// the never-ship rules already fold case, and `realPath` keeps naming the
-// file's real location — now spelled by the filesystem rather than by the
-// path the caller asked for.
+// BT39: the per-file canonicalisation starts with the native realpath
+// variant — one system call instead of the JavaScript walk's lstat per
+// component (the create profile's second-largest cost). But the native call
+// returns the on-disk spelling, while the JS walk the contract was built on
+// returns the spelling it was given — and `path`, the scan names and the
+// note all carry that spelling byte-for-byte. So the native answer is used
+// only when it resolves to the SAME name the input spelled (case-folded
+// compare): a plain file keeps its tree spelling exactly as the JS walk
+// produced it. Anything else — a case-divergent disk name, a symlink or
+// junction that redirected, an escape — falls back to the JS walk, which
+// reproduces the baseline result byte-for-byte. Links are rare; the fast
+// path pays for the common case and the checks see nothing new.
 export function classifySnapshot(repoRoot: string, commit: string, rules: readonly NeverShipRule[]): { files: SnapshotFile[]; removed: SnapshotRemoval[]; blobs: Set<string>; links: Set<string> } {
-  const realRoot = realpathSync.native(repoRoot);
+  const realRoot = realpathSync(repoRoot);
   // -c core.quotepath=false: without it ls-tree C-quotes non-ASCII names even under -z.
   const listing = git(repoRoot, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '-z', '--format=%(objecttype) %(objectsize) %(path)', commit]);
   const escapes: string[] = [];
@@ -103,7 +105,10 @@ export function classifySnapshot(repoRoot: string, commit: string, rules: readon
     let real: string;
     let sizeOnDisk = 0;
     try {
-      real = realpathSync.native(absolute);
+      const resolved = realpathSync.native(absolute);
+      real = toPosix(relative(realRoot, resolved)).toLowerCase() === toPosix(relative(realRoot, absolute)).toLowerCase()
+        ? absolute // no link, same name modulo case — the JS walk's answer is this spelling
+        : realpathSync(absolute); // a link/junction redirected: the baseline resolver decides
       const stat = statSync(real);
       if (!stat.isFile()) { unreadable.push(path); continue; }
       sizeOnDisk = stat.size;
