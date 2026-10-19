@@ -15,4 +15,4 @@ Updated by the CTO on 19 October 2026 at the K31b close.
 
 ## Next
 
-This run stops after K31b. No wave is in flight. The apply-is-local finding is in the INBOX for the roadmap; K30 remains available; BT33 parked; BT12 Part B deferred.
+Owner named `START.md: BT37` on 19 October 2026. Dispatch BT37 only: the five bounded product fixes from K31b, with stand-in regression tests and an independent pass. No real GitHub journey, payment or deletion. Inbox lessons are handled: local-apply wording is adopted into BT37; task sizing was exercised by K31b; wrapper environment knowledge already lives in the station card and saved shims. Stop after BT37; K30 remains available, BT33 parked, BT12 Part B deferred.
