@@ -14,4 +14,4 @@ Updated by the CTO on 19 October 2026 at the BT37 close.
 
 ## Next
 
-This run stops after BT37. No wave is in flight or starts automatically. K30 remains available; BT33 stays parked and BT12 Part B deferred. K31b's real-use evidence and K33-K37 improvements remain shipped.
+This run was started with `START.md: K30` on 19 October 2026. Dispatching K30 only: write stage contracts (`docs/box-v4/CONTRACTS.md`), map every guarantee and scale target to its proof (`kitchen/reviews/K30-contracts.md`), prove at least five critical guarantees bite in a scratch copy, rank gaps, and propose hardening waves. No product or test edits, no deletions, no external posts. Stop after K30; BT33 stays parked and BT12 Part B deferred.
