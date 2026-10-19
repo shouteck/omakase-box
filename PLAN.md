@@ -1,3 +1,6 @@
+| **K38** | **The shared posted-world fixture copies safely.** The intermittent Linux red after K30 (a scratch Git folder vanishing mid-copy): cause confirmed from evidence, fixed at the cause (likely background Git maintenance in the fixture repositories), proven over 30 runs. | Brief: [waves/K38.md](waves/K38.md). |
+| **K39** | **The four unmeasured scale targets, measured.** create on 10,000 files; a whole post; 100 solutions on one bounty; apply and close with 1,000 records. Met or missed, five runs each, a rerunnable script. | Brief: [waves/K39.md](waves/K39.md). From K30. |
+| **BT38** | **Four guarantees proven directly, and one dead helper removed.** T1 (unasked text constant), T4 (reads change nothing shared), C5 (snapshot resolvable, or the contract corrected), PL3 (every refusal names a next step); each shown to bite. | Brief: [waves/BT38.md](waves/BT38.md). From K30. |
 # Plan: the bounty tool for coding agents
 
 Updated by the CTO on 18 October 2026: the roadmap (one loop, six stages, two foundations) was approved by the owner that day. First written 11 October 2026. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
