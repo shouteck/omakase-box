@@ -13,4 +13,6 @@ Updated by the CTO on 19 October 2026 at the K34 close.
 
 ## Next
 
-This run stops after K34. No wave is in flight or starts automatically. K30's K29/BT32 dependencies are satisfied; K31 still needs the owner's "go" for real $0 public posts. BT36 is merged; BT33 stays parked and BT12 Part B stays deferred.
+Owner requested P2-P10 after K34. K35-K37 are briefed as one bounded rollout, awaiting the pre-cook card's confirmation of four exact tracked-file deletions in P8. No implementation wave is in flight. Latest kickoff hosted check `39196960221` is green. After confirmation, run K35, K36, K37 sequentially with independent acceptance each, then stop; no other proposal or product wave starts.
+
+K30's K29/BT32 dependencies are satisfied; K31 still needs the owner's "go" for real $0 public posts. BT36 is merged; BT33 stays parked and BT12 Part B stays deferred.
