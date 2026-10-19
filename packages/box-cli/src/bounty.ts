@@ -3,11 +3,33 @@
 // commands) and the published artifact (src/box.ts, the bounty tool alone).
 // One code path — the tool behaves identically installed and from this
 // repository.
-import { resolve } from 'node:path';
+import { lstatSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { actingOn, applyBounty, BountyRefused, BountyUsage, closeBounty, createBounty, allowRepository, denyRepository, renderConfig, changeConfig, renderSummary, parseCreateArgs, parseOptions, commandHelp, OPTIONS_NOTE, postBounty, readDecision, renderDescribe, renderHelp, renderPreview, renderRules, renderStatus, repoReward, requireRepository, resolveRepoRoot, setMergeNoticeListener, setInstructionNoticeListener, renderOverview, showPath, statusDocument, lookDocument, configDocument, HOOK_GH_CALL_COUNT, HOOK_GH_CALL_LIMIT_MS, HOOK_GITHUB_BUDGET_MS, hookDisclosure, hookHost, hookOff, hookOn, hookStatus, limitGitHubCalls, runHook } from '../../box-bounty/index.js';
 import type { ParsedOptions } from '../../box-bounty/index.js';
 import { previewGitHub } from '../../box-bounty/index.js';
-import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine } from '../../box-bounty/index.js';
+import { findDocument, lookBounty, quoteForeign, renderFind, renderResume, openRecords, endedContaining, readGitPinsOncePerProcess, boundAmount, payToLine, gitOutcome } from '../../box-bounty/index.js';
+
+// Does .git/config name this remote — read as bytes, so the apply output
+// costs no extra Git start. `.git` can be a linked worktree's `gitdir:`
+// pointer; the shared config then sits in the common dir its `commondir`
+// file names. Anything unreadable answers false — the caller states the
+// local fact without naming a remote it cannot confirm.
+const remoteNamed = (repoRoot: string, name: string): boolean => {
+  try {
+    let dotGit = join(repoRoot, '.git');
+    const entry = lstatSync(dotGit, { throwIfNoEntry: false });
+    if (entry === undefined) return false;
+    if (entry.isFile()) {
+      const pointer = readFileSync(dotGit, 'utf8');
+      if (!pointer.startsWith('gitdir:')) return false;
+      const gitdir = resolve(repoRoot, pointer.slice('gitdir:'.length).trim());
+      const common = readFileSync(join(gitdir, 'commondir'), 'utf8').trim();
+      dotGit = resolve(gitdir, common);
+    }
+    return readFileSync(join(dotGit, 'config'), 'utf8').includes(`[remote "${name}"]`);
+  } catch { return false; }
+};
 
 export interface BountyHost {
   /** print the message plus usage lines and exit 2 — the entrypoint's usage(). */
@@ -240,6 +262,25 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // The saved job the bounty came from is what the agent returns to —
         // the compact form names it; the commit hash is `status --full`'s.
         console.log(`${result.record.id} — applied — attempt ${result.attempt} merged as ${result.mergeCommit} on this branch`);
+        // BT37: the merge exists in this checkout only — say so and say the
+        // exact publish command, in git's own convention (`git status` says
+        // "Your branch is ahead of 'origin/main' by N commits. (use "git
+        // push" to publish your local commits)"). The tool never pushes.
+        // Two Git reads at most; a failed read or a detached HEAD states the
+        // local fact alone — a count or command git did not provide is never
+        // fabricated.
+        const upstream = gitOutcome(applyRoot, ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']).stdout.trim();
+        if (upstream !== '') {
+          const ahead = gitOutcome(applyRoot, ['rev-list', '--count', '@{u}..HEAD']).stdout.trim();
+          console.log(/^\d+$/.test(ahead)
+            ? `not on GitHub yet: this branch is ${ahead} commit(s) ahead of ${upstream} — publish it with: git push`
+            : `not on GitHub yet: this branch's upstream is ${upstream} — publish it with: git push`);
+        } else {
+          const branch = gitOutcome(applyRoot, ['branch', '--show-current']).stdout.trim();
+          console.log(branch === '' ? 'not on GitHub yet: the merge is local to this checkout'
+            : remoteNamed(applyRoot, 'origin') ? `not on GitHub yet: this branch has no upstream — publish it with: git push -u origin ${branch}`
+            : `not on GitHub yet: this branch (${branch}) has no upstream and this checkout has no remote named origin — publish it by pushing ${branch} to the repository's remote`);
+        }
         console.log(`ended — ${jobLine(result.record)}; to reverse it: git revert -m 1 ${result.mergeCommit}`);
         console.log(renderResume(result.record));
       } else {

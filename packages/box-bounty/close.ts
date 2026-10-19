@@ -38,7 +38,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
       const comments = snapshot.comments;
       for (const decision of decisions) {
         const marker = `<!-- box-bounty:${record.id}:${decision.command} -->`;
-        const fact = decision.command === 'merged' ? `Solution${decision.attempt !== undefined ? ` #${decision.attempt}` : ''} is merged on the bounty's branch as commit ${decision.merge} (${decision.reason ?? decision.merge}).`
+        const fact = decision.command === 'merged' ? `Solution${decision.attempt !== undefined ? ` #${decision.attempt}` : ''} is merged on the bounty's branch as commit ${decision.merge} (${decision.reason ?? decision.merge}) — merged in the owner's checkout; it reaches this repository when the owner pushes it.`
           : decision.stage === 'applied' ? `Applied as commit ${decision.merge}.`
           : decision.stage === 'rejected' ? `Rejected. Recorded reason: ${decision.reason}`
           : decision.stage === 'undone' ? `Undo recorded as commit ${decision.merge}.`

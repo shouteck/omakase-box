@@ -4,7 +4,7 @@
 // it reads records — none of it is read BY the record store. Moved out of
 // record.ts unchanged (BT25).
 
-import { mkdirSync,writeFileSync } from 'node:fs';
+import { existsSync,mkdirSync,readFileSync,writeFileSync } from 'node:fs';
 import { BountyRefused } from './errors.js';
 import { join } from 'node:path';
 import { quoteForeign,showPath } from './notice.js';
@@ -101,24 +101,49 @@ export const validAt = (at: string | null | undefined): string | null => {
   return Number.isFinite(Date.parse(at)) ? at : null;
 };
 
+// Pull requests still waiting to be collected (BT37): the freshly listed
+// ones plus the previously seen, deduped by number and commit — a re-pushed
+// request is a new one — minus what a collected attempt already is (its
+// commit lands on seenPullRequests at collection, so seen alone overcounts).
+// A waiting pull request is real activity: status must never read
+// "no solution yet" beside one.
+export const waitingPullRequests = (record: BountyRecord): readonly { readonly n: number; readonly commit: string; readonly at: string }[] => {
+  const github = record.github;
+  if (github === undefined) return [];
+  const collected = new Set(attemptsOf(record).map(attempt => attempt.commit));
+  const waiting = new Map<string, { n: number; commit: string; at: string }>();
+  for (const pr of [...github.availablePullRequests ?? [], ...github.seenPullRequests ?? []]) {
+    if (collected.has(pr.commit)) continue;
+    waiting.set(`${pr.n}#${pr.commit}`, pr);
+  }
+  return [...waiting.values()];
+};
+
 /** The two age facts (BT35): when the bounty opened — its `posted` event, a
     draft's create — and when anything last happened: the posted event or the
-    newest attempt's collection time. Both ISO times or null, both read-only.
-    A posted event whose time does not parse leaves `openedAt` unknown: the
-    draft's `createdAt` is never shown in its place, because that would state
-    a posting date the record does not carry. */
+    newest attempt's collection time, and when nothing is collected yet, the
+    newest waiting pull request's time (BT37). Both ISO times or null, both
+    read-only. A posted event whose time does not parse leaves `openedAt`
+    unknown: the draft's `createdAt` is never shown in its place, because
+    that would state a posting date the record does not carry. */
 export const bountyAge = (record: BountyRecord): { readonly openedAt: string | null; readonly lastActivityAt: string | null } => {
   const postedEvent = record.events.find(event => event.stage === 'posted');
   const openedAt = postedEvent === undefined ? validAt(record.createdAt) : validAt(postedEvent.at);
-  const attemptTimes = attemptsOf(record).map(attempt => validAt(attempt.at));
-  const times = [postedEvent === undefined ? null : validAt(postedEvent.at), ...attemptTimes].filter((at): at is string => at !== null);
+  const attempts = attemptsOf(record);
+  const attemptTimes = attempts.map(attempt => validAt(attempt.at));
+  // Only when nothing is collected — a waiting request's `at` answers under
+  // the same ISO contract, and an unreadable one makes latest activity
+  // unknown exactly as an unreadable attempt time does.
+  const waitingTimes = attempts.length === 0 ? waitingPullRequests(record).map(pr => validAt(pr.at)) : [];
+  const times = [postedEvent === undefined ? null : validAt(postedEvent.at), ...attemptTimes, ...waitingTimes].filter((at): at is string => at !== null);
   // A draft has no posted/attempt activity — its own creation is the last
   // thing that happened, so `openedAt` (the draft's createdAt) stands in.
   // For a posted bounty this fallback is null too: a broken posted `at`
   // stays unknown rather than borrowing createdAt as a fake posting date.
-  // An unreadable attempt time means the newest activity is unknown; showing
-  // an older post or solution as the latest would state a false fact.
-  const latest = attemptTimes.some(at => at === null) ? null : times.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1) ?? openedAt;
+  // An unreadable attempt or waiting-request time means the newest activity
+  // is unknown; showing an older post or solution as the latest would state
+  // a false fact.
+  const latest = [...attemptTimes, ...waitingTimes].some(at => at === null) ? null : times.sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1) ?? openedAt;
   return { openedAt, lastActivityAt: latest };
 };
 
@@ -130,7 +155,8 @@ const ageClause = (record: BountyRecord): string => {
   const now = nowMs();
   const { openedAt, lastActivityAt } = bountyAge(record);
   const open = openedAt === null ? 'age unavailable' : daysSince(openedAt, now) === 0 ? 'open today' : `open ${dayWord(daysSince(openedAt, now))}`;
-  const last = attemptsOf(record).length === 0 ? 'no solution yet'
+  const last = attemptsOf(record).length === 0
+    ? (waitingPullRequests(record).length === 0 ? 'no solution yet' : `${waitingPullRequests(record).length} solution(s) waiting`)
     : lastActivityAt === null ? 'last activity time unavailable'
     : daysSince(lastActivityAt, now) === 0 ? 'last solution today'
     : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
@@ -358,7 +384,13 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
   // without starting a Git process.
   if (options.id === undefined) {
     const tracked = trackedRecordFiles(repoRoot);
-    if (tracked.length > 0) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
+    // Said once per checkout (BT37, the BT17 said-once mechanism, one topic
+    // shared with `config`): on every status it cried wolf where records are
+    // tracked on purpose. --full still always states the fact, and
+    // --json's records field always carries it.
+    if (tracked.length > 0) {
+      if (options.full === true || saidOnce(repoRoot, 'records-tracked')) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
+    }
     else if (options.full === true) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
   }
   for (const [address, notice] of Object.entries(loadState().firstMerges)) {
@@ -625,7 +657,15 @@ function syncOpenSurfaces(repoRoot: string): void {
   // OPEN still lives beside the records' old spelling; the store keeps the
   // records themselves, so the folder may not exist yet.
   mkdirSync(recordDir(repoRoot), { recursive: true });
-  writeFileSync(join(recordDir(repoRoot), 'OPEN'), `${renderOpenLine(repoRoot)}\n`);
+  // Write only on a real change (BT37): under core.autocrlf an untouched
+  // rewrite still showed OPEN as modified — compare the stored bytes with
+  // line endings normalised (never trimmed — a real difference must land)
+  // and leave bytes and mtime alone when nothing moved. The instruction-file
+  // sync already compares: replaceFile returns early on before.equals(after).
+  const openPath = join(recordDir(repoRoot), 'OPEN');
+  const next = `${renderOpenLine(repoRoot)}\n`;
+  const current = existsSync(openPath) ? readFileSync(openPath, 'utf8') : null;
+  if (current === null || current.replaceAll('\r\n', '\n') !== next) writeFileSync(openPath, next);
   // Every instruction-file message that reports a refusal or an edit is
   // emitted — the file is named and the edit is stated as not committed
   // (BT14, F3); 'block current' and 'kept there once' change nothing and
