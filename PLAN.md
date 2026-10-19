@@ -152,7 +152,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | 9c | **K33** the kitchen reviewed on its own record (merged) | the kitchen | — (cooked and reviewed by fresh agents, not the head chef) | done; report in `kitchen/reviews/K33-kitchen.md`; P1 implemented by K34; owner requested P2-P10 through K35-K37 |
 | 9c1 | **K34** interrupted verification retains start evidence (K33 P1, merged) | the kitchen | K33; owner approved 19 October 2026 | done; independent PASS, start records never grant completion/PASS/reuse |
 | 9c2 | **K35** smaller current rulebook (P2, P6-P9, merged) | the kitchen | K34; owner confirmed four-file retirement and rollout | done; `5c55aac`, independent PASS on `de1f34e` |
-| 9c3 | **K36** sourced owner decisions and brief checks (P3-P4) | the kitchen | K35; rollout card confirmation | briefed; source-linked ledger and read-only reference/suite lint, no semantic intent claims |
+| 9c3 | **K36** sourced owner decisions and brief checks (P3-P4, merged) | the kitchen | K35; owner confirmed rollout | done; `ffb5f9f`, independent PASS on `9f2518a`; references, not semantic intent |
 | 9c4 | **K37** load context and per-wave verify costs (P5, P10) | the kitchen | K36; rollout card confirmation | briefed; advisory comparable-duration outliers, missing-aware totals, no acceptance changes |
 | 10 | publishing (BT12 Part B) | getting the tool (G7) | the owner's decision | owner's |
 
