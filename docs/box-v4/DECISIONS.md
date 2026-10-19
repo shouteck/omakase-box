@@ -10,3 +10,5 @@ Compact, dated record of the owner's decisions that current work relies on. One 
 | D-2026-10-06-temp-cleanup | 2026-10-06 | documented | Standing approval at every wave close to delete temp items named box-d21-*, box-k6-* and kitchen-verify-pg*, and to stop a leftover embedded test database. | docs/box-v4/KITCHEN.md Resources; .devin/rules/box-kitchen.md |
 | D-2026-10-11-public-origin | 2026-10-11 | documented | `origin` is public and stays public: nothing unpublishable goes into a pushed commit. | AGENTS.md "Who decides what" |
 | D-2026-10-14-tool-convention | 2026-10-14 | documented | A wave that changes a command, option or printed output names the established tool convention it follows or says why it departs. | templates/wave.md Notes |
+
+| D-2026-10-19-k31-sandbox-go | 2026-10-19 | documented | Owner named `START.MD: K31` and replied `go` to the pre-cook card: real public $0 bounty posts on shouteck/box-bounty-sandbox only, scratch clones deleted after, nothing posted elsewhere. | waves/K31.md approval line; commit adding this row |
