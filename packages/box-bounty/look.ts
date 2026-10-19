@@ -1,4 +1,3 @@
-import { BountyRefused } from './errors.js';
 import { gitOutcome } from './git.js';
 import { resolveAttempt } from './collect.js';
 import { attemptsOf,baseCommitOf,loadRecord,persistRecord,requireCurrentDelivery } from './record.js';
@@ -13,8 +12,6 @@ import type { Attempt,BountyRecord } from './record.js';
 //
 // `<n>` is a pull request's number: when no recorded attempt carries it and
 // the bounty is posted on GitHub, `look` collects the pull request first.
-
-const refuse = (reason: string, detail: string, next = 'box bounty status'): never => { throw new BountyRefused(reason, `${detail}; next: ${next}`); };
 
 // A diff longer than this is large: `look` prints the changed-file list and
 // names `box bounty look <id> <n> --full` for the whole change instead of
