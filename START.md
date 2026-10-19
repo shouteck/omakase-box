@@ -15,7 +15,7 @@ Before the first wave:
 1. Read [AGENTS.md](AGENTS.md), [STATUS.md](STATUS.md) and [docs/box-v4/KITCHEN.md](docs/box-v4/KITCHEN.md).
 2. Check that STATUS.md matches Git: current branch, last commit on master, any `wave/*` branch, uncommitted changes. If they disagree, Git is right; fix STATUS.md. Delete any `wave/*` branch that is fully merged (`git branch -d`; skip it without asking if your host wants a confirmation). Then empty `kitchen/INBOX.md` ("Getting better" in KITCHEN.md).
 3. Read the latest off-machine result (do not wait for a run in progress): `gh run list -R shouteck/omakase-box --limit 3`. A red run on master comes first: the one wave this run may cook is the fix, and STATUS.md says so while it is red.
-4. Show the owner the pre-cook card, then start or wait as the table says.
+4. Before dispatching, run `node scripts/brief-check.mjs waves/<id>.md` on each brief to dispatch: it names unresolved suite names, wave links and decision IDs. Then read the decisions' fit yourself — the checker validates references, not whether the prose honours them. Show the owner the pre-cook card, then start or wait as the table says.
 
 > **About to cook: <wave ids>**
 > **You will get:** up to three outcomes.

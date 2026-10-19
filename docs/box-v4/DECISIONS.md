@@ -1,0 +1,12 @@
+# Owner decisions ledger (K36)
+
+Compact, dated record of the owner's decisions that current work relies on. One row per decision: a stable ID, the date it was given, a concise scope, and a concrete source (file or commit). `documented` means the decision is recorded in a source the kitchen can point to (commit, wave file, rules file); `quoted` would mean the owner's literal words — no entry here claims one. Where an entry and [AGENTS.md](../../AGENTS.md) disagree, AGENTS.md wins; this file records, it does not grant authority. Seed, not archive: only what live briefs and rules cite.
+
+| ID | Date | Kind | Scope | Source |
+|---|---|---|---|---|
+| D-2026-10-19-rollout | 2026-10-19 | documented | Owner requested the K33 P2–P10 rollout and confirmed the K35–K37 card with `go`: K35 (P2, P6–P9), K36 (P3–P4), K37 (P5, P10). | commit b99aefd; waves/K35.md, waves/K36.md, waves/K37.md Approval lines |
+| D-2026-10-19-deletions | 2026-10-19 | documented | The same `go` covers exactly four tracked-file deletions: kitchen/stations/service-data.md, kitchen/stations/console.md, kitchen/roles/station-chef.md, .devin/agents/box-station-chef.md. | commit b99aefd; waves/K35.md Scope |
+| D-2026-10-06-branch-cleanup | 2026-10-06 | documented | Standing approval to delete a wave's local branch with `git branch -d` once fully merged; every other deletion still needs confirmation. | docs/box-v4/KITCHEN.md close step; .devin/rules/box-kitchen.md |
+| D-2026-10-06-temp-cleanup | 2026-10-06 | documented | Standing approval at every wave close to delete temp items named box-d21-*, box-k6-* and kitchen-verify-pg*, and to stop a leftover embedded test database. | docs/box-v4/KITCHEN.md Resources; .devin/rules/box-kitchen.md |
+| D-2026-10-11-public-origin | 2026-10-11 | documented | `origin` is public and stays public: nothing unpublishable goes into a pushed commit. | AGENTS.md "Who decides what" |
+| D-2026-10-14-tool-convention | 2026-10-14 | documented | A wave that changes a command, option or printed output names the established tool convention it follows or says why it departs. | templates/wave.md Notes |

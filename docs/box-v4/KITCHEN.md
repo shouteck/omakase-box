@@ -9,7 +9,7 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 
 ## A wave, start to finish
 
-1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming the station it belongs to (see [the brigade](../../kitchen/README.md)). One page. If it does not fit on one page the task is too big; split it.
+1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming the station it belongs to (see [the brigade](../../kitchen/README.md)) and the [owner decisions](DECISIONS.md) it relies on. One page; if it does not fit, the task is too big — split it. `node scripts/brief-check.mjs` checks its references before dispatch (START.md step 4).
 2. **Branch.** `wave/<id>` from current master. The main checkout is the default; sequential cooks share it. Separate worktrees are only for genuinely parallel writers (one writer per branch) and for the head chef's mid-wave kitchen-document commits.
 3. **Implement.** The worker gets its role file, the wave file and the station card, and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
 4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
@@ -19,7 +19,7 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 
 When the last wave of a milestone closes, send the CEO the finished card with the next proposal. While a decision is with the CEO, keep doing everything that does not depend on it: briefs for the proposed milestone, read-only investigation, cleanup waves. Do not sit idle behind a gate.
 
-Keep the ceremony in proportion. A wave whose whole check is one cheap command does not need a page of brief; a wave that touches product behaviour does need a reviewer who is not the author.
+Keep ceremony in proportion: a one-command check needs no page of brief; a product-behaviour change needs a reviewer who is not the author.
 
 **States.** A brief on master awaiting the owner's "go" is **awaiting approval**, not a wave in flight; only the owner starts it. A running wave may be **parked** (a `Park <id>` commit): the head chef parks it and only the head chef resumes it, as a dispatch — after a second correction, a fresh worker per step 5. Parking is not acceptance: no verdict, no merge.
 
@@ -35,7 +35,7 @@ Keep the ceremony in proportion. A wave whose whole check is one cheap command d
 - `check` runs typecheck; no check-only suites remain after K29. Full acceptance names both surviving suites: `node scripts/verify.mjs --full test:box-bounty test:kitchen`. A suite named in the invocation never runs twice.
 - All runs report `db=none`. Removed database modes refuse before work; `--db=none` remains accepted for existing callers.
 - The bounty test files run three workers in parallel, pinned in `tests/kitchen/k12-bounty-parallel.test.ts`; other suites keep one.
-- K29's completed full-profile observation on this host took 772 s, including 690 s for bounty tests and 70 s for kitchen tests. One observation is not a speedup claim. The retired exporter's 330 s budget does not apply to this workload; no surviving-profile budget is calibrated.
+- K29's one completed full-profile observation here took 772 s (690 s bounty, 70 s kitchen); one observation is not a speedup claim. No surviving-profile budget is calibrated.
 - Name the suites the change affects in the brief. Do not run unrelated legacy suites on every wave.
 - A brief that changes what a command does or prints names `test:kitchen` in Done when; verify adds it anyway.
 - A lost or unclear result is fixed by running it again. Do not start a duplicate while a finite command is still running.
