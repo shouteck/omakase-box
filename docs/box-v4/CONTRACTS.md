@@ -24,7 +24,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Refusals.** `missing-task`, `missing-why`, `missing-part-of`, `not-a-repository`, `never-ship-input` (a `--task` file a never-ship rule covers, `create.ts:94`), `link-escape`, `unreadable-path` (`snapshot.ts:118`), `invalid-boxignore` (`never-ship.ts:96`), `create-option-retired`, `folder-delivery-retired`, `checks-removed` (retired options refused by name, `args.ts:144-146`, `commands.ts:20`).
 
-**Scale target.** Under 1 s on a 10,000-file repository (PLAN.md); see K30 proof map for the measurement.
+**Scale target.** BT39 planning budgets: median 3 s at 1,000 files and 20 s at 10,000 files on like-for-like local fixtures; successful capture at 100,000 files. Final observed medians were 2.751 s / 17.823 s with overlapping spread; one 100k create completed in 194.476 s. Not a per-run guarantee or unlimited-size claim (Git output bound: 512 MiB). The original under-1-second/10k target was missed; see `kitchen/reviews/BT39-performance.md`.
 
 ## post
 
@@ -70,7 +70,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 
 **Refusals.** `missing-query` (`find.ts:37`), `hook-unknown-host`, `hook-already-on`, `hook-not-on`, `hook-settings-malformed`, `hook-settings-escape`, `hook-settings-blocked` (`hook.ts`), `instruction-file-missing`, `instruction-file-not-file`, `instruction-file-link`, `instruction-file-outside-repo`, `instruction-file-tool-owned`, `instruction-file-changed`, `instruction-markers-damaged`, `instruction-import-cycle`, `instruction-import-unmaintained` (`instructions.ts`).
 
-**Scale target.** Flat from 100 to 1,000 bounties — met (PLAN.md); pinned by `bt32.test.ts` scale-gate test and `kitchen/memory/measure.mjs`.
+**Scale target.** Flat from 100 to 1,000 bounties - met (PLAN.md); pinned by `bt32.test.ts` scale-gate test and `kitchen/memory/measure.mjs`. BT39 adds local stand-in median goals at 100 waiting PRs: 2 s for unchanged listing facts, 15 s for changed facts. Five mixed observations had median 0.863 s (0.796-12.110 s); only four were cached steady-state observations, so this is not a five-run steady-state acceptance result or a real-GitHub latency promise.
 
 ## review
 

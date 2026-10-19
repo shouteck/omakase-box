@@ -1,4 +1,60 @@
-# BT39 performance notes — buffers, profiles, spawn audit, bites
+# BT39 performance notes - buffers, profiles, spawn audit, bites
+
+## Accepted Result (Supersedes Intermediate Measurements Below)
+
+Accepted SHA: `23e7cbe9638fdf85cfa9580eb58c9f4a9607791d`; independent
+PASS `de40d03`, final output-measurement evidence `2a8dffb`. Earlier
+pure-native path resolution was rejected for changing binary/scan/note path
+spelling on case-divergent Windows repositories. The guarded fast path
+retains the input spelling for an unchanged case-folded offset; redirects
+use the original JS resolver. The unsafe index-copy experiment was removed.
+
+| Final point | Baseline runs (ms) | Accepted-code runs (ms) | Median / range |
+|---|---|---|---|
+| create, 1k | 2279, 2313, 2313, 2325, 2799 | 3348, 2200, 2237, 2751, 3188 | 2313 / 2279-2799 -> 2751 / 2200-3348 |
+| create, 10k | 18702, 16899, 18276, 18652, 17425 | 26015, 15917, 17823, 18429, 14816 | 18276 / 16899-18702 -> 17823 / 14816-26015 |
+| status, 100 PRs | 11087, 11474, 12214, 12250, 10833 | 12110, 1128, 796, 855, 863 | 11474 / 10833-12250 -> 863 / 796-12110 |
+
+These are unfiltered observations on this Windows host, not an idle-host
+benchmark or a statistically established speedup. The final 10k median is
+about 2.5% lower, with overlapping spread; the final worker 1k median is
+higher. The 26,015 ms observation overlapped a scoped red-proof suite, so
+the final create cohort is not a fully isolated timing comparison.
+CPU-busy sampling was recorded per cohort, not per individual command.
+Earlier approximately 10-13% create gains below belong to superseded code.
+Parent CPU profiles locate cost; they do not measure child Git CPU.
+The profile of the native resolver predates its spelling guard, so it
+supports the mechanism, not an exact final-code CPU fraction.
+
+Status's first observation pays for regenerating a saved listing; the four
+subsequent observations reuse it. Five observations support the mixed
+sequence median, not a five-sample steady-state claim. On the measured
+world, gh starts fall from 105 to 5; Git starts were 4 to 8 including a
+pre-existing chain-refresh interval and the new remote-base-tip read.
+No real-GitHub latency or sustained service-level target was measured.
+
+The reviewer completed create at 100,002 tracked files on the accepted
+code: exit 0, `bt-9bf7eb48cfa4`, **194,476 ms**, one run only. This is not a
+proof of unlimited project size: buffered Git output has a finite 512 MiB
+limit and failures must remain named.
+
+The reviewer ran `bt17-measure.mjs` on accepted code and compared its JSON
+byte-for-byte with the baseline: identical, 2,565 bytes, empty stderr.
+That script measures exit/line/character counts, not raw CLI text. A live
+baseline/candidate `low.bin` versus disk `LOW.BIN` probe additionally
+confirmed the corrected path-text boundary. Never-ship and scan mutation
+checks failed as expected; all 750 bounty and 136 kitchen tests passed.
+
+Planning budgets derived from this profile and agent workflow: create
+3 s at 1k, 20 s at 10k, successful 100k capture; status 2 s with an unchanged
+100-PR listing and 15 s when listing facts change. These are median goals
+for like-for-like local stand-in cohorts, not per-invocation guarantees.
+The historic under-1-second create target remains a recorded miss.
+Raw scratch was inspected by the pass; it is disposable and removed at
+close. The tables, mutation descriptions and Git/verify records are the
+durable evidence.
+
+## Intermediate Investigation (Historical, Not Final-Code Claims)
 
 Worker scratch root: `%TEMP%\kitchen-BT39-base` (all raw logs, result JSONs,
 `.cpuprof` files, the adapted `measure-bt39.mjs`, spy + probe scripts).

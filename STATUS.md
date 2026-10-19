@@ -1,14 +1,17 @@
 ﻿# Status
 
-Updated by the CTO on 19 October 2026 at the BT38 close.
+Updated by the CTO on 20 October 2026 at the BT39 close.
 
 ## Now
 
-- **BT38 merged** (`eb1fd51`; independent PASS test-verified on `6745b39`, verdict `6768894`). Adds `tests/box/bounty/bt38.test.ts` with direct proofs for T1 (instruction-file bytes and `mtimeMs` stay identical across all 18 reading commands, and change when a new PR arrives), T4 (remote and local `refs/box-bounty/*` stay identical across the same 18 reading commands), C5 (`planBounty`'s snapshot commit resolves with the captured tree, while new drafts are unpinned post-BT24 — `docs/box-v4/CONTRACTS.md` C5 corrected at close), and PL3 (table-driven CLI refusals across all 9 contract sections exit non-zero and name a next step; ~99 lexical refusal messages without a verbatim command listed in the Result). Removes the dead `refuse` helper from `packages/box-bounty/look.ts`.
-- **Bite proof:** worker broke T1 (`replaceFile` forced write), T4 (`refreshSharedMemory` appended a chain event) and PL3 (`missing-query` stripped of its command) and captured the verbatim failures; the independent pass repeated the T1 bite itself.
-- **Verify cost:** `verify: 2 runs, total 1158s` (2 PASS, 0 FAIL, 0 missing/malformed summaries, 1,150 executed step-seconds; within comparable win32 cohort median 1,028 s, n=3) from post-merge `node scripts/kitchen-stats.mjs --wave=BT38`.
-- Main checkout is master; all `bt38*` scratch items and the merged branch are removed. Latest hosted result before merge was green `39296933710`; post-push checks are not awaited.
+- **BT39 merged** (`bac8c85`); independent PASS on `23e7cbe9638fdf85cfa9580eb58c9f4a9607791d`, verdict `de40d03`, evidence `2a8dffb`. Git reads have explicit 512 MiB bounds and named errors. Guarded native resolution preserves live-byte capture and baseline spelling; unchanged PR listings reuse saved facts with remote-base-tip invalidation.
+- **100k create succeeds** on accepted code: 194,476 ms, one run. Status five-run mixed median 11,474 to 863 ms (796-12,110 ms; first regenerates, four cached). Final 10k create median 18,276 to 17,823 ms has overlapping spread; final 1k worker median rose 2,313 to 2,751 ms. No blanket create-speedup or unlimited-size claim.
+- **Acceptance:** `verify 23e7cbe PASS check=0 build=0 test:box-bounty=0 test:kitchen=0 db=none 1289s`; 750 bounty/136 kitchen tests passed. Pass's same-SHA invocation lawfully reused that record; independent buffer, never-ship, scan, case-text and final 100k probes passed. BT17 measurement JSON is byte-identical to baseline (exit/line/character counts, not raw output).
+- **Corrections retained:** unsafe index-copy capture and pure-native case spelling were rejected, with regressions. Prior reviewer PASS was withdrawn before merge. A timeout under high load passed on scoped rerun; load is context, not proven cause.
+- **Planning targets:** local medians create 3 s at 1k / 20 s at 10k; status 2 s unchanged / 15 s changed at 100 PRs; successful 100k capture. PLAN/CONTRACTS state these as planning budgets, not service guarantees; the historic 1 s/10k miss remains recorded. Final tables and limits: `kitchen/reviews/BT39-performance.md`.
+- **Verify cost:** `verify: 6 runs, total 5298s`; 5 PASS/1 FAIL, no missing summaries/durations, 5,266 executed step-seconds. Local `.kitchen/runs`, exact IDs and merge bounds in the wave Result.
+- Master clean and pushed at close; exact owned scratch and merged branch removed. Latest pre-merge hosted run green `39302652050`; post-push checks not awaited. No live bounty posts, payments or new remote destinations.
 
 ## Next
 
-Owner named `START.md: BT39` on 20 October 2026. Run BT39 only: audit growing process output and fix named buffer failures; profile then optimize create at 10k files and status at 100 solutions; measure five-run before/after comparisons plus one successful 100k create; propose derived targets. No normal output or hard-stop changes, live GitHub posts, payments or file deletions. Stop after BT39; BT33 stays parked and BT12 Part B deferred.
+This run stops after BT39. No wave is in flight or starts automatically. Remaining performance limits are in BACKLOG; BT33 stays parked and BT12 Part B deferred.

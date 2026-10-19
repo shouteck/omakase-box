@@ -1,7 +1,7 @@
 | **K38** (merged 19 October 2026) | **The shared posted-world fixture copies safely.** The intermittent Linux red after K30 (a scratch Git folder vanishing mid-copy): cause confirmed from evidence (`git maintenance run --auto` spawned detached on push), fixed at the cause (`gc.auto=0` + `maintenance.auto=false` at creation, plus one retry backstop), proven over 30 runs by both worker and pass. | Record: [waves/K38.md](waves/K38.md). Merged `6ed5b0f`; independent PASS on `7a99d9d`. |
 | **K39** (merged 19 October 2026) | **The four unmeasured scale targets, measured.** `kitchen/memory/scale/measure.mjs` + `kitchen/reviews/K39-scale.md`: Targets 2 (`post` ~2.2–2.4 s), 3 (100 solutions: `status` ~8.8 s, `look` ~0.35 s, 108 lines/4.8 KB) and 4 (1,000 records: `apply` 2.7 s, `close` 2.1 s) **met**; Target 1 (`create` <1 s at 10k files) **missed ~20×** (20.6 s median at 10k; 100k fails 5/5 with `ENOBUFS` in `git.ts:204` `ls-tree -r -z`). | Record: [waves/K39.md](waves/K39.md). Merged `d1967a8`; independent PASS on `1aee0f5`. |
 | **BT38** (merged 19 October 2026) | **Four guarantees proven directly, and one dead helper removed.** `tests/box/bounty/bt38.test.ts`: T1 (instruction block bytes+mtime unchanged across 18 reading commands), T4 (reads change nothing shared), C5 (create snapshot commit resolves + unpinned post-BT24 contract corrected in `CONTRACTS.md`), PL3 (per-section refusals name a next step; ~99 lexical gaps listed); T1/T4/PL3 shown to bite; unused `refuse` helper removed from `look.ts`. | Record: [waves/BT38.md](waves/BT38.md). Merged `eb1fd51`; independent PASS on `6745b39`. |
-| **BT39** | **create survives any project size and gets faster; status with many solutions gets fast.** From K39: the shared Git helper's missing buffer limit (create crashed at 100,000 files) fixed everywhere with a named failure; create (20.6 s at 10,000 files) and status (8.7 s at 100 solutions) profiled, their top causes fixed without behaviour change, and targets derived from the profile and agents' needs. | Brief: [waves/BT39.md](waves/BT39.md). From K39. |
+| **BT39** (merged 20 October 2026) | **Large Git output handled; create and status profiled.** Explicit 512 MiB Git buffers with named failure; accepted-code 100k create completes in 194.476 s. Guarded path resolution preserves capture/output: 10k median 18.276 to 17.823 s (overlapping ranges; 1k worker median regressed). Saved unchanged PR listings cut status's mixed five-run median 11.474 to 0.863 s. Planning budgets and limits are recorded, not service guarantees. | Record: [waves/BT39.md](waves/BT39.md); [profile and final tables](kitchen/reviews/BT39-performance.md). Merged `bac8c85`; independent PASS on `23e7cbe`. |
 # Plan: the bounty tool for coding agents
 
 Updated by the CTO on 18 October 2026: the roadmap (one loop, six stages, two foundations) was approved by the owner that day. First written 11 October 2026. This is the whole roadmap. Earlier plans are in Git history. Current state is in [STATUS.md](STATUS.md).
@@ -124,6 +124,13 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | G1, G2 | Finding solvers; private repositories | — | — | — | outside the MVP (above) |
 
 ### Engineering roadmap: each stage defined
+
+BT39 replaces the original Create target below with local median planning
+budgets of 3 s at 1,000 files and 20 s at 10,000 files, plus successful
+100,000-file capture. Track adds 2 s for unchanged / 15 s for changed
+100-PR listings. These are derived planning budgets, not per-run guarantees;
+the original under-1-second/10k target remains below as the historic miss.
+See the accepted-code tables and confounds in `kitchen/reviews/BT39-performance.md`.
 
 | Stage | States moved | Guarantees it must never break | Code | Scale target |
 |---|---|---|---|---|
