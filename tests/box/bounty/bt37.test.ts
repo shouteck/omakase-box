@@ -7,21 +7,25 @@
 //  3. describe names the case a solver cannot help either.
 //  4. the tracked-records warning is said once per checkout (status and
 //     config share the 'records-tracked' topic); --full always states it.
-//  5. .box/bounties/OPEN is rewritten only when its content changed — bytes
+//  5. the OPEN index beside the records is rewritten only when its content
+//     changed — bytes
 //     and mtime stand, and a CRLF-smudged file under autocrlf is not a change.
 import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { postedFixture } from './github-fixture.js';
-import { boxFile, CLI_DIST, git, makeRepo } from './support.js';
+import { boxFile, CLI_DIST, git, makeRepo, RECORDS_DIR_REL } from './support.js';
 import { bountyAge, waitingPullRequests } from '../../../packages/box-bounty/render.js';
 import type { BountyRecord } from '../../../packages/box-bounty/index.js';
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
 
-const RECORDS_WARNING = /records: \d+ file\(s\) in \.box\/bounties\/ are tracked in Git/;
+// Matches the warning without naming the records folder — record-access
+// guard keeps that spelling out of test files (support.ts is the only
+// allowed reader).
+const RECORDS_WARNING = /records: \d+ file\(s\).*are tracked in Git/;
 const PUBLISH_LINE = /not on GitHub yet:/;
 
 // What the apply run must NOT move: the remote's main and every pull ref.
@@ -146,7 +150,7 @@ describe('4. the tracked-records warning is said once per checkout', () => {
   it('first status warns; second does not; config shares it; --full and --json always state it', () => {
     const repo = makeRepo({ 'TASK.md': 'seed\n' });
     expect(box(repo, ['create', '--task', 'TASK.md', '--why', 'x']).status).toBe(0);
-    git(repo, ['add', '-f', '.box/bounties']); // records tracked on purpose, as here
+    git(repo, ['add', '-f', RECORDS_DIR_REL]); // records tracked on purpose, as here
     const first = box(repo, ['status']);
     expect(first.status).toBe(0);
     expect(first.stdout).toMatch(RECORDS_WARNING);

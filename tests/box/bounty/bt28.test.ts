@@ -156,14 +156,18 @@ describe('4. the tracked-records notice', () => {
     expect(box(repo, ['config', '--full']).stdout).toContain(`records: ${RECORDS_DIR_REL}/ is not tracked in Git (local to this checkout)`);
   });
 
-  it('tracked records warn on every form and in --json', () => {
+  // BT37: the warning is said once per checkout (status and config share the
+  // 'records-tracked' topic) — tracking on purpose cried wolf every command;
+  // --full and --json still always state the fact.
+  it('tracked records warn once per checkout; --full and --json always state the fact', () => {
     const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
     seed(repo, 1, 'drafted');
     git(repo, ['add', RECORDS_DIR_REL]);
     const warning = `records: 1 file(s) in ${RECORDS_DIR_REL}/ are tracked in Git`;
     expect(box(repo, ['status']).stdout).toContain(warning);
+    expect(box(repo, ['status']).stdout).not.toContain(warning);
+    expect(box(repo, ['config']).stdout).not.toContain(warning);
     expect(box(repo, ['status', '--full']).stdout).toContain(warning);
-    expect(box(repo, ['config']).stdout).toContain(warning);
     expect(box(repo, ['config', '--full']).stdout).toContain(warning);
     const statusJson = JSON.parse(box(repo, ['status', '--json']).stdout);
     expect(statusJson.records).toEqual({ tracked: true, trackedFiles: 1 });
