@@ -262,11 +262,27 @@ interface World {
 // The repo, bare "GitHub" remote, gh stand-in and drafted bounty every
 // fixture-style test starts from — one helper, so `fixture` and the shared
 // posted world build exactly the same thing.
+// K38: a world is a master template copied with cpSync once per test — no
+// git process may keep running inside it. Pushes make receive-pack spawn
+// `git maintenance run --auto` (detached on newer git via maintenance.autoDetach
+// / gc.autoDetach, both defaulting to true) and commits spawn `gc --auto`; a
+// background git still working the object store while cloneWorld's cpSync
+// walks it makes a listed entry vanish before the copy reaches it — ENOENT
+// under remote.git/objects on the Linux hosted run (39273307351). Pin every
+// repo a world holds — owner repo, bare remote and solver clones — so no
+// automatic maintenance or gc can ever fire there.
+function silenceGitHousekeeping(path: string): void {
+  git(path, ['config', 'gc.auto', '0']);
+  git(path, ['config', 'maintenance.auto', 'false']);
+}
+
 function makeWorld(title: string, files: Record<string, string>, resumeNote?: string, publicNote?: string, existing?: { repo: string; id: string; repository?: string | undefined }): World {
   const repo = existing?.repo ?? makeRepo(files);
   const scratch = runRoot('bt6a');
   const bare = join(scratch, 'remote.git');
   git(repo, ['init', '--bare', bare]);
+  silenceGitHousekeeping(repo);
+  silenceGitHousekeeping(bare);
   const hasOrigin = git(repo, ['remote']).split('\n').includes('origin');
   if (existing === undefined || !hasOrigin) {
     if (hasOrigin) git(repo, ['remote', 'set-url', 'origin', 'git@github.com:owner/project.git']);
@@ -401,6 +417,7 @@ function contextFor(world: World): GithubFixture {
     // Cloned from the bare remote's path — the solver's own origin — so a
     // pull request is pushed exactly like a fork or a branch in-repository.
     git(repo, ['clone', '--single-branch', '--branch', history, bare, solver]);
+    silenceGitHousekeeping(solver);
     write(solver, 'app.txt', 'fixed\n');
     for (const [path, content] of Object.entries(extra)) write(solver, path, content);
     git(solver, ['add', '-A']);
@@ -471,8 +488,22 @@ function cloneWorld<M extends World & { readonly prSha?: string }>(master: M, sc
   // a fingerprint drift no tool action caused. The refresh below warms the
   // fields timestamps cannot carry (ctime, inode): the copy's index then
   // matches its own worktree, as a warm checkout's would.
-  cpSync(master.scratch, scratch, { recursive: true, preserveTimestamps: true });
-  cpSync(master.repo, repo, { recursive: true, preserveTimestamps: true });
+  //
+  // K38 second line: silenceGitHousekeeping stops fixture git from running
+  // background work, but the copy can still race a file that any other
+  // process removes mid-walk — cpSync's C++ fast path reports a vanished
+  // source entry as ENOENT naming the *destination* directory (syscall cp).
+  // Retry once on ENOENT only; a second failure is a real problem, not a race.
+  try {
+    cpSync(master.scratch, scratch, { recursive: true, preserveTimestamps: true });
+    cpSync(master.repo, repo, { recursive: true, preserveTimestamps: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    rmSync(scratch, { recursive: true, force: true });
+    rmSync(repo, { recursive: true, force: true });
+    cpSync(master.scratch, scratch, { recursive: true, preserveTimestamps: true });
+    cpSync(master.repo, repo, { recursive: true, preserveTimestamps: true });
+  }
   git(repo, ['update-index', '--refresh']);
   const bare = join(scratch, 'remote.git');
   const bin = join(scratch, 'bin');
