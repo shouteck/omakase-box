@@ -11,4 +11,4 @@ Updated by the CTO on 19 October 2026 at the BT38 close.
 
 ## Next
 
-This run stops after BT38. No wave is in flight or starts automatically. BT39 (fix `git()` buffer limit at 100k files + profile and speed up `create` at 10k files and `status` at 100 solutions) is briefed and ready when named; BT33 stays parked and BT12 Part B deferred.
+Owner named `START.md: BT39` on 20 October 2026. Run BT39 only: audit growing process output and fix named buffer failures; profile then optimize create at 10k files and status at 100 solutions; measure five-run before/after comparisons plus one successful 100k create; propose derived targets. No normal output or hard-stop changes, live GitHub posts, payments or file deletions. Stop after BT39; BT33 stays parked and BT12 Part B deferred.
