@@ -52,3 +52,5 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **Git output that grows with history needs an explicit buffer.** A test or script that reads `git diff`, `git log` or similar over the repository's history sets `maxBuffer` (Node's default is 1 MiB) and fails by name on a read error; K15's guard crashed with `ENOBUFS` once the wave-file diff passed 1 MiB (K15-ci).
 
 - **A source-delivered environment does not persist across this host's agent tool calls** — each exec gets a fresh shell. K31's gh-logging shims missed several calls; transcript-derived counts were the labelled fallback. Bake env into each command or a wrapper, not a one-time source.
+
+- **Env for measured agents goes in wrappers, not source** — K31's sourced env did not persist across tool calls (missed gh counts); K31b's baked wrapper scripts logged 347/347. Pattern: kitchen/memory/real-use-b/shims/.
