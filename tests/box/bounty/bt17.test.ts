@@ -33,7 +33,9 @@ const BUDGETS: Record<string, Budget> = {
   'config':            { lines: 18, characters: 2400 },
   'deny':              { lines: 6,  characters: 600 },
   'help':              { lines: 32, characters: 4200 },
-  'describe':          { lines: 28, characters: 2000 },
+  // BT37: the not-worth-it list gained the "a solver could not do it either"
+  // clause — measured 2,085 characters on the standard journey (+85).
+  'describe':          { lines: 28, characters: 2085 },
   'describe --rules':  { lines: 10, characters: 600 },
 };
 

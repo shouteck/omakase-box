@@ -6,7 +6,7 @@ import { DECISION_WORDS, ownerBlock } from './owner-text.js';
 import { attemptsOf } from './record.js';
 import { applyBounty } from './answer.js';
 import { gitOutcome } from './git.js';
-import { askMergeNoticeLine, loadSettings, loadState, localFirstMergeLine, markSaid, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saidAlready, saveState, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
+import { askMergeNoticeLine, loadSettings, loadState, localFirstMergeLine, markSaid, readDecision, repositoryIdentity, requireRepository, rewardNoticeLine, saidAlready, saidOnce, saveState, settingsFile, unknownSetting, writeDecision, writeMergeAnswer, writeMoney, writeRepository } from './settings.js';
 import type { DecisionRead } from './settings.js';
 import type { BountyRecord, WaitingFor } from './record.js';
 import { relative } from 'node:path';
@@ -262,10 +262,14 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     lines.push(...instructionNotices(repoRoot, false));
     // Whether the records are committed is a fact needing attention (BT28):
     // tracked records on a repository that posts to GitHub publish owner-only
-    // context — the warning prints on every form; untracked says so under
-    // --full only. trackedRecordFiles answers untracked with no Git process.
+    // context — the warning is said once per checkout (BT37, the
+    // 'records-tracked' topic `status` shares); --full still always states
+    // the fact, and untracked says so under --full only.
+    // trackedRecordFiles answers untracked with no Git process.
     const tracked = trackedRecordFiles(repoRoot);
-    if (tracked.length > 0) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
+    if (tracked.length > 0) {
+      if (full || saidOnce(repoRoot, 'records-tracked')) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
+    }
     else if (full) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
     const listed = openRecords(repoRoot);
     if (address === null || settings.repositories[address] === undefined) {

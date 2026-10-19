@@ -127,8 +127,9 @@ the history and reports. A listing marks a solution as new the first time the
 tool shows it, then as seen since that time. Seen means only that it was shown.
 
 Every open bounty also shows its age: `open N days; last solution N days ago`
-(or `open today`, `no solution yet`), from the posted event and the newest
-collected solution. Age timestamps must have the record's ISO date-time shape
+(or `open today`, `no solution yet`, or `N solution(s) waiting` when pull
+requests wait uncollected), from the posted event and the newest collected
+solution — or the newest waiting pull request when nothing is collected yet. Age timestamps must have the record's ISO date-time shape
 and name a real calendar date and clock time; anything else is named `age
 unavailable` (`null` in JSON), never turned into a duration or republished as
 an ISO fact. When an attempt's collection time is invalid, latest activity is
@@ -152,8 +153,9 @@ purpose — a case-insensitive match over each readable record's id, title,
 why, part-of and task text, open matches first, bounded at twenty lines.
 `--part-of` records which job or parent bounty a new bounty belongs to and
 shows it on the record's status line. A `records:` line in `status --full`
-and `config --full` says whether `.box/bounties/` is tracked in Git, and
-every form of `status` and `config` warns when it is — committed records
+and `config --full` says whether `.box/bounties/` is tracked in Git, and the
+first `status` or `config` in a checkout warns when it is (the `--json`
+documents always carry the fact) — committed records
 publish owner-only context (the why, the saved job, the local path) to any
 public remote the repository pushes to.
 
@@ -251,7 +253,11 @@ working tree.
 
 `apply <n>` collects like `look` when `<n>` names a pull request, merges a
 clean solution and names `git revert -m 1 <merge>` — one ordinary commit —
-as the way back, in the same output. On your
+as the way back, in the same output. The merge exists only in this checkout:
+the same output says so and names the publish command git's own convention
+suggests (`git push`, or `git push -u origin <branch>` with no upstream) —
+the tool never pushes, and a merge comment posted to the issue says the merge
+reaches the repository when the owner pushes. On your
 own working tree your filters apply as in plain Git: after a clean `apply`,
 filtered files are in their working-tree form and `git status` is clean.
 
