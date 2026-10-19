@@ -1,0 +1,76 @@
+box-bounty handoff report — machine-a
+=====================================
+
+Started:  2026-10-19 06:22:49 UTC (from `date -u`)
+Finished: 2026-10-19 07:09:30 UTC
+Repo:     C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a
+          (clone of github.com/shouteck/box-bounty-sandbox, branch main, clean)
+
+Task: "node --test fails. Make it pass." — hand off via `box bounty`;
+I was not allowed to make the fix myself.
+
+What I found
+------------
+`node --test` fails its only test, test/inventory.test.js:
+  AssertionError: inventory.md says seven fruit but count.js prints 8
+data/fruit.txt lists 8 fruit; src/count.js correctly prints 8;
+docs/inventory.md still says "seven". The stale doc is the defect.
+I did not edit it — the fix was handed to an outside solver.
+
+Commands run, in order
+----------------------
+ 1. ls -la; date -u                              — orient; record start time
+ 2. cat AGENTS.md README.md box gh               — read rules and wrappers
+ 3. ls -R ...; cat src/count.js test/*.js docs/inventory.md data/fruit.txt
+                                                — read the project
+ 4. cat src/fruit.js; node src/count.js; node --test
+                                                — reproduced the failure (above)
+ 5. ./box bounty describe                       — what the tool does/costs;
+                                                 owner had already allowed it
+ 6. ./box bounty help                           — the full journey
+ 7. git status/remote/log; ./gh auth status     — clean tree, on main, authed
+ 8. wrote task file ../machine-a-task.md        — symptom, evidence, rules for
+                                                 the solver (don't touch the test
+                                                 or shared/)
+ 9. ./box bounty create --task ... --why ... --title "Make node --test pass"
+                                              -> drafted bt-48ec2a94776d
+10. ./box bounty post bt-48ec2a94776d --preview — nothing new becomes public; OK
+11. ./box bounty post bt-48ec2a94776d          -> posted as issue #28 on
+                                                 shouteck/box-bounty-sandbox,
+                                                 branch box-bounty/bt-48ec2a94776d
+12. ./box bounty status (repeatedly)            — waited for solutions
+13. ./gh pr list --state open (repeatedly); ./gh issue view 28 --comments
+                                                — cross-checked GitHub directly
+14. inspected Temp\box-k31b\gh-logs\*.jsonl and the solver-* / machine-b dirs
+                                                — confirmed no solver activity
+
+Decisions
+---------
+- Handed off rather than fixing docs/inventory.md myself, per instructions.
+- Task file gives the solver the observed failure and the project rules, but
+  leaves the fix to them (solver writes the change; I judge it).
+- Posted after a clean --preview: nothing unpublished would go public.
+- Kept the bounty open and polled ~45 minutes for a pull request.
+
+Outcome
+-------
+Bounty bt-48ec2a94776d is posted and OPEN:
+  https://github.com/shouteck/box-bounty-sandbox/issues/28
+No pull request or issue comment arrived during the session. The drill's
+solver workspaces (solver-a1, -a2a, -a2b, -a3, machine-b) exist but showed
+zero gh activity in their logs. `node --test` still fails locally; the only
+permitted path to a fix (the bounty) is in flight. Next step when a PR
+appears: `box bounty look bt-48ec2a94776d <n>` to inspect, then
+`box bounty apply bt-48ec2a94776d <n>` to merge — the merge will land via a
+PR into main, never a direct push.
+
+Confusions / tool notes
+-----------------------
+- `box bounty post` gave no output for 10s and had to be read from its
+  background shell; it posted fine.
+- `box bounty status` warns that .box/bounties/ files are tracked in Git
+  (owner-only context could be published if pushed). Pre-existing from an
+  earlier drill (bt-212eb1764bf7.json is committed), not caused by me;
+  left as-is since untracking rewrites tracked state.
+- `describe` predicted ~0.1 h to first solution from 1 past bounty; no
+  solution arrived in ~45 min this run.

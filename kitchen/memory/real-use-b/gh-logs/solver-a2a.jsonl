@@ -1,0 +1,18 @@
+{"ts":"2026-10-19T08:43:20.676Z","cwd":"/tmp/box-k31b/solver-a2a","args":"issue view 30 --repo shouteck/box-bounty-sandbox "}
+{"ts":"2026-10-19T08:43:24.331Z","cwd":"/tmp/box-k31b/solver-a2a","args":"auth status "}
+{"ts":"2026-10-19T08:43:26.371Z","cwd":"/tmp/box-k31b/solver-a2a","args":"repo clone shouteck/box-bounty-sandbox repo "}
+{"ts":"2026-10-19T08:46:01.067Z","cwd":"/tmp/box-k31b/solver-a2a/repo","args":"pr create --repo shouteck/box-bounty-sandbox --base box-bounty/bt-930fd7566866 --head solver/bt-930fd7566866-names --title count.js: add --names flag printing only fruit names --body Solves https://github.com/shouteck/box-bounty-sandbox/issues/30 (bounty bt-930fd7566866).
+
+## Change
+
+`src/count.js` gains a `--names` flag: it prints each fruit name on its own line and skips the count line entirely. The flag is checked first; the default path and `--list` path are byte-for-byte unchanged.
+
+## Verified from the repository root
+
+- `node src/count.js` -> `data/fruit.txt lists 8 fruit` (unchanged)
+- `node src/count.js --names` -> 8 lines, fruit names only, no count line
+- `node src/count.js --list` -> count line then each name (unchanged)
+- `node --test` -> 1 pass, 0 fail
+
+No edits under `shared/`; `docs/inventory.md` untouched since the count did not change. "}
+{"ts":"2026-10-19T08:46:06.462Z","cwd":"/tmp/box-k31b/solver-a2a","args":"pr view 31 --repo shouteck/box-bounty-sandbox --json number,title,baseRefName,headRefName,state,url "}

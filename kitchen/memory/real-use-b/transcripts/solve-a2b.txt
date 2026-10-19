@@ -1,0 +1,51 @@
+Bounty report — issue #30, shouteck/box-bounty-sandbox
+======================================================
+
+Started:  2026-10-19 08:46:32 UTC (date -u run once at start)
+Finished: 2026-10-19 08:47:23 UTC
+
+Result
+------
+Opened pull request https://github.com/shouteck/box-bounty-sandbox/pull/32
+- base: box-bounty/bt-930fd7566866 (the branch the bounty targets)
+- head: solve/bt-930fd7566866-names, commit cfe7ed3
+- change: src/count.js only; 7 insertions, 2 deletions
+main was never pushed.
+
+How I understood the task
+-------------------------
+The issue asks for a --names flag on src/count.js: when passed, print only
+the fruit names (one per line), no count line. With no flag the output must
+stay exactly "data/fruit.txt lists 8 fruit"; --list must keep printing the
+count line followed by the names; node --test must still pass. The fix:
+wrap the existing count/--list path in an else branch so --names takes
+precedence and prints only names. The count itself does not change, so
+docs/inventory.md needs no edit. shared/ was not touched and no
+credentials were added.
+
+Commands run, in order
+----------------------
+1. date -u && ls -la C:\Users\shout\AppData\Local\Temp\box-k31b\solver-a2b
+2. cat gh gh.cmd gh.ps1                          (inspected the wrapper)
+3. ./gh issue view 30 --repo shouteck/box-bounty-sandbox
+4. ./gh auth status                              (logged in as shouteck)
+5. ./gh repo clone shouteck/box-bounty-sandbox repo -- --branch box-bounty/bt-930fd7566866
+6. git log --oneline -5 && ls -R .
+7. cat src/count.js src/fruit.js data/fruit.txt docs/inventory.md test/inventory.test.js AGENTS.md README.md
+8. node --version && node src/count.js && node src/count.js --list && node --test   (baseline: all as described, 1 test pass)
+9. git checkout -b solve/bt-930fd7566866-names
+10. edited src/count.js (added --names branch; updated header comment)
+11. node src/count.js / --list / --names && node --test   (all correct: names-only with --names, other outputs unchanged, test passes)
+12. git add src/count.js && git -c user.name="box-solver" -c user.email="solver@localhost" commit -m "count.js: add --names flag printing only fruit names" && git push -u origin solve/bt-930fd7566866-names
+13. ./gh pr create --repo shouteck/box-bounty-sandbox --base box-bounty/bt-930fd7566866 --head solve/bt-930fd7566866-names --title ... --body ...
+14. ./gh pr view 32 --repo shouteck/box-bounty-sandbox --json number,title,baseRefName,headRefName,state,url && date -u
+
+Unclear points
+--------------
+- Behavior when --names and --list are passed together was unspecified;
+  I made --names take precedence (names only, still no count line), which
+  matches the stated requirement literally.
+- The issue offered "fork or push a branch"; the account was already
+  authenticated as the repo owner with repo scope, so pushing a solve/*
+  branch in the same repository (which README.md designates for test-run
+  branches) was the simplest path.

@@ -1,0 +1,96 @@
+README TYPO FIX REPORT — "repositoriy's" -> "repository's"
+Repository: C:\Users\shout\AppData\Local\Temp\box-k31b\machine-a
+Task: the README's first paragraph says the sandbox is run by "the
+repositoriy's owner" — fix the spelling.
+Constraint: never push to main; pull requests are how changes land here.
+
+Started:  Mon Oct 19 12:19:47 UTC 2026  (date -u, run once at start)
+Finished: Mon Oct 19 12:20:36 UTC 2026  (date -u)
+
+EVERY COMMAND I RAN, IN ORDER
+1. date -u && ls -la on the project root — start timestamp; saw the
+   prior drills' bounty task files and reports, .box/, .devin/, and the
+   box/gh wrapper scripts.
+2. Read README.md — confirmed the typo on line 3: "run by the
+   repositoriy's owner." Read AGENTS.md — rules of the place; nothing
+   restricts editing README.md (only shared/ is off-limits).
+3. git status && git branch -a && git log --oneline -5 — on main, 6
+   commits ahead of origin/main (prior drills' unpushed bounty merges);
+   .box/bounties/OPEN modified; prior task/report files untracked.
+   Read report-bt-ce3a99040849.txt and bounty-task-banner-typo.md —
+   learned the two prior postures: hand off via box bounty when the
+   project forbids the edit (shared/), do it yourself on a fix/* branch
+   when plainly doable.
+4. Read report-deploy-sh-fix.txt — the do-it-yourself precedent in
+   full: branch off origin/main (not local main, so the 6 unpushed
+   merges don't pollute the PR), one commit, push, ./gh pr create,
+   verify, switch back to main.
+5. cat gh && cat box && git remote -v — gh is a logging shim over the
+   real GitHub CLI; box is a scratch-settings wrapper over the
+   box-bounty tool; origin is github.com/shouteck/box-bounty-sandbox.
+6. git diff .box/bounties/OPEN && git show origin/main:README.md &&
+   ./gh auth status — the OPEN diff is the tool's own bookkeeping (now
+   recording the still-open bounty bt-ce3a99040849 / issue #36), not
+   mine; the typo is present on origin/main too; gh authed as shouteck
+   with repo scope.
+7. git checkout -b fix/readme-repository-typo origin/main — branched
+   off origin/main so the PR contains only my commit. The dirty
+   .box/bounties/OPEN and the untracked files carried over harmlessly.
+8. Edited README.md line 3: "repositoriy's" -> "repository's".
+9. git diff README.md && grep -rn "repositoriy" . --include="*.md"
+   --exclude-dir=.git — clean one-word diff; no other occurrences in
+   markdown.
+10. grep -rn "repositoriy" . --exclude-dir=.git — no occurrences
+    anywhere. git add README.md && git commit — commit e94f078, only
+    README.md staged (the OPEN bookkeeping was deliberately left out).
+11. git push -u origin fix/readme-repository-typo && ./gh pr create
+    --base main --head fix/readme-repository-typo — opened PR #37.
+12. ./gh pr view 37 --json ... — verified: OPEN, base main, head
+    fix/readme-repository-typo, one commit e94f078, one file README.md
+    (+1/-1).
+13. git checkout main && git status --short --branch && date -u —
+    restored the checkout to the branch I found it on; finish
+    timestamp.
+14. Wrote this report.
+
+DECISIONS AND WHY
+- Did the work myself instead of opening a bounty: README.md is fully
+  in this project's remit (unlike shared/, which the last drill had to
+  hand off), the change is a one-word spelling fix with an exact
+  required result, and the tool's own guidance (cited in the previous
+  reports) is that a bounty is not worth it when the work is plainly
+  doable. The task said to use the tools "if they help" — here they
+  would only add hours of wait.
+- Branched off origin/main, not local main: local main is 6 commits
+  ahead via prior unpushed bounty merges that are not mine to ship;
+  this keeps the PR diff to exactly one commit.
+- Did NOT commit .box/bounties/OPEN: its modification is the box
+  tool's own bookkeeping for the still-open bounty bt-ce3a99040849,
+  unrelated to this fix.
+- Left the PR open rather than merging: "pull requests are how changes
+  land here" — merging is the owner's review step, matching the prior
+  drills' posture (PR #35 is still open too).
+- Switched back to main afterwards to leave the working copy as found.
+
+CONFUSIONS / TOOL QUIRKS
+- One combined `git show ... | head -5` invocation got mangled by the
+  shell output truncation ("'| head -5' was parsed out"); rerunning
+  the command alone produced the full file. Cosmetic only.
+- The earlier report described the .box/bounties/OPEN modification as
+  a cosmetic "open bounties: none" rewrite; since then the tool has
+  updated it to record the still-open bounty bt-ce3a99040849. Still
+  tool bookkeeping — left uncommitted either way.
+
+STATE LEFT BEHIND
+- PR #37 OPEN: "README: fix \"repositoriy's\" typo in first paragraph"
+  — https://github.com/shouteck/box-bounty-sandbox/pull/37 — branch
+  fix/readme-repository-typo, commit e94f078, one file (README.md,
+  +1/-1). Ready for the owner to review/merge.
+- Nothing pushed to main; local main still the same 6 commits ahead of
+  origin/main as before.
+- Working tree otherwise as found: .box/bounties/OPEN still modified
+  (tool bookkeeping), prior drills' task/report files still untracked,
+  plus this report. README.md on the main checkout still shows the
+  typo until the PR lands — expected.
+- The prior drill's bounty bt-ce3a99040849 (issue #36, the shared/
+  banner typo) is still open with no answers — not mine to act on.
