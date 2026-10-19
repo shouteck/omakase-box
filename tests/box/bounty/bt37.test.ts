@@ -168,20 +168,28 @@ describe('4. the tracked-records warning is said once per checkout', () => {
 });
 
 describe('5. OPEN is rewritten only when it changes', () => {
-  it('two consecutive status runs leave OPEN byte-identical, mtime included', () => {
-    const repo = makeRepo({ 'TASK.md': 'seed\n' });
-    expect(box(repo, ['create', '--task', 'TASK.md', '--why', 'x']).status).toBe(0);
+  // A posted bounty with a waiting pull request: every `status` persists the
+  // record again (seen-pull-request bookkeeping), so each run reaches the
+  // OPEN write while its content stands unchanged — the phantom-dirty case
+  // real use hit under autocrlf.
+  it('two consecutive status runs leave OPEN byte-identical, mtime included', () => postedFixture(({ repo }) => {
+    // The first two runs are real changes: the refresh lands, then the
+    // pull requests are marked seen — OPEN's own line reflects both. Only
+    // the settled third run is the no-change case.
+    expect(box(repo, ['status']).status).toBe(0);
+    expect(box(repo, ['status']).status).toBe(0);
     const openPath = boxFile(repo, 'OPEN');
     const before = { bytes: readFileSync(openPath), mtime: statSync(openPath).mtimeMs };
     expect(box(repo, ['status']).status).toBe(0);
     expect(readFileSync(openPath).equals(before.bytes)).toBe(true);
     expect(statSync(openPath).mtimeMs).toBe(before.mtime);
-  });
+  }));
 
-  it('a CRLF-smudged OPEN under autocrlf is not a change — still no rewrite', () => {
-    const repo = makeRepo({ 'TASK.md': 'seed\n' });
+  it('a CRLF-smudged OPEN under autocrlf is not a change — still no rewrite', () => postedFixture(({ repo }) => {
     git(repo, ['config', 'core.autocrlf', 'true']);
-    expect(box(repo, ['create', '--task', 'TASK.md', '--why', 'x']).status).toBe(0);
+    // Let the content settle first, as above.
+    expect(box(repo, ['status']).status).toBe(0);
+    expect(box(repo, ['status']).status).toBe(0);
     const openPath = boxFile(repo, 'OPEN');
     // What the file looks like after an autocrlf checkout wrote it back.
     writeFileSync(openPath, readFileSync(openPath, 'utf8').replaceAll('\n', '\r\n'));
@@ -189,9 +197,9 @@ describe('5. OPEN is rewritten only when it changes', () => {
     expect(box(repo, ['status']).status).toBe(0);
     expect(readFileSync(openPath).equals(before.bytes)).toBe(true);
     expect(statSync(openPath).mtimeMs).toBe(before.mtime);
-    // A real change still lands: a second bounty, and OPEN grows.
-    const created = box(repo, ['create', '--task', 'TASK.md', '--why', 'another']);
-    expect(created.status).toBe(0);
-    expect(readFileSync(openPath, 'utf8').replaceAll('\r\n', '\n').length).toBeGreaterThan(before.bytes.length);
-  });
+    // A real change still lands: close the bounty and OPEN rewrites.
+    const closed = box(repo, ['close', '--reason', 'done']);
+    expect(closed.status).toBe(0);
+    expect(readFileSync(openPath, 'utf8').replaceAll('\r\n', '\n')).toBe('open bounties: none\n');
+  }));
 });
