@@ -1,18 +1,17 @@
 ﻿# Status
 
-Updated by the CTO on 19 October 2026 at the K31b close.
+Updated by the CTO on 19 October 2026 at the BT37 close.
 
 ## Now
 
-- **K31b merged** (`76b4f50`; independent PASS test-verified on `f852900`, verdict `d072365`). Report: `kitchen/reviews/K31b-real-use.md`; evidence in `kitchen/memory/real-use-b/`.
-- **Experiment A (instructed loop):** the whole loop ran on real GitHub three times — post -> solver PR -> look -> apply -> closed. A2 had two solvers (identical diffs; one merged, one closed). A3's designed reject never ran: the poster repaired the task's own contradiction and the good solution was applied - recorded ending per the brief.
-- **Experiment B (uninstructed decision):** 1 of 3 handed off. B2 (forbidden `shared/` folder) handed off correctly; B1 declined with a precise reason (a solver cannot reach the Debian host either) and fixed it itself; B3 declined correctly. All three checked existing bounties first - K31's blind spot gone.
-- **work-b:** read the shared memory transparently and became the missing solver for the open bounty. Memory questions M2/M5/M9 right, M11 partly.
-- **Product findings for the roadmap:** `apply` merges locally and closes GitHub, but remote `main` never moves and nothing prompts a push; `status` briefly contradicted an open PR; `describe`'s worth-it list lacks the "solver can't do it either" case; `.box/bounties/OPEN` phantom-dirty under autocrlf. All in the report's fixes list.
-- Capture fixed: baked wrapper env logged 347/347 gh starts, zero transcript-derived.
-- Sandbox clean: 0 open issues / 0 PRs; `main` `747f4b5`; only two pre-K31 `fix/*` branches remain. Scratch deleted; wave branch deleted.
-- K31b post-push checks not awaited. K31, K33-K37 remain shipped.
+- **BT37 merged** (`0584bcf`; independent PASS test-verified on `b03121a`, verdict `bd56e04`). Five bounded fixes from K31b: local-merge/publish guidance, consistent waiting-PR facts, clearer cannot-help advice, once-only tracking warnings and compare-before-write OPEN.
+- **Apply stays local.** Output follows Git's ahead/upstream convention and offers the publish command; detached/unreadable states do not invent one. The tool never pushes. The issue comment now explains that the owner must push. No stage transition or GitHub call changed.
+- **Waiting facts stay current.** Available PRs, including an empty list, override seen history; one re-pushed PR counts once, not twice. Latest waiting activity also feeds JSON. Collected old heads do not hide new heads; malformed times remain unavailable.
+- **Acceptance:** worker `verify b03121a PASS check=0 build=0 test:box-bounty=0 test:kitchen=0 db=none 1028s`; pass's exact-SHA invocation reused that valid record and reran all 15 focused cases. Final suites: 736 bounty tests passed, 1 skipped; 136 kitchen tests passed. An earlier three-test verify failure and a withdrawn reviewer PASS remain recorded; the PR-revision counterexample now has a failing-before/passing-after regression.
+- **Budgets:** apply measured 26 Git/5 gh, inside unchanged K14 limits; only describe's character budget rose, exactly 85 to 2,085 for the measured dynamic journey. Its static output is smaller.
+- **Verify cost:** `verify: 5 runs, total 2672s`; 4 PASS/1 FAIL completed summaries, 0 missing summaries/durations; 2,656 executed step-seconds. Post-merge `node scripts/kitchen-stats.mjs --wave=BT37`, local ignored `.kitchen/runs` with exact source IDs and merge-parent bounds in the wave Result. Wall duration is not CPU/agent effort.
+- Main checkout is master; owned scratch and merged branch removed, no matching covered temp items or node/Postgres test process at close. Pre-existing stash/K14 artifacts untouched. Latest hosted result before merge was green `39254999319`; BT37 post-push jobs are not awaited. No real GitHub journey or payment performed.
 
 ## Next
 
-Owner named `START.md: BT37` on 19 October 2026. Dispatch BT37 only: the five bounded product fixes from K31b, with stand-in regression tests and an independent pass. No real GitHub journey, payment or deletion. Inbox lessons are handled: local-apply wording is adopted into BT37; task sizing was exercised by K31b; wrapper environment knowledge already lives in the station card and saved shims. Stop after BT37; K30 remains available, BT33 parked, BT12 Part B deferred.
+This run stops after BT37. No wave is in flight or starts automatically. K30 remains available; BT33 stays parked and BT12 Part B deferred. K31b's real-use evidence and K33-K37 improvements remain shipped.

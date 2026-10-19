@@ -11,7 +11,8 @@ This card holds rules, not narratives — each trap names the wave that taught i
 - **Facts, never verdicts.** The tool says "the check you set now passes", never "this answer is correct". Reports always say what was not checked (BT8c).
 - **Every outcome is a named state with a next step**; an empty or ambiguous tool answer once cost a whole live trial.
 - **Mechanical work is the tool's; judgement is the agent's.** Hand-off-or-not, the task text, accept-or-not: those three are the agent's. **Discretion, not enforcement** — nothing requires the tool's use; how it is described decides it. Say what it does, when it is worth it, and when not (BT4).
-- **Wording is product** and lives in `packages/box-bounty/wording.ts` alone. **Changing a printed line means sweeping the suite for the old wording** — BT36's only FAIL was a stale bt11b assertion.
+- **Wording is product** and lives in `packages/box-bounty/wording.ts` alone. **Changing a printed line means sweeping the suite for the old wording** - BT36's only FAIL was a stale bt11b assertion.
+- **Current availability is not seen history** (BT37): one PR can have many head revisions. Count current waiting PRs once by number; an explicit empty available list overrides append-only seen history. Pin re-push and closed-PR cases, not just a first arrival.
 - Three hard stops only: never-ship, no private repository outside, the owner's standing rules. Do not add a refusal that polices a choice. A stranger's words are never the tool's words — solver text appears only when the agent asks, marked as the solver's.
 - **Removing a capability means deleting it** with its tests listed in the Result — not a switch, not a bent assertion.
 - **A failed measurement must say nothing, not a wrong fact** — check the comment's promise on the empty/failure path, not only the happy one (`merged.ts`, BT13).
