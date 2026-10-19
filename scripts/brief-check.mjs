@@ -9,11 +9,14 @@
 // What it checks, narrowly and by name:
 //   * the brief exists and has a "## Done when" section (absence is a named
 //     failure, never a silent pass);
-//   * every `test:<name>` token inside that section (inline code or plain
-//     text — fenced blocks are ignored entirely, so historical transcripts
-//     and examples are not mistaken for acceptance) resolves to a real
-//     package.json script of this root, not a toolchain version or a retired
-//     name like BT36's `test:box-package`;
+//   * every `test:<name>` token and every `npm run`/`pnpm run` argument on
+//     command lines inside that section (lines spelling verify.mjs, suite.mjs,
+//     pnpm or npm run — fenced blocks are ignored entirely, and a bare suite
+//     name in prose is not a command) resolves, case-sensitively, to a real
+//     package.json script of this root — not a toolchain version, a retired
+//     name like BT36's `test:box-package`, or a case variant like
+//     `test:Kitchen`. A `vitest` line is named as unsupported rather than
+//     silently accepted;
 //   * every `waves/<id>.md` reference in the brief points at a file that
 //     exists under the root;
 //   * the brief's `Owner decisions:` field is present and is `none` or a list
@@ -108,13 +111,22 @@ export function checkBrief(briefPath, { rootDir = repoRoot } = {}) {
   const section = doneWhenSection(prose);
   if (section === null) problems.push(`${label}: no "## Done when" section — there is no acceptance to check`);
   else {
-    // Only lines that spell a command have their `test:*` arguments resolved —
-    // a suite name mentioned as prose ("the old test:box-package mistake") is
+    // Only lines that spell a command have their suite arguments resolved — a
+    // suite name mentioned as prose ("the old test:box-package mistake") is
     // not a command and is never checked. Supported spellings are the ones the
-    // kitchen actually uses: verify.mjs, suite.mjs and pnpm lines.
-    const commandLines = section.split('\n').filter(line => /\bverify\.mjs\b|\bsuite\.mjs\b|\bpnpm\b/.test(line));
-    for (const name of new Set(commandLines.flatMap(line => [...line.matchAll(/\btest:[a-z0-9-]+\b/g)].map(match => match[0])))) {
-      if (!Object.hasOwn(scripts, name)) problems.push(`${label}: "${name}" in Done when is not a package.json script — fix the suite name or add the script first`);
+    // kitchen actually uses: verify.mjs, suite.mjs, `pnpm`, and `npm run` /
+    // `pnpm run`. Names are compared exactly, preserving case: `test:Kitchen`
+    // is not the `test:kitchen` script and fails by name. A `vitest` line is
+    // named as an unsupported spelling rather than silently accepted.
+    for (const [index, line] of section.split('\n').entries()) {
+      const isCommand = /\bverify\.mjs\b|\bsuite\.mjs\b|\bpnpm\b|\bnpm\s+run\b/.test(line);
+      if (/\bvitest\b/.test(line)) problems.push(`${label}: line ${index + 1} of Done when spells "vitest" — acceptance commands are verify.mjs/suite.mjs/pnpm/npm run spellings, not a direct runner`);
+      if (!isCommand) continue;
+      const names = [...line.matchAll(/\btest:[a-zA-Z0-9-]+\b/g)].map(match => match[0]);
+      for (const match of line.matchAll(/\b(?:npm|pnpm)\s+run\s+([a-zA-Z0-9:_-]+)/g)) names.push(match[1]);
+      for (const name of new Set(names)) {
+        if (!Object.hasOwn(scripts, name)) problems.push(`${label}: "${name}" in Done when is not a package.json script — fix the suite name or add the script first`);
+      }
     }
   }
 
@@ -122,15 +134,28 @@ export function checkBrief(briefPath, { rootDir = repoRoot } = {}) {
     if (!existsSync(join(rootDir, ref))) problems.push(`${label}: linked wave file ${ref} does not exist`);
   }
 
-  const decisionsLine = prose.split('\n').find(line => /^\s*-?\s*owner decisions\s*:/i.test(line));
-  if (decisionsLine === undefined) problems.push(`${label}: no "Owner decisions:" field — name the ledger IDs this brief relies on, or none`);
+  // Every "Owner decisions:" line is read — checking only the first would let
+  // a second field smuggle an unknown ID or a conflicting "none". The format
+  // is one field; two or more are rejected by name rather than reconciled.
+  const decisionsLines = prose.split('\n').filter(line => /^\s*-?\s*owner decisions\s*:/i.test(line));
+  if (decisionsLines.length === 0) problems.push(`${label}: no "Owner decisions:" field — name the ledger IDs this brief relies on, or none`);
   else {
-    const value = decisionsLine.replace(/^[^:]*:/, '').trim();
-    if (value === '' || /[<>]/.test(value)) problems.push(`${label}: "Owner decisions:" is a placeholder — fill in ledger IDs or none before dispatch`);
-    else if (!/^none$/i.test(value)) {
-      for (const id of value.split(/[\s,]+/).filter(Boolean)) {
-        if (!ID_PATTERN.test(id)) problems.push(`${label}: "${id}" is not a decision ID (D-YYYY-MM-DD-name)`);
-        else if (!ledger.ids.has(id)) problems.push(`${label}: unknown decision ID ${id} — add it to ${LEDGER} or correct the reference`);
+    if (decisionsLines.length > 1) problems.push(`${label}: ${decisionsLines.length} "Owner decisions:" fields — one field only; merge the IDs into it`);
+    for (const line of decisionsLines) {
+      const value = line.replace(/^[^:]*:/, '').trim();
+      if (value === '' || /[<>]/.test(value)) { problems.push(`${label}: "Owner decisions:" is a placeholder — fill in ledger IDs or none before dispatch`); continue; }
+      const tokens = value.split(/[\s,]+/).filter(Boolean);
+      const ids = tokens.filter(token => ID_PATTERN.test(token));
+      if (tokens.some(token => /^none$/i.test(token)) && ids.length) problems.push(`${label}: "Owner decisions:" mixes "none" with IDs — pick one or the other`);
+      const seen = new Set();
+      for (const token of tokens) {
+        if (/^none$/i.test(token)) continue;
+        if (!ID_PATTERN.test(token)) problems.push(`${label}: "${token}" is not a decision ID (D-YYYY-MM-DD-name)`);
+        else {
+          if (seen.has(token)) problems.push(`${label}: "Owner decisions:" repeats ${token}`);
+          seen.add(token);
+          if (!ledger.ids.has(token)) problems.push(`${label}: unknown decision ID ${token} — add it to ${LEDGER} or correct the reference`);
+        }
       }
     }
   }

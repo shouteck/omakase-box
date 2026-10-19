@@ -132,6 +132,54 @@ describe('named diagnostics on invalid input', () => {
     expect(status).toBe(1);
     expect(out).toContain('Owner decisions');
   });
+
+  it('every Owner decisions field is checked: a second one cannot smuggle an unknown ID or a conflicting none', () => {
+    const secondField = BRIEF.replace('Owner decisions: D-2026-01-01-a', 'Owner decisions: D-2026-01-01-a\nOwner decisions: D-2026-01-02-ghost');
+    const { dir, briefPath } = fakeRoot({ brief: secondField });
+    const { status, out } = run(briefPath, dir);
+    expect(status).toBe(1);
+    expect(out).toContain('Owner decisions');
+    expect(out).toContain('D-2026-01-02-ghost');
+
+    const conflict = fakeRoot({ brief: BRIEF.replace('Owner decisions: D-2026-01-01-a', 'Owner decisions: D-2026-01-01-a\nOwner decisions: none') });
+    const c = run(conflict.briefPath, conflict.dir);
+    expect(c.status).toBe(1);
+    expect(c.out).toContain('Owner decisions');
+  });
+
+  it('one field mixing none with IDs, and one field repeating an ID, both fail by name', () => {
+    const mixed = fakeRoot({ brief: BRIEF.replace('Owner decisions: D-2026-01-01-a', 'Owner decisions: none D-2026-01-01-a') });
+    const m = run(mixed.briefPath, mixed.dir);
+    expect(m.status).toBe(1);
+    expect(m.out).toContain('mixes "none"');
+
+    const repeated = fakeRoot({ brief: BRIEF.replace('Owner decisions: D-2026-01-01-a', 'Owner decisions: D-2026-01-01-a D-2026-01-01-a') });
+    const r = run(repeated.briefPath, repeated.dir);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('repeats D-2026-01-01-a');
+  });
+
+  it('suite spellings on command lines resolve exactly: npm run name and case-preserved test: tokens', () => {
+    const npmRun = fakeRoot({ brief: BRIEF.replace('`node scripts/verify.mjs test:kitchen`', '`npm run test:box-package`') });
+    const n = run(npmRun.briefPath, npmRun.dir);
+    expect(n.status).toBe(1);
+    expect(n.out).toContain('test:box-package');
+
+    const upper = fakeRoot({ brief: BRIEF.replace('test:kitchen`', 'test:Kitchen`') });
+    const u = run(upper.briefPath, upper.dir);
+    expect(u.status).toBe(1);
+    expect(u.out).toContain('test:Kitchen');
+
+    const good = fakeRoot({ brief: BRIEF.replace('`node scripts/verify.mjs test:kitchen`', '`npm run test:kitchen`') });
+    expect(run(good.briefPath, good.dir).status).toBe(0);
+  });
+
+  it('a direct vitest spelling in Done when is named unsupported, not silently accepted', () => {
+    const vitest = fakeRoot({ brief: BRIEF.replace('`node scripts/verify.mjs test:kitchen`', '`npx vitest run tests/kitchen`') });
+    const v = run(vitest.briefPath, vitest.dir);
+    expect(v.status).toBe(1);
+    expect(v.out).toContain('vitest');
+  });
 });
 
 describe('fences and prose are not commands', () => {
