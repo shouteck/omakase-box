@@ -1,13 +1,18 @@
 ﻿# Status
 
-Updated by the CTO on 19 October 2026 at the K38 close.
+Updated by the CTO on 19 October 2026 at the K39 close.
 
 ## Now
 
-- **K38 merged** (`6ed5b0f`; independent PASS test-verified on `7a99d9d`, verdict `15d4e7a`). The hosted Linux red — ENOENT copying a fixture world's `remote.git/objects` — is diagnosed and fixed: `cpSync` reports the destination on a copy failure, and `git maintenance run --auto` spawned detached by `receive-pack` could outlive a push into the copy. Fixture repos now pin `gc.auto=0` and `maintenance.auto=false` at creation (trace-confirmed: nothing spawns on push), plus one documented retry as the second line.
-- **Proof:** pass independently reran the 30-run loop (30/30 green) and re-verified the mechanism with GIT_TRACE. The exact transient file is bounded, not named — stated honestly. No assertion or product change; `git diff master -- tests/` is fixture-only.
-- **Verify cost:** `verify: 2 runs, total 1304s` (local `.kitchen/runs`). Master is clean; branch and scratch removed. Post-push checks not awaited.
+- **K39 merged** (`d1967a8`; independent PASS test-verified on `1aee0f5`, verdict `3d9384f`). Delivers `kitchen/memory/scale/measure.mjs` (`--target=<1|2|3|4|all>`) and `kitchen/reviews/K39-scale.md`, measuring all four previously unmeasured scale targets with 5 runs each, median/min–max spread and sampled CPU-busy disclosure.
+- **Scale verdicts (3 met, 1 missed):**
+  - **T1 (`create` <1 s at 10,000 files) — MISSED ~20×:** 20,617 ms median (17.9–22.2 s) at 10k files; 2,318 ms at 1k; at 100k files **5/5 runs fail** with `ENOBUFS` because `snapshot.ts:70` (`git ls-tree -r -z`) calls `git.ts:204` with Node's 1 MiB default `spawnSync` `maxBuffer` (while `cat-file` paths set 512 MiB). Recorded in `kitchen/INBOX.md` for a product fix wave.
+  - **T2 (whole `post` <30 s) — MET:** 2,193 / 2,356 / 2,337 ms medians at 0 / 5 / 50 unpushed commits with `--with-changes` (pass live rerun: 2,410 / 2,444 / 2,186 ms); local plan+scan (~1.2 s) dominates over push (~0.13 s).
+  - **T3 (100 solutions on one bounty) — MET:** `status` 9,107 ms first-discovery / 8,754 ms steady-state median; `--full` 8,880 ms; `--json` 9,530 ms; `look 1` 372 ms, `look 100` 340 ms; `status` output bounded at 108 lines / 4,802 chars.
+  - **T4 (`apply` and `close` at 1,000 records) — MET:** `apply` 2,738 ms (vs 1,950 ms at 10 records), `close` 2,133 ms (vs 1,353 ms at 10 records) — ~1.4–1.6× growth.
+- **Verify cost:** `verify: 2 runs, total 99s` (2 PASS, 0 FAIL, 0 missing/malformed summaries, 82 executed step-seconds) from post-merge `node scripts/kitchen-stats.mjs --wave=K39`.
+- Main checkout is master; all `%TEMP%\kitchen-k39-*` and `k39-*.log` items and the merged branch are removed. Latest hosted result before merge was green `39289545709`; post-push checks are not awaited.
 
 ## Next
 
-This run was started with `START.md: K39` on 19 October 2026. Dispatching K39 only: measure the four scale targets (`create` 1k/10k/100k files, whole `post`, 100 solutions on one bounty, `apply` and `close` at 1,000 records vs 10) with five runs each via `kitchen/memory/scale/measure.mjs` and report in `kitchen/reviews/K39-scale.md`. No product or test edits, no deletions, no external actions. Stop after K39; BT38 has a brief; BT33 parked; BT12 Part B deferred.
+This run stops after K39. No wave is in flight or starts automatically. BT38 (direct proofs + dead-helper removal) is briefed and ready when named; the T1 `create` `maxBuffer`/10k-scale finding is in `kitchen/INBOX.md` to brief; BT33 stays parked and BT12 Part B deferred.
