@@ -22,6 +22,28 @@ import { root as repoRoot } from './process.mjs';
 // .kitchen/runs/<startedAt-with-:. -as-->-<sha7>/summary.json. Returns one entry
 // per directory, sorted oldest first; a dir without a parseable summary keeps
 // its dir-name sha and timestamp so it still counts.
+// K37: a summary's (or start marker's) load snapshot, sanitized field by
+// field. Old records carry none (null); malformed ones keep the fields that
+// parse and lose the rest. `loadAverage.supported === false` means the
+// platform stubbed the metric (Windows) — never an observed zero.
+function sanitizeLoad(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const la = raw.loadAverage && typeof raw.loadAverage === 'object' ? raw.loadAverage : {};
+  const cpu = raw.cpu && typeof raw.cpu === 'object' ? raw.cpu : {};
+  const mem = raw.memory && typeof raw.memory === 'object' ? raw.memory : {};
+  return {
+    capturedAt: typeof raw.capturedAt === 'string' ? raw.capturedAt : null,
+    platform: typeof raw.platform === 'string' ? raw.platform : null,
+    logicalCores: typeof cpu.logicalCores === 'number' ? cpu.logicalCores : null,
+    memoryFreeBytes: typeof mem.freeBytes === 'number' ? mem.freeBytes : null,
+    loadAverage: {
+      supported: la.supported === true,
+      five: typeof la.five === 'number' ? la.five : null,
+      note: typeof la.note === 'string' ? la.note : null,
+    },
+  };
+}
+
 export function readRuns(runsDir) {
   if (!existsSync(runsDir)) return [];
   const runs = [];
@@ -30,7 +52,7 @@ export function readRuns(runsDir) {
     if (!statSync(dir).isDirectory()) continue;
     const match = name.match(/^(.*)-([0-9a-f]{7,40})$/);
     const dirStamp = Date.parse((match ? match[1] : name).replace(/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, '$1T$2:$3:$4.$5Z'));
-    const run = { name, sha: match ? match[2] : null, startedAt: Number.isNaN(dirStamp) ? null : dirStamp, seconds: null, verdict: null, dirty: null, steps: [], summary: 'missing', start: 'missing' };
+    const run = { name, sha: match ? match[2] : null, startedAt: Number.isNaN(dirStamp) ? null : dirStamp, seconds: null, verdict: null, dirty: null, steps: [], summary: 'missing', start: 'missing', load: null, loadFrom: null };
     // K34: started.json — the record verify writes when the run directory is
     // created — can make an unfinished run legible (planned steps, flags,
     // dirty-at-start). It is never authoritative: its facts are used only
@@ -51,6 +73,8 @@ export function readRuns(runsDir) {
           run.plannedSteps = Array.isArray(marker.steps) ? marker.steps.map(String) : [];
           run.startedDirty = typeof marker.dirty === 'boolean' ? marker.dirty : null;
           run.flags = marker.flags && typeof marker.flags === 'object' && marker.flags !== null ? { only: !!marker.flags.only, fresh: !!marker.flags.fresh, full: !!marker.flags.full } : {};
+          run.load = sanitizeLoad(marker.load);
+          if (run.load !== null) run.loadFrom = 'started';
         } else run.start = 'mismatched';
       } catch { run.start = 'malformed'; }
     }
@@ -67,6 +91,9 @@ export function readRuns(runsDir) {
         run.dirty = typeof parsed.dirty === 'boolean' ? parsed.dirty : null;
         run.steps = Array.isArray(parsed.steps) ? parsed.steps.map(step => ({ name: String(step && step.name), exit: step && typeof step.exit === 'number' ? step.exit : null, seconds: step && typeof step.seconds === 'number' ? step.seconds : null, reused: step && typeof step.reused === 'string' ? step.reused : null })) : [];
         run.profile = typeof parsed.profile === 'string' ? parsed.profile : null;
+        run.notRun = Array.isArray(parsed.notRun) ? parsed.notRun.map(String) : [];
+        const summaryLoad = sanitizeLoad(parsed.load);
+        if (summaryLoad !== null) { run.load = summaryLoad; run.loadFrom = 'summary'; }
       } catch { run.summary = 'malformed'; }
     }
     runs.push(run);
@@ -400,6 +427,140 @@ function waveHistory(root, waves, repo) {
   return history;
 }
 
+// --- comparable-duration advisory (K37 P10) -----------------------------------
+
+// A duration observation is eligible only when it describes one fully
+// executed invocation: a parseable summary on a clean tree, the whole step
+// plan attempted (notRun empty), no step reused, and a valid positive wall
+// time. Reused invocations, dirty runs, incomplete plans and missing or
+// invalid durations are excluded — they say nothing honest about duration.
+function durationEligible(run) {
+  return run.summary === 'ok' && run.dirty === false
+    && Array.isArray(run.notRun) && run.notRun.length === 0
+    && run.steps.length > 0 && run.steps.every(step => step.reused === null && typeof step.seconds === 'number' && Number.isFinite(step.seconds) && step.seconds >= 0)
+    && typeof run.seconds === 'number' && Number.isFinite(run.seconds) && run.seconds > 0;
+}
+// The comparable cohort is the same effective executed plan on the same
+// platform where known: an explicit --full profile when recorded, else the
+// executed step set. Platform comes only from a recorded load snapshot —
+// 'unknown' runs compare only against other 'unknown' runs, never across.
+const cohortPlatform = run => (run.load && run.load.platform) || 'unknown';
+function cohortPlan(run) {
+  if (run.profile) return 'profile ' + run.profile;
+  const names = run.steps.map(step => step.name).sort();
+  return names.length ? 'steps ' + names.join(',') : null;
+}
+const median = list => {
+  const sorted = [...list].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+
+// One advisory report per candidate run: the candidate's seconds against the
+// earlier eligible runs of its own cohort (never itself — a candidate cannot
+// inflate its own baseline). With `candidates` null the latest eligible run
+// of each cohort is evaluated. Fewer than minEarlier earlier observations
+// means 'unavailable', not a pass; strictly more than factor times the median
+// flags 'outlier'. Advisory only — it names a duration outlier, never a cause
+// (load, CPU or otherwise), and never touches a verdict.
+export function durationAdvisory(runs, { candidates = null, minEarlier = 3, factor = 2 } = {}) {
+  const cohorts = new Map();
+  for (const run of runs.filter(durationEligible)) {
+    const plan = cohortPlan(run);
+    if (plan === null) continue;
+    const key = plan + '|' + cohortPlatform(run);
+    if (!cohorts.has(key)) cohorts.set(key, { plan, platform: cohortPlatform(run), eligible: [] });
+    cohorts.get(key).eligible.push(run);
+  }
+  const reports = [];
+  for (const cohort of cohorts.values()) {
+    cohort.eligible.sort((a, b) => (a.startedAt ?? Infinity) - (b.startedAt ?? Infinity));
+    const mine = candidates === null ? [cohort.eligible[cohort.eligible.length - 1]] : cohort.eligible.filter(run => candidates.includes(run));
+    for (const candidate of mine) {
+      const earlier = cohort.eligible.filter(run => run !== candidate && (run.startedAt ?? Infinity) < (candidate.startedAt ?? Infinity));
+      const base = { plan: cohort.plan, platform: cohort.platform, run: candidate.name, seconds: candidate.seconds,
+        load: candidate.load ? (candidate.load.loadAverage.supported && candidate.load.loadAverage.five !== null ? 'loadavg5=' + candidate.load.loadAverage.five : 'load average not observed (' + (candidate.load.loadAverage.note || 'unsupported metric') + ')') : 'load not recorded' };
+      if (earlier.length < minEarlier) {
+        reports.push({ ...base, status: 'unavailable', reason: earlier.length + ' earlier eligible observations (need ' + minEarlier + ')', sources: earlier.map(run => run.name) });
+        continue;
+      }
+      const times = earlier.map(run => run.seconds);
+      const med = median(times);
+      reports.push({ ...base, status: candidate.seconds > factor * med ? 'outlier' : 'within',
+        n: earlier.length, median: med, min: Math.min(...times), max: Math.max(...times),
+        factor, sources: earlier.map(run => run.name) });
+    }
+  }
+  return reports;
+}
+
+// --- per-wave verification cost (K37 P10) --------------------------------------
+
+// Read-only machine-readable totals for one wave, for the close line
+// `verify: N runs, total Ns`. Attribution is by recorded sha against the
+// wave's branch-commit bounds (merge second-parent minus already-on-master,
+// or merge-base..branch for an unmerged branch — the same bounds the page
+// uses). A run whose sha is missing, ambiguous, outside those bounds or
+// unknown to the repository is counted as unattributed — never silently
+// dropped, never double-counted with a sibling wave. Invocation wall seconds
+// and executed step seconds are kept apart: a reused step adds nothing to
+// the executed total, and the reused invocation still carries its own small
+// wall time. History is local: a checkout without .kitchen/runs reports
+// 'missing', not zero.
+export function waveReport(root, waveId) {
+  const runsDir = join(root, '.kitchen', 'runs');
+  const history = existsSync(runsDir) ? 'present' : 'missing';
+  const runs = history === 'present' ? readRuns(runsDir) : [];
+  const repo = repoView(root);
+  const waves = waveHistory(root, readWaves(root), repo);
+  const wave = waves.find(item => item.id === waveId) || null;
+  const report = {
+    wave: waveId,
+    history,
+    waveRecord: wave === null ? 'missing' : 'found',
+    attribution: {
+      method: 'run sha resolved against the wave branch commits: rev-list merge.parent1..merge.parent2 for a merged wave, merge-base..branch for an unmerged one',
+      merge: wave && wave.mergeSha ? wave.mergeSha : null,
+      branchCommits: wave ? wave.branchCommits.length : 0,
+      limits: 'attribution is by recorded commit only — a correction or sibling sharing these exact bounds counts here; a run on a commit outside them never does',
+    },
+    runs: { attributed: 0, withSummary: 0, missingSummary: 0, malformedSummary: 0, verdicts: { PASS: 0, FAIL: 0, UNCOMMITTED: 0, other: 0, unfinished: 0 } },
+    wallSeconds: { known: 0, missing: 0 },
+    executedStepSeconds: { known: 0, stepsMissingSeconds: 0 },
+    runIds: [],
+    unattributed: { count: 0, ids: [], note: 'runs outside the wave bounds; first 50 ids listed' },
+    durationAdvisory: [],
+    provenance: 'local ' + runsDir + (history === 'missing' ? ' — absent: a fresh clone has no run history, reported missing not zero' : ''),
+  };
+  if (wave === null) { report.error = 'no wave record ' + waveId + ' in waves/ or no merge/branch found'; }
+  const bounds = wave ? new Set(wave.branchCommits) : new Set();
+  const attributedRuns = [];
+  for (const run of runs) {
+    const full = resolveSha(repo.graph, run.sha);
+    if (full !== null && bounds.has(full)) { attributedRuns.push(run); report.runIds.push(run.name); }
+    else { report.unattributed.count += 1; if (report.unattributed.ids.length < 50) report.unattributed.ids.push(run.name); }
+  }
+  for (const run of attributedRuns) {
+    report.runs.attributed += 1;
+    if (run.summary === 'ok') {
+      report.runs.withSummary += 1;
+      report.runs.verdicts[run.verdict === 'PASS' || run.verdict === 'FAIL' || run.verdict === 'UNCOMMITTED' ? run.verdict : 'other'] += 1;
+    } else if (run.summary === 'malformed') report.runs.malformedSummary += 1;
+    else { report.runs.missingSummary += 1; report.runs.verdicts.unfinished += 1; }
+    if (typeof run.seconds === 'number' && Number.isFinite(run.seconds)) report.wallSeconds.known += run.seconds;
+    else report.wallSeconds.missing += 1;
+    for (const step of run.steps) {
+      if (step.reused !== null) continue; // a reused step executed nothing here
+      if (typeof step.seconds === 'number' && Number.isFinite(step.seconds)) report.executedStepSeconds.known += step.seconds;
+      else report.executedStepSeconds.stepsMissingSeconds += 1;
+    }
+  }
+  report.line = 'verify: ' + report.runs.attributed + ' runs, total ' + report.wallSeconds.known + 's'
+    + (report.wallSeconds.missing ? ' (' + report.wallSeconds.missing + ' runs without a recorded wall time)' : '');
+  report.durationAdvisory = durationAdvisory(runs, { candidates: attributedRuns });
+  return report;
+}
+
 // --- the page -----------------------------------------------------------------
 
 const fmtMin = seconds => (seconds / 60).toFixed(1);
@@ -503,6 +664,19 @@ function page(root, { budgetSeconds = null } = {}) {
   if (!steps.size) out.push('  missing — no run data');
   out.push('');
 
+  // K37: duration compared only to a documented comparable cohort — same
+  // executed plan and recorded platform — and only as an advisory. A flag is
+  // a duration outlier, never a cause (high load included), never a verdict,
+  // and a rerun never erases the first failed attempt.
+  out.push('Duration vs comparable runs (advisory — an outlier is a slow observation, not a cause or a verdict)');
+  const advisories = durationAdvisory(runs);
+  if (!advisories.length) out.push('  missing — no eligible duration observations');
+  for (const report of advisories) {
+    if (report.status === 'unavailable') out.push('  ' + report.plan + ' on ' + report.platform + ': ' + report.run + ' ' + report.seconds + 's — comparison unavailable, ' + report.reason + '; ' + report.load);
+    else out.push('  ' + report.plan + ' on ' + report.platform + ': ' + report.run + ' ' + report.seconds + 's vs median ' + report.median + 's (n=' + report.n + ', range ' + report.min + '-' + report.max + 's, sources ' + report.sources.join(', ') + '; ' + report.load + ')' + (report.status === 'outlier' ? ' — OUTLIER >' + report.factor + 'x median' : ' — within'));
+  }
+  out.push('');
+
   const checks = checkLimits(root);
   checks.push(budgetCheck(runs, { budgetSeconds }));
   const failures = [];
@@ -521,6 +695,17 @@ function page(root, { budgetSeconds = null } = {}) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const rootArg = process.argv.slice(2).find(arg => arg.startsWith('--root='));
   const root = (rootArg ? rootArg.slice(7) : repoRoot).replace(/[/\x5c]+$/, '');
+  const waveArg = process.argv.slice(2).find(arg => arg.startsWith('--wave='));
+  if (waveArg !== undefined) {
+    // Close-time query: machine-readable per-wave verification cost.
+    // `node scripts/kitchen-stats.mjs [--root=<dir>] --wave=<id>` prints one
+    // JSON document and nothing else. Read-only.
+    try {
+      const root = (rootArg ? rootArg.slice(7) : repoRoot).replace(/[/\x5c]+$/, '');
+      console.log(JSON.stringify(waveReport(root, waveArg.slice(7)), null, 2));
+      process.exit(0);
+    } catch (error) { console.error('kitchen-stats --wave failed: ' + (error instanceof Error ? error.message : String(error))); process.exit(2); }
+  }
   const budgetArg = process.argv.slice(2).find(arg => arg.startsWith('--budget'));
   let budgetSeconds = null;
   if (budgetArg !== undefined) {

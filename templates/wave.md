@@ -48,5 +48,5 @@ Decisions already made, interfaces to reuse, traps. Keep it short; link instead 
 - Lenses: <one line per ticked lens: what was tried and what was found>
 - Method: <playbook followed; each principle that changed a decision and what it changed>
 - Findings and limits:
-- Merged: `<merge SHA>` · Resources removed: yes | <what remains and why>
+- Merged: `<merge SHA>` · Verify cost: `<the "line" from node scripts/kitchen-stats.mjs --wave=<id>, e.g. verify: N runs, total Ns>` · Resources removed: yes | <what remains and why>
 - Reflect: <what went wrong, was repeated or could be better> -> <wave | station | kitchen>: <what it became, or "nothing">

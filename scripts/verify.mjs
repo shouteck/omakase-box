@@ -18,6 +18,7 @@ import { createWriteStream, mkdirSync, readFileSync, writeFileSync } from 'node:
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { root } from './process.mjs';
+import { captureLoad } from './host-load.mjs';
 import { changedPaths, kitchenSuiteReason, reusableStep, selectCheckSuites, stepReadsPath, suiteKey } from './suite.mjs';
 
 const args = process.argv.slice(2);
@@ -85,10 +86,13 @@ mkdirSync(runDirectory, { recursive: true });
 // effective step plan — never environment or raw argv strings. It is
 // evidence of an invocation, never of a result: nothing reads it for reuse
 // or PASS, and a completed summary.json remains the trust anchor.
-writeFileSync(join(runDirectory, 'started.json'), JSON.stringify({ schemaVersion: 1, sha, startedAt: startedAt.toISOString(), dirty, flags: { only, fresh, full }, steps }, null, 2) + '\n');
+// K37: one cheap load snapshot at start rides both records. What the platform
+// cannot answer (loadavg on Windows) is marked unsupported, never zero.
+const load = captureLoad();
+writeFileSync(join(runDirectory, 'started.json'), JSON.stringify({ schemaVersion: 1, sha, startedAt: startedAt.toISOString(), dirty, flags: { only, fresh, full }, steps, load }, null, 2) + '\n');
 if (dirty) {
   const line = `verify ${sha.slice(0, 7)}+dirty UNCOMMITTED not-run=${steps.join(',')} db=none 0s (refused before database, build and tests: uncommitted changes)`;
-  writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: true, verdict: 'UNCOMMITTED', startedAt: startedAt.toISOString(), seconds: 0, database: 'none', profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: null, steps: [], notRun: steps, dirtyPaths: dirtyPathsStart, failure: 'uncommitted changes in the working tree', line }, null, 2) + '\n');
+  writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: true, verdict: 'UNCOMMITTED', startedAt: startedAt.toISOString(), seconds: 0, database: 'none', profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: null, steps: [], notRun: steps, dirtyPaths: dirtyPathsStart, failure: 'uncommitted changes in the working tree', load, line }, null, 2) + '\n');
   console.error('verify: refusing before database, build or test work — the working tree has uncommitted changes:');
   for (const path of dirtyPathsStart) console.error(`  ${path}`);
   console.log(`\n${line}\nLogs: ${runDirectory}`);
@@ -215,7 +219,7 @@ const notRun = steps.slice(results.length);
 const seconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
 const stepCell = result => `${result.name}=${result.reused ? `reused@${result.reused}${result.ancestor === undefined ? '' : `(ancestor ${result.ancestor.slice(0, 7)}, only inert paths changed)`}` : result.exit}`;
 const line = `verify ${sha.slice(0, 7)}${dirtyAny ? '+dirty' : ''} ${verdict} ${results.map(stepCell).join(' ')}${notRun.length ? ` not-run=${notRun.join(',')}` : ''} db=${db.kind} ${seconds}s${failure ? ` (${failure})` : ''}`;
-writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyAny, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, finalStatus, dirtyPaths, line }, null, 2) + '\n');
+writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: dirtyAny, verdict, startedAt: startedAt.toISOString(), seconds, database: db.kind, profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: checkPlan ? [...checkCovered] : null, steps: results, notRun, failure: failure ?? null, finalStatus, dirtyPaths, load, line }, null, 2) + '\n');
 console.log(`\n${line}\nLogs: ${runDirectory}`);
 if (statusReadFailed) console.error('verify: final Git status could not be read (git status --porcelain failed) — the run is dirty/unreadable and not reusable.');
 else if (dirtyAny) {
