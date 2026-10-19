@@ -54,3 +54,5 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **A source-delivered environment does not persist across this host's agent tool calls** — each exec gets a fresh shell. K31's gh-logging shims missed several calls; transcript-derived counts were the labelled fallback. Bake env into each command or a wrapper, not a one-time source.
 
 - **Env for measured agents goes in wrappers, not source** — K31's sourced env did not persist across tool calls (missed gh counts); K31b's baked wrapper scripts logged 347/347. Pattern: kitchen/memory/real-use-b/shims/.
+
+- **cpSync ENOENT names the destination, not the vanished source** — a missing file in a copied .git is git housekeeping racing the walk (K38). Fixture repos pin gc.auto=0 and maintenance.auto=false at creation; retries are the documented backstop, not the fix.

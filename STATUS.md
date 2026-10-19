@@ -1,15 +1,13 @@
 ﻿# Status
 
-Updated by the CTO on 19 October 2026 at the K30 close.
+Updated by the CTO on 19 October 2026 at the K38 close.
 
 ## Now
 
-- **K30 merged** (`df37d20`; independent PASS test-verified on `5aaac78`, verdict `39f9ad4`). Delivers `docs/box-v4/CONTRACTS.md` (contracts for all six stages, two foundations and the platform: 60 numbered guarantees and all 134 `BountyRefused` reason names partitioned with zero omissions or duplicates) and `kitchen/reviews/K30-contracts.md` (proof map, six bite experiments, scale target status, ranked gaps and five hardening wave proposals).
-- **Hard stops proven to bite:** six one-line mutations in a scratch copy (C1 never-ship, P1 private-repo, P4+O1 owner's-yes, R1 nothing-solver-wrote-runs, P3 only-named-public, M1 drafts-never-shared) each broke the named test; the independent pass repeated two bites itself (`apply-unsafe-config` and private-repo refusal) and spot-checked 15 proof citations and the 134-refusal partition.
-- **Ranked gaps:** no gap touches a hard stop. Top gaps are four unmeasured/partial scale targets (`create` <1 s on 10k files, `post` <30 s whole command, `review` at 100 solutions, `decide` at 1,000 records) plus side-effect-only assertions (`T1` unasked-text-constant, `T4` quiet reads across all read commands, `C5` snapshot commit resolvable, `PL3` every refusal carries `next:`, `M6` plain-clone on real GitHub) and one dead helper (`look.ts:17` `refuse`).
-- **Verify cost:** `verify: 3 runs, total 194s` (2 PASS, 1 FAIL from a stale `dist` before rebuild; 0 missing/malformed summaries; 165 executed step-seconds) from post-merge `node scripts/kitchen-stats.mjs --wave=K30` against local `.kitchen/runs`.
-- Main checkout is master; all `kitchen-k30-*`/`k30-*` scratch items and the merged branch are removed. Latest hosted result before merge was green `39268107076` (BT37 close); post-push checks are not awaited.
+- **K38 merged** (`6ed5b0f`; independent PASS test-verified on `7a99d9d`, verdict `15d4e7a`). The hosted Linux red — ENOENT copying a fixture world's `remote.git/objects` — is diagnosed and fixed: `cpSync` reports the destination on a copy failure, and `git maintenance run --auto` spawned detached by `receive-pack` could outlive a push into the copy. Fixture repos now pin `gc.auto=0` and `maintenance.auto=false` at creation (trace-confirmed: nothing spawns on push), plus one documented retry as the second line.
+- **Proof:** pass independently reran the 30-run loop (30/30 green) and re-verified the mechanism with GIT_TRACE. The exact transient file is bounded, not named — stated honestly. No assertion or product change; `git diff master -- tests/` is fixture-only.
+- **Verify cost:** `verify: 2 runs, total 1304s` (local `.kitchen/runs`). Master is clean; branch and scratch removed. Post-push checks not awaited.
 
 ## Next
 
-This run stops after K30. No wave is in flight or starts automatically. Five stage-hardening waves (`create`, `post`, `track`, `review`, `decide`) are proposed in `kitchen/reviews/K30-contracts.md` for when the owner names them; BT33 stays parked and BT12 Part B deferred.
+This run stops after K38. No wave in flight. Roadmap order next: K39 (scale-target measurements) and BT38 (direct proofs + dead-helper removal) both have briefs; BT33 parked; BT12 Part B deferred.
