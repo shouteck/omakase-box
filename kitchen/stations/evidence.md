@@ -50,3 +50,5 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **Never present unfinished or failed work as complete** — folded from the retired console card: a passing test is not a usable screen, and state that survives only in a page is a bug. The terminal demo under `kitchen/demo/` is demo tooling, not a restored web app.
 - **Do not download a browser.** The demo's Chromium lives in `.runtime/browsers` and the suite runner sets the path; if it is missing or will not launch, stop and report.
 - **Git output that grows with history needs an explicit buffer.** A test or script that reads `git diff`, `git log` or similar over the repository's history sets `maxBuffer` (Node's default is 1 MiB) and fails by name on a read error; K15's guard crashed with `ENOBUFS` once the wave-file diff passed 1 MiB (K15-ci).
+
+- **A source-delivered environment does not persist across this host's agent tool calls** — each exec gets a fresh shell. K31's gh-logging shims missed several calls; transcript-derived counts were the labelled fallback. Bake env into each command or a wrapper, not a one-time source.
