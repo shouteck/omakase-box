@@ -30,7 +30,30 @@ export function readRuns(runsDir) {
     if (!statSync(dir).isDirectory()) continue;
     const match = name.match(/^(.*)-([0-9a-f]{7,40})$/);
     const dirStamp = Date.parse((match ? match[1] : name).replace(/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, '$1T$2:$3:$4.$5Z'));
-    const run = { name, sha: match ? match[2] : null, startedAt: Number.isNaN(dirStamp) ? null : dirStamp, seconds: null, verdict: null, dirty: null, steps: [], summary: 'missing' };
+    const run = { name, sha: match ? match[2] : null, startedAt: Number.isNaN(dirStamp) ? null : dirStamp, seconds: null, verdict: null, dirty: null, steps: [], summary: 'missing', start: 'missing' };
+    // K34: started.json — the record verify writes when the run directory is
+    // created — can make an unfinished run legible (planned steps, flags,
+    // dirty-at-start). It is never authoritative: its facts are used only
+    // when they agree with the directory name verify itself minted (sha
+    // prefix and timestamp), so a forged or transplanted marker changes the
+    // label, never the attribution, and it can never stand in for a
+    // completed summary.json.
+    const startPath = join(dir, 'started.json');
+    if (existsSync(startPath)) {
+      try {
+        const marker = JSON.parse(readFileSync(startPath, 'utf8'));
+        const markerSha = typeof marker.sha === 'string' ? marker.sha : null;
+        const markerAt = Date.parse(marker.startedAt);
+        const agrees = markerSha !== null && run.sha !== null && markerSha.startsWith(run.sha)
+          && !Number.isNaN(markerAt) && markerAt === run.startedAt;
+        if (agrees) {
+          run.start = 'ok';
+          run.plannedSteps = Array.isArray(marker.steps) ? marker.steps.map(String) : [];
+          run.startedDirty = typeof marker.dirty === 'boolean' ? marker.dirty : null;
+          run.flags = marker.flags && typeof marker.flags === 'object' && marker.flags !== null ? { only: !!marker.flags.only, fresh: !!marker.flags.fresh, full: !!marker.flags.full } : {};
+        } else run.start = 'mismatched';
+      } catch { run.start = 'malformed'; }
+    }
     const summaryPath = join(dir, 'summary.json');
     if (existsSync(summaryPath)) {
       try {
@@ -341,7 +364,12 @@ function page(root, { budgetSeconds = null } = {}) {
   out.push('source: ' + runsDir + ' (' + runs.length + ' run dirs) + git log; read-only, nothing written');
   out.push('');
   out.push('Verify runs');
-  out.push('  ' + withSummary.length + ' runs with summary.json · ' + without.length + ' without — ' + (without.length ? without.map(run => run.name + (run.summary === 'malformed' ? ' (malformed summary)' : '')).join(', ') : 'none'));
+  const withoutLabel = run => run.summary === 'malformed' ? ' (malformed summary)'
+    : run.start === 'ok' ? ` (started, unfinished — running or interrupted; planned ${run.plannedSteps.length ? run.plannedSteps.join(',') : 'missing'}${run.startedDirty === true ? ', dirty at start' : ''})`
+    : run.start === 'malformed' ? ' (malformed started.json)'
+    : run.start === 'mismatched' ? ' (started.json disagrees with the dir name)'
+    : ' (no start record — predates K34 or died before the marker)';
+  out.push('  ' + withSummary.length + ' runs with summary.json · ' + without.length + ' without — ' + (without.length ? without.map(run => run.name + withoutLabel(run)).join(', ') : 'none'));
   out.push('  verdicts: ' + verdictCount('PASS') + ' PASS · ' + verdictCount('FAIL') + ' FAIL · ' + verdictCount('UNCOMMITTED') + ' UNCOMMITTED · ' + (withSummary.length - verdictCount('PASS') - verdictCount('FAIL') - verdictCount('UNCOMMITTED')) + ' other');
   out.push('  total verify time: ' + fmtMin(totalSeconds) + ' min across ' + withSummary.length + ' runs (runs without summary carry no timing)');
 

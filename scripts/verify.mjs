@@ -77,6 +77,15 @@ const dirty = dirtyPathsStart.length > 0;
 const startedAt = new Date();
 const runDirectory = join(root, '.kitchen', 'runs', `${startedAt.toISOString().replace(/[:.]/g, '-')}-${sha.slice(0, 7)}`);
 mkdirSync(runDirectory, { recursive: true });
+// K34: the run's durable start record, written synchronously the moment the
+// run directory exists — before the dirty-tree refusal and before any
+// check/build/suite work. A killed run used to leave only the directory
+// name; now started.json makes the invocation attributable. It carries only
+// validated facts — commit, start time, the dirty-at-start flag and the
+// effective step plan — never environment or raw argv strings. It is
+// evidence of an invocation, never of a result: nothing reads it for reuse
+// or PASS, and a completed summary.json remains the trust anchor.
+writeFileSync(join(runDirectory, 'started.json'), JSON.stringify({ schemaVersion: 1, sha, startedAt: startedAt.toISOString(), dirty, flags: { only, fresh, full }, steps }, null, 2) + '\n');
 if (dirty) {
   const line = `verify ${sha.slice(0, 7)}+dirty UNCOMMITTED not-run=${steps.join(',')} db=none 0s (refused before database, build and tests: uncommitted changes)`;
   writeFileSync(join(runDirectory, 'summary.json'), JSON.stringify({ schemaVersion: 1, sha, dirty: true, verdict: 'UNCOMMITTED', startedAt: startedAt.toISOString(), seconds: 0, database: 'none', profile: full ? `verify --full ${suites.join(' ')}` : null, checkSuites: null, steps: [], notRun: steps, dirtyPaths: dirtyPathsStart, failure: 'uncommitted changes in the working tree', line }, null, 2) + '\n');
