@@ -150,6 +150,7 @@ Scored by: blocks the main loop (L), how often an actor meets it (F), cost (C). 
 | 9b | **K32** agent payments researched (done) | pay (autonomy) | — | done |
 | 9b2 | **BT36** the owner records that a solver was paid | pay (G5) | — (`config set paid` confirmed 19 October 2026) | **yes**: ready now |
 | 9c | **K33** the kitchen reviewed on its own record (merged) | the kitchen | — (cooked and reviewed by fresh agents, not the head chef) | done; report and ten proposals in `kitchen/reviews/K33-kitchen.md`, implementation not started |
+| 9c1 | **K34** interrupted verification retains start evidence (K33 P1) | the kitchen | K33; owner approved 19 October 2026 | approved; one reviewed implementation wave, P2-P10 remain proposals |
 | 10 | publishing (BT12 Part B) | getting the tool (G7) | the owner's decision | owner's |
 
 The kitchen has one stove, so waves cook one at a time; "independent" means it can be named at any point without waiting for another wave.
