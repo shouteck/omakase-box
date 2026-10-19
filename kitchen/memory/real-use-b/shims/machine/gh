@@ -1,0 +1,7 @@
+#!/bin/sh
+# K31b gh-start counter, machine A callers (`./gh`). The log path is baked
+# into the file — no environment to keep alive. One line == one gh start.
+LOG="C:/Users/shout/AppData/Local/Temp/box-k31b/gh-logs/machine-a.jsonl"
+ARGS=$(printf '%s ' "$@" | sed 's/\\/\\\\/g; s/"/\\"/g')
+printf '{"ts":"%s","cwd":"%s","args":"%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" "$PWD" "$ARGS" >> "$LOG" 2>/dev/null
+exec "/c/Program Files/GitHub CLI/gh" "$@"

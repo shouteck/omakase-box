@@ -1,0 +1,11 @@
+#!/bin/sh
+# K31b box wrapper for machine A. Bakes the scratch settings dir so the
+# owner's real settings are never read or written, names this machine's
+# gh-start log for the tool's internal gh calls, puts the logging gh shim
+# on PATH (sh shim dir holds gh.cmd only), then runs the scratch-installed
+# box. Nothing here depends on a sourced environment — every variable is
+# set inside each invocation.
+export BOX_BOUNTY_SETTINGS_DIR="C:/Users/shout/AppData/Local/Temp/box-k31b/settings-a"
+export K31B_GH_LOG="C:/Users/shout/AppData/Local/Temp/box-k31b/gh-logs/machine-a.jsonl"
+export PATH="/c/Users/shout/AppData/Local/Temp/box-k31b/shim:$PATH"
+exec node "C:/Users/shout/AppData/Local/Temp/box-k31b/prefix/node_modules/box-bounty/dist/box.js" "$@"
