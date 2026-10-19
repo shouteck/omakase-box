@@ -19,7 +19,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 - C2. Links and junctions resolving outside the repository are refused, never followed (`snapshot.ts:112` `link-escape`).
 - C3. `create` performs no network I/O and writes no `refs/box-bounty/<id>` ref — the draft is local (`bt32.test.ts` case 1, `record.test.ts:54`).
 - C4. `--why` is required and stored only in the record — never in any shipped artifact (`create.ts:129`, `missing-why`).
-- C5. A pinned snapshot commit exists so the exact work state can be rebuilt (`snapshot.ts`, `plan.snapshot.commit`).
+- C5. `planBounty` builds a resolvable snapshot commit whose tree is the captured working state (`snapshot.ts`, `plan.snapshot.commit`; since BT24, new drafts do not pin `refs/box-bounty/<id>` or store `record.snapshot` — corrected by BT38).
 - C6. The snapshot tree emits bytes from the pinned commit (`git cat-file blob`), never the live worktree (packaging card, BT6a-era; `snapshot.ts`).
 
 **Refusals.** `missing-task`, `missing-why`, `missing-part-of`, `not-a-repository`, `never-ship-input` (a `--task` file a never-ship rule covers, `create.ts:94`), `link-escape`, `unreadable-path` (`snapshot.ts:118`), `invalid-boxignore` (`never-ship.ts:96`), `create-option-retired`, `folder-delivery-retired`, `checks-removed` (retired options refused by name, `args.ts:144-146`, `commands.ts:20`).
