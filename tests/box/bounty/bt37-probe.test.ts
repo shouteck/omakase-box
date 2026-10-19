@@ -18,7 +18,9 @@ describe('one open pull request counts once in "solution(s) waiting"', () => {
     expect(first.status).toBe(0);
     expect(first.stdout).toContain('1 solution(s) waiting');
     // The solver force-pushes: the API now names a new head for the same PR.
-    const pr = { ...state().prs[0], head: { sha: 'f'.repeat(40) } };
+    const open = state().prs[0];
+    if (open === undefined) throw new Error('fixture lost its pull request');
+    const pr = { ...open, head: { sha: 'f'.repeat(40) } };
     update({ prs: [pr] });
     const second = box(repo, ['status']);
     expect(second.status).toBe(0);

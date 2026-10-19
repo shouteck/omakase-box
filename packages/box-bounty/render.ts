@@ -101,22 +101,23 @@ export const validAt = (at: string | null | undefined): string | null => {
   return Number.isFinite(Date.parse(at)) ? at : null;
 };
 
-// Pull requests still waiting to be collected (BT37): the freshly listed
-// ones plus the previously seen, deduped by number and commit — a re-pushed
-// request is a new one — minus what a collected attempt already is (its
-// commit lands on seenPullRequests at collection, so seen alone overcounts).
+// Pull requests still waiting to be collected (BT37): the current listing is
+// authoritative when present — empty included; a closed-unmerged request is
+// gone whatever history says. seenPullRequests is append-only (n, commit)
+// history and only the fallback when no listing exists; a solver's re-push
+// replaces the head, so each request counts by its latest known revision,
+// not every seen pair. A collected attempt whose commit is the current
+// revision is that solution itself, not waiting (an older collected
+// revision leaves the re-pushed request waiting).
 // A waiting pull request is real activity: status must never read
 // "no solution yet" beside one.
 export const waitingPullRequests = (record: BountyRecord): readonly { readonly n: number; readonly commit: string; readonly at: string }[] => {
   const github = record.github;
   if (github === undefined) return [];
   const collected = new Set(attemptsOf(record).map(attempt => attempt.commit));
-  const waiting = new Map<string, { n: number; commit: string; at: string }>();
-  for (const pr of [...github.availablePullRequests ?? [], ...github.seenPullRequests ?? []]) {
-    if (collected.has(pr.commit)) continue;
-    waiting.set(`${pr.n}#${pr.commit}`, pr);
-  }
-  return [...waiting.values()];
+  const current = new Map<number, { n: number; commit: string; at: string }>();
+  for (const pr of github.availablePullRequests ?? github.seenPullRequests ?? []) current.set(pr.n, pr);
+  return [...current.values()].filter(pr => !collected.has(pr.commit));
 };
 
 /** The two age facts (BT35): when the bounty opened — its `posted` event, a

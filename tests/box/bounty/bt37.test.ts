@@ -124,6 +124,48 @@ describe('2. status never says "no solution yet" while a pull request waits', ()
     expect(waitingPullRequests(record)).toEqual([PR(7, 'b'.repeat(40), '2026-10-04T00:00:00.000Z')]);
   });
 
+  it('the current listing is authoritative: dead seen revisions and collected heads do not wait', () => {
+    // PR 7 re-pushed: collected old revision, new head in the listing —
+    // still one waiting request. PR 8 closed unmerged: only in seen history,
+    // absent from the current listing — not waiting. PR 9's collected commit
+    // is its current head — the collected solution, not waiting.
+    const record = recordWith({
+      attempts: [
+        { n: 1, at: '2026-10-05T00:00:00.000Z', commit: 'b'.repeat(40), changed: [], added: [], deleted: [], outcome: 'answered', conflicts: null, report: [] },
+        { n: 2, at: '2026-10-05T00:00:00.000Z', commit: 'e'.repeat(40), changed: [], added: [], deleted: [], outcome: 'answered', conflicts: null, report: [] }
+      ],
+      github: {
+        availablePullRequests: [PR(7, 'f'.repeat(40), '2026-10-06T00:00:00.000Z'), PR(9, 'e'.repeat(40), '2026-10-05T00:00:00.000Z')],
+        seenPullRequests: [PR(7, 'b'.repeat(40), '2026-10-04T00:00:00.000Z'), PR(8, 'd'.repeat(40), '2026-10-04T00:00:00.000Z'), PR(9, 'e'.repeat(40), '2026-10-05T00:00:00.000Z')]
+      }
+    });
+    expect(waitingPullRequests(record)).toEqual([PR(7, 'f'.repeat(40), '2026-10-06T00:00:00.000Z')]);
+  });
+
+  it('an empty current listing means nothing waits, whatever seen history holds', () => {
+    const record = recordWith({
+      github: {
+        availablePullRequests: [],
+        seenPullRequests: [PR(7, 'b'.repeat(40), '2026-10-04T00:00:00.000Z')]
+      }
+    });
+    expect(waitingPullRequests(record)).toEqual([]);
+  });
+
+  it('seen alone is the fallback and counts each request by its latest revision', () => {
+    // No listing was ever produced (e.g. the record predates refresh): the
+    // append-only history still counts PR 7 once — at its newest head and
+    // time — and PR 8 once.
+    const record = recordWith({
+      github: {
+        seenPullRequests: [PR(7, 'b'.repeat(40), '2026-10-04T00:00:00.000Z'), PR(7, 'f'.repeat(40), '2026-10-06T00:00:00.000Z'), PR(8, 'd'.repeat(40), '2026-10-05T00:00:00.000Z')]
+      }
+    });
+    expect(waitingPullRequests(record)).toEqual([PR(7, 'f'.repeat(40), '2026-10-06T00:00:00.000Z'), PR(8, 'd'.repeat(40), '2026-10-05T00:00:00.000Z')]);
+    // The newest waiting revision's time is the last activity.
+    expect(bountyAge(record).lastActivityAt).toBe('2026-10-06T00:00:00.000Z');
+  });
+
   it('a malformed waiting time makes lastActivityAt unavailable, never a false older fact', () => {
     const record = recordWith({
       github: { availablePullRequests: [PR(7, 'b'.repeat(40), 'not-a-time')] }
