@@ -16,7 +16,7 @@ This is the Box project's replacement router, derived from poteto's principles. 
 
 A bare START.md means: act as CTO and follow START.md in the repository root. Read AGENTS.md, STATUS.md and docs/box-v4/KITCHEN.md; they are the rules, the state and the procedure. This skill adds only how to use the retained pstack material on Devin.
 
-The team is flat: dispatch `box-worker`, then a distinct `box-reviewer`, with run_subagent, one at a time, each given the wave file and a complete standalone prompt. `box-recipient` is for package-only attempts from D2.2. Lead profiles are for genuinely parallel work only. The CTO writes briefs, status and kitchen tooling, never product code.
+The team is flat: dispatch `box-worker`, then a distinct `box-reviewer`, with run_subagent, one at a time, each given the wave file and a complete standalone prompt. `box-recipient` is for package-only attempts from D2.2. There is no lead layer: the CTO staffs every role this same way, never by nesting workers. The CTO writes briefs, status and kitchen tooling, never product code.
 
 ## Using the retained skills
 

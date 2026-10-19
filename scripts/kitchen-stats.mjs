@@ -107,6 +107,32 @@ function fileText(root, name) {
 function lineCount(text) {
   return text === '' ? 0 : (text.match(/\n/g) || []).length + (text.endsWith('\n') ? 0 : 1);
 }
+
+// K35 (P2/P8): the living station cards are the only active cards, each bounded
+// at CARD_LIMIT_BYTES UTF-8 bytes, and retired roles/stations (station-chef,
+// service-data, console) must not survive as live instructions or options in
+// any file a dispatch reads. LIVE_RULE_FILES is the fixed half of that set —
+// the host routing adapters and the brigade/template documents; role files and
+// station cards are enumerated from their directories, so a new card or role
+// is measured without an edit here. suite.mjs imports the same list so every
+// path a kitchen test reads also triggers test:kitchen and the hosted run.
+export const CARD_LIMIT_BYTES = 12288;
+export const LIVE_RULE_FILES = [
+  'kitchen/README.md',
+  'templates/wave.md',
+  '.devin/rules/box-kitchen.md',
+  '.claude/skills/kitchen/SKILL.md',
+  '.cursor/rules/box-kitchen.mdc',
+  '.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md',
+  '.devin/plugins/box-pstack/DEVIN-COMPATIBILITY.md',
+];
+const RETIRED_TOKENS = [/\bstation[- ]chef\b/i, /\bbox-station-chef\b/i, /\bservice-data\b/i, /\bstations\/console\b/i];
+function ruleFiles(root) {
+  const files = ['AGENTS.md', 'docs/box-v4/KITCHEN.md', ...LIVE_RULE_FILES];
+  const rolesDir = join(root, 'kitchen', 'roles');
+  if (existsSync(rolesDir)) for (const name of readdirSync(rolesDir).filter(name => name.endsWith('.md')).sort()) files.push(join('kitchen', 'roles', name));
+  return files;
+}
 // Each check reports { label, actual, limit, ok } — ok is true/false, or the
 // string 'missing' when the input file is absent (missing is labelled, not a pass).
 export function checkLimits(root) {
@@ -127,6 +153,35 @@ export function checkLimits(root) {
   }
   const status = fileText(root, 'STATUS.md');
   checks.push({ label: 'STATUS.md lines', actual: status === null ? 'missing' : String(lineCount(status)), limit: '60', ok: status === null ? 'missing' : lineCount(status) <= 60 });
+
+  // K35: living cards are bounded; retired names are not live options; every
+  // station a dispatch can name has a card and every card is named.
+  const stationsDir = join(root, 'kitchen', 'stations');
+  const cards = existsSync(stationsDir) ? readdirSync(stationsDir).filter(name => name.endsWith('.md')).sort() : [];
+  if (!cards.length) checks.push({ label: 'living station cards', actual: 'missing', limit: `each <= ${CARD_LIMIT_BYTES} B`, ok: 'missing' });
+  for (const card of cards) {
+    const bytes = Buffer.byteLength(fileText(root, join('kitchen', 'stations', card)) ?? '');
+    checks.push({ label: `living card kitchen/stations/${card} size`, actual: bytes + ' B', limit: `${CARD_LIMIT_BYTES} B`, ok: bytes <= CARD_LIMIT_BYTES });
+  }
+  const scanned = ruleFiles(root).map(name => ({ name, text: fileText(root, name) })).filter(item => item.text !== null);
+  if (!scanned.length) checks.push({ label: 'retired role/station names absent from live rules', actual: 'missing', limit: 'none', ok: 'missing' });
+  else {
+    const hits = [];
+    for (const { name, text } of scanned) for (const token of RETIRED_TOKENS) if (token.test(text)) hits.push(`${name} matches ${token}`);
+    checks.push({ label: 'retired role/station names absent from live rules', actual: hits.length ? hits.join('; ') : 'none', limit: 'none', ok: hits.length === 0 });
+  }
+  const readme = fileText(root, 'kitchen/README.md');
+  const template = fileText(root, 'templates/wave.md');
+  if (readme === null || template === null) checks.push({ label: 'station listings match living cards', actual: 'missing', limit: 'exactly the cards on disk', ok: 'missing' });
+  else {
+    const named = new Set([...readme.matchAll(/stations\/([a-z0-9-]+)\.md/g)].map(match => match[1] + '.md'));
+    const slot = (template.match(/Station:\s*<([^>]+)>/) || [])[1] || '';
+    for (const option of slot.split('|').map(name => name.trim()).filter(Boolean)) named.add(option + '.md');
+    const missing = [...named].filter(name => !cards.includes(name));
+    const unlisted = cards.filter(name => !named.has(name));
+    const actual = [...missing.map(name => `listed without card: ${name}`), ...unlisted.map(name => `card not listed: ${name}`)].join('; ') || 'match';
+    checks.push({ label: 'station listings match living cards', actual, limit: 'exactly the cards on disk', ok: missing.length === 0 && unlisted.length === 0 });
+  }
   return checks;
 }
 

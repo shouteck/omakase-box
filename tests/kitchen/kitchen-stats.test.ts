@@ -125,9 +125,9 @@ describe('checkLimits — the kitchen-size guards the page enforces', () => {
 
   it('passes a compliant root and reports missing files as missing, not ok', () => {
     const ok = limits(fakeRoot());
-    expect(ok.map((c: Json) => c.ok)).toEqual([true, true, true]);
+    expect(ok.slice(0, 3).map((c: Json) => c.ok)).toEqual([true, true, true]);
     const empty = temp();
-    expect(limits(empty).map((c: Json) => c.ok)).toEqual(['missing', 'missing', 'missing']);
+    expect(limits(empty).slice(0, 3).map((c: Json) => c.ok)).toEqual(['missing', 'missing', 'missing']);
   });
 
   it('fails each fabricated violation by name — all three limits must trip', () => {
@@ -148,7 +148,7 @@ describe('checkLimits — the kitchen-size guards the page enforces', () => {
     const dir = fakeRoot();
     writeFileSync(join(dir, 'kitchen', 'INBOX.md'), Array.from({ length: 10 }, (_, i) => `- entry ${i}`).join('\n') + '\n');
     writeFileSync(join(dir, 'STATUS.md'), Array(60).fill('x').join('\n') + '\n');
-    expect(limits(dir).every((c: Json) => c.ok === true)).toBe(true);
+    expect(limits(dir).slice(0, 3).every((c: Json) => c.ok === true)).toBe(true);
   });
 });
 

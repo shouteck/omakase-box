@@ -33,6 +33,16 @@ on:
       - 'kitchen/demo/record.mjs'
       - 'docs/box-v4/KITCHEN.md'
       - 'waves/*.md'
+      # K35: the rulebook guard reads every live rule/role/card/adapter file.
+      - 'kitchen/README.md'
+      - 'kitchen/roles/*.md'
+      - 'kitchen/stations/*.md'
+      - 'templates/wave.md'
+      - '.devin/rules/box-kitchen.md'
+      - '.devin/plugins/box-pstack/skills/poteto-mode/SKILL.md'
+      - '.devin/plugins/box-pstack/DEVIN-COMPATIBILITY.md'
+      - '.claude/skills/kitchen/SKILL.md'
+      - '.cursor/rules/box-kitchen.mdc'
 
 # A newer push to the same ref cancels a stale run, queued or in progress.
 concurrency:

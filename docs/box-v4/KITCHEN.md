@@ -10,7 +10,7 @@ The rules are in [AGENTS.md](../../AGENTS.md). This file is the procedure. The r
 ## A wave, start to finish
 
 1. **Brief.** Copy [the template](../../templates/wave.md) to `waves/<id>.md` and fill it in, naming the station it belongs to (see [the brigade](../../kitchen/README.md)). One page. If it does not fit on one page the task is too big; split it.
-2. **Branch.** `wave/<id>` from current master. Sequential work can use the main checkout. Parallel work gets its own worktree, one writer each.
+2. **Branch.** `wave/<id>` from current master. The main checkout is the default; sequential cooks share it. Separate worktrees are only for genuinely parallel writers (one writer per branch) and for the head chef's mid-wave kitchen-document commits.
 3. **Implement.** The worker gets its role file, the wave file and the station card, and nothing else by default. It commits to the branch and runs `node scripts/verify.mjs` itself before handing back.
 4. **Review.** The reviewer checks out the worker's commit, reads `git diff master...wave/<id>` against the brief, runs `node scripts/verify.mjs` with the suites the brief names, and writes the verdict into the wave file: commit SHA, the verify summary line, PASS or FAIL, findings.
 5. **Fix loop.** On FAIL the worker fixes and commits; the reviewer reruns on the new SHA. No new approval. Rerunning a check is always allowed. If the CTO changes the scope mid-wave, the wave file is edited first and the worker is pointed at it. After a second correction, stop resuming the same worker: start a fresh one with the wave file up to date — instructions decay across resumes. A FAIL whose cause is a design choice with no precedent goes to a prototype wave, not another correction.
@@ -21,15 +21,17 @@ When the last wave of a milestone closes, send the CEO the finished card with th
 
 Keep the ceremony in proportion. A wave whose whole check is one cheap command does not need a page of brief; a wave that touches product behaviour does need a reviewer who is not the author.
 
+**States.** A brief on master awaiting the owner's "go" is **awaiting approval**, not a wave in flight; only the owner starts it. A running wave may be **parked** (a `Park <id>` commit): the head chef parks it and only the head chef resumes it, as a dispatch — after a second correction, a fresh worker per step 5. Parking is not acceptance: no verdict, no merge.
+
 ## Verification
 
 - **One executed full run per candidate.** The cook fixes with file-scoped checks, then runs full verify on its committed candidate. The pass relies on that record and runs its own attacks; it uses `--fresh` only for a stated doubt about the record.
 - **Off-machine verify.** Code pushes to master run `verify --full` on GitHub Actions (free tier). It is a safety net, never a step to wait for: the local verify on the same commit is what gates a merge. Read the latest result with `gh run list -R shouteck/omakase-box --limit 3` at kickoff and before the next merge. If it is red, the next wave is the fix.
 
-`node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, build and the named suites on the host without a database, and writes one log per step plus `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
+`node scripts/verify.mjs [suites...]` is the only acceptance command. It runs typecheck, build and the named suites on the host without a database, and writes one log per step plus `started.json` and `summary.json` under `.kitchen/runs/`. The exit code is the verdict: zero only when every step passed.
 
-- The candidate's identity is its commit SHA. Verify refuses to call a run with uncommitted changes acceptable.
-- A step already PASS on this exact commit with a clean tree is `reused` instead of re-run; the recorded `summary.json` (commit, clean flag, step verdict) is the trust anchor, and `--fresh` forces a real run when the record is doubted.
+- The candidate's identity is its commit SHA. Verify refuses to run on a tree dirty at start (exit 3, `UNCOMMITTED`); a run that ends dirty keeps per-step verdicts but is never a PASS.
+- A step is `reused` instead of re-run when a completed `summary.json` — the trust anchor — proves it: a clean PASS on this exact commit, a PASS on one of the nearest 20 ancestors when every path since is one the step does not read, or a run on either that was dirty only in paths the step does not read. `--fresh` forces a real run when the record is doubted.
 - `check` runs typecheck; no check-only suites remain after K29. Full acceptance names both surviving suites: `node scripts/verify.mjs --full test:box-bounty test:kitchen`. A suite named in the invocation never runs twice.
 - All runs report `db=none`. Removed database modes refuse before work; `--db=none` remains accepted for existing callers.
 - The bounty test files run three workers in parallel, pinned in `tests/kitchen/k12-bounty-parallel.test.ts`; other suites keep one.
@@ -109,4 +111,4 @@ Closing one:
 
 ## Hosts and structure
 
-The brigade, the stations and the rule for when a station gets its own chef are in [kitchen/README.md](../../kitchen/README.md). They are the same on every host. Host notes are in [PSTACK.md](PSTACK.md). Record which host and model filled each role in the wave file.
+The brigade and the stations are in [kitchen/README.md](../../kitchen/README.md). They are the same on every host. Host notes are in [PSTACK.md](PSTACK.md). Record which host and model filled each role in the wave file.
