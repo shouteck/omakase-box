@@ -4,14 +4,24 @@
 // committed tree for literals except the one live-brief proof.
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const temps: string[] = [];
-const temp = (suffix = '') => { const dir = mkdtempSync(join(tmpdir(), 'kitchen-k36-')) + suffix; if (suffix) mkdirSync(dir, { recursive: true }); temps.push(dir); return dir; };
+// One owned root per fixture: a spaced variant is a child inside the same
+// mkdtemp root, so a single afterAll rm cleans both — a suffixed path beside
+// the base used to orphan the empty base dir (K36 correction 2).
+const temp = (suffix = '') => {
+  const base = mkdtempSync(join(tmpdir(), 'kitchen-k36-'));
+  temps.push(base);
+  if (!suffix) return base;
+  const dir = join(base, suffix.trim());
+  mkdirSync(dir, { recursive: true });
+  return dir;
+};
 afterAll(() => { for (const dir of temps) rmSync(dir, { recursive: true, force: true }); });
 
 const LEDGER_ROW = '| D-2026-01-01-a | 2026-01-01 | documented | approved the fixture rollout | commit abc1234; waves/K1.md |';
@@ -63,6 +73,8 @@ describe('valid briefs pass, on roots with or without spaces', () => {
 
   it('the same brief under a root path containing spaces exits 0', () => {
     const spaced = temp(' with space');
+    // No orphan base: the spaced fixture lives inside an owned mkdtemp root.
+    expect(temps).toContain(dirname(spaced));
     mkdirSync(join(spaced, 'docs', 'box-v4'), { recursive: true });
     mkdirSync(join(spaced, 'waves'), { recursive: true });
     writeFileSync(join(spaced, 'package.json'), JSON.stringify({ scripts: { 'test:kitchen': 'x' } }));
