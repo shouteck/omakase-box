@@ -161,43 +161,21 @@ Each step names the command that fires it, what a refusal leaves and what a retr
   - A retry finds: the same accounts, read back by id. Nothing is created twice.
   - The PF3 result fixes the solver-country list D5 shows on the board.
 - **Payment readiness** (before any charge). The solver's `card_payments` and `transfers` capabilities must be `active`. Otherwise the board shows "waiting for the solver's payout setup" and nothing is charged.
-- **Paying (PF4): one PaymentIntent per bounty, reused after a decline, so two payable intents never exist for one bounty.**
-  - **Records.** The platform keeps, per bounty: the approval (the owner's "Pay", or the agent's pay check under the mandate), generation `g` (starts at 1), the PaymentIntent id, and confirm number `n`. Each is written before the call that depends on it.
-  - **Telling "not yet attempted" from "declined", using only Stripe's own fields.**
-    - The card is attached **at create**: `payment_method` is the "ID of the payment method ... to attach to this PaymentIntent", with the owner as `customer` [S27]. Once payment information is provided, "the PaymentIntent enters the `requires_confirmation` status" [S23].
-    - So an approved payment that never reached a confirm is in `requires_confirmation`.
-    - A failed confirm moves it to `requires_payment_method` [S22], and sets `last_payment_error`, "The payment error encountered in the previous PaymentIntent confirmation" [S28].
-    - **Decline = `requires_payment_method` with `last_payment_error` set.** Because Stripe clears that field "if the PaymentIntent is later updated for any reason" [S28], the platform updates the PaymentIntent only in the owner's "Pay again" step.
-    - `requires_payment_method` with `last_payment_error` empty is treated as never attempted.
-  - **The confirm number.** `n = 1` is recorded together with "creating g". The confirm key is `box-pay/<repository>/<bounty id>/pi/<g>/confirm/<n>`, using the recorded value; on "Pay again" that is the value *after* the increment.
-    - `n` increments only in "Pay again". A retried confirm whose outcome is unknown reuses the same `n`.
-    - Stripe then either runs it for the first time, or returns the saved result if it already ran [S19].
-  - **Case 1: first payment.**
-    - Fired by: the approval. That is the owner's "Pay" (ask me) or the platform's pay check after the hint from `apply` or `box bounty close` (agent decides), as in K42 section 3.3.
-    - Steps: record "creating g" and `n = 1`; create with the card attached, the destination and `on_behalf_of` set to the solver, metadata `{bounty id, g}`, key `box-pay/<repository>/<bounty id>/pi/<g>`; store the id; confirm off-session with key `.../confirm/1`.
-    - Refusal: see cases 3 and 4.
-  - **Case 2: approved but never attempted.** This is a crash after create, or after recording `n` but before the confirm reached Stripe.
-    - Leaves: the PaymentIntent in `requires_confirmation` (or `requires_payment_method` with `last_payment_error` empty). Nothing is charged, and the bounty shows "payment pending", never "card declined".
-    - Fired by: the original trigger again, with no new approval needed. That is the owner's next "Pay" click, or in agent mode the next pay check (the next hint, or the platform's refresh of the bounty).
-    - Retry finds that state and confirms with the same `n`. With an empty `payment_method` it first attaches the owner's saved card. Agent mode is never stalled by a crash.
-  - **Case 3: declined.**
-    - Leaves: `requires_payment_method` with `last_payment_error` set, still the only PaymentIntent for the bounty. Nothing is transferred, and the bounty shows "owed: card declined, owner to pay again".
-    - Fired by: **only** the owner's "Pay again", after updating the card on Stripe's page, in both modes. The agent never re-confirms a declined card.
-    - "Pay again" records `n + 1`, updates the PaymentIntent with the owner's current saved card (it becomes `requires_confirmation`), and confirms with key `.../confirm/<n + 1>`.
-    - Retry finds: a crash inside "Pay again" leaves `requires_confirmation`, which is case 2, completed by the next pay check under the approval already recorded. Otherwise it finds the result of confirm `n + 1`.
-  - **Case 4: authentication required.**
-    - Leaves: `requires_action` on the same PaymentIntent.
-    - Fired by: the owner finishing it on Stripe's page. No new call from the platform.
-    - Retry finds `requires_action` and sends the owner to the same page.
-  - **Case 5: cancelled.** This happens "if the confirmation limit is reached" [S22], and "Cancellation invalidates the PaymentIntent for future payment attempts" [S23].
-    - Fired by: the owner's "Pay again". The platform moves to `g + 1`, records `n = 1`, and runs case 1's steps with the new generation.
-    - Leaves: the cancelled PaymentIntent, which can never be paid.
-    - Retry finds the new generation's state.
-  - **Case 6: crash between create and storing the id.**
-    - Retry finds "creating g" with no id. It repeats the create with the same key, and Stripe returns the first result for a key that has not been pruned [S19].
-    - If the key may have been pruned (24 hours or more), the platform first lists the owner's PaymentIntents (`customer` filter [S24]) and adopts the one whose metadata matches `{bounty id, g}` before creating anything. Then it continues as case 2.
-  - **Every trigger reads the stored PaymentIntent first** (a GET, no key): `succeeded` records paid and calls nothing; `processing` waits; the other states go to the cases above.
-  - **Why `g` and `n` are in the keys.** Stripe "saves the status code and body of the first request made with a given idempotency key" and returns the saved response on retries, "including `500` errors"; keys can be pruned once at least 24 hours old [S19]. A confirm key without `n` would replay the old decline after the owner fixed the card. A create key without `g` would return the cancelled PaymentIntent.
+- **Paying (PF4): five invariants, each proven by a PF4 test.** The payment state machine (records, idempotency keys, which Stripe state leads where) is designed in the PF4 brief, not here. Its triggers are the owner's "Pay" (ask me) and the platform's pay check after a hint (agent decides), as in K42 section 3.3.
+  1. **One payable PaymentIntent per bounty, ever.**
+     - Stripe: a create retried under the same key returns the first result only until the key is pruned, at least 24 hours on; after that "We generate a new request" [S19]. So the design must find an existing PaymentIntent before creating one (for example in the owner's `customer` list [S24]). "Cancellation invalidates the PaymentIntent for future payment attempts" [S23].
+     - Test: crash after each step of a payment and retry, inside and after the key window, and cancel one; the bounty never has two PaymentIntents that are not `canceled`.
+  2. **Every confirm, retries and crash recovery included, re-runs the mandate rules (PLATFORM.md 3.5: limits, `deny`, `off`, revocation) and the payee checks (3.3, item 4) at the moment of the call.** A refusal charges nothing, leaves the PaymentIntent as it is, and is shown on the board and in `status`.
+     - Stripe: a PaymentIntent with its payment method waits in `requires_confirmation`, "ready to confirm" [S23]; the confirm is the call that charges [S22].
+     - Test: between a crash and its retry, set `off`, add a `deny`, revoke the token, lower the limit below the amount, or make the payee ambiguous; each retry makes no confirm, the PaymentIntent is unchanged, and the refusal is named on the board and in `status`.
+  3. **The board tells apart: never attempted, declined, owner authentication required, outcome unknown.**
+     - Stripe: never attempted is `requires_confirmation` [S23][S27]. A failed confirm leaves `requires_payment_method` [S22] with `last_payment_error` set, which Stripe clears "if the PaymentIntent is later updated for any reason" [S28]. An off-session failure that needs authentication arrives the same way: "the status of the PaymentIntent is `requires_payment_method`", with the `authentication_required` code [S29][S30]. Outcome unknown is a call with no response (invariant 4).
+     - "Owner must authenticate" is finished by the owner on a Stripe page, with "the declined PaymentIntent's client secret" [S29], never by an off-session retry.
+     - Test: each of the four states gets its own words on the board and in `status`; `authentication_required` sends no further off-session confirm.
+  4. **An unknown-outcome retry reads the PaymentIntent first and never charges twice.** Retries under the same key "return the saved response, including `500` errors" [S19], so a stored error moves to a new key only after the read shows nothing was attempted (`requires_confirmation`, no `last_payment_error`); `succeeded` is recorded as paid with no call.
+     - Test: a lost response after a success is retried with no charge; a saved `500` with nothing attempted pays once under a new key; the same `500` with `succeeded` behind it makes no call.
+  5. **Each trigger names what fires it, what a refusal leaves and what a retry finds.** Source: the evidence station's K42 lesson; Stripe's behaviour is in 1 to 4.
+     - Test: one test per trigger in the PF4 brief's table, firing it, refusing it and retrying it.
 - **Wise export (later wave).**
   - Fired by: the owner's "Export batch" on the board, for owed bounties whose solver is outside the Stripe list.
   - Output: a file in Wise's "Send by email" template [W4]. The bounties are marked "exported, not paid".
@@ -226,17 +204,12 @@ Each step names the command that fires it, what a refusal leaves and what a retr
 5. **Section 7, step 3:** "a legal entity: unknown" becomes "an individual account if Stripe accepts it ($0), otherwise an ACRA sole proprietorship (S$115, then S$30 a year); a Pte Ltd (S$315 + S$60 a year) when real volume begins, because Connect liability is unlimited". Add: "the sandbox works before business verification [S16]" (closes K42's N8 test-mode half).
 6. **Section 8:**
    - **PF3** gains the country-proof gate (SG, JP, AU, US, DE, plus TH and AE to settle Stripe's ambiguous sentence) and the capability readiness rule.
-   - **PF4** replaces the single key `box-pay/<repository>/<bounty id>` with one PaymentIntent per bounty, reused after a decline:
-     - the owner's card is attached at create, so "not yet attempted" (`requires_confirmation`) is distinct from "declined" (`requires_payment_method` with `last_payment_error` set) [S23][S27][S28];
-     - create key `.../pi/<g>`, confirm key `.../pi/<g>/confirm/<n>`; `n` is recorded before each confirm, increments only in "Pay again", and the key uses the value after the increment;
-     - a never-attempted payment is confirmed under its original approval by the next "Pay" or pay check; only a real decline waits for the owner's "Pay again";
-     - a cancelled PaymentIntent moves to `g + 1`; a crash after create is adopted by metadata (section 8 above, cases 1 to 6).
-   - PF4's tests add:
-     - a crash after create, and a crash after recording `n`, are both confirmed by the next agent pay check and never shown as "declined";
-     - a decline then "Pay again" pays once, and the agent never re-confirms a decline;
-     - a lost confirm response retried with the same `n` charges once;
-     - a crash between create and store adopts the existing PaymentIntent;
-     - a cancelled PaymentIntent is never confirmed again.
+   - **PF4** replaces the single key `box-pay/<repository>/<bounty id>` with a payment state machine designed in the PF4 brief and held to five invariants, each proven by a PF4 test (section 8 above):
+     1. one payable PaymentIntent per bounty, ever [S19][S23];
+     2. every confirm, retries and crash recovery included, re-runs the mandate rules (3.5) and the payee checks (3.3) at the moment of the call; a refusal charges nothing, leaves the PaymentIntent as it is, and is shown on the board and in `status`;
+     3. the board tells apart never attempted, declined, owner authentication required and outcome unknown; authentication arrives as `requires_payment_method` with `authentication_required` and is finished by the owner on a Stripe page, never by an off-session retry [S29];
+     4. an unknown-outcome retry reads the PaymentIntent first and never charges twice; a stored error replayed under a key [S19] moves to a new key only after the read shows nothing was attempted;
+     5. each trigger names what fires it, what a refusal leaves and what a retry finds.
    - New **PF7** (after PF6): the Wise "Send by email" export for owed bounties outside the Stripe list, recorded paid only on the owner's word.
 7. **Section 9:**
    - **D1** becomes this document's recommendation.
@@ -278,6 +251,8 @@ Stripe documentation (read as Markdown from `docs.stripe.com/<path>.md`; the ser
 - [S26] Stripe support, Thailand support for marketplaces ("We do not support separate charges and transfer"; destination charges and `on_behalf_of` not addressed; read by summarising fetch, the page renders by script): https://support.stripe.com/questions/stripe-thailand-support-for-marketplace
 - [S27] API reference, Create a PaymentIntent (`payment_method` "to attach to this PaymentIntent"; `customer` required for a saved method): https://docs.stripe.com/api/payment_intents/create
 - [S28] API reference, The PaymentIntent object (`last_payment_error`: "The payment error encountered in the previous PaymentIntent confirmation. It will be cleared if the PaymentIntent is later updated for any reason."): https://docs.stripe.com/api/payment_intents/object
+- [S29] Save a customer's payment method without making a payment, Setup Intents variant, "Charge the saved payment method later" (an off-session failure "fails with a 402 HTTP status code and the status of the PaymentIntent is `requires_payment_method`"; for the `authentication_required` decline code, "use the declined PaymentIntent's client secret with confirmPayment to allow the customer to authenticate the payment"): https://docs.stripe.com/payments/save-and-reuse?payment-ui=elements
+- [S30] Error codes (`authentication_required`: "If your customer is off session, notify your customer to return to your application and complete the payment"): https://docs.stripe.com/error-codes
 
 Airwallex (documentation read as Markdown from `airwallex.com/docs/<path>.md`; marketing pages in the **Singapore edition** `/en-sg/`)
 
