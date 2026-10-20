@@ -201,7 +201,7 @@ describe('the three owner words through the built CLI', () => {
     const run = cli(root, 'owner', verb);
     expect(run.status).toBe(3);
     expect(run.stderr).toContain('command-removed');
-    expect(run.stderr).toContain('use box bounty');
+    expect(run.stderr).toContain('next: box bounty');
     expect(saved()).toBe(before);
   });
   it('stray arguments and unknown or hard-stop settings are named refusals with no write', () => {
