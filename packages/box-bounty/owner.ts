@@ -89,6 +89,9 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
     } catch { /* named addresses work outside this checkout */ }
   }
   const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
+  // Instructions stay off unless the owner turns them on (BT41): the tool
+  // offers the one command here and never writes the block itself.
+  if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('agents here learn of the tool only once instructions are on — box bounty config set instructions true writes the block into this project\'s instruction files');
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
   const retiredNotice = rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);

@@ -66,7 +66,7 @@ function listingHistory(record: BountyRecord, repository: string, plan: GitHubPl
     // The issue and the create preview agree on the note (BT14, F4): a
     // generated note exists — the preview names it — it is simply not
     // published; only a truly absent note says "none supplied".
-    '## What was already tried', '', note !== null ? publicText(note.text.trim()) : record.noteSource === 'generated' ? 'The note the tool wrote from the local changes is not published.' : 'No public note was supplied.', '',
+    '## What was already tried', '', note !== null ? publicText(note.text.trim()) : record.noteSource === 'generated' ? 'What the poster tried is in the task above — the tool asks agents to put it there.' : 'No public note was supplied.', '',
     '## The code',
     '',
     `Branch from \`${branch}\` — it is the branch pull requests for this bounty target.`,

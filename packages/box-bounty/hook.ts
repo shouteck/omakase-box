@@ -751,7 +751,7 @@ export function hookDisclosure(repoRoot: string, host: HookHost): string {
     '',
     'what it touches:',
     `- it writes hook entries into ${host.file} inside this project — the entries it adds are shown below in compact form; everything already in the file is preserved byte for byte`,
-    `- the entries run: ${slotCommand('start')}, ${slotCommand('pause')} and ${slotCommand('finish')} — reading this project's .box/bounties records and writing .box/hook-told.json (what agents have been told) and .box/hook-on.json (what hook on installed, so hook off restores exactly)`,
+    `- the entries run: ${slotCommand('start')}, ${slotCommand('pause')} and ${slotCommand('finish')} — reading this project's .box/local/box.db record store and writing .box/hook-told.json (what agents have been told) and .box/hook-on.json (what hook on installed, so hook off restores exactly)`,
     `- it contacts GitHub through your gh sign-in at most once every ${HOOK_GITHUB_INTERVAL_MS / 60000} minutes, only while an open bounty is posted there; each call is capped at ${HOOK_GH_CALL_LIMIT_MS / 1000} seconds, all calls in one run stay within ${HOOK_GITHUB_BUDGET_MS / 1000} seconds and ${HOOK_GH_CALL_COUNT} calls, and the host entry itself times out at ${HOOK_ENTRY_TIMEOUT_SECONDS} seconds`
   ];
   const decision = (() => { try { return readDecision(repoRoot); } catch { return null; } })();
