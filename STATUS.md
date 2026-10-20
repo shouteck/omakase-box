@@ -1,23 +1,23 @@
 # Status
 
-Updated by the CTO on 21 October 2026 at the K42 close.
+Updated by the CTO on 21 October 2026 at the K42b close.
 
 ## Now
 
-- **K42 merged** (`e7ab507`); independent PASS on `a6f0ec2` (verdict 4) after three corrections, the third by a fresh cook. Documents only: `docs/box-v4/PLATFORM.md`.
-- **The design:** nobody holds money while a bounty is open. The owner's card is saved with Stripe and charged once, after the platform itself checks on GitHub that exactly one bounty pull request is marked merged with its head on the default branch; Stripe passes the charge straight to the solver (destination charge). The payee comes from GitHub facts only; when two qualify, or work lands by plain Git with nothing marked merged, the owner decides and nothing is paid automatically.
-- **Hosting finding:** Vercel's free plan forbids taking payments, so the recommendation is Cloudflare Workers Free with D1 on `*.workers.dev`, at $0. Owner setup: nine steps, seven at $0; a lawyer's review of terms and possibly a legal entity are not $0.
-- **Build waves proposed:** PF1 board, PF2 CLI login and hints, PF3 cards and solver onboarding (Stripe test mode), PF4 pay, PF5 format and docs, PF6 one real $1 payment. None briefed.
-- **Verify/cost:** `verify: 10 runs, total 832s`; 9 PASS, 1 FAIL (stale ignored `dist/cli.js` on the first run), 0 missing summaries. Off-machine run on master green at kickoff; the post-merge run not awaited.
+- **K42b merged** (`eb4eeb2`); independent PASS on `51ff720` (verdict 4) after three corrections, the third a CTO scope cut done by a fresh cook. Documents only: `docs/box-v4/PLATFORM-MONEY-SG.md`, plus a revision note at the top of PLATFORM.md.
+- **D1 recommendation:** a Stripe Connect platform account in Singapore, held by the owner, using destination charges with `on_behalf_of` the solver. Solvers in 37 countries confirmed on Stripe's pages; Thailand and the UAE unknown, tested in PF3; not India, Indonesia, the Philippines, Vietnam, Pakistan, Nigeria or Ukraine. Those are reached later by owner-paid Wise batches (49 destinations). The `on_behalf_of` route is documented but unproven: PF3 proves it in Stripe's sandbox at $0.
+- **Cost:** $0 to start; S$115 once + S$30 a year if Stripe needs a sole proprietorship. Per payment (Singapore edition): 3.4% + $0.50, +0.5% international card, +2% FX; Connect $2 per active solver a month, 0.25% + $0.50 per payout, 0.25% funds routing. Disputes still debit the platform.
+- **For a lawyer before live mode:** whether the platform "arranges" cross-border transfers or provides "merchant acquisition" under the Payment Services Act; a sole proprietor's unlimited liability; stablecoins stay parked.
+- **Rejected:** a US company (US$500 + at least US$325 a year, a $25,000 IRS penalty risk, no extra Asian reach); Airwallex and Adyen are sales-only.
+- **Verify/cost:** `verify: 10 runs, total 788s`; 10 PASS, 0 missing summaries. Off-machine run on master green before merge; the post-merge run not awaited.
 - Master clean and pushed at close.
 
 ## Next
 
-This run stops after K42. No wave is in flight or starts automatically.
+This run stops after K42b. No wave is in flight or starts automatically.
 
-- **Owner decisions D1–D7** are in PLATFORM.md section 9, each with one recommendation. PF1 needs D2 (hosting); PF3 onward needs D1 (legal entity and country). K43 (what the platform shows) can run on the design as it stands.
-- **K43 and K44 briefed**, waiting to be named. K41 (film) and publishing stay held until the platform's first version exists.
-- **New in BACKLOG:** K42's code reading suggests the CLI's merge recognition may accept a PR whose head is already on the owner's branch; unproven, needs a reproducing test first.
+- **Owner decisions D1–D7:** PLATFORM.md section 9, with D1, D4–D7 revised by PLATFORM-MONEY-SG.md. Its proposed text is folded into PLATFORM.md once the owner decides D1. PF1 needs D2 (hosting); PF3 onward needs D1.
+- **Owner's go-to-market thesis** (D-2026-10-21-gtm-thesis): free for everyone, agents on both sides, long-running autonomy as the demand. K44 rewritten around it; K43 designs agents first and runs after K44. Both briefed, waiting to be named.
+- K41 (film) and publishing stay held until the platform's first version exists.
+- **In BACKLOG:** the CLI merge-recognition finding from K42 (unproven, needs a reproducing test first) and two notes for the PF4 brief.
 - BT33 stays parked; remaining performance limits in BACKLOG.
-- **K42b briefed** (21 October 2026): the owner is in Singapore, so K42's Stripe Connect route would pay Singapore solvers only. K42b finds the money route and recommends D1. It gates PF3 onward only.
-- **Owner's go-to-market thesis** (D-2026-10-21-gtm-thesis): free for everyone, agents on both sides, long-running autonomy as the demand. K44 rewritten around it (runs alongside K42b); K43 now designs agents first and runs after K42 and K44.
