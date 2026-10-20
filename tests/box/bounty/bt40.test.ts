@@ -173,4 +173,21 @@ describe('BT40 every refusal names its next step', () => {
       expect(out, `held post names no next step —\n${out}`).toContain('next: ');
     });
   });
+
+  it('settings-hard-stop names an action after next:, and following it works', () => {
+    const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n' });
+    const result = cli(repo, ['config', 'set', 'bogus-hardstop-x1', '1']);
+    const out = `${result.stdout}\n${result.stderr}`;
+    expect(result.status, `box bounty config set bogus-hardstop-x1 1 exited ${result.status} —\n${out}`).toBe(3);
+    expect(out, `expected settings-hard-stop —\n${out}`).toContain('(settings-hard-stop)');
+    // Rule 3: the text after `next:` is a step the reader can do now, not a
+    // fact about the rule — the pass caught "a hard stop cannot be configured
+    // — it is enforced" (no action) at 250edc8.
+    expect(out, `hard-stop next carries no action —\n${out}`).toMatch(/next: [^\n]*(choose|omit)[^\n]*box bounty config/);
+    // Follow the printed step: `box bounty config` runs and lists real settings.
+    const listed = cli(repo, ['config']);
+    const listedOut = `${listed.stdout}\n${listed.stderr}`;
+    expect(listed.status, `box bounty config exited ${listed.status} —\n${listedOut}`).toBe(0);
+    expect(listedOut, `config lists no configurable settings —\n${listedOut}`).toContain('box bounty config set instructions');
+  });
 });
