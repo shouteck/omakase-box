@@ -19,3 +19,4 @@ This run stops after K42. No wave is in flight or starts automatically.
 - **K43 and K44 briefed**, waiting to be named. K41 (film) and publishing stay held until the platform's first version exists.
 - **New in BACKLOG:** K42's code reading suggests the CLI's merge recognition may accept a PR whose head is already on the owner's branch; unproven, needs a reproducing test first.
 - BT33 stays parked; remaining performance limits in BACKLOG.
+- **K42b briefed** (21 October 2026): the owner is in Singapore, so K42's Stripe Connect route would pay Singapore solvers only. K42b finds the money route and recommends D1. It gates PF3 onward only.
