@@ -17,3 +17,4 @@ Updated by the CTO on 20 October 2026 at the BT40 close.
 This run stops after BT40. No wave is in flight or starts automatically. Remaining performance limits stay in BACKLOG; BT33 remains parked and BT12 Part B deferred. One stats-attribution lesson is in the inbox for the next kickoff.
 
 - **Briefed 20 October 2026, not started:** K40 (each user's seat, before publishing), then BT41 (what a new user reads; K40's findings folded in first), then K41 (launch video). Order: K40 → BT41 → K41; publishing (BT12 Part B) after BT41. Each runs when named.
+- **Owner decision, 20 October 2026: box bounty becomes a platform** (D-2026-10-20-platform): a public bounty board and end-to-end payment. **K42** briefed (design only, can run alongside K40). **K41 (film) and publishing are held** until the platform's first version exists, so the launch shows the whole loop. K40 and BT41 continue.
