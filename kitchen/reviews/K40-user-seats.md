@@ -237,11 +237,16 @@ owner's limit is $8`. The limit is a cap on the **total promised across
 open bounties**, not per-bounty as the help line says. (Code read:
 `money.ts` `assertPromiseRoom`.)
 
-**P5 — holds.** Runtime probe on the stand-in world with $5 owed:
-`box bounty hook start` exited 0 and printed **nothing**. The only place
-the owed amount appears is agent-facing output: `1 payment(s) owed — box
-bounty status shows whom` inside `box bounty`/`status`. Nothing addresses
-the owner; an agent that does not pass it on leaves the owner uninformed.
+**P5 — holds, qualified.** Runtime probe on the stand-in world with $5
+owed: `box bounty hook start` exited 0 and printed **nothing**. But the
+tool is not silent overall: `apply` prints an explicit owner block —
+`for the owner — pass this on in these words:` followed by five lines
+ending `Pay standin-solver at https://buy.stripe.com/test_K40fixture0000
+(a test link — no real money moves through it).` and `Before you pay,
+check the page asks for $5 and that the account name there belongs to
+standin-solver.` — plus agent-facing `1 payment(s) owed`. The owed fact
+reaches the owner **only if an agent relays the block**; the hook's
+session start itself tells no one.
 
 **P6 — does not hold.** Runtime probe: `box bounty` in a fresh clone of
 the reachable public sandbox with zero open bounties opened with
@@ -265,7 +270,8 @@ inside the task text, so the solver still had context and completed PR
 | S2-on | `87ac78b8` | clone, block + allow | Full journey: `create` → `post --preview` → `post` (issue #39) → status polling. Posted cleanly. |
 | S3 Solver | `580106b7` | issue URL only | Followed the issue's "How to answer" exactly: branched from `box-bounty/bt-e879e5958d8a`, PR #40 `aafef89`, banner-only exact change. |
 | S4 Later | `78b0192b` | fresh clone + settings | Found issue+PR on its own; `look` refused `shared-only`; correctly ran tests and recommended applying from the origin checkout. |
-| S5 Owner | `373a4271` | dossier only | Answered all four questions; grades below. |
+| S5 Owner | `373a4271` | dossier only | Answered all four; assessment **invalid** — dossier missed the apply owner block (see A7). |
+| S5b Owner (retest) | `a3004654` | faithful dossier only | Answered all four correctly incl. `deny` revocation; only "stop everything"/public-history removal unknown. |
 
 Isolation limits: per-seat clones/settings/logs; one S4 code-search helper
 call bypassed the runner (agent disclosed it); S1 chose a `--prefix`
@@ -284,19 +290,28 @@ seats; they used the bash `run` (method friction, not a product defect).
 | F5 | S2-off | — | Held-for-owner block worked as designed on empty settings; not a defect | none |
 | F6 | S2-off | — | Fixture confound: repo AGENTS/README name the tool; discovery says nothing about P1 (method) | clean-neutral rerun (method row, not product) |
 | F7 | S2-on | slows | No arrival notification; agent polled `status` in `sleep` loops ~8 min | none required — note for BT41 if a wait verb is ever wanted |
-| F8 | S3 | slows | "What was already tried" read "The note the tool wrote from the local changes is not published." — useless to the solver (P7) | post.ts: when the note is not published, write the agent's tried-note or drop the section |
-| F9 | S4 | misleads | `status` printed `posted "…" — open today; no solution yet` and suggested `look <id> <n>` while PR #40 existed and `look` always refuses `shared-only` on this machine | status: for shared-memory bounties say "posted from another machine; N pull request(s) waiting on GitHub — act on it from that machine" (wording only; cross-machine apply is an owner decision, not BT41 scope) |
+| F8 | S3 | slows | "What was already tried" read "The note the tool wrote from the local changes is not published." — useless to the solver (P7) | post.ts (text only): say `what the poster tried is in the task above` or omit the section — do NOT publish the note field (private context); block schema stays byte-identical |
+| F9 | S4 | misleads | `status` printed `posted "…" — open today; no solution yet` and suggested `look <id> <n>` while PR #40 existed and `look` always refuses `shared-only` on this machine | status (text only): for shared-memory bounties say "solution arrival is not refreshed on this machine — inspect the issue on GitHub or the originating checkout"; do not invent a PR count (this world cannot list them). Any fetch/count/cross-machine apply is a behaviour change needing the owner's decision — outside BT41 |
 | F10 | S4 | — | One unlogged code-search call (trace limit, disclosed by the agent) | none — recorded as isolation limit |
-| F11 | S5 | misleads | No tool output addressed to the owner names how to revoke/stop (deny/hook off/uninstall exist only in the README, which the owner never sees via the tool) | owner-facing lines (held/allow/owed blocks): add a `stop:` line naming `box bounty deny <repo>` / uninstall |
+| F11 | S5 | ~~misleads~~ **superseded** | Original claim "no owner-facing stop/revoke line exists anywhere" was REFUTED by S5b: `config --full` output contains `deny: box bounty deny <owner/name>` and `all-projects … change: box bounty config set all-projects <true|false|ask>`, and the owner answered revocation correctly | Replaced by F11b |
+| F11b | S5b | slows | Residual: no line names a single "stop everything" or how to remove already-public posts/history — the owner said so correctly | README/owner blocks (text only): optionally point at deny + issue cleanup; note removal of published history is inherently manual |
 | F12 | S5 | — | Dossier juxtaposed earlier empty-settings lines with later allowed lines; owner read inconsistency (fixture assembly confound, not a product contradiction) | none — method note; tool persisted consistent facts |
 
-S5 grades against the fact key: Q1 **partially right** (allowed,
-sandbox-only, $0, no asking — but flagged the dossier's own
-inconsistency); Q2 **right within the lines** ("does not say exactly which
-files or other information a post exposes" — correct; shared memory is
-the hidden fact P3 names); Q3 **right** ($0 real, $5 explicitly
-fictional); Q4 **right** ("the document does not tell me" — the correct
-answer, and the absence is finding F11).
+**S5 grades** (original dossier — invalid material, kept for history):
+Q1 partially right; Q2 right within the lines; Q3 right; Q4 right (and
+the "no stop path" absence is what F11 claimed — now superseded).
+
+**S5b grades** (`a3004654`, faithful dossier): Q1 **right** (allowed
+sandbox $0 under own account, merges without asking, per-settings-folder
+scope understood); Q2 **right** (public repo + bounty posts; tracked
+records' owner-only context risk noted; did not claim push state —
+correct unknown); Q3 **right** ($0 real, $5 explicitly fictional and
+"pay by hand — the tool never moves money" understood); Q4 **right** —
+found `box bounty deny shouteck/box-bounty-sandbox` and the
+`all-projects` scope rule in the config output itself; correctly named
+the remaining unknown (no single stop-everything / removal of published
+posts). No claim here that S5b's answers generalise to product defaults —
+it read the faithful material.
 
 ## Cleanup performed (all $0, sandbox only)
 
@@ -330,8 +345,10 @@ only (`seat1`…`seat5`, `settings-*`, `logs`, `pkg`, `prefix`, `prompts`,
 `probe-sandbox`, `s5-standin`, `s5-standin-run.mjs`, `s5-probe-p4-p5.mjs`,
 `s5-standin-transcript.txt`, `s5-probe-transcript.txt`, `gen-seats.cjs`);
 no other roots created, no processes left running. gh starts logged:
-seat1=1, S2-off=3, S2-on=30, S3=3, S4=7 (44 total; setup/probe calls
-excluded — they lived in `setup-*.log` and the probe transcripts).
+seat1=1, S2-off=3, S2-on=30, S3=3, S4=7 = 44 participant; plus 5 cook
+cleanup calls in `seat2-on-gh.jsonl` = 49 logged lines across all files;
+setup/probe calls excluded — they lived in `setup-*.log` and the probe
+transcripts).
 
 ---
 
