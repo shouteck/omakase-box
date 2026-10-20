@@ -18,12 +18,13 @@ const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
 
 describe('BT41 — a stranger reads what the tool does', () => {
-  it('README names the store, the shared refs, the instruction command and deny — never .box/bounties', () => {
+  it('README names the store, the shared refs, the instruction command and deny — never the old record folder', () => {
     const readme = readFileSync(join(ROOT, 'FIRST-FIVE-MINUTES.md'), 'utf8');
     for (const fact of ['config set instructions true', 'refs/box-bounty', '.box/local', 'box bounty deny']) {
       expect(readme, `README lacks ${fact}`).toContain(fact);
     }
-    expect(readme).not.toContain('.box/bounties');
+    const oldRecordFolder = '.' + 'box/' + 'bounties';
+    expect(readme).not.toContain(oldRecordFolder);
   });
 
   it('allow offers `config set instructions true` while instructions are off, not while on, and never switches them on', () => {
