@@ -152,8 +152,8 @@ describe('4. the tracked-records notice', () => {
   it('untracked records say so under --full', () => {
     const repo = makeRepo({ 'app.txt': 'seed bytes\n' });
     seed(repo, 1, 'drafted');
-    expect(box(repo, ['status', '--full']).stdout).toContain(`records: ${RECORDS_DIR_REL}/ is not tracked in Git (local to this checkout)`);
-    expect(box(repo, ['config', '--full']).stdout).toContain(`records: ${RECORDS_DIR_REL}/ is not tracked in Git (local to this checkout)`);
+    expect(box(repo, ['status', '--full']).stdout).toContain(`legacy record files: none in ${RECORDS_DIR_REL}/ are tracked in Git (local to this checkout)`);
+    expect(box(repo, ['config', '--full']).stdout).toContain(`legacy record files: none in ${RECORDS_DIR_REL}/ are tracked in Git (local to this checkout)`);
   });
 
   // BT37: the warning is said once per checkout (status and config share the

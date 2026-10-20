@@ -156,11 +156,15 @@ const ageClause = (record: BountyRecord): string => {
   const now = nowMs();
   const { openedAt, lastActivityAt } = bountyAge(record);
   const open = openedAt === null ? 'age unavailable' : daysSince(openedAt, now) === 0 ? 'open today' : `open ${dayWord(daysSince(openedAt, now))}`;
-  const last = attemptsOf(record).length === 0
-    ? (waitingPullRequests(record).length === 0 ? 'no solution yet' : `${waitingPullRequests(record).length} solution(s) waiting`)
-    : lastActivityAt === null ? 'last activity time unavailable'
-    : daysSince(lastActivityAt, now) === 0 ? 'last solution today'
-    : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
+  // A shared record is a chain snapshot: this machine does not refresh its
+  // pull requests, so an empty attempt list proves nothing (BT41, P8).
+  const last = record.shared === true && attemptsOf(record).length === 0
+    ? 'solution arrival not refreshed on this machine'
+    : attemptsOf(record).length === 0
+      ? (waitingPullRequests(record).length === 0 ? 'no solution yet' : `${waitingPullRequests(record).length} solution(s) waiting`)
+      : lastActivityAt === null ? 'last activity time unavailable'
+      : daysSince(lastActivityAt, now) === 0 ? 'last solution today'
+      : `last solution ${dayWord(daysSince(lastActivityAt, now))} ago`;
   return `${open}; ${last}`;
 };
 
@@ -201,6 +205,14 @@ export function staleReminderLines(repoRoot: string, open: readonly BountyRecord
 // The one `next:` command a bounty prints, shared by the text status and
 // the status --json document (BT19).
 export const nextStep = (record: BountyRecord): string => {
+  // A shared record is read-only here: its pull requests and decisions live
+  // with the machine that posted it or on GitHub (BT41, P8).
+  if (record.shared === true) {
+    const issue = record.github?.issue?.url;
+    return issue !== undefined && issue !== ''
+      ? `posted from another machine — read the issue and its pull requests on GitHub: ${issue}, or continue in the checkout that posted it`
+      : 'posted from another machine — continue in the checkout that posted it, or on GitHub';
+  }
   if (retiredRoute(record) !== null) {
     return `this delivery route was retired; end it with box bounty close ${record.id}`;
   }
@@ -392,7 +404,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     if (tracked.length > 0) {
       if (options.full === true || saidOnce(repoRoot, 'records-tracked')) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
     }
-    else if (options.full === true) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
+    else if (options.full === true) lines.push('legacy record files: none in .box/bounties/ are tracked in Git (local to this checkout)');
   }
   for (const [address, notice] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === notice.commit))) {

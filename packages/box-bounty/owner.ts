@@ -89,6 +89,9 @@ export function allowRepository(repoRoot: string | null, name?: string, ask = fa
     } catch { /* named addresses work outside this checkout */ }
   }
   const lines = [...(emitDisclosure === undefined ? wordsForOwner : []), `${ask ? 'ask me each time' : 'allowed'}: ${address} — written to the owner's settings.`, reward === 0 ? `bounties on ${address} state $0 — no payment is promised; set one with box bounty config set reward <whole dollars> ${address}` : `bounties on ${address} state $${reward} — a promise you pay by hand; at most $${limit} promised open at once`];
+  // Instructions stay off unless the owner turns them on (BT41): the tool
+  // offers the one command here and never writes the block itself.
+  if (repoRoot !== null && !readInstructions(repoRoot).enabled) lines.push('agents here learn of the tool only once instructions are on — box bounty config set instructions true writes the block into this project\'s instruction files');
   if (ask) lines.push('This covers each post and each merge — the owner is asked before either.');
   const retiredNotice = rewardNoticeLine();
   if (retiredNotice !== null) lines.push(retiredNotice);
@@ -270,7 +273,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     if (tracked.length > 0) {
       if (full || saidOnce(repoRoot, 'records-tracked')) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
     }
-    else if (full) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
+    else if (full) lines.push('legacy record files: none in .box/bounties/ are tracked in Git (local to this checkout)');
     const listed = openRecords(repoRoot);
     if (address === null || settings.repositories[address] === undefined) {
       lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so its bounties state $0`);

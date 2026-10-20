@@ -222,7 +222,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     authority: true,
     values: {
       '--reward': { ...AMOUNT, help: 'the reward for one bounty, in whole dollars' },
-      '--reward-limit': { ...AMOUNT, help: 'the most one bounty may state, in whole dollars' },
+      '--reward-limit': { ...AMOUNT, help: 'the most promised across this repository\'s open bounties, in whole dollars' },
       '--repo': REPO
     },
     switches: { '--ask': { help: 'the tool asks before each post rather than posting freely' } }

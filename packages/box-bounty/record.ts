@@ -622,7 +622,7 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
       const url = shared.github?.issue?.url;
       throw new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; next: act on it from that machine, or on GitHub`);
     }
-    throw new BountyRefused('unknown-bounty', `no bounty ${id} — .box/bounties/${id}.json does not exist; next: box bounty status lists the bounties this project knows`);
+    throw new BountyRefused('unknown-bounty', `no bounty ${id} — this project has no record for it; next: box bounty status lists the bounties this project knows`);
   }
   if (stored.record === null) {
     throw new BountyRefused('record-corrupt', `${recordPath(repoRoot, id)} is not a readable bounty record; next: open it by hand, or remove it and run box bounty status again`);
