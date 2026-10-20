@@ -15,3 +15,5 @@ Updated by the CTO on 20 October 2026 at the BT39 close.
 ## Next
 
 This run stops after BT39. No wave is in flight or starts automatically. Remaining performance limits are in BACKLOG; BT33 stays parked and BT12 Part B deferred.
+
+- **BT40 briefed** (20 October 2026, not started): every refusal names its `next:` step, closing BT38's PL3 gap (242 of 246 sites lacked it), with a static guard test. Runs when named. Brief: `waves/BT40.md`.
