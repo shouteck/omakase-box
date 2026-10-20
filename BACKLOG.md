@@ -4,6 +4,8 @@ Known gaps and leftovers that are not blocking. STATUS.md lists only what blocks
 
 ## Product
 
+- **For the PF4 brief, from the K42b pass** (see [K42b](waves/K42b.md)): fix whether the owner's card is attached when the PaymentIntent is created (invariant 3's "never attempted = `requires_confirmation`" depends on it, else allow `requires_payment_method` with an empty `last_payment_error`); say whether `off` or `deny` cancels an unconfirmed PaymentIntent, so invariant 1 stays simple.
+
 - **CLI merge recognition may count a PR as merged with nothing new landing** (code reading in [K42](waves/K42.md), not run): `merged.ts`/`collect.ts` appear to accept a PR whose head commit is already on the owner's branch. Needs a reproducing test before any fix. The platform design (PLATFORM.md 3.6) refuses to pay such a PR alone either way. Also from the K42 pass: a PR merged on GitHub directly into `box-bounty/<id>` leaves the closing step refusing `github-branch-changed` for good (today's behaviour too); PF4 can treat "the record's PR is reported merged" as done.
 
 - **K40 continuation/notification boundary** (see [K40](waves/K40.md), F9/P5): a fresh clone could read public bounty history but `look` refused `shared-only`, and its status did not observe the waiting PR; the hook did not surface an owed payment although apply prints an owner payment block. BT41 can clarify existing behavior in text, not add new cross-machine collection/apply, PR queries or payment notifications. Such behavior belongs in an owner-scoped wave/platform design, not an inferred documentation fix. The claimed absence of a revoke command was refuted by complete-material S5b.

@@ -60,3 +60,4 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **cpSync ENOENT names the destination, not the vanished source** — a missing file in a copied .git is git housekeeping racing the walk (K38). Fixture repos pin gc.auto=0 and maintenance.auto=false at creation; retries are the documented backstop, not the fix.
 
 - **A design that adds a trigger names the command that fires it, what a refusal leaves behind and what a retry finds.** K42's payment rule took three corrections, each fix opening the next edge case.
+- **A design wave states invariants, each with the test that proves it; step-by-step state machines are designed in the build wave, against tests.** K42b's PF4 payment steps grew a new edge case in each of three rounds of prose.

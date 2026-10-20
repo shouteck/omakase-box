@@ -2,6 +2,8 @@
 
 Written by the K42 cook on 21 October 2026 for milestone PF (D-2026-10-20-platform). Research and design only: no account was created, no key made, no money moved. Every source was read on **21 October 2026**; references are numbered at the end. Where no primary source was found the claim is under "Not found". Where an answer needs a lawyer or a tax adviser, it says so. K43 decides what is shown and how; this document names the data, the flows and who holds money.
 
+> **Revised for Singapore by K42b (21 October 2026).** The owner is in Singapore, where self-serve Stripe Connect transfers only within Singapore. [PLATFORM-MONEY-SG.md](PLATFORM-MONEY-SG.md) replaces this document's D1 recommendation and revises section 2 (charge type: destination charges with `on_behalf_of`, always; countries; Singapore fees), sections 7 and 8 (PF3's country-proof gate; PF4 held to five invariants; a new PF7 Wise export) and D4, D5, D6 and D7. Its "Proposed changes to PLATFORM.md" are folded in here once the owner decides D1; until then, where the two disagree, PLATFORM-MONEY-SG.md is current.
+
 ## The owner's page (read this first)
 
 **What the platform does.** It lists open bounties on a public page, and when a solution is merged it charges the owner's saved card and pays the solver, through Stripe. The owner never clicks a solver's link again. The CLI stays the main tool; the platform is the place bounties can be seen and the money moves.
