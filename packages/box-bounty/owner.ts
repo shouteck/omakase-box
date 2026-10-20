@@ -273,7 +273,7 @@ export function renderConfig(repoRoot: string | null, options?: { readonly full?
     if (tracked.length > 0) {
       if (full || saidOnce(repoRoot, 'records-tracked')) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
     }
-    else if (full) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
+    else if (full) lines.push('legacy record files: none in .box/bounties/ are tracked in Git (local to this checkout)');
     const listed = openRecords(repoRoot);
     if (address === null || settings.repositories[address] === undefined) {
       lines.push(`promised across this repository's open bounties: $${promisedHere ?? 0} — this repository is not listed, so its bounties state $0`);

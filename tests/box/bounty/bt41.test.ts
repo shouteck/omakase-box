@@ -12,19 +12,34 @@ import { allowRepository, finalizeBounty, loadRecord, planBounty, postBounty, sh
 import { importShared } from '../../../packages/box-bounty/store.js';
 import type { SharedRow } from '../../../packages/box-bounty/store.js';
 import { fixture, refused } from './github-fixture.js';
-import { CLI_DIST, ROOT, git, makeRepo, recordExists, runRoot } from './support.js';
+import { CLI_DIST, ROOT, git, makeRepo, recordExists, runRoot, write } from './support.js';
 
 const box = (cwd: string, args: string[]) =>
   spawnSync(process.execPath, [CLI_DIST, 'bounty', ...args], { cwd, encoding: 'utf8', env: process.env, timeout: 60000 });
 
 describe('BT41 — a stranger reads what the tool does', () => {
-  it('README names the store, the shared refs, the instruction command and deny — never the old record folder', () => {
+  it('README names the store, the shared refs, the instruction command, deny and the project tool files', () => {
     const readme = readFileSync(join(ROOT, 'FIRST-FIVE-MINUTES.md'), 'utf8');
-    for (const fact of ['config set instructions true', 'refs/box-bounty', '.box/local', 'box bounty deny']) {
+    const openSummary = '.' + 'box/' + 'bounties/OPEN';
+    const firstMerge = '.' + 'box/' + 'bounties/FIRST_MERGE';
+    for (const fact of ['config set instructions true', 'refs/box-bounty', '.box/local', 'box bounty deny', openSummary, firstMerge]) {
       expect(readme, `README lacks ${fact}`).toContain(fact);
     }
-    const oldRecordFolder = '.' + 'box/' + 'bounties';
-    expect(readme).not.toContain(oldRecordFolder);
+    expect(readme).toContain('each project\'s own bounty records are in `.box/local/box.db`');
+  });
+
+  it('the untracked records line names legacy files, never the old folder as the store', () => {
+    const repo = makeRepo({ 'app.txt': 'seed\n' });
+    write(repo, 'TASK.md', '# task\n');
+    finalizeBounty(planBounty({ repoPath: repo, taskPath: join(repo, 'TASK.md'), why: 'a seeded draft' }));
+    const oldFolder = '.' + 'box/' + 'bounties/';
+    const line = `legacy record files: none in ${oldFolder} are tracked in Git (local to this checkout)`;
+    for (const args of [['status', '--full'], ['config', '--full']]) {
+      const run = box(repo, args);
+      expect(run.status, run.stderr).toBe(0);
+      expect(run.stdout).toContain(line);
+      expect(run.stdout).not.toContain(`records: ${oldFolder}`);
+    }
   });
 
   it('allow offers `config set instructions true` while instructions are off, not while on, and never switches them on', () => {

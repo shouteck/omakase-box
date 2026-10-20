@@ -404,7 +404,7 @@ export function renderStatus(repoRoot: string, options: { readonly id?: string; 
     if (tracked.length > 0) {
       if (options.full === true || saidOnce(repoRoot, 'records-tracked')) lines.push(`records: ${tracked.length} file(s) in .box/bounties/ are tracked in Git — bounty records hold owner-only context (why, saved job, local path, scan findings) that pushing to a public remote publishes; untrack with git rm --cached -r .box/bounties`);
     }
-    else if (options.full === true) lines.push('records: .box/bounties/ is not tracked in Git (local to this checkout)');
+    else if (options.full === true) lines.push('legacy record files: none in .box/bounties/ are tracked in Git (local to this checkout)');
   }
   for (const [address, notice] of Object.entries(loadState().firstMerges)) {
     if (listed.some(entry => entry.record?.events.some(event => event.stage === 'applied' && event.merge === notice.commit))) {

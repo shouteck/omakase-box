@@ -139,11 +139,13 @@ published stay until removed by hand.
     npm uninstall -g box-bounty
 
 What the tool wrote stays where it was written, and nothing of it is required
-to keep working: each project's own bounty records are in `.box/local/` in the
-repository (delete the folder to forget this machine's copy — the shared
-memory already pushed to the remote stays), and the owner's answers and the
-reward setting are in the settings folder — `%APPDATA%\box` on Windows,
-`~/.config/box` elsewhere, or `BOX_BOUNTY_SETTINGS_DIR` when set. Delete that
-folder too and nothing of the tool remains on this machine. Issues, pull
-requests and the shared refs it published stay on the remote until removed by
-hand.
+to keep working: each project's own bounty records are in `.box/local/box.db`,
+and the tool's summaries are `.box/bounties/OPEN` (the open-bounty line) and
+`.box/bounties/FIRST_MERGE` (the first outside merge). Delete the project's
+whole `.box` folder to remove this machine's copy — the shared memory already
+pushed to the remote stays. The owner's answers and the reward setting are in
+the settings folder — `%APPDATA%\box` on Windows, `~/.config/box` elsewhere, or
+`BOX_BOUNTY_SETTINGS_DIR` when set. Deleting both leaves nothing of the tool's
+own state on this machine; a block written into an instruction file stays until
+you remove it. Issues, pull requests and the shared refs it published stay on
+the remote until removed by hand.
