@@ -62,7 +62,7 @@ was with an unreachable remote.)
 |---|---|
 | `pkg\box-bounty-0.1.0.tgz` | the artifact; `pkg\package\README.md` extracted copy |
 | `prefix\` | global-style install used by the seat worlds that ship the tool installed |
-| `settings-s1\` … `settings-s4\`, `settings-probe\` | per-seat `BOX_BOUNTY_SETTINGS_DIR`; owner's settings never read or written |
+| `settings-<seat>\` (e.g. `settings-seat2-on`) | per-seat `BOX_BOUNTY_SETTINGS_DIR` actually used by each runner; owner's settings never read or written. `settings-s2on`/`s2off` were an unused seed path — see the phase-1.5 correction |
 | `seat1\` | S1 world: tarball + README copy + `sandbox\` clone at `cf45694` + runner + gh shims; **no** `box` wrapper — S1 installs it itself; settings-s1 empty (stranger discovers `allow`) |
 | `seat2-off\` | `sandbox\` clone at `cf45694`, `box`/`gh` wrappers + runner, settings-s2off seeded: sandbox `allowed`, reward 0, rewardLimit 0, `instructions.enabled=false`; local uncommitted edits remove `<!-- box-bounty -->` block from `AGENTS.md` and delete `.devin\hooks.v1.json` (would disclose the tool at session start) |
 | `seat2-on\` | identical clone unmodified — committed `AGENTS.md` block verified byte-equal to the tool's own `renderRulesBlock('idle')` (`wording.ts`); settings-s2on seeded identically except `instructions.enabled=true` |
@@ -117,6 +117,69 @@ settings seed `instructions.enabled=true` matches. The off-clone differs
 by exactly two local uncommitted edits (block removed, hooks.v1.json
 deleted). No seat's state touches another; S2-off and S2-on are separate
 fresh agents on separate clones and settings dirs.
+
+### Setup audit correction (phase 1.5, before S2-on dispatch)
+
+**Bug found and fixed.** The seat generator baked
+`BOX_BOUNTY_SETTINGS_DIR=<scratch>\settings-seat2-off` /
+`settings-seat2-on` into the runners, while the seed settings were written
+to `settings-s2off` / `settings-s2on`. Consequence: **S2-off ran with an
+empty settings dir** — no `allow`, no instructions config; the tool
+auto-created `settings-seat2-off\state.json` only. Its run therefore ended
+held at the owner-allow gate (`create → preview → post` stopped where the
+tool asks the owner). That outcome reflects *empty* settings plus the
+priming confound below — **it is not evidence that a normally-configured
+project blocks, and is not claimed as a product bug.** No retroactive
+change to the off world; its settings state is left as the seat left it.
+
+**Off-world priming confound (fixture bug, recorded not fixed).** The off
+clone's `AGENTS.md` line 1 reads "This is a test area for the box-bounty
+tool", the `README.md` names the tool and its records, and `box`/`gh`
+wrappers sit at the seat root beside the runner — so the off agent
+discovered the tool through ordinary project text, with no instruction
+block. Its discovery is **not** evidence about P1 (an agent in a new
+project never hears of the tool). A clean-neutral paired rerun — a project
+whose text does not name the tool — is needed if the clock allows, after
+the on/S3 chain.
+
+**On-world correction (the only change made).** Run through the on-seat's
+own runner, inside `seat2-on\sandbox`, so the tool wrote the real formats:
+
+```
+$ ../run box bounty allow shouteck/box-bounty-sandbox --reward 0 --reward-limit 0
+allowed: shouteck/box-bounty-sandbox — written to the owner's settings.
+bounties on shouteck/box-bounty-sandbox state $0 — no payment is promised; …
+$ ../run box bounty config set instructions true
+instructions: on; owner's settings outside the repository. Existing blocks remain when off.
+AGENTS.md: block updated — the edit is in the worktree, not committed; commit it with the project
+```
+
+`settings-seat2-on\settings.json` now carries `bounty: allowed`,
+`reward 0`, `rewardLimit 0` and
+`instructions["…\\seat2-on\\sandbox"].enabled = true` (verbatim file kept
+in scratch; the `git diff` on `AGENTS.md` is empty apart from line-ending
+normalisation — the tool rewrote the identical block). `state.json` was
+deleted afterwards so the seat agent still sees once-only notices
+(`said`, `rewardNoticeAt`) — the BT17 trap. Both setup commands' full
+output is preserved in `logs\setup-seat2-on.log`; `seat2-on.log` was
+truncated afterwards and now contains only what the S2-on agent produces.
+The frozen S2-on prompt (Appendix A3) is unchanged.
+
+**Same bug, other seats, assessed:** `seat1` runs against `settings-seat1`
+(intended empty anyway — the stranger discovers `allow`); `seat3` has no
+tool; `settings-s2on`/`settings-s2off` seeds are now unused duplicates and
+will be removed at cleanup. `settings-s4` is prepared later per the plan.
+
+**S1 / S2-off status (from the CTO):** S1 (fresh agent `564b76f0`)
+finished — report saved at `prompts\S1-report.md` (a
+punctuation-normalized transcription; `logs\seat1.log`/`seat1-gh.jsonl`
+are verbatim). It installed the package locally and hand-edited AGENTS.md
+plus wrappers rather than finding the `config set instructions` path, and
+noticed the `.box\bounties\` vs `.box\local\box.db` record-location
+mismatch (P2 candidate). S2-off (fresh agent `f6969c07`) finished —
+created `bt-7771561ca9fa`, previewed, post held at owner allow; nothing
+public was posted. Owner-addressed lines from S1 and S2-off are collected
+for S5 from the verbatim logs in phase 2.
 
 ### Sequence for the CTO
 
