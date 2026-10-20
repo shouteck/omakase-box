@@ -1,9 +1,13 @@
 # K40 — the tool from each user's seat
 
-Status: **phase 1 — setup complete; no seats dispatched yet.** Cook cannot
-dispatch agents on this host; the CTO dispatches fresh seat agents
-sequentially with the frozen prompts in Appendix A and preserves their own
-reports. Context isolation is by instruction, not an OS boundary.
+Status: **complete — all five seats ran (six fresh agents), findings
+recorded, public state cleaned.** Cook cannot dispatch agents on this
+host; the CTO dispatched fresh seat agents sequentially with the frozen
+prompts in Appendix A and preserved their own reports (agent ids below are
+real). Context isolation was by instruction, not an OS boundary — one seat
+(S4) used an unlogged code-search helper once; the runner logs are the
+verbatim record, self-reports are labelled as such. No seat was shown this
+brief, the repository docs, another seat's notes, or P1–P7.
 
 ## Phase 1 — what was built
 
@@ -194,15 +198,140 @@ run.
 
 ## P1–P7
 
-Pending — answered from seat transcripts in phase 2. P6 preliminary above.
+Each verdict is against verbatim evidence; "read" means code/README read
+by the cook, "runtime" means observed CLI output this wave.
+
+**P1 — holds in part; the causal half is untestable this wave.**
+Default-off is confirmed (runtime, `config --json` in S1's session):
+`"instructions":{"enabled":false,"file":null,"found":[{"path":"AGENTS.md","refused":null}]}`,
+and `config --full` printed `instructions: off; change: box bounty config
+set instructions <true|false>`. The README gap is confirmed (read):
+`FIRST-FIVE-MINUTES.md` contains no occurrence of the word
+"instructions" — it describes only `hook on --host <name>` (lines 71–76).
+The stronger claim "an agent in a new project never hears of the tool" is
+**not answered**: the off-seat's ordinary `AGENTS.md`/`README.md` name
+box-bounty and its wrappers sat beside the runner, so its discovery is a
+fixture confound, not evidence (see phase-1.5 correction). A clean-neutral
+off/on pair remains open work.
+
+**P2 — holds.** README (read): "On your machine it writes each bounty's
+record under `.box/bounties/`" (FIRST-FIVE-MINUTES.md:9) and "each
+project's own bounty records are in `.box/bounties/`" (:95). Runtime
+help in S1's session: "the record lives in .box/local/box.db inside the
+repository — it outlives the session that made it." S1 independently
+flagged the mismatch (seat1.log; S1-report.md "Documentation mismatch").
+
+**P3 — holds.** README "What becomes public" lists "the task, the one
+line of why, the bounty branch's commits, and a machine-readable block on
+the issue" — no mention of the shared memory pushed to
+`refs/box-bounty/*`. Runtime proof it is really public:
+`refs/box-bounty/bt-e879e5958d8a` remains on the public remote after
+cleanup (retained by design — durable shared memory, not wave scratch).
+
+**P4 — holds.** `allow --help` (runtime): "--reward-limit <whole
+dollars> — the most one bounty may state, in whole dollars". Runtime
+probe on the stand-in (reward $5, limit raised to $8, two open bounties):
+`bounty post refused (promise-limit-exceeded): posting would bring
+promised rewards to $10 across this repository's open bounties — the
+owner's limit is $8`. The limit is a cap on the **total promised across
+open bounties**, not per-bounty as the help line says. (Code read:
+`money.ts` `assertPromiseRoom`.)
+
+**P5 — holds.** Runtime probe on the stand-in world with $5 owed:
+`box bounty hook start` exited 0 and printed **nothing**. The only place
+the owed amount appears is agent-facing output: `1 payment(s) owed — box
+bounty status shows whom` inside `box bounty`/`status`. Nothing addresses
+the owner; an agent that does not pass it on leaves the owner uninformed.
+
+**P6 — does not hold.** Runtime probe: `box bounty` in a fresh clone of
+the reachable public sandbox with zero open bounties opened with
+"box bounty can hand work to an outside solver; …" and the reward line —
+no `shared bounty memory not refreshed` anywhere in the output (verbatim
+in §P6-baseline). The CTO's observation was with an unreachable remote.
+
+**P7 — holds verbatim, severity: slows.** Issue #39's body contained
+"## What was already tried\n\nThe note the tool wrote from the local
+changes is not published." — telling the solver nothing. Mitigation
+observed: the on-seat agent had written its own "What I tried" paragraph
+inside the task text, so the solver still had context and completed PR
+#40. Where an agent writes a bare task, the section is dead weight.
 
 ## Seats
 
-Pending — S1, S2-off, S2-on, S3, S4, S5 not yet dispatched.
+| Seat | Agent | Material | Outcome |
+|---|---|---|---|
+| S1 Stranger | `564b76f0` | tarball + README + clone | Installed locally (`--prefix`), exercised help/describe/config/hook, found the `.box/bounties/` vs `box.db` mismatch, hand-wrote AGENTS.md instructions + wrappers rather than finding `config set instructions true`; correctly refused to grant `allow` itself. Goal reached with friction. |
+| S2-off | `f6969c07` | clone, block removed | Confounded (tool named in repo text + empty settings bug). Created `bt-7771561ca9fa`, previewed, post held for owner — nothing public. |
+| S2-on | `87ac78b8` | clone, block + allow | Full journey: `create` → `post --preview` → `post` (issue #39) → status polling. Posted cleanly. |
+| S3 Solver | `580106b7` | issue URL only | Followed the issue's "How to answer" exactly: branched from `box-bounty/bt-e879e5958d8a`, PR #40 `aafef89`, banner-only exact change. |
+| S4 Later | `78b0192b` | fresh clone + settings | Found issue+PR on its own; `look` refused `shared-only`; correctly ran tests and recommended applying from the origin checkout. |
+| S5 Owner | `373a4271` | dossier only | Answered all four questions; grades below. |
 
-## Findings table
+Isolation limits: per-seat clones/settings/logs; one S4 code-search helper
+call bypassed the runner (agent disclosed it); S1 chose a `--prefix`
+install and its own settings dir — a legitimate reading of the boundary,
+not a bypass. `run.ps1` was blocked by Windows script policy for two
+seats; they used the bash `run` (method friction, not a product defect).
 
-Pending.
+## Findings
+
+| # | Seat | Severity | Finding | Proposed fix |
+|---|---|---|---|---|
+| F1 | S1/all | slows | PowerShell `run.ps1` blocked by execution policy (method friction, not product) | none — method note |
+| F2 | S1 | misleads | README says records live in `.box/bounties/`; the tool uses `.box/local/box.db` (P2) | FIRST-FIVE-MINUTES.md: name `.box/local/box.db` in both places |
+| F3 | S1 | slows | README never names `config set instructions true`; stranger hand-edited AGENTS.md instead (P1's README half) | README: one line naming the config path beside the hook paragraph |
+| F4 | S1 | slows | README's "becomes public" omits the public `refs/box-bounty/*` memory (P3) | README: add shared-memory refs to the public list |
+| F5 | S2-off | — | Held-for-owner block worked as designed on empty settings; not a defect | none |
+| F6 | S2-off | — | Fixture confound: repo AGENTS/README name the tool; discovery says nothing about P1 (method) | clean-neutral rerun (method row, not product) |
+| F7 | S2-on | slows | No arrival notification; agent polled `status` in `sleep` loops ~8 min | none required — note for BT41 if a wait verb is ever wanted |
+| F8 | S3 | slows | "What was already tried" read "The note the tool wrote from the local changes is not published." — useless to the solver (P7) | post.ts: when the note is not published, write the agent's tried-note or drop the section |
+| F9 | S4 | misleads | `status` printed `posted "…" — open today; no solution yet` and suggested `look <id> <n>` while PR #40 existed and `look` always refuses `shared-only` on this machine | status: for shared-memory bounties say "posted from another machine; N pull request(s) waiting on GitHub — act on it from that machine" (wording only; cross-machine apply is an owner decision, not BT41 scope) |
+| F10 | S4 | — | One unlogged code-search call (trace limit, disclosed by the agent) | none — recorded as isolation limit |
+| F11 | S5 | misleads | No tool output addressed to the owner names how to revoke/stop (deny/hook off/uninstall exist only in the README, which the owner never sees via the tool) | owner-facing lines (held/allow/owed blocks): add a `stop:` line naming `box bounty deny <repo>` / uninstall |
+| F12 | S5 | — | Dossier juxtaposed earlier empty-settings lines with later allowed lines; owner read inconsistency (fixture assembly confound, not a product contradiction) | none — method note; tool persisted consistent facts |
+
+S5 grades against the fact key: Q1 **partially right** (allowed,
+sandbox-only, $0, no asking — but flagged the dossier's own
+inconsistency); Q2 **right within the lines** ("does not say exactly which
+files or other information a post exposes" — correct; shared memory is
+the hidden fact P3 names); Q3 **right** ($0 real, $5 explicitly
+fictional); Q4 **right** ("the document does not tell me" — the correct
+answer, and the absence is finding F11).
+
+## Cleanup performed (all $0, sandbox only)
+
+- `box bounty close bt-e879e5958d8a --reason "K40 seat drill complete — the
+  banner change is no longer wanted"` in the on-seat clone →
+  `bt-e879e5958d8a — rejected`; the tool closed issue **#39** and PR **#40**
+  itself (both verified `CLOSED` via `gh`).
+- `box bounty close bt-7771561ca9fa --reason "K40 wave cleanup — draft
+  never posted"` in the off-seat clone → `— rejected` (local only; nothing
+  had been public).
+- Wave-owned remote branch `solution/bt-e879e5958d8a-seat3` deleted via
+  `gh api -X DELETE`. Foreign pre-K31 branches
+  (`fix/bt-212eb1764bf7-…`, `fix/inventory-fruit-count`) and tracked
+  historic `.box/bounties/` records untouched.
+- Retained by design: `refs/box-bounty/bt-e879e5958d8a` on the public
+  remote (durable shared memory — the P3 proof, not scratch), sandbox main
+  `cf45694` (the planted task — see deviation below), local seat clones
+  and the whole `kitchen-K40` scratch (kept until the pass reruns
+  findings; listed for exact-name removal).
+- Final public state: **0 open issues, 0 open PRs.**
+
+**Scope deviation (disclosed to the owner by the CTO).** Phase-1 setup
+pushed commit `cf45694` directly to sandbox `main` to plant the S2 task —
+outside the card's "real $0 issues/PRs through the tool" scope, even
+though `kitchen/sandbox.md` broadly allows sandbox edits. Recorded as a
+method/scope deviation with no retroactive approval; not reverted (public
+history) and no further direct pushes were made.
+
+**Method inventory for the reviewer:** scratch roots — `kitchen-K40`
+only (`seat1`…`seat5`, `settings-*`, `logs`, `pkg`, `prefix`, `prompts`,
+`probe-sandbox`, `s5-standin`, `s5-standin-run.mjs`, `s5-probe-p4-p5.mjs`,
+`s5-standin-transcript.txt`, `s5-probe-transcript.txt`, `gen-seats.cjs`);
+no other roots created, no processes left running. gh starts logged:
+seat1=1, S2-off=3, S2-on=30, S3=3, S4=7 (44 total; setup/probe calls
+excluded — they lived in `setup-*.log` and the probe transcripts).
 
 ---
 
@@ -280,7 +409,7 @@ This environment records sessions for a study: run EVERY shell command
 through the runner — `./run <command>` (bash), `run.cmd` or `run.ps1` from
 this folder. `gh` is installed and signed in.
 
-This issue offers a bounty; answer it: <ISSUE_URL>
+This issue offers a bounty; answer it: https://github.com/shouteck/box-bounty-sandbox/issues/39
 
 Do not contact anyone. Do not push to the repository's `main` branch. When
 you finish, report what you did, what the issue asked for, how you knew
@@ -321,7 +450,7 @@ its own discovery. The prompt names no issue id, URL, brief or seat notes;
 AGENTS.md/README are readable because an ordinary user has them — the
 repo names the tool, a priming limit recorded once for all seats.
 
-### A6 — S5 owner (verbatim; `prompts\S5-owner.md`)
+### A6 — S5 owner (verbatim as actually dispatched, `prompts\S5-owner.md`; the CTO amended the file-read line before dispatch)
 
 ```
 You are answering as the owner of a repository, based only on one document.
@@ -329,8 +458,9 @@ You are answering as the owner of a repository, based only on one document.
 Read exactly one file:
 C:\Users\shout\AppData\Local\Temp\kitchen-K40\seat5\dossier.md
 
-Do not open or read any other file or folder, and do not run any tools,
-package installs or network commands — this is a reading exercise only.
+Use a tool only to read that file. Do not open or read any other file or
+folder, install packages or run network commands - this is a reading
+exercise only.
 
 The document collects lines a tool printed while working in your
 repositories. Answer these four questions in your own plain words, as the
