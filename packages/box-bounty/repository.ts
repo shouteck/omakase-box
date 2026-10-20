@@ -58,7 +58,7 @@ function remoteCandidates(config: ConfigEntries): RemoteCandidate[] | null {
   const found = new Map<string, { remotes: string[]; urls: string[] }>();
   for (const [name, urls] of byRemote) {
     const addresses = [...new Set(urls.map(url => GITHUB_URL.test(url) ? repositoryAddress(url) : null).filter((address): address is string => address !== null))];
-    if (addresses.length > 1) throw new BountyRefused('github-remote-mismatch', `remote ${name} names different GitHub repositories; a yes for one cannot cover another. Make its fetch and push addresses name one repository`);
+    if (addresses.length > 1) throw new BountyRefused('github-remote-mismatch', `remote ${name} names different GitHub repositories; a yes for one cannot cover another; next: make its fetch and push addresses name one repository`);
     const address = addresses[0];
     if (address === undefined) continue;  // not GitHub: no part in identity, never contacted
     const candidate = found.get(address) ?? { remotes: [], urls: [] };
@@ -66,7 +66,7 @@ function remoteCandidates(config: ConfigEntries): RemoteCandidate[] | null {
     candidate.urls.push(...urls.filter(url => repositoryAddress(url) === address));
     found.set(address, candidate);
   }
-  if (found.size === 0) throw new BountyRefused('github-remote-required', 'no remote names a GitHub repository; add one, then run box bounty allow');
+  if (found.size === 0) throw new BountyRefused('github-remote-required', 'no remote names a GitHub repository; next: add a GitHub remote, then run box bounty allow');
   return [...found.entries()].map(([address, candidate]) => ({ address, remotes: candidate.remotes, urls: candidate.urls }));
 }
 
@@ -94,7 +94,7 @@ export function chooseRepository(root: string, listed: ReadonlySet<string>): Rep
     if (onList.length === 0) return { kind: 'unlisted', candidates };
     if (onList.length > 1) {
       const named = onList.map(candidate => `${candidate.address} (remote ${candidate.remotes.join(', ')})`).join(' and ');
-      throw new BountyRefused('repository-several-allowed', `remotes ${named} are all on the list; the tool cannot tell which one this checkout is — a yes for one repository never covers another. Take all but one off the list with box bounty deny <owner/name>, or work from a checkout whose remotes name one`);
+      throw new BountyRefused('repository-several-allowed', `remotes ${named} are all on the list; the tool cannot tell which one this checkout is — a yes for one repository never covers another; next: the owner takes all but one off the list with box bounty deny <owner/name>, or works from a checkout whose remotes name one`);
     }
     chosen = onList[0]!;
   }
@@ -108,7 +108,7 @@ export function chooseRepository(root: string, listed: ReadonlySet<string>): Rep
       const base = rewrite.key.slice(4, rewrite.key.lastIndexOf('.'));
       const rewritten = base + url.slice(rewrite.value.length);
       if (!GITHUB_URL.test(rewritten) || repositoryAddress(rewritten) !== chosen.address) {
-        throw new BountyRefused('repository-destination-mismatch', 'a Git URL rewrite sends this repository to a different destination; nothing was allowed or posted. Remove the rewrite or make the addresses agree');
+        throw new BountyRefused('repository-destination-mismatch', 'a Git URL rewrite sends this repository to a different destination; nothing was allowed or posted; next: remove the rewrite or make the addresses agree');
       }
     }
   }

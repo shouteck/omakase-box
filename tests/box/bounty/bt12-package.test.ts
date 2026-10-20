@@ -186,6 +186,7 @@ describe('what it needs is stated and checked', () => {
       expect(refused.stderr).toContain('box refused (node-too-old)');
       expect(refused.stderr).toContain(`Node ${NODE_MINIMUM} or later is required — found node ${fake}`);
       expect(refused.stderr).toContain('https://nodejs.org');
+      expect(refused.stderr).toContain('next: ');
       expect(refused.stdout).toBe('');
     }
     // At the floor exactly, and on the real runtime, it continues to the command.

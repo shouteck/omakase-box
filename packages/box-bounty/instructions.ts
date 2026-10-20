@@ -121,7 +121,7 @@ function projectGitDir(root: string): string | null {
   return dir;
 }
 
-const toolOwned = (named: string): BountyRefused => new BountyRefused('instruction-file-tool-owned', `${named} belongs to Git or to this tool; an instruction file must be one your agents read. Nothing changed`);
+const toolOwned = (named: string): BountyRefused => new BountyRefused('instruction-file-tool-owned', `${named} belongs to Git or to this tool; an instruction file must be one your agents read; next: name an instruction file your agents read. Nothing changed`);
 
 // `.git/` and `.box/` belong to Git and to this tool — a block synced into
 // `.git/config` breaks Git in the checkout and one in `.box/bounties/`
@@ -137,7 +137,7 @@ const toolOwned = (named: string): BountyRefused => new BountyRefused('instructi
 // elsewhere under the root is refused the same way.
 export function checkInstructionFile(repoRoot: string, named: string): string {
   const { root, path, rel, actual, problem, leaf, canonical } = walkProjectPath(repoRoot, named);
-  if (problem?.kind === 'outside') throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed`);
+  if (problem?.kind === 'outside') throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed; next: name a file inside the repository`);
   const owns = (value: string) => folded(value).split('/').some(part => part === '.git' || part === '.box');
   if (owns(rel)) throw toolOwned(named);
   if (owns(actual)) throw toolOwned(named);
@@ -153,13 +153,13 @@ export function checkInstructionFile(repoRoot: string, named: string): string {
     }
   }
   if (problem !== null) {
-    if (problem.kind === 'link') throw new BountyRefused('instruction-file-link', `${named}: instruction-file-link; nothing changed`);
-    throw new BountyRefused('instruction-file-missing', `${named}: instruction-file-missing; choose an existing file`);
+    if (problem.kind === 'link') throw new BountyRefused('instruction-file-link', `${named}: instruction-file-link; nothing changed; next: name a real file, not a link`);
+    throw new BountyRefused('instruction-file-missing', `${named}: instruction-file-missing; next: name an existing file`);
   }
   const stat = leaf!;
-  if (!stat.isFile()) throw new BountyRefused('instruction-file-not-file', `${named}: instruction-file-not-file; nothing changed`);
-  if (stat.nlink > 1) throw new BountyRefused('instruction-file-link', `${named}: instruction-file-link; nothing changed`);
-  if (!folded(canonical!).startsWith(`${folded(root)}/`)) throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed`);
+  if (!stat.isFile()) throw new BountyRefused('instruction-file-not-file', `${named}: instruction-file-not-file; nothing changed; next: name a plain file`);
+  if (stat.nlink > 1) throw new BountyRefused('instruction-file-link', `${named}: instruction-file-link; nothing changed; next: name a real file, not a link`);
+  if (!folded(canonical!).startsWith(`${folded(root)}/`)) throw new BountyRefused('instruction-file-outside-repo', `${named}: instruction-file-outside-repo; nothing changed; next: name a file inside the repository`);
   return path;
 }
 
@@ -203,7 +203,7 @@ function span(bytes: Buffer): { readonly afterOpen: number; readonly closeAt: nu
   const openAt = bytes.indexOf(open), closeAt = bytes.indexOf(close);
   const damaged = bytes.toString('latin1').match(/<!--\s*\/?box-bounty\b/g) ?? [];
   if (openAt === -1 && closeAt === -1 && damaged.length === 0) return null;
-  if (openAt < 0 || closeAt < openAt + open.length || bytes.indexOf(open, openAt + open.length) !== -1 || bytes.indexOf(close, closeAt + close.length) !== -1 || damaged.length !== 2) throw new BountyRefused('instruction-markers-damaged', 'instruction-markers-damaged; nothing changed');
+  if (openAt < 0 || closeAt < openAt + open.length || bytes.indexOf(open, openAt + open.length) !== -1 || bytes.indexOf(close, closeAt + close.length) !== -1 || damaged.length !== 2) throw new BountyRefused('instruction-markers-damaged', 'instruction-markers-damaged; nothing changed; next: fix the managed block in the instruction file, then rerun the same command');
   return { openAt, afterOpen: openAt + open.length, closeAt };
 }
 export function checkInstructionMarkers(path: string): void { span(readFileSync(path)); }
@@ -241,7 +241,7 @@ function replaceFile(path: string, before: Buffer, after: Buffer): void {
   const staging = `${path}.box-${randomUUID()}.tmp`;
   try {
     writeFileSync(staging, after, { flag: 'wx', mode: lstatSync(path).mode });
-    if (!readFileSync(path).equals(before)) throw new BountyRefused('instruction-file-changed', 'instruction-file-changed during update; nothing changed');
+    if (!readFileSync(path).equals(before)) throw new BountyRefused('instruction-file-changed', 'instruction-file-changed during update; nothing changed; next: rerun the same command');
     renameSync(staging, path);
   } finally { rmSync(staging, { force: true }); }
 }
@@ -281,7 +281,7 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
         let next = target;
         let terminal = target;
         while (next !== undefined) {
-          if (seen.has(next.path)) throw new BountyRefused('instruction-import-cycle', 'instruction-import-cycle; nothing changed');
+          if (seen.has(next.path)) throw new BountyRefused('instruction-import-cycle', 'instruction-import-cycle; nothing changed; next: break the import cycle between the instruction files');
           seen.add(next.path);
           const nextPath = checkInstructionFile(repoRoot, next.path);
           span(readFileSync(nextPath));
@@ -290,7 +290,7 @@ export function syncInstructions(repoRoot: string, add = false): string[] {
           next = further === null ? undefined : files.find(candidate => candidate.path === further);
         }
         if (terminal === undefined || span(readFileSync(checkInstructionFile(repoRoot, terminal.path))) === null) {
-          if (add) throw new BountyRefused('instruction-import-unmaintained', 'instruction-import-unmaintained; nothing changed');
+          if (add) throw new BountyRefused('instruction-import-unmaintained', 'instruction-import-unmaintained; nothing changed; next: add the imported file to the maintained list or remove the import');
           messages.push(`${file.path}: imported file lacks the block; existing bytes kept. Add it with box bounty config set instructions true`);
           continue;
         }

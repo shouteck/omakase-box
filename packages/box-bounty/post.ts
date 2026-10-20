@@ -27,20 +27,20 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
   // Only an unposted draft from before BT15 reads its old public text. No
   // source copy or returned folder is consulted, and no folder is changed.
   const retired = retiredRoute(record);
-  if (retired !== null) return invalid(retired, `this bounty used a retired delivery route; end it with box bounty close ${record.id}`);
-  if (record.folder === undefined) return invalid('record-corrupt', 'this draft has no public task text');
+  if (retired !== null) return invalid(retired, `this bounty used a retired delivery route; next: end it with box bounty close ${record.id}`);
+  if (record.folder === undefined) return invalid('record-corrupt', 'this draft has no public task text; next: end it with box bounty close ${record.id} and create a new one');
   let bytes: Buffer;
   try {
     const path = join(record.folder, 'bounty.json');
-    if (!lstatSync(path).isFile()) return invalid('legacy-task-unavailable', `the old public task is not a plain file; end it with box bounty close ${record.id}`);
+    if (!lstatSync(path).isFile()) return invalid('legacy-task-unavailable', `the old public task is not a plain file; next: end it with box bounty close ${record.id}`);
     bytes = readFileSync(path);
   }
-  catch { return invalid('legacy-task-unavailable', `the old draft's public task cannot be read; end it with box bounty close ${record.id} and create a new one`); }
-  if (record.manifestSha256 !== undefined && digest(bytes) !== record.manifestSha256) return invalid('manifest-tampered', 'the old draft public text changed; nothing was posted');
+  catch { return invalid('legacy-task-unavailable', `the old draft's public task cannot be read; next: end it with box bounty close ${record.id} and create a new one`); }
+  if (record.manifestSha256 !== undefined && digest(bytes) !== record.manifestSha256) return invalid('manifest-tampered', 'the old draft public text changed; nothing was posted; next: end it with box bounty close ${record.id} and create a new draft');
   let value: unknown;
-  try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', 'the old draft public text is unreadable'); }
+  try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', 'the old draft public text is unreadable; next: end it with box bounty close ${record.id} and create a new one'); }
   const inputText = (item: unknown): item is { file: string; text: string } => isObject(item) && typeof item['file'] === 'string' && typeof item['text'] === 'string';
-  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot?.commit || record.snapshot === undefined || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', 'the old draft public text is unreadable');
+  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot?.commit || record.snapshot === undefined || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', 'the old draft public text is unreadable; next: end it with box bounty close ${record.id} and create a new one');
   return { task: value['task'], note: value['note'], tool: typeof value['tool'] === 'string' ? value['tool'] : TOOL_VERSION };
 }
 
@@ -181,7 +181,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   const record = loadRecord(root, id);
   const resumable = record.github !== undefined && record.stage === 'posted';
   if (record.stage !== 'confirmed' && record.stage !== 'drafted' && record.stage !== 'waiting' && !resumable) {
-    return invalid('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted`);
+    return invalid('not-postable', `bounty ${id} is ${record.stage} — only a drafted or confirmed bounty can be posted; next: box bounty status ${id}`);
   }
   // A project file cannot name money or publish lists — the claim refusal is
   // named before anything else, so a refused post changes nothing (BT11a).
@@ -202,10 +202,10 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     reusedAnswer = ownerGate(root, record, { for: 'post', to: 'github', choice: opts?.choice ?? { withChanges: false, include: [] } }).reused === true;
   }
   const repository = publicRepository(root);
-  if (record.githubApproval !== undefined && record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository the recorded approval was made for; nothing was posted');
-  if (record.github !== undefined && record.github.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved for this bounty; nothing was posted');
+  if (record.githubApproval !== undefined && record.githubApproval.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository the recorded approval was made for; nothing was posted; next: point origin back at the approved repository, or the owner allows the new one with box bounty allow <owner/name>');
+  if (record.github !== undefined && record.github.repository !== repository) return invalid('github-repository-changed', 'origin no longer names the repository approved for this bounty; nothing was posted; next: point origin back at the approved repository, or the owner allows the new one with box bounty allow <owner/name>');
   const account = signedAccount(root);
-  if (record.github !== undefined && record.github.account !== account) return invalid('github-account-changed', 'sign in to the account that started this post before retrying; nothing was posted');
+  if (record.github !== undefined && record.github.account !== account) return invalid('github-account-changed', 'sign in to the account that started this post before retrying; nothing was posted; next: sign in to that account with gh auth login, then run box bounty post again');
   if (record.github === undefined && record.githubApproval === undefined) {
     // The standing-decision path (BT8): no per-bounty approval exists or is
     // needed. The owner's written answer gates the post; the pre-publish
@@ -217,7 +217,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     // a named refusal — the owner settles it in `config` (safe to publish /
     // never publish), or the flagged content is removed and the post rerun.
     if (opts?.answered === true && priorWait?.reason === 'secrets') {
-      return invalid('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it. The owner decides in box bounty config: the path goes on safe to publish or never publish; or the flagged content is removed and the post run again; nothing was posted`);
+      return invalid('allow-scan-held', `${id} waits on the pre-publish scan — an owner answer cannot release it; nothing was posted; next: the owner decides in box bounty config — the path goes on safe to publish or never publish, or the flagged content is removed and the post run again`);
     }
     const plan = planGitHub(root, repository, record, shipRules(root), choice);
     // An owner answer is bound to what the owner was shown would be
@@ -229,7 +229,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
     // bind — the post's own refusals still apply.
     const shown = priorWait?.shown;
     if (opts?.answered === true && priorWait?.to === 'github' && shown !== undefined && !sameShown(shown, shownOfPlan(plan))) {
-      return invalid('github-preview-stale', `what would be published changed since this post first waited — the owner's answer was for what they were shown and does not carry over. Run box bounty post ${id} again so the wait records the new state for the owner; nothing was posted`);
+      return invalid('github-preview-stale', `what would be published changed since this post first waited — the owner's answer was for what they were shown and does not carry over; nothing was posted; next: run box bounty post ${id} again so the wait records the new state for the owner`);
     }
     // An owner answer clears only what the recorded wait named: a post held
     // for the decision alone can still carry scan hits the owner never saw —
@@ -258,14 +258,14 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         ...plan.scan.hits.map(hit => `  hit: ${hit.path}:${hit.line} — ${hit.rule}${hit.commit !== undefined ? ` — in unpushed commit ${hit.commit.slice(0, 12)} — an ordinary git push would publish it too` : ''}`),
         ...(plan.scan.suppressed > 0 ? [`${plan.scan.suppressed} hit(s) on safe-listed paths are not held`] : []),
         ...(plan.scan.binary.length > 0 ? [`not scanned — Git treats them as binary: ${plan.scan.binary.join(', ')}`] : []),
-        'the scan is a stated pattern list, not proof of absence.'
+        'the scan is a stated pattern list, not proof of absence.', `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
       ].join('\n'));
     }
     if (plan.include.length > 0 && seen !== 'untracked-file') {
       waitForOwner(root, record, { for: 'post', reason: 'untracked-file', at: new Date().toISOString(), to: 'github', choice, shown: shownOfPlan(plan) });
       return invalid('publish-held', [
         `${id} — an untracked file is named for publishing (${plan.include.join(', ')}); this bounty waits for the owner`,
-        `the owner answers this one with box bounty allow ${id} — the answer is bound to what would be published now — or ends it with box bounty close ${id}`
+        `the owner answers this one with box bounty allow ${id} — the answer is bound to what would be published now — or ends it with box bounty close ${id}`, `next: pass the owner block on in its words; box bounty status ${id} shows when the answer lands`
       ].join('\n'));
     }
     const text = listingHistory(record, repository, plan, reward!.amount);
@@ -324,18 +324,18 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
       // it is removed — so a stale one ends the bounty rather than guess.
       const staleNext = `the approval recorded before the decision moved to the owner's settings can no longer be refreshed; end this bounty with box bounty close ${id} and create a new one — nothing was posted`;
       if (plan.base !== approval.base) {
-        return invalid('github-preview-stale', `what the GitHub repository has moved since the preview was approved — ${staleNext}`);
+        return invalid('github-preview-stale', `what the GitHub repository has moved since the preview was approved; next: ${staleNext}`);
       }
       if (plan.head !== approval.head || plan.pushed.length !== (approval.pushed ?? []).length || plan.pushed.some((commit, index) => commit.sha !== approval.pushed![index]!.sha)) {
-        return invalid('github-preview-stale', `the branch moved since the preview was approved — ${staleNext}`);
+        return invalid('github-preview-stale', `the branch moved since the preview was approved; next: ${staleNext}`);
       }
       if (plan.tip !== approval.tip) {
-        return invalid('github-preview-stale', `the uncommitted work or named files changed since the preview was approved — ${staleNext}`);
+        return invalid('github-preview-stale', `the uncommitted work or named files changed since the preview was approved; next: ${staleNext}`);
       }
       // Even work that stays home is part of what the owner was shown: if the
       // tracked or untracked leftovers changed since the preview, it is stale.
       if (plan.leftHome !== approval.leftHome || plan.untracked !== approval.untracked || plan.include.join('') !== (approval.include ?? []).join('')) {
-        return invalid('github-preview-stale', `the working state changed since the preview was approved — ${staleNext}`);
+        return invalid('github-preview-stale', `the working state changed since the preview was approved; next: ${staleNext}`);
       }
       publication = {
         repository,
@@ -354,9 +354,9 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         pending: null
       };
     } else if (present.length === 0) {
-      return invalid('legacy-delivery-retired', `the recorded approval used a retired route; end it with box bounty close ${id}`);
+      return invalid('legacy-delivery-retired', `the recorded approval used a retired route; next: end it with box bounty close ${id}`);
     } else {
-      return invalid('record-corrupt', `the recorded GitHub approval carries only some plan fields (${present.join(', ')}) — it is not a readable approval; nothing was posted`);
+      return invalid('record-corrupt', `the recorded GitHub approval carries only some plan fields (${present.join(', ')}) — it is not a readable approval; nothing was posted; next: run box bounty post ${id} again so the owner is shown a fresh approval`);
     }
     // The recorded approval was the owner's own written yes — kept as the
     // answer that allowed this post.
@@ -367,7 +367,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   }
   const branchTip = remoteBranchSha(root, repository, record.github.branch);
   if (branchTip !== null && branchTip !== record.github.commit) {
-    return invalid('github-branch-changed', `${record.github.branch} on the remote is ${branchTip}, not the ${record.github.commit} this tool approved — it was changed outside the tool; nothing was posted`);
+    return invalid('github-branch-changed', `${record.github.branch} on the remote is ${branchTip}, not the ${record.github.commit} this tool approved — it was changed outside the tool; nothing was posted; next: ask the owner — the remote branch was changed outside the tool`);
   }
   const publication = record.github;
   let destination: string;
@@ -380,7 +380,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
         ensureLabel(root, repository);
         const created = api(root, `repos/${repository}/issues`, { title: publication.title, body: publication.body, labels: ['box-bounty'] });
         const labels = isObject(created) && Array.isArray(created['labels']) ? created['labels'] : [];
-        if (!labels.some(entry => isObject(entry) && entry['name'] === 'box-bounty')) return invalid('github-response-invalid', 'the box-bounty label did not land on the issue');
+        if (!labels.some(entry => isObject(entry) && entry['name'] === 'box-bounty')) return invalid('github-response-invalid', 'the box-bounty label did not land on the issue; next: check the issue on GitHub; box bounty status shows what was recorded');
         return issueNumber(created, repository);
       })();
     }
@@ -392,7 +392,7 @@ export function postGitHub(root: string, id: string, opts?: { answered?: boolean
   } catch {
     publication.pending = `post-incomplete: ${publication.state}; issue ${publication.issue?.url ?? 'not recorded'}; retry box bounty post ${id} or remove with box bounty close ${id}`;
     persistRecord(root, record);
-    return invalid('github-post-incomplete', publication.pending);
+    return invalid('github-post-incomplete', `${publication.pending}; next: retry box bounty post ${id} or remove it with box bounty close ${id}`);
   }
   // BT32: the posted milestone is a shared chain event — scanned, appended,
   // pushed; a push that cannot land is held locally and retried, never a

@@ -55,7 +55,7 @@ export function ownerGate(repoRoot: string, record: BountyRecord, action: { for:
   waitForOwner(repoRoot, record, { for: action.for, reason, at: new Date().toISOString(), to: action.to, ...(action.choice !== undefined ? { choice: action.choice } : {}), ...(shown !== undefined ? { shown } : {}) });
   throw new BountyRefused(
     read.decision === null ? 'owner-allow-needed' : 'owner-answer-needed',
-    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(anyJsonContaining(repoRoot, '"decision": "once"') ? ['The owner previously chose this one bounty only.'] : [])].join('\n')
+    [`waiting for the owner: ${record.id} — ${waitingSummary(record)}`, ...ownerWaitLines(repoRoot, record, read), ...(anyJsonContaining(repoRoot, '"decision": "once"') ? ['The owner previously chose this one bounty only.'] : []), `next: pass the owner block on in its words; box bounty status ${record.id} shows when the answer lands`].join('\n')
   );
 }
 

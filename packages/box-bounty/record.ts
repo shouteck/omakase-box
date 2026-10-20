@@ -620,12 +620,12 @@ export function loadRecord(repoRoot: string, id: string): BountyRecord {
     const shared = sharedRead(repoRoot, id);
     if (shared !== null) {
       const url = shared.github?.issue?.url;
-      throw new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; act on it from that machine, or on GitHub`);
+      throw new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; next: act on it from that machine, or on GitHub`);
     }
-    throw new BountyRefused('unknown-bounty', `no bounty ${id} — .box/bounties/${id}.json does not exist. Run box bounty status to list the bounties this project knows`);
+    throw new BountyRefused('unknown-bounty', `no bounty ${id} — .box/bounties/${id}.json does not exist; next: box bounty status lists the bounties this project knows`);
   }
   if (stored.record === null) {
-    throw new BountyRefused('record-corrupt', `${recordPath(repoRoot, id)} is not a readable bounty record — open it by hand, or remove it and run box bounty status again`);
+    throw new BountyRefused('record-corrupt', `${recordPath(repoRoot, id)} is not a readable bounty record; next: open it by hand, or remove it and run box bounty status again`);
   }
   return stored.record;
 }
@@ -751,7 +751,7 @@ export function retiredRoute(record: BountyRecord): string | null {
 export function requireCurrentDelivery(record: BountyRecord): void {
   const retired = retiredRoute(record);
   if (retired !== null) {
-    throw new BountyRefused(retired, `this bounty used a retired delivery route; its history is still readable. End it with box bounty close ${record.id}`);
+    throw new BountyRefused(retired, `this bounty used a retired delivery route; its history is still readable; next: end it with box bounty close ${record.id}`);
   }
 }
 

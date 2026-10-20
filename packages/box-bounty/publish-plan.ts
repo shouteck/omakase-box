@@ -46,10 +46,10 @@ function scanRemote(root: string, repository: string, id: string): string[] {
   const fetch = gitOutcome(root, ['fetch', '--no-tags', '--no-recurse-submodules', remoteUrl(repository), `+refs/heads/*:${scan}/heads/*`, `+refs/tags/*:${scan}/tags/*`]);
   if (fetch.status !== 0 || fetch.error !== undefined) {
     dropScanRefs(root, id);
-    return invalid('github-git-failed', 'Git could not read what the GitHub repository has; check signed-in Git and retry');
+    return invalid('github-git-failed', 'Git could not read what the GitHub repository has; next: check signed-in Git and rerun the same command');
   }
   const tips = gitOutcome(root, ['for-each-ref', '--format=%(objectname)', scan]);
-  if (tips.status !== 0) return invalid('github-git-failed', 'Git could not read what the GitHub repository has; check signed-in Git and retry');
+  if (tips.status !== 0) return invalid('github-git-failed', 'Git could not read what the GitHub repository has; next: check signed-in Git and rerun the same command');
   return [...new Set(tips.stdout.split('\n').map(line => line.trim()).filter(sha => /^[a-f\d]{40}$/.test(sha)))];
 }
 
@@ -67,7 +67,7 @@ function gitStdin(repo: string, args: readonly string[], input: string): string 
   });
   if (result.status !== 0 || result.error !== undefined) {
     const detail = ((result.stderr ?? '') || (result.stdout ?? '') || result.error?.message || `exit ${result.status}`).trim();
-    throw new BountyRefused('github-git-failed', `git ${args.join(' ')} failed: ${detail}`);
+    throw new BountyRefused('github-git-failed', `git ${args.join(' ')} failed: ${detail}; next: fix what git reported, then rerun the same command`);
   }
   return result.stdout ?? '';
 }
@@ -121,11 +121,11 @@ export function commitStatuses(root: string, sha: string, consequence: string, k
   let parent = knownParent;
   if (parent === undefined) {
     const parents = gitOutcome(root, ['rev-list', '--parents', '-n', '1', sha]);
-    if (parents.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
+    if (parents.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}; next: check signed-in Git and rerun the same command`);
     parent = parents.stdout.trim().split(/\s+/).slice(1)[0] ?? EMPTY_TREE;
   }
   const diff = gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', parent, sha]);
-  if (diff.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}`);
+  if (diff.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)}; ${consequence}; next: check signed-in Git and rerun the same command`);
   return parseNameStatus(diff.stdout);
 }
 
@@ -160,17 +160,17 @@ function stagedIndex(root: string): StagedIndex {
 // the same index `ls-files -u` would have listed.
 function trackedChanges(root: string, unmergedKnown: boolean): NamedStatus[] {
   if (unmergedKnown) {
-    return invalid('github-unmerged-paths', 'the repository has unmerged paths — finish or abort the merge before posting to GitHub');
+    return invalid('github-unmerged-paths', 'the repository has unmerged paths; next: finish the merge or run git merge --abort, then run box bounty post again');
   }
   const diff = ownerGitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', 'HEAD']);
-  if (diff.status !== 0) return invalid('github-git-failed', `Git could not read the uncommitted state: ${(diff.stderr || diff.stdout).trim()}`);
+  if (diff.status !== 0) return invalid('github-git-failed', `Git could not read the uncommitted state: ${(diff.stderr || diff.stdout).trim()}; next: check signed-in Git and rerun the same command`);
   return parseNameStatus(diff.stdout);
 }
 
 // Untracked entries (`??` porcelain) — counted, never published unless named.
 function untrackedEntries(root: string): string[] {
   const status = ownerGitOutcome(root, ['status', '--porcelain', '-z']);
-  if (status.status !== 0) return invalid('github-git-failed', `Git could not read the working state: ${(status.stderr || status.stdout).trim()}`);
+  if (status.status !== 0) return invalid('github-git-failed', `Git could not read the working state: ${(status.stderr || status.stdout).trim()}; next: check signed-in Git and rerun the same command`);
   const entries = status.stdout.split('\0');
   const untracked: string[] = [];
   for (let i = 0; i < entries.length; i += 1) {
@@ -195,25 +195,25 @@ function validateIncludes(root: string, names: readonly string[], rules: readonl
     try { real = realpathSync(absolute); } catch { real = ''; }
     const offset = real === '' ? '' : toPosix(relative(realRoot, real));
     if (real === '' || offset === '' || offset.startsWith('../') || offset === '..' || isAbsolute(offset)) {
-      return invalid('github-include-invalid', `--include ${name} does not resolve to a file inside the repository — name untracked files inside the checkout, one by one`);
+      return invalid('github-include-invalid', `--include ${name} does not resolve to a file inside the repository — name untracked files inside the checkout, one by one; next: name untracked files inside the checkout, one by one, with --include <path>`);
     }
     const stat = lstatSync(absolute, { throwIfNoEntry: false });
     if (stat === undefined || !stat.isFile() || stat.isSymbolicLink()) {
       return invalid(stat === undefined ? 'github-include-missing' : 'github-include-invalid',
         stat === undefined
-          ? `--include ${name} does not exist — untracked files are published only when named, and only files that exist can be named`
-          : `--include ${name} resolves to ${offset}, which is not a plain untracked file — name each file itself`);
+          ? `--include ${name} does not exist — untracked files are published only when named, and only files that exist can be named; next: name an existing untracked file with --include <path>`
+          : `--include ${name} resolves to ${offset}, which is not a plain untracked file — name each file itself; next: name a plain untracked file with --include <path>`);
     }
     if (offset.startsWith('.box/bounties/') || offset.startsWith('.box/local/')) {
-      return invalid('github-include-invalid', `--include ${name} resolves to ${offset} — the tool's own bounty records carry owner-only context and are never published`);
+      return invalid('github-include-invalid', `--include ${name} resolves to ${offset} — the tool's own bounty records carry owner-only context and are never published; next: name a different file with --include <path>`);
     }
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
     if (rule !== undefined) {
-      return invalid('github-include-never-ship', `--include ${name} resolves to ${offset}, which the never-ship rule '${rule.name}' covers — it cannot be published; nothing was posted`);
+      return invalid('github-include-never-ship', `--include ${name} resolves to ${offset}, which the never-ship rule '${rule.name}' covers — it cannot be published; nothing was posted; next: drop ${name} from --include — a never-ship path cannot be published`);
     }
     const tracked = ownerGitOutcome(root, ['ls-files', '--error-unmatch', '-z', '--', offset]);
     if (tracked.status === 0) {
-      return invalid('github-include-invalid', `--include ${name} resolves to ${offset}, which is already tracked — it is published through the uncommitted-changes choice, not named by hand`);
+      return invalid('github-include-invalid', `--include ${name} resolves to ${offset}, which is already tracked — it is published through the uncommitted-changes choice, not named by hand; next: leave it out of --include and answer the uncommitted-changes choice`);
     }
     included.push(offset);
   }
@@ -262,7 +262,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
           return false;
         }
         if (stat.isSymbolicLink() || (index < parts.length - 1 && !stat.isDirectory()) || (index === parts.length - 1 && !stat.isFile())) {
-          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${path} — the tool publishes file contents, not links; nothing was posted`);
+          return invalid('github-non-plain-path', `the uncommitted state holds a link or other non-plain entry at ${path} — the tool publishes file contents, not links; nothing was posted; next: remove or replace ${path}, then run box bounty post again`);
         }
       }
       // The blob is what `git add` would store for the path — its configured
@@ -274,7 +274,7 @@ function buildWip(root: string, record: BountyRecord, tracked: readonly NamedSta
       try {
         blob = gitFilteredBlob(root, path, readFileSync(absolute));
       } catch (error) {
-        return invalid('github-filter-failed', `the filtered form of ${path} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; fix the configured filter or commit the file, then post again. Nothing was posted`);
+        return invalid('github-filter-failed', `the filtered form of ${path} cannot be produced — ${error instanceof Error ? error.message : String(error)} — the tool publishes the filtered form only; next: fix the configured filter or commit the file, then run box bounty post again. Nothing was posted`);
       }
       pending.push({ mode: modes.get(path) ?? '100644', sha: blob, path });
       return true;
@@ -368,12 +368,12 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
   const headSha = headLines[0] ?? '';
   const headTree = headLines[1] ?? '';
   if (!/^[a-f\d]{40}$/.test(headSha) || !/^[a-f\d]{40}$/.test(headTree)) {
-    return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have');
+    return invalid('github-no-public-base', 'the current branch has no commits yet — there is nothing the GitHub repository can already have; next: commit the work, then run box bounty post again');
   }
   const tips = scanRemote(root, repository, record.id);
   try {
     if (tips.length === 0) {
-      return invalid('github-no-public-base', 'the GitHub repository reports no branches or tags — there is nothing public to point solvers at');
+      return invalid('github-no-public-base', 'the GitHub repository reports no branches or tags — there is nothing public to point solvers at; next: push a branch to the GitHub repository first, then run box bounty post again');
     }
     // The commits on the current branch the remote lacks, newest first — read
     // from what the remote itself reports, never a local tracking name.
@@ -393,7 +393,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     const base = gitOutcome(root, ['rev-list', '--topo-order', 'HEAD']).stdout
       .split('\n').map(line => line.trim()).find(sha => sha !== '' && !unpushedSet.has(sha));
     if (base === undefined) {
-      return invalid('github-no-public-base', 'the current branch shares no commit with the GitHub repository — there is nothing public to point solvers at');
+      return invalid('github-no-public-base', 'the current branch shares no commit with the GitHub repository — there is nothing public to point solvers at; next: fetch from the GitHub repository so the branches share a commit, or check origin');
     }
     // One staged-index read answers "any unmerged paths" for trackedChanges
     // and "what modes does the index know" for the wip commit — the index is
@@ -429,7 +429,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     }
     if (violations.length > 0) {
       const named = [...new Map(violations.map(v => [v.path, v])).values()];
-      return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}`);
+      return invalid('github-never-ship', `a change being published for the first time touches never-ship paths — refused, nothing was posted: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}; next: take the never-ship paths out of the change, then run box bounty post again`);
     }
     // The pre-publish scan: the added lines of every commit published for
     // the first time, of the work-in-progress diff, and of each named
@@ -443,13 +443,13 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
     const binary: string[] = [];
     for (const sha of unpushed) {
       const patch = gitOutcome(root, ['diff', '-p', '--no-renames', firstParents.get(sha) ?? EMPTY_TREE, sha]);
-      if (patch.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)} for the pre-publish scan; nothing was posted`);
+      if (patch.status !== 0) return invalid('github-git-failed', `Git could not read commit ${sha.slice(0, 12)} for the pre-publish scan; nothing was posted; next: check signed-in Git and rerun the same command`);
       found.push(...scanPatch(patch.stdout).map(hit => ({ ...hit, commit: sha })));
       binary.push(...binaryPatchPaths(patch.stdout));
     }
     if (wip !== null) {
       const patch = gitOutcome(root, ['diff', '-p', '--no-renames', 'HEAD', wip.tree]);
-      if (patch.status !== 0) return invalid('github-git-failed', 'Git could not read the work-in-progress diff for the pre-publish scan; nothing was posted');
+      if (patch.status !== 0) return invalid('github-git-failed', 'Git could not read the work-in-progress diff for the pre-publish scan; nothing was posted; next: check signed-in Git and rerun the same command');
       found.push(...scanPatch(patch.stdout).map(hit => ({ ...hit, commit: wip.commit })));
       binary.push(...binaryPatchPaths(patch.stdout));
     }
@@ -458,7 +458,7 @@ export function planGitHub(root: string, repository: string, record: BountyRecor
         const bytes = readFileSync(join(root, ...offset.split('/')));
         if (looksBinary(bytes)) { binary.push(offset); continue; }
         found.push(...scanText(offset, bytes.toString('utf8')));
-      } catch { return invalid('github-include-missing', `--include ${offset} could not be read for the pre-publish scan; nothing was posted`); }
+      } catch { return invalid('github-include-missing', `--include ${offset} could not be read for the pre-publish scan; nothing was posted; next: name an existing untracked file with --include <path>`); }
     }
     // The owner's safe to publish list is the scan's only exception: hits on
     // those paths are counted, never held — never-ship rules still apply to

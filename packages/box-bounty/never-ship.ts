@@ -93,7 +93,7 @@ function compilePattern(raw: string, line: number): RegExp {
   // Fold case on the pattern side too: matches run against the lower-cased
   // canonical path, so an un-folded pattern containing uppercase could never hit.
   const pattern = raw.trim().toLowerCase();
-  if (pattern.startsWith('!')) throw new BountyRefused('invalid-boxignore', `${OWNER_LIST_FILE} line ${line}: '!' negation is not supported — never-ship rules can only remove files`);
+  if (pattern.startsWith('!')) throw new BountyRefused('invalid-boxignore', `${OWNER_LIST_FILE} line ${line}: '!' negation is not supported — never-ship rules can only remove files; next: remove the '!' negation on ${OWNER_LIST_FILE} line ${line}`);
   if (pattern.endsWith('/')) {
     const dir = pattern.slice(0, -1);
     const anchored = dir.startsWith('/') || dir.includes('/');
@@ -169,13 +169,13 @@ export function checkProjectClaims(repoRoot: string): void {
       try { parsed = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; } // unreadable is not a claim the tool can read
       if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
         const rewardClaim = Object.keys(parsed).find(key => REWARD_CLAIM_KEY.test(key));
-        if (rewardClaim !== undefined) throw new BountyRefused('project-claims-reward', `${name} claims "${rewardClaim}" — the reward and its limit live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it or rename the key; nothing was read from it`);
+        if (rewardClaim !== undefined) throw new BountyRefused('project-claims-reward', `${name} claims "${rewardClaim}" — the reward and its limit live only in the owner's settings (${settingsFile()}); a project file grants nothing; nothing was read from it; next: remove it or rename the key`);
         const claim = Object.keys(parsed).find(key => CLAIM_KEY.test(key));
-        if (claim !== undefined) throw new BountyRefused('project-claims-list', `${name} claims "${claim}" — the owner's publish lists live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it or rename the key; nothing was read from it`);
+        if (claim !== undefined) throw new BountyRefused('project-claims-list', `${name} claims "${claim}" — the owner's publish lists live only in the owner's settings (${settingsFile()}); a project file grants nothing; nothing was read from it; next: remove it or rename the key`);
       }
       continue;
     }
-    throw new BountyRefused('project-claims-list', `${name} names an owner publish list — the lists live only in the owner's settings (${settingsFile()}); a project file grants nothing. Remove it; nothing was read from it`);
+    throw new BountyRefused('project-claims-list', `${name} names an owner publish list — the lists live only in the owner's settings (${settingsFile()}); a project file grants nothing; nothing was read from it; next: remove it`);
   }
 }
 
@@ -212,14 +212,14 @@ function publishEntryPath(repoRoot: string, which: string, named: string): strin
   const tail: string[] = [];
   while (!existsSync(ancestor)) {
     const parent = dirname(ancestor);
-    if (parent === ancestor) throw new BountyRefused('publish-list-outside', `${which} ${named} cannot be resolved; nothing changed`);
+    if (parent === ancestor) throw new BountyRefused('publish-list-outside', `${which} ${named} cannot be resolved; nothing changed; next: fix or remove the ${named} entry in ${which}`);
     tail.unshift(pathBasename(ancestor));
     ancestor = parent;
   }
   const canon = join(realpathSync(ancestor), ...tail);
   const offset = toPosix(relative(root, canon));
   if (offset === '' || offset === '..' || offset.startsWith('../') || isAbsolute(offset)) {
-    throw new BountyRefused('publish-list-outside', `${which} ${named} resolves to ${canon}${offset === '' ? '' : ', outside the repository'} — a listed path names a path inside the repository; nothing changed`);
+    throw new BountyRefused('publish-list-outside', `${which} ${named} resolves to ${canon}${offset === '' ? '' : ', outside the repository'} — a listed path names a path inside the repository; nothing changed; next: remove ${named} from ${which} or name a path inside the repository`);
   }
   let current = root;
   for (const part of relative(root, absolute).split(sep)) {
@@ -227,7 +227,7 @@ function publishEntryPath(repoRoot: string, which: string, named: string): strin
     current = join(current, part);
     const stat = lstatSync(current, { throwIfNoEntry: false });
     if (stat === undefined) break;
-    if (stat.isSymbolicLink()) throw new BountyRefused('publish-list-link', `${which} ${named} resolves through a link — a listed path must be a real path inside the repository; nothing changed`);
+    if (stat.isSymbolicLink()) throw new BountyRefused('publish-list-link', `${which} ${named} resolves through a link — a listed path must be a real path inside the repository; nothing changed; next: replace ${named} in ${which} with a real path inside the repository`);
   }
   return offset;
 }
@@ -250,10 +250,10 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
     const existing = loadSettings().publishing?.[root]?.never ?? [];
     if (existing.length > 0) rules.push({ name: 'owner-never-publish', match: path => listedUnder(existing, path) });
     const rule = rules.find(candidate => candidate.match(offset.toLowerCase()));
-    if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${offset} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed`);
+    if (rule !== undefined) throw new BountyRefused('publish-list-never-ship', `safe to publish ${offset} names a path the never-ship rule '${rule.name}' keeps out — the safe list cannot carry a never-ship path; nothing changed; next: remove ${offset} from the safe list — never-ship paths cannot be listed`);
   }
   const stat = lstatSync(settingsFile(), { throwIfNoEntry: false });
-  if (stat !== undefined && (stat.isSymbolicLink() || !stat.isFile())) throw new BountyRefused('publish-list-settings-link', 'the owner settings file is a link or not a plain file; nothing changed');
+  if (stat !== undefined && (stat.isSymbolicLink() || !stat.isFile())) throw new BountyRefused('publish-list-settings-link', 'the owner settings file is a link or not a plain file; nothing changed; next: make the owner settings file a plain file, then rerun the same command');
   const settings = loadSettings();
   const key = which === 'never-publish' ? 'never' : 'safe';
   const previous = settings.publishing?.[root] ?? { never: [], safe: [] };
@@ -263,7 +263,7 @@ export function changePublishList(repoRoot: string, which: 'never-publish' | 'sa
     list.push(offset);
   } else {
     const index = list.findIndex(entry => entry.toLowerCase() === offset.toLowerCase());
-    if (index === -1) throw new BountyRefused('publish-list-not-listed', `${which}: ${offset} is not listed; nothing changed`);
+    if (index === -1) throw new BountyRefused('publish-list-not-listed', `${which}: ${offset} is not listed; nothing changed; next: add ${offset} to ${which} or remove it from the named paths`);
     list.splice(index, 1);
   }
   const next = { never: [...(key === 'never' ? list : previous.never)], safe: [...(key === 'safe' ? list : previous.safe)] };

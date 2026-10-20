@@ -89,7 +89,7 @@ const checkInside = (repoRoot: string): void => {
     const stat = lstatSync(at, { throwIfNoEntry: false });
     if (stat === undefined) continue;
     if (stat.isSymbolicLink() || !stat.isDirectory()) {
-      throw new BountyRefused('local-store-path-blocked', `${named} is a link or not a directory — the record store must be a real directory inside this checkout; nothing was written`);
+      throw new BountyRefused('local-store-path-blocked', `${named} is a link or not a directory — the record store must be a real directory inside this checkout; nothing was written; next: make ${named} a real directory inside this checkout, or remove the link`);
     }
   }
 };

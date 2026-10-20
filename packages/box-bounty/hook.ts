@@ -285,7 +285,7 @@ export const HOOK_HOSTS: readonly HookHost[] = [
 export function hookHost(name: string | undefined): HookHost {
   const found = HOOK_HOSTS.find(host => host.name === name);
   if (found === undefined) {
-    throw new BountyRefused('hook-unknown-host', `${name === undefined ? 'no host named' : `${JSON.stringify(name)} is not a host the hook can be installed for`} — known hosts: ${HOOK_HOSTS.map(host => host.name).join(', ')}; nothing changed`);
+    throw new BountyRefused('hook-unknown-host', `${name === undefined ? 'no host named' : `${JSON.stringify(name)} is not a host the hook can be installed for`} — known hosts: ${HOOK_HOSTS.map(host => host.name).join(', ')}; nothing changed; next: name a known host with box bounty hook on --host <name>`);
   }
   return found;
 }
@@ -397,7 +397,7 @@ function readSettings(path: string): { text: string; root: Span } {
   const tokens = scan(text);
   const parsed = tokens.length === 0 ? null : parseSpan(tokens, 0);
   if (parsed === null || parsed.next !== tokens.length || parsed.span.kind !== 'object') {
-    throw new BountyRefused('hook-settings-malformed', `${path} is not a readable JSON object — fix the file or remove it and run hook on again; nothing changed`);
+    throw new BountyRefused('hook-settings-malformed', `${path} is not a readable JSON object; nothing changed; next: fix the file or remove it, then run box bounty hook on again`);
   }
   return { text, root: parsed.span };
 }
@@ -408,7 +408,7 @@ function reparse(text: string, path: string): Span {
   const tokens = scan(text);
   const parsed = parseSpan(tokens, 0);
   if (parsed === null || parsed.next !== tokens.length || parsed.span.kind !== 'object') {
-    throw new BountyRefused('hook-settings-malformed', `${path}: the file could not be re-read while being edited; nothing changed`);
+    throw new BountyRefused('hook-settings-malformed', `${path}: the file could not be re-read while being edited; nothing changed; next: run box bounty hook on again`);
   }
   return parsed.span;
 }
@@ -482,7 +482,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
   let root = reparse(text, path);
   let box = container(root, host);
   if (host.nested && box === null && root.members!.find(entry => entry.key === 'hooks') !== undefined) {
-    throw new BountyRefused('hook-settings-malformed', `${path}: "hooks" is not an object — fix the file; nothing changed`);
+    throw new BountyRefused('hook-settings-malformed', `${path}: "hooks" is not an object; nothing changed; next: fix the file, then run box bounty hook on again`);
   }
   // Refuse to double-install — scanning only what was already there: a
   // container the tool is about to create holds only our entries and would
@@ -493,7 +493,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
       let group: unknown = null;
       try { group = JSON.parse(text.slice(element.start, element.end)); } catch { continue; }
       if (isOurs(group)) {
-        throw new BountyRefused('hook-already-on', `the hook is already installed in ${host.file} ("${member.key}"); nothing changed — remove it with box bounty hook off --host ${host.name}`);
+        throw new BountyRefused('hook-already-on', `the hook is already installed in ${host.file} ("${member.key}"); nothing changed; next: remove it with box bounty hook off --host ${host.name} if it should be off`);
       }
     }
   }
@@ -504,7 +504,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
     root = reparse(text, path);
     box = container(root, host);
   }
-  if (box === null) throw new BountyRefused('hook-settings-malformed', `${path}: the hooks object could not be found; nothing changed`);
+  if (box === null) throw new BountyRefused('hook-settings-malformed', `${path}: the hooks object could not be found; nothing changed; next: fix the file or remove it, then run box bounty hook on again`);
   for (const event of Object.keys(groups)) {
     const current = reparse(text, path);
     const currentBox = container(current, host)!;
@@ -513,7 +513,7 @@ function addEntries(path: string, host: HookHost, groups: Record<string, unknown
       createdMembers.push(event);
       text = insertLast(text, currentBox, `\n    "${event}": ${JSON.stringify(groups[event], null, 2).replaceAll('\n', '\n    ')}`);
     } else if (member.value.kind !== 'array') {
-      throw new BountyRefused('hook-settings-malformed', `${path}: "${event}" is not a list of hook entries — fix the file; nothing changed`);
+      throw new BountyRefused('hook-settings-malformed', `${path}: "${event}" is not a list of hook entries; nothing changed; next: fix the file, then run box bounty hook on again`);
     } else {
       for (const group of groups[event]!) {
         const again = reparse(text, path);
@@ -610,22 +610,22 @@ function checkedSettingsPath(repoRoot: string, host: HookHost): string {
   const { root, path, problem, leaf, canonical } = walkProjectPath(repoRoot, host.file);
   if (problem !== null) {
     if (problem.kind === 'link') {
-      throw new BountyRefused('hook-settings-escape', `${problem.at} is a link — the hook only writes settings that stay inside the project; nothing changed`);
+      throw new BountyRefused('hook-settings-escape', `${problem.at} is a link — the hook only writes settings that stay inside the project; nothing changed; next: replace the link with a real directory inside the project, then run box bounty hook on again`);
     }
     if (problem.kind === 'outside') {
-      throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
+      throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed; next: name a settings path inside the project`);
     }
     if (problem.kind === 'blocked') {
-      throw new BountyRefused('hook-settings-blocked', `${problem.at} is not a directory — the hook cannot write ${host.file}; nothing changed`);
+      throw new BountyRefused('hook-settings-blocked', `${problem.at} is not a directory — the hook cannot write ${host.file}; nothing changed; next: make ${problem.at} a directory or move it aside, then run box bounty hook on again`);
     }
     // 'missing': below the last existing component the tool creates inside the project.
   }
   if (leaf !== undefined) {
-    if (leaf.isDirectory()) throw new BountyRefused('hook-settings-blocked', `${path} is a directory — ${host.file} must be a settings file; nothing changed`);
-    if (leaf.nlink > 1) throw new BountyRefused('hook-settings-escape', `${path} is linked from more than one place — the hook only writes a file the project owns; nothing changed`);
+    if (leaf.isDirectory()) throw new BountyRefused('hook-settings-blocked', `${path} is a directory — ${host.file} must be a settings file; nothing changed; next: move ${path} aside or choose a different settings file, then run box bounty hook on again`);
+    if (leaf.nlink > 1) throw new BountyRefused('hook-settings-escape', `${path} is linked from more than one place — the hook only writes a file the project owns; nothing changed; next: remove the extra links to ${path}, then run box bounty hook on again`);
     const resolved = folded(canonical!);
     if (resolved !== folded(root) && !resolved.startsWith(`${folded(root)}/`)) {
-      throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed`);
+      throw new BountyRefused('hook-settings-escape', `${path} resolves outside this project — the hook only writes settings inside the project; nothing changed; next: name a settings path inside the project`);
     }
   }
   return path;
@@ -722,10 +722,10 @@ export function hookStatus(repoRoot: string): string {
 
 export function hookOff(repoRoot: string, host: HookHost): string {
   const path = checkedSettingsPath(repoRoot, host);
-  if (!existsSync(path)) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — ${host.file} does not exist; nothing changed`);
+  if (!existsSync(path)) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — ${host.file} does not exist; nothing changed; next: install it with box bounty hook on --host ${host.name}`);
   const installs = readInstalls(repoRoot);
   const { text, removed } = removeEntries(path, host, installs[host.name] ?? null);
-  if (removed === 0) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — no box entries in ${host.file}; nothing changed`);
+  if (removed === 0) throw new BountyRefused('hook-not-on', `the hook is not on for ${host.name} — no box entries in ${host.file}; nothing changed; next: install it with box bounty hook on --host ${host.name}`);
   if (text === null) rmSync(path, { force: true });
   else writeFileSync(path, text);
   delete installs[host.name];

@@ -90,8 +90,8 @@ export const invalid = (reason: string, message: string): never => { throw new B
 export const publicationRef = (id: string): string => `refs/box-bounty/${id}-github`;
 export const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 export const READABLE_LOGIN = /^[a-z\d][a-z\d-]{0,38}(?:\[bot\])?$/i;
-export const login = (value: unknown): string => typeof value === 'string' && READABLE_LOGIN.test(value) ? value : invalid('github-response-invalid', 'GitHub returned an unreadable account name; nothing was executed');
-export const number = (value: unknown): number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : invalid('github-response-invalid', 'GitHub returned an unreadable number');
+export const login = (value: unknown): string => typeof value === 'string' && READABLE_LOGIN.test(value) ? value : invalid('github-response-invalid', 'GitHub returned an unreadable account name; nothing was executed; next: check gh and rerun the same command');
+export const number = (value: unknown): number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : invalid('github-response-invalid', 'GitHub returned an unreadable number; next: check gh and rerun the same command');
 
 // The least GitHub CLI the tool runs on — every GitHub call is `gh api` or
 // `gh auth status`, carried verbatim; the tool is only proven against gh
@@ -106,11 +106,11 @@ function gh(root: string, args: readonly string[]): string {
   // The run-level budget a bounded caller (the hook) sets: a call count so
   // endless pagination cannot loop forever, and a deadline so a run of hung
   // calls stays inside its bound. Ordinary commands leave both unbounded.
-  if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again');
+  if (ghCallBudget <= 0 || Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   ghCallBudget -= 1;
   let program: ReturnType<typeof resolveProgram>;
   try { program = resolveProgram('gh'); }
-  catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com)`); }
+  catch { return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — none was found on PATH (https://cli.github.com); next: install gh from https://cli.github.com, then rerun the same command`); }
   if (!probedGh.has(program.path)) {
     // `gh version`, never `gh --version`: a gh.exe that is a wrapped program
     // may see the double-dash flag eaten by its own runtime before the
@@ -118,19 +118,19 @@ function gh(root: string, args: readonly string[]): string {
     const probe = launch(program, root, ['version']);
     const found = /gh version (\d+)\.(\d+)/.exec(probe.stdout ?? '');
     if (probe.error !== undefined || probe.status !== 0 || found === null) {
-      return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — the program at ${program.path} did not answer 'gh version' (https://cli.github.com)`);
+      return invalid('github-cli-missing', `GitHub CLI gh ${GH_LEAST} or later is required for GitHub bounties — the program at ${program.path} did not answer 'gh version' (https://cli.github.com); next: install gh from https://cli.github.com, then rerun the same command`);
     }
     if (Number(found[1]) < 2) {
-      return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com)`);
+      return invalid('github-cli-too-old', `GitHub CLI gh ${GH_LEAST} or later is required — found gh ${found[1]}.${found[2]} (https://cli.github.com); next: upgrade gh from https://cli.github.com, then rerun the same command`);
     }
     probedGh.add(program.path);
   }
   // The probe itself can burn a whole call's cap — check the run deadline
   // again before the real call so the worst case is the deadline plus one
   // in-flight call.
-  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again');
+  if (Date.now() >= ghDeadline) return invalid('github-call-budget', 'the GitHub budget for this run is spent — the run stays inside its bound and the next one can ask again; next: rerun the command — a new run gets a fresh budget');
   const result = launch(program, root, args);
-  if (result.error !== undefined || result.status !== 0) return invalid('github-command-failed', 'GitHub CLI could not complete the requested operation; check gh sign-in and access, then retry');
+  if (result.error !== undefined || result.status !== 0) return invalid('github-command-failed', 'GitHub CLI could not complete the requested operation; next: check gh sign-in and access, then rerun the same command');
   return result.stdout ?? '';
 }
 
@@ -150,12 +150,12 @@ export function limitGitHubCalls(ms: number, calls = Infinity, deadline = Infini
 function launch(program: ReturnType<typeof resolveProgram>, root: string, args: readonly string[]) {
   if (program.kind === 'command-file') {
     for (const token of [program.path, ...args]) {
-      if (/["%!\r\n]/.test(token) || /\\$/.test(token)) throw new BountyRefused('github-cli-unsafe', 'this gh command file cannot carry these arguments safely; use the gh executable');
+      if (/["%!\r\n]/.test(token) || /\\$/.test(token)) throw new BountyRefused('github-cli-unsafe', 'this gh command file cannot carry these arguments safely; next: put the real gh executable on PATH');
     }
     const line = `"${[program.path, ...args].map(token => `"${token}"`).join(' ')}"`;
     let interpreter: string;
     try { interpreter = resolveProgram('cmd.exe').path; }
-    catch { throw new BountyRefused('github-cli-missing', 'the command-file interpreter is missing; use the gh executable'); }
+    catch { throw new BountyRefused('github-cli-missing', 'the command-file interpreter is missing; next: put the real gh executable on PATH'); }
     return spawnSync(interpreter, ['/d', '/s', '/c', line], { cwd: root, encoding: 'utf8', windowsHide: true, windowsVerbatimArguments: true, timeout: ghCallLimit, maxBuffer: 16 * 1024 * 1024 });
   }
   return spawnSync(program.path, [...args], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: ghCallLimit, maxBuffer: 16 * 1024 * 1024 });
@@ -172,7 +172,7 @@ export function api(root: string, endpoint: string, payload?: object, method?: s
     }
     const output = gh(root, args);
     try { return JSON.parse(output); }
-    catch { return invalid('github-response-invalid', 'GitHub returned unreadable data; retry after checking gh'); }
+    catch { return invalid('github-response-invalid', 'GitHub returned unreadable data; next: check gh and rerun the same command'); }
   } finally { rmSync(work, { recursive: true, force: true }); }
 }
 
@@ -180,7 +180,7 @@ export function pages(root: string, endpoint: string): unknown[] {
   const entries: unknown[] = [];
   for (let page = 1; ; page += 1) {
     const data = api(root, `${endpoint}${endpoint.includes('?') ? '&' : '?'}per_page=100&page=${page}`);
-    if (!Array.isArray(data)) return invalid('github-response-invalid', 'GitHub returned an unreadable list');
+    if (!Array.isArray(data)) return invalid('github-response-invalid', 'GitHub returned an unreadable list; next: check gh and rerun the same command');
     entries.push(...data);
     if (data.length < 100) return entries;
   }
@@ -188,7 +188,7 @@ export function pages(root: string, endpoint: string): unknown[] {
 
 export function signedAccount(root: string): string {
   const account = api(root, 'user');
-  if (!isObject(account)) return invalid('github-response-invalid', 'the signed-in account could not be read');
+  if (!isObject(account)) return invalid('github-response-invalid', 'the signed-in account could not be read; next: run gh auth status, then rerun the same command');
   return login(account['login']);
 }
 
@@ -204,31 +204,31 @@ export function publicRepository(root: string): string {
     // CLI presence/version refusals keep their own names — only the auth
     // call's failure means not-signed-in.
     if (error instanceof BountyRefused && error.reason.startsWith('github-cli-')) throw error;
-    return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com)`);
+    return invalid('github-not-signed-in', `GitHub CLI gh ${GH_LEAST} or later, signed in, is required for GitHub bounties — gh is present but not signed in to GitHub (https://cli.github.com); next: sign in with gh auth login, then rerun the same command`);
   }
   let info: unknown;
   try { info = api(root, `repos/${repository}`); }
-  catch { return invalid('github-visibility-unreadable', PUBLIC_ONLY); }
-  if (!isObject(info) || typeof info['full_name'] !== 'string' || info['full_name'].toLowerCase() !== repository.toLowerCase() || typeof info['private'] !== 'boolean' || info['visibility'] !== 'public' && info['visibility'] !== 'private' && info['visibility'] !== 'internal') return invalid('github-visibility-unreadable', PUBLIC_ONLY);
-  if (info['private'] !== false || info['visibility'] !== 'public') return invalid('github-private-repository', PUBLIC_ONLY);
+  catch { return invalid('github-visibility-unreadable', `${PUBLIC_ONLY}; next: check gh access to the repository, then rerun the same command`); }
+  if (!isObject(info) || typeof info['full_name'] !== 'string' || info['full_name'].toLowerCase() !== repository.toLowerCase() || typeof info['private'] !== 'boolean' || info['visibility'] !== 'public' && info['visibility'] !== 'private' && info['visibility'] !== 'internal') return invalid('github-visibility-unreadable', `${PUBLIC_ONLY}; next: check gh access to the repository, then rerun the same command`);
+  if (info['private'] !== false || info['visibility'] !== 'public') return invalid('github-private-repository', `${PUBLIC_ONLY}; next: ask the owner — only a public repository can be posted`);
   // Push access is checked before any branch push or issue (BT16 rule 9):
   // the bounty branch goes to this repository, so a sign-in that cannot push
   // is named now rather than halfway through the post.
   const permissions = isObject(info['permissions']) ? info['permissions'] : {};
-  if (permissions['push'] !== true) return invalid('github-push-denied', `your GitHub sign-in cannot push to ${repository}, and the bounty branch goes there; nothing was posted`);
+  if (permissions['push'] !== true) return invalid('github-push-denied', `your GitHub sign-in cannot push to ${repository}, and the bounty branch goes there; nothing was posted; next: sign in with gh auth login to an account that can push to ${repository}, then rerun the same command`);
   return info['full_name'];
 }
 
 export function remoteGit(root: string, repository: string, args: readonly string[]): void {
   const result = gitOutcome(root, [...args.slice(0, 1), `https://github.com/${repository}.git`, ...args.slice(1)]);
-  if (result.status !== 0 || result.error !== undefined) return invalid('github-git-failed', 'Git could not complete the GitHub operation; check signed-in Git and retry');
+  if (result.status !== 0 || result.error !== undefined) return invalid('github-git-failed', 'Git could not complete the GitHub operation; next: check signed-in Git and rerun the same command');
 }
 
 export function issueNumber(value: unknown, repository: string) {
-  if (!isObject(value)) return invalid('github-response-invalid', 'GitHub returned an unreadable issue');
+  if (!isObject(value)) return invalid('github-response-invalid', 'GitHub returned an unreadable issue; next: check gh and rerun the same command');
   const n = number(value['number']);
   const url = `https://github.com/${repository}/issues/${n}`;
-  if (value['html_url'] !== url) return invalid('github-response-invalid', 'GitHub returned an issue outside the project repository');
+  if (value['html_url'] !== url) return invalid('github-response-invalid', 'GitHub returned an issue outside the project repository; next: check the repository on GitHub, then rerun the same command');
   return { number: n, url };
 }
 
@@ -254,7 +254,7 @@ export const remoteUrl = (repository: string): string => `https://github.com/${r
 // The sha the remote's bounty branch points at now, or null when it is gone.
 export function remoteBranchSha(root: string, repository: string, branch: string): string | null {
   const remote = gitOutcome(root, ['ls-remote', remoteUrl(repository), `refs/heads/${branch}`]);
-  if (remote.status !== 0 || remote.error !== undefined) return invalid('github-git-failed', 'Git could not read the bounty branch; check signed-in Git and retry');
+  if (remote.status !== 0 || remote.error !== undefined) return invalid('github-git-failed', 'Git could not read the bounty branch; next: check signed-in Git and rerun the same command');
   const sha = remote.stdout.trim().split(/\s+/)[0] ?? '';
   return /^[a-f\d]{40}$/.test(sha) ? sha : null;
 }

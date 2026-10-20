@@ -21,7 +21,7 @@ const [major, minor, patch] = parse(process.versions.node);
 const supported = major! > needMajor!
   || (major === needMajor && (minor! > needMinor! || (minor === needMinor && patch! >= needPatch!)));
 if (!supported) {
-  process.stderr.write(`box refused (node-too-old): Node ${NODE_MINIMUM} or later is required — found node ${process.versions.node}. Get it at https://nodejs.org\n`);
+  process.stderr.write(`box refused (node-too-old): Node ${NODE_MINIMUM} or later is required — found node ${process.versions.node}; next: install it from https://nodejs.org, then rerun the command\n`);
   process.exit(3);
 }
 

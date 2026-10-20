@@ -20,15 +20,15 @@ export function gitProgram(): string {
   pinnedGit = undefined;
   let program: string;
   try { program = resolve(resolveProgram('git').path); }
-  catch { throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — none was found on PATH. Get it at https://git-scm.com`); }
+  catch { throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — none was found on PATH. Get it at https://git-scm.com; next: install Git from https://git-scm.com, then rerun the same command`); }
   const probe = spawnSync(program, ['version'], { encoding: 'utf8', windowsHide: true });
   const found = /git version (\d+)\.(\d+)/.exec(probe.stdout ?? '');
   if (probe.error !== undefined || probe.status !== 0 || found === null) {
-    throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — the program at ${program} did not answer 'git version'. Get it at https://git-scm.com`);
+    throw new BountyRefused('git-missing', `Git ${GIT_LEAST} or later is required — the program at ${program} did not answer 'git version'. Get it at https://git-scm.com; next: install Git from https://git-scm.com, then rerun the same command`);
   }
   const major = Number(found[1]); const minor = Number(found[2]);
   if (major < 2 || major === 2 && minor < 40) {
-    throw new BountyRefused('git-too-old', `Git ${GIT_LEAST} or later is required — found git ${found[1]}.${found[2]}. Get it at https://git-scm.com`);
+    throw new BountyRefused('git-too-old', `Git ${GIT_LEAST} or later is required — found git ${found[1]}.${found[2]}. Get it at https://git-scm.com; next: upgrade Git from https://git-scm.com, then rerun the same command`);
   }
   pinnedGit = program;
   return pinnedGit;

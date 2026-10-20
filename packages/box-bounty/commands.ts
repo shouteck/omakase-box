@@ -17,7 +17,7 @@ import { shareClosed } from './chain.js';
 import type { BountyRecord } from './record.js';
 
 export function postBounty(repoRoot: string, id: string, to = 'github', opts?: { answered?: boolean; choice?: import('./gh.js').GitHubChoice }): { record: BountyRecord; destination: string } {
-  if (to !== 'github') throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
+  if (to !== 'github') throw new BountyRefused('folder-delivery-retired', 'folder delivery was retired; next: post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
   return postGitHub(repoRoot, id, opts);
 }
 
@@ -38,7 +38,7 @@ export interface CloseOutcome {
 export function closeBounty(repoRoot: string, id: string, reason?: string): CloseOutcome {
   const text = reason?.trim() ?? '';
   if (reason !== undefined && text === '') {
-    throw new BountyRefused('missing-reason', `close needs a nonempty reason or none — box bounty close ${id}, or box bounty close ${id} --reason "<why the bounty ended without a merge>"`);
+    throw new BountyRefused('missing-reason', `close needs a nonempty reason or none; next: box bounty close ${id}, or box bounty close ${id} --reason "<why the bounty ended without a merge>"`);
   }
   const record = loadRecord(repoRoot, id);
   if (!isOpenStage(record.stage)) {
