@@ -79,7 +79,7 @@ const toPosixPath = (path: string): string => path.split('\\').join('/');
 function readTextFile(path: string, reason: string, repoRoot: string, rules: readonly NeverShipRule[]): { file: string; text: string } {
   const absolute = resolve(path);
   if (!statSync(absolute, { throwIfNoEntry: false })?.isFile()) {
-    throw new BountyRefused(reason, `file ${path} does not exist — pass a readable file`);
+    throw new BountyRefused(reason, `file ${path} does not exist; next: pass a readable file`);
   }
   // The file's bytes are embedded verbatim into the bounty — a never-ship path
   // is refused here exactly as it would be inside the snapshot. Inside the repo
@@ -91,10 +91,10 @@ function readTextFile(path: string, reason: string, repoRoot: string, rules: rea
   const key = (inside ? offset : toPosixPath(real)).toLowerCase();
   const matched = (inside ? rules : BUILTIN_RULES).find(rule => rule.match(key));
   if (matched !== undefined) {
-    throw new BountyRefused('never-ship-input', `${path} resolves to ${inside ? offset : real}, which the never-ship rule '${matched.name}' removes — the task file must be safe to embed. They may sit anywhere outside the never-ship paths — inside the repository or outside it, committed or not`);
+    throw new BountyRefused('never-ship-input', `${path} resolves to ${inside ? offset : real}, which the never-ship rule '${matched.name}' removes — the task file must be safe to embed. They may sit anywhere outside the never-ship paths — inside the repository or outside it, committed or not; next: name a task file outside the never-ship paths`);
   }
   const text = readFileSync(absolute, 'utf8');
-  if (text.trim() === '') throw new BountyRefused(reason, `file ${path} is empty — a bounty needs real content`);
+  if (text.trim() === '') throw new BountyRefused(reason, `file ${path} is empty; next: pass a file with real content`);
   return { file: inside ? offset : basename(real), text };
 }
 
@@ -118,7 +118,7 @@ export function resolveRepoRoot(repoPath: string, command?: string): string {
   const top = gitOutcome(repo, ['rev-parse', '--show-toplevel']);
   if (top.status !== 0 || top.stdout.trim() === '') {
     const verb = command !== undefined ? `box bounty ${command}` : 'box bounty';
-    throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in`);
+    throw new BountyRefused('not-a-repository', `${repo} is not inside a Git checkout — ${verb} needs a repository to work in; next: run ${verb} inside a Git checkout`);
   }
   return realpathSync(top.stdout.trim());
 }
@@ -126,18 +126,18 @@ export function resolveRepoRoot(repoPath: string, command?: string): string {
 export function planBounty(options: CreateOptions): BountyPlan {
   const why = options.why.trim();
   if (why === '') {
-    throw new BountyRefused('missing-why', 'create needs one line of why — pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
+    throw new BountyRefused('missing-why', 'create needs one line of why; next: pass --why "<why this is handed off>". It is kept only in the record, never shipped, so the reasons for handing off can be learned from use');
   }
   const partOf = options.partOf?.trim();
   if (options.partOf !== undefined && partOf === '') {
-    throw new BountyRefused('missing-part-of', 'a blank --part-of names no job or bounty — pass --part-of "<job or bounty-id>" or leave it out');
+    throw new BountyRefused('missing-part-of', 'a blank --part-of names no job or bounty; next: pass --part-of "<job or bounty-id>" or leave it out');
   }
   const repoRoot = resolveRepoRoot(options.repoPath, 'create');
   const rules = [...shipRules(repoRoot)];
   const task = options.taskPath === '-'
     ? { file: 'standard input', text: readFileSync(0, 'utf8') }
     : readTextFile(options.taskPath, 'missing-task', repoRoot, rules);
-  if (task.text.trim() === '') throw new BountyRefused('missing-task', 'standard input is empty; a bounty needs real task content');
+  if (task.text.trim() === '') throw new BountyRefused('missing-task', 'standard input is empty; a bounty needs real task content; next: give the task content on standard input or with --task <file>');
   // The title comes from the task when none is given: its first non-empty
   // line's first sentence, as deriveTitle states it. --title still wins
   // when supplied — and is shortened by the same stated rule.

@@ -97,11 +97,11 @@ const REMOVED_FLAGS = new Set(['--setup', '--check', '--guard']);
 const AMOUNT_FLAGS = new Set(['--reward', '--amount', '--price', '--pay', '--payment', '--limit', '--budget', '--dollars']);
 const amountRefusal = (flag: string, command: string): BountyRefused | undefined =>
   AMOUNT_FLAGS.has(flag)
-    ? new BountyRefused('reward-agent-set', `${flag} names money — the reward is the owner's to set, never the agent's; ${command} takes no amount. The owner sets it with box bounty config set reward <whole dollars>`)
+    ? new BountyRefused('reward-agent-set', `${flag} names money — the reward is the owner's to set, never the agent's; ${command} takes no amount; next: the owner sets it with box bounty config set reward <whole dollars>`)
     : undefined;
 const folderRefusal = (flag: string): BountyRefused | undefined =>
   flag === '--from'
-    ? new BountyRefused('folder-delivery-retired', 'folder solutions were retired; collect a pull request with box bounty look <id> <number> or box bounty apply <id> <number>. Nothing changed')
+    ? new BountyRefused('folder-delivery-retired', 'folder solutions were retired; next: collect a pull request with box bounty look <id> <number> or box bounty apply <id> <number>. Nothing changed')
     : undefined;
 
 export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
@@ -141,9 +141,9 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     },
     switches: { '--full': { help: 'print the draft preview' } },
     refused: (flag) => {
-      if (RETIRED_FLAGS[flag] !== undefined) return new BountyRefused('create-option-retired', `${flag} was retired; ${RETIRED_FLAGS[flag]}. Nothing changed`);
-      if (flag === '--out') return new BountyRefused('folder-delivery-retired', 'create writes a local record only; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
-      if (REMOVED_FLAGS.has(flag)) return new BountyRefused('checks-removed', `${flag} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; pass --task <file> and --why "<one line>"`);
+      if (RETIRED_FLAGS[flag] !== undefined) return new BountyRefused('create-option-retired', `${flag} was retired. Nothing changed; next: ${RETIRED_FLAGS[flag]}`);
+      if (flag === '--out') return new BountyRefused('folder-delivery-retired', 'create writes a local record only; next: post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
+      if (REMOVED_FLAGS.has(flag)) return new BountyRefused('checks-removed', `${flag} names a check — checks were removed on 11 October 2026. A bounty carries no command and the tool runs nothing a solver wrote; next: box bounty create --task <file> --why "<one line>"`);
       return amountRefusal(flag, 'create');
     }
   },
@@ -177,7 +177,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
       '--preview': { help: 'show exactly what becomes public; posts nothing' }
     },
     refused: (flag, value) => {
-      if (flag === '--to' && value !== 'github') return new BountyRefused('folder-delivery-retired', 'folder delivery was retired; post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
+      if (flag === '--to' && value !== 'github') return new BountyRefused('folder-delivery-retired', 'folder delivery was retired; next: post to GitHub with box bounty post <id>. A private repository cannot be handed off with this tool');
       return amountRefusal(flag, 'post');
     }
   },
@@ -201,7 +201,7 @@ export const BOUNTY_COMMANDS: Readonly<Record<string, CommandSpec>> = {
     values: { '--repo': REPO },
     refused: (flag) => folderRefusal(flag)
       ?? (/^--(yes|ok|approve|approved|allow|allowed|owner|force|confirm|answered|permit|accept|asked|skip-ask|no-ask|without-ask|i-asked)/.test(flag)
-        ? new BountyRefused('merge-approval-agent', `${flag} tries to mark a merge approved — an agent cannot approve a merge; the owner answers a waiting merge with box bounty allow <id>. Nothing changed`)
+        ? new BountyRefused('merge-approval-agent', `${flag} tries to mark a merge approved — an agent cannot approve a merge. Nothing changed; next: the owner answers a waiting merge with box bounty allow <id>`)
         : undefined)
   },
   close: {
@@ -340,7 +340,7 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
     const flag = equals < 0 ? token : token.slice(0, equals);
     const refusal = spec.refused?.(flag, equals < 0 ? argv[i + 1] : token.slice(equals + 1));
     if (refusal !== undefined) throw refusal;
-    if (flag === '--json' && spec.switches?.['--json'] === undefined) throw new BountyRefused('json-not-supported', `--json is not available on ${spec.label} yet`);
+    if (flag === '--json' && spec.switches?.['--json'] === undefined) throw new BountyRefused('json-not-supported', `--json is not available on ${spec.label} yet; next: run ${spec.label} without --json`);
   }
   const positionals: string[] = [];
   const values: Record<string, string> = {};
@@ -366,7 +366,7 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
       if (inline !== undefined) fail(`${flag} takes no value`);
       if (switches.has(flag)) {
         // 7. allow/deny/config keep authority-arguments for a repeated option.
-        if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} was repeated; nothing changed`);
+        if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} was repeated; nothing changed; next: pass ${flag} once`);
         fail(`${flag} was given twice`);
       }
       switches.add(flag);
@@ -387,7 +387,7 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
           return spec.values?.[name] !== undefined || spec.switches?.[name] !== undefined;
         };
         if (next === undefined || namesOption(next)) {
-          if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} needs ${rule.missing ?? 'a value'}; nothing changed`);
+          if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} needs ${rule.missing ?? 'a value'}; nothing changed; next: give ${flag} ${rule.missing ?? 'a value'}`);
           throw new BountyUsage(`${flag} needs a value`, [`usage: ${spec.usage}`]);
         }
         value = next;
@@ -395,7 +395,7 @@ export function parseOptions(command: string, argv: readonly string[]): ParsedOp
       }
       if (rule.repeatable === true) (repeated[flag] ??= []).push(value);
       else if (values[flag] !== undefined) {
-        if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} was repeated; nothing changed`);
+        if (spec.authority === true) throw new BountyRefused('authority-arguments', `${flag} was repeated; nothing changed; next: pass ${flag} once`);
         fail(`${flag} was given twice`);
       } else values[flag] = value;
       continue;

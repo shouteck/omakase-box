@@ -155,8 +155,9 @@ export function repositoryIdentity(root: string): string | null {
     is repository-choice-needed carrying the candidate lines. */
 export function requireRepository(root: string): string {
   const choice = chooseRepository(root, activeAddresses(loadSettings()));
-  if (choice === null) throw new BountyRefused('repository-address-required', 'this repository has no GitHub address, so it cannot be listed. Add a GitHub remote, then run box bounty allow');
-  if (choice.kind === 'unlisted') throw new BountyRefused('repository-choice-needed', `this checkout's remotes name several GitHub repositories; tell me which one it is — nothing was posted and nothing changed:\n${repositoryChoiceLines(choice.candidates).join('\n')}`);
+  if (choice === null) throw new BountyRefused('repository-address-required', 'this repository has no GitHub address, so it cannot be listed; next: add a GitHub remote, then run box bounty allow');
+  if (choice.kind === 'unlisted') throw new BountyRefused('repository-choice-needed', `this checkout's remotes name several GitHub repositories; tell me which one it is — nothing was posted and nothing changed:\n${repositoryChoiceLines(choice.candidates).join('\n')}
+next: the owner names one with box bounty allow <owner/name>`);
   return choice.address;
 }
 
@@ -192,9 +193,9 @@ const HARD_STOP_WORDS = ['nevership', 'private', 'secret', 'scan', 'hardstop', '
 export function unknownSetting(name: string): never {
   const folded = name.toLowerCase().replace(/[-_]/g, '');
   const hard = HARD_STOP_WORDS.some(word => folded.includes(word));
-  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid'}. Nothing changed`);
+  throw new BountyRefused(hard ? 'settings-hard-stop' : 'settings-unknown-name', `${settingsFile()}: "${name}" ${hard ? 'tries to reach a hard stop; hard stops cannot be changed' : 'is not a setting the tool knows; known settings: all-projects, repositories, instructions, instruction-file, reward, reward-limit, paid'}. Nothing changed; next: ${hard ? 'a hard stop cannot be configured — choose a configurable setting; box bounty config lists them' : 'name a known setting — box bounty config lists them'}`);
 }
-const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; fix the settings file or remove it`); };
+const bad = (detail: string): never => { throw new BountyRefused('settings-malformed', `${settingsFile()}: ${detail}; next: fix the settings file or remove it`); };
 function change(value: unknown, where: string): Change {
   if (!isObject(value) || !decision(value['bounty']) || typeof value['at'] !== 'string') return bad(`${where} must hold {bounty, at}, with bounty allowed, ask, off or null`);
   for (const name of Object.keys(value)) if (!['bounty', 'at'].includes(name)) unknownSetting(name);
@@ -233,7 +234,7 @@ function writeAtomic(path: string, text: string): void {
     } catch (error) {
       if (Date.now() >= giveUp) {
         try { rmSync(temp, { force: true }); } catch { /* litter over a wrong claim */ }
-        throw new BountyRefused('settings-write-failed', `${path}: the file could not be replaced (${error instanceof Error ? error.message : String(error)}); the previous file stands, nothing was lost`);
+        throw new BountyRefused('settings-write-failed', `${path}: the file could not be replaced (${error instanceof Error ? error.message : String(error)}); the previous file stands, nothing was lost; next: fix what blocked the write, then rerun the same command`);
       }
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
     }
@@ -457,7 +458,7 @@ export function loadSettings(): OwnerSettings {
   // for a repository the owner named (BT11c). A hand-written file that puts
   // one there fails loudly like every other wrong shape.
   const defaultLevel = fallback === undefined ? undefined : level(fallback, 'default');
-  if (defaultLevel !== undefined && (defaultLevel.reward !== undefined || defaultLevel.rewardLimit !== undefined)) return bad('default cannot hold a reward or a limit — money belongs to a named repository; fix the settings file or remove it');
+  if (defaultLevel !== undefined && (defaultLevel.reward !== undefined || defaultLevel.rewardLimit !== undefined)) return bad('default cannot hold a reward or a limit — money belongs to a named repository');
   // What the tool once wrote into the owner's file is still read — and a
   // bad shape still fails loudly — but it is never the owner's again: the
   // first load that finds a moved key folds it into state.json (the state's
@@ -474,7 +475,7 @@ export function loadSettings(): OwnerSettings {
   // keep the amount they were posted with; that lives on records.
   const retiring = parsed['reward'] !== undefined || parsed['rewardLimit'] !== undefined;
   if (retiring) {
-    if (moved.retiredReward !== undefined) return bad('the settings file holds both a shared reward and a retired one; fix the settings file or remove it');
+    if (moved.retiredReward !== undefined) return bad('the settings file holds both a shared reward and a retired one');
     moved = {
       ...moved,
       retiredReward: {
@@ -716,10 +717,10 @@ export function readDecision(repoRoot: string): DecisionRead {
 }
 export function writeRepository(address: string, bounty: OwnerDecision | null, beforeWrite?: () => void, money?: { readonly reward: number; readonly rewardLimit: number | null }): { path: string; at: string; key: string } {
   const key = repositoryAddress(address);
-  if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address; use owner/name. Nothing changed`);
+  if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address. Nothing changed; next: pass an owner/name repository address`);
   const settings = loadSettings();
   const previous = settings.repositories[key];
-  if (bounty === null && (previous === undefined || previous.bounty === null || previous.bounty === 'off')) throw new BountyRefused('repository-not-listed', `${key} is not listed; nothing changed`);
+  if (bounty === null && (previous === undefined || previous.bounty === null || previous.bounty === 'off')) throw new BountyRefused('repository-not-listed', `${key} is not listed; nothing changed; next: the owner lists it first with box bounty allow ${key}`);
   const at = new Date().toISOString();
   const changes = [...(previous?.changes ?? []), ...(previous === undefined ? [] : [{ bounty: previous.bounty, at: previous.at }])];
   // Money lives on this entry alone. `deny` clears it — a re-allowed
@@ -754,10 +755,10 @@ export function writeRepository(address: string, bounty: OwnerDecision | null, b
     are the caller's to check, so the refusal can name which side failed. */
 export function writeMoney(address: string, patch: { readonly reward?: number; readonly rewardLimit?: number }): { readonly at: string; readonly key: string; readonly entry: SettingsLevel } {
   const key = repositoryAddress(address);
-  if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address; use owner/name. Nothing changed`);
+  if (key === null) throw new BountyRefused('repository-address-invalid', `${address} is not a repository address. Nothing changed; next: pass an owner/name repository address`);
   const settings = loadSettings();
   const previous = settings.repositories[key];
-  if (previous === undefined || previous.bounty === null || previous.bounty === 'off') throw new BountyRefused('reward-repository-unlisted', `${key} is not on the owner's list — money is promised only for a repository you named. Allow it first: box bounty allow ${key} [--reward <whole dollars> --reward-limit <whole dollars>]. Nothing changed`);
+  if (previous === undefined || previous.bounty === null || previous.bounty === 'off') throw new BountyRefused('reward-repository-unlisted', `${key} is not on the owner's list — money is promised only for a repository you named. Nothing changed; next: box bounty allow ${key} [--reward <whole dollars> --reward-limit <whole dollars>]`);
   const at = new Date().toISOString();
   const entry: SettingsLevel = { ...previous, ...(patch.reward === undefined ? {} : { reward: { amount: patch.reward, at } }), ...(patch.rewardLimit === undefined ? {} : { rewardLimit: { amount: patch.rewardLimit, at } }) };
   persist({ ...settings, repositories: { ...settings.repositories, [key]: entry } });
@@ -791,10 +792,10 @@ export function checkInstructionSettingsWrite(repoRoot: string): void {
   const folder = resolve(realpathSync(ancestor), ...tail);
   const relativeFolder = folder.toLowerCase().replaceAll('\\', '/');
   const rootKey = root.toLowerCase().replaceAll('\\', '/');
-  if (relativeFolder === rootKey || relativeFolder.startsWith(`${rootKey}/`)) throw new BountyRefused('settings-inside-repo', 'instruction maintenance settings must live outside the repository; nothing changed');
+  if (relativeFolder === rootKey || relativeFolder.startsWith(`${rootKey}/`)) throw new BountyRefused('settings-inside-repo', 'instruction maintenance settings must live outside the repository; nothing changed; next: name a settings file outside the repository');
   const stat = lstatSync(settingsFile(), { throwIfNoEntry: false });
-  if (stat !== undefined && (stat.isSymbolicLink() || stat.nlink > 1)) throw new BountyRefused('instruction-settings-link', 'instruction-settings-link: instruction configuration cannot write a linked settings file; nothing changed');
-  if (stat !== undefined && !stat.isFile()) throw new BountyRefused('instruction-settings-not-file', 'instruction-settings-not-file: choose an ordinary settings file; nothing changed');
+  if (stat !== undefined && (stat.isSymbolicLink() || stat.nlink > 1)) throw new BountyRefused('instruction-settings-link', 'instruction-settings-link: instruction configuration cannot write a linked settings file; nothing changed; next: name a settings file that is not a link');
+  if (stat !== undefined && !stat.isFile()) throw new BountyRefused('instruction-settings-not-file', 'instruction-settings-not-file; nothing changed; next: name an ordinary settings file');
 }
 export function writeInstructions(repoRoot: string, choice: InstructionSettings): void {
   checkInstructionSettingsWrite(repoRoot);
@@ -826,7 +827,7 @@ function checkLocalMergePath(repoRoot: string): void {
     const stat = lstatSync(path, { throwIfNoEntry: false });
     if (stat === undefined) continue;
     if (stat.isSymbolicLink() || (path === localMergeFile(repoRoot) ? !stat.isFile() : !stat.isDirectory())) {
-      throw new BountyRefused('first-merge-notice-unsafe-path', `${path}: the local first-merge notice must use ordinary directories and a file`);
+      throw new BountyRefused('first-merge-notice-unsafe-path', `${path}: the local first-merge notice must use ordinary directories and a file; next: name ordinary directories and a file for the first-merge notice`);
     }
   }
 }
@@ -835,9 +836,9 @@ function readLocalMerge(repoRoot: string): LocalMergeNotice | null {
   checkLocalMergePath(repoRoot);
   if (!existsSync(path)) return null;
   let value: unknown;
-  try { value = JSON.parse(readFileSync(path, 'utf8')); } catch { throw new BountyRefused('first-merge-notice-malformed', `${path}: the local first-merge notice is unreadable`); }
+  try { value = JSON.parse(readFileSync(path, 'utf8')); } catch { throw new BountyRefused('first-merge-notice-malformed', `${path}: the local first-merge notice is unreadable; next: fix or remove ${path} — the local first-merge notice must be readable`); }
   if (!isObject(value) || value['kind'] !== 'box-local-first-merge' || typeof value['repository'] !== 'string' || typeof value['commit'] !== 'string' || !/^[a-f\d]{40,64}$/.test(value['commit']) || typeof value['at'] !== 'string') {
-    throw new BountyRefused('first-merge-notice-malformed', `${path}: the local first-merge notice is unreadable`);
+    throw new BountyRefused('first-merge-notice-malformed', `${path}: the local first-merge notice is unreadable; next: fix or remove ${path} — the local first-merge notice must be readable`);
   }
   return { repository: value['repository'], commit: value['commit'], at: value['at'] };
 }

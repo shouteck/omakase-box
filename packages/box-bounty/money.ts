@@ -46,9 +46,9 @@ export function rewardForPost(repoRoot: string): { readonly amount: number } {
 export function assertPromiseRoom(repoRoot: string, amount: number): void {
   const { limit } = repoReward(repoRoot);
   if (amount <= 0) return;
-  if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`} — the owner sets the most that may be promised with box bounty config set reward-limit <whole dollars>; nothing was posted`);
+  if (limit === null || limit < amount) throw new BountyRefused('reward-needs-limit', `each bounty states $${amount}, but ${limit === null ? 'no limit is set' : `the limit is $${limit}, below it`}; nothing was posted; next: the owner sets it with box bounty config set reward-limit <whole dollars>`);
   const promised = promisedTotal(openRecords(repoRoot));
-  if (promised + amount > limit) throw new BountyRefused('promise-limit-exceeded', `posting would bring promised rewards to $${promised + amount} across this repository's open bounties — the owner's limit is $${limit}; nothing was posted`);
+  if (promised + amount > limit) throw new BountyRefused('promise-limit-exceeded', `posting would bring promised rewards to $${promised + amount} across this repository's open bounties — the owner's limit is $${limit}; nothing was posted; next: lower the reward, or the owner raises the limit with box bounty config set reward-limit <whole dollars>`);
 }
 
 // One directory, one mkdir — atomic on every filesystem the tool runs on. A
@@ -72,7 +72,7 @@ export function withPromiseLock<T>(repoRoot: string, run: () => T): T {
       try {
         if (Date.now() - statSync(lock).mtimeMs > PROMISE_LOCK_STALE_MS) { rmSync(lock, { recursive: true, force: true }); continue; }
       } catch { continue; }
-      if (Date.now() >= giveUp) throw new BountyRefused('promise-limit-busy', 'another command is binding a bounty reward right now — run this post again in a moment; nothing was posted');
+      if (Date.now() >= giveUp) throw new BountyRefused('promise-limit-busy', 'another command is binding a bounty reward right now; nothing was posted; next: run box bounty post again in a moment');
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
     }
   }

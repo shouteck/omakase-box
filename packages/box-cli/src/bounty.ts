@@ -97,21 +97,21 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
     // what replaced it — never a silent drop, never an alias that runs the
     // old operation. The refusal line above names what was typed.
     const removed: Record<string, string> = {
-      answer: 'collection is a step inside look and apply, not a command — box bounty look <id> <number> collects a pull request and shows its change; box bounty apply <id> <number> collects and merges',
-      questions: 'reading what other accounts wrote is part of status — box bounty status <id> --comments',
-      reply: 'the tool no longer writes comments for you — comment on the issue in your own words with your own gh, for example gh issue comment <number> --body "<your own words>"',
-      undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it: git revert -m 1 <merge>',
-      reject: 'ending a bounty with nothing merged is one command now — box bounty close <id> --reason "<why>" keeps the reason on the record',
-      withdraw: 'ending a bounty with nothing merged is one command now — box bounty close <id>',
-      remind: 'the tool no longer supplies reminders; box bounty shows the current overview',
-      confirm: 'the owner allows the tool once, not each bounty — preview with box bounty post <id> --preview, publish with box bounty post <id>; the owner uses box bounty allow, deny and config'
+      answer: 'collection is a step inside look and apply, not a command; next: box bounty look <id> <number> collects a pull request and shows its change; box bounty apply <id> <number> collects and merges',
+      questions: 'reading what other accounts wrote is part of status; next: box bounty status <id> --comments',
+      reply: 'the tool no longer writes comments for you; next: comment on the issue in your own words with your own gh, for example gh issue comment <number> --body "<your own words>"',
+      undo: 'the tool no longer reverses an applied merge — the merge is one ordinary commit and ordinary Git reverses it; next: git revert -m 1 <merge>',
+      reject: 'ending a bounty with nothing merged is one command now; next: box bounty close <id> --reason "<why>" keeps the reason on the record',
+      withdraw: 'ending a bounty with nothing merged is one command now; next: box bounty close <id>',
+      remind: 'the tool no longer supplies reminders; next: box bounty status shows the current overview',
+      confirm: 'the owner allows the tool once, not each bounty; next: preview with box bounty post <id> --preview, publish with box bounty post <id>; the owner uses box bounty allow, deny and config'
     };
     if (removed[subcommand!] !== undefined) {
       throw new BountyRefused('command-removed', removed[subcommand!]!);
     }
     if (subcommand === 'owner') {
       const replacements: Record<string, string> = { setup: 'box bounty config', allow: 'box bounty allow', ask: 'box bounty allow --ask', off: 'box bounty deny', on: 'box bounty allow', answer: 'box bounty allow <waiting-bounty-id>', summary: 'box bounty status --since <iso>' };
-      throw new BountyRefused('command-removed', `owner ${bountyArgs[0] ?? ''} was removed; use ${replacements[bountyArgs[0] ?? ''] ?? 'box bounty allow, box bounty deny or box bounty config'}. Nothing changed`);
+      throw new BountyRefused('command-removed', `owner ${bountyArgs[0] ?? ''} was removed. Nothing changed; next: ${replacements[bountyArgs[0] ?? ''] ?? 'box bounty allow, box bounty deny or box bounty config'}`);
     }
     if (subcommand === undefined) {
       // `box bounty --version` — the package version, like `box --version`.
@@ -206,7 +206,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         // the text view prints — the acting-on line, the once-only notices,
         // a recognised merge — is stderr here; --since is a text report
         // the document does not carry, so it is refused by name.
-        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report — run box bounty status --since <iso> without --json');
+        if (since !== undefined) throw new BountyRefused('json-not-supported', '--since prints a text report; next: run box bounty status --since <iso> without --json');
         setInstructionNoticeListener(line => console.error(line));
         setMergeNoticeListener(line => console.error(line));
         console.log(JSON.stringify(statusDocument(root, { ...(id === undefined ? {} : { id }), comments: parsed.switches.has('--comments') }, line => console.error(line))));
@@ -367,7 +367,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
       // `config set <name> <value>` is three words; four is allowed only for
       // `reward`/`reward-limit`'s repository target and for `paid`'s `no`.
       const withTarget = values[0] === 'set' && (values[1] === 'reward' || values[1] === 'reward-limit' || values[1] === 'paid');
-      if (subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && withTarget)) throw new BountyRefused('authority-arguments', 'unexpected arguments; use allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], deny [owner/name], or config [set|add|remove <setting> <value>]. Nothing changed');
+      if (subcommand === 'config' && values.length !== 0 && values.length !== 3 && !(values.length === 4 && withTarget)) throw new BountyRefused('authority-arguments', 'unexpected arguments. Nothing changed; next: box bounty allow [owner/name|waiting-id] [--ask] [--reward <whole dollars> --reward-limit <whole dollars>], box bounty deny [owner/name], or box bounty config [set|add|remove <setting> <value>]');
       let root: string | null = null;
       try { root = resolveRepoRoot(repoPath(parsed), subcommand); }
       catch (error) { if (!(error instanceof BountyRefused) || error.reason !== 'not-a-repository' || parsed.values['--repo'] !== undefined) throw error; }
@@ -379,7 +379,7 @@ export async function runBounty(rest: readonly string[], host: BountyHost): Prom
         setMergeNoticeListener(line => console.error(line));
         console.log(JSON.stringify(configDocument(root, line => console.error(line))));
       }
-      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them; run it without --json. Nothing changed');
+      else if (parsed.switches.has('--json')) throw new BountyRefused('json-not-supported', '--json reads the settings — config set|add|remove writes them. Nothing changed; next: run box bounty config without --json to read the settings');
       else console.log(values.length === 0 ? renderConfig(root, { full: parsed.switches.has('--full') }) : changeConfig(root, values[0]!, values[1]!, values[2]!, text => console.log(text), values.length === 4 ? values[3] : undefined));
     } else if (subcommand === 'hook') {
       // BT9: the owner switches the hook on and off; hosts run the slot

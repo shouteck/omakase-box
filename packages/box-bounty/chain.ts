@@ -78,7 +78,7 @@ const scanHold = (fields: Record<string, string | null | undefined>): void => {
   throw new BountyRefused('publish-held', [
     `the shared bounty memory event was held — ${hits.length} secret-shaped hit(s) in its text:`,
     ...hits.map(hit => `  ${hit.name}:${hit.line} — ${hit.rule}`),
-    'nothing was written to the chain and nothing was pushed. The scan is a stated pattern list, not proof of absence.'
+    'nothing was written to the chain and nothing was pushed. The scan is a stated pattern list, not proof of absence.', `next: pass the owner block on in its words; the answer lands on the publish lists — box bounty config add safe-to-publish <path> or add never-publish <path>`
   ].join('\n'));
 };
 
@@ -782,5 +782,5 @@ function foldEvents(id: string, events: readonly ChainEvent[]): SharedRow | null
 // The message shared-only actions carry — one place decides the wording.
 export function sharedOnlyRefusal(record: BountyRecord): BountyRefused {
   const url = record.github?.issue?.url;
-  return new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; act on it from that machine, or on GitHub`);
+  return new BountyRefused('shared-only', `this bounty was posted from another machine${url !== undefined && url !== '' ? `; its issue is ${url}` : ''}; next: act on it from that machine, or on GitHub`);
 }

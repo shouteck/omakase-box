@@ -27,7 +27,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
   // issue or a removed branch. The unasked line below fires only on change.
   let changed = false;
   try {
-    if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'sign in to the account that started this post to finish outside work');
+    if (signedAccount(root) !== publication.account) return invalid('github-account-changed', 'the account that started this post must finish outside work; next: sign in with gh auth login');
     if (publication.issue === null) {
       publication.issue = recoverIssue(root, publication);
       persistRecord(root, record);
@@ -46,7 +46,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         const body = `${fact}\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
-          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment');
+          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the decision comment; next: run box bounty close again; box bounty status shows what is recorded');
           comments.push(response);
           changed = true;
         }
@@ -62,7 +62,7 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
         const body = `The bounty branch \`${publication.branch}\` is removed. It carried ${pushed.length} commit(s) that existed only there — their identifiers stay valid in any clone that fetched them: ${pushed.map(commit => `\`${commit.sha}\` ${commit.subject}`).join(', ')}.\n\n${marker}`;
         if (!comments.some(entry => isObject(entry) && entry['body'] === body && isObject(entry['user']) && entry['user']['login'] === publication.account)) {
           const response = api(root, `${endpoint}/comments`, { body });
-          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment');
+          if (!isObject(response) || response['body'] !== body || !isObject(response['user']) || response['user']['login'] !== publication.account) return invalid('github-response-invalid', 'GitHub did not confirm the branch-removal comment; next: run box bounty close again; box bounty status shows what is recorded');
           changed = true;
         }
       }
@@ -87,14 +87,14 @@ export function syncGitHubDecision(root: string, record: BountyRecord, opts?: { 
           publication.formatRepair = 'updated';
         } catch { publication.formatRepair = 'update-failed'; closed = api(root, endpoint, { state: 'closed' }, 'PATCH'); }
       } else closed = api(root, endpoint, { state: 'closed' }, 'PATCH');
-      if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure');
+      if (!isObject(closed) || closed['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub did not confirm issue closure; next: run box bounty close again; box bounty status shows what is recorded');
       // The record not yet showing 'closed' means this run closed it; a
       // body the PATCH rewrote (the format block) is a real change too.
       if (publication.state !== 'closed' || closed['body'] !== snapshot.body) changed = true;
     }
     const tip = remoteBranchSha(root, publication.repository, publication.branch);
     if (tip !== null && tip !== publication.commit) {
-      throw new BountyRefused('github-branch-changed', `${publication.branch} on the remote is ${tip}, not the ${publication.commit} this tool posted — it was changed outside the tool; removing it is not this tool's call`);
+      throw new BountyRefused('github-branch-changed', `${publication.branch} on the remote is ${tip}, not the ${publication.commit} this tool posted — it was changed outside the tool; removing it is not this tool's call; next: ask the owner — the remote branch was changed outside the tool and removing it is not this tool's call`);
     }
     if (tip !== null) { remoteGit(root, publication.repository, ['push', `:refs/heads/${publication.branch}`]); changed = true; }
     git(root, ['update-ref', '-d', publicationRef(record.id)]);
@@ -151,23 +151,23 @@ function closingIssue(root: string, publication: GitHubPublication): { body: str
       query: 'query($owner:String!,$name:String!,$number:Int!,$after:String){repository(owner:$owner,name:$name){issue(number:$number){body author{login} comments(first:100,after:$after){edges{cursor node{body author{login}}} pageInfo{hasNextPage}}}}}',
       variables: { owner, name, number: publication.issue?.number, after }
     });
-    if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['issue'])) return invalid('github-response-invalid', 'GitHub returned an unreadable closing issue');
+    if (!isObject(data) || !isObject(data['data']) || !isObject(data['data']['repository']) || !isObject(data['data']['repository']['issue'])) return invalid('github-response-invalid', 'GitHub returned an unreadable closing issue; next: run box bounty close again; box bounty status shows what is recorded');
     const issue = data['data']['repository']['issue'];
-    if (typeof issue['body'] !== 'string' || !isObject(issue['author']) || issue['author']['login'] !== publication.account || !isObject(issue['comments'])) return invalid('github-issue-mismatch', 'the closing issue body or author did not match this bounty');
+    if (typeof issue['body'] !== 'string' || !isObject(issue['author']) || issue['author']['login'] !== publication.account || !isObject(issue['comments'])) return invalid('github-issue-mismatch', 'the closing issue body or author did not match this bounty; next: check the issue on GitHub, then run box bounty close again');
     body ??= issue['body'];
-    if (body !== issue['body']) return invalid('github-issue-changed', 'the issue body changed while its comments were read; retry closing');
+    if (body !== issue['body']) return invalid('github-issue-changed', 'the issue body changed while its comments were read; next: run box bounty close again');
     const connection = issue['comments'];
-    if (!Array.isArray(connection['edges']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments');
+    if (!Array.isArray(connection['edges']) || !isObject(connection['pageInfo'])) return invalid('github-response-invalid', 'GitHub returned unreadable closing comments; next: run box bounty close again; box bounty status shows what is recorded');
     let last: string | null = null;
     for (const edge of connection['edges']) {
-      if (!isObject(edge) || typeof edge['cursor'] !== 'string' || edge['cursor'] === '' || !isObject(edge['node']) || typeof edge['node']['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment');
+      if (!isObject(edge) || typeof edge['cursor'] !== 'string' || edge['cursor'] === '' || !isObject(edge['node']) || typeof edge['node']['body'] !== 'string') return invalid('github-response-invalid', 'GitHub returned an unreadable closing comment; next: run box bounty close again; box bounty status shows what is recorded');
       const node = edge['node'];
       comments.push({ body: node['body'], user: node['author'] });
       last = edge['cursor'];
     }
     const page = connection['pageInfo'];
     if (page['hasNextPage'] === false) return { body, comments };
-    if (page['hasNextPage'] !== true || last === null || seenAfter.has(last)) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor');
+    if (page['hasNextPage'] !== true || last === null || seenAfter.has(last)) return invalid('github-response-invalid', 'GitHub returned an unreadable comment cursor; next: run box bounty close again; box bounty status shows what is recorded');
     after = last; seenAfter.add(after);
   }
 }

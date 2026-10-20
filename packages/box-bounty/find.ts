@@ -34,7 +34,7 @@ const haystacks = (record: BountyRecord): readonly (readonly [string, string | u
 
 export function findBounties(repoRoot: string, query: string): { readonly total: number; readonly matches: readonly FindMatch[] } {
   const needle = query.trim().toLowerCase();
-  if (needle === '') throw new BountyRefused('missing-query', 'find needs words to look for — box bounty find "<words>"');
+  if (needle === '') throw new BountyRefused('missing-query', 'find needs words to look for; next: box bounty find "<words>"');
   // The merged-solution scan still runs first — a record read is the moment
   // an outside merge is recognised, and find is a record read. The matching
   // itself is the store's: one plain substring search, the same on every

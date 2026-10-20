@@ -143,7 +143,7 @@ describe('BT38 contract guarantees proven directly', () => {
       const out = `${result.stdout}\n${result.stderr}`;
       expect(result.status, `${entry.section}: box bounty ${entry.args.join(' ')} exited 0 —\n${out}`).not.toBe(0);
       expect(out, `${entry.section}: expected ${entry.reason} —\n${out}`).toContain(`(${entry.reason})`);
-      expect(out, `${entry.section}: refusal names no next step —\n${out}`).toMatch(/next:|box bounty |git /);
+      expect(out, `${entry.section}: refusal names no next step —\n${out}`).toMatch(/next: /);
     }
   });
 
@@ -154,7 +154,7 @@ describe('BT38 contract guarantees proven directly', () => {
       const out = `${result.stdout}\n${result.stderr}`;
       expect(result.status, `apply on a posted bounty with no attempts exited 0 —\n${out}`).not.toBe(0);
       expect(out).toContain('(wrong-stage)');
-      expect(out).toMatch(/next:|box bounty |git /);
+      expect(out).toMatch(/next: /);
     });
   });
 });

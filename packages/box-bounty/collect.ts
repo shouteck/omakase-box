@@ -12,7 +12,7 @@ import { parsePayTo,payToLine,type PayToFact } from './pay.js';
 import { shareSolution } from './chain.js';
 
 export function listGitHubAnswers(root: string, id: string, record = loadRecord(root, id), shown = true): string {
-  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; post it with box bounty post ${id}, or end it with box bounty close ${id}`);
+  if (record.github === undefined) return invalid('not-github-posted', `this bounty has no GitHub post; next: post it with box bounty post ${id}, or end it with box bounty close ${id}`);
   if (retiredRoute(record) !== null) return `This bounty used a retired delivery route; end it with box bounty close ${id}`;
   const { repository, branch } = record.github;
   const data = pages(root, `repos/${repository}/pulls?state=open&base=${branch}`);
@@ -25,9 +25,9 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   // full read.
   const facts: { entry: unknown; n: number; commit: string; author: string; payTo: PayToFact }[] = [];
   for (const entry of data) {
-    if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
+    if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request; next: check gh and rerun the same command');
     const n = number(entry['number']);
-    if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit');
+    if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit; next: check gh and rerun the same command');
     facts.push({ entry, n, commit: entry['head']['sha'], author: login(entry['user']['login']), payTo: parsePayTo(typeof entry['body'] === 'string' ? entry['body'] : '') });
   }
   const pays = boundAmount(record) !== undefined && boundAmount(record)! > 0;
@@ -58,13 +58,13 @@ export function listGitHubAnswers(root: string, id: string, record = loadRecord(
   const lines = [`GitHub answers for ${id} against ${branch}:`];
   const available: NonNullable<GitHubPublication['availablePullRequests']> = [];
   for (const { entry } of facts) {
-    if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request');
+    if (!isObject(entry) || !isObject(entry['user'])) return invalid('github-response-invalid', 'GitHub returned an unreadable pull request; next: check gh and rerun the same command');
     const n = number(entry['number']);
-    if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit');
+    if (!isObject(entry['head']) || typeof entry['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(entry['head']['sha'])) return invalid('github-response-invalid', 'GitHub returned an unreadable solution commit; next: check gh and rerun the same command');
     const commit = entry['head']['sha'];
     const seen = record.github.seenPullRequests?.find(entry => entry.n === n && entry.commit === commit);
     const files = pages(root, `repos/${repository}/pulls/${n}/files`);
-    const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files'));
+    const names = files.map(file => isObject(file) && typeof file['filename'] === 'string' ? redact(quoteForeign(file['filename'])) : invalid('github-response-invalid', 'GitHub returned unreadable changed files; next: check gh and rerun the same command'));
     const collected = record.attempts?.find(attempt => attempt.commit === commit);
     const next = collected === undefined ? `collect: box bounty look ${id} ${n} or box bounty apply ${id} ${n}` : `collected as solution ${collected.n}; look: box bounty look ${id} ${collected.n}`;
     // The `pay-to:` line is read only from the pull request description — a
@@ -88,7 +88,7 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
   if (publication?.state !== 'posted' || publication.issue === null) return;
   try {
     const issue = api(root, `repos/${publication.repository}/issues/${publication.issue.number}`);
-    if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state');
+    if (!isObject(issue) || issue['state'] !== 'open' && issue['state'] !== 'closed') return invalid('github-response-invalid', 'GitHub returned an unreadable issue state; next: check gh and rerun the same command');
     observeIssueFormat(record, publication, issue);
     const answers = listGitHubAnswers(root, record.id, record, false);
     const comments = issueComments(root, record, issue); // the issue read above — status asks GitHub for it once
@@ -110,7 +110,7 @@ export function refreshGitHubStatus(root: string, record: BountyRecord): void {
 // `author` is null when GitHub returned an account name the tool will not
 // print: the comment still counts and is still shown, marked as such.
 function observeIssueFormat(record: BountyRecord, publication: GitHubPublication, issue: unknown): void {
-  if (!isObject(issue) || issue['number'] !== publication.issue?.number || typeof issue['body'] !== 'string' || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', 'the issue body or author could not be bound to this bounty');
+  if (!isObject(issue) || issue['number'] !== publication.issue?.number || typeof issue['body'] !== 'string' || !isObject(issue['user']) || issue['user']['login'] !== publication.account) return invalid('github-issue-mismatch', 'the issue body or author could not be bound to this bounty; next: check the issue on GitHub, then rerun the same command');
   publication.formatRead = formatFact(issue['body'], formatFor(record));
   publication.formatReadAt = new Date().toISOString();
   publication.formatUnavailableAt = null;
@@ -152,7 +152,7 @@ export function issueComments(root: string, record: BountyRecord, fetched?: unkn
 // branch tip it descends from, classified changed/added/deleted.
 function pullRequestChange(root: string, base: string, head: string): { changed: readonly string[]; added: readonly string[]; deleted: readonly string[] } {
   const diff = gitOutcome(root, ['diff', '--name-status', '-z', '--no-renames', base, head]);
-  if (diff.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request change; nothing was collected');
+  if (diff.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request change; nothing was collected; next: check signed-in Git and rerun the same command');
   const changed: string[] = [];
   const added: string[] = [];
   const deleted: string[] = [];
@@ -235,22 +235,22 @@ function renderPullRequestReport(record: BountyRecord, n: number, at: string, au
 export function answerGitHub(root: string, id: string, pr: number, via?: 'look' | 'apply') {
   const record = loadRecord(root, id);
   requireCurrentDelivery(record);
-  if (record.github === undefined || record.github.state !== 'posted') return invalid('not-github-posted', 'this bounty is not posted to GitHub');
-  if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — a solution can only come back to a bounty that is still open`);
-  if (!Number.isSafeInteger(pr) || pr < 1) return invalid('github-pr-missing', 'name an existing pull request number');
+  if (record.github === undefined || record.github.state !== 'posted') return invalid('not-github-posted', 'this bounty is not posted to GitHub; next: box bounty status');
+  if (!isOpenStage(record.stage)) return invalid('not-posted', `bounty ${id} is ${record.stage} — a solution can only come back to a bounty that is still open; next: box bounty status ${id}`);
+  if (!Number.isSafeInteger(pr) || pr < 1) return invalid('github-pr-missing', 'next: name an existing pull request number');
   const publication = record.github;
   const { repository, branch } = publication;
   let data: unknown;
   try { data = api(root, `repos/${repository}/pulls/${pr}`); }
-  catch { return invalid('github-pr-missing', 'that pull request cannot be read in the project repository; nothing was collected'); }
-  if (!isObject(data) || !isObject(data['base']) || !isObject(data['base']['repo']) || data['base']['ref'] !== branch || data['base']['repo']['full_name'] !== repository) return invalid('github-pr-wrong-branch', 'the pull request targets another branch or repository; nothing was collected');
-  if (!isObject(data['head']) || typeof data['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(data['head']['sha']) || !isObject(data['user'])) return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts');
+  catch { return invalid('github-pr-missing', 'that pull request cannot be read in the project repository; nothing was collected; next: rerun the command with a pull request number that exists in the project repository'); }
+  if (!isObject(data) || !isObject(data['base']) || !isObject(data['base']['repo']) || data['base']['ref'] !== branch || data['base']['repo']['full_name'] !== repository) return invalid('github-pr-wrong-branch', 'the pull request targets another branch or repository; nothing was collected; next: name a pull request that targets the project repository');
+  if (!isObject(data['head']) || typeof data['head']['sha'] !== 'string' || !/^[a-f\d]{40}$/.test(data['head']['sha']) || !isObject(data['user'])) return invalid('github-response-invalid', 'GitHub returned unreadable pull request facts; next: check gh and rerun the same command');
   const author = login(data['user']['login']);
   // The pull request's head lands on FETCH_HEAD alone — no scratch ref to
   // create and delete around the read.
   remoteGit(root, repository, ['fetch', '--no-tags', '--no-recurse-submodules', `refs/pull/${pr}/head`]);
   const commit = git(root, ['rev-parse', 'FETCH_HEAD']);
-  if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; retry to collect its current version');
+  if (commit !== data['head']['sha']) return invalid('github-pr-changed', 'the pull request changed during collection; next: rerun the same command to collect its current version');
   const body = typeof data['body'] === 'string' ? data['body'] : '';
   const payTo = parsePayTo(body);
   requireCurrentDelivery(record);
@@ -279,7 +279,7 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
   const way = record.github === undefined
     ? `post to GitHub with box bounty post ${record.id}, or end it with box bounty close ${record.id}`
     : `name one of them or a pull request number — the pull request collects itself`;
-  return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}`);
+  return invalid('unknown-attempt', `solution ${n} does not exist on ${record.id} — the bounty knows ${known}; ${way}; next: box bounty status ${record.id}`);
 }
 
 // The history path: the pull request's commits are the answer. Refusals, each
@@ -291,19 +291,19 @@ export function resolveAttempt(root: string, record: BountyRecord, n: number, vi
 // tool never renders it as its own words.
 function collectHistoryPullRequest(root: string, record: BountyRecord, publication: GitHubPublication, commit: string, author: string, pr: number, via?: string, payTo: PayToFact = { state: 'none' }, description?: string) {
   if (gitOutcome(root, ['merge-base', '--is-ancestor', publication.commit, commit]).status !== 0) {
-    return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected`);
+    return invalid('github-pr-not-descended', `the pull request's history does not descend from ${publication.branch}, the bounty branch — there is nothing sound to compare it with; nothing was collected; next: ask the solver to rebase the pull request on ${publication.branch}, or do not collect it`);
   }
   const remoteTip = remoteBranchSha(root, publication.repository, publication.branch);
   if (remoteTip !== publication.commit) {
-    return invalid('github-branch-changed', `${publication.branch} on the remote is ${remoteTip ?? 'gone'}, not the ${publication.commit} this tool posted — it was changed outside the tool; nothing was collected`);
+    return invalid('github-branch-changed', `${publication.branch} on the remote is ${remoteTip ?? 'gone'}, not the ${publication.commit} this tool posted — it was changed outside the tool; nothing was collected; next: ask the owner — the remote branch was changed outside the tool`);
   }
   const tree = gitOutcome(root, ['ls-tree', '-rz', commit]);
-  if (tree.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request tree');
+  if (tree.status !== 0) return invalid('github-pr-unreadable', 'Git could not read the pull request tree; next: check signed-in Git and rerun the same command');
   for (const entry of tree.stdout.split('\0')) {
     if (entry === '') continue;
     const match = /^(100644|100755) blob ([a-f\d]{40})\t(.+)$/s.exec(entry);
-    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', 'the pull request tree holds a link, a submodule or an unsafe path; nothing was collected');
-    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', 'a pull request path contains credential-shaped text; nothing was collected');
+    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', `the pull request tree holds a link, a submodule or an unsafe path; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
+    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', `a pull request path contains credential-shaped text; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
   }
   // Never-ship on everything the pull request introduces: a path it touches
   // anywhere in its new history — added, changed or deleted — is refused,
@@ -325,11 +325,11 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   }
   if (violations.length > 0) {
     const named = [...new Map(violations.map(v => [v.path, v])).values()];
-    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}`);
+    return invalid('answer-never-ship', `the pull request touches never-ship paths in its history — refused, nothing was collected: ${named.map(v => `${v.path} (rule '${v.rule}')`).join(', ')}; next: end the bounty with box bounty close ${record.id} --reason "<why>" — never-ship paths cannot be collected`);
   }
   const change = pullRequestChange(root, publication.commit, commit);
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {
-    return invalid('answer-empty', 'the pull request changes nothing against the bounty branch — a return that changes nothing is no solution');
+    return invalid('answer-empty', `the pull request changes nothing against the bounty branch — a return that changes nothing is no solution; next: ask for a pull request that changes something, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
   }
   // A pull request keeps its own number as its solution number — the outside
   // listing and `look`/`apply <id> <n>` name the same thing. A number already
