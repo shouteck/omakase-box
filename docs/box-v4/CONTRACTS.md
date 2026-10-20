@@ -199,7 +199,7 @@ A refusal is a `BountyRefused` (`errors.ts:5`) whose first argument is a stable 
 **Guarantees.**
 - PL1. Git and `gh` are checked before use — missing, too old, unsafe or unsigned-in is a named refusal changing nothing (`git.ts:23-31`, `gh.ts:149-154`).
 - PL2. One bundled file, no runtime dependencies, Node ≥22.13 (`bt12-package.test.ts:63,73,132`; `src/node-check.ts`).
-- PL3. Every outcome is a named state with a next step — no silent failure (PLAN.md; `errors.ts` refusal messages carry `next:`).
+- PL3. Every outcome is a named state with a next step - no silent failure. BT40 makes refusal text carry literal `next: `: `bt40.test.ts` parses 246 sites (244 directly guarded, the forwarding definition excluded, removed-command table tested through the CLI), rejects nonexistent suggested commands and unexpanded interpolation, and exercises the eight refusal families. Held owner blocks retain exit 0 and append the agent's step; the Node floor is checked in `bt12-package.test.ts`. Usage messages retain their usage forms. Syntax checks do not prove a step is true: the independent pass reviewed site context and followed printed steps live; see `waves/BT40.md`.
 - PL4. A stranger's text is never shown as the tool's own (`json.ts` `fromOthers`; `bt11b.test.ts:86`).
 - PL5. `--json` exists only where a command grew it; elsewhere `json-not-supported` (`args.ts:343`, `bounty.ts:209,382`).
 - PL6. Every refusal is named — `BountyRefused` carries a machine-readable reason (`errors.ts`; k29-arg-refusals checks names).
