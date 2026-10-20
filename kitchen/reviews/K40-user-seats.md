@@ -1,4 +1,56 @@
-# K40 — the tool from each user's seat
+# K40 - the tool from each user's seat
+
+## Accepted Close
+
+Accepted report SHA: `4e42308`; independent PASS `f9a1518`, after the
+incomplete owner packet was rejected and a fresh S5b agent read the corrected
+packet. Seven fresh agent sessions covered the five seats, including
+separate S2 off/on sessions and the owner retest. This is internal
+agent-based investigation, not human-user or customer evidence.
+
+Current conclusions supersede earlier setup descriptions below:
+
+- P1 is partial: default-off and the README instruction-setup omission hold;
+  the off/on discovery comparison is invalid because the sandbox already
+  names the tool and off used a mistakenly unseeded settings directory.
+- P2/P3/P4 hold: stale record-location text, omitted shared-public-memory
+  disclosure, and reward-limit help that describes one bounty rather than
+  the total promise cap. P5 holds only as a relay/hook observation: an
+  explicit owner payment block exists; the hook does not surface the debt.
+- P6 does not hold on the reachable, initially empty public remote. P7's
+  unhelpful "already tried" section was observed, but the solver succeeded.
+- The later agent hit the real `shared-only` boundary; its local `status`
+  did not observe PR #40. This was not a successful cross-machine apply.
+  Wording may explain the limitation; enabling new behavior is separate.
+- Original F11 ("no owner-facing revocation line") is refuted. With complete
+  `config --full` and payment owner blocks, fresh S5b correctly found
+  `box bounty deny` and answered all four questions. F11b is only the
+  residual cleanup/public-history guidance gap; do not treat it as a
+  revocation failure.
+
+The original owner packet omitted required owner-addressed payment lines
+and included agent-facing substitutes. It remains an invalid-material
+attempt, not erased evidence. The replacement packet matched its source
+blocks except one omitted `(noted <timestamp>)` suffix on the reward line;
+that is a transcription omission, not a fully byte-identical quotation.
+The original packet and S5b packet were separately frozen and reviewed.
+
+All real bounty traffic was $0, issue #39 / PR #40 were closed as rejected,
+and no solution was merged to sandbox main. The direct setup push
+`cf45694` is a scope/method deviation, disclosed to the owner; it is not
+retroactively approved or represented as a through-tool action. That seed
+commit and the durable `refs/box-bounty/bt-e879e5958d8a` history remain public.
+Foreign pre-existing branches/records were left untouched.
+
+Seat traffic count: 44 participant gh starts plus 5 cleanup starts = 49
+entries in the seat gh logs. This is not an inventory of every network
+operation. S4 also used one unlogged search helper; isolation was by
+instruction rather than an OS boundary. Raw scratch was inspected by the
+pass and removed at close; prompts, relevant verbatim output, method limits
+and the final findings table remain here and in `waves/K40.md`.
+
+BT41 has the text-only handoff below; it has not started. No product code
+or tests changed in K40.
 
 Status: **complete — all five seats ran (six fresh agents), findings
 recorded, public state cleaned.** Cook cannot dispatch agents on this
