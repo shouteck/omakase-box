@@ -14,6 +14,4 @@ Updated by the CTO on 20 October 2026 at the BT39 close.
 
 ## Next
 
-This run stops after BT39. No wave is in flight or starts automatically. Remaining performance limits are in BACKLOG; BT33 stays parked and BT12 Part B deferred.
-
-- **BT40 briefed** (20 October 2026, not started): every refusal names its `next:` step, closing BT38's PL3 gap (242 of 246 sites lacked it), with a static guard test. Runs when named. Brief: `waves/BT40.md`.
+Owner named `START.md: BT40` on 20 October 2026. Run BT40 only: add truthful site-specific `next:` text to refusals, a parser-based guard and the scoped test strengthening; keep reason names, exits, conditions, side effects and stored text unchanged. Independent exact-commit acceptance before merge; no live external actions, payments or file deletions. Stop after BT40. Remaining performance limits are in BACKLOG; BT33 stays parked and BT12 Part B deferred.
