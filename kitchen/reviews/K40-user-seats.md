@@ -490,6 +490,61 @@ not obvious from the lines) · owes = nothing real ($0); the $5 to
 no explicit "remove/disable everything" instruction — an answer that says
 so is *correct*.
 
+### A7 — S5b owner, rerun after review FAIL (verbatim; `prompts\S5b-owner.md`)
+
+```
+You are answering as the owner of a repository, based only on one document.
+
+Read exactly one file:
+C:\Users\shout\AppData\Local\Temp\kitchen-K40\seat5b\dossier.md
+
+Use a tool only to read that file. Do not open or read any other file or
+folder, install packages or run network commands — this is a reading
+exercise only.
+
+The document collects lines a tool printed while working in your
+repositories. Answer these four questions in your own plain words, as the
+owner would:
+
+1. What did I allow?
+2. What is public?
+3. What do I owe, and to whom?
+4. How do I stop it all?
+
+If the lines do not tell you an answer, say so — do not guess.
+```
+
+**Why a rerun.** The first dossier omitted the tool's actual
+`for the owner — pass this on in these words` payment block from the
+stand-in `apply` output, showing only agent-facing overview/status lines
+— not the owner-addressed material the brief requires. S5's assessment is
+therefore **invalid as a measure of the owner experience** (incomplete
+material, plus the earlier/later settings juxtaposition confound); its
+answers are kept untouched in the frozen record, not amended. The product
+findings F9/F11 and P5 stand or fall on their own verbatim evidence, not
+on S5's answers.
+
+**S5b dossier (`seat5b\dossier.md`, sha256 `da776603551d854e…`, 84
+lines).** Contents, each verbatim with origin + settings folder +
+timestamp labelled in the heading: (a) REAL $0 — the complete held owner
+block from `seat2-off.log` (post refused for owner, 12:12Z);
+(b) REAL $0 — the allow output incl. its 5-line owner block and the
+recorded answer lines from `setup-seat2-on.log` (12:13Z);
+(c) REAL $0 — S1's complete `config --full` output from `seat1.log`
+(12:08Z, nothing written); (d) SIMULATED $5 — the complete 5-line payment
+owner block from `s5-standin-transcript.txt` `apply` (12:27Z), including
+the fictional test link.
+**Excluded** (recorded here only, not in the dossier): `for you`
+relay blocks — agent-addressed; all status/overview agent-facing lines —
+brief requires owner-addressed material; expected answers, P-findings and
+other seats' notes. The dossier asserts nothing the owner lines did not
+say (shared memory remains unknown to the owner).
+
+**gh-count correction:** participant gh starts — seat1=1, S2-off=3,
+S2-on=30, S3=3, S4=7 (44 total). `seat2-on-gh.jsonl` now holds 35 lines:
+30 participant + 5 from the cook's own post-seat cleanup close, appended
+later — counted separately, never rewritten.
+
 ### S5 stand-in fixture (prepared, proven)
 
 `scratch\s5-standin-run.mjs` runs the real packed CLI through the whole
