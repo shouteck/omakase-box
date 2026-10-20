@@ -12,3 +12,4 @@ Compact, dated record of the owner's decisions that current work relies on. One 
 | D-2026-10-14-tool-convention | 2026-10-14 | documented | A wave that changes a command, option or printed output names the established tool convention it follows or says why it departs. | templates/wave.md Notes |
 
 | D-2026-10-19-k31-sandbox-go | 2026-10-19 | documented | Owner named `START.MD: K31` and replied `go` to the pre-cook card: real public $0 bounty posts on shouteck/box-bounty-sandbox only, scratch clones deleted after, nothing posted elsewhere. | waves/K31.md approval line; commit adding this row |
+| D-2026-10-20-k40-sandbox-go | 2026-10-20 | documented | Owner named K40 and replied `go` to its pre-cook card: fresh user-seat agents; real public $0 issues/PRs on shouteck/box-bounty-sandbox only; $5 payment example confined to a local stand-in; no product/test changes; close K40 bounties and remove its scratch. | waves/K40.md Approval; owner's go in this session |
