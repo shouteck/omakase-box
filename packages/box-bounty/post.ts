@@ -28,7 +28,7 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
   // source copy or returned folder is consulted, and no folder is changed.
   const retired = retiredRoute(record);
   if (retired !== null) return invalid(retired, `this bounty used a retired delivery route; next: end it with box bounty close ${record.id}`);
-  if (record.folder === undefined) return invalid('record-corrupt', 'this draft has no public task text; next: end it with box bounty close ${record.id} and create a new one');
+  if (record.folder === undefined) return invalid('record-corrupt', `this draft has no public task text; next: end it with box bounty close ${record.id} and create a new one`);
   let bytes: Buffer;
   try {
     const path = join(record.folder, 'bounty.json');
@@ -36,11 +36,11 @@ function bountyContent(record: BountyRecord): NonNullable<BountyRecord['content'
     bytes = readFileSync(path);
   }
   catch { return invalid('legacy-task-unavailable', `the old draft's public task cannot be read; next: end it with box bounty close ${record.id} and create a new one`); }
-  if (record.manifestSha256 !== undefined && digest(bytes) !== record.manifestSha256) return invalid('manifest-tampered', 'the old draft public text changed; nothing was posted; next: end it with box bounty close ${record.id} and create a new draft');
+  if (record.manifestSha256 !== undefined && digest(bytes) !== record.manifestSha256) return invalid('manifest-tampered', `the old draft public text changed; nothing was posted; next: end it with box bounty close ${record.id} and create a new draft`);
   let value: unknown;
-  try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', 'the old draft public text is unreadable; next: end it with box bounty close ${record.id} and create a new one'); }
+  try { value = JSON.parse(bytes.toString('utf8')); } catch { return invalid('record-corrupt', `the old draft public text is unreadable; next: end it with box bounty close ${record.id} and create a new one`); }
   const inputText = (item: unknown): item is { file: string; text: string } => isObject(item) && typeof item['file'] === 'string' && typeof item['text'] === 'string';
-  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot?.commit || record.snapshot === undefined || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', 'the old draft public text is unreadable; next: end it with box bounty close ${record.id} and create a new one');
+  if (!isObject(value) || value['id'] !== record.id || !isObject(value['snapshot']) || value['snapshot']['commit'] !== record.snapshot?.commit || record.snapshot === undefined || !inputText(value['task']) || value['note'] !== null && !inputText(value['note'])) return invalid('record-corrupt', `the old draft public text is unreadable; next: end it with box bounty close ${record.id} and create a new one`);
   return { task: value['task'], note: value['note'], tool: typeof value['tool'] === 'string' ? value['tool'] : TOOL_VERSION };
 }
 

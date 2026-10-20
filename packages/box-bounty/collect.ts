@@ -302,8 +302,8 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   for (const entry of tree.stdout.split('\0')) {
     if (entry === '') continue;
     const match = /^(100644|100755) blob ([a-f\d]{40})\t(.+)$/s.exec(entry);
-    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', 'the pull request tree holds a link, a submodule or an unsafe path; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"');
-    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', 'a pull request path contains credential-shaped text; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"');
+    if (match === null || match[3] === undefined || match[3].split('/').some(segment => segment === '' || segment === '.' || segment === '..') || /[\\:\x00-\x1f]/.test(match[3])) return invalid('answer-unsafe-path', `the pull request tree holds a link, a submodule or an unsafe path; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
+    if (redact(match[3]) !== match[3]) return invalid('github-response-invalid', `a pull request path contains credential-shaped text; nothing was collected; next: do not collect it, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
   }
   // Never-ship on everything the pull request introduces: a path it touches
   // anywhere in its new history — added, changed or deleted — is refused,
@@ -329,7 +329,7 @@ function collectHistoryPullRequest(root: string, record: BountyRecord, publicati
   }
   const change = pullRequestChange(root, publication.commit, commit);
   if (change.changed.length === 0 && change.added.length === 0 && change.deleted.length === 0) {
-    return invalid('answer-empty', 'the pull request changes nothing against the bounty branch — a return that changes nothing is no solution; next: ask for a pull request that changes something, or end the bounty with box bounty close ${record.id} --reason "<why>"');
+    return invalid('answer-empty', `the pull request changes nothing against the bounty branch — a return that changes nothing is no solution; next: ask for a pull request that changes something, or end the bounty with box bounty close ${record.id} --reason "<why>"`);
   }
   // A pull request keeps its own number as its solution number — the outside
   // listing and `look`/`apply <id> <n>` name the same thing. A number already

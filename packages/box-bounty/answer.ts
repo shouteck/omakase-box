@@ -229,7 +229,7 @@ export function applyBounty(repoRoot: string, id: string, target?: ApplyTarget, 
   // before the working tree, index or branch is touched.
   const unsafe = unsafeOwnerCommands(repoRoot);
   if (unsafe.length > 0) {
-    throw new BountyRefused('apply-unsafe-config', `the owner's Git configuration could run a program a solution supplies or changes during this merge — apply refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}; next: merge the answer with your own git if you accept those programs — the choice is yours — or point the configured command outside the repository`);
+    throw new BountyRefused('apply-unsafe-config', `the owner's Git configuration could run a program a solution supplies or changes during this merge — apply refuses before anything is touched: ${unsafe.map(item => `${item.key} = ${showPath(item.command)} — ${item.detail}`).join('; ')}; next: ask the owner to point the configured commands outside the repository or remove them, or end the bounty with box bounty close ${id} --reason "<why>"`);
   }
   // HEAD is the attribute view for every read and the merge below: the
   // solver's files have not landed yet, so HEAD is the owner's committed

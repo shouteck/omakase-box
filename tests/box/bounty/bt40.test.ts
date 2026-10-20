@@ -74,6 +74,27 @@ describe('BT40 every refusal names its next step', () => {
     expect(sites.filter(site => site.excepted).length, 'expected exactly the forwarding definition and the removed-table lookup').toBe(2);
   });
 
+  it('guard: no refusal message is a literal that leaves ${...} unexpanded', () => {
+    // A single-quoted (or NoSubstitution) message containing `${record.id}`
+    // prints the placeholder, not the id — the pass caught exactly that at
+    // 80d1f51. Descend into every site's message argument: any plain string
+    // literal carrying `${` is a missed template.
+    const bad: string[] = [];
+    for (const site of collectSites()) {
+      if (site.excepted) continue;
+      const sf = ts.createSourceFile(site.file, readFileSync(join(ROOT, site.file), 'utf8'), ts.ScriptTarget.Latest, true);
+      const visit = (node: ts.Node) => {
+        if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) && node.text.includes('${')) {
+          const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
+          bad.push(`${site.file}:${line + 1} ${site.reason} carries literal '\${' unexpanded`);
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(sf);
+    }
+    expect(bad.join('\n'), 'refusal messages with unexpanded ${…} placeholders').toBe('');
+  });
+
   it('removed command names still answer with a next step through the built CLI', () => {
     const repo = makeRepo({ 'TASK.md': 'Fix the sum.\n' });
     const removed: readonly (readonly string[])[] = [
