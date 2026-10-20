@@ -58,3 +58,5 @@ Learned the hard way in R3b and the lab's live runs. They apply to BT5, BT6 and 
 - **Env for measured agents goes in wrappers, not source** — K31's sourced env did not persist across tool calls (missed gh counts); K31b's baked wrapper scripts logged 347/347. Pattern: kitchen/memory/real-use-b/shims/.
 
 - **cpSync ENOENT names the destination, not the vanished source** — a missing file in a copied .git is git housekeeping racing the walk (K38). Fixture repos pin gc.auto=0 and maintenance.auto=false at creation; retries are the documented backstop, not the fix.
+
+- **A design that adds a trigger names the command that fires it, what a refusal leaves behind and what a retry finds.** K42's payment rule took three corrections, each fix opening the next edge case.
