@@ -8,7 +8,7 @@ Written by the K42b cook on 21 October 2026 for decision D1 in `PLATFORM.md` sec
 
 **Recommendation for D1.**
 
-- **Start:** a Stripe Connect platform account in Singapore, held by you, with one charge shape: a destination charge with `on_behalf_of` set to the solver. Solvers: up to 37 countries (Stripe's self-serve countries that are also on its Express list [S6][S11], less Thailand and the UAE, where Stripe says "platform users in these countries can't self-serve Express connected accounts" [S7]), Singapore included; not India, Indonesia, the Philippines, Vietnam, Pakistan, Nigeria or Ukraine.
+- **Start:** a Stripe Connect platform account in Singapore, held by you, with one charge shape: a destination charge with `on_behalf_of` set to the solver. Solvers: 37 countries confirmed on Stripe's pages (its self-serve countries that are also on its Express list [S6][S11]), Singapore included. Thailand and the UAE are on both lists too, but Stripe's sentence about them is ambiguous [S7][S25][S26]: unknown, not excluded, and tested in PF3. Not India, Indonesia, the Philippines, Vietnam, Pakistan, Nigeria or Ukraine.
 - **Add later:** for solvers Stripe cannot reach, Wise Business batch payments "Send by email" from your own Wise balance [W3][W4]. It reaches 49 destinations [W8], including all seven above. The platform only writes the batch file; no money or bank details pass through it.
 
 **Cost.** To start: $0 (Stripe has no setup or monthly fee [S14], and its sandbox works before your business is verified [S16]). If Stripe asks for a registered business: S$115 once and S$30 a year for an ACRA sole proprietorship [L4][L5]. Per payment, Singapore edition: 3.4% + $0.50 per domestic card charge, +0.5% for international cards, +2% if currency conversion is required [S14]; Connect, when the platform handles pricing: $2 per monthly active solver account, 0.25% + $0.50 per payout, and 0.25% of payout volume for "Funds routing and platform management" [S15]. With `on_behalf_of`, Stripe applies the fee structure of the solver's country [S4]. Those per-country rates were not read (N3). Disputes still cost the platform: with destination charges, "with or without `on_behalf_of`, your platform balance is automatically debited for the disputed amount and fee" [S4] (D4). A lawyer's review before the first real payment is not $0 (D6, unchanged).
@@ -25,7 +25,7 @@ Written by the K42b cook on 21 October 2026 for decision D1 in `PLATFORM.md` sec
 
 | Route | Who can be paid, and where | Who holds money, and when | Owner's setup (counted below) | Cost: start / per year / per payment | Still needs a lawyer |
 |---|---|---|---|---|---|
-| **Stripe Connect from Singapore** (recommended start) | Without `on_behalf_of`: Singapore only [S1][S2]. With it: solvers whose Express account can take card payments, in 37 self-serve countries; Thailand and the UAE only through Stripe sales [S6][S7][S11][S3]. Individuals: yes [S7] | Nobody while a bounty is open. At payment, Stripe holds it: the charge is on the platform's account and moves to the solver's balance at once [S3]; then the solver's payout schedule | 7 steps in the sandbox, +1 for live, +1 only if a UEN is needed | $0 / $0 (S$115 once + S$30/yr if registered [L4][L5]) / 3.4% + $0.50 (+0.5% intl, +2% FX) [S14] plus $2 per active account, 0.25% + $0.50 per payout and 0.25% of payout volume for funds routing [S15]; the solver's country's rates with `on_behalf_of` [S4] (N3); disputes debit the platform [S4] | PS Act "arranging" vs the technical-service exclusion, and "merchant acquisition" [L1]; unlimited liability [L6][S12] |
+| **Stripe Connect from Singapore** (recommended start) | Without `on_behalf_of`: Singapore only [S1][S2]. With it: solvers whose Express account can take card payments, in 37 confirmed countries; Thailand and the UAE unknown, not excluded, tested in PF3 [S6][S7][S11][S3][S25][S26]. Individuals: yes [S7] | Nobody while a bounty is open. At payment, Stripe holds it: the charge is on the platform's account and moves to the solver's balance at once [S3]; then the solver's payout schedule | 7 steps in the sandbox, +1 for live, +1 only if a UEN is needed | $0 / $0 (S$115 once + S$30/yr if registered [L4][L5]) / 3.4% + $0.50 (+0.5% intl, +2% FX) [S14] plus $2 per active account, 0.25% + $0.50 per payout and 0.25% of payout volume for funds routing [S15]; the solver's country's rates with `on_behalf_of` [S4] (N3); disputes debit the platform [S4] | PS Act "arranging" vs the technical-service exclusion, and "merchant acquisition" [L1]; unlimited liability [L6][S12] |
 | **Wise Business, owner pays** (recommended later) | 49 destinations [W8]; recipients need no Wise account [W2]; "Send by email" asks each solver for bank details by a link [W4] | Your own Wise balance until you pay the batch; unclaimed email payments are cancelled and refunded after 1 week [W4] | 2 once; 4 per batch | Free to register [W1] / not found / "From 0.19%", varies by currency [W1] | Whether preparing the batch is "arranging" [L1] |
 | Airwallex Payments for Platforms | Full connected accounts in 55 markets [A1]; individuals: yes [A2][A5]; ledger accounts in 200+ markets leave the funds the platform's [A2] | The platform account owns the payment; FundsSplit divides it before settlement [A7]; timing not public | Not public: "Contact sales" [A8][A9] | Not public [A9] | Same as Stripe |
 | PayPal Payouts, owner pays | "96 countries" [P1]; recipient needs a PayPal (or US Venmo) account [P1] | Your PayPal balance, prefunded [P1]; unclaimed returned after 30 days [P2] | Business account + "Request access to PayPal Payouts", decided by PayPal [P1] | Not read / not read / 2%; for USD payouts capped at 1.00 USD domestic and 50.00 USD international (SGD: 1.60 / 80.00) [P4] | Same as Wise |
@@ -59,9 +59,13 @@ That is 7 steps at $0 that work in the sandbox, 1 more for live, and 1 condition
 - **Connect from Singapore, account and charge types.** Singapore is on the platform-country lists for Express and for Custom accounts [S7]. It is also on the list of regions supporting separate charges and transfers (43 codes, `SG` among them) [S2]. Destination charges are supported [S3]. Within Singapore, any of these works. Across borders, see the next point.
 - **Which countries connected accounts may be in.** The cross-border payouts page (the same text in the `en-US`, `en-GB` and `es-419` editions): "Platforms based in the US, UK, EEA, Canada or Switzerland can transfer funds to connected accounts in any of those regions ... Stripe doesn't support self-serve cross-border payouts to countries outside the listed regions. Contact sales to discuss alternatives, or use Global Payouts" [S1]. The capabilities page repeats the same-region rule for transfers [S5]. On the charge pages: "For other regions, the platform and connected account must be in the same region unless using `on_behalf_of`" [S4]. For destination charges: "if your platform and a connected account aren't in the same region, you must specify the connected account as the settlement merchant using the `on_behalf_of` parameter" [S3]. And "The `on_behalf_of` parameter is supported only for connected accounts with a payments capability such as card_payments. Accounts under the recipient service agreement can't request `card_payments`" [S3][S2]. Recipient-agreement accounts reach other countries only through Global Payouts [S8].
   - With `on_behalf_of`, Stripe "Settles charges in the country of the specified account", "Uses the fee structure for the connected account's country" and shows the connected account's descriptor and address on the owner's statement [S4].
-  - Countries: Stripe's Singapore availability page lists 44 countries without a "Preview" or "Extended network" badge [S11]. Of these, 39 are also on the Express list [S6]. Two of the 39 are not self-serve: "Due to restrictions that apply when using Connect in the United Arab Emirates and Thailand, platform users in these countries can't self-serve Express connected accounts. To begin onboarding for Express connected accounts in these countries, contact us" [S7].
-    - That leaves **37 self-serve countries:** AT, AU, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FR, GB, GR, HK, HU, IE, IT, JP, LT, LU, LV, MT, MX, NL, NO, NZ, PL, PT, RO, SE, SG, SI, SK, US.
-    - Thailand and the UAE: through Stripe sales only (N2).
+  - Countries: Stripe's Singapore availability page lists 44 countries without a "Preview" or "Extended network" badge [S11]. Of these, 39 are also on the Express list [S6].
+    - **37 confirmed:** AT, AU, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FR, GB, GR, HK, HU, IE, IT, JP, LT, LU, LV, MT, MX, NL, NO, NZ, PL, PT, RO, SE, SG, SI, SK, US.
+    - **Thailand and the UAE: unknown, not excluded.**
+      - Stripe's Express page, under its *platform* requirements, says: "Due to restrictions that apply when using Connect in the United Arab Emirates and Thailand, platform users in these countries can't self-serve Express connected accounts. To begin onboarding for Express connected accounts in these countries, contact us" [S7]. The sentence is ambiguous. "Platform users in these countries" reads as platforms based there; "Express connected accounts in these countries" reads as solvers there.
+      - Stripe's UAE page lists "Foreign platform with UAE connected accounts" as supported, "Available only with" direct charges or destination charges with `on_behalf_of`, and adds that "some configurations may require you to contact our sales team" [S25].
+      - Stripe's Thailand page says "We do not support separate charges and transfer" and does not address destination charges or `on_behalf_of` [S26].
+      - Both countries go into the PF3 sandbox gate (section 8).
     - BR, HR, GI, LI and MY are Stripe countries missing from the Express list read.
     - India and Indonesia are "Preview" and link to sales [S11].
   - The Express list names 103 country codes, "Some countries are available only when using cross-border payouts" [S6]. For a Singapore platform that list therefore overstates reach.
@@ -139,7 +143,7 @@ That is 7 steps at $0 that work in the sandbox, 1 more for live, and 1 condition
 | Route | Solver countries | Individuals? | Solver onboarding |
 |---|---|---|---|
 | Stripe from Singapore, no `on_behalf_of` | Singapore [S1][S2] | Yes [S7] | Stripe-hosted onboarding [S18] |
-| Stripe from Singapore, `on_behalf_of` | 37 self-serve countries (listed in section 1) [S6][S7][S11]; Thailand and the UAE through Stripe sales only [S7]; to be proven in PF3 | Yes [S7] | Stripe-hosted onboarding with card payments enabled [S3][S18] |
+| Stripe from Singapore, `on_behalf_of` | 37 confirmed countries (listed in section 1) [S6][S11]; Thailand and the UAE unknown, not excluded, because Stripe's wording is ambiguous [S7][S25][S26]; all to be proven in PF3 | Yes [S7] | Stripe-hosted onboarding with card payments enabled [S3][S18] |
 | Airwallex | 55 full-account markets [A1] | Yes [A2] | Airwallex KYC through the platform: hosted flow, embedded component or API [A4] |
 | Wise, owner pays | 49 destinations [W8] | Yes, no Wise account needed [W2] | Email link, bank details within a week [W4] |
 | PayPal Payouts, owner pays | "96 countries" [P1]; per-country features [P2] | Yes, with a PayPal account [P1] | A PayPal account |
@@ -152,33 +156,47 @@ Each step names the command that fires it, what a refusal leaves and what a retr
 
 - **PF3 gate: country proof in the sandbox.**
   - Fired by: a PF3 test script, using the owner's sandbox keys.
-  - What it does: creates Express test accounts in SG, JP, AU, US and DE, requesting `card_payments` and `transfers`, and runs a USD destination charge with `on_behalf_of` to each.
+  - What it does: creates Express test accounts in SG, JP, AU, US, DE, TH and AE, requesting `card_payments` and `transfers`, and runs a USD destination charge with `on_behalf_of` to each. TH and AE settle the ambiguity in [S7]: an account Stripe refuses to create, or a charge it refuses, puts that country on the Wise list.
   - A refusal leaves: no charge, and the account's Stripe error, recorded per country. That country goes to the Wise list.
   - A retry finds: the same accounts, read back by id. Nothing is created twice.
   - The PF3 result fixes the solver-country list D5 shows on the board.
 - **Payment readiness** (before any charge). The solver's `card_payments` and `transfers` capabilities must be `active`. Otherwise the board shows "waiting for the solver's payout setup" and nothing is charged.
 - **Paying (PF4): one PaymentIntent per bounty, reused after a decline, so two payable intents never exist for one bounty.**
-  - **Records.** The platform keeps, per bounty: generation `g` (starts at 1), the PaymentIntent id, and confirm count `n` (starts at 0). Each is written before the call that depends on it.
-  - **Create.**
-    - Fired by: the first payment trigger, which is the owner's "Pay" (ask me) or the platform's pay check after the hint from `apply` or `box bounty close` (agent decides), as in K42 section 3.3.
-    - Before the call, the platform records "creating g".
-    - It then creates the PaymentIntent: the owner as customer, the destination and `on_behalf_of` set to the solver, metadata `{bounty id, g}`, and idempotency key `box-pay/<repository>/<bounty id>/pi/<g>`. Finally it stores the returned id.
-  - **Confirm.**
-    - Fired by:
-      - the first time, by the same trigger as create;
-      - after a decline, **only** by the owner's "Pay again" on the bounty page, after updating the card on Stripe's page. This holds in both modes; "agent decides" never re-confirms a declined card on its own.
-    - The platform records `n + 1`, then confirms off-session with the owner's current saved card and key `box-pay/<repository>/<bounty id>/pi/<g>/confirm/<n>`.
-    - The decline arrives on this call: "If payment fails, the PaymentIntent transitions to the `requires_payment_method` status or the `canceled` status if the confirmation limit is reached" [S22].
-  - **A refusal leaves:**
-    - Decline: the same PaymentIntent in `requires_payment_method`, still the only one for the bounty. Nothing is transferred, and the bounty shows "owed: card declined, owner to pay again".
-    - `authentication_required`: the same PaymentIntent in `requires_action`. The owner finishes it on Stripe's page; no new call is made.
-  - **A retry finds.** Every trigger first reads the stored PaymentIntent, a GET with no key:
-    - `succeeded`: record paid, call nothing;
-    - `processing`: wait;
-    - `requires_action`: send the owner to Stripe's page;
-    - `requires_payment_method`: confirm with `n + 1`, on the owner's "Pay again" only;
-    - `canceled`, from the confirmation limit: "Cancellation invalidates the PaymentIntent for future payment attempts" [S23]. The platform moves to `g + 1` and creates a new PaymentIntent, so the old one can never be paid.
-  - **Crash between create and store.** The retry finds "creating g" with no id. It repeats the create with the same key, and Stripe returns the first result for a key that has not been pruned [S19]. If the key may have been pruned (24 hours or more), the platform first lists the owner's PaymentIntents (`customer` filter [S24]) and adopts the one whose metadata matches `{bounty id, g}` before creating anything.
+  - **Records.** The platform keeps, per bounty: the approval (the owner's "Pay", or the agent's pay check under the mandate), generation `g` (starts at 1), the PaymentIntent id, and confirm number `n`. Each is written before the call that depends on it.
+  - **Telling "not yet attempted" from "declined", using only Stripe's own fields.**
+    - The card is attached **at create**: `payment_method` is the "ID of the payment method ... to attach to this PaymentIntent", with the owner as `customer` [S27]. Once payment information is provided, "the PaymentIntent enters the `requires_confirmation` status" [S23].
+    - So an approved payment that never reached a confirm is in `requires_confirmation`.
+    - A failed confirm moves it to `requires_payment_method` [S22], and sets `last_payment_error`, "The payment error encountered in the previous PaymentIntent confirmation" [S28].
+    - **Decline = `requires_payment_method` with `last_payment_error` set.** Because Stripe clears that field "if the PaymentIntent is later updated for any reason" [S28], the platform updates the PaymentIntent only in the owner's "Pay again" step.
+    - `requires_payment_method` with `last_payment_error` empty is treated as never attempted.
+  - **The confirm number.** `n = 1` is recorded together with "creating g". The confirm key is `box-pay/<repository>/<bounty id>/pi/<g>/confirm/<n>`, using the recorded value; on "Pay again" that is the value *after* the increment.
+    - `n` increments only in "Pay again". A retried confirm whose outcome is unknown reuses the same `n`.
+    - Stripe then either runs it for the first time, or returns the saved result if it already ran [S19].
+  - **Case 1: first payment.**
+    - Fired by: the approval. That is the owner's "Pay" (ask me) or the platform's pay check after the hint from `apply` or `box bounty close` (agent decides), as in K42 section 3.3.
+    - Steps: record "creating g" and `n = 1`; create with the card attached, the destination and `on_behalf_of` set to the solver, metadata `{bounty id, g}`, key `box-pay/<repository>/<bounty id>/pi/<g>`; store the id; confirm off-session with key `.../confirm/1`.
+    - Refusal: see cases 3 and 4.
+  - **Case 2: approved but never attempted.** This is a crash after create, or after recording `n` but before the confirm reached Stripe.
+    - Leaves: the PaymentIntent in `requires_confirmation` (or `requires_payment_method` with `last_payment_error` empty). Nothing is charged, and the bounty shows "payment pending", never "card declined".
+    - Fired by: the original trigger again, with no new approval needed. That is the owner's next "Pay" click, or in agent mode the next pay check (the next hint, or the platform's refresh of the bounty).
+    - Retry finds that state and confirms with the same `n`. With an empty `payment_method` it first attaches the owner's saved card. Agent mode is never stalled by a crash.
+  - **Case 3: declined.**
+    - Leaves: `requires_payment_method` with `last_payment_error` set, still the only PaymentIntent for the bounty. Nothing is transferred, and the bounty shows "owed: card declined, owner to pay again".
+    - Fired by: **only** the owner's "Pay again", after updating the card on Stripe's page, in both modes. The agent never re-confirms a declined card.
+    - "Pay again" records `n + 1`, updates the PaymentIntent with the owner's current saved card (it becomes `requires_confirmation`), and confirms with key `.../confirm/<n + 1>`.
+    - Retry finds: a crash inside "Pay again" leaves `requires_confirmation`, which is case 2, completed by the next pay check under the approval already recorded. Otherwise it finds the result of confirm `n + 1`.
+  - **Case 4: authentication required.**
+    - Leaves: `requires_action` on the same PaymentIntent.
+    - Fired by: the owner finishing it on Stripe's page. No new call from the platform.
+    - Retry finds `requires_action` and sends the owner to the same page.
+  - **Case 5: cancelled.** This happens "if the confirmation limit is reached" [S22], and "Cancellation invalidates the PaymentIntent for future payment attempts" [S23].
+    - Fired by: the owner's "Pay again". The platform moves to `g + 1`, records `n = 1`, and runs case 1's steps with the new generation.
+    - Leaves: the cancelled PaymentIntent, which can never be paid.
+    - Retry finds the new generation's state.
+  - **Case 6: crash between create and storing the id.**
+    - Retry finds "creating g" with no id. It repeats the create with the same key, and Stripe returns the first result for a key that has not been pruned [S19].
+    - If the key may have been pruned (24 hours or more), the platform first lists the owner's PaymentIntents (`customer` filter [S24]) and adopts the one whose metadata matches `{bounty id, g}` before creating anything. Then it continues as case 2.
+  - **Every trigger reads the stored PaymentIntent first** (a GET, no key): `succeeded` records paid and calls nothing; `processing` waits; the other states go to the cases above.
   - **Why `g` and `n` are in the keys.** Stripe "saves the status code and body of the first request made with a given idempotency key" and returns the saved response on retries, "including `500` errors"; keys can be pruned once at least 24 hours old [S19]. A confirm key without `n` would replay the old decline after the owner fixed the card. A create key without `g` would return the cancelled PaymentIntent.
 - **Wise export (later wave).**
   - Fired by: the owner's "Export batch" on the board, for owed bounties whose solver is outside the Stripe list.
@@ -201,18 +219,24 @@ Each step names the command that fires it, what a refusal leaves and what a retr
 
 ## Proposed changes to PLATFORM.md (for the CTO; not applied)
 
-1. **Owner's page, "What the platform does":** "through Stripe" becomes "through a Stripe platform account in Singapore; solvers in Stripe's 37 self-serve Express countries are paid automatically (once PF3 proves it); others are paid from the owner's own Wise account by a batch the platform prepares".
+1. **Owner's page, "What the platform does":** "through Stripe" becomes "through a Stripe platform account in Singapore; solvers in the Stripe countries PF3 proves (37 confirmed on Stripe's pages; Thailand and the UAE to be tested) are paid automatically; others are paid from the owner's own Wise account by a batch the platform prepares".
 2. **Section 2, "Charge type":** "Destination charges" becomes "destination charges with `on_behalf_of` set to the solver, always: the only cross-region path open to a Singapore platform [S3][S4]; the solver's account must have `card_payments` [S3]; Stripe applies the solver's country's fees [S4]". Also add the readiness rule from this document's section 8.
-3. **Section 2, "Countries":** replace the last three sentences with: "A Singapore platform transfers only within Singapore [S1][S2]; with `on_behalf_of` it reaches the 37 self-serve countries on both Stripe's availability page and its Express list (PLATFORM-MONEY-SG section 1). Thailand and the UAE, also on both lists, are not self-serve: platforms there "can't self-serve Express connected accounts" [S7]. Global Payouts is US/UK only and assumes a money transmitter licence [S9]."
+3. **Section 2, "Countries":** replace the last three sentences with: "A Singapore platform transfers only within Singapore [S1][S2]; with `on_behalf_of` it reaches the 37 countries confirmed on both Stripe's availability page and its Express list (PLATFORM-MONEY-SG section 1). Thailand and the UAE are also on both lists, but Stripe's sentence about them is ambiguous [S7]. Its UAE page supports foreign platforms "only with" direct charges or destination charges with `on_behalf_of` [S25]. So they are unknown, not excluded, until PF3's sandbox gate tests them. Global Payouts is US/UK only and assumes a money transmitter licence [S9]."
 4. **Section 2, "Fees":** add the Singapore edition figures: 3.4% + $0.50 domestic, +0.5% international, +2% FX, $15 dispute fee [S14]; $2 per monthly active account, 0.25% + $0.50 per payout, and 0.25% of payout volume for "Funds routing and platform management" [S15]. Keep the existing "0.25 % funds routing" line. Under `on_behalf_of`, the solver's country's rates apply [S4], so N7 is closed only for Singapore-settled payments.
 5. **Section 7, step 3:** "a legal entity: unknown" becomes "an individual account if Stripe accepts it ($0), otherwise an ACRA sole proprietorship (S$115, then S$30 a year); a Pte Ltd (S$315 + S$60 a year) when real volume begins, because Connect liability is unlimited". Add: "the sandbox works before business verification [S16]" (closes K42's N8 test-mode half).
 6. **Section 8:**
-   - **PF3** gains the country-proof gate and the capability readiness rule.
+   - **PF3** gains the country-proof gate (SG, JP, AU, US, DE, plus TH and AE to settle Stripe's ambiguous sentence) and the capability readiness rule.
    - **PF4** replaces the single key `box-pay/<repository>/<bounty id>` with one PaymentIntent per bounty, reused after a decline:
-     - create key `.../pi/<g>`, confirm key `.../pi/<g>/confirm/<n>`, with `g` and `n` recorded before each call;
-     - the first confirm fires on the owner's "Pay" or on the agent's pay check; a confirm after a decline fires only on the owner's "Pay again";
-     - a decline leaves the same PaymentIntent in `requires_payment_method`; a retry reads it first; a cancelled one moves to `g + 1`; a crash after create is adopted by metadata (section 8 above).
-   - PF4's tests add: a decline then "Pay again" pays once; a decline replayed with the same confirm key is not retried by the agent; a crash between create and store adopts the existing PaymentIntent; a cancelled PaymentIntent is never confirmed again.
+     - the owner's card is attached at create, so "not yet attempted" (`requires_confirmation`) is distinct from "declined" (`requires_payment_method` with `last_payment_error` set) [S23][S27][S28];
+     - create key `.../pi/<g>`, confirm key `.../pi/<g>/confirm/<n>`; `n` is recorded before each confirm, increments only in "Pay again", and the key uses the value after the increment;
+     - a never-attempted payment is confirmed under its original approval by the next "Pay" or pay check; only a real decline waits for the owner's "Pay again";
+     - a cancelled PaymentIntent moves to `g + 1`; a crash after create is adopted by metadata (section 8 above, cases 1 to 6).
+   - PF4's tests add:
+     - a crash after create, and a crash after recording `n`, are both confirmed by the next agent pay check and never shown as "declined";
+     - a decline then "Pay again" pays once, and the agent never re-confirms a decline;
+     - a lost confirm response retried with the same `n` charges once;
+     - a crash between create and store adopts the existing PaymentIntent;
+     - a cancelled PaymentIntent is never confirmed again.
    - New **PF7** (after PF6): the Wise "Send by email" export for owed bounties outside the Stripe list, recorded paid only on the owner's word.
 7. **Section 9:**
    - **D1** becomes this document's recommendation.
@@ -232,7 +256,7 @@ Stripe documentation (read as Markdown from `docs.stripe.com/<path>.md`; the ser
 - [S4] Understand how charges work in a Connect integration ("unless using `on_behalf_of`"; settlement, fees and statement under `on_behalf_of`; disputes debit the platform): https://docs.stripe.com/connect/charges
 - [S5] Account capabilities, cross-border transfers: https://docs.stripe.com/connect/account-capabilities
 - [S6] Connected account types, Express availability (103 country codes; "Some countries are available only when using cross-border payouts"): https://docs.stripe.com/connect/accounts
-- [S7] Using Express connected accounts (platform countries including Singapore "can create Express accounts for most countries Stripe supports"; UAE and Thailand "can't self-serve Express connected accounts"; per-country onboarding in Connect Settings; `business_type=individual`). The Custom accounts page carries the same platform-country list: https://docs.stripe.com/connect/express-accounts , https://docs.stripe.com/connect/custom-accounts
+- [S7] Using Express connected accounts (platform countries including Singapore "can create Express accounts for most countries Stripe supports"; the ambiguous UAE and Thailand sentence under platform requirements; per-country onboarding in Connect Settings; `business_type=individual`). The Custom accounts page carries the same platform-country list: https://docs.stripe.com/connect/express-accounts , https://docs.stripe.com/connect/custom-accounts
 - [S8] Service agreement types (recipient agreement cannot request `card_payments`): https://docs.stripe.com/connect/service-agreement-types
 - [S9] Global Payouts (senders GB, US; private preview list; "already hold the Money Transmitter Licence"; Treasury funding): https://docs.stripe.com/global-payouts
 - [S10] Global Payouts recipient requirements (sender countries United States and United Kingdom only; recipients include Singapore, India, the Philippines): https://docs.stripe.com/global-payouts/recipient-requirements
@@ -250,6 +274,10 @@ Stripe documentation (read as Markdown from `docs.stripe.com/<path>.md`; the ser
 - [S22] API reference, Confirm a PaymentIntent (failure moves it to `requires_payment_method`, or `canceled` at the confirmation limit): https://docs.stripe.com/api/payment_intents/confirm
 - [S23] The PaymentIntent lifecycle ("Cancellation invalidates the PaymentIntent for future payment attempts"): https://docs.stripe.com/payments/paymentintents/lifecycle
 - [S24] API reference, List all PaymentIntents (`customer` filter): https://docs.stripe.com/api/payment_intents/list
+- [S25] Stripe support, "Connect availability in the UAE" ("Foreign platform with UAE connected accounts", "Available only with" direct charges or destination charges with `on_behalf_of`; "some configurations may require you to contact our sales team"; read by summarising fetch, the page renders by script): https://support.stripe.com/questions/connect-availability-in-the-uae
+- [S26] Stripe support, Thailand support for marketplaces ("We do not support separate charges and transfer"; destination charges and `on_behalf_of` not addressed; read by summarising fetch, the page renders by script): https://support.stripe.com/questions/stripe-thailand-support-for-marketplace
+- [S27] API reference, Create a PaymentIntent (`payment_method` "to attach to this PaymentIntent"; `customer` required for a saved method): https://docs.stripe.com/api/payment_intents/create
+- [S28] API reference, The PaymentIntent object (`last_payment_error`: "The payment error encountered in the previous PaymentIntent confirmation. It will be cleared if the PaymentIntent is later updated for any reason."): https://docs.stripe.com/api/payment_intents/object
 
 Airwallex (documentation read as Markdown from `airwallex.com/docs/<path>.md`; marketing pages in the **Singapore edition** `/en-sg/`)
 
