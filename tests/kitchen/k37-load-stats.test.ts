@@ -1,3 +1,4 @@
+// reads: scripts/kitchen-stats.mjs, scripts/host-load.mjs, scripts/verify.mjs
 // K37 regression tests: cheap honest load context in run records, the
 // advisory comparable-cohort duration flag, and the read-only per-wave stats
 // query. Everything runs on fabricated run dirs and one fabricated git repo
@@ -162,6 +163,26 @@ describe('durationAdvisory — comparable cohort, strict threshold, never a verd
     three(dir2);
     fakeRun(dir2, dirName(NOW, sha('d')), { summary: pass(NOW, sha('d'), 900, { steps: [{ name: 'check', exit: 0, seconds: 500 }, { name: 'build', exit: 0, seconds: 400 }] }) });
     expect(advisory(dir2).find((r: Json) => r.run === dirName(NOW, sha('d'))).status).toBe('unavailable');
+  });
+  it('K45: a selected test:kitchen is its own cohort — never measured against the whole suite', () => {
+    const kitchen = (ms: number, commit: string, seconds: number, files: string[] | undefined) =>
+      pass(ms, commit, seconds, { steps: [{ name: 'test:kitchen', exit: 0, seconds, log: 'test_kitchen.log' }], ...(files ? { kitchenSelected: files } : {}) });
+    const dir = temp();
+    // Three whole-suite runs from before the field existed, then one 2-file run.
+    fakeRun(dir, dirName(NOW - 400000, sha('a')), { summary: kitchen(NOW - 400000, sha('a'), 100, undefined) });
+    fakeRun(dir, dirName(NOW - 300000, sha('b')), { summary: kitchen(NOW - 300000, sha('b'), 110, undefined) });
+    fakeRun(dir, dirName(NOW - 200000, sha('c')), { summary: kitchen(NOW - 200000, sha('c'), 120, undefined) });
+    fakeRun(dir, dirName(NOW, sha('d')), { summary: kitchen(NOW, sha('d'), 9, ['k15.test.ts', 'stats.test.ts']) });
+    const reports = advisory(dir);
+    const selected = reports.find((r: Json) => r.run === dirName(NOW, sha('d')));
+    expect(selected.status).toBe('unavailable');
+    expect(selected.reason).toContain('0 earlier eligible');
+    expect(selected.plan).toContain('kitchen k15.test.ts+stats.test.ts');
+    // A whole-suite run after them still compares with its own kind only.
+    fakeRun(dir, dirName(NOW + 100000, sha('e')), { summary: kitchen(NOW + 100000, sha('e'), 241, undefined) });
+    const whole = advisory(dir).find((r: Json) => r.run === dirName(NOW + 100000, sha('e')));
+    expect(whole.status).toBe('outlier');
+    expect(whole.n).toBe(3);
   });
   it('reports carry no causal claim: a timeout-shaped failure stays a failure, never a load verdict', () => {
     const dir = temp();

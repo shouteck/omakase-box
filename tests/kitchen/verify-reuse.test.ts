@@ -1,3 +1,4 @@
+// reads: scripts/verify.mjs, scripts/suite.mjs, .github/workflows/verify.yml
 // Fast unit tests for the K5 "stop repeating work" seam: the check-suite table,
 // the diff->suite selection, and reusableStep — the predicate verify.mjs trusts
 // before it lets a recorded PASS stand in for a real run. Everything runs on
@@ -178,6 +179,26 @@ describe('reusableStep — when a recorded PASS may stand in', () => {
     fakePass(old, NOW, sha('a'));
     expect(reusable(old, sha('a'), 'check', { suites: [] })).not.toBeNull();
     expect(reusable(old, sha('a'), 'check', { suites: ['auth'] })).toBeNull();
+  });
+
+  it('K45: a reused test:kitchen must have covered this run\'s kitchen selection — wide stands in for narrow, never the reverse', () => {
+    const narrow = temp();
+    fakePass(narrow, NOW, sha('a'), { kitchenSelected: ['k15-sandbox-guard.test.ts', 'kitchen-stats.test.ts'] });
+    expect(reusable(narrow, sha('a'), 'test:kitchen', { kitchenFiles: ['kitchen-stats.test.ts'] })).not.toBeNull();
+    expect(reusable(narrow, sha('a'), 'test:kitchen', { kitchenFiles: ['k15-sandbox-guard.test.ts', 'kitchen-stats.test.ts'] })).not.toBeNull();
+    // A narrow PASS never stands in for a wider selection.
+    expect(reusable(narrow, sha('a'), 'test:kitchen', { kitchenFiles: ['k15-sandbox-guard.test.ts', 'kitchen-stats.test.ts', 'verify-reuse.test.ts'] })).toBeNull();
+    expect(reusable(narrow, sha('a'), 'test:kitchen', { kitchenFiles: ['verify-reuse.test.ts'] })).toBeNull();
+    // The rule binds test:kitchen only: the other steps of that run still count.
+    expect(reusable(narrow, sha('a'), 'build').run).toBe(dirName(NOW, sha('a')));
+    // A recorded selection that is not a list proves no coverage.
+    const unreadable = temp();
+    fakePass(unreadable, NOW, sha('a'), { kitchenSelected: null });
+    expect(reusable(unreadable, sha('a'), 'test:kitchen', { kitchenFiles: [] })).toBeNull();
+    // Before K45 every recorded test:kitchen ran the whole directory.
+    const legacy = temp();
+    fakePass(legacy, NOW, sha('a'));
+    expect(reusable(legacy, sha('a'), 'test:kitchen', { kitchenFiles: ['verify-reuse.test.ts', 'kitchen-stats.test.ts'] })).not.toBeNull();
   });
 
   it('picks the newest qualifying run when several PASS on the commit', () => {

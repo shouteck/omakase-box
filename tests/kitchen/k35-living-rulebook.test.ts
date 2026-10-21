@@ -1,3 +1,4 @@
+// reads: @rulebook, scripts/kitchen-stats.mjs
 // K35: the living-rulebook guards kitchen-stats.mjs checkLimits enforces —
 // bounded station cards, retired role/station names absent from live rules,
 // and station listings that match the cards on disk. Every negative runs on a

@@ -1,3 +1,4 @@
+// reads: scripts/kitchen-stats.mjs, @rulebook, waves/
 // Fast unit tests for the K4 kitchen numbers page and the verify stall guard.
 // Everything runs on fabricated run dirs under the OS temp dir; nothing touches
 // the real .kitchen/runs or spawns verify inside verify. The module under test

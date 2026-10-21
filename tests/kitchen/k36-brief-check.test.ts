@@ -1,3 +1,4 @@
+// reads: scripts/brief-check.mjs, waves/K36.md, waves/K37.md, docs/box-v4/DECISIONS.md
 // K36: scripts/brief-check.mjs — the read-only pre-dispatch brief check.
 // Every case runs the real CLI against a fabricated root under the OS temp
 // dir, so a bad fixture really exits nonzero; nothing here scans the

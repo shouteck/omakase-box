@@ -1,3 +1,4 @@
+// reads: kitchen/demo/gh-standin.cjs, tests/box/bounty/github-fixture.ts, tests/box/bounty/bt7-ux-fixture.mjs, packages/box-bounty/, packages/box-cli/
 // K19 — stand-in GitHub parity with real GitHub.
 //
 // K18 found the demo's stand-in answered `issues/<n>` with the whole issue

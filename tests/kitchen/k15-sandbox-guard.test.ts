@@ -1,3 +1,4 @@
+// reads: waves/
 // K15 pin: the sandbox (shouteck/box-bounty-sandbox, kitchen/sandbox.md)
 // exists so a real GitHub bounty step never again targets the owner's
 // working repository — on BT10 a live run there had to stop and ask the
