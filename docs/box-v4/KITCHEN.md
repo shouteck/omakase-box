@@ -54,6 +54,8 @@ The verdict carries its level, because "passed" means different things: `ui-veri
 
 **Same model on both sides is normal here.** The pass is a fresh agent with no share in the cook's reasoning — the independence the kitchen relies on. Shared blind spots are covered mechanically: the pass's attacks, tests that must fail, the off-machine run.
 
+**Staffing on Claude Code** (owner, 21 October 2026). A brief may carry a "Staffing" section naming each role's model and effort. When it does, the coordinator dispatches `box-worker` and `box-reviewer` with the Agent tool's `model` and `effort` set exactly as written. The brief is the explicit instruction those settings need. Participants in fresh-agent checks run as fresh sessions, never as subagents. A correction uses a fresh cook at the same settings. After two FAILs on one finding, it steps up one level. Fable is used only on the owner's word. The Result records each role's host, model and effort.
+
 ## Recipients
 
 From D2.2 on, some waves need a `box-recipient`: an agent given only an exported Box folder outside this checkout and no repository access, standing in for an outside contributor. Its report of what was missing is evidence, not a defect. The CTO gives it the folder path and nothing else. Such an agent is not an independent human and is never reported as one.

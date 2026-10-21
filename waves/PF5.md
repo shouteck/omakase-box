@@ -12,6 +12,15 @@ Owner decisions: D-2026-10-21-platform-v1; D-2026-10-21-no-platform-money; owner
 
 So the CLI gains **no new command and no credential.** It tells the platform "look now" with an unauthenticated hint carrying identifiers only, and reads the solver's accepted payment methods from the platform's public API. This keeps the owner's surface at `allow`, `deny` and `config`.
 
+## Staffing (Claude Code, coordinator on Opus 5.5)
+
+Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
+
+- **Cook:** `box-worker`, **Opus 5.5**, effort **high**: it changes the CLI's core paths and what leaves the machine.
+- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**. Never the agent that cooked.
+- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
+- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+
 ## Outcome
 
 - A bounty appears on the board moments after `post`, instead of at the next scheduled search.

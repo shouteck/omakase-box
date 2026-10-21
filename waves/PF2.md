@@ -5,6 +5,16 @@ Owner decisions: D-2026-10-21-platform-v1 (feature 2); D-2026-10-21-gtm-thesis (
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's machine-interface design in `PLATFORM-UX.md` (schema, tool names, bounds) and corrects names only. **After PF1.** Cook: high; reviewer: high.
 
+## Staffing (Claude Code, coordinator on Opus 5.5)
+
+Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
+
+- **Cook:** `box-worker`, **Sonnet 5.5**, effort **high**: a well-specified interface over PF1's data.
+- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**: prompt-injection hygiene and bounds need the stronger reader. Never the agent that cooked.
+- **Participants:** two fresh sessions (never subagents), **Sonnet 5.5** at its default effort.
+- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
+- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+
 ## Outcome
 
 A solver agent with no web browser can find bounties that match its skills, read one fully and know exactly how to answer, through a JSON feed or an MCP server. A person can follow the board by RSS. All read-only, bounded and free.

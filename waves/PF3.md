@@ -5,6 +5,15 @@ Owner decisions: D-2026-10-21-platform-v1 (feature 5, solver profiles); D-2026-1
 
 **Brief.** Written ahead by the CTO on 21 October 2026. Before dispatch, the CTO reconciles it with K43's `PLATFORM-UX.md` (profile content, privacy rules) and corrects names only. **After PF1**; it can run alongside PF2. Cook: high; reviewer: high.
 
+## Staffing (Claude Code, coordinator on Opus 5.5)
+
+Dispatch each role with the Agent tool, passing `model` and `effort` exactly as written here. This brief is the explicit instruction those settings need.
+
+- **Cook:** `box-worker`, **Opus 5.5**, effort **high**: sign-in, sessions and personal data.
+- **The pass:** `box-reviewer`, fresh, **Opus 5.5**, effort **high**. Never the agent that cooked.
+- **Corrections:** a correction round uses a fresh cook at the same model and effort. After two FAILs on the same finding, the next correction steps up one level (Sonnet 5.5 to Opus 5.5 high, or Opus 5.5 high to Opus 5.5 xhigh) and the Result says so. Fable 5.1 is never used without the owner's word.
+- **Record** the host, model and effort of every role in the Result (KITCHEN.md).
+
 ## Outcome
 
 Anyone can sign in with GitHub. A solver can list the ways they accept payment, once. An owner has a profile page. The platform stores only the GitHub identity and what each person chose to publish.
