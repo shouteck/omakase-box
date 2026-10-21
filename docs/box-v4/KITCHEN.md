@@ -54,7 +54,7 @@ The verdict carries its level, because "passed" means different things: `ui-veri
 
 **Staffing on Claude Code** (owner, 21 October 2026). A brief's Staffing section sets each role's model and effort; dispatch exactly as written. Participants are fresh sessions, never subagents. Fable only on the owner's word. The Result records each role's host, model and effort.
 
-**Staffing on OpenCode** (owner, 22 October 2026). When a brief's Staffing names an OpenCode agent, the agent profile in `.opencode/agents/` pins the model. The Claude Code head chef dispatches each role as a fresh `opencode run --agent <name> --model <provider/model>` session, a new session for every role (never `--continue`). It confirms the model with `opencode export <session-id>`. Participants run with `--dir` in a scratch folder outside the checkout. Escalation after two FAILs on one finding goes to Claude Code's `box-worker` on Opus 5.5 high.
+**Staffing on OpenCode** (owner, 22 October 2026). When a brief's Staffing names an OpenCode agent, the agent profile in `.opencode/agents/` pins the model. The head chef (on OpenCode, the `head-chef` agent; or Claude Code) dispatches each role as a fresh `opencode run --agent <name> --model <provider/model>` session, a new session for every role (never `--continue`). It confirms the model with `opencode export <session-id>`. Participants run with `--dir` in a scratch folder outside the checkout. After two FAILs on one finding the head chef stops and asks the owner whether the next correction runs in Claude Code (`box-worker`, Opus 5.5 high) or on another named model.
 
 ## Recipients
 
