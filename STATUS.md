@@ -15,8 +15,8 @@ Updated by the CTO on 21 October 2026 at the K44 close.
 
 This run stops after K44. No wave is in flight or starts automatically.
 
-- **K44's five owner decisions** (GTM.md, last section), each recommended yes: (1) the instruction block states the reward, public-on-this-repository-only and whether posting is allowed, re-measured by a fresh-agent A/B (E1) before any launch; (2) a handful of the kitchen's own first bounties carry about $40–60 each, paid by the owner directly (spending, owner only); (3) launch copy leads with the mechanism, not earning; (4) agent-initiated demand stays unproven and owner-requested bounties are counted alongside; (5) MCP registries first, then one Show HN by the owner.
+- **K44's five owner decisions: decided** (D-2026-10-21-k44-decisions): (1) yes, as one constant line (BT42); (2) no seed rewards, no spending; (3)–(5) yes.
 - **Platform:** open source, free, no money (D-2026-10-21-no-platform-money); first version per D-2026-10-21-platform-v1. **K43** (the board, designed agents first) is briefed and waiting to be named; it reads GTM.md. D2 (hosting) reopened.
-- K41 (film) and publishing stay held until the platform's first version exists.
+- K41 (film) and publishing stay held until the platform's first version exists (see the path below).
 - **In BACKLOG:** the flaky `bt39` test; the CLI merge-recognition finding from K42 (unproven); BT33 parked; performance limits.
 - **Path to launch, owner 21 October 2026** (D-2026-10-21-k44-decisions, D-2026-10-21-minimalism): no spending; build the platform's first version, then publish everything and wait. Order: **K43** (design, minimalism) and **BT42** (instruction note) now; then **PF1** → **PF2** and **PF3** → **PF4** → **PF5**; **K41** (film with the board and a use-case punchline) after PF5; **PF6** (launch readiness) last; then the owner deploys, publishes and posts. PF1–PF6 written ahead and reconciled with K43 before each dispatch.
